@@ -4,6 +4,7 @@
   "description": "",
   "main": "./src/client.ts",
   "types": "./src/index.ts",
+  "type": "module",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -12,6 +13,7 @@
   "license": "ISC",
   "packageManager": "pnpm@10.8.0",
   "dependencies": {
+    "@project/shared": "workspace:^",
     "drizzle-orm": "^0.45.2",
     "postgres": "^3.4.9"
   },
