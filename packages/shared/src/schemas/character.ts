@@ -7,7 +7,7 @@ import { z } from "zod";
 // Modifiers must always be stored and parsed as lists to ensure map/reduce
 // operations never throw "undefined is not a function" during stat calculation
 export const ModifierSchema = z.object({
-  id: z.string().uuid(),
+  id: z.uuid(),
   sourceId: z.string(),
   type: z.enum([
     "bonus",

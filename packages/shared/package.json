@@ -6,13 +6,19 @@
   "main": "./src/index.ts",
   "types": "./src/index.ts",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "packageManager": "pnpm@10.8.0",
   "dependencies": {
+    "vitest": "^4.1.9",
     "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@vitest/coverage-v8": "4.1.9"
   }
 }
