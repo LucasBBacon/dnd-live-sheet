@@ -3,10 +3,13 @@
   "version": "1.0.0",
   "description": "",
   "main": "./src/client.ts",
-  "types": "./src/index.ts",
+  "types": "./src/client.ts",
   "type": "module",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "db:push": "drizzle-kit push",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "tsx src/migrate.ts",
+    "db:studio": "drizzle-kit studio"
   },
   "keywords": [],
   "author": "",
@@ -14,12 +17,14 @@
   "packageManager": "pnpm@10.8.0",
   "dependencies": {
     "@project/shared": "workspace:^",
+    "dotenv": "^17.4.2",
     "drizzle-orm": "^0.45.2",
     "postgres": "^3.4.9"
   },
   "devDependencies": {
     "@types/node": "^26.0.0",
     "drizzle-kit": "^0.31.10",
-    "typescript": "^6.0.3"
+    "typescript": "^6.0.3",
+    "tsx": "^4.10.5"
   }
 }
