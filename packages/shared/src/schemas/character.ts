@@ -4,6 +4,16 @@ import { z } from "zod";
 // 1. Core primitives and modifiers
 // ----------------------------------------------------------------------------------
 
+// Flavor data: updates here do not trigger engine recalculations
+export const CharacterFlavorSchema = z.object({
+  name: z.string().min(1).max(100),
+  alignment: z.string().optional(),
+  eyeColor: z.string().optional(),
+  backstory: z.string().max(5000).optional(),
+});
+
+export type CharacterFlavorData = z.infer<typeof CharacterFlavorSchema>;
+
 // Modifiers must always be stored and parsed as lists to ensure map/reduce
 // operations never throw "undefined is not a function" during stat calculation
 export const ModifierSchema = z.object({
@@ -92,3 +102,12 @@ export const CharacterEngineSchema = z.object({
 });
 
 export type CharacterEngineData = z.infer<typeof CharacterEngineSchema>;
+
+export const BaseCharacterSchema = z.object({
+  id: z.uuid(),
+  userId: z.string(),
+  flavor: CharacterFlavorSchema,
+  engine: CharacterEngineSchema,
+});
+
+export type Character = z.infer<typeof BaseCharacterSchema>;

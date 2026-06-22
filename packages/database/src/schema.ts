@@ -12,7 +12,7 @@ import type { CharacterEngineData } from "@project/shared";
 import { isNull } from "drizzle-orm";
 
 // define the flavor type (or import from shared) to type the JSONB col
-type CharacterFlavorData = {
+export type CharacterFlavorData = {
   name: string;
   alignment?: string;
   eyeColor?: string;
