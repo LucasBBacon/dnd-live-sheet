@@ -6,8 +6,10 @@ import {
   varchar,
   timestamp,
   uniqueIndex,
+  index,
 } from "drizzle-orm/pg-core";
 import type { CharacterEngineData } from "@project/shared";
+import { isNull } from "drizzle-orm";
 
 // define the flavor type (or import from shared) to type the JSONB col
 type CharacterFlavorData = {
@@ -39,11 +41,16 @@ export const characters = pgTable(
     // audit trails
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at").defaultNow().notNull(),
+    deletedAt: timestamp("deleted_at"),
   },
   (table) => ({
     // ensure strict 1:1 mapping for phase 1 beta testers
-    singleCharacterIdx: uniqueIndex("user_single_character_idx").on(
-      table.userId,
+    singleCharacterIdx: uniqueIndex("user_single_character_idx")
+      .on(table.userId)
+      .where(isNull(table.deletedAt)),
+    engineDatGinIdx: index("engine_data_gin_idx").using(
+      "gin",
+      table.engineData,
     ),
   }),
 );
