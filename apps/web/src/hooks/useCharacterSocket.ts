@@ -3,7 +3,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef } from "react";
 import { io, Socket } from "socket.io-client";
 
-const WS_URL = "http:/localhost:3000";
+const WS_URL = "http://localhost:3000";
 
 export const useCharacterSocket = (characterId: string | undefined) => {
   const socketRef = useRef<Socket | null>(null);
