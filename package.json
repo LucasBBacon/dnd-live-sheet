@@ -4,6 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+    "dev": "turbo run dev",
+    "build": "turbo run build",
     "test": "turbo test --filter=@project/shared",
     "test:shared": "pnpm --filter @project/shared test"
   },

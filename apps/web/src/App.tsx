@@ -1,122 +1,80 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import heroImg from './assets/hero.png'
-import './App.css'
+import { useState } from "react";
+import { useCharacterSheet, useUpdateFlavor } from "./api/queries";
 
-function App() {
-  const [count, setCount] = useState(0)
+const App = () => {
+  const { data: character, isLoading, isError, error } = useCharacterSheet();
+  const { mutate: updateFlavor, isPending } = useUpdateFlavor();
+
+  // local state strictly for unsubmitted input field
+  const [newEyeColor, setNewEyeColor] = useState("");
+
+  if (isLoading) return <div>Loading character data...</div>;
+  if (isError)
+    return <div>Error fetching sheet: {(error as Error).message}</div>;
+  if (!character) return <div>No active character found.</div>;
+
+  const handleUpdateFlavor = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newEyeColor.trim()) return;
+
+    updateFlavor({ eyeColor: newEyeColor });
+    setNewEyeColor(""); // clear local state after submission
+  };
 
   return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
-        </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.tsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
-        <button
-          type="button"
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
+    <div style={{ padding: "2rem", fontFamily: "monospace" }}>
+      <h1>D&D Live Sheet</h1>
+      <hr />
+
+      <section style={{ marginBottom: "2rem" }}>
+        <h2>Flavor Profile</h2>
+        <p>
+          <strong>Name:</strong> {character.flavorData.name}
+        </p>
+        <p>
+          <strong>Alignment:</strong> {character.flavorData.alignment || "None"}
+        </p>
+        <p>
+          <strong>Eye Color:</strong>{" "}
+          {character.flavorData.eyeColor || "Unknown"}
+        </p>
+
+        <form onSubmit={handleUpdateFlavor} style={{ marginTop: "1rem" }}>
+          <input
+            type="text"
+            value={newEyeColor}
+            onChange={(e) => setNewEyeColor(e.target.value)}
+            placeholder="New Eye Color"
+            disabled={isPending}
+          />
+          <button type="submit" disabled={isPending}>
+            {isPending ? "Saving..." : "Update Eye Color"}
+          </button>
+        </form>
       </section>
 
-      <div className="ticks"></div>
+      <section>
+        <h2>Engine Mechanics (Read-Only)</h2>
+        <p>
+          <strong>Total Level:</strong> {character.totalLevel}
+        </p>
+        <p>
+          <strong>Current HP:</strong> {character.currentHp} /{" "}
+          {character.engineData.hp.max}
+        </p>
 
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
+        <h3>Attributes</h3>
+        <ul style={{ listStyleType: "none", padding: 0 }}>
+          <li>STR: {character.engineData.attributes.str}</li>
+          <li>DEX: {character.engineData.attributes.dex}</li>
+          <li>CON: {character.engineData.attributes.con}</li>
+          <li>INT: {character.engineData.attributes.int}</li>
+          <li>WIS: {character.engineData.attributes.wis}</li>
+          <li>CHA: {character.engineData.attributes.cha}</li>
+        </ul>
       </section>
+    </div>
+  );
+};
 
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
-  )
-}
-
-export default App
+export default App;
