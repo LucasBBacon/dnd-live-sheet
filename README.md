@@ -2,150 +2,178 @@
 
 Live character sheet platform for **Dungeons and Dragons 5e (2014 ruleset)**.
 
-This repository is a Turborepo monorepo that will provide:
+This repository is a Turborepo monorepo with a React frontend, Express + Socket.IO backend, shared rules/contracts package, and a Drizzle/Postgres data layer.
 
-- A guided character creation wizard
-- A level-up progression flow
-- A live, reactive character sheet
-- Strict 5e (2014) mechanics and validation
-- Real-time cascading mechanical updates from player actions
-- Flavor field updates that are persisted without triggering recalculations
-- Single character per user (initial release constraint)
-- Dual dice support: digital rolls and manual physical roll input
-- Dice range gating to prevent invalid roll values
+## Current Status
 
-## Project Scope
+Implemented right now:
 
-The platform separates **mechanical state** from **flavor state**:
+- Monorepo workspace with Turborepo + pnpm
+- Shared Zod schemas and typed game action contracts
+- Shared pure rules functions (ability modifier, proficiency, AC, HP calculations)
+- Character persistence in Postgres via Drizzle ORM
+- One-character-per-user database guardrail (unique index on active `user_id`)
+- REST hydration endpoint for current character
+- REST flavor-only update endpoint (no mechanical recalculation pipeline)
+- Real-time HP modification flow over Socket.IO
+- Local mock authentication (`x-tester-id` header)
+- Shared package test suite with Vitest
 
-- Mechanical state (stats, classes, equipment, conditions, HP, etc.) drives derived calculations.
-- Flavor state (eye color, alignment, backstory, etc.) is saved directly and does not trigger the event cascade.
+Not implemented yet:
 
-This allows the app to remain fast and deterministic for gameplay logic while still supporting rich character personalization.
+- Character creation wizard
+- Level-up flow
+- Full dice system (digital/manual roll pipelines)
+- Broader action set beyond `MODIFY_HP`
 
-## Core Product Requirements
+## Monorepo Layout
 
-1. Character creation flow wizard
-2. Character level-up flow
-3. Live character sheet functionality
-4. DND 5e 2014 ruleset applied
-5. Automated cascading updates to user actions
-6. Flavor actions saved directly with no cascade events
-7. One character per user for now (expandable later)
-8. Digital dice rolls or manual physical roll inputs
-9. Roll validation that enforces expected dice ranges
+- `apps/web`: React + Vite client UI
+- `apps/server`: Express API + Socket.IO gateway
+- `packages/shared`: Zod schemas, action contracts, pure 5e engine functions, tests
+- `packages/database`: Drizzle schema/client/config + seed script
 
-## Monorepo Structure
+## Prerequisites
 
-- `apps/web`: React + Vite frontend
-- `apps/server`: Node/Express backend APIs + realtime entrypoints
-- `packages/shared`: Shared Zod contracts, types, and pure 5e rules logic
-- `packages/database`: Drizzle schema/client and persistence layer
+- Node.js 20+
+- pnpm 10+
+- PostgreSQL 15+
 
-## Technical Direction
+## Environment Variables
 
-### Rules Engine Philosophy
+Create a root `.env` file at the repository root.
 
-- Stateless and deterministic pure functions for 5e calculations
-- Shared library consumed by both server and client where appropriate
-- Validation-first API contracts (Zod) at all trust boundaries
+Required:
 
-### Flavor vs Mechanical Processing
+- `DATABASE_URL=postgres://user:password@localhost:5432/dnd_live_sheet`
 
-- Flavor updates are routed through direct persistence endpoints.
-- Mechanical actions go through an event pipeline that recomputes derived values and publishes canonical state.
+Optional:
 
-### Dice System
+- `PORT=3000` for the server
+- `CLIENT_URL=http://localhost:5173` for CORS origin allowlist
 
-- Digital mode: pseudo-random roll generation per die shape
-- Manual mode: user-provided roll payloads for physical dice
-- Validation gate: strict integer range enforcement (for example, d20 must be in [1, 20])
+Notes:
 
-## Delivery Roadmap
+- `packages/database` and `apps/server` both load `../../.env`, so variables should live in the root `.env` file.
 
-### Phase 1: Workspace and Data Modeling (Weeks 1-3)
-**Objective:** Set up the monorepo architecture and define data boundaries.
+## Getting Started
 
-- Repository setup with Turborepo workspace:
-	- `apps/web` (React/Vite)
-	- `apps/server` (Node/Express)
-	- `packages/shared` (Zod schemas and core types)
-- Database schema (Drizzle + Postgres):
-	- Character table and linked mechanical state structures (items, classes, stats)
-	- Isolated flavor block (JSONB or explicit columns) for direct, non-cascading updates
-- Authentication and guardrails:
-	- Simple auth
-	- Unique constraint/index on `user_id` in characters to enforce one-character-per-user
+1. Install dependencies:
 
-### Phase 2: Core Rules Engine and Pure Logic (Weeks 4-6)
-**Objective:** Build stateless DND 5e (2014) logic in shared library.
+```bash
+pnpm install
+```
 
-- Pure mechanics functions:
-	- Ability modifier from raw score
-	- Proficiency bonus from level
-	- Baseline unarmored AC calculation: 10 + Dexterity modifier
-- Validation contract definitions via Zod:
-	- Strict ranges (for example ability score 1-30)
-- Dice engine architecture:
-	- Digital and manual roll payload support
-	- Gatekeeper schema for die-specific range validation
+2. Push schema to your database:
 
-### Phase 3: Backend Infrastructure and Persistent APIs (Weeks 7-9)
-**Objective:** Establish secure REST endpoints and data persistence.
+```bash
+pnpm --filter @project/database db:push
+```
 
-- Core endpoints for character fetch and mutation
-- Flavor bypass route:
-	- `PATCH /api/character/flavor` writes direct flavor updates
-	- No real-time mechanical pipeline execution for flavor-only changes
-- Seed framework (Drizzle):
-	- Standard 2014 SRD references (classes, equipment packs, weapons)
+3. Seed a development character (`dev-user-1`):
 
-### Phase 4: Frontend Hydration and UI Foundation (Weeks 10-12)
-**Objective:** Build visible sheet layout and synchronization layer.
+```bash
+pnpm --filter @project/database db:seed
+```
 
-- TanStack Query integration for initial hydration and remote data management
-- Zustand store for local UI state and interaction-driven updates
-- Flavor interface sections wired to direct API updates
-- Validation that flavor edits persist without full mechanical recomputation
+4. Start all dev services:
 
-### Phase 5: WebSocket Real-Time Action System (Weeks 13-16)
-**Objective:** Implement event-driven cascading updates via WebSockets.
+```bash
+pnpm dev
+```
 
-- Socket.io bidirectional infrastructure
-- Action package emission for gameplay events (example: `EQUIP_ITEM`)
-- Backend action processor:
-	- Persist action results
-	- Re-run shared rules calculations
-	- Broadcast confirmed canonical state to connected clients
+Default local URLs:
 
-### Phase 6: Multi-Step Wizards (Weeks 17-20)
-**Objective:** Implement stateful creation and progression workflows.
+- Web: `http://localhost:5173`
+- API/Socket server: `http://localhost:3000`
 
-- Character creation wizard:
-	- Local staged state for race/class/stats and related selections
-	- Final-step payload validation (Zod) and single transactional submit
-- Level-up wizard:
-	- Sequential level validation (for example 1 -> 2)
-	- Feature choice validation against character build constraints
+## Scripts
 
-### Phase 7: Telemetry, Bridge, and Launch (Weeks 21+)
-**Objective:** Add observability and prepare beta launch.
+Root:
 
-- Pino JSON logging for action traceability and anomaly detection
-- Sentry integration for runtime exception capture
-- Docker-based deployment of a single production instance in a UK data center
+- `pnpm dev` -> run all workspace dev tasks via Turbo
+- `pnpm build` -> run workspace build tasks
+- `pnpm test` -> run shared package tests via Turbo filter
+- `pnpm test:shared` -> run `@project/shared` tests directly
 
-## Non-Goals for Initial Release
+Web (`@project/web`):
 
-- Multi-character account support
-- Full homebrew content system
-- Cross-campaign roster management
+- `pnpm --filter @project/web dev`
+- `pnpm --filter @project/web build`
+- `pnpm --filter @project/web lint`
+- `pnpm --filter @project/web preview`
 
-## Success Criteria
+Server (`@project/server`):
 
-- Character creation and level-up flows complete successfully with strict rules validation
-- Mechanical actions produce deterministic cascading sheet updates
-- Flavor updates persist instantly with no mechanical recomputation
-- Dice workflows reject out-of-range or malformed roll inputs
-- One-character-per-user rule is consistently enforced across API and persistence layers
+- `pnpm --filter @project/server dev`
+- `pnpm --filter @project/server build`
+- `pnpm --filter @project/server start`
+
+Database (`@project/database`):
+
+- `pnpm --filter @project/database db:push`
+- `pnpm --filter @project/database db:generate`
+- `pnpm --filter @project/database db:studio`
+- `pnpm --filter @project/database db:seed`
+
+## API Overview
+
+All routes are currently mounted under `/api/character` and protected by mock auth.
+
+Auth requirement for local testing:
+
+- Header: `x-tester-id: dev-user-1`
+
+Endpoints:
+
+- `GET /api/character`
+Returns the active character row for the authenticated user.
+
+- `PATCH /api/character/flavor`
+Validates a partial `CharacterFlavorSchema` payload and merges it into `flavor_data`.
+This endpoint intentionally bypasses mechanical recalculation.
+
+## Socket Events
+
+Client -> server:
+
+- `join_character` with `characterId`
+- `dispatch_action` with shared `GameAction` payload
+
+Server -> client:
+
+- `state_updated` with action type when an action is processed
+- `action_error` when payload validation or processing fails
+
+Currently supported action type:
+
+- `MODIFY_HP`
+
+## Testing
+
+Run shared tests:
+
+```bash
+pnpm test:shared
+```
+
+Coverage:
+
+```bash
+pnpm --filter @project/shared test:coverage
+```
+
+## Architecture Notes
+
+- Shared contracts (`@project/shared`) are used for runtime validation and compile-time typing across web/server/database boundaries.
+- Mechanical state is stored in `engine_data` JSONB while flavor state is stored in `flavor_data` JSONB.
+- Top-level indexed columns (for example `current_hp`, `total_level`) are denormalized for efficient querying.
+- HP updates run in a transaction with row locking to avoid concurrent update races.
+
+## Near-Term Roadmap
+
+- Expand action reducer pipeline beyond HP changes
+- Add character creation and level-up workflows
+- Add full dice roll handling and validation surface
+- Replace mock auth with real identity/session auth
 
