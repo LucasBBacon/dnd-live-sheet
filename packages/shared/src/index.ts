@@ -9,3 +9,7 @@ export type {
   CharacterFlavorData,
   Character,
 } from "./schemas/character.js";
+
+export { ModifyHpActionSchema, GameActionSchema } from "./schemas/actions.js";
+
+export type { GameAction } from "./schemas/actions.js";

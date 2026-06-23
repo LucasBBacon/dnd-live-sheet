@@ -1,12 +1,23 @@
 import express from "express";
+import http from "http";
 import cors from "cors";
 import helmet from "helmet";
 import { createAuthMiddleware } from "./middleware/requireAuth.js";
 import { MockAuthProvider } from "./core/auth/MockAuthProvider.js";
 import characterRoutes from "./routes/character.js";
 import { globalErrorHandler } from "./middleware/errorHandler.js";
+import { Server } from "socket.io";
+import { initializeWebSockets } from "./socket/controller.js";
 
 const app = express();
+const server = http.createServer(app); // wrap express in standard http server
+
+const io = new Server(server, {
+  cors: {
+    origin: process.env.CLIENT_URL || "http://localhost:5173",
+    methods: ["GET", "POST"],
+  },
+});
 
 // security and parsing middleware
 app.use(helmet());
@@ -22,7 +33,9 @@ app.use("/api/character", authMiddleware, characterRoutes);
 // global error catcher (REGISTER LAST)
 app.use(globalErrorHandler);
 
+initializeWebSockets(io);
+
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log(`Server initialized on port ${PORT}`);
+server.listen(PORT, () => {
+  console.log(`Server & WebSockets initialized on port ${PORT}`);
 });
