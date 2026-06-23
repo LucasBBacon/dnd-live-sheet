@@ -1,5 +1,6 @@
 import { GameActionSchema } from "@project/shared";
 import type { Server, Socket } from "socket.io";
+import { modifyCharacterHp } from "../services/combatService.js";
 
 export const initializeWebSockets = (io: Server) => {
   io.on("connection", (socket: Socket) => {
@@ -27,17 +28,23 @@ export const initializeWebSockets = (io: Server) => {
       try {
         // process specific action type
         if (action.type === "MODIFY_HP") {
-          // TODO: run core math reducer here (e.g., check temp hp overflow)
-          // TODO: execute db transaction to update characters.engineData
+          const newHpState = await modifyCharacterHp(
+            action.characterId,
+            action.payload.amount,
+          );
 
-          console.log(`Processing HP modification for ${action.characterId}`);
+          console.log(
+            `[Combat] Character ${action.characterId} HP updated to ${newHpState.current}`,
+          );
         }
-
         // broadcast the validated result back to the room
         // tells the frontend to invalidate its cache and pull fresh sheet
         io.to(`char_${action.characterId}`).emit("state_updated", action.type);
       } catch (error) {
         console.error(`[Socket] Action processing failed`, error);
+        socket.emit("action_error", {
+          message: "Server failed to process action",
+        });
       }
     });
 
