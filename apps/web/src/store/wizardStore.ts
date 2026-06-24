@@ -27,7 +27,7 @@ interface WizardState {
 }
 
 export const useWizardStore = create<WizardState>((set, get) => ({
-  currentStep: 1,
+  currentStep: 2,
   targetLevel: 1,
 
   characterName: "",
