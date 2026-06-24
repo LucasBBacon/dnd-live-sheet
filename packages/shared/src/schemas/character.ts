@@ -32,6 +32,8 @@ export const ModifierSchema = z.object({
 
 export const ModifiersList = z.array(ModifierSchema).default([]);
 
+export type ModifiersListData = z.infer<typeof ModifiersList>;
+
 // ----------------------------------------------------------------------------------
 // 2. Progression and options (subrace / subclass enforcements)
 // ----------------------------------------------------------------------------------

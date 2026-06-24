@@ -1,0 +1,256 @@
+[
+  {
+    "id": "subrace_dragonborn_black",
+    "name": "Black Dragon",
+    "parentRaceId": "race_dragonborn",
+    "lore": {
+      "shortDescription": "",
+      "fullText": "You have draconic ancestry. Choose one type of dragon from the Draconic Ancestry table. Your breath weapon and damage resistance are determined by the dragon type."
+    },
+    "traitsAdded": [
+      "trait_breath_weapon_acid_line",
+      "trait_damage_resistance_acid"
+    ]
+  },
+  {
+    "id": "subrace_dragonborn_blue",
+    "name": "Blue Dragon",
+    "parentRaceId": "race_dragonborn",
+    "lore": {
+      "shortDescription": "",
+      "fullText": "You have draconic ancestry. Choose one type of dragon from the Draconic Ancestry table. Your breath weapon and damage resistance are determined by the dragon type."
+    },
+    "traitsAdded": [
+      "trait_breath_weapon_lightning_line",
+      "trait_damage_resistance_lightning"
+    ]
+  },
+  {
+    "id": "subrace_dragonborn_brass",
+    "name": "Brass Dragon",
+    "parentRaceId": "race_dragonborn",
+    "lore": {
+      "shortDescription": "",
+      "fullText": "You have draconic ancestry. Choose one type of dragon from the Draconic Ancestry table. Your breath weapon and damage resistance are determined by the dragon type."
+    },
+    "traitsAdded": [
+      "trait_breath_weapon_fire_line",
+      "trait_damage_resistance_fire"
+    ]
+  },
+  {
+    "id": "subrace_dragonborn_bronze",
+    "name": "Bronze Dragon",
+    "parentRaceId": "race_dragonborn",
+    "lore": {
+      "shortDescription": "",
+      "fullText": "You have draconic ancestry. Choose one type of dragon from the Draconic Ancestry table. Your breath weapon and damage resistance are determined by the dragon type."
+    },
+    "traitsAdded": [
+      "trait_breath_weapon_lightning_line",
+      "trait_damage_resistance_lightning"
+    ]
+  },
+  {
+    "id": "subrace_dragonborn_copper",
+    "name": "Copper Dragon",
+    "parentRaceId": "race_dragonborn",
+    "lore": {
+      "shortDescription": "",
+      "fullText": "You have draconic ancestry. Choose one type of dragon from the Draconic Ancestry table. Your breath weapon and damage resistance are determined by the dragon type."
+    },
+    "traitsAdded": [
+      "trait_breath_weapon_acid_line",
+      "trait_damage_resistance_acid"
+    ]
+  },
+  {
+    "id": "subrace_dragonborn_gold",
+    "name": "Gold Dragon",
+    "parentRaceId": "race_dragonborn",
+    "lore": {
+      "shortDescription": "",
+      "fullText": "You have draconic ancestry. Choose one type of dragon from the Draconic Ancestry table. Your breath weapon and damage resistance are determined by the dragon type."
+    },
+    "traitsAdded": [
+      "trait_breath_weapon_fire_cone",
+      "trait_damage_resistance_fire"
+    ]
+  },
+  {
+    "id": "subrace_dragonborn_green",
+    "name": "Green Dragon",
+    "parentRaceId": "race_dragonborn",
+    "lore": {
+      "shortDescription": "",
+      "fullText": "You have draconic ancestry. Choose one type of dragon from the Draconic Ancestry table. Your breath weapon and damage resistance are determined by the dragon type."
+    },
+    "traitsAdded": [
+      "trait_breath_weapon_poison_cone",
+      "trait_damage_resistance_poison"
+    ]
+  },
+  {
+    "id": "subrace_dragonborn_red",
+    "name": "Red Dragon",
+    "parentRaceId": "race_dragonborn",
+    "lore": {
+      "shortDescription": "",
+      "fullText": "You have draconic ancestry. Choose one type of dragon from the Draconic Ancestry table. Your breath weapon and damage resistance are determined by the dragon type."
+    },
+    "traitsAdded": [
+      "trait_breath_weapon_fire_cone",
+      "trait_damage_resistance_fire"
+    ]
+  },
+  {
+    "id": "subrace_dragonborn_silver",
+    "name": "Silver Dragon",
+    "parentRaceId": "race_dragonborn",
+    "lore": {
+      "shortDescription": "",
+      "fullText": "You have draconic ancestry. Choose one type of dragon from the Draconic Ancestry table. Your breath weapon and damage resistance are determined by the dragon type."
+    },
+    "traitsAdded": [
+      "trait_breath_weapon_cold_cone",
+      "trait_damage_resistance_cold"
+    ]
+  },
+  {
+    "id": "subrace_dragonborn_white",
+    "name": "White Dragon",
+    "parentRaceId": "race_dragonborn",
+    "lore": {
+      "shortDescription": "",
+      "fullText": "You have draconic ancestry. Choose one type of dragon from the Draconic Ancestry table. Your breath weapon and damage resistance are determined by the dragon type."
+    },
+    "traitsAdded": [
+      "trait_breath_weapon_cold_cone",
+      "trait_damage_resistance_cold"
+    ]
+  },
+  {
+    "id": "subrace_dwarf_hill",
+    "name": "Hill Dwarf",
+    "parentRaceId": "race_dwarf",
+    "traitsAdded": [
+      "trait_dwarf_hill_ability_bonuses",
+      "trait_dwarven_toughness"
+    ],
+    "lore": {
+      "shortDescription": "Hill dwarves are sturdy and keen-witted, known for deep traditions, long memory, and exceptional resilience.",
+      "fullText": "Hill dwarves are among the oldest and most tradition-bound of dwarven folk. Their communities prize endurance, practical wisdom, and strong clan ties. Generations of hard living in rugged lands have made them notably hardy, and many hill dwarves are respected as defenders, craftsmen, and elders whose counsel carries weight.",
+      "sections": [
+        {
+          "title": "Dwarven Toughness",
+          "body": "Your hit point maximum increases by 1, and it increases by 1 every time you gain a level."
+        },
+        {
+          "title": "Hill Dwarf Culture",
+          "body": "Hill dwarf settlements tend to be old, stable, and strongly rooted in clan tradition. Their leaders are often chosen for wisdom and reliability, and their people are expected to contribute to the community's long-term strength."
+        }
+      ]
+    }
+  },
+  {
+    "id": "subrace_dwarf_mountain",
+    "name": "Mountain Dwarf",
+    "parentRaceId": "race_dwarf",
+    "traitsAdded": [
+      "trait_dwarf_mountain_ability_bonuses",
+      "trait_dwarven_armor_training"
+    ],
+    "lore": {
+      "shortDescription": "Mountain dwarves are strong and hardy, accustomed to a difficult life in rugged terrain.",
+      "fullText": "As a mountain dwarf, you're strong and hardy, accustomed to a difficult life in rugged terrain. You're probably on the tall side (for a dwarf), and tend toward lighter coloration. The shield dwarves of northern Faerûn, as well as the ruling Hylar clan and the noble Daewar clan of Dragonlance, are mountain dwarves."
+    }
+  },
+  {
+    "id": "subrace_elf_high",
+    "name": "High Elf",
+    "parentRaceId": "race_elf",
+    "lore": {
+      "shortDescription": "As a high elf, you have a keen mind and a mastery of at least the basics of magic.",
+      "fullText": "As a high elf, you have a keen mind and a mastery of at least the basics of magic. In many of the worlds of D&D, there are two kinds of high elves. One type (which includes the gray elves and valley elves of Greyhawk, the Silvanesti of Dragonlance, and the sun elves of the Forgotten Realms) is haughty and reclusive, believing themselves to be superior to non-elves and even other elves. The other type (including the high elves of Greyhawk, the Qualinesti of Dragonlance, and the moon elves of the Forgotten Realms) are more common and more friendly, and often encountered among humans and other races.\nThe sun elves of Faerûn (also called gold elves or sunrise elves) have bronze skin and hair of copper, black, or golden blond. Their eyes are golden, silver, or black. Moon elves (also called silver elves or gray elves) are much paler, with alabaster skin sometimes tinged with blue. They often have hair of silver-white, black, or blue, but various shades of blond, brown, and red are not uncommon. Their eyes are blue or green and flecked with gold."
+    },
+    "traitsAdded": [
+      "trait_elf_high_ability_bonuses",
+      "trait_elf_weapon_training",
+      "trait_cantrip",
+      "trait_extra_language"
+    ]
+  },
+  {
+    "id": "subrace_elf_wood",
+    "name": "Wood Elf",
+    "parentRaceId": "race_elf",
+    "lore": {
+      "shortDescription": "As a wood elf, you have keen senses and intuition, and your fleet feet carry you quickly and stealthily through your native forests.",
+      "fullText": "As a wood elf, you have keen senses and intuition, and your fleet feet carry you quickly and stealthily through your native forests. This category includes the wild elves (grugach) of Greyhawk and the Kagonesti of Dragonlance, as well as the races called wood elves in Greyhawk and the Forgotten Realms. In Faerûn, wood elves (also called wild elves, green elves, or forest elves) are reclusive and distrusting of non-elves.\nWood elves' skin tends to be copperish in hue, sometimes with traces of green. Their hair tends toward browns and blacks, but it is occasionally blond or copper-colored. Their eyes are green, brown, or hazel."
+    },
+    "traitsAdded": [
+      "trait_elf_wood_ability_bonuses",
+      "trait_elf_weapon_training",
+      "trait_fleet_of_foot",
+      "trait_mask_of_the_wild"
+    ]
+  },
+  {
+    "id": "subrace_gnome_deep",
+    "name": "Deep Gnome",
+    "parentRaceId": "race_gnome",
+    "lore": {
+      "shortDescription": "Guarded, and suspicious of outsiders, svirfneblin are cunning and taciturn, but can be just as kind-hearted, loyal, and compassionate as their surface cousins.",
+      "fullText": "Forest gnomes and rock gnomes are the gnomes most commonly encountered in the lands of the surface world. There is another subrace of gnomes rarely seen by any surface-dweller: deep gnomes, also known as svirfneblin. Guarded, and suspicious of outsiders, svirfneblin are cunning and taciturn, but can be just as kind-hearted, loyal, and compassionate as their surface cousins."
+    },
+    "traitsAdded": [
+      "trait_gnome_deep_ability_bonuses",
+      "trait_gnome_deep_age",
+      "trait_gnome_deep_alignment",
+      "trait_gnome_deep_size",
+      "trait_darkvision_superior",
+      "trait_stone_camouflage",
+      "trait_gnome_deep_languages"
+    ]
+  },
+  {
+    "id": "subrace_gnome_rock",
+    "name": "Rock Gnome",
+    "parentRaceId": "race_gnome",
+    "lore": {
+      "shortDescription": "You have a natural inventiveness and hardiness beyond that of other gnomes.",
+      "fullText": "As a rock gnome, you have a natural inventiveness and hardiness beyond that of other gnomes. Most gnomes in the worlds of D&D are rock gnomes, including the tinker gnomes of the Dragonlance setting."
+    },
+    "traitsAdded": [
+      "trait_gnome_rock_ability_bonuses",
+      "trait_artificers_lore",
+      "trait_tinker"
+    ]
+  },
+  {
+    "id": "subrace_halfling_lightfoot",
+    "name": "Lightfoot Halfling",
+    "parentRaceId": "race_halfling",
+    "lore": {
+      "shortDescription": "Lightfoot halflings are nimble and sociable, often blending into their surroundings.",
+      "fullText": "As a lightfoot halfling, you can easily hide from notice, even using other people as cover. You're inclined to be affable and get along well with others. In the Forgotten Realms, lightfoot halflings have spread the farthest and thus are the most common variety.\nLightfoots are more prone to wanderlust than other halflings, and often dwell alongside other races or take up a nomadic life. In the world of Greyhawk, these halflings are called hairfeet or tallfellows."
+    },
+    "traitsAdded": [
+      "trait_halfling_lightfoot_ability_bonuses",
+      "trait_naturally_stealthy"
+    ]
+  },
+  {
+    "id": "subrace_halfling_stout",
+    "name": "Stout Halfling",
+    "parentRaceId": "race_halfling",
+    "lore": {
+      "shortDescription": "Stout halflings are hardy and resilient, often with a touch of dwarven blood.",
+      "fullText": "As a stout halfling, you're hardier than average and have some resistance to poison. Some say that stouts have dwarven blood. In the Forgotten Realms, these halflings are called stronghearts, and they're most common in the south."
+    },
+    "traitsAdded": [
+      "trait_halfling_stout_ability_bonuses",
+      "trait_stout_resilience"
+    ]
+  }
+]

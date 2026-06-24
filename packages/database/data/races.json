@@ -1,0 +1,345 @@
+[
+  {
+    "id": "race_dragonborn",
+    "name": "Dragonborn",
+    "traits": [
+      "trait_dragonborn_ability_bonuses",
+      "trait_dragonborn_age",
+      "trait_dragonborn_size",
+      "trait_dragonborn_speed",
+      "trait_dragonborn_languages"
+    ],
+    "subraceInfo": {
+      "displayLabel": "Draconic Ancestry"
+    },
+    "lore": {
+      "shortDescription": "Humanoids descended from dragons, bearing draconic heritage and power. Some serve as faithful dragon warriors, while others find their own path.",
+      "fullText": "Born of dragons, as their name proclaims, the dragonborn walk proudly through a world that greets them with fearful incomprehension. Shaped by draconic gods or the dragons themselves, dragonborn originally hatched from dragon eggs as a unique race, combining the best attributes of dragons and humanoids. Some dragonborn are faithful servants to true dragons, others form the ranks of soldiers in great wars, and still others find themselves adrift, with no clear calling in life.",
+      "sections": [
+        {
+          "title": "Proud Dragon Kin",
+          "body": ""
+        },
+        {
+          "title": "Self-Sufficient Clans",
+          "body": ""
+        },
+        {
+          "title": "Dragonborn Names",
+          "body": ""
+        },
+        {
+          "title": "",
+          "body": ""
+        }
+      ]
+    }
+  },
+  {
+    "id": "race_dwarf",
+    "name": "Dwarf",
+    "traits": [
+      "trait_dwarf_ability_bonuses",
+      "trait_dwarf_age",
+      "trait_dwarf_size",
+      "trait_dwarf_speed",
+      "trait_dwarf_speed_resilience",
+      "trait_dwarven_resilience",
+      "trait_darkvision_60",
+      "trait_dwarven_combat_training",
+      "trait_dwarf_tool_proficiency",
+      "trait_stonecutting",
+      "trait_dwarf_languages"
+    ],
+    "subraceInfo": {
+      "displayLabel": "Subrace"
+    },
+    "lore": {
+      "shortDescription": "Mountain-dwelling craftspeople of ancient strongholds, bound by fierce clan loyalty and a long memory for both tradition and grudges.",
+      "fullText": "Kingdoms rich in ancient grandeur, halls carved into the roots of mountains, the echoing of picks and hammers in deep mines and blazing forges, a commitment to clan and tradition, and a burning hatred of goblins and ores-these common threads unite all dwarves.",
+      "sections": [
+        {
+          "title": "Short And Stout",
+          "body": "Bold and hardy, dwarves are known as skilled warriors, miners, and workers of stone and metal. Though they stand well under 5 feel tall, dwarves are so broad and compact that they can weigh as much as a human standing nearly two feet taller. Their courage and endurance are also easily a match for any of the larger folk.\nDwarven skin ranges from deep brown to a paler hue tinged with red, but the most common shades are light brown or deep tan, like certain tones of earth. Their hair, worn long but in simple styles, is usually black, gray, or brown, though paler dwarves often have red hair. Male dwarves value their beards highly and groom them carefully."
+        },
+        {
+          "title": "Long Memory, Long Grudges",
+          "body": "Dwarves can live to be more than 400 years old, so lhe oldest living dwarves often remember a very different world. For example, some of the oldest dwarves living in Citadel Felbarr (in the world of the Forgotten Realms) can recall the day, more than three centuries ago, when orcs conquered the fortress and drove them into an exile that lasted over 250 years. This longevity grants them a perspective on lhe world that shorter-lived races such as humans and halflings lack.\nDwarves are solid and enduring like the mountains they love, weathering the passage of centuries with stoic endurance and little change. They respect the traditions of their clans, tracing their ancestry back to the founding of their most ancient strongholds in the youth of the world, and don't abandon those traditions lightly. Part of those traditions is devotion to the gods of the dwarves, who uphold the dwarven ideals of industrious labor, skill in battle, and devotion to the forge.\nIndividual dwarves are determined and loyal, true to their word and decisive in action, sometimes to the point of stubbornness. Many dwarves have a strong sense of justice, and they are slow to forget wrongs they have suffered. A wrong done to one dwarf is a wrong done to the dwarf's entire clan, so what begins as one dwarf's hunt for vengeance can become a full-blown clan feud."
+        }
+      ]
+    }
+  },
+  {
+    "id": "race_elf",
+    "name": "Elf",
+    "traits": [
+      "trait_elf_ability_bonuses",
+      "trait_elf_age",
+      "trait_elf_size",
+      "trait_elf_speed",
+      "trait_darkvision_60",
+      "trait_keen_senses",
+      "trait_fey_ancestry",
+      "trait_trance",
+      "trait_elf_languages"
+    ],
+    "subraceInfo": {
+      "displayLabel": "Subrace"
+    },
+    "lore": {
+      "shortDescription": "Graceful, magical beings with an otherworldly nature, devoted to beauty, art, and the wonders of the natural world.",
+      "fullText": "Elves are a magical people of otherworldly grace, living in the world but not entirely part of it. They live in places of ethereal beauty, in the midst of ancient forests ar in silvery spires glittering with faerie light, where soft music drifts through the air and gentle fragrances waft on the breeze. Elves love nature and magic, art and artistry, music and poetry, and the good things of the world."
+    }
+  },
+  {
+    "id": "race_gnome",
+    "name": "Gnome",
+    "traits": [
+      "trait_gnome_ability_bonuses",
+      "trait_gnome_age",
+      "trait_gnome_size",
+      "trait_gnome_speed",
+      "trait_darkvision_60",
+      "trait_gnome_cunning",
+      "trait_gnome_languages"
+    ],
+    "subraceInfo": {
+      "displayLabel": "Subrace"
+    },
+    "lore": {
+      "shortDescription": "Clever inventors and tinkerers living in close-knit communities, driven by boundless curiosity, creativity, and an infectious love of life's adventures.",
+      "fullText": "A constant hum of busy activity pervades the warrens and neighborhoods where gnomes form their close knit communities. Louder sounds punctuate the hum: a crunch of grinding gears here, a minor explosion there, a yelp of surprise or triumph, and especially bursts of laughter. Gnomes take delight in life, enjoying every moment of invention, exploration, investigation, creation, and play.",
+      "sections": [
+        {
+          "title": "Vibrant Expression",
+          "body": ""
+        },
+        {
+          "title": "Delighted Dedication",
+          "body": ""
+        },
+        {
+          "title": "Bright Burrows",
+          "body": ""
+        },
+        {
+          "title": "Gnome Names",
+          "body": ""
+        },
+        {
+          "title": "Seeing the World",
+          "body": ""
+        }
+      ]
+    }
+  },
+  {
+    "id": "race_half_elf",
+    "name": "Half-Elf",
+    "size": "medium",
+    "speed": {
+      "walk": 30
+    },
+    "languages": {
+      "known": [
+        "lang_common",
+        "lang_elvish"
+      ],
+      "choices": {
+        "count": 1,
+        "uniqueChoices": true
+      }
+    },
+    "traits": [
+      "trait_half_elf_ability_bonuses",
+      "trait_half_elf_age",
+      "trait_half_elf_size",
+      "trait_half_elf_speed",
+      "trait_darkvision_60",
+      "trait_fey_ancestry",
+      "trait_skill_versatility",
+      "trait_half_elf_languages"
+    ],
+    "lore": {
+      "shortDescription": "Caught between two worlds, half-elves blend human ambition and curiosity with elven grace and artistry, often becoming wanderers and adventurers.",
+      "fullText": "Walking in two worlds but truly belonging to neither, half-elves combine what some say are the best qualities of their elf and human parents: human curiosity, inventiveness, and ambition tempered by the refined senses, love of nature, and artistic tastes of the elves. Some half-elves live among humans, set apart by their emotional and physical differences, watching friends and loved ones age while time barely touches them. Others live with the elves, growing restless as they reach adulthood in the timeless elven realms, while their peers continue to live as children. Many half-elves, unable to fit into either society, choose lives of solitary wandering or join with other misfits and outcasts in the adventuring life.",
+      "sections": [
+        {
+          "title": "Of Two Worlds",
+          "body": ""
+        },
+        {
+          "title": "Diplomats or Wanderers",
+          "body": ""
+        },
+        {
+          "title": "Half-Elf Names",
+          "body": ""
+        },
+        {
+          "title": "Half-Elf Traits",
+          "body": ""
+        },
+        {
+          "title": "Ability Score Increase",
+          "body": "Your Charisma score increases by 2, and tow other ability scores of your choice increase by 1."
+        }
+      ]
+    }
+  },
+  {
+    "id": "race_half_orc",
+    "name": "Half-Orc",
+    "size": "medium",
+    "speed": {
+      "walk": 30
+    },
+    "abilityBonuses": {
+      "fixed": {
+        "str": 2,
+        "con": 1
+      }
+    },
+    "languages": {
+      "known": [
+        "lang_common",
+        "lang_orc"
+      ]
+    },
+    "traits": [
+      "trait_half_orc_ability_bonuses",
+      "trait_half_orc_age",
+      "trait_half_orc_size",
+      "trait_half_orc_speed",
+      "trait_darkvision_60",
+      "trait_menacing",
+      "trait_relentless_endurance",
+      "trait_savage_attacks",
+      "trait_half_orc_languages"
+    ],
+    "lore": {
+      "shortDescription": "Born of human and orc blood, half-orcs are powerful, fierce, and driven to prove their strength in both savage and civilized worlds.",
+      "fullText": "Whether united under the leadership of a mighty warlock or having fought to a standstill after years of conflict, orc and human tribes sometimes form alliances, joining forces into a larger horde to the terror of civilized lands nearby. When these alliances are sealed by marriages, half-orcs are born. Some half-orcs rise to become proud chiefs of orc tribes, their human blood giving them an edge over their full-blooded orc rivals. Some venture into the world to prove their worth among humans and other more civilized races. Many of these become adventurers, achieving greatness for their mighty deeds and notoriety for their barbaric customs and savage fury.",
+      "sections": [
+        {
+          "title": "Ability Score Increase",
+          "body": "Your Strength score increases by 2, and your Constitution score increases by 1."
+        }
+      ]
+    }
+  },
+  {
+    "id": "race_halfling",
+    "name": "Halfling",
+    "size": "small",
+    "speed": {
+      "walk": 25
+    },
+    "abilityBonuses": {
+      "fixed": {
+        "dex": 2
+      }
+    },
+    "languages": {
+      "known": [
+        "lang_common",
+        "lang_halfling"
+      ]
+    },
+    "traits": [
+      "trait_halfling_ability_bonuses",
+      "trait_halfling_age",
+      "trait_halfling_size",
+      "trait_halfling_speed",
+      "trait_lucky",
+      "trait_brave",
+      "trait_halfling_nimbleness",
+      "trait_halfling_languages"
+    ],
+    "subraceInfo": {
+      "displayLabel": "Subrace"
+    },
+    "lore": {
+      "shortDescription": "Peace-loving folk who prize hearth, good food, and quiet communities, whether settled in villages or wandering the open road.",
+      "fullText": "The comforts of home are the goals of most halflings' lives: a place to settle in peace and quiet, far from marauding monsters and clashing armies; a blazing fire and a generous meal; fine drink and fine conversation. Though some halflings live out their days in remote agricultural communities, others form nomadic bands that travel constantly, lured by the open road and the wide horizon to discover the wonders of new lands and peoples. But even these wanderers love peace, food, hearth, and home, though home might be a wagon jostling along an dirt road or a raft floating downriver."
+    }
+  },
+  {
+    "id": "race_human",
+    "name": "Human",
+    "size": "medium",
+    "speed": {
+      "walk": 30
+    },
+    "abilityBonuses": {
+      "fixed": {
+        "cha": 1,
+        "con": 1,
+        "dex": 1,
+        "int": 1,
+        "str": 1,
+        "wis": 1
+      }
+    },
+    "languages": {
+      "known": [
+        "lang_common"
+      ],
+      "choices": {
+        "count": 1,
+        "uniqueChoices": true
+      }
+    },
+    "traits": [
+      "trait_human_ability_bonuses",
+      "trait_human_age",
+      "trait_human_size",
+      "trait_human_speed",
+      "trait_human_languages"
+    ],
+    "lore": {
+      "shortDescription": "Ambitious and short-lived, humans pursue innovation, conquest, and trade with a relentless drive to achieve.",
+      "fullText": "In the reckonings of most worlds, humans are the youngest of the common races, late to arrive on the world scene and short-lived in comparison to dwarves, elves, and dragons. Perhaps it is because of their shorter lives that they strive to achieve as much as they can in the years they are given. Or maybe they feel they have something to prove to the elder races, and that's why they build their mighty empires on the foundation of conquest and trade. Whatever drives them, humans are the innovators, the achievers, and the pioneers of the worlds."
+    }
+  },
+  {
+    "id": "race_tiefling",
+    "name": "Tiefling",
+    "size": "medium",
+    "speed": {
+      "walk": 30
+    },
+    "abilityBonuses": {
+      "fixed": {
+        "int": 1,
+        "cha": 2
+      }
+    },
+    "languages": {
+      "known": [
+        "lang_common",
+        "lang_infernal"
+      ]
+    },
+    "traits": [
+      "trait_tiefling_ability_bonuses",
+      "trait_tiefling_age",
+      "trait_tiefling_size",
+      "trait_tiefling_speed",
+      "trait_darkvision_60",
+      "trait_hellish_resistance",
+      "trait_infernal_legacy",
+      "trait_tiefling_languages"
+    ],
+    "lore": {
+      "shortDescription": "Marked by infernal blood and burdened by ancient prejudice, tieflings endure mistrust with resilience and defiant self-determination.",
+      "fullText": "To be greeted with stares and whispers, to suffer violence and insult on the street, to see mistrust and fear in every eye: this is the lot of the tiefling. And to twist the knife, tieflings know that this is because a pact struck generations ago infused the essence of Asmodeus-overlord of the Nine Hells-into their bloodline. Their appearance and their nature are not their fault but the result of an ancient sin, for which they and their children and their children's children will always be held accountable.",
+      "sections": [
+        {
+          "title": "Ability Score Increase",
+          "body": "Your Intelligence score increases by 1, and your Charisma score increases by 2."
+        }
+      ]
+    }
+  }
+]

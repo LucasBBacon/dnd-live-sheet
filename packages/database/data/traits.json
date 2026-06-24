@@ -1,0 +1,6195 @@
+[
+  {
+    "id": "trait_acolyte_of_nature",
+    "name": "Acolyte of Nature",
+    "effects": [
+      {
+        "type": "spell_grant",
+        "choice": {
+          "count": 1,
+          "pool": "any"
+        }
+      },
+      {
+        "type": "proficiency_choice",
+        "category": "skills",
+        "choice": {
+          "count": 1,
+          "pool": [
+            "animal_handling",
+            "nature",
+            "survival"
+          ]
+        }
+      }
+    ],
+    "lore": {
+      "shortDescription": "Learn a druid cantrip and gain proficiency in a nature-related skill.",
+      "fullText": "At 1st level, you learn one cantrip of your choice from the druid spell list. This cantrip counts as a cleric cantrip for you, but it doesn’t count against the number of cleric cantrips you know. You also gain proficiency in one of the following skills of your choice: Animal Handling, Nature, or Survival."
+    }
+  },
+  {
+    "id": "trait_artificers_lore",
+    "name": "Artificer's Lore",
+    "lore": {
+      "shortDescription": "Add double proficiency to any History check related to: magic items, alchemical objects, and technological devices.",
+      "fullText": "Whenever you make an Intelligence (History) check related to magic items, alchemical objects, or technological devices, you can add twice your proficiency bonus, instead of any proficiency bonus you normally apply."
+    }
+  },
+  {
+    "id": "trait_avatar_of_battle",
+    "name": "Avatar of Battle",
+    "lore": {
+      "shortDescription": "Gain resistance to bludgeoning, piercing, and slashing damage from nonmagical attacks.",
+      "fullText": "At 17th level, you gain resistance to bludgeoning, piercing, and slashing damage from nonmagical attacks."
+    }
+  },
+  {
+    "id": "trait_blessed_healer",
+    "name": "Blessed Healer",
+    "lore": {
+      "shortDescription": "When you heal others, you heal yourself.",
+      "fullText": "Beginning at 6th level, the healing spells you cast on others heal you as well. When you cast a spell of 1st level or higher that restores hit points to a creature other than you, you regain hit points equal to 2 + the spell's level."
+    }
+  },
+  {
+    "id": "trait_blessing_of_the_trickster",
+    "name": "Blessing of the Trickster",
+    "lore": {
+      "shortDescription": "Grant a creature advantage on Stealth checks.",
+      "fullText": "Starting when you choose this domain at 1st level, you can use your action to touch a willing creature other than yourself to give it advantage on Dexterity (Stealth) checks. This blessing lasts for 1 hour or until you use this feature again."
+    }
+  },
+  {
+    "id": "trait_blessings_of_knowledge",
+    "name": "Blessings of Knowledge",
+    "effects": [
+      {
+        "type": "proficiency_choice",
+        "category": "languages",
+        "choice": {
+          "count": 2,
+          "pool": "any"
+        }
+      },
+      {
+        "type": "proficiency_choice",
+        "category": "skills",
+        "choice": {
+          "count": 2,
+          "pool": [
+            "arcana",
+            "history",
+            "nature",
+            "religion"
+          ]
+        }
+      }
+    ],
+    "lore": {
+      "shortDescription": "Gain proficiency in languages and skills with divine blessings.",
+      "fullText": "At 1st level, you learn two languages of your choice. You also become proficient in your choice of two of the following skills: Arcana, History, Nature, or Religion.\nYour proficiency bonus is doubled for any ability check you make that uses either of those skills."
+    }
+  },
+  {
+    "id": "trait_brave",
+    "name": "Brave",
+    "lore": {
+      "shortDescription": "You have advantage on saving throws against being frightened.",
+      "fullText": "You have advantage on saving throws against being frightened."
+    },
+    "effects": [
+      {
+        "type": "advantage",
+        "target": "against_frightened"
+      }
+    ]
+  },
+  {
+    "id": "trait_cantrip",
+    "name": "Cantrip",
+    "lore": {
+      "shortDescription": "You know one cantrip of your choice.",
+      "fullText": "You know one cantrip of your choice from the wizard spell list. Intelligence is your spellcasting ability for it."
+    },
+    "effects": [
+      {
+        "type": "spell_grant",
+        "choice": {
+          "count": 1,
+          "pool": [
+            "wizard_spell_list"
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "id": "trait_cd_charm_animals_and_plants",
+    "name": "Channel Divinity: Charm Animals and Plants",
+    "lore": {
+      "shortDescription": "Use Channel Divinity to charm animals and plants.",
+      "fullText": "Starting at 2nd level, you can use your Channel Divinity to charm animals and plants.\nAs an action, you present your holy symbol and invoke the name of your deity. Each beast or plant creature that can see you within 30 feet of you must make a Wisdom saving throw. If the creature fails its saving throw, it is charmed by you for 1 minute or until it takes damage. While it is charmed by you, it is friendly to you and other creatures you designate."
+    }
+  },
+  {
+    "id": "trait_cd_cloak_of_shadows",
+    "name": "Channel Divinity: Cloak of Shadows",
+    "lore": {
+      "shortDescription": "Use your Channel Divinity to become invisible.",
+      "fullText": "Starting at 6th level, you can use your Channel Divinity to vanish.\nAs an action, you become invisible until the end of your next turn. You become visible if you attack or cast a spell."
+    }
+  },
+  {
+    "id": "trait_cd_destructive_wrath",
+    "name": "Channel Divinity: Destructive Wrath",
+    "lore": {
+      "shortDescription": "Use your Channel Divinity to deal maximum damage with lightning or thunder damage.",
+      "fullText": "Starting at 2nd level, you can use your Channel Divinity to wield the power of the storm with unchecked ferocity.\nWhen you roll lightning or thunder damage, you can use your Channel Divinity to deal maximum damage, instead of rolling."
+    }
+  },
+  {
+    "id": "trait_cd_guided_strike",
+    "name": "Channel Divinity: Guided Strike",
+    "lore": {
+      "shortDescription": "Use your Channel Divinity to gain a +10 bonus to an attack roll.",
+      "fullText": "Starting at 2nd level, you can use your Channel Divinity to strike with supernatural accuracy. When you make an attack roll, you can use your Channel Divinity to gain a +10 bonus to the roll. You make this choice after you see the roll, but before the DM says whether the attack hits or misses."
+    }
+  },
+  {
+    "id": "trait_cd_invoke_duplicity",
+    "name": "Channel Divinity: Invoke Duplicity",
+    "lore": {
+      "shortDescription": "Create an illusory duplicate of yourself.",
+      "fullText": "Starting at 2nd level, you can use your Channel Divinity to create an illusory duplicate of yourself.\nAs an action, you create a perfect illusion of yourself that lasts for 1 minute, or until you lose your concentration (as if you were concentrating on a spell). The illusion appears in an unoccupied space that you can see within 30 feet of you. As a bonus action on your turn, you can move the illusion up to 30 feet to a space you can see, but it must remain within 120 feet of you.\nFor the duration, you can cast spells as though you were in the illusion's space, but you must use your own senses. Additionally, when both you and your illusion are within 5 feet of a creature that can see the illusion, you have advantage on attack rolls against that creature, given how distracting the illusion is to the target."
+    }
+  },
+  {
+    "id": "trait_cd_knowledge_of_the_ages",
+    "name": "Channel Divinity: Knowledge of the Ages",
+    "lore": {
+      "shortDescription": "Tap into a divine well of knowledge with your Channel Divinity.",
+      "fullText": "Starting at 2nd level, you can use your Channel Divinity to tap into a divine well of knowledge. As an action, you choose one skill or tool. For 10 minutes, you have proficiency with the chosen skill or tool."
+    }
+  },
+  {
+    "id": "trait_cd_preserve_life",
+    "name": "Channel Divinity: Preserve Life",
+    "lore": {
+      "shortDescription": "Heal the badly injured with your Channel Divinity.",
+      "fullText": "Starting at 2nd level, you can use your Channel Divinity to heal the badly injured.\nAs an action, you present your holy symbol and evoke healing energy that can restore a number of hit points equal to five times your cleric level. Choose any creatures within 30 feet of you, and divide those hit points among them. This feature can restore a creature to no more than half of its hit point maximum. You can't use this feature on an undead or a construct."
+    }
+  },
+  {
+    "id": "trait_cd_radiance_of_the_dawn",
+    "name": "Channel Divinity: Radiance of the Dawn",
+    "lore": {
+      "shortDescription": "Use your Channel Divinity to dispel darkness and deal radiant damage.",
+      "fullText": "Starting at 2nd level, you can use your Channel Divinity to harness sunlight, banishing darkness and dealing radiant damage to your foes.\nAs an action, you present your holy symbol, and any magical darkness within 30 feet of you is dispelled. Additionally, each hostile creature within 30 feet of you must make a Constitution saving throw. A creature takes radiant damage equal to 2d10 + your cleric level on a failed saving throw, and half as much damage on a successful one. A creature that has total cover from you is not affected."
+    }
+  },
+  {
+    "id": "trait_cd_read_thoughts",
+    "name": "Channel Divinity: Read Thoughts",
+    "lore": {
+      "shortDescription": "Read a creature's thoughts and command it with your Channel Divinity.",
+      "fullText": "At 6th level, you can use your Channel Divinity to read a creature's thoughts. You can then use your access to the creature's mind to command it.\nAs an action, choose one creature that you can see within 60 feet of you. That creature must make a Wisdom saving throw. If the creature succeeds on the saving throw, you can't use this feature on it again until you finish a long rest.\nIf the creature fails its save, you can read its surface thoughts (those foremost in its mind, reflecting its current emotions and what it is actively thinking about) when it is within 60 feet of you. This effect lasts for 1 minute.\nDuring that time, you can use your action to end this effect and cast the Suggestion spell on the creature without expending a spell slot. The target automatically fails its saving throw against the spell."
+    }
+  },
+  {
+    "id": "trait_cd_war_gods_blessing",
+    "name": "Channel Divinity: War God's Blessing",
+    "lore": {
+      "shortDescription": "Use your Channel Divinity to grant a +10 bonus to an attack roll within 30 feet.",
+      "fullText": "At 6th level, when a creature within 30 feet of you makes an attack roll, you can use your reaction to grant that creature a +10 bonus to the roll, using your Channel Divinity. You make this choice after you see the roll, but before the DM says whether the attack hits or misses."
+    }
+  },
+  {
+    "id": "trait_barbarian_prof_armor",
+    "isStartingProficiency": true,
+    "name": "Armor Proficiencies",
+    "lore": {
+      "shortDescription": "Proficiency with light/medium armor and shields.",
+      "fullText": "Gain proficiency with light and medium armor, and shields."
+    },
+    "effects": [
+      {
+        "type": "proficiency",
+        "category": "armor",
+        "item": "light"
+      },
+      {
+        "type": "proficiency",
+        "category": "armor",
+        "item": "medium"
+      },
+      {
+        "type": "proficiency",
+        "category": "armor",
+        "item": "shields"
+      }
+    ]
+  },
+  {
+    "id": "trait_barbarian_mult_prof_armor",
+    "name": "Multiclass Armor Proficiencies",
+    "lore": {
+      "shortDescription": "Gain proficiency with shields.",
+      "fullText": "If you multiclass into Barbarian, you gain proficiency with shields."
+    },
+    "effects": [
+      {
+        "type": "proficiency",
+        "category": "armor",
+        "item": "shields"
+      }
+    ]
+  },
+  {
+    "id": "trait_barbarian_mult_prof_weapons",
+    "name": "Multiclass Weapon Proficiencies",
+    "lore": {
+      "shortDescription": "Gain proficiency with martial weapons.",
+      "fullText": "If you multiclass into Barbarian, you gain proficiency with martial weapons."
+    },
+    "effects": [
+      {
+        "type": "proficiency",
+        "category": "weapons",
+        "item": "martial"
+      }
+    ]
+  },
+  {
+    "id": "trait_barbarian_prof_saving_throw",
+    "isStartingProficiency": true,
+    "name": "Saving Throws Proficiencies",
+    "lore": {
+      "shortDescription": "Proficiency in Strength and Constitution saving throws.",
+      "fullText": "Gain proficiency in Strength and Constitution saving throws."
+    },
+    "effects": [
+      {
+        "type": "proficiency",
+        "category": "saving_throws",
+        "item": "str"
+      },
+      {
+        "type": "proficiency",
+        "category": "saving_throws",
+        "item": "con"
+      }
+    ]
+  },
+  {
+    "id": "trait_barbarian_prof_skills",
+    "isStartingProficiency": true,
+    "name": "Skill Proficiencies",
+    "lore": {
+      "shortDescription": "Choice of proficiencies: Animal Handling, Athletics, Intimidation, Nature, Perception, and Survival.",
+      "fullText": "Gain proficiency in two of the following skills: Animal Handling, Athletics, Intimidation, Nature, Perception, and Survival."
+    },
+    "effects": [
+      {
+        "type": "proficiency_choice",
+        "choice": {
+          "count": 2,
+          "pool": [
+            "animal_handling",
+            "athletics",
+            "intimidation",
+            "nature",
+            "perception",
+            "survival"
+          ]
+        },
+        "category": "skills"
+      }
+    ]
+  },
+  {
+    "id": "trait_barbarian_prof_weapons",
+    "isStartingProficiency": true,
+    "name": "Weapon Proficiencies",
+    "lore": {
+      "shortDescription": "Proficiency with simple and martial weapons.",
+      "fullText": "Gain proficiency with simple and martial weapons."
+    },
+    "effects": [
+      {
+        "type": "proficiency",
+        "category": "weapons",
+        "item": "simple"
+      },
+      {
+        "type": "proficiency",
+        "category": "weapons",
+        "item": "martial"
+      }
+    ]
+  },
+  {
+    "id": "trait_bard_prof_armor",
+    "name": "Armor Proficiencies",
+    "isStartingProficiency": true,
+    "lore": {
+      "shortDescription": "Proficiency with light armor.",
+      "fullText": "Gain proficiency with light armor."
+    },
+    "effects": [
+      {
+        "type": "proficiency",
+        "category": "armor",
+        "item": "light"
+      }
+    ]
+  },
+  {
+    "id": "trait_bard_mult_prof_armor",
+    "name": "Multiclass Armor Proficiencies",
+    "lore": {
+      "shortDescription": "Proficiency with light armor.",
+      "fullText": "Gain proficiency with light armor."
+    },
+    "effects": [
+      {
+        "type": "proficiency",
+        "category": "armor",
+        "item": "light"
+      }
+    ]
+  },
+  {
+    "id": "trait_bard_prof_mult_skills",
+    "name": "Multiclass Skills Proficiency",
+    "isStartingProficiency": false,
+    "lore": {
+      "shortDescription": "Proficiency with skill of choice.",
+      "fullText": "Gain proficiency with one skill of your choice."
+    },
+    "effects": [
+      {
+        "type": "proficiency_choice",
+        "choice": {
+          "count": 1,
+          "pool": [
+            "acrobatics",
+            "animal_handling",
+            "arcana",
+            "athletics",
+            "deception",
+            "history",
+            "insight",
+            "intimidation",
+            "investigation",
+            "medicine",
+            "nature",
+            "perception",
+            "performance",
+            "persuasion",
+            "religion",
+            "sleight_of_hand",
+            "stealth",
+            "survival"
+          ]
+        },
+        "category": "skills"
+      }
+    ]
+  },
+  {
+    "id": "trait_bard_prof_mult_tools",
+    "name": "Multiclass Tools Proficiency",
+    "isStartingProficiency": false,
+    "lore": {
+      "shortDescription": "Proficiency with musical instrument.",
+      "fullText": "Gain proficiency with one musical instrument of your choice."
+    },
+    "effects": [
+      {
+        "type": "proficiency_choice",
+        "choice": {
+          "count": 1,
+          "pool": "any"
+        },
+        "category": "tools"
+      }
+    ]
+  },
+  {
+    "id": "trait_bard_prof_saving_throw",
+    "isStartingProficiency": true,
+    "name": "Saving Throws Proficiencies",
+    "lore": {
+      "shortDescription": "Proficiency in Dexterity and Charisma saving throws.",
+      "fullText": "Gain proficiency in Dexterity and Charisma saving throws."
+    },
+    "effects": [
+      {
+        "type": "proficiency",
+        "category": "saving_throws",
+        "item": "dex"
+      },
+      {
+        "type": "proficiency",
+        "category": "saving_throws",
+        "item": "cha"
+      }
+    ]
+  },
+  {
+    "id": "trait_bard_prof_skills",
+    "isStartingProficiency": true,
+    "name": "Skills Proficiencies",
+    "lore": {
+      "shortDescription": "Proficiency in three skills of your choice.",
+      "fullText": "Gain proficiency in three skills of your choice."
+    },
+    "effects": [
+      {
+        "type": "proficiency_choice",
+        "choice": {
+          "count": 3,
+          "pool": [
+            "acrobatics",
+            "animal_handling",
+            "arcana",
+            "athletics",
+            "deception",
+            "history",
+            "insight",
+            "intimidation",
+            "investigation",
+            "medicine",
+            "nature",
+            "perception",
+            "performance",
+            "persuasion",
+            "religion",
+            "sleight_of_hand",
+            "stealth",
+            "survival"
+          ]
+        },
+        "category": "skills"
+      }
+    ]
+  },
+  {
+    "id": "trait_bard_prof_tools",
+    "isStartingProficiency": true,
+    "name": "Tools Proficiencies",
+    "lore": {
+      "shortDescription": "Proficiency with three musical instruments.",
+      "fullText": "Gain proficiency with three musical instruments."
+    },
+    "effects": [
+      {
+        "type": "proficiency",
+        "category": "tools",
+        "item": "category_musical_instrument"
+      },
+      {
+        "type": "proficiency",
+        "category": "tools",
+        "item": "category_musical_instrument"
+      },
+      {
+        "type": "proficiency",
+        "category": "tools",
+        "item": "category_musical_instrument"
+      }
+    ]
+  },
+  {
+    "id": "trait_bard_prof_weapons",
+    "name": "Weapons Proficiencies",
+    "isStartingProficiency": true,
+    "lore": {
+      "shortDescription": "Proficiency with simple weapons, hand crossbows, longswords, rapiers, and shortswords.",
+      "fullText": "Gain proficiency with simple weapons, hand crossbows, longswords, rapiers, and shortswords."
+    },
+    "effects": [
+      {
+        "type": "proficiency",
+        "category": "weapons",
+        "item": "category_weapon_simple"
+      },
+      {
+        "type": "proficiency",
+        "category": "weapons",
+        "item": "weapon_hand_crossbow"
+      },
+      {
+        "type": "proficiency",
+        "category": "weapons",
+        "item": "weapon_longsword"
+      },
+      {
+        "type": "proficiency",
+        "category": "weapons",
+        "item": "weapon_rapier"
+      },
+      {
+        "type": "proficiency",
+        "category": "weapons",
+        "item": "weapon_shortsword"
+      }
+    ]
+  },
+  {
+    "id": "trait_spellcasting_bard",
+    "name": "Spellcasting",
+    "lore": {
+      "shortDescription": "This trait defines the character's spellcasting progression and casting rules."
+    },
+    "spellcasting": {
+      "ability": "cha",
+      "preparationType": "known",
+      "ritualCasting": true,
+      "progressionByLevel": [
+        {
+          "level": 1,
+          "cantripsKnown": 2,
+          "spellsKnown": 4,
+          "spellSlots": {
+            "1": 2
+          }
+        },
+        {
+          "level": 2,
+          "cantripsKnown": 2,
+          "spellsKnown": 5,
+          "spellSlots": {
+            "1": 3
+          }
+        },
+        {
+          "level": 3,
+          "cantripsKnown": 2,
+          "spellsKnown": 6,
+          "spellSlots": {
+            "1": 4,
+            "2": 2
+          }
+        },
+        {
+          "level": 4,
+          "cantripsKnown": 3,
+          "spellsKnown": 7,
+          "spellSlots": {
+            "1": 4,
+            "2": 3
+          }
+        },
+        {
+          "level": 5,
+          "cantripsKnown": 3,
+          "spellsKnown": 8,
+          "spellSlots": {
+            "1": 4,
+            "2": 3,
+            "3": 2
+          }
+        },
+        {
+          "level": 6,
+          "cantripsKnown": 3,
+          "spellsKnown": 9,
+          "spellSlots": {
+            "1": 4,
+            "2": 3,
+            "3": 3
+          }
+        },
+        {
+          "level": 7,
+          "cantripsKnown": 3,
+          "spellsKnown": 10,
+          "spellSlots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 1
+          }
+        },
+        {
+          "level": 8,
+          "cantripsKnown": 3,
+          "spellsKnown": 11,
+          "spellSlots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 2
+          }
+        },
+        {
+          "level": 9,
+          "cantripsKnown": 3,
+          "spellsKnown": 12,
+          "spellSlots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 3,
+            "5": 1
+          }
+        },
+        {
+          "level": 10,
+          "cantripsKnown": 4,
+          "spellsKnown": 14,
+          "spellSlots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 3,
+            "5": 2
+          }
+        },
+        {
+          "level": 11,
+          "cantripsKnown": 4,
+          "spellsKnown": 15,
+          "spellSlots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 3,
+            "5": 2,
+            "6": 1
+          }
+        },
+        {
+          "level": 12,
+          "cantripsKnown": 4,
+          "spellsKnown": 15,
+          "spellSlots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 3,
+            "5": 2,
+            "6": 1
+          }
+        },
+        {
+          "level": 13,
+          "cantripsKnown": 4,
+          "spellsKnown": 16,
+          "spellSlots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 3,
+            "5": 2,
+            "6": 1,
+            "7": 1
+          }
+        },
+        {
+          "level": 14,
+          "cantripsKnown": 4,
+          "spellsKnown": 18,
+          "spellSlots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 3,
+            "5": 2,
+            "6": 1,
+            "7": 1
+          }
+        },
+        {
+          "level": 15,
+          "cantripsKnown": 4,
+          "spellsKnown": 19,
+          "spellSlots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 3,
+            "5": 2,
+            "6": 1,
+            "7": 1,
+            "8": 1
+          }
+        },
+        {
+          "level": 16,
+          "cantripsKnown": 4,
+          "spellsKnown": 19,
+          "spellSlots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 3,
+            "5": 2,
+            "6": 1,
+            "7": 1,
+            "8": 1
+          }
+        },
+        {
+          "level": 17,
+          "cantripsKnown": 4,
+          "spellsKnown": 20,
+          "spellSlots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 3,
+            "5": 2,
+            "6": 1,
+            "7": 1,
+            "8": 1,
+            "9": 1
+          }
+        },
+        {
+          "level": 18,
+          "cantripsKnown": 4,
+          "spellsKnown": 22,
+          "spellSlots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 3,
+            "5": 3,
+            "6": 1,
+            "7": 1,
+            "8": 1,
+            "9": 1
+          }
+        },
+        {
+          "level": 19,
+          "cantripsKnown": 4,
+          "spellsKnown": 22,
+          "spellSlots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 3,
+            "5": 3,
+            "6": 2,
+            "7": 1,
+            "8": 1,
+            "9": 1
+          }
+        },
+        {
+          "level": 20,
+          "cantripsKnown": 4,
+          "spellsKnown": 22,
+          "spellSlots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 3,
+            "5": 3,
+            "6": 2,
+            "7": 2,
+            "8": 1,
+            "9": 1
+          }
+        }
+      ]
+    }
+  },
+  {
+    "id": "trait_cleric_war_prof_bonus",
+    "name": "Bonus Proficiency",
+    "lore": {
+      "shortDescription": "Gain proficiency with martial weapons and heavy armor.",
+      "fullText": "At 1st level, you gain proficiency with martial weapons and heavy armor."
+    },
+    "effects": [
+      {
+        "type": "proficiency",
+        "category": "weapons",
+        "item": "category_martial"
+      },
+      {
+        "type": "proficiency",
+        "category": "armor",
+        "item": "heavy"
+      }
+    ]
+  },
+  {
+    "id": "trait_cleric_life_prof_bonus",
+    "name": "Bonus Proficiency",
+    "lore": {
+      "shortDescription": "Gain proficiency with heavy armor.",
+      "fullText": "When you choose this domain at 1st level, you gain proficiency with heavy armor."
+    },
+    "effects": [
+      {
+        "type": "proficiency",
+        "category": "armor",
+        "item": "heavy"
+      }
+    ]
+  },
+  {
+    "id": "trait_cleric_light_bonus_cantrip",
+    "name": "Bonus Cantrip",
+    "spellcasting": {
+      "ability": "wis",
+      "preparationType": "prepared",
+      "ritualCasting": false,
+      "progressionByLevel": [
+        {
+          "level": 1,
+          "bonusSpells": [
+            "spell_light"
+          ]
+        }
+      ]
+    },
+    "lore": {
+      "shortDescription": "Gain the Light cantrip.",
+      "fullText": "When you choose this domain at 1st level, you gain the Light cantrip if you don't already know it. This cantrip doesn’t count against the number of cleric cantrips you know."
+    }
+  },
+  {
+    "id": "trait_cleric_nature_prof_bonus",
+    "name": "Bonus Proficiency",
+    "lore": {
+      "shortDescription": "Gain proficiency with heavy armor.",
+      "fullText": "Also at 1st level, you gain proficiency with heavy armor."
+    },
+    "effects": [
+      {
+        "type": "proficiency",
+        "category": "armor",
+        "item": "heavy"
+      }
+    ]
+  },
+  {
+    "id": "trait_cleric_prof_armor",
+    "name": "Armor Proficiencies",
+    "isStartingProficiency": true,
+    "lore": {
+      "shortDescription": "Proficiency with light and medium armor, and shields.",
+      "fullText": "Gain proficiency with light armor, medium armor, and shields."
+    },
+    "effects": [
+      {
+        "type": "proficiency",
+        "category": "armor",
+        "item": "light"
+      },
+      {
+        "type": "proficiency",
+        "category": "armor",
+        "item": "medium"
+      },
+      {
+        "type": "proficiency",
+        "category": "armor",
+        "item": "shields"
+      }
+    ]
+  },
+  {
+    "id": "trait_cleric_mult_prof_armor",
+    "name": "Multiclass Armor Proficiencies",
+    "lore": {
+      "shortDescription": "Gain proficiency with light armor, medium armor, and shields.",
+      "fullText": "If you multiclass into Cleric, you gain proficiency with light armor, medium armor, and shields."
+    },
+    "effects": [
+      {
+        "type": "proficiency",
+        "category": "armor",
+        "item": "light"
+      },
+      {
+        "type": "proficiency",
+        "category": "armor",
+        "item": "medium"
+      },
+      {
+        "type": "proficiency",
+        "category": "armor",
+        "item": "shields"
+      }
+    ]
+  },
+  {
+    "id": "trait_cleric_prof_saving_throw",
+    "name": "Saving Throws Proficiencies",
+    "isStartingProficiency": true,
+    "lore": {
+      "shortDescription": "Proficiency in Wisdom and Charisma saving throws.",
+      "fullText": "Gain proficiency in Wisdom and Charisma saving throws."
+    },
+    "effects": [
+      {
+        "type": "proficiency",
+        "category": "saving_throws",
+        "item": "wis"
+      },
+      {
+        "type": "proficiency",
+        "category": "saving_throws",
+        "item": "cha"
+      }
+    ]
+  },
+  {
+    "id": "trait_cleric_prof_skills",
+    "isStartingProficiency": true,
+    "name": "Skills Proficiencies",
+    "lore": {
+      "shortDescription": "Proficiency in two skills from History, Insight, Medicine, Persuasion, and Religion.",
+      "fullText": "Gain proficiency in two skills from the following: History, Insight, Medicine, Persuasion, and Religion."
+    },
+    "effects": [
+      {
+        "type": "proficiency_choice",
+        "choice": {
+          "count": 2,
+          "pool": [
+            "history",
+            "insight",
+            "medicine",
+            "persuasion",
+            "religion"
+          ]
+        },
+        "category": "skills"
+      }
+    ]
+  },
+  {
+    "id": "trait_cleric_prof_weapons",
+    "name": "Weapons Proficiencies",
+    "isStartingProficiency": true,
+    "lore": {
+      "shortDescription": "Proficiency with simple weapons.",
+      "fullText": "Gain proficiency with simple weapons."
+    },
+    "effects": [
+      {
+        "type": "proficiency",
+        "category": "weapons",
+        "item": "category_weapon_simple"
+      }
+    ]
+  },
+  {
+    "id": "trait_spellcasting_cleric",
+    "name": "Spellcasting",
+    "lore": {
+      "shortDescription": "This trait defines the character's spellcasting progression and casting rules."
+    },
+    "spellcasting": {
+      "ability": "wis",
+      "preparationType": "prepared",
+      "ritualCasting": true,
+      "progressionByLevel": [
+        {
+          "level": 1,
+          "cantripsKnown": 3,
+          "spellSlots": {
+            "1": 2
+          }
+        },
+        {
+          "level": 2,
+          "cantripsKnown": 3,
+          "spellSlots": {
+            "1": 3
+          }
+        },
+        {
+          "level": 3,
+          "cantripsKnown": 3,
+          "spellSlots": {
+            "1": 4,
+            "2": 2
+          }
+        },
+        {
+          "level": 4,
+          "cantripsKnown": 4,
+          "spellSlots": {
+            "1": 4,
+            "2": 3
+          }
+        },
+        {
+          "level": 5,
+          "cantripsKnown": 4,
+          "spellSlots": {
+            "1": 4,
+            "2": 3,
+            "3": 2
+          }
+        },
+        {
+          "level": 6,
+          "cantripsKnown": 4,
+          "spellSlots": {
+            "1": 4,
+            "2": 3,
+            "3": 3
+          }
+        },
+        {
+          "level": 7,
+          "cantripsKnown": 4,
+          "spellSlots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 1
+          }
+        },
+        {
+          "level": 8,
+          "cantripsKnown": 4,
+          "spellSlots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 2
+          }
+        },
+        {
+          "level": 9,
+          "cantripsKnown": 4,
+          "spellSlots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 3,
+            "5": 1
+          }
+        },
+        {
+          "level": 10,
+          "cantripsKnown": 5,
+          "spellSlots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 3,
+            "5": 2
+          }
+        },
+        {
+          "level": 11,
+          "cantripsKnown": 5,
+          "spellSlots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 3,
+            "5": 2,
+            "6": 1
+          }
+        },
+        {
+          "level": 12,
+          "cantripsKnown": 5,
+          "spellSlots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 3,
+            "5": 2,
+            "6": 1
+          }
+        },
+        {
+          "level": 13,
+          "cantripsKnown": 5,
+          "spellSlots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 3,
+            "5": 2,
+            "6": 1,
+            "7": 1
+          }
+        },
+        {
+          "level": 14,
+          "cantripsKnown": 5,
+          "spellSlots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 3,
+            "5": 2,
+            "6": 1,
+            "7": 1
+          }
+        },
+        {
+          "level": 15,
+          "cantripsKnown": 5,
+          "spellSlots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 3,
+            "5": 2,
+            "6": 1,
+            "7": 1,
+            "8": 1
+          }
+        },
+        {
+          "level": 16,
+          "cantripsKnown": 5,
+          "spellSlots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 3,
+            "5": 2,
+            "6": 1,
+            "7": 1,
+            "8": 1
+          }
+        },
+        {
+          "level": 17,
+          "cantripsKnown": 5,
+          "spellSlots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 3,
+            "5": 2,
+            "6": 1,
+            "7": 1,
+            "8": 1,
+            "9": 1
+          }
+        },
+        {
+          "level": 18,
+          "cantripsKnown": 5,
+          "spellSlots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 3,
+            "5": 3,
+            "6": 1,
+            "7": 1,
+            "8": 1,
+            "9": 1
+          }
+        },
+        {
+          "level": 19,
+          "cantripsKnown": 5,
+          "spellSlots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 3,
+            "5": 3,
+            "6": 2,
+            "7": 1,
+            "8": 1,
+            "9": 1
+          }
+        },
+        {
+          "level": 20,
+          "cantripsKnown": 5,
+          "spellSlots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 3,
+            "5": 3,
+            "6": 2,
+            "7": 2,
+            "8": 1,
+            "9": 1
+          }
+        }
+      ]
+    }
+  },
+  {
+    "id": "trait_cleric_tempest_prof_bonus",
+    "name": "Bonus Proficiency",
+    "lore": {
+      "shortDescription": "Gain proficiency with heavy armor and martial weapons.",
+      "fullText": "At 1st level, you gain proficiency with martial weapons and heavy armor."
+    },
+    "effects": [
+      {
+        "type": "proficiency",
+        "category": "armor",
+        "item": "heavy"
+      },
+      {
+        "type": "proficiency",
+        "category": "weapons",
+        "item": "martial"
+      }
+    ]
+  },
+  {
+    "id": "trait_divine_domain",
+    "name": "Divine Domain",
+    "lore": {
+      "shortDescription": "Choose a divine domain related to your deity.",
+      "fullText": "At 1st level, you choose a domain shaped by your choice of Deity and the gifts they grant you. Your choice grants you domain spells and other features when you choose it at 1st level. It also grants you additional ways to use Channel Divinity when you gain that feature at 2nd level, and additional benefits at 6th, 8th, and 17th levels."
+    }
+  },
+  {
+    "id": "trait_knowledge_domain_spells",
+    "name": "Knowledge Domain Spells",
+    "lore": {
+      "shortDescription": "You always have certain spells prepared.",
+      "fullText": "The Knowledge domain grants you access to a set of domain spells at each cleric level listed in the Knowledge Domain Spells table. Once you gain a domain spell, you always have it prepared, and it doesn't count against the number of spells you can prepare each day."
+    },
+    "spellcasting": {
+      "ability": "wis",
+      "preparationType": "prepared",
+      "ritualCasting": false,
+      "progressionByLevel": [
+        {
+          "level": 1,
+          "bonusSpells": [
+            "spell_command",
+            "spell_identify"
+          ]
+        },
+        {
+          "level": 3,
+          "bonusSpells": [
+            "spell_augury",
+            "spell_suggestion"
+          ]
+        },
+        {
+          "level": 5,
+          "bonusSpells": [
+            "spell_nondetection",
+            "spell_speak_with_dead"
+          ]
+        },
+        {
+          "level": 7,
+          "bonusSpells": [
+            "spell_arcane_eye",
+            "spell_confusion"
+          ]
+        },
+        {
+          "level": 9,
+          "bonusSpells": [
+            "spell_legend_lore",
+            "spell_scrying"
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "trait_cleric_life_domain_spells",
+    "name": "Life Domain Spells",
+    "lore": {
+      "shortDescription": "You always have certain spells prepared.",
+      "fullText": "The Life domain grants you access to a set of domain spells at each cleric level listed in the Life Domain Spells table. Once you gain a domain spell, you always have it prepared, and it doesn't count against the number of spells you can prepare each day."
+    },
+    "spellcasting": {
+      "ability": "wis",
+      "preparationType": "prepared",
+      "ritualCasting": false,
+      "progressionByLevel": [
+        {
+          "level": 1,
+          "bonusSpells": [
+            "spell_bless",
+            "spell_cure_wounds"
+          ]
+        },
+        {
+          "level": 3,
+          "bonusSpells": [
+            "spell_lesser_restoration",
+            "spell_spiritual_weapon"
+          ]
+        },
+        {
+          "level": 5,
+          "bonusSpells": [
+            "spell_beacon_of_hope",
+            "spell_revivify"
+          ]
+        },
+        {
+          "level": 7,
+          "bonusSpells": [
+            "spell_death_ward",
+            "spell_guardian_of_faith"
+          ]
+        },
+        {
+          "level": 9,
+          "bonusSpells": [
+            "spell_mass_cure_wounds",
+            "spell_raise_dead"
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "trait_light_domain_spells",
+    "name": "Light Domain Spells",
+    "lore": {
+      "shortDescription": "You always have certain spells prepared.",
+      "fullText": "The Light domain grants you access to a set of domain spells at each cleric level listed in the Light Domain Spells table. Once you gain a domain spell, you always have it prepared, and it doesn't count against the number of spells you can prepare each day."
+    },
+    "spellcasting": {
+      "ability": "wis",
+      "preparationType": "prepared",
+      "ritualCasting": false,
+      "progressionByLevel": [
+        {
+          "level": 1,
+          "bonusSpells": [
+            "spell_burning_hands",
+            "spell_faerie_fire"
+          ]
+        },
+        {
+          "level": 3,
+          "bonusSpells": [
+            "spell_flaming_sphere",
+            "spell_scorching_ray"
+          ]
+        },
+        {
+          "level": 5,
+          "bonusSpells": [
+            "spell_daylight",
+            "spell_fireball"
+          ]
+        },
+        {
+          "level": 7,
+          "bonusSpells": [
+            "spell_guardian_of_faith",
+            "spell_wall_of_fire"
+          ]
+        },
+        {
+          "level": 9,
+          "bonusSpells": [
+            "spell_flame_strike",
+            "spell_scrying"
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "trait_nature_domain_spells",
+    "name": "Nature Domain Spells",
+    "lore": {
+      "shortDescription": "You always have certain spells prepared.",
+      "fullText": "The Nature domain grants you access to a set of domain spells at each cleric level listed in the Nature Domain Spells table. Once you gain a domain spell, you always have it prepared, and it doesn't count against the number of spells you can prepare each day."
+    },
+    "spellcasting": {
+      "ability": "wis",
+      "preparationType": "prepared",
+      "ritualCasting": false,
+      "progressionByLevel": [
+        {
+          "level": 1,
+          "bonusSpells": [
+            "spell_animal_friendship",
+            "spell_speak_with_animals"
+          ]
+        },
+        {
+          "level": 3,
+          "bonusSpells": [
+            "spell_barkskin",
+            "spell_spike_growth"
+          ]
+        },
+        {
+          "level": 5,
+          "bonusSpells": [
+            "spell_plant_growth",
+            "spell_wind_wall"
+          ]
+        },
+        {
+          "level": 7,
+          "bonusSpells": [
+            "spell_dominate_beast",
+            "spell_grasping_vine"
+          ]
+        },
+        {
+          "level": 9,
+          "bonusSpells": [
+            "spell_insect_plague",
+            "spell_tree_stride"
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "trait_tempest_domain_spells",
+    "name": "Tempest Domain Spells",
+    "lore": {
+      "shortDescription": "You always have certain spells prepared.",
+      "fullText": "The Tempest domain grants you access to a set of domain spells at each cleric level listed in the Tempest Domain Spells table. Once you gain a domain spell, you always have it prepared, and it doesn't count against the number of spells you can prepare each day."
+    },
+    "spellcasting": {
+      "ability": "wis",
+      "preparationType": "prepared",
+      "ritualCasting": false,
+      "progressionByLevel": [
+        {
+          "level": 1,
+          "bonusSpells": [
+            "spell_fog_cloud",
+            "spell_thunderwave"
+          ]
+        },
+        {
+          "level": 3,
+          "bonusSpells": [
+            "spell_gust_of_wind",
+            "spell_shatter"
+          ]
+        },
+        {
+          "level": 5,
+          "bonusSpells": [
+            "spell_call_lightning",
+            "spell_sleet_storm"
+          ]
+        },
+        {
+          "level": 7,
+          "bonusSpells": [
+            "spell_control_water",
+            "spell_ice_storm"
+          ]
+        },
+        {
+          "level": 9,
+          "bonusSpells": [
+            "spell_destructive_wave",
+            "spell_insect_plague"
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "trait_trickery_domain_spells",
+    "name": "Trickery Domain Spells",
+    "lore": {
+      "shortDescription": "You always have certain spells prepared.",
+      "fullText": "The Trickery domain grants you access to a set of domain spells at each cleric level listed in the Trickery Domain Spells table. Once you gain a domain spell, you always have it prepared, and it doesn't count against the number of spells you can prepare each day."
+    },
+    "spellcasting": {
+      "ability": "wis",
+      "preparationType": "prepared",
+      "ritualCasting": false,
+      "progressionByLevel": [
+        {
+          "level": 1,
+          "bonusSpells": [
+            "spell_charm_person",
+            "spell_disguise_self"
+          ]
+        },
+        {
+          "level": 3,
+          "bonusSpells": [
+            "spell_mirror_image",
+            "spell_pass_without_trace"
+          ]
+        },
+        {
+          "level": 5,
+          "bonusSpells": [
+            "spell_blink",
+            "spell_dispel_magic"
+          ]
+        },
+        {
+          "level": 7,
+          "bonusSpells": [
+            "spell_dimension_door",
+            "spell_polymorph"
+          ]
+        },
+        {
+          "level": 9,
+          "bonusSpells": [
+            "spell_dominate_person",
+            "spell_modify_memory"
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "trait_war_domain_spells",
+    "name": "War Domain Spells",
+    "lore": {
+      "shortDescription": "You always have certain spells prepared.",
+      "fullText": "The War domain grants you access to a set of domain spells at each cleric level listed in the War Domain Spells table. Once you gain a domain spell, you always have it prepared, and it doesn't count against the number of spells you can prepare each day."
+    },
+    "spellcasting": {
+      "ability": "wis",
+      "preparationType": "prepared",
+      "ritualCasting": false,
+      "progressionByLevel": [
+        {
+          "level": 1,
+          "bonusSpells": [
+            "spell_divine_favor",
+            "spell_shield_of_faith"
+          ]
+        },
+        {
+          "level": 3,
+          "bonusSpells": [
+            "spell_magic_weapon",
+            "spell_spiritual_weapon"
+          ]
+        },
+        {
+          "level": 5,
+          "bonusSpells": [
+            "spell_crusaders_mantle",
+            "spell_spirit_guardians"
+          ]
+        },
+        {
+          "level": 7,
+          "bonusSpells": [
+            "spell_freedom_of_movement",
+            "spell_stoneskin"
+          ]
+        },
+        {
+          "level": 9,
+          "bonusSpells": [
+            "spell_flame_strike",
+            "spell_hold_monster"
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "trait_druid_prof_armor",
+    "isStartingProficiency": true,
+    "name": "Armor Proficiencies",
+    "lore": {
+      "shortDescription": "Gain proficiency with light armor, medium armor, and shields.",
+      "fullText": "Gain proficiency with light armor, medium armor, and shields. Druids will not wear armor or use shields made of metal."
+    },
+    "effects": [
+      {
+        "type": "proficiency",
+        "category": "armor",
+        "item": "light"
+      },
+      {
+        "type": "proficiency",
+        "category": "armor",
+        "item": "medium"
+      },
+      {
+        "type": "proficiency",
+        "category": "armor",
+        "item": "shields"
+      }
+    ]
+  },
+  {
+    "id": "trait_druid_mult_prof_armor",
+    "name": "Multiclass Armor Proficiencies",
+    "lore": {
+      "shortDescription": "Gain proficiency with light armor, medium armor, and shields (no metal).",
+      "fullText": "If you multiclass into Druid, you gain proficiency with light armor, medium armor, and shields. Druids will not wear armor made of metal."
+    },
+    "effects": [
+      {
+        "type": "proficiency",
+        "category": "armor",
+        "item": "light"
+      },
+      {
+        "type": "proficiency",
+        "category": "armor",
+        "item": "medium"
+      },
+      {
+        "type": "proficiency",
+        "category": "armor",
+        "item": "shields"
+      }
+    ]
+  },
+  {
+    "id": "trait_druid_prof_saving_throw",
+    "isStartingProficiency": true,
+    "name": "Saving Throws Proficiencies",
+    "lore": {
+      "shortDescription": "Proficiency in Intelligence and Wisdom saving throws.",
+      "fullText": "Gain proficiency in Intelligence and Wisdom saving throws."
+    },
+    "effects": [
+      {
+        "type": "proficiency",
+        "category": "saving_throws",
+        "item": "int"
+      },
+      {
+        "type": "proficiency",
+        "category": "saving_throws",
+        "item": "wis"
+      }
+    ]
+  },
+  {
+    "id": "trait_druid_prof_skills",
+    "isStartingProficiency": true,
+    "name": "Skills Proficiencies",
+    "lore": {
+      "shortDescription": "Proficiency with two skills of your choice.",
+      "fullText": "Choose two skills from the following list: Arcana, Animal Handling, Insight, Medicine, Nature, Perception, Religion, Survival."
+    },
+    "effects": [
+      {
+        "type": "proficiency_choice",
+        "choice": {
+          "count": 2,
+          "pool": [
+            "arcana",
+            "animal_handling",
+            "insight",
+            "medicine",
+            "nature",
+            "perception",
+            "religion",
+            "survival"
+          ]
+        },
+        "category": "skills"
+      }
+    ]
+  },
+  {
+    "id": "trait_druid_prof_tools",
+    "isStartingProficiency": true,
+    "name": "Tools Proficiencies",
+    "lore": {
+      "shortDescription": "Proficiency with the herbalism kit.",
+      "fullText": "Gain proficiency with the herbalism kit."
+    },
+    "effects": [
+      {
+        "type": "proficiency",
+        "category": "tools",
+        "item": "tool_herbalism_kit"
+      }
+    ]
+  },
+  {
+    "id": "trait_druid_prof_weapons",
+    "isStartingProficiency": true,
+    "name": "Weapons Proficiency",
+    "lore": {
+      "shortDescription": "Proficiency with clubs, daggers, darts, javelins, maces, quarterstaffs, scimitars, sickles, slings, and spears.",
+      "fullText": "Druids are proficient with the following weapons: clubs, daggers, darts, javelins, maces, quarterstaffs, scimitars, sickles, slings, and spears."
+    },
+    "effects": [
+      {
+        "type": "proficiency",
+        "category": "weapons",
+        "item": "weapon_club"
+      },
+      {
+        "type": "proficiency",
+        "category": "weapons",
+        "item": "weapon_dagger"
+      },
+      {
+        "type": "proficiency",
+        "category": "weapons",
+        "item": "weapon_dart"
+      },
+      {
+        "type": "proficiency",
+        "category": "weapons",
+        "item": "weapon_javelin"
+      },
+      {
+        "type": "proficiency",
+        "category": "weapons",
+        "item": "weapon_mace"
+      },
+      {
+        "type": "proficiency",
+        "category": "weapons",
+        "item": "weapon_quarterstaff"
+      },
+      {
+        "type": "proficiency",
+        "category": "weapons",
+        "item": "weapon_scimitar"
+      },
+      {
+        "type": "proficiency",
+        "category": "weapons",
+        "item": "weapon_sickle"
+      },
+      {
+        "type": "proficiency",
+        "category": "weapons",
+        "item": "weapon_sling"
+      },
+      {
+        "type": "proficiency",
+        "category": "weapons",
+        "item": "weapon_spear"
+      }
+    ]
+  },
+  {
+    "id": "trait_spellcasting_druid",
+    "name": "Spellcasting",
+    "lore": {
+      "shortDescription": "This trait defines the character's spellcasting progression and casting rules."
+    },
+    "spellcasting": {
+      "ability": "wis",
+      "preparationType": "prepared",
+      "ritualCasting": true,
+      "progressionByLevel": [
+        {
+          "level": 1,
+          "cantripsKnown": 2,
+          "spellSlots": {
+            "1": 2
+          }
+        },
+        {
+          "level": 2,
+          "cantripsKnown": 2,
+          "spellSlots": {
+            "1": 3
+          }
+        },
+        {
+          "level": 3,
+          "cantripsKnown": 2,
+          "spellSlots": {
+            "1": 4,
+            "2": 2
+          }
+        },
+        {
+          "level": 4,
+          "cantripsKnown": 3,
+          "spellSlots": {
+            "1": 4,
+            "2": 3
+          }
+        },
+        {
+          "level": 5,
+          "cantripsKnown": 3,
+          "spellSlots": {
+            "1": 4,
+            "2": 3,
+            "3": 2
+          }
+        },
+        {
+          "level": 6,
+          "cantripsKnown": 3,
+          "spellSlots": {
+            "1": 4,
+            "2": 3,
+            "3": 3
+          }
+        },
+        {
+          "level": 7,
+          "cantripsKnown": 3,
+          "spellSlots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 1
+          }
+        },
+        {
+          "level": 8,
+          "cantripsKnown": 3,
+          "spellSlots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 2
+          }
+        },
+        {
+          "level": 9,
+          "cantripsKnown": 3,
+          "spellSlots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 3,
+            "5": 1
+          }
+        },
+        {
+          "level": 10,
+          "cantripsKnown": 4,
+          "spellSlots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 3,
+            "5": 2
+          }
+        },
+        {
+          "level": 11,
+          "cantripsKnown": 4,
+          "spellSlots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 3,
+            "5": 2,
+            "6": 1
+          }
+        },
+        {
+          "level": 12,
+          "cantripsKnown": 4,
+          "spellSlots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 3,
+            "5": 2,
+            "6": 1
+          }
+        },
+        {
+          "level": 13,
+          "cantripsKnown": 4,
+          "spellSlots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 3,
+            "5": 2,
+            "6": 1,
+            "7": 1
+          }
+        },
+        {
+          "level": 14,
+          "cantripsKnown": 4,
+          "spellSlots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 3,
+            "5": 2,
+            "6": 1,
+            "7": 1
+          }
+        },
+        {
+          "level": 15,
+          "cantripsKnown": 4,
+          "spellSlots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 3,
+            "5": 2,
+            "6": 1,
+            "7": 1,
+            "8": 1
+          }
+        },
+        {
+          "level": 16,
+          "cantripsKnown": 4,
+          "spellSlots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 3,
+            "5": 2,
+            "6": 1,
+            "7": 1,
+            "8": 1
+          }
+        },
+        {
+          "level": 17,
+          "cantripsKnown": 4,
+          "spellSlots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 3,
+            "5": 2,
+            "6": 1,
+            "7": 1,
+            "8": 1,
+            "9": 1
+          }
+        },
+        {
+          "level": 18,
+          "cantripsKnown": 4,
+          "spellSlots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 3,
+            "5": 3,
+            "6": 1,
+            "7": 1,
+            "8": 1,
+            "9": 1
+          }
+        },
+        {
+          "level": 19,
+          "cantripsKnown": 4,
+          "spellSlots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 3,
+            "5": 3,
+            "6": 2,
+            "7": 1,
+            "8": 1,
+            "9": 1
+          }
+        },
+        {
+          "level": 20,
+          "cantripsKnown": 4,
+          "spellSlots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 3,
+            "5": 3,
+            "6": 2,
+            "7": 2,
+            "8": 1,
+            "9": 1
+          }
+        }
+      ]
+    }
+  },
+  {
+    "id": "trait_fighter_eldritch_knight_spellcasting",
+    "name": "Eldritch Knight Spellcasting",
+    "lore": {
+      "shortDescription": "You learn arcane cantrips and spells, using Intelligence as your spellcasting ability.",
+      "fullText": "You augment your martial training with arcane spellcasting. You learn cantrips and wizard spells over time and gain spell slots as you progress as an Eldritch Knight."
+    },
+    "spellcasting": {
+      "ability": "int",
+      "preparationType": "known",
+      "ritualCasting": false,
+      "schoolRestrictions": [
+        "abjuration",
+        "evocation"
+      ],
+      "spellListSource": [
+        "class_wizard"
+      ],
+      "progressionByLevel": [
+        {
+          "level": 3,
+          "cantripsKnown": 2,
+          "spellsKnown": 3,
+          "spellSlots": {
+            "1": 2
+          }
+        },
+        {
+          "level": 4,
+          "cantripsKnown": 2,
+          "spellsKnown": 4,
+          "spellSlots": {
+            "1": 3
+          }
+        },
+        {
+          "level": 5,
+          "cantripsKnown": 2,
+          "spellsKnown": 4,
+          "spellSlots": {
+            "1": 3
+          }
+        },
+        {
+          "level": 6,
+          "cantripsKnown": 2,
+          "spellsKnown": 4,
+          "spellSlots": {
+            "1": 3
+          }
+        },
+        {
+          "level": 7,
+          "cantripsKnown": 2,
+          "spellsKnown": 5,
+          "spellSlots": {
+            "1": 4,
+            "2": 2
+          }
+        },
+        {
+          "level": 8,
+          "cantripsKnown": 2,
+          "spellsKnown": 6,
+          "freeSchoolSpellSlots": 1,
+          "spellSlots": {
+            "1": 4,
+            "2": 2
+          }
+        },
+        {
+          "level": 9,
+          "cantripsKnown": 2,
+          "spellsKnown": 6,
+          "spellSlots": {
+            "1": 4,
+            "2": 2
+          }
+        },
+        {
+          "level": 10,
+          "cantripsKnown": 3,
+          "spellsKnown": 7,
+          "spellSlots": {
+            "1": 4,
+            "2": 3
+          }
+        },
+        {
+          "level": 11,
+          "cantripsKnown": 3,
+          "spellsKnown": 8,
+          "spellSlots": {
+            "1": 4,
+            "2": 3
+          }
+        },
+        {
+          "level": 12,
+          "cantripsKnown": 3,
+          "spellsKnown": 8,
+          "spellSlots": {
+            "1": 4,
+            "2": 3
+          }
+        },
+        {
+          "level": 13,
+          "cantripsKnown": 3,
+          "spellsKnown": 9,
+          "spellSlots": {
+            "1": 4,
+            "2": 3,
+            "3": 2
+          }
+        },
+        {
+          "level": 14,
+          "cantripsKnown": 3,
+          "spellsKnown": 10,
+          "freeSchoolSpellSlots": 2,
+          "spellSlots": {
+            "1": 4,
+            "2": 3,
+            "3": 2
+          }
+        },
+        {
+          "level": 15,
+          "cantripsKnown": 3,
+          "spellsKnown": 10,
+          "spellSlots": {
+            "1": 4,
+            "2": 3,
+            "3": 2
+          }
+        },
+        {
+          "level": 16,
+          "cantripsKnown": 3,
+          "spellsKnown": 11,
+          "spellSlots": {
+            "1": 4,
+            "2": 3,
+            "3": 3
+          }
+        },
+        {
+          "level": 17,
+          "cantripsKnown": 3,
+          "spellsKnown": 11,
+          "spellSlots": {
+            "1": 4,
+            "2": 3,
+            "3": 3
+          }
+        },
+        {
+          "level": 18,
+          "cantripsKnown": 3,
+          "spellsKnown": 11,
+          "spellSlots": {
+            "1": 4,
+            "2": 3,
+            "3": 3
+          }
+        },
+        {
+          "level": 19,
+          "cantripsKnown": 3,
+          "spellsKnown": 12,
+          "spellSlots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 1
+          }
+        },
+        {
+          "level": 20,
+          "cantripsKnown": 3,
+          "spellsKnown": 13,
+          "freeSchoolSpellSlots": 3,
+          "spellSlots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 1
+          }
+        }
+      ]
+    }
+  },
+  {
+    "id": "trait_fighter_prof_armor",
+    "name": "Armor Proficiencies",
+    "isStartingProficiency": true,
+    "lore": {
+      "shortDescription": "Proficiency with light/medium/heavy armor and shields.",
+      "fullText": "Gain proficiency in light, medium, and heavy armor, and shields."
+    },
+    "effects": [
+      {
+        "type": "proficiency",
+        "category": "armor",
+        "item": "light"
+      },
+      {
+        "type": "proficiency",
+        "category": "armor",
+        "item": "medium"
+      },
+      {
+        "type": "proficiency",
+        "category": "armor",
+        "item": "heavy"
+      },
+      {
+        "type": "proficiency",
+        "category": "armor",
+        "item": "shields"
+      }
+    ]
+  },
+  {
+    "id": "trait_fighter_mult_prof_armor",
+    "name": "Multiclass Armor Proficiencies",
+    "lore": {
+      "shortDescription": "Gain proficiency with light armor, medium armor, and shields.",
+      "fullText": "If you multiclass into Fighter, you gain proficiency with light armor, medium armor, and shields."
+    },
+    "effects": [
+      {
+        "type": "proficiency",
+        "category": "armor",
+        "item": "light"
+      },
+      {
+        "type": "proficiency",
+        "category": "armor",
+        "item": "medium"
+      },
+      {
+        "type": "proficiency",
+        "category": "armor",
+        "item": "shields"
+      }
+    ]
+  },
+  {
+    "id": "trait_fighter_mult_prof_weapons",
+    "name": "Multiclass Weapon Proficiencies",
+    "lore": {
+      "shortDescription": "Gain proficiency with simple and martial weapons.",
+      "fullText": "If you multiclass into Fighter, you gain proficiency with simple and martial weapons."
+    },
+    "effects": [
+      {
+        "type": "proficiency",
+        "category": "weapons",
+        "item": "simple"
+      },
+      {
+        "type": "proficiency",
+        "category": "weapons",
+        "item": "martial"
+      }
+    ]
+  },
+  {
+    "id": "trait_fighter_prof_saving_throw",
+    "isStartingProficiency": true,
+    "name": "Saving Throws Proficiencies",
+    "lore": {
+      "shortDescription": "Proficiency in Strength and Constitution saving throws.",
+      "fullText": "Gain proficiency in Strength and Constitution saving throws."
+    },
+    "effects": [
+      {
+        "type": "proficiency",
+        "category": "saving_throws",
+        "item": "str"
+      },
+      {
+        "type": "proficiency",
+        "category": "saving_throws",
+        "item": "con"
+      }
+    ]
+  },
+  {
+    "id": "trait_fighter_prof_skills",
+    "isStartingProficiency": true,
+    "name": "Skills Proficiencies",
+    "lore": {
+      "shortDescription": "Gain proficiency in two skills of your choice.",
+      "fullText": "Choose two skills from the following list to gain proficiency in: Acrobatics, Animal Handling, Athletics, History, Insight, Intimidation, Perception, Survival."
+    },
+    "effects": [
+      {
+        "type": "proficiency_choice",
+        "choice": {
+          "count": 2,
+          "pool": [
+            "acrobatics",
+            "animal_handling",
+            "athletics",
+            "history",
+            "insight",
+            "intimidation",
+            "perception",
+            "survival"
+          ]
+        },
+        "category": "skills"
+      }
+    ]
+  },
+  {
+    "id": "trait_fighter_prof_weapons",
+    "isStartingProficiency": true,
+    "name": "Weapon Proficiencies",
+    "lore": {
+      "shortDescription": "Gain proficiency with simple and martial weapons.",
+      "fullText": "Gain proficiency with simple and martial weapons."
+    },
+    "effects": [
+      {
+        "type": "proficiency",
+        "category": "weapons",
+        "item": "simple"
+      },
+      {
+        "type": "proficiency",
+        "category": "weapons",
+        "item": "martial"
+      }
+    ]
+  },
+  {
+    "id": "trait_monk_mult_prof_weapons",
+    "name": "Multiclass Weapon Proficiencies",
+    "lore": {
+      "shortDescription": "Gain proficiency with simple weapons and shortswords.",
+      "fullText": "If you multiclass into Monk, you gain proficiency with simple weapons and shortswords."
+    },
+    "effects": [
+      {
+        "type": "proficiency",
+        "category": "weapons",
+        "item": "simple"
+      },
+      {
+        "type": "proficiency",
+        "category": "weapons",
+        "item": "shortsword"
+      }
+    ]
+  },
+  {
+    "id": "trait_monk_prof_saving_throw",
+    "isStartingProficiency": true,
+    "name": "Saving Throws Proficiencies",
+    "lore": {
+      "shortDescription": "Proficiency in Strength and Dexterity saving throws.",
+      "fullText": "Gain proficiency in Strength and Dexterity saving throws."
+    },
+    "effects": [
+      {
+        "type": "proficiency",
+        "category": "saving_throws",
+        "item": "str"
+      },
+      {
+        "type": "proficiency",
+        "category": "saving_throws",
+        "item": "dex"
+      }
+    ]
+  },
+  {
+    "id": "trait_monk_prof_skills",
+    "isStartingProficiency": true,
+    "name": "Skills Proficiencies",
+    "lore": {
+      "shortDescription": "Gain proficiency in two skills of your choice.",
+      "fullText": "Choose two skills from the following list to gain proficiency in: Acrobatics, Athletics, History, Insight, Religion, Stealth."
+    },
+    "effects": [
+      {
+        "type": "proficiency_choice",
+        "choice": {
+          "count": 2,
+          "pool": [
+            "acrobatics",
+            "athletics",
+            "history",
+            "insight",
+            "religion",
+            "stealth"
+          ]
+        },
+        "category": "skills"
+      }
+    ]
+  },
+  {
+    "id": "trait_monk_prof_tools",
+    "isStartingProficiency": true,
+    "name": "Tools Proficiencies",
+    "lore": {
+      "shortDescription": "Proficiency with one artisan tool type, and one musical instrument type.",
+      "fullText": "Gain proficiency with one type of artisan's tools, and one type of musical instrument."
+    },
+    "effects": [
+      {
+        "type": "proficiency",
+        "category": "tools",
+        "item": "category_artisans_tools"
+      },
+      {
+        "type": "proficiency",
+        "category": "tools",
+        "item": "category_musical_instrument"
+      }
+    ]
+  },
+  {
+    "id": "trait_monk_prof_weapons",
+    "name": "Weapons Proficiencies",
+    "isStartingProficiency": true,
+    "lore": {
+      "shortDescription": "Proficiency with shortswords and simple weapons.",
+      "fullText": "Gain proficiency with shortswords and simple weapons."
+    },
+    "effects": [
+      {
+        "type": "proficiency",
+        "category": "weapons",
+        "item": "simple"
+      },
+      {
+        "type": "proficiency",
+        "category": "weapons",
+        "item": "weapon_shortsword"
+      }
+    ]
+  },
+  {
+    "id": "trait_paladin_prof_armor",
+    "name": "Armor Proficiencies",
+    "isStartingProficiency": true,
+    "lore": {
+      "shortDescription": "Proficiency with light/medium/heavy armor, and shields.",
+      "fullText": "Gain proficiency in light, medium, and heavy armor, and shields."
+    },
+    "effects": [
+      {
+        "type": "proficiency",
+        "category": "armor",
+        "item": "light"
+      },
+      {
+        "type": "proficiency",
+        "category": "armor",
+        "item": "medium"
+      },
+      {
+        "type": "proficiency",
+        "category": "armor",
+        "item": "heavy"
+      },
+      {
+        "type": "proficiency",
+        "category": "armor",
+        "item": "shields"
+      }
+    ]
+  },
+  {
+    "id": "trait_paladin_mult_prof_armor",
+    "name": "Multiclass Armor Proficiencies",
+    "lore": {
+      "shortDescription": "Gain proficiency with light armor, medium armor, and shields.",
+      "fullText": "If you multiclass into Paladin, you gain proficiency with light armor, medium armor, and shields."
+    },
+    "effects": [
+      {
+        "type": "proficiency",
+        "category": "armor",
+        "item": "light"
+      },
+      {
+        "type": "proficiency",
+        "category": "armor",
+        "item": "medium"
+      },
+      {
+        "type": "proficiency",
+        "category": "armor",
+        "item": "shields"
+      }
+    ]
+  },
+  {
+    "id": "trait_paladin_mult_prof_weapons",
+    "name": "Multiclass Weapon Proficiencies",
+    "lore": {
+      "shortDescription": "Gain proficiency with simple and martial weapons.",
+      "fullText": "If you multiclass into Paladin, you gain proficiency with simple and martial weapons."
+    },
+    "effects": [
+      {
+        "type": "proficiency",
+        "category": "weapons",
+        "item": "simple"
+      },
+      {
+        "type": "proficiency",
+        "category": "weapons",
+        "item": "martial"
+      }
+    ]
+  },
+  {
+    "id": "trait_paladin_prof_saving_throw",
+    "isStartingProficiency": true,
+    "name": "Saving Throws Proficiencies",
+    "lore": {
+      "shortDescription": "Proficiency in Wisdom and Charisma saving throws.",
+      "fullText": "Gain proficiency in Wisdom and Charisma saving throws."
+    },
+    "effects": [
+      {
+        "type": "proficiency",
+        "category": "saving_throws",
+        "item": "wis"
+      },
+      {
+        "type": "proficiency",
+        "category": "saving_throws",
+        "item": "cha"
+      }
+    ]
+  },
+  {
+    "id": "trait_paladin_prof_skills",
+    "isStartingProficiency": true,
+    "name": "Skills Proficiencies",
+    "lore": {
+      "shortDescription": "Gain proficiency in two skills of your choice from the Paladin skill list.",
+      "fullText": "Gain proficiency in two skills of your choice from the following list: Athletics, Insight, Intimidation, Medicine, Persuasion, Religion."
+    },
+    "effects": [
+      {
+        "type": "proficiency_choice",
+        "choice": {
+          "count": 2,
+          "pool": [
+            "athletics",
+            "insight",
+            "intimidation",
+            "medicine",
+            "persuasion",
+            "religion"
+          ]
+        },
+        "category": "skills"
+      }
+    ]
+  },
+  {
+    "id": "trait_paladin_prof_weapons",
+    "isStartingProficiency": true,
+    "name": "Weapons Proficiencies",
+    "lore": {
+      "shortDescription": "Gain proficiency with simple and martial weapons.",
+      "fullText": "Gain proficiency in all simple and martial weapons."
+    },
+    "effects": [
+      {
+        "type": "proficiency",
+        "category": "weapons",
+        "item": "simple"
+      },
+      {
+        "type": "proficiency",
+        "category": "weapons",
+        "item": "martial"
+      }
+    ]
+  },
+  {
+    "id": "trait_spellcasting_paladin",
+    "name": "Spellcasting",
+    "lore": {
+      "shortDescription": "This trait defines the character's spellcasting progression and casting rules."
+    },
+    "spellcasting": {
+      "ability": "cha",
+      "preparationType": "prepared",
+      "ritualCasting": false,
+      "progressionByLevel": [
+        {
+          "level": 2,
+          "spellSlots": {
+            "1": 2
+          }
+        },
+        {
+          "level": 3,
+          "spellSlots": {
+            "1": 3
+          }
+        },
+        {
+          "level": 4,
+          "spellSlots": {
+            "1": 3
+          }
+        },
+        {
+          "level": 5,
+          "spellSlots": {
+            "1": 4,
+            "2": 2
+          }
+        },
+        {
+          "level": 6,
+          "spellSlots": {
+            "1": 4,
+            "2": 2
+          }
+        },
+        {
+          "level": 7,
+          "spellSlots": {
+            "1": 4,
+            "2": 3
+          }
+        },
+        {
+          "level": 8,
+          "spellSlots": {
+            "1": 4,
+            "2": 3
+          }
+        },
+        {
+          "level": 9,
+          "spellSlots": {
+            "1": 4,
+            "2": 3,
+            "3": 2
+          }
+        },
+        {
+          "level": 10,
+          "spellSlots": {
+            "1": 4,
+            "2": 3,
+            "3": 2
+          }
+        },
+        {
+          "level": 11,
+          "spellSlots": {
+            "1": 4,
+            "2": 3,
+            "3": 3
+          }
+        },
+        {
+          "level": 12,
+          "spellSlots": {
+            "1": 4,
+            "2": 3,
+            "3": 3
+          }
+        },
+        {
+          "level": 13,
+          "spellSlots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 1
+          }
+        },
+        {
+          "level": 14,
+          "spellSlots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 1
+          }
+        },
+        {
+          "level": 15,
+          "spellSlots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 2
+          }
+        },
+        {
+          "level": 16,
+          "spellSlots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 2
+          }
+        },
+        {
+          "level": 17,
+          "spellSlots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 3,
+            "5": 1
+          }
+        },
+        {
+          "level": 18,
+          "spellSlots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 3,
+            "5": 1
+          }
+        },
+        {
+          "level": 19,
+          "spellSlots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 3,
+            "5": 2
+          }
+        },
+        {
+          "level": 20,
+          "spellSlots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 3,
+            "5": 2
+          }
+        }
+      ]
+    }
+  },
+  {
+    "id": "trait_ranger_prof_armor",
+    "name": "Armor Proficiencies",
+    "isStartingProficiency": true,
+    "lore": {
+      "shortDescription": "Proficiency with light armor, medium armor, and shields.",
+      "fullText": "Gain proficiency with light armor, medium armor, and shields."
+    },
+    "effects": [
+      {
+        "type": "proficiency",
+        "category": "armor",
+        "item": "light"
+      },
+      {
+        "type": "proficiency",
+        "category": "armor",
+        "item": "medium"
+      },
+      {
+        "type": "proficiency",
+        "category": "armor",
+        "item": "shields"
+      }
+    ]
+  },
+  {
+    "id": "trait_ranger_mult_prof_armor",
+    "name": "Multiclass Armor Proficiencies",
+    "lore": {
+      "shortDescription": "Gain proficiency with light armor, medium armor, and shields.",
+      "fullText": "If you multiclass into Ranger, you gain proficiency with light armor, medium armor, and shields."
+    },
+    "effects": [
+      {
+        "type": "proficiency",
+        "category": "armor",
+        "item": "light"
+      },
+      {
+        "type": "proficiency",
+        "category": "armor",
+        "item": "medium"
+      },
+      {
+        "type": "proficiency",
+        "category": "armor",
+        "item": "shields"
+      }
+    ]
+  },
+  {
+    "id": "trait_ranger_mult_prof_weapons",
+    "name": "Multiclass Weapon Proficiencies",
+    "lore": {
+      "shortDescription": "Gain proficiency with simple and martial weapons.",
+      "fullText": "If you multiclass into Ranger, you gain proficiency with simple and martial weapons."
+    },
+    "effects": [
+      {
+        "type": "proficiency",
+        "category": "weapons",
+        "item": "simple"
+      },
+      {
+        "type": "proficiency",
+        "category": "weapons",
+        "item": "martial"
+      }
+    ]
+  },
+  {
+    "id": "trait_ranger_prof_saving_throw",
+    "isStartingProficiency": true,
+    "name": "Saving Throws Proficiencies",
+    "lore": {
+      "shortDescription": "Proficiency in Strength and Dexterity saving throws.",
+      "fullText": "Gain proficiency in Strength and Dexterity saving throws."
+    },
+    "effects": [
+      {
+        "type": "proficiency",
+        "category": "saving_throws",
+        "item": "str"
+      },
+      {
+        "type": "proficiency",
+        "category": "saving_throws",
+        "item": "dex"
+      }
+    ]
+  },
+  {
+    "id": "trait_ranger_prof_skills",
+    "isStartingProficiency": true,
+    "name": "Skills Proficiencies",
+    "lore": {
+      "shortDescription": "Gain proficiency in three skills of your choice from the Ranger skill list.",
+      "fullText": "Gain proficiency in three skills of your choice from the following list: Animal Handling, Athletics, Insight, Investigation, Nature, Perception, Stealth, Survival."
+    },
+    "effects": [
+      {
+        "type": "proficiency_choice",
+        "choice": {
+          "count": 3,
+          "pool": [
+            "animal_handling",
+            "athletics",
+            "insight",
+            "investigation",
+            "nature",
+            "perception",
+            "stealth",
+            "survival"
+          ]
+        },
+        "category": "skills"
+      }
+    ]
+  },
+  {
+    "id": "trait_ranger_prof_weapons",
+    "name": "Weapons Proficiencies",
+    "isStartingProficiency": true,
+    "lore": {
+      "shortDescription": "Proficiency with simple and martial weapons.",
+      "fullText": "Gain proficiency with simple and martial weapons."
+    },
+    "effects": [
+      {
+        "type": "proficiency",
+        "category": "weapons",
+        "item": "simple"
+      },
+      {
+        "type": "proficiency",
+        "category": "weapons",
+        "item": "martial"
+      }
+    ]
+  },
+  {
+    "id": "trait_spellcasting_ranger",
+    "name": "Spellcasting",
+    "lore": {
+      "shortDescription": "This trait defines the character's spellcasting progression and casting rules."
+    },
+    "spellcasting": {
+      "ability": "wis",
+      "preparationType": "known",
+      "ritualCasting": false,
+      "progressionByLevel": [
+        {
+          "level": 2,
+          "cantripsKnown": 0,
+          "spellsKnown": 2,
+          "spellSlots": {
+            "1": 2
+          }
+        },
+        {
+          "level": 3,
+          "cantripsKnown": 0,
+          "spellsKnown": 3,
+          "spellSlots": {
+            "1": 3
+          }
+        },
+        {
+          "level": 4,
+          "cantripsKnown": 0,
+          "spellsKnown": 3,
+          "spellSlots": {
+            "1": 3
+          }
+        },
+        {
+          "level": 5,
+          "cantripsKnown": 0,
+          "spellsKnown": 4,
+          "spellSlots": {
+            "1": 4,
+            "2": 2
+          }
+        },
+        {
+          "level": 6,
+          "cantripsKnown": 0,
+          "spellsKnown": 4,
+          "spellSlots": {
+            "1": 4,
+            "2": 2
+          }
+        },
+        {
+          "level": 7,
+          "cantripsKnown": 0,
+          "spellsKnown": 5,
+          "spellSlots": {
+            "1": 4,
+            "2": 3
+          }
+        },
+        {
+          "level": 8,
+          "cantripsKnown": 0,
+          "spellsKnown": 5,
+          "spellSlots": {
+            "1": 4,
+            "2": 3
+          }
+        },
+        {
+          "level": 9,
+          "cantripsKnown": 0,
+          "spellsKnown": 6,
+          "spellSlots": {
+            "1": 4,
+            "2": 3,
+            "3": 2
+          }
+        },
+        {
+          "level": 10,
+          "cantripsKnown": 0,
+          "spellsKnown": 6,
+          "spellSlots": {
+            "1": 4,
+            "2": 3,
+            "3": 2
+          }
+        },
+        {
+          "level": 11,
+          "cantripsKnown": 0,
+          "spellsKnown": 7,
+          "spellSlots": {
+            "1": 4,
+            "2": 3,
+            "3": 3
+          }
+        },
+        {
+          "level": 12,
+          "cantripsKnown": 0,
+          "spellsKnown": 7,
+          "spellSlots": {
+            "1": 4,
+            "2": 3,
+            "3": 3
+          }
+        },
+        {
+          "level": 13,
+          "cantripsKnown": 0,
+          "spellsKnown": 8,
+          "spellSlots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 1
+          }
+        },
+        {
+          "level": 14,
+          "cantripsKnown": 0,
+          "spellsKnown": 8,
+          "spellSlots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 1
+          }
+        },
+        {
+          "level": 15,
+          "cantripsKnown": 0,
+          "spellsKnown": 9,
+          "spellSlots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 2
+          }
+        },
+        {
+          "level": 16,
+          "cantripsKnown": 0,
+          "spellsKnown": 9,
+          "spellSlots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 2
+          }
+        },
+        {
+          "level": 17,
+          "cantripsKnown": 0,
+          "spellsKnown": 10,
+          "spellSlots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 3,
+            "5": 1
+          }
+        },
+        {
+          "level": 18,
+          "cantripsKnown": 0,
+          "spellsKnown": 10,
+          "spellSlots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 3,
+            "5": 1
+          }
+        },
+        {
+          "level": 19,
+          "cantripsKnown": 0,
+          "spellsKnown": 11,
+          "spellSlots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 3,
+            "5": 2
+          }
+        },
+        {
+          "level": 20,
+          "cantripsKnown": 0,
+          "spellsKnown": 11,
+          "spellSlots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 3,
+            "5": 2
+          }
+        }
+      ]
+    }
+  },
+  {
+    "id": "trait_rogue_prof_armor",
+    "name": "Armor Proficiencies",
+    "isStartingProficiency": true,
+    "lore": {
+      "shortDescription": "Proficiency with light armor.",
+      "fullText": "Gain proficiency with light armor."
+    },
+    "effects": [
+      {
+        "type": "proficiency",
+        "category": "armor",
+        "item": "light"
+      }
+    ]
+  },
+  {
+    "id": "trait_rogue_mult_prof_armor",
+    "name": "Multiclass Armor Proficiency",
+    "isStartingProficiency": false,
+    "lore": {
+      "shortDescription": "Gain proficiency with light armor.",
+      "fullText": "If you multiclass into Rogue, you gain proficiency with light armor."
+    },
+    "effects": [
+      {
+        "type": "proficiency",
+        "category": "armor",
+        "item": "light"
+      }
+    ]
+  },
+  {
+    "id": "trait_rogue_mult_prof_skills",
+    "name": "Multiclass Skills Proficiency",
+    "isStartingProficiency": false,
+    "lore": {
+      "shortDescription": "Gain proficiency with one Rogue skill of your choice.",
+      "fullText": "If you multiclass into Rogue, you gain proficiency with one skill of your choice from the Rogue skill list."
+    },
+    "effects": [
+      {
+        "type": "proficiency_choice",
+        "choice": {
+          "count": 1,
+          "pool": [
+            "acrobatics",
+            "athletics",
+            "deception",
+            "insight",
+            "intimidation",
+            "investigation",
+            "perception",
+            "performance",
+            "persuasion",
+            "sleight_of_hand",
+            "stealth"
+          ]
+        },
+        "category": "skills"
+      }
+    ]
+  },
+  {
+    "id": "trait_rogue_mult_prof_tools",
+    "name": "Multiclass Tools Proficiency",
+    "isStartingProficiency": false,
+    "lore": {
+      "shortDescription": "Gain proficiency with thieves' tools.",
+      "fullText": "If you multiclass into Rogue, you gain proficiency with thieves' tools."
+    },
+    "effects": [
+      {
+        "type": "proficiency",
+        "category": "tools",
+        "item": "tool_thieves_tools"
+      }
+    ]
+  },
+  {
+    "id": "trait_rogue_prof_saving_throw",
+    "isStartingProficiency": true,
+    "name": "Saving Throws Proficiencies",
+    "lore": {
+      "shortDescription": "Proficiency in Dexterity and Intelligence saving throws.",
+      "fullText": "Gain proficiency in Dexterity and Intelligence saving throws."
+    },
+    "effects": [
+      {
+        "type": "proficiency",
+        "category": "saving_throws",
+        "item": "dex"
+      },
+      {
+        "type": "proficiency",
+        "category": "saving_throws",
+        "item": "int"
+      }
+    ]
+  },
+  {
+    "id": "trait_rogue_prof_skills",
+    "isStartingProficiency": true,
+    "name": "Skills Proficiencies",
+    "lore": {
+      "shortDescription": "Gain proficiency in four skills of your choice from the Rogue skill list.",
+      "fullText": "Gain proficiency in four skills of your choice from the following list: Acrobatics, Athletics, Deception, Insight, Intimidation, Investigation, Perception, Performance, Persuasion, Sleight of Hand, Stealth."
+    },
+    "effects": [
+      {
+        "type": "proficiency_choice",
+        "choice": {
+          "count": 4,
+          "pool": [
+            "acrobatics",
+            "athletics",
+            "deception",
+            "insight",
+            "intimidation",
+            "investigation",
+            "perception",
+            "performance",
+            "persuasion",
+            "sleight_of_hand",
+            "stealth"
+          ]
+        },
+        "category": "skills"
+      }
+    ]
+  },
+  {
+    "id": "trait_rogue_prof_tools",
+    "name": "Tools Proficiencies",
+    "isStartingProficiency": true,
+    "lore": {
+      "shortDescription": "Proficiency with thieves' tools.",
+      "fullText": "Gain proficiency with thieves' tools."
+    },
+    "effects": [
+      {
+        "type": "proficiency",
+        "category": "tools",
+        "item": "tool_thieves_tools"
+      }
+    ]
+  },
+  {
+    "id": "trait_rogue_prof_weapons",
+    "name": "Weapons Proficiencies",
+    "isStartingProficiency": true,
+    "lore": {
+      "shortDescription": "Proficiency with simple weapons, hand crossbows, longswords, rapiers, and shortswords.",
+      "fullText": "Gain proficiency with simple weapons, hand crossbows, longswords, rapiers, and shortswords."
+    },
+    "effects": [
+      {
+        "type": "proficiency",
+        "category": "weapons",
+        "item": "simple"
+      },
+      {
+        "type": "proficiency",
+        "category": "weapons",
+        "item": "weapon_hand_crossbow"
+      },
+      {
+        "type": "proficiency",
+        "category": "weapons",
+        "item": "weapon_longsword"
+      },
+      {
+        "type": "proficiency",
+        "category": "weapons",
+        "item": "weapon_rapier"
+      },
+      {
+        "type": "proficiency",
+        "category": "weapons",
+        "item": "weapon_shortsword"
+      }
+    ]
+  },
+  {
+    "id": "trait_sorcerer_prof_saving_throw",
+    "isStartingProficiency": true,
+    "name": "Saving Throws Proficiencies",
+    "lore": {
+      "shortDescription": "Proficiency in Constitution and Charisma saving throws.",
+      "fullText": "Gain proficiency in Constitution and Charisma saving throws."
+    },
+    "effects": [
+      {
+        "type": "proficiency",
+        "category": "saving_throws",
+        "item": "con"
+      },
+      {
+        "type": "proficiency",
+        "category": "saving_throws",
+        "item": "cha"
+      }
+    ]
+  },
+  {
+    "id": "trait_sorcerer_prof_skills",
+    "isStartingProficiency": true,
+    "name": "Skills Proficiencies",
+    "lore": {
+      "shortDescription": "Gain proficiency in two skills of your choice from the Sorcerer skill list.",
+      "fullText": "Gain proficiency in two skills of your choice from the following list: Arcana, Deception, Insight, Intimidation, Persuasion, Religion."
+    },
+    "effects": [
+      {
+        "type": "proficiency_choice",
+        "choice": {
+          "count": 2,
+          "pool": [
+            "arcana",
+            "deception",
+            "insight",
+            "intimidation",
+            "persuasion",
+            "religion"
+          ]
+        },
+        "category": "skills"
+      }
+    ]
+  },
+  {
+    "id": "trait_sorcerer_prof_weapons",
+    "name": "Weapons Proficiencies",
+    "isStartingProficiency": true,
+    "lore": {
+      "shortDescription": "Gain proficiency with daggers, darts, slings, quarterstaffs, and light crossbows.",
+      "fullText": "Gain proficiency with daggers, darts, slings, quarterstaffs, and light crossbows."
+    },
+    "effects": [
+      {
+        "type": "proficiency",
+        "category": "weapons",
+        "item": "weapon_dagger"
+      },
+      {
+        "type": "proficiency",
+        "category": "weapons",
+        "item": "weapon_dart"
+      },
+      {
+        "type": "proficiency",
+        "category": "weapons",
+        "item": "weapon_sling"
+      },
+      {
+        "type": "proficiency",
+        "category": "weapons",
+        "item": "weapon_quarterstaff"
+      },
+      {
+        "type": "proficiency",
+        "category": "weapons",
+        "item": "weapon_light_crossbow"
+      }
+    ]
+  },
+  {
+    "id": "trait_spellcasting_sorcerer",
+    "name": "Spellcasting",
+    "lore": {
+      "shortDescription": "This trait defines the character's spellcasting progression and casting rules."
+    },
+    "spellcasting": {
+      "ability": "cha",
+      "preparationType": "known",
+      "ritualCasting": false,
+      "progressionByLevel": [
+        {
+          "level": 1,
+          "cantripsKnown": 4,
+          "spellsKnown": 2,
+          "spellSlots": {
+            "1": 2
+          }
+        },
+        {
+          "level": 2,
+          "cantripsKnown": 4,
+          "spellsKnown": 3,
+          "spellSlots": {
+            "1": 3
+          }
+        },
+        {
+          "level": 3,
+          "cantripsKnown": 4,
+          "spellsKnown": 4,
+          "spellSlots": {
+            "1": 4,
+            "2": 2
+          }
+        },
+        {
+          "level": 4,
+          "cantripsKnown": 5,
+          "spellsKnown": 5,
+          "spellSlots": {
+            "1": 4,
+            "2": 2
+          }
+        },
+        {
+          "level": 5,
+          "cantripsKnown": 5,
+          "spellsKnown": 6,
+          "spellSlots": {
+            "1": 4,
+            "2": 3,
+            "3": 2
+          }
+        },
+        {
+          "level": 6,
+          "cantripsKnown": 5,
+          "spellsKnown": 7,
+          "spellSlots": {
+            "1": 4,
+            "2": 3,
+            "3": 3
+          }
+        },
+        {
+          "level": 7,
+          "cantripsKnown": 5,
+          "spellsKnown": 8,
+          "spellSlots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 1
+          }
+        },
+        {
+          "level": 8,
+          "cantripsKnown": 5,
+          "spellsKnown": 9,
+          "spellSlots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 2
+          }
+        },
+        {
+          "level": 9,
+          "cantripsKnown": 5,
+          "spellsKnown": 10,
+          "spellSlots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 3,
+            "5": 1
+          }
+        },
+        {
+          "level": 10,
+          "cantripsKnown": 6,
+          "spellsKnown": 11,
+          "spellSlots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 3,
+            "5": 2
+          }
+        },
+        {
+          "level": 11,
+          "cantripsKnown": 6,
+          "spellsKnown": 12,
+          "spellSlots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 3,
+            "5": 2,
+            "6": 1
+          }
+        },
+        {
+          "level": 12,
+          "cantripsKnown": 6,
+          "spellsKnown": 12,
+          "spellSlots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 3,
+            "5": 2,
+            "6": 1
+          }
+        },
+        {
+          "level": 13,
+          "cantripsKnown": 6,
+          "spellsKnown": 13,
+          "spellSlots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 3,
+            "5": 2,
+            "6": 1,
+            "7": 1
+          }
+        },
+        {
+          "level": 14,
+          "cantripsKnown": 6,
+          "spellsKnown": 13,
+          "spellSlots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 3,
+            "5": 2,
+            "6": 1,
+            "7": 1
+          }
+        },
+        {
+          "level": 15,
+          "cantripsKnown": 6,
+          "spellsKnown": 14,
+          "spellSlots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 3,
+            "5": 2,
+            "6": 1,
+            "7": 1,
+            "8": 1
+          }
+        },
+        {
+          "level": 16,
+          "cantripsKnown": 6,
+          "spellsKnown": 14,
+          "spellSlots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 3,
+            "5": 2,
+            "6": 1,
+            "7": 1,
+            "8": 1
+          }
+        },
+        {
+          "level": 17,
+          "cantripsKnown": 6,
+          "spellsKnown": 15,
+          "spellSlots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 3,
+            "5": 2,
+            "6": 1,
+            "7": 1,
+            "8": 1,
+            "9": 1
+          }
+        },
+        {
+          "level": 18,
+          "cantripsKnown": 6,
+          "spellsKnown": 15,
+          "spellSlots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 3,
+            "5": 3,
+            "6": 1,
+            "7": 1,
+            "8": 1,
+            "9": 1
+          }
+        },
+        {
+          "level": 19,
+          "cantripsKnown": 6,
+          "spellsKnown": 15,
+          "spellSlots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 3,
+            "5": 3,
+            "6": 2,
+            "7": 1,
+            "8": 1,
+            "9": 1
+          }
+        },
+        {
+          "level": 20,
+          "cantripsKnown": 6,
+          "spellsKnown": 15,
+          "spellSlots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 3,
+            "5": 3,
+            "6": 2,
+            "7": 2,
+            "8": 1,
+            "9": 1
+          }
+        }
+      ]
+    }
+  },
+  {
+    "id": "trait_warlock_prof_armor",
+    "name": "Armor Proficiencies",
+    "isStartingProficiency": true,
+    "lore": {
+      "shortDescription": "Proficiency with light armor.",
+      "fullText": "Gain proficiency with light armor."
+    },
+    "effects": [
+      {
+        "type": "proficiency",
+        "category": "armor",
+        "item": "light"
+      }
+    ]
+  },
+  {
+    "id": "trait_warlock_mult_prof_armor",
+    "name": "Multiclass Armor Proficiencies",
+    "lore": {
+      "shortDescription": "Gain proficiency with light armor.",
+      "fullText": "If you multiclass into Warlock, you gain proficiency with light armor."
+    },
+    "effects": [
+      {
+        "type": "proficiency",
+        "category": "armor",
+        "item": "light"
+      }
+    ]
+  },
+  {
+    "id": "trait_warlock_mult_prof_weapons",
+    "name": "Multiclass Weapon Proficiencies",
+    "lore": {
+      "shortDescription": "Gain proficiency with simple weapons.",
+      "fullText": "If you multiclass into Warlock, you gain proficiency with simple weapons."
+    },
+    "effects": [
+      {
+        "type": "proficiency",
+        "category": "weapons",
+        "item": "simple"
+      }
+    ]
+  },
+  {
+    "id": "trait_warlock_prof_saving_throw",
+    "isStartingProficiency": true,
+    "name": "Saving Throws Proficiencies",
+    "lore": {
+      "shortDescription": "Proficiency in Wisdom and Charisma saving throws.",
+      "fullText": "Gain proficiency in Wisdom and Charisma saving throws."
+    },
+    "effects": [
+      {
+        "type": "proficiency",
+        "category": "saving_throws",
+        "item": "wis"
+      },
+      {
+        "type": "proficiency",
+        "category": "saving_throws",
+        "item": "cha"
+      }
+    ]
+  },
+  {
+    "id": "trait_warlock_prof_skills",
+    "isStartingProficiency": true,
+    "name": "Skills Proficiencies",
+    "lore": {
+      "shortDescription": "Gain proficiency in two skills of your choice from the Warlock skill list.",
+      "fullText": "Gain proficiency in two skills of your choice from the following list: Arcana, Deception, History, Intimidation, Investigation, Nature, Religion."
+    },
+    "effects": [
+      {
+        "type": "proficiency_choice",
+        "choice": {
+          "count": 2,
+          "pool": [
+            "arcana",
+            "deception",
+            "history",
+            "intimidation",
+            "investigation",
+            "nature",
+            "religion"
+          ]
+        },
+        "category": "skills"
+      }
+    ]
+  },
+  {
+    "id": "trait_warlock_prof_weapons",
+    "name": "Weapons Proficiencies",
+    "isStartingProficiency": true,
+    "lore": {
+      "shortDescription": "Proficiency with simple weapons.",
+      "fullText": "Gain proficiency with simple weapons."
+    },
+    "effects": [
+      {
+        "type": "proficiency",
+        "category": "weapons",
+        "item": "simple"
+      }
+    ]
+  },
+  {
+    "id": "trait_wizard_prof_saving_throw",
+    "isStartingProficiency": true,
+    "name": "Saving Throws Proficiencies",
+    "lore": {
+      "shortDescription": "Proficiency in Intelligence and Wisdom saving throws.",
+      "fullText": "Gain proficiency in Intelligence and Wisdom saving throws."
+    },
+    "effects": [
+      {
+        "type": "proficiency",
+        "category": "saving_throws",
+        "item": "int"
+      },
+      {
+        "type": "proficiency",
+        "category": "saving_throws",
+        "item": "wis"
+      }
+    ]
+  },
+  {
+    "id": "trait_wizard_prof_skills",
+    "isStartingProficiency": true,
+    "name": "Skills Proficiencies",
+    "lore": {
+      "shortDescription": "Gain proficiency in two skills of your choice from the Wizard skill list.",
+      "fullText": "Gain proficiency in two skills of your choice from the following list: Arcana, History, Insight, Investigation, Medicine, Religion."
+    },
+    "effects": [
+      {
+        "type": "proficiency_choice",
+        "choice": {
+          "count": 2,
+          "pool": [
+            "arcana",
+            "history",
+            "insight",
+            "investigation",
+            "medicine",
+            "religion"
+          ]
+        },
+        "category": "skills"
+      }
+    ]
+  },
+  {
+    "id": "trait_wizard_prof_weapons",
+    "name": "Weapons Proficiencies",
+    "isStartingProficiency": true,
+    "lore": {
+      "shortDescription": "Gain proficiency with daggers, darts, slings, quarterstaffs, and light crossbows.",
+      "fullText": "Gain proficiency with daggers, darts, slings, quarterstaffs, and light crossbows."
+    },
+    "effects": [
+      {
+        "type": "proficiency",
+        "category": "weapons",
+        "item": "weapon_dagger"
+      },
+      {
+        "type": "proficiency",
+        "category": "weapons",
+        "item": "weapon_dart"
+      },
+      {
+        "type": "proficiency",
+        "category": "weapons",
+        "item": "weapon_sling"
+      },
+      {
+        "type": "proficiency",
+        "category": "weapons",
+        "item": "weapon_quarterstaff"
+      },
+      {
+        "type": "proficiency",
+        "category": "weapons",
+        "item": "weapon_light_crossbow"
+      }
+    ]
+  },
+  {
+    "id": "trait_spellcasting_wizard",
+    "name": "Spellcasting",
+    "lore": {
+      "shortDescription": "This trait defines the character's spellcasting progression and casting rules."
+    },
+    "spellcasting": {
+      "ability": "int",
+      "preparationType": "prepared",
+      "ritualCasting": true,
+      "progressionByLevel": [
+        {
+          "level": 1,
+          "cantripsKnown": 3,
+          "spellsKnown": 6,
+          "spellSlots": {
+            "1": 2
+          }
+        },
+        {
+          "level": 2,
+          "cantripsKnown": 3,
+          "spellsKnown": 8,
+          "spellSlots": {
+            "1": 2
+          }
+        },
+        {
+          "level": 3,
+          "cantripsKnown": 3,
+          "spellsKnown": 10,
+          "spellSlots": {
+            "1": 4,
+            "2": 2
+          }
+        },
+        {
+          "level": 4,
+          "cantripsKnown": 4,
+          "spellsKnown": 12,
+          "spellSlots": {
+            "1": 4,
+            "2": 3
+          }
+        },
+        {
+          "level": 5,
+          "cantripsKnown": 4,
+          "spellsKnown": 14,
+          "spellSlots": {
+            "1": 4,
+            "2": 3,
+            "3": 2
+          }
+        },
+        {
+          "level": 6,
+          "cantripsKnown": 4,
+          "spellsKnown": 16,
+          "spellSlots": {
+            "1": 4,
+            "2": 3,
+            "3": 3
+          }
+        },
+        {
+          "level": 7,
+          "cantripsKnown": 4,
+          "spellsKnown": 18,
+          "spellSlots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 1
+          }
+        },
+        {
+          "level": 8,
+          "cantripsKnown": 4,
+          "spellsKnown": 20,
+          "spellSlots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 2
+          }
+        },
+        {
+          "level": 9,
+          "cantripsKnown": 4,
+          "spellsKnown": 22,
+          "spellSlots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 3,
+            "5": 1
+          }
+        },
+        {
+          "level": 10,
+          "cantripsKnown": 5,
+          "spellsKnown": 24,
+          "spellSlots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 3,
+            "5": 2
+          }
+        },
+        {
+          "level": 11,
+          "cantripsKnown": 5,
+          "spellsKnown": 26,
+          "spellSlots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 3,
+            "5": 2,
+            "6": 1
+          }
+        },
+        {
+          "level": 12,
+          "cantripsKnown": 5,
+          "spellsKnown": 26,
+          "spellSlots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 3,
+            "5": 2,
+            "6": 1
+          }
+        },
+        {
+          "level": 13,
+          "cantripsKnown": 5,
+          "spellsKnown": 28,
+          "spellSlots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 3,
+            "5": 2,
+            "6": 1,
+            "7": 1
+          }
+        },
+        {
+          "level": 14,
+          "cantripsKnown": 5,
+          "spellsKnown": 30,
+          "spellSlots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 3,
+            "5": 2,
+            "6": 1,
+            "7": 1
+          }
+        },
+        {
+          "level": 15,
+          "cantripsKnown": 5,
+          "spellsKnown": 32,
+          "spellSlots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 3,
+            "5": 2,
+            "6": 1,
+            "7": 1,
+            "8": 1
+          }
+        },
+        {
+          "level": 16,
+          "cantripsKnown": 5,
+          "spellsKnown": 34,
+          "spellSlots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 3,
+            "5": 2,
+            "6": 1,
+            "7": 1,
+            "8": 1
+          }
+        },
+        {
+          "level": 17,
+          "cantripsKnown": 5,
+          "spellsKnown": 36,
+          "spellSlots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 3,
+            "5": 2,
+            "6": 1,
+            "7": 1,
+            "8": 1,
+            "9": 1
+          }
+        },
+        {
+          "level": 18,
+          "cantripsKnown": 5,
+          "spellsKnown": 38,
+          "spellSlots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 3,
+            "5": 3,
+            "6": 1,
+            "7": 1,
+            "8": 1,
+            "9": 1
+          }
+        },
+        {
+          "level": 19,
+          "cantripsKnown": 5,
+          "spellsKnown": 40,
+          "spellSlots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 3,
+            "5": 3,
+            "6": 2,
+            "7": 1,
+            "8": 1,
+            "9": 1
+          }
+        },
+        {
+          "level": 20,
+          "cantripsKnown": 5,
+          "spellsKnown": 42,
+          "spellSlots": {
+            "1": 4,
+            "2": 3,
+            "3": 3,
+            "4": 3,
+            "5": 3,
+            "6": 2,
+            "7": 2,
+            "8": 1,
+            "9": 1
+          }
+        }
+      ]
+    }
+  },
+  {
+    "id": "trait_corona_of_light",
+    "name": "Corona of Light",
+    "lore": {
+      "shortDescription": "Activate an aura of sunlight that hampers your enemies.",
+      "fullText": "Starting at 17th level, you can use your action to activate an aura of sunlight that lasts for 1 minute or until you dismiss it using another action. You emit bright light in a 60-foot radius and dim light 30 feet beyond that. Your enemies in the bright light have disadvantage on saving throws against any spell that deals fire or radiant damage.\n\n"
+    }
+  },
+  {
+    "id": "trait_damage_resistance_acid",
+    "name": "Damage Resistance: Acid",
+    "lore": {
+      "shortDescription": "You have resistance to acid damage.",
+      "fullText": "You have resistance to the damage type associated with your draconic ancestry."
+    },
+    "effects": [
+      {
+        "type": "resistance",
+        "target": "damage_acid"
+      }
+    ]
+  },
+  {
+    "id": "trait_damage_resistance_cold",
+    "name": "Damage Resistance: Cold",
+    "lore": {
+      "shortDescription": "You have resistance to cold damage.",
+      "fullText": "You have resistance to the damage type associated with your draconic ancestry."
+    },
+    "effects": [
+      {
+        "type": "resistance",
+        "target": "damage_cold"
+      }
+    ]
+  },
+  {
+    "id": "trait_damage_resistance_fire",
+    "name": "Damage Resistance: Fire",
+    "lore": {
+      "shortDescription": "You have resistance to fire damage.",
+      "fullText": "You have resistance to the damage type associated with your draconic ancestry."
+    },
+    "effects": [
+      {
+        "type": "resistance",
+        "target": "damage_fire"
+      }
+    ]
+  },
+  {
+    "id": "trait_damage_resistance_poison",
+    "name": "Damage Resistance: Poison",
+    "lore": {
+      "shortDescription": "You have resistance to poison damage.",
+      "fullText": "You have resistance to the damage type associated with your draconic ancestry."
+    },
+    "effects": [
+      {
+        "type": "resistance",
+        "target": "damage_poison"
+      }
+    ]
+  },
+  {
+    "id": "trait_damage_resistance_lightning",
+    "name": "Damage Resistance: Lightning",
+    "lore": {
+      "shortDescription": "You have resistance to lightning damage.",
+      "fullText": "You have resistance to the damage type associated with your draconic ancestry."
+    },
+    "effects": [
+      {
+        "type": "resistance",
+        "target": "damage_lightning"
+      }
+    ]
+  },
+  {
+    "id": "trait_dampen_elements",
+    "name": "Dampen Elements",
+    "lore": {
+      "shortDescription": "Use your reaction to grant resistance to a creature against an elemental damage type.",
+      "fullText": "Starting at 6th level, when you or a creature within 30 feet of you takes acid, cold, fire, lightning, or thunder damage, you can use your reaction to grant resistance to the creature against that instance of the damage."
+    }
+  },
+  {
+    "id": "trait_darkvision_60",
+    "name": "Darkvision",
+    "lore": {
+      "shortDescription": "See in dim light as if bright light, and in darkness as if dim light, to 60 feet.",
+      "fullText": "Accustomed to life underground, you have superior vision in dark and dim conditions. You can see in dim light within 60 feet of you as if it were bright light, and in darkness as if it were dim light. You can't discern color in darkness, only shades of gray."
+    },
+    "effects": [
+      {
+        "type": "sense",
+        "target": "darkvision",
+        "value": 60
+      }
+    ]
+  },
+  {
+    "id": "trait_darkvision_superior",
+    "name": "Superior Darkvision",
+    "lore": {
+      "shortDescription": "Your darkvision has a radius of 120 feet.",
+      "fullText": "Your darkvision has a radius of 120 feet."
+    },
+    "effects": [
+      {
+        "type": "sense",
+        "target": "darkvision",
+        "value": 120
+      }
+    ]
+  },
+  {
+    "id": "trait_diamond_soul",
+    "name": "Diamond Soul",
+    "lore": {
+      "shortDescription": "Gain proficiency in all saving throws."
+    },
+    "effects": [
+      {
+        "type": "proficiency",
+        "category": "saving_throws",
+        "item": "str"
+      },
+      {
+        "type": "proficiency",
+        "category": "saving_throws",
+        "item": "dex"
+      },
+      {
+        "type": "proficiency",
+        "category": "saving_throws",
+        "item": "con"
+      },
+      {
+        "type": "proficiency",
+        "category": "saving_throws",
+        "item": "int"
+      },
+      {
+        "type": "proficiency",
+        "category": "saving_throws",
+        "item": "wis"
+      },
+      {
+        "type": "proficiency",
+        "category": "saving_throws",
+        "item": "cha"
+      }
+    ]
+  },
+  {
+    "id": "trait_disciple_of_life",
+    "name": "Disciple of Life",
+    "lore": {
+      "shortDescription": "Your healing spells are more effective.",
+      "fullText": "Also starting at 1st level, your healing spells are more effective. Whenever you use a spell of 1st level or higher to restore hit points to a creature, the creature regains additional hit points equal to 2 + the spell's level."
+    }
+  },
+  {
+    "id": "trait_divine_healer",
+    "name": "Divine Healer",
+    "lore": {
+      "shortDescription": "Infuse your weapon strikes with divine energy.",
+      "fullText": "At 8th level, you gain the ability to infuse your weapon strikes with divine energy. Once on each of your turns when you hit a creature with a weapon attack, you can cause the attack to deal an extra 1d8 radiant damage to the target. When you reach 14th level, the extra damage increases to 2d8."
+    }
+  },
+  {
+    "id": "trait_divine_strike",
+    "name": "Divine Strike",
+    "lore": {
+      "shortDescription": "Infuse your weapon strikes with divine energy.",
+      "fullText": "At 8th level, you gain the ability to infuse your weapon strikes with divine energy. Once on each of your turns when you hit a creature with a weapon attack, you can cause the attack to deal an extra 1d8 cold, fire, or lightning damage (your choice) to the target. When you reach 14th level, the extra damage increases to 2d8."
+    }
+  },
+  {
+    "id": "trait_dwarven_armor_training",
+    "name": "Dwarven Armor Training",
+    "lore": {
+      "shortDescription": "Proficiency with light and medium armor.",
+      "fullText": "You have proficiency with light and medium armor."
+    },
+    "effects": [
+      {
+        "type": "proficiency",
+        "category": "armor",
+        "item": "light"
+      },
+      {
+        "type": "proficiency",
+        "category": "armor",
+        "item": "medium"
+      }
+    ]
+  },
+  {
+    "id": "trait_dwarven_combat_training",
+    "name": "Dwarven Combat Training",
+    "lore": {
+      "shortDescription": "Gain proficiency with battleaxe, handaxe, light hammer, and warhammer.",
+      "fullText": "You have proficiency with the battleaxe, handaxe, light hammer, and warhammer."
+    },
+    "effects": [
+      {
+        "type": "proficiency",
+        "category": "weapons",
+        "item": "weapon_battleaxe"
+      },
+      {
+        "type": "proficiency",
+        "category": "weapons",
+        "item": "weapon_handaxe"
+      },
+      {
+        "type": "proficiency",
+        "category": "weapons",
+        "item": "weapon_light_hammer"
+      },
+      {
+        "type": "proficiency",
+        "category": "weapons",
+        "item": "weapon_warhammer"
+      }
+    ]
+  },
+  {
+    "id": "trait_dwarven_resilience",
+    "name": "Dwarven Resilience",
+    "lore": {
+      "shortDescription": "Gain advantage and resistance against poison.",
+      "fullText": "You have advantage on saving throws against poison, and you have resistance against poison damage."
+    },
+    "effects": [
+      {
+        "type": "advantage",
+        "target": "saving_throws_against_poison"
+      },
+      {
+        "type": "other",
+        "target": "damage_resistance_poison"
+      }
+    ]
+  },
+  {
+    "id": "trait_dwarven_toughness",
+    "name": "Dwarven Toughness",
+    "lore": {
+      "shortDescription": "Gain a 1 HP increase per level.",
+      "fullText": "Your hit point maximum increases by 1, and it increases by 1 every time you gain a level."
+    }
+  },
+  {
+    "id": "trait_eldritch_invocations",
+    "name": "Eldritch Invocations",
+    "lore": {
+      "shortDescription": "In your study of occult lore you have unearthed eldritch invocations — fragments of forbidden knowledge that imbue you with a permanent magical ability.",
+      "fullText": "In your study of occult lore, you have unearthed eldritch invocations, fragments of forbidden knowledge that imbue you with an abiding magical ability. At 2nd level, you gain two eldritch invocations of your choice. Your invocation options are detailed at the end of the class description. When you gain certain warlock levels, you gain additional invocations of your choice. Additionally, when you gain a level in this class, you can choose one of the invocations you know and replace it with another invocation that you could learn at that level."
+    }
+  },
+  {
+    "id": "trait_eldritch_master",
+    "name": "Eldritch Master",
+    "lore": {
+      "shortDescription": "At 20th level you can spend 1 minute entreating your patron to regain all expended Pact Magic spell slots.",
+      "fullText": "At 20th level, you can draw on your inner reserve of mystical power while entreating your patron to regain expended spell slots. You can spend 1 minute entreating your patron for aid to regain all your expended Pact Magic spell slots. Once you regain spell slots with this feature, you must finish a long rest before you can do so again."
+    }
+  },
+  {
+    "id": "trait_elf_weapon_training",
+    "name": "Elf Weapon Training",
+    "lore": {
+      "shortDescription": "You have proficiency with the longsword, shortsword, shortbow, and longbow.",
+      "fullText": "You have proficiency with the longsword, shortsword, shortbow, and longbow."
+    },
+    "effects": [
+      {
+        "type": "proficiency",
+        "category": "weapons",
+        "item": "weapon_longsword"
+      },
+      {
+        "type": "proficiency",
+        "category": "weapons",
+        "item": "weapon_shortsword"
+      },
+      {
+        "type": "proficiency",
+        "category": "weapons",
+        "item": "weapon_shortbow"
+      },
+      {
+        "type": "proficiency",
+        "category": "weapons",
+        "item": "weapon_longbow"
+      }
+    ]
+  },
+  {
+    "id": "trait_extra_language",
+    "name": "Extra Language",
+    "lore": {
+      "shortDescription": "You can speak, read, and write one extra language of your choice.",
+      "fullText": "You can speak, read, and write one extra language of your choice."
+    },
+    "effects": [
+      {
+        "type": "proficiency_choice",
+        "category": "languages",
+        "choice": {
+          "count": 1,
+          "pool": "any"
+        }
+      }
+    ]
+  },
+  {
+    "id": "trait_feat_alert",
+    "name": "Alert",
+    "lore": {
+      "shortDescription": "You gain a +5 bonus to initiative."
+    },
+    "effects": [
+      {
+        "type": "stat_modifier",
+        "target": "initiative",
+        "value": 5
+      }
+    ]
+  },
+  {
+    "id": "trait_feat_battle_hardened",
+    "name": "Battle Hardened",
+    "lore": {
+      "shortDescription": "You gain a +1 bonus to Armor Class."
+    },
+    "effects": [
+      {
+        "type": "stat_modifier",
+        "target": "ac",
+        "value": 1
+      }
+    ]
+  },
+  {
+    "id": "trait_feat_fleet_footed",
+    "name": "Fleet Footed",
+    "lore": {
+      "shortDescription": "Your speed increases by 5 feet."
+    },
+    "effects": [
+      {
+        "type": "stat_modifier",
+        "target": "speed",
+        "value": 5
+      }
+    ]
+  },
+  {
+    "id": "trait_feat_gifted_mind",
+    "name": "Gifted Mind",
+    "lore": {
+      "shortDescription": "You gain proficiency in Arcana and History."
+    },
+    "effects": [
+      {
+        "type": "proficiency",
+        "category": "skills",
+        "item": "arcana"
+      },
+      {
+        "type": "proficiency",
+        "category": "skills",
+        "item": "history"
+      }
+    ]
+  },
+  {
+    "id": "trait_feat_mobile",
+    "name": "Mobile",
+    "lore": {
+      "shortDescription": "Your speed increases by 10 feet."
+    },
+    "effects": [
+      {
+        "type": "stat_modifier",
+        "target": "speed",
+        "value": 10
+      }
+    ]
+  },
+  {
+    "id": "trait_feat_skilled",
+    "name": "Skilled",
+    "lore": {
+      "shortDescription": "Gain proficiency in any combination of three skills of your choice."
+    },
+    "effects": [
+      {
+        "type": "proficiency_choice",
+        "category": "skills",
+        "choice": {
+          "count": 3,
+          "pool": "any"
+        }
+      }
+    ]
+  },
+  {
+    "id": "trait_feat_spellbound",
+    "name": "Spellbound",
+    "lore": {
+      "shortDescription": "A feat reserved for practiced spellcasters."
+    },
+    "effects": [
+      {
+        "type": "other",
+        "target": "spellcasting_focus"
+      }
+    ]
+  },
+  {
+    "id": "trait_fey_ancestry",
+    "name": "Fey Ancestry",
+    "lore": {
+      "shortDescription": "You gain advantage against charm and can't be put to sleep.",
+      "fullText": "You have advantage on saving throws against being charmed, and magic can't put you to sleep."
+    },
+    "effects": [
+      {
+        "type": "advantage",
+        "target": "saving_throw",
+        "value": "charmed"
+      }
+    ]
+  },
+  {
+    "id": "trait_fighting_style_defense",
+    "name": "Fighting Style: Defense",
+    "lore": {
+      "shortDescription": "While you are wearing armor, you gain a +1 bonus to AC."
+    },
+    "effects": [
+      {
+        "type": "stat_modifier",
+        "target": "ac",
+        "value": 1,
+        "predicates": [
+          {
+            "type": "armor_required",
+            "value": "any"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "trait_fleet_of_foot",
+    "name": "Fleet of Foot",
+    "lore": {
+      "shortDescription": "Your base walking speed increases to 35 feet.",
+      "fullText": "Your base walking speed increases to 35 feet."
+    },
+    "effects": [
+      {
+        "type": "stat_modifier",
+        "target": "base_speed",
+        "value": 35
+      }
+    ]
+  },
+  {
+    "id": "trait_gnome_cunning",
+    "name": "Gnome Cunning",
+    "lore": {
+      "shortDescription": "You have advantage on all Intelligence, Wisdom, and Charisma saving throws against magic.",
+      "fullText": "You have advantage on all Intelligence, Wisdom, and Charisma saving throws against magic."
+    },
+    "effects": [
+      {
+        "type": "advantage",
+        "target": "int_saving_throw",
+        "value": "magic"
+      },
+      {
+        "type": "advantage",
+        "target": "wis_saving_throw",
+        "value": "magic"
+      },
+      {
+        "type": "advantage",
+        "target": "cha_saving_throw",
+        "value": "magic"
+      }
+    ]
+  },
+  {
+    "id": "trait_hellish_resistance",
+    "name": "Hellish Resistance",
+    "lore": {
+      "shortDescription": "You have resistance to fire damage.",
+      "fullText": "You have resistance to fire damage."
+    },
+    "effects": [
+      {
+        "type": "resistance",
+        "target": "fire_damage"
+      }
+    ]
+  },
+  {
+    "id": "trait_improved_duplicity",
+    "name": "Improved Duplicity",
+    "lore": {
+      "shortDescription": "Create multiple duplicates of yourself with Invoke Duplicity.",
+      "fullText": "At 17th level, you can create up to four duplicates of yourself, instead of one, when you use Invoke Duplicity. As a bonus action on your turn, you can move any number of them up to 30 feet, to a maximum range of 120 feet."
+    }
+  },
+  {
+    "id": "trait_improved_flare",
+    "name": "Improved Flare",
+    "lore": {
+      "shortDescription": "Use your Warding Flare against attacks targeting your allies.",
+      "fullText": "Starting at 6th level, you can also use your Warding Flare feature when a creature that you can see within 30 feet of you attacks a creature other than you."
+    }
+  },
+  {
+    "id": "trait_infernal_legacy",
+    "name": "Infernal Legacy",
+    "lore": {
+      "shortDescription": "You gain knowledge of certain spells related to your infernal heritage.",
+      "fullText": "You know the thaumaturgy cantrip. When you reach 3rd level, you can cast the hellish rebuke spell as a 2nd-level spell once with this trait and regain the ability to do so when you finish a long rest. When you reach 5th level, you can cast the darkness spell once with this trait and regain the ability to do so when you finish a long rest. Charisma is your spellcasting ability for these spells."
+    }
+  },
+  {
+    "id": "trait_jack_of_all_trades",
+    "name": "Jack of All Trades",
+    "lore": {
+      "shortDescription": "Starting at 2nd level, you can add half your proficiency bonus to any ability check that does not already include your proficiency bonus.",
+      "fullText": "Starting at 2nd level, you can add half your proficiency bonus, rounded down, to any ability check you make that does not already include your proficiency bonus."
+    },
+    "effects": [
+      {
+        "type": "half_proficiency",
+        "target": "unproficient_checks"
+      }
+    ]
+  },
+  {
+    "id": "trait_keen_senses",
+    "name": "Keen Senses",
+    "lore": {
+      "shortDescription": "You have proficiency in the Perception skill.",
+      "fullText": "You have proficiency in the Perception skill."
+    },
+    "effects": [
+      {
+        "type": "proficiency",
+        "category": "skills",
+        "item": "perception"
+      }
+    ]
+  },
+  {
+    "id": "trait_lucky",
+    "name": "Lucky",
+    "lore": {
+      "shortDescription": "Reroll a 1 for an attack, ability check, or saving throw roll.",
+      "fullText": "When you roll a 1 on the d20 for an attack roll, ability check, or saving throw, you can reroll the die and must use the new roll."
+    }
+  },
+  {
+    "id": "trait_mask_of_the_wild",
+    "name": "Mask of the Wild",
+    "lore": {
+      "shortDescription": "You can attempt to hide in lightly obscured natural environments.",
+      "fullText": "You can attempt to hide even when you are only lightly obscured by foliage, heavy rain, falling snow, mist, and other natural phenomena."
+    }
+  },
+  {
+    "id": "trait_master_of_nature",
+    "name": "Master of Nature",
+    "lore": {
+      "shortDescription": "Command animals and plant creatures charmed by your Channel Divinity.",
+      "fullText": "At 17th level, you gain the ability to command animals and plant creatures. While creatures are charmed by your Charm Animals and Plants feature, you can take a bonus action on your turn to verbally command what each of those creatures will do on its next turn."
+    }
+  },
+  {
+    "id": "trait_menacing",
+    "name": "Menacing",
+    "lore": {
+      "shortDescription": "You gain proficiency in the Intimidation skill.",
+      "fullText": "You gain proficiency in the Intimidation skill."
+    },
+    "effects": [
+      {
+        "type": "proficiency",
+        "category": "skills",
+        "item": "intimidation"
+      }
+    ]
+  },
+  {
+    "id": "trait_mystic_arcanum_6",
+    "name": "Mystic Arcanum (6th level)",
+    "lore": {
+      "shortDescription": "At 11th level your patron bestows a magical secret — choose one 6th-level spell to cast once per long rest without expending a spell slot.",
+      "fullText": "At 11th level, your patron bestows upon you a magical secret called an arcanum. Choose one 6th-level spell from the warlock spell list as this arcanum. You can cast your arcanum spell once without expending a spell slot. You must finish a long rest before you can do so again. Higher levels of this class grant additional arcanums: a 7th-level spell at 13th level, an 8th-level spell at 15th level, and a 9th-level spell at 17th level. You regain all uses of your Mystic Arcanum when you finish a long rest."
+    }
+  },
+  {
+    "id": "trait_mystic_arcanum_7",
+    "name": "Mystic Arcanum (7th level)",
+    "lore": {
+      "shortDescription": "At 13th level your patron grants you a 7th-level spell to cast once per long rest without expending a spell slot.",
+      "fullText": "At 13th level, you gain a second arcanum. Choose one 7th-level spell from the warlock spell list. You can cast it once without expending a spell slot, and you must finish a long rest before you can do so again."
+    }
+  },
+  {
+    "id": "trait_mystic_arcanum_8",
+    "name": "Mystic Arcanum (8th level)",
+    "lore": {
+      "shortDescription": "At 15th level your patron grants you an 8th-level spell to cast once per long rest without expending a spell slot.",
+      "fullText": "At 15th level, you gain a third arcanum. Choose one 8th-level spell from the warlock spell list. You can cast it once without expending a spell slot, and you must finish a long rest before you can do so again."
+    }
+  },
+  {
+    "id": "trait_mystic_arcanum_9",
+    "name": "Mystic Arcanum (9th level)",
+    "lore": {
+      "shortDescription": "At 17th level your patron grants you a 9th-level spell to cast once per long rest without expending a spell slot.",
+      "fullText": "At 17th level, you gain a fourth arcanum. Choose one 9th-level spell from the warlock spell list. You can cast it once without expending a spell slot, and you must finish a long rest before you can do so again."
+    }
+  },
+  {
+    "id": "trait_naturally_stealthy",
+    "name": "Naturally Stealthy",
+    "lore": {
+      "shortDescription": "You can attempt to hide even when you are only lightly obscured.",
+      "fullText": "You can attempt to hide even when you are obscured only by a creature that is at least one size larger than you."
+    }
+  },
+  {
+    "id": "trait_otherworldly_patron_feature",
+    "name": "Otherworldly Patron Feature",
+    "lore": {
+      "shortDescription": "Your patron grants you a feature as determined by your subclass.",
+      "fullText": "At certain levels your otherworldly patron grants you special features. The specific feature depends on the patron you chose at 1st level."
+    }
+  },
+  {
+    "id": "trait_otherworldly_patron",
+    "name": "Otherworldly Patron",
+    "lore": {
+      "shortDescription": "You have struck a bargain with an otherworldly being of immense power.",
+      "fullText": "At 1st level, you have struck a bargain with an otherworldly being of immense power that has granted you your magical abilities. Your choice of patron shapes many of your powers as you advance in levels, as well as the spells available to you."
+    }
+  },
+  {
+    "id": "trait_pact_boon",
+    "name": "Pact Boon",
+    "lore": {
+      "shortDescription": "At 3rd level your patron bestows a gift on you for your loyal service: Pact of the Chain, Pact of the Blade, or Pact of the Tome.",
+      "fullText": "At 3rd level, your otherworldly patron bestows a gift upon you for your loyal service. You gain one of the following features of your choice. Pact of the Chain: You learn the find familiar spell and can cast it as a ritual. Pact of the Blade: You can use your action to create a pact weapon in your empty hand. Pact of the Tome: Your patron gives you a grimoire called a Book of Shadows. When you gain this feature, choose three cantrips from any class's spell list."
+    }
+  },
+  {
+    "id": "trait_pact_magic",
+    "name": "Pact Magic",
+    "lore": {
+      "shortDescription": "Your arcane research and pact grant you a small number of powerful spell slots that recharge on a short or long rest.",
+      "fullText": "Your arcane research and the magic bestowed on you by your patron have given you facility with spells. You know two cantrips of your choice from the warlock spell list. You regain all expended Pact Magic spell slots when you finish a short or long rest. All your Pact Magic spell slots are the same level, determined by your warlock level, and you gain additional slots and higher slot levels as you advance."
+    },
+    "spellcasting": {
+      "ability": "cha",
+      "preparationType": "pact",
+      "ritualCasting": false,
+      "progressionByLevel": [
+        {
+          "level": 1,
+          "cantripsKnown": 2,
+          "spellsKnown": 2,
+          "spellSlots": {
+            "1": 1
+          }
+        },
+        {
+          "level": 2,
+          "cantripsKnown": 2,
+          "spellsKnown": 3,
+          "spellSlots": {
+            "1": 2
+          }
+        },
+        {
+          "level": 3,
+          "cantripsKnown": 2,
+          "spellsKnown": 4,
+          "spellSlots": {
+            "2": 2
+          }
+        },
+        {
+          "level": 4,
+          "cantripsKnown": 3,
+          "spellsKnown": 5,
+          "spellSlots": {
+            "2": 2
+          }
+        },
+        {
+          "level": 5,
+          "cantripsKnown": 3,
+          "spellsKnown": 6,
+          "spellSlots": {
+            "3": 2
+          }
+        },
+        {
+          "level": 6,
+          "cantripsKnown": 3,
+          "spellsKnown": 7,
+          "spellSlots": {
+            "3": 2
+          }
+        },
+        {
+          "level": 7,
+          "cantripsKnown": 3,
+          "spellsKnown": 8,
+          "spellSlots": {
+            "4": 2
+          }
+        },
+        {
+          "level": 8,
+          "cantripsKnown": 3,
+          "spellsKnown": 9,
+          "spellSlots": {
+            "4": 2
+          }
+        },
+        {
+          "level": 9,
+          "cantripsKnown": 3,
+          "spellsKnown": 10,
+          "spellSlots": {
+            "5": 2
+          }
+        },
+        {
+          "level": 10,
+          "cantripsKnown": 4,
+          "spellsKnown": 10,
+          "spellSlots": {
+            "5": 2
+          }
+        },
+        {
+          "level": 11,
+          "cantripsKnown": 4,
+          "spellsKnown": 11,
+          "spellSlots": {
+            "5": 3
+          }
+        },
+        {
+          "level": 12,
+          "cantripsKnown": 4,
+          "spellsKnown": 11,
+          "spellSlots": {
+            "5": 3
+          }
+        },
+        {
+          "level": 13,
+          "cantripsKnown": 4,
+          "spellsKnown": 12,
+          "spellSlots": {
+            "5": 3
+          }
+        },
+        {
+          "level": 14,
+          "cantripsKnown": 4,
+          "spellsKnown": 12,
+          "spellSlots": {
+            "5": 3
+          }
+        },
+        {
+          "level": 15,
+          "cantripsKnown": 4,
+          "spellsKnown": 13,
+          "spellSlots": {
+            "5": 3
+          }
+        },
+        {
+          "level": 16,
+          "cantripsKnown": 4,
+          "spellsKnown": 13,
+          "spellSlots": {
+            "5": 3
+          }
+        },
+        {
+          "level": 17,
+          "cantripsKnown": 4,
+          "spellsKnown": 14,
+          "spellSlots": {
+            "5": 4
+          }
+        },
+        {
+          "level": 18,
+          "cantripsKnown": 4,
+          "spellsKnown": 14,
+          "spellSlots": {
+            "5": 4
+          }
+        },
+        {
+          "level": 19,
+          "cantripsKnown": 4,
+          "spellsKnown": 15,
+          "spellSlots": {
+            "5": 4
+          }
+        },
+        {
+          "level": 20,
+          "cantripsKnown": 4,
+          "spellsKnown": 15,
+          "spellSlots": {
+            "5": 4
+          }
+        }
+      ]
+    }
+  },
+  {
+    "id": "trait_potent_spellcasting",
+    "name": "Potent Spellcasting",
+    "lore": {
+      "shortDescription": "Add your Wisdom modifier to the damage you deal with cleric cantrips.",
+      "fullText": "Starting at 8th level, you add your Wisdom modifier to the damage you deal with any cleric cantrip."
+    }
+  },
+  {
+    "id": "trait_breath_weapon_acid_line",
+    "name": "Breath Weapon: Acid (5 by 30 ft. line Dex. save)",
+    "lore": {
+      "shortDescription": "You can use your action to exhale destructive energy as a acid 5 by 30 ft. line (Dex. save).",
+      "fullText": "You can use your action to exhale destructive energy. Your draconic ancestry determines the size, shape, and damage type of the exhalation. When you use your breath weapon, each creature in the area of the exhalation must make a saving throw, the type of which is determined by your draconic ancestry. The DC for this saving throw equals 8 + your Constitution modifier + your proficiency bonus. A creature takes 2d6 damage on a failed save, and half as much damage on a successful one. The damage increases to 3d6 at 6th level, 4d6 at 11th level, and 5d6 at 16th level. After you use your breath weapon, you can't use it again until you complete a short or long rest."
+    }
+  },
+  {
+    "id": "trait_breath_weapon_cold_cone",
+    "name": "Breath Weapon: Cold (15 ft. cone Con. save)",
+    "lore": {
+      "shortDescription": "You can use your action to exhale destructive energy as a cold 15 ft. cone (Con. save).",
+      "fullText": "You can use your action to exhale destructive energy. Your draconic ancestry determines the size, shape, and damage type of the exhalation. When you use your breath weapon, each creature in the area of the exhalation must make a saving throw, the type of which is determined by your draconic ancestry. The DC for this saving throw equals 8 + your Constitution modifier + your proficiency bonus. A creature takes 2d6 damage on a failed save, and half as much damage on a successful one. The damage increases to 3d6 at 6th level, 4d6 at 11th level, and 5d6 at 16th level. After you use your breath weapon, you can't use it again until you complete a short or long rest."
+    },
+    "effects": [
+      {
+        "type": "action_grant",
+        "value": "action_breath_weapon_cold_cone"
+      }
+    ]
+  },
+  {
+    "id": "trait_breath_weapon_fire_cone",
+    "name": "Breath Weapon: Fire (15 ft. cone Dex. save)",
+    "lore": {
+      "shortDescription": "You can use your action to exhale destructive energy as a fire 15 ft. cone (Dex. save).",
+      "fullText": "You can use your action to exhale destructive energy. Your draconic ancestry determines the size, shape, and damage type of the exhalation. When you use your breath weapon, each creature in the area of the exhalation must make a saving throw, the type of which is determined by your draconic ancestry. The DC for this saving throw equals 8 + your Constitution modifier + your proficiency bonus. A creature takes 2d6 damage on a failed save, and half as much damage on a successful one. The damage increases to 3d6 at 6th level, 4d6 at 11th level, and 5d6 at 16th level. After you use your breath weapon, you can't use it again until you complete a short or long rest."
+    }
+  },
+  {
+    "id": "trait_breath_weapon_fire_line",
+    "name": "Breath Weapon: Fire (5 by 30 ft. line Dex. save)",
+    "lore": {
+      "shortDescription": "You can use your action to exhale destructive energy as a fire 5 by 30 ft. line (Dex. save).",
+      "fullText": "You can use your action to exhale destructive energy. Your draconic ancestry determines the size, shape, and damage type of the exhalation. When you use your breath weapon, each creature in the area of the exhalation must make a saving throw, the type of which is determined by your draconic ancestry. The DC for this saving throw equals 8 + your Constitution modifier + your proficiency bonus. A creature takes 2d6 damage on a failed save, and half as much damage on a successful one. The damage increases to 3d6 at 6th level, 4d6 at 11th level, and 5d6 at 16th level. After you use your breath weapon, you can't use it again until you complete a short or long rest."
+    }
+  },
+  {
+    "id": "trait_breath_weapon_lightning_line",
+    "name": "Breath Weapon: Lightning (5 by 30 ft. line Dex. save)",
+    "lore": {
+      "shortDescription": "You can use your action to exhale destructive energy as a lightning 5 by 30 ft. line (Dex. save).",
+      "fullText": "You can use your action to exhale destructive energy. Your draconic ancestry determines the size, shape, and damage type of the exhalation. When you use your breath weapon, each creature in the area of the exhalation must make a saving throw, the type of which is determined by your draconic ancestry. The DC for this saving throw equals 8 + your Constitution modifier + your proficiency bonus. A creature takes 2d6 damage on a failed save, and half as much damage on a successful one. The damage increases to 3d6 at 6th level, 4d6 at 11th level, and 5d6 at 16th level. After you use your breath weapon, you can't use it again until you complete a short or long rest."
+    }
+  },
+  {
+    "id": "trait_breath_weapon_poison_cone",
+    "name": "Breath Weapon: Poison (15 ft. cone Con. save)",
+    "lore": {
+      "shortDescription": "You can use your action to exhale destructive energy as a poison 15 ft. cone (Con. save).",
+      "fullText": "You can use your action to exhale destructive energy. Your draconic ancestry determines the size, shape, and damage type of the exhalation. When you use your breath weapon, each creature in the area of the exhalation must make a saving throw, the type of which is determined by your draconic ancestry. The DC for this saving throw equals 8 + your Constitution modifier + your proficiency bonus. A creature takes 2d6 damage on a failed save, and half as much damage on a successful one. The damage increases to 3d6 at 6th level, 4d6 at 11th level, and 5d6 at 16th level. After you use your breath weapon, you can't use it again until you complete a short or long rest."
+    }
+  },
+  {
+    "id": "trait_dragonborn_ability_bonuses",
+    "name": "Ability Bonuses",
+    "lore": {
+      "shortDescription": "+2 Strength, +1 Charisma.",
+      "fullText": "Your Strength score increases by 2, and your Charisma score increases by 1."
+    },
+    "effects": [
+      {
+        "type": "ability_bonus_fixed",
+        "target": "str",
+        "value": 2
+      },
+      {
+        "type": "ability_bonus_fixed",
+        "target": "cha",
+        "value": 1
+      }
+    ]
+  },
+  {
+    "id": "trait_dragonborn_age",
+    "name": "Age",
+    "lore": {
+      "shortDescription": "You reach adulthood at 15, and live to be around 80.",
+      "fullText": "Young dragonborn grow quickly. They walk hours after hatching, attain the size and development of a 10-year-old human child by the age of 3, and reach adulthood by 15. They live to be around 80."
+    }
+  },
+  {
+    "id": "trait_dragonborn_languages",
+    "name": "Languages",
+    "lore": {
+      "shortDescription": "You can speak, read, and write Common and Draconic.",
+      "fullText": "You can speak, read, and write Common and Draconic. Draconic is thought to be one of the oldest languages and is often used in the study of magic. The language sounds harsh to most other creatures and includes numerous hard consonants and sibilants."
+    },
+    "effects": [
+      {
+        "type": "proficiency",
+        "category": "languages",
+        "item": "lang_common"
+      },
+      {
+        "type": "proficiency",
+        "category": "languages",
+        "item": "lang_draconic"
+      }
+    ]
+  },
+  {
+    "id": "trait_dragonborn_size",
+    "name": "Size",
+    "lore": {
+      "shortDescription": "Your size is Medium.",
+      "fullText": "Dragonborn are taller and heavier than humans, standing well over 6 feet tall and averaging almost 250 pounds. Your size is Medium."
+    },
+    "effects": [
+      {
+        "type": "size_set",
+        "value": "medium"
+      }
+    ]
+  },
+  {
+    "id": "trait_dragonborn_speed",
+    "name": "Speed",
+    "lore": {
+      "shortDescription": "Your base walking speed is 30 feet.",
+      "fullText": "Your base walking speed is 30 feet."
+    },
+    "effects": [
+      {
+        "type": "stat_modifier",
+        "target": "base_speed",
+        "value": 30
+      }
+    ]
+  },
+  {
+    "id": "trait_dwarf_ability_bonuses",
+    "name": "Ability Score Increase",
+    "lore": {
+      "shortDescription": "+2 Constitution.",
+      "fullText": "Your Constitution score increases by 2."
+    },
+    "effects": [
+      {
+        "type": "ability_bonus_fixed",
+        "target": "con",
+        "value": 2
+      }
+    ]
+  },
+  {
+    "id": "trait_dwarf_age",
+    "name": "Age",
+    "lore": {
+      "shortDescription": "You reach adulthood at 50, you live about 350 years.",
+      "fullText": "Dwarves mature at the same rate as humans, but they're considered young until they reach the age of 50. On average, they live about 350 years."
+    }
+  },
+  {
+    "id": "trait_dwarf_hill_ability_bonuses",
+    "name": "Ability Score Increase",
+    "lore": {
+      "shortDescription": "+1 Wisdom.",
+      "fullText": "Your Wisdom score increases by 1."
+    },
+    "effects": [
+      {
+        "type": "ability_bonus_fixed",
+        "target": "wis",
+        "value": 1
+      }
+    ]
+  },
+  {
+    "id": "trait_dwarf_languages",
+    "name": "Languages",
+    "lore": {
+      "shortDescription": "You can speak, read, and write Common and Dwarvish.",
+      "fullText": "You can speak, read, and write Common and Dwarvish. Dwarvish is full of hard consonants and guttural sounds, and those characteristics spill over into whatever other language a dwarf might speak."
+    },
+    "effects": [
+      {
+        "type": "proficiency",
+        "category": "languages",
+        "item": "lang_common"
+      },
+      {
+        "type": "proficiency",
+        "category": "languages",
+        "item": "lang_dwarvish"
+      }
+    ]
+  },
+  {
+    "id": "trait_dwarf_mountain_ability_bonuses",
+    "name": "Ability Score Increase",
+    "lore": {
+      "shortDescription": "+2 Strength.",
+      "fullText": "Your Strength score increases by 2."
+    },
+    "effects": [
+      {
+        "type": "ability_bonus_fixed",
+        "target": "str",
+        "value": 2
+      }
+    ]
+  },
+  {
+    "id": "trait_dwarf_size",
+    "name": "Size",
+    "lore": {
+      "shortDescription": "Your size is Medium.",
+      "fullText": "Dwarves stand between 4 and 5 feet tall and average about 150 pounds. Your size is Medium."
+    },
+    "effects": [
+      {
+        "type": "size_set",
+        "value": "medium"
+      }
+    ]
+  },
+  {
+    "id": "trait_dwarf_speed_resilience",
+    "name": "Speed Resilience",
+    "lore": {
+      "shortDescription": "No heavy armor speed reduction.",
+      "fullText": "Your speed is not reduced by wearing heavy armor."
+    }
+  },
+  {
+    "id": "trait_dwarf_speed",
+    "name": "Speed",
+    "lore": {
+      "shortDescription": "Your base walking speed is 25 feet.",
+      "fullText": "Your base walking speed is 25 feet."
+    },
+    "effects": [
+      {
+        "type": "stat_modifier",
+        "target": "base_speed",
+        "value": 25
+      }
+    ]
+  },
+  {
+    "id": "trait_dwarf_tool_proficiency",
+    "name": "Dwarf Tool Proficiency",
+    "lore": {
+      "shortDescription": "Gain proficiency with your artisan's tool of choice.",
+      "fullText": "You gain proficiency with the artisan's tools of your choice: smith's tools, brewer's supplies, or mason's tools."
+    }
+  },
+  {
+    "id": "trait_elf_ability_bonuses",
+    "name": "Ability Score Increase",
+    "lore": {
+      "shortDescription": "+2 Dexterity.",
+      "fullText": "Your Dexterity score increases by 2."
+    },
+    "effects": [
+      {
+        "type": "ability_bonus_fixed",
+        "target": "dex",
+        "value": 2
+      }
+    ]
+  },
+  {
+    "id": "trait_elf_age",
+    "name": "Age",
+    "lore": {
+      "shortDescription": "You reach adulthood at around 100 years old, and live to be 750.",
+      "fullText": "Although elves reach physical maturity at about the same age as humans, the elven understanding of adulthood goes beyond physical growth to encompass worldly experience. An elf typically claims adulthood and an adult name around the age of 100 and can live to be 750 years old."
+    }
+  },
+  {
+    "id": "trait_elf_high_ability_bonuses",
+    "name": "Ability Score Increase",
+    "lore": {
+      "shortDescription": "+1 Intelligence.",
+      "fullText": "Your Intelligence score increases by 1."
+    },
+    "effects": [
+      {
+        "type": "ability_bonus_fixed",
+        "target": "int",
+        "value": 1
+      }
+    ]
+  },
+  {
+    "id": "trait_elf_languages",
+    "name": "Languages",
+    "lore": {
+      "shortDescription": "You can speak, read, and write Common and Elvish.",
+      "fullText": "You can speak, read, and write Common and Elvish. Elvish is fluid, with subtle intonations and intricate grammar. Elven literature is rich and varied, and their songs and poems are famous among other races. Many bards learn their language so they can add Elvish ballads to their repertoires."
+    },
+    "effects": [
+      {
+        "type": "proficiency",
+        "category": "languages",
+        "item": "lang_common"
+      },
+      {
+        "type": "proficiency",
+        "category": "languages",
+        "item": "lang_elvish"
+      }
+    ]
+  },
+  {
+    "id": "trait_elf_size",
+    "name": "Size",
+    "lore": {
+      "shortDescription": "Your size is Medium.",
+      "fullText": "Elves range from under 5 to over 6 feet tall and have slender builds. Your size is Medium."
+    },
+    "effects": [
+      {
+        "type": "size_set",
+        "value": "medium"
+      }
+    ]
+  },
+  {
+    "id": "trait_elf_speed",
+    "name": "Speed",
+    "lore": {
+      "shortDescription": "Your base walking speed is 30 feet.",
+      "fullText": "Your base walking speed is 30 feet."
+    },
+    "effects": [
+      {
+        "type": "stat_modifier",
+        "target": "base_speed",
+        "value": 30
+      }
+    ]
+  },
+  {
+    "id": "trait_elf_wood_ability_bonuses",
+    "name": "Ability Score Increase",
+    "lore": {
+      "shortDescription": "+1 Wisdom.",
+      "fullText": "Your Wisdom score increases by 1."
+    },
+    "effects": [
+      {
+        "type": "ability_bonus_fixed",
+        "target": "wis",
+        "value": 1
+      }
+    ]
+  },
+  {
+    "id": "trait_gnome_ability_bonuses",
+    "name": "Ability Score Increase",
+    "lore": {
+      "shortDescription": "+2 Intelligence.",
+      "fullText": "Your Intelligence score increases by 2."
+    },
+    "effects": [
+      {
+        "type": "ability_bonus_fixed",
+        "target": "int",
+        "value": 2
+      }
+    ]
+  },
+  {
+    "id": "trait_gnome_age",
+    "name": "Age",
+    "lore": {
+      "shortDescription": "You reach adulthood around age 40. You live 350 to almost 500 years.",
+      "fullText": "Gnomes mature at the same rate humans do, and most are expected to settle down into an adult life by around age 40. They can live 350 to almost 500 years."
+    }
+  },
+  {
+    "id": "trait_gnome_deep_ability_bonuses",
+    "name": "Ability Score Increase",
+    "lore": {
+      "shortDescription": "+1 Constitution.",
+      "fullText": "Your Constitution score increases by 1."
+    },
+    "effects": [
+      {
+        "type": "ability_bonus_fixed",
+        "target": "con",
+        "value": 1
+      }
+    ]
+  },
+  {
+    "id": "trait_gnome_deep_age",
+    "name": "Age",
+    "lore": {
+      "shortDescription": "You reach adulthood at 25, and live 200 to 250 years.",
+      "fullText": "Deep gnomes are short-lived for gnomes. They mature at the same rate humans do and are considered full-grown adults by 25. They live 200 to 250 years, although hard toil and the dangers of the Underdark often claim them before their time."
+    }
+  },
+  {
+    "id": "trait_gnome_deep_alignment",
+    "name": "Alignment",
+    "lore": {
+      "shortDescription": "You favor neutral alignments.",
+      "fullText": "Svirfneblin believe that survival depends on avoiding entanglements with other creatures and not making enemies, so they favor neutral alignments. They rarely wish others ill, and they are unlikely to take risks on behalf of others."
+    }
+  },
+  {
+    "id": "trait_gnome_deep_languages",
+    "name": "Languages",
+    "lore": {
+      "shortDescription": "You can speak, read, and write Common, Gnomish, and Undercommon.",
+      "fullText": "You can speak, read, and write Common, Gnomish, and Undercommon. The svirfneblin dialect is more guttural than surface Gnomish, and most svirfneblin know only a little bit of Common, but those who deal with outsiders (and that includes you as an adventurer) pick up enough Common to get by in other lands."
+    },
+    "effects": [
+      {
+        "type": "proficiency",
+        "category": "languages",
+        "item": "lang_common"
+      },
+      {
+        "type": "proficiency",
+        "category": "languages",
+        "item": "lang_gnomish"
+      },
+      {
+        "type": "proficiency",
+        "category": "languages",
+        "item": "lang_undercommon"
+      }
+    ]
+  },
+  {
+    "id": "trait_gnome_deep_size",
+    "name": "Size",
+    "lore": {
+      "shortDescription": "Your size is Small.",
+      "fullText": "A typical svirfneblin stands about 3 to 3½ feet tall and weighs 80 to 120 pounds. Your size is Small."
+    },
+    "effects": [
+      {
+        "type": "size_set",
+        "value": "small"
+      }
+    ]
+  },
+  {
+    "id": "trait_gnome_languages",
+    "name": "Languages",
+    "lore": {
+      "shortDescription": "You can speak, read, and write Common and Gnomish.",
+      "fullText": "You can speak, read, and write Common and Gnomish. The Gnomish language, which uses the Dwarvish script, is renowned for its technical treatises and its catalogs of knowledge about the natural world."
+    },
+    "effects": [
+      {
+        "type": "proficiency",
+        "category": "languages",
+        "item": "lang_common"
+      },
+      {
+        "type": "proficiency",
+        "category": "languages",
+        "item": "lang_gnomish"
+      }
+    ]
+  },
+  {
+    "id": "trait_gnome_rock_ability_bonuses",
+    "name": "Ability Score Increase",
+    "lore": {
+      "shortDescription": "+1 Constitution",
+      "fullText": "Your Constitution score increases by 1."
+    },
+    "effects": [
+      {
+        "type": "ability_bonus_fixed",
+        "target": "con",
+        "value": 1
+      }
+    ]
+  },
+  {
+    "id": "trait_gnome_size",
+    "name": "Size",
+    "lore": {
+      "shortDescription": "Your size is Small.",
+      "fullText": "Gnomes are between 3 and 4 feet tall and average about 40 pounds. Your size is Small."
+    },
+    "effects": [
+      {
+        "type": "size_set",
+        "value": "small"
+      }
+    ]
+  },
+  {
+    "id": "trait_gnome_speed",
+    "name": "Speed",
+    "lore": {
+      "shortDescription": "Your base walking speed is 25 feet.",
+      "fullText": "Your base walking speed is 25 feet."
+    },
+    "effects": [
+      {
+        "type": "stat_modifier",
+        "target": "base_speed",
+        "value": 25
+      }
+    ]
+  },
+  {
+    "id": "trait_half_elf_ability_bonuses",
+    "name": "Ability Score Increase",
+    "lore": {
+      "shortDescription": "+2 Charisma, +1 to two other ability scores of your choice.",
+      "fullText": "Your Charisma score increases by 2, and two other ability scores of your choice increase by 1."
+    },
+    "effects": [
+      {
+        "type": "ability_bonus_fixed",
+        "target": "cha",
+        "value": 2
+      },
+      {
+        "type": "ability_bonus_choice",
+        "choice": {
+          "count": 2,
+          "bonus": 1,
+          "pool": [
+            "str",
+            "dex",
+            "con",
+            "int",
+            "wis"
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "id": "trait_half_elf_age",
+    "name": "Age",
+    "lore": {
+      "shortDescription": "You reach adulthood at around 20, and live often exceeding 180 years.",
+      "fullText": "Half-elves mature at the same rate humans do and reach adulthood around the age of 20. They live much longer than humans, however, often exceeding 180 years."
+    }
+  },
+  {
+    "id": "trait_half_elf_languages",
+    "name": "Languages",
+    "lore": {
+      "shortDescription": "You can speak, read, and write Common, Elvish, and one extra language of your choice.",
+      "fullText": "You can speak, read, and write Common, Elvish, and one extra language of your choice."
+    },
+    "effects": [
+      {
+        "type": "proficiency",
+        "category": "languages",
+        "item": "lang_common"
+      },
+      {
+        "type": "proficiency",
+        "category": "languages",
+        "item": "lang_elvish"
+      },
+      {
+        "type": "proficiency_choice",
+        "category": "languages",
+        "choice": {
+          "count": 1,
+          "pool": [
+            "lang_dwarvish",
+            "lang_giant",
+            "lang_gnomish",
+            "lang_orc",
+            "lang_undercommon"
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "id": "trait_half_elf_size",
+    "name": "Size",
+    "lore": {
+      "shortDescription": "Your size is Medium",
+      "fullText": "Half-elves are about the same size as humans, ranging from 5 to 6 feet tall. Your size is Medium."
+    },
+    "effects": [
+      {
+        "type": "size_set",
+        "value": "medium"
+      }
+    ]
+  },
+  {
+    "id": "trait_half_elf_speed",
+    "name": "Speed",
+    "lore": {
+      "shortDescription": "Your base walking speed is 30 feet.",
+      "fullText": "Your base walking speed is 30 feet."
+    },
+    "effects": [
+      {
+        "type": "stat_modifier",
+        "target": "base_speed",
+        "value": 30
+      }
+    ]
+  },
+  {
+    "id": "trait_half_orc_ability_bonuses",
+    "name": "Ability Score Increase",
+    "lore": {
+      "shortDescription": "+2 Strength, +1 Constitution",
+      "fullText": "Your Strength score increases by 2, and your Constitution score increases by 1."
+    },
+    "effects": [
+      {
+        "type": "ability_bonus_fixed",
+        "target": "str",
+        "value": 2
+      },
+      {
+        "type": "ability_bonus_fixed",
+        "target": "con",
+        "value": 1
+      }
+    ]
+  },
+  {
+    "id": "trait_half_orc_age",
+    "name": "Age",
+    "lore": {
+      "shortDescription": "You reach adulthood at age 14, and rarely live longer than 75 years.",
+      "fullText": "Half-orcs mature a little faster than humans, reaching adulthood around age 14. They age noticeably faster and rarely live longer than 75 years."
+    }
+  },
+  {
+    "id": "trait_half_orc_languages",
+    "name": "Languages",
+    "lore": {
+      "shortDescription": "You can speak, read, and write Common and Orc.",
+      "fullText": "You can speak, read, and write Common and Orc. Orc is a harsh, grating language with hard consonants. It has no script of its own but is written in the Dwarvish script."
+    },
+    "effects": [
+      {
+        "type": "proficiency",
+        "category": "languages",
+        "item": "lang_common"
+      },
+      {
+        "type": "proficiency",
+        "category": "languages",
+        "item": "lang_orc"
+      }
+    ]
+  },
+  {
+    "id": "trait_half_orc_size",
+    "name": "Size",
+    "lore": {
+      "shortDescription": "Your size is Medium.",
+      "fullText": "Half-orcs are somewhat larger and bulkier than humans, and they range from 5 to well over 6 feet tall. Your size is Medium."
+    },
+    "effects": [
+      {
+        "type": "size_set",
+        "value": "medium"
+      }
+    ]
+  },
+  {
+    "id": "trait_half_orc_speed",
+    "name": "Speed",
+    "lore": {
+      "shortDescription": "Base walking speed of 30 feet.",
+      "fullText": "Your base walking speed is 30 feet."
+    },
+    "effects": [
+      {
+        "type": "stat_modifier",
+        "target": "base_speed",
+        "value": 30
+      }
+    ]
+  },
+  {
+    "id": "trait_halfling_ability_bonuses",
+    "name": "Ability Score Increase",
+    "lore": {
+      "shortDescription": "+2 Dexterity",
+      "fullText": "Your Dexterity score increases by 2."
+    },
+    "effects": [
+      {
+        "type": "ability_bonus_fixed",
+        "target": "dex",
+        "value": 2
+      }
+    ]
+  },
+  {
+    "id": "trait_halfling_age",
+    "name": "Age",
+    "lore": {
+      "shortDescription": "You reach adulthood at 20, and usually live into your mid first or second century.",
+      "fullText": "A halfling reaches adulthood at the age of 20 and generally lives into the middle of his or her second century."
+    }
+  },
+  {
+    "id": "trait_halfling_languages",
+    "name": "Languages",
+    "lore": {
+      "shortDescription": "You can speak, read, and write Common and Halfling.",
+      "fullText": "You can speak, read, and write Common and Halfling. The Halfling language isn't secret, but halflings are loath to share it with others. They write very little, so they don't have a rich body of literature. Their oral tradition, however, is very strong. Almost all halflings speak Common to converse with the people in whose lands they dwell or through which they are traveling."
+    },
+    "effects": [
+      {
+        "type": "proficiency",
+        "category": "languages",
+        "item": "lang_common"
+      },
+      {
+        "type": "proficiency",
+        "category": "languages",
+        "item": "lang_halfling"
+      }
+    ]
+  },
+  {
+    "id": "trait_halfling_lightfoot_ability_bonuses",
+    "name": "Ability Score Increase",
+    "lore": {
+      "shortDescription": "+1 Charisma",
+      "fullText": "Your Charisma score increases by 1."
+    },
+    "effects": [
+      {
+        "type": "stat_modifier",
+        "target": "cha",
+        "value": 1
+      }
+    ]
+  },
+  {
+    "id": "trait_halfling_nimbleness",
+    "name": "Halfling Nimbleness",
+    "lore": {
+      "shortDescription": "You can move through the space of any creature that is of a size larger than yours.",
+      "fullText": "You can move through the space of any creature that is of a size larger than yours."
+    }
+  },
+  {
+    "id": "trait_halfling_size",
+    "name": "Size",
+    "lore": {
+      "shortDescription": "Your size is Small.",
+      "fullText": "Halflings average about 3 feet tall and weigh about 40 pounds. Your size is Small."
+    },
+    "effects": [
+      {
+        "type": "size_set",
+        "value": "small"
+      }
+    ]
+  },
+  {
+    "id": "trait_halfling_speed",
+    "name": "Speed",
+    "lore": {
+      "shortDescription": "Your base walking speed is 25 feet.",
+      "fullText": "Your base walking speed is 25 feet."
+    },
+    "effects": [
+      {
+        "type": "stat_modifier",
+        "target": "base_speed",
+        "value": 25
+      }
+    ]
+  },
+  {
+    "id": "trait_halfling_stout_ability_bonuses",
+    "name": "Ability Score Increase",
+    "lore": {
+      "shortDescription": "+1 Constitution",
+      "fullText": "Your Constitution score increases by 1."
+    },
+    "effects": [
+      {
+        "type": "stat_modifier",
+        "target": "con",
+        "value": 1
+      }
+    ]
+  },
+  {
+    "id": "trait_human_ability_bonuses",
+    "name": "Ability Score Increase",
+    "lore": {
+      "shortDescription": "+1 to all ability scores",
+      "fullText": "Your ability scores each increase by 1."
+    },
+    "effects": [
+      {
+        "type": "ability_bonus_fixed",
+        "target": "wis",
+        "value": 1
+      },
+      {
+        "type": "ability_bonus_fixed",
+        "target": "int",
+        "value": 1
+      },
+      {
+        "type": "ability_bonus_fixed",
+        "target": "str",
+        "value": 1
+      },
+      {
+        "type": "ability_bonus_fixed",
+        "target": "dex",
+        "value": 1
+      },
+      {
+        "type": "ability_bonus_fixed",
+        "target": "con",
+        "value": 1
+      },
+      {
+        "type": "ability_bonus_fixed",
+        "target": "cha",
+        "value": 1
+      }
+    ]
+  },
+  {
+    "id": "trait_human_age",
+    "name": "Age",
+    "lore": {
+      "shortDescription": "You reach adulthood around 19 and live less than 100 years.",
+      "fullText": "Humans reach adulthood in their late teens and live less than a century."
+    }
+  },
+  {
+    "id": "trait_human_languages",
+    "name": "Languages",
+    "lore": {
+      "shortDescription": "You can speak, read, and write Common and one extra language of your choice.",
+      "fullText": "You can speak, read, and write Common and one extra language of your choice. Humans typically learn the languages of other peoples they deal with, including obscure dialects. They are fond of sprinkling their speech with words borrowed from other tongues: Orc curses, Elvish musical expressions, Dwarvish military phrases, and so on."
+    },
+    "effects": [
+      {
+        "type": "proficiency",
+        "category": "languages",
+        "item": "lang_common"
+      },
+      {
+        "type": "proficiency_choice",
+        "category": "languages",
+        "choice": {
+          "count": 1,
+          "pool": [
+            "lang_elvish",
+            "lang_dwarvish",
+            "lang_orc",
+            "lang_halfling",
+            "lang_draconic",
+            "lang_infernal"
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "id": "trait_human_size",
+    "name": "Size",
+    "lore": {
+      "shortDescription": "Your size is Medium.",
+      "fullText": "Humans vary widely in height and build, from barely 5 feet to well over 6 feet tall. Regardless of your position in that range, your size is Medium."
+    },
+    "effects": [
+      {
+        "type": "size_set",
+        "target": "medium"
+      }
+    ]
+  },
+  {
+    "id": "trait_human_speed",
+    "name": "Speed",
+    "lore": {
+      "shortDescription": "Your base walking speed is 30 feet.",
+      "fullText": "Your base walking speed is 30 feet."
+    },
+    "effects": [
+      {
+        "type": "stat_modifier",
+        "target": "base_speed",
+        "value": 30
+      }
+    ]
+  },
+  {
+    "id": "trait_tiefling_ability_bonuses",
+    "name": "Ability Score Increase",
+    "lore": {
+      "shortDescription": "+1 Intelligence, +2 Charisma",
+      "fullText": "Your Intelligence score increases by 1, and your Charisma score increases by 2."
+    },
+    "effects": [
+      {
+        "type": "ability_bonus_fixed",
+        "target": "int",
+        "value": 1
+      },
+      {
+        "type": "ability_bonus_fixed",
+        "target": "cha",
+        "value": 2
+      }
+    ]
+  },
+  {
+    "id": "trait_tiefling_age",
+    "name": "Age",
+    "lore": {
+      "shortDescription": "You reach adulthood around 19 and live less than 100 years.",
+      "fullText": "Tieflings mature at the same rate as humans but live a few years longer."
+    }
+  },
+  {
+    "id": "trait_tiefling_languages",
+    "name": "Languages",
+    "lore": {
+      "shortDescription": "You can speak, read, and write Common and Infernal.",
+      "fullText": "You can speak, read, and write Common and Infernal."
+    },
+    "effects": [
+      {
+        "type": "proficiency",
+        "category": "languages",
+        "item": "lang_common"
+      },
+      {
+        "type": "proficiency",
+        "category": "languages",
+        "item": "lang_infernal"
+      }
+    ]
+  },
+  {
+    "id": "trait_tiefling_size",
+    "name": "Size",
+    "lore": {
+      "shortDescription": "Your size is Medium.",
+      "fullText": "Tieflings are about the same size and build as humans. Your size is Medium."
+    },
+    "effects": [
+      {
+        "type": "size_set",
+        "target": "medium"
+      }
+    ]
+  },
+  {
+    "id": "trait_tiefling_speed",
+    "name": "Speed",
+    "lore": {
+      "shortDescription": "Your base walking speed is 30 feet.",
+      "fullText": "Your base walking speed is 30 feet."
+    },
+    "effects": [
+      {
+        "type": "stat_modifier",
+        "target": "base_speed",
+        "value": 30
+      }
+    ]
+  },
+  {
+    "id": "trait_relentless_endurance",
+    "name": "Relentless Endurance",
+    "lore": {
+      "shortDescription": "Drop to 1 hit point instead of 0 once per long rest.",
+      "fullText": "When you are reduced to 0 hit points but not killed outright, you can drop to 1 hit point instead. You can't use this feature again until you finish a long rest."
+    }
+  },
+  {
+    "id": "trait_savage_attacks",
+    "name": "Savage Attacks",
+    "lore": {
+      "shortDescription": "Roll one of the weapon's damage dice one additional time on a critical hit.",
+      "fullText": "When you score a critical hit with a melee weapon attack, you can roll one of the weapon's damage dice one additional time and add it to the extra damage of the critical hit."
+    }
+  },
+  {
+    "id": "trait_shadow_stalker",
+    "name": "Shadow Stalker",
+    "lore": {
+      "shortDescription": "You gain +2 to Stealth and have Advantage on Stealth checks in dim light."
+    },
+    "effects": [
+      {
+        "type": "stat_modifier",
+        "target": "stealth",
+        "value": 2
+      },
+      {
+        "type": "advantage",
+        "target": "stealth",
+        "predicates": [
+          {
+            "type": "environment_condition",
+            "value": "dim_light"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "trait_skill_versatility",
+    "name": "Skill Versatility",
+    "lore": {
+      "shortDescription": "You gain proficiency in two skills of your choice.",
+      "fullText": "You gain proficiency in two skills of your choice."
+    },
+    "effects": [
+      {
+        "type": "proficiency_choice",
+        "category": "skills",
+        "choice": {
+          "count": 2,
+          "pool": "any"
+        }
+      }
+    ]
+  },
+  {
+    "id": "trait_starlit_bloodline",
+    "name": "Starlit Bloodline",
+    "lore": {
+      "shortDescription": "An inherited celestial spark grants innate magic at key milestones.",
+      "fullText": "Your bloodline resonates with old starlight. Certain spells arise naturally in your magic and are cast innately rather than learned from a spellbook."
+    },
+    "effects": [
+      {
+        "type": "spell_grant",
+        "target": "spell_ember_spark",
+        "levelAvailable": 1,
+        "spellcastingAbility": "cha"
+      },
+      {
+        "type": "spell_grant",
+        "target": "spell_lunar_step",
+        "levelAvailable": 5,
+        "spellcastingAbility": "cha",
+        "uses": {
+          "count": 1,
+          "reset": "long_rest"
+        }
+      },
+      {
+        "type": "spell_grant",
+        "target": "spell_starfall_seal",
+        "levelAvailable": 9,
+        "spellcastingAbility": "cha",
+        "uses": {
+          "count": 1,
+          "reset": "long_rest"
+        }
+      }
+    ]
+  },
+  {
+    "id": "trait_stone_camouflage",
+    "name": "Stone Camouflage",
+    "lore": {
+      "shortDescription": "Advantage on Stealth checks while in rocky terrain.",
+      "fullText": "You have advantage on Dexterity (Stealth) checks to hide in rocky terrain."
+    }
+  },
+  {
+    "id": "trait_stonecutting",
+    "name": "Stonecutting",
+    "lore": {
+      "shortDescription": "Gain proficiency and expertise with History checks related to stonework.",
+      "fullText": "Whenever you make an Intelligence (History) check related to the origin of stonework, you are considered proficient in the History skill and add double your proficiency bonus to the check, instead of your normal proficiency bonus."
+    }
+  },
+  {
+    "id": "trait_stormborn",
+    "name": "Stormborn",
+    "lore": {
+      "shortDescription": "Gain a flying speed when you are not underground or indoors.",
+      "fullText": "At 17th level, you have a flying speed equal to your current walking speed whenever you are not underground or indoors."
+    }
+  },
+  {
+    "id": "trait_stout_resilience",
+    "name": "Stout Resilience",
+    "lore": {
+      "shortDescription": "Gain advantage and resistance against poison.",
+      "fullText": "You have advantage on saving throws against poison, and you have resistance against poison damage."
+    },
+    "effects": [
+      {
+        "type": "advantage",
+        "target": "poison_save"
+      },
+      {
+        "type": "resistance",
+        "target": "poison_damage"
+      }
+    ]
+  },
+  {
+    "id": "trait_supreme_healing",
+    "name": "Supreme Healing",
+    "lore": {
+      "shortDescription": "Maximize your healing spells.",
+      "fullText": "Starting at 17th level, when you would normally roll one or more dice to restore hit points with a spell, you instead use the highest number possible for each die. For example, instead of restoring 2d6 hit points to a creature, you restore 12."
+    }
+  },
+  {
+    "id": "trait_thunderous_strike",
+    "name": "Thunderous Strike",
+    "lore": {
+      "shortDescription": "Push a creature when you deal lightning damage.",
+      "fullText": "At 6th level, when you deal lightning damage to a Large or smaller creature, you can also push it up to 10 feet away from you."
+    }
+  },
+  {
+    "id": "trait_tinker",
+    "name": "Tinker",
+    "lore": {
+      "shortDescription": "Gain proficiency with artisan's tools, and the ability to create a tiny clockwork device.",
+      "fullText": "You have proficiency with artisan's tools (tinker's tools). Using those tools, you can spend 1 hour and 10 gp worth of materials to construct a Tiny clockwork device (AC 5, 1 hp). The device ceases to function after 24 hours (unless you spend 1 hour repairing it to keep the device functioning), or when you use your action to dismantle it; at that time, you can reclaim the materials used to create it. You can have up to three such devices active at a time.\nWhen you create a device, choose one of the following options:\nClockwork Toy. This toy is a clockwork animal, monster, or person, such as a frog, mouse, bird, dragon, or soldier. When placed on the ground, the toy moves 5 feet across the ground on each of your turns in a random direction. It makes noises as appropriate to the creature it represents.\nFire Starter. The device produces a miniature flame, which you can use to light a candle, torch, or campfire. Using the device requires your action.\nMusic Box. When opened, this music box plays a single song at a moderate volume. The box stops playing when it reaches the song’s end or when it is closed."
+    }
+  },
+  {
+    "id": "trait_trance",
+    "name": "Trance",
+    "lore": {
+      "shortDescription": "You gain the effects of 8 hours of rest from 4 hours of meditation.",
+      "fullText": "Elves don't need to sleep. Instead, they meditate deeply, remaining semiconscious, for 4 hours a day. (The Common word for such meditation is “trance.”) While meditating, you can dream after a fashion; such dreams are actually mental exercises that have become reflexive through years of practice. After resting in this way, you gain the same benefit that a human does from 8 hours of sleep."
+    }
+  },
+  {
+    "id": "trait_unarmored_defense_barbarian",
+    "name": "Unarmored Defense",
+    "effects": [
+      {
+        "type": "stat_modifier",
+        "target": "ac",
+        "value": "con",
+        "predicates": [
+          {
+            "type": "armor_prohibited",
+            "value": "any"
+          },
+          {
+            "type": "shield_prohibited",
+            "value": true
+          }
+        ]
+      }
+    ],
+    "lore": {
+      "shortDescription": "While you are not wearing any armor, your Armor Class equals 10 + your Dexterity modifier + your Constitution modifier. Vou can use a shield and still gain this benefit.",
+      "fullText": "While you are not wearing any armor, your Armor Class equals 10 + your Dexterity modifier + your Constitution modifier. Vou can use a shield and still gain this benefit."
+    }
+  },
+  {
+    "id": "trait_unarmored_movement",
+    "name": "Unarmored Movement",
+    "lore": {
+      "shortDescription": "Your speed increases by 10 feet while you are not wearing armor or wielding a shield."
+    },
+    "effects": [
+      {
+        "type": "stat_modifier",
+        "target": "speed",
+        "value": 10,
+        "predicates": [
+          {
+            "type": "armor_prohibited",
+            "value": "any"
+          },
+          {
+            "type": "shield_prohibited",
+            "value": true
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "trait_visions_of_the_past",
+    "name": "Visions of the Past",
+    "lore": {
+      "shortDescription": "Call up visions of the past that relate to an object you hold or your immediate surroundings.",
+      "fullText": "Starting at 17th level, you can call up visions of the past that relate to an object you hold or your immediate surroundings. You spend at least 1 minute in meditation and prayer, then receive dreamlike, shadowy glimpses of recent events. You can meditate in this way for a number of minutes equal to your Wisdom score and must maintain concentration during that time, as if you were casting a spell.\nOnce you use this feature, you can't use it again until you finish a short or long rest.\nObject Reading. Holding an object as you meditate, you can see visions of the object's previous owner. After meditating for 1 minute, you learn how the owner acquired and lost the object, as well as the most recent significant event involving the object and that owner. If the object was owned by another creature in the recent past (within a number of days equal to your Wisdom score), you can spend 1 additional minute for each owner to learn the same information about that creature.\nArea Reading. As you meditate, you see visions of recent events in your immediate vicinity (a room, street, tunnel, clearing, or the like, up to a 50-foot cube), going back a number of days equal to your Wisdom score. For each minute you meditate, you learn about one significant event, beginning with the most recent. Significant events typically involve powerful emotions, such as battles and betrayals, marriages and murders, births and funerals. However, they might also include more mundane events that are nevertheless important in your current situation."
+    }
+  },
+  {
+    "id": "trait_war_priest",
+    "name": "War Priest",
+    "lore": {
+      "shortDescription": "Make a weapon attack as a bonus action a number of times equal to your Wisdom modifier.",
+      "fullText": "From 1st level, your god delivers bolts of inspiration to you while you are engaged in battle. When you use the Attack action, you can make one weapon attack as a bonus action.\nYou can use this feature a number of times equal to your Wisdom modifier (a minimum of once). You regain all expended uses when you finish a long rest."
+    }
+  },
+  {
+    "id": "trait_warding_flare",
+    "name": "Warding Flare",
+    "lore": {
+      "shortDescription": "Use your reaction to impose disadvantage on an attack against you.",
+      "fullText": "Also at 1st level, you can interpose divine light between yourself and an attacking enemy. When you are attacked by a creature within 30 feet of you that you can see, you can use your reaction to impose disadvantage on the attack roll, causing light to flare before the attacker before it hits or misses. An attacker that can't be blinded is immune to this feature.\nYou can use this feature a number of times equal to your Wisdom modifier (a minimum of once). You regain all expended uses when you finish a long rest."
+    }
+  },
+  {
+    "id": "trait_wrath_of_the_storm",
+    "name": "Wrath of the Storm",
+    "lore": {
+      "shortDescription": "Use your reaction to deal lightning or thunder damage to an attacker.",
+      "fullText": "Also at 1st level, you can thunderously rebuke attackers. When a creature within 5 feet of you that you can see hits you with an attack, you can use your reaction to cause the creature to make a Dexterity saving throw. The creature takes 2d8 lightning or thunder damage (your choice) on a failed saving throw, and half as much damage on a successful one.\nYou can use this feature a number of times equal to your Wisdom modifier (a minimum of once). You regain all expended uses when you finish a long rest."
+    }
+  }
+]

@@ -1,0 +1,144 @@
+[
+  {
+    "id": "feat_alert",
+    "name": "Alert",
+    "category": "general",
+    "source": "phb",
+    "grantedTraits": [
+      "trait_feat_alert"
+    ],
+    "lore": {
+      "shortDescription": "You gain a +5 bonus to initiative."
+    },
+    "tags": [
+      "initiative"
+    ]
+  },
+  {
+    "id": "feat_battle_hardened",
+    "name": "Battle Hardened",
+    "category": "general",
+    "source": "homebrew",
+    "prerequisites": {
+      "requiredClassIds": [
+        "class_fighter"
+      ]
+    },
+    "grantedTraits": [
+      "trait_feat_battle_hardened"
+    ],
+    "lore": {
+      "shortDescription": "Your martial discipline grants you a +1 bonus to Armor Class."
+    },
+    "tags": [
+      "armor_class"
+    ]
+  },
+  {
+    "id": "feat_fleet_footed",
+    "name": "Fleet Footed",
+    "category": "origin",
+    "source": "homebrew",
+    "prerequisites": {
+      "abilityMinimums": {
+        "dex": 12
+      }
+    },
+    "grantedTraits": [
+      "trait_feat_fleet_footed"
+    ],
+    "lore": {
+      "shortDescription": "Your speed increases by 5 feet."
+    },
+    "tags": [
+      "origin",
+      "speed"
+    ]
+  },
+  {
+    "id": "feat_gifted_mind",
+    "name": "Gifted Mind",
+    "category": "origin",
+    "source": "homebrew",
+    "grantedTraits": [
+      "trait_feat_gifted_mind"
+    ],
+    "lore": {
+      "shortDescription": "You gain proficiency in Arcana and History."
+    },
+    "tags": [
+      "origin",
+      "skills"
+    ]
+  },
+  {
+    "id": "feat_mobile",
+    "name": "Mobile",
+    "category": "general",
+    "source": "phb",
+    "grantedTraits": [
+      "trait_feat_mobile"
+    ],
+    "lore": {
+      "shortDescription": "Your speed increases by 10 feet."
+    },
+    "tags": [
+      "speed"
+    ]
+  },
+  {
+    "id": "feat_skilled",
+    "name": "Skilled",
+    "category": "general",
+    "source": "phb",
+    "grantedTraits": [
+      "trait_feat_skilled"
+    ],
+    "lore": {
+      "shortDescription": "Gain proficiency in any combination of three skills of your choice."
+    },
+    "tags": [
+      "skills"
+    ]
+  },
+  {
+    "id": "feat_spellbound",
+    "name": "Spellbound",
+    "category": "general",
+    "source": "homebrew",
+    "prerequisites": {
+      "requiresSpellcasting": true,
+      "minimumLevel": 4
+    },
+    "grantedTraits": [
+      "trait_feat_spellbound"
+    ],
+    "lore": {
+      "shortDescription": "A feat reserved for practiced spellcasters."
+    },
+    "tags": [
+      "spellcasting"
+    ]
+  },
+  {
+    "id": "feat_starlit_bloodline",
+    "name": "Starlit Bloodline",
+    "category": "general",
+    "source": "homebrew",
+    "prerequisites": {
+      "requiresSpellcasting": true,
+      "minimumLevel": 4
+    },
+    "grantedTraits": [
+      "trait_starlit_bloodline"
+    ],
+    "lore": {
+      "shortDescription": "You awaken latent star-magic and gain innate spells keyed to Charisma.",
+      "fullText": "The old stars answer your call. You gain an innate cantrip immediately and unlock stronger innate spells as you gain levels."
+    },
+    "tags": [
+      "spellcasting",
+      "innate_magic"
+    ]
+  }
+]
