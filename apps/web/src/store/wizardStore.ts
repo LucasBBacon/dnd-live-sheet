@@ -2,58 +2,94 @@ import { create } from "zustand";
 
 interface WizardState {
   currentStep: number;
+  targetLevel: number;
 
   // draft data
-  name: string;
-  selectedRaceId: string | null;
-  selectedSubraceId: string | null;
-  selectedClassId: string | null;
-  selectedSubclassId: string | null;
+  characterName: string;
+  raceId: string | null;
+  subraceId: string | null;
+  classId: string | null;
+  subclassId: string | null;
+
+  raceRequiresSubrace: boolean;
+  classSubclassReqLevel: number | null;
 
   // actions
   setStep: (step: number) => void;
+  setName: (name: string) => void;
   setRace: (raceId: string, requiresSubrace: boolean) => void;
-  setClass: (classId: string, subclassReqLevel: boolean) => void;
+  setSubrace: (subraceId: string) => void;
+  setClass: (classId: string, reqLevel: number) => void;
+  setSubclass: (subclassId: string) => void;
 
   // validation gatekeeper
-  canProceedToNextStep: () => boolean;
+  canProceed: () => boolean;
 }
 
 export const useWizardStore = create<WizardState>((set, get) => ({
   currentStep: 1,
-  name: "",
-  selectedRaceId: null,
-  selectedSubraceId: null,
-  selectedClassId: null,
-  selectedSubclassId: null,
+  targetLevel: 1,
+
+  characterName: "",
+  raceId: null,
+  subraceId: null,
+  classId: null,
+  subclassId: null,
+
+  raceRequiresSubrace: false,
+  classSubclassReqLevel: null,
 
   setStep: (step) => set({ currentStep: step }),
 
+  setName: (name) => set({ characterName: name }),
+
   setRace: (raceId, requiresSubrace) =>
     set({
-      selectedRaceId: raceId,
+      raceId,
+      raceRequiresSubrace: requiresSubrace,
       // wipe subrace if change their mind so it's not saved
-      selectedSubraceId: null,
+      subraceId: null,
     }),
 
-  setClass: (classId, subclassReqLevel) =>
+  setSubrace: (subraceId) => set({ subraceId }),
+
+  setClass: (classId, reqLevel) =>
     set({
-      selectedClassId: classId,
-      selectedSubclassId: null,
+      classId,
+      classSubclassReqLevel: reqLevel,
+      subclassId: null,
     }),
 
-  canProceedToNextStep: () => {
+  setSubclass: (subclassId) => set({ subclassId }),
+
+  canProceed: () => {
     const state = get();
-    if (state.currentStep === 1) return state.name.length > 0;
 
-    if (state.currentStep === 2) {
-      // race selection
-      if (!state.selectedRaceId) return false;
-      // Strict Enforcement: Block UI progression if subrace is required but missing
-      // This requirement logic relies on data fetched from reference API
-      return true;
+    switch (state.currentStep) {
+      case 1: // name and basics
+        return state.characterName.trim().length > 0;
+
+      case 2: // race selection
+        if (!state.raceId) return false;
+        // Strict Enforcement: Block UI progression if subrace is required but missing
+        // This requirement logic relies on data fetched from reference API
+        if (state.raceRequiresSubrace && !state.subraceId) return false;
+        return true;
+
+      case 3: // class selection
+        if (!state.classId) return false;
+        if (
+          state.classSubclassReqLevel &&
+          state.targetLevel >= state.classSubclassReqLevel
+        ) {
+          if (!state.subclassId) return false;
+        }
+        return true;
+
+      // TODO: Add more cases, Ability Scores, Backgrounds, etc...
+
+      default:
+        return false;
     }
-
-    return false;
   },
 }));

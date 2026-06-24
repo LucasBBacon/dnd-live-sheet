@@ -26,12 +26,18 @@ router.get("/races", async (req, res, next) => {
     const allSubraces = await db.select().from(subraces);
 
     // map subraces to their parent race
-    const payload = allRaces.map((race) => ({
-      ...race,
-      subraces: race.requiresSubrace
-        ? allSubraces.filter((sr) => sr.parentRaceId === race.id)
-        : [],
-    }));
+    const payload = allRaces.map((race) => {
+      const linkedSubraces = allSubraces.filter(
+        (sr) => sr.parentRaceId === race.id,
+      );
+
+      return {
+        ...race,
+        // Derive requirement from relational truth, not only a seeded flag.
+        requiresSubrace: race.requiresSubrace || linkedSubraces.length > 0,
+        subraces: linkedSubraces,
+      };
+    });
 
     return res.status(200).json({ races: payload });
   } catch (error) {

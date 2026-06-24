@@ -5,9 +5,18 @@ export const globalErrorHandler = (
   err: Error,
   req: Request,
   res: Response,
-  next: NextFunction,
+  _next: NextFunction,
 ) => {
-  console.error(`[Error] ${req.method} ${req.path}:`, err.message);
+  const cause =
+    err && typeof err === "object" && "cause" in err
+      ? (err as { cause?: unknown }).cause
+      : undefined;
+
+  console.error(`[Error] ${req.method} ${req.path}:`, {
+    name: err.name,
+    message: err.message,
+    cause,
+  });
 
   if (err instanceof ZodError) {
     return res.status(400).json({
@@ -15,4 +24,12 @@ export const globalErrorHandler = (
       details: err.flatten(),
     });
   }
+
+  return res.status(500).json({
+    error: "Internal Server Error",
+    message:
+      process.env.NODE_ENV === "development"
+        ? err.message
+        : "Unexpected failure while processing request.",
+  });
 };
