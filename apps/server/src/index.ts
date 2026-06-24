@@ -2,9 +2,10 @@ import express from "express";
 import http from "http";
 import cors from "cors";
 import helmet from "helmet";
+import characterRoutes from "./routes/character.js";
+import referenceRoutes from "./routes/reference.js";
 import { createAuthMiddleware } from "./middleware/requireAuth.js";
 import { MockAuthProvider } from "./core/auth/MockAuthProvider.js";
-import characterRoutes from "./routes/character.js";
 import { globalErrorHandler } from "./middleware/errorHandler.js";
 import { Server } from "socket.io";
 import { initializeWebSockets } from "./socket/controller.js";
@@ -29,6 +30,7 @@ const authMiddleware = createAuthMiddleware(new MockAuthProvider());
 
 // route registration
 app.use("/api/character", authMiddleware, characterRoutes);
+app.use("/api/reference", referenceRoutes);
 
 // global error catcher (REGISTER LAST)
 app.use(globalErrorHandler);
