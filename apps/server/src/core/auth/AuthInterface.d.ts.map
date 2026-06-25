@@ -1,0 +1,1 @@
+{"version":3,"file":"AuthInterface.d.ts","sourceRoot":"","sources":["AuthInterface.ts"],"names":[],"mappings":"AAAA,OAAO,KAAK,EAAE,OAAO,EAAE,MAAM,SAAS,CAAC;AAGvC,MAAM,WAAW,iBAAiB;IAChC,EAAE,EAAE,MAAM,CAAC;CAEZ;AAED,MAAM,WAAW,YAAY;IAC3B,YAAY,CAAC,GAAG,EAAE,OAAO,GAAG,OAAO,CAAC,iBAAiB,GAAG,IAAI,CAAC,CAAC;CAC/D"}

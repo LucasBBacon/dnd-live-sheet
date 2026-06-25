@@ -1,5 +1,6 @@
 import type { CharacterEngineData } from "@project/shared";
 import * as dotenv from "dotenv";
+import { sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
 import { characters } from "./schema.js";
@@ -59,6 +60,34 @@ const normalizeSpeed = (speed: unknown): number => {
   return 30;
 };
 
+const traitIdToName = (traitId: string): string =>
+  traitId
+    .replace(/^trait_/, "")
+    .split("_")
+    .filter(Boolean)
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(" ");
+
+const normalizeLore = (
+  lore: unknown,
+  fallbackName: string,
+): { shortDescription: string; fullText?: string } => {
+  if (
+    lore &&
+    typeof lore === "object" &&
+    "shortDescription" in lore &&
+    typeof (lore as { shortDescription?: unknown }).shortDescription ===
+      "string"
+  ) {
+    return lore as { shortDescription: string; fullText?: string };
+  }
+
+  return {
+    shortDescription: `${fallbackName} reference data.`,
+    fullText: "",
+  };
+};
+
 const runMigration = async () => {
   console.log("Initiating Reference Data ETL Pipeline...");
 
@@ -66,6 +95,72 @@ const runMigration = async () => {
     // EXTRACT: load raw JSON payloads
     const rawTraits = await loadJsonData<any>("traits.json");
     const rawFeats = await loadJsonData<any>("feats.json");
+    const rawRaces = await loadJsonData<any>("races.json");
+    const rawSubraces = await loadJsonData<any>("subraces.json");
+    const rawClasses = await loadJsonData<any>("classes.json");
+    const rawSubclasses = await loadJsonData<any>("subclasses.json");
+
+    const knownTraitIds = new Set<string>(
+      rawTraits
+        .map((t: any) => t.id)
+        .filter((id: unknown): id is string => typeof id === "string"),
+    );
+
+    const referencedTraitIds = new Set<string>();
+
+    for (const feat of rawFeats) {
+      for (const traitId of feat.grantedTraits || []) {
+        if (typeof traitId === "string") referencedTraitIds.add(traitId);
+      }
+    }
+
+    for (const race of rawRaces) {
+      for (const traitId of race.traits || []) {
+        if (typeof traitId === "string") referencedTraitIds.add(traitId);
+      }
+    }
+
+    for (const subrace of rawSubraces) {
+      for (const traitId of subrace.traitsAdded || []) {
+        if (typeof traitId === "string") referencedTraitIds.add(traitId);
+      }
+    }
+
+    for (const cls of rawClasses) {
+      for (const progression of cls.progression || []) {
+        for (const traitId of progression.features || []) {
+          if (typeof traitId === "string") referencedTraitIds.add(traitId);
+        }
+      }
+    }
+
+    for (const subclass of rawSubclasses) {
+      for (const progression of subclass.progression || []) {
+        for (const traitId of progression.features || []) {
+          if (typeof traitId === "string") referencedTraitIds.add(traitId);
+        }
+      }
+    }
+
+    const missingTraitRows: Array<{
+      id: string;
+      name: string;
+      lore: { shortDescription: string; fullText?: string };
+      effects: unknown[];
+      isStartingProficiency: boolean;
+    }> = [...referencedTraitIds]
+      .filter((traitId) => !knownTraitIds.has(traitId))
+      .map((traitId) => ({
+        id: traitId,
+        name: traitIdToName(traitId),
+        lore: {
+          shortDescription: "Auto-generated placeholder trait from source references.",
+          fullText:
+            "This trait was generated during seeding because it is referenced by progression or reference data but is missing from traits.json.",
+        },
+        effects: [],
+        isStartingProficiency: false,
+      }));
 
     // LOAD: traits (base entity)
     if (rawTraits.length > 0) {
@@ -74,7 +169,7 @@ const runMigration = async () => {
       const mappedTraits = rawTraits.map((t: any) => ({
         id: t.id,
         name: t.name,
-        lore: t.lore,
+        lore: normalizeLore(t.lore, t.name ?? t.id ?? "Trait"),
         effects: t.effects || [],
         isStartingProficiency: t.isStartingProficiency ?? false,
       }));
@@ -83,6 +178,16 @@ const runMigration = async () => {
         .insert(traits)
         .values(mappedTraits)
         .onConflictDoNothing({ target: traits.id });
+
+      if (missingTraitRows.length > 0) {
+        console.warn(
+          `Detected ${missingTraitRows.length} missing referenced traits. Creating placeholders to satisfy foreign keys.`,
+        );
+        await db
+          .insert(traits)
+          .values(missingTraitRows as any[])
+          .onConflictDoNothing({ target: traits.id });
+      }
     }
 
     // LOAD: feats (base entity)
@@ -95,7 +200,7 @@ const runMigration = async () => {
         category: f.category,
         source: f.source || null,
         repeatable: f.repeatable ?? false,
-        lore: f.lore,
+        lore: normalizeLore(f.lore, f.name ?? f.id ?? "Feat"),
         prerequisites: f.prerequisites || null,
       }));
 
@@ -146,23 +251,31 @@ const runMigration = async () => {
     }
 
     // 5. LOAD: Races & Subraces
-    const rawRaces = await loadJsonData<any>("races.json");
-    const rawSubraces = await loadJsonData<any>("subraces.json");
 
     if (rawRaces.length > 0) {
       console.log(`Processing ${rawRaces.length} Races...`);
+      const mappedRaces = rawRaces.map((r: any) => ({
+        id: r.id,
+        name: r.name,
+        speed: normalizeSpeed(r.speed),
+        requiresSubrace: !!r.subraceInfo,
+        displayLabel: r.subraceInfo?.displayLabel ?? "",
+        lore: normalizeLore(r.lore, r.name ?? r.id ?? "Race"),
+      }));
+
       await db
         .insert(races)
-        .values(
-          rawRaces.map((r: any) => ({
-            id: r.id,
-            name: r.name,
-            speed: normalizeSpeed(r.speed),
-            requiresSubrace: r.requiresSubrace ?? false, // Strict requirement enforcement
-            lore: r.lore,
-          })),
-        )
-        .onConflictDoNothing();
+        .values(mappedRaces)
+        .onConflictDoUpdate({
+          target: races.id,
+          set: {
+            name: sql`excluded.name`,
+            speed: sql`excluded.speed`,
+            requiresSubrace: sql`excluded.requires_subrace`,
+            displayLabel: sql`excluded.display_label`,
+            lore: sql`excluded.lore`,
+          },
+        });
 
       const raceTraitsData = rawRaces.flatMap((r: any) =>
         (r.traits || []).map((traitId: string) => ({ raceId: r.id, traitId })),
@@ -183,7 +296,7 @@ const runMigration = async () => {
             id: sr.id,
             parentRaceId: sr.parentRaceId,
             name: sr.name,
-            lore: sr.lore,
+            lore: normalizeLore(sr.lore, sr.name ?? sr.id ?? "Subrace"),
           })),
         )
         .onConflictDoNothing();
@@ -202,8 +315,6 @@ const runMigration = async () => {
     }
 
     // 6. LOAD: Classes & Subclasses
-    const rawClasses = await loadJsonData<any>("classes.json");
-    const rawSubclasses = await loadJsonData<any>("subclasses.json");
 
     if (rawClasses.length > 0) {
       console.log(`Processing ${rawClasses.length} Classes...`);
@@ -216,7 +327,7 @@ const runMigration = async () => {
             hitDie: c.hitDie,
             subclassRequirementLevel: c.subclassInfo?.choiceLevel || 3, // Strict gatekeeper
             startingEquipment: c.startingEquipment || {},
-            lore: c.lore,
+            lore: normalizeLore(c.lore, c.name ?? c.id ?? "Class"),
           })),
         )
         .onConflictDoNothing();
@@ -265,7 +376,7 @@ const runMigration = async () => {
             id: sc.id,
             parentClassId: sc.parentClassId,
             name: sc.name,
-            lore: sc.lore,
+            lore: normalizeLore(sc.lore, sc.name ?? sc.id ?? "Subclass"),
           })),
         )
         .onConflictDoNothing();

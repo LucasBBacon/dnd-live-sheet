@@ -1,4 +1,8 @@
-import type { FeatPrerequisites, ModifiersListData, TraitEffect } from "@project/shared";
+import type {
+  FeatPrerequisites,
+  ModifiersListData,
+  TraitEffect,
+} from "@project/shared";
 import {
   boolean,
   integer,
@@ -90,6 +94,7 @@ export const races = pgTable("races", {
   name: varchar("name", { length: 255 }).notNull(),
   speed: integer("speed").notNull(),
   requiresSubrace: boolean("requires_subrace").default(false).notNull(),
+  displayLabel: varchar("display_label", { length: 255 }),
   lore: jsonb("lore")
     .$type<{ shortDescription: string; fullText?: string }>()
     .notNull(),

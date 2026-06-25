@@ -5,8 +5,10 @@ import {
   classLevels,
   classProgressions,
   races,
+  raceTraits,
   subclasses,
   subraces,
+  subraceTraits,
   traits,
 } from "@project/database/src/reference.js";
 import { eq } from "drizzle-orm";
@@ -21,21 +23,48 @@ router.get("/races", async (req, res, next) => {
   try {
     // fetch all base races
     const allRaces = await db.select().from(races);
-
     // fetch all subraces and bundle them efficiently in memory
     const allSubraces = await db.select().from(subraces);
 
-    // map subraces to their parent race
+    // fetch all traits tied to base races
+    const fullyResolvedRaceTraits = await db
+      .select({ raceId: raceTraits.raceId, trait: traits })
+      .from(raceTraits)
+      .innerJoin(traits, eq(raceTraits.traitId, traits.id));
+
+    // fetch all traits tied to subraces
+    const fullyResolvedSubraceTraits = await db
+      .select({ subraceId: subraceTraits.subraceId, traits: traits })
+      .from(subraceTraits)
+      .innerJoin(traits, eq(subraceTraits.traitId, traits.id));
+
+    // map subraces to their parent race with explicit provenance
     const payload = allRaces.map((race) => {
-      const linkedSubraces = allSubraces.filter(
-        (sr) => sr.parentRaceId === race.id,
-      );
+      // filter traits for this race and map them with an explicit source header
+      const baseTraits = fullyResolvedRaceTraits
+        .filter((rt) => rt.raceId === race.id)
+        .map((rt) => ({ ...rt.trait, sourceOrigin: `Race: ${race.name}` }));
+
+      const associatedSubraces = allSubraces
+        .filter((sr) => sr.parentRaceId === race.id)
+        .map((subrace) => {
+          const subTraits = fullyResolvedSubraceTraits
+            .filter((st) => st.subraceId === subrace.id)
+            .map((st) => ({
+              ...st.traits,
+              sourceOrigin: `Subrace: ${subrace.name}`, // hard metadata source track
+            }));
+
+          return {
+            ...subrace,
+            traits: subTraits,
+          };
+        });
 
       return {
         ...race,
-        // Derive requirement from relational truth, not only a seeded flag.
-        requiresSubrace: race.requiresSubrace || linkedSubraces.length > 0,
-        subraces: linkedSubraces,
+        traits: baseTraits,
+        subraces: associatedSubraces,
       };
     });
 
