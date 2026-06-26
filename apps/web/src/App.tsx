@@ -1,9 +1,9 @@
-import { ClassStepContainer } from "./components/wizard/ClassStepContainer";
+import { AbilityStepContainer } from "./components/wizard/AbilityStepContainer";
 
 const App = () => {
   return (
     <div>
-      <ClassStepContainer />
+      <AbilityStepContainer />
     </div>
   );
 };

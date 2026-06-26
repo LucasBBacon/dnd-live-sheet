@@ -1,5 +1,8 @@
 import { create } from "zustand";
 
+export type GenerationMethod = "STANDARD_ARRAY" | "POINT_BUY" | "MANUAL";
+export type Attributes = "str" | "dex" | "con" | "int" | "wis" | "cha";
+
 interface WizardState {
   currentStep: number;
   targetLevel: number;
@@ -14,6 +17,9 @@ interface WizardState {
   raceRequiresSubrace: boolean;
   classSubclassReqLevel: number | null;
 
+  generationMethod: GenerationMethod;
+  baseAbilityScores: Record<Attributes, number>;
+
   // actions
   setStep: (step: number) => void;
   setName: (name: string) => void;
@@ -21,13 +27,16 @@ interface WizardState {
   setSubrace: (subraceId: string) => void;
   setClass: (classId: string, reqLevel: number) => void;
   setSubclass: (subclassId: string) => void;
+  setGenerationMethod: (method: GenerationMethod) => void;
+  setBaseAbilityScore: (stat: Attributes, value: number) => void;
+  setAllAbilityScores: (scores: Record<Attributes, number>) => void;
 
   // validation gatekeeper
   canProceed: () => boolean;
 }
 
 export const useWizardStore = create<WizardState>((set, get) => ({
-  currentStep: 3,
+  currentStep: 4,
   targetLevel: 1,
 
   characterName: "",
@@ -62,6 +71,23 @@ export const useWizardStore = create<WizardState>((set, get) => ({
 
   setSubclass: (subclassId) => set({ subclassId }),
 
+  generationMethod: "STANDARD_ARRAY",
+  baseAbilityScores: { str: 8, dex: 8, con: 8, int: 8, wis: 8, cha: 8 },
+
+  setGenerationMethod: (method) =>
+    set({
+      generationMethod: method,
+      // reset ot baseline when switching methods!!
+      baseAbilityScores: { str: 8, dex: 8, con: 8, int: 8, wis: 8, cha: 8 },
+    }),
+
+  setBaseAbilityScore: (stat, value) =>
+    set((state) => ({
+      baseAbilityScores: { ...state.baseAbilityScores, [stat]: value },
+    })),
+
+  setAllAbilityScores: (scores) => set({ baseAbilityScores: scores }),
+
   canProceed: () => {
     const state = get();
 
@@ -85,6 +111,12 @@ export const useWizardStore = create<WizardState>((set, get) => ({
           if (!state.subclassId) return false;
         }
         return true;
+
+      case 4:
+        // ensure all ability scores are within valid phb bounds (3-18 pre racial)
+        return Object.values(state.baseAbilityScores).every(
+          (val) => val >= 3 && val <= 18,
+        );
 
       // TODO: Add more cases, Ability Scores, Backgrounds, etc...
 
