@@ -110,36 +110,39 @@ router.get("/classes/:id/subclasses", async (req, res, next) => {
  * GET /api/reference/classes/:id/timeline
  * Builds on the 1-to-20 progression array, merging class level sand granted traits
  */
-router.get("classes/:id/timeline", async (req, res, next) => {
+router.get('/classes/:id/timeline', async (req, res, next) => {
   try {
     const classId = req.params.id;
 
-    // Fetch the raw scaling metadata for levels 1-20
+    // 1. Fetch the raw scaling metadata for levels 1-20
     const levels = await db
       .select()
       .from(classLevels)
       .where(eq(classLevels.classId, classId));
 
-    // Fetch all traits granted by this class across all levels
-    // join the classProgressions junction table with the actual traits table
+    // 2. Fetch all traits granted by this class across all levels
+    // We join the classProgressions junction table with the actual traits table
     const grantedFeatures = await db
-      .select({ level: classProgressions.level, trait: traits }) // pull the entire trait object (including flavour lore)
+      .select({
+        level: classProgressions.level,
+        trait: traits, // Pull the entire trait object (including flavor lore)
+      })
       .from(classProgressions)
       .innerJoin(traits, eq(classProgressions.traitId, traits.id))
       .where(eq(classProgressions.classId, classId));
 
-    // assemble timeline array for frontend
+    // 3. Assemble the timeline array for the frontend
     const timeline = Array.from({ length: 20 }, (_, i) => {
       const currentLevel = i + 1;
-      const levelMeta = levels.find((l) => l.level === currentLevel);
+      const levelMeta = levels.find(l => l.level === currentLevel) || {};
       const featuresAtLevel = grantedFeatures
-        .filter((f) => f.level === currentLevel)
-        .map((f) => f.trait);
+        .filter(f => f.level === currentLevel)
+        .map(f => f.trait);
 
       return {
         level: currentLevel,
-        scaling: levelMeta?.classSpecificScaling || null,
-        spellcasting: levelMeta?.spellcastingProgression || null,
+        scaling: levelMeta.classSpecificScaling || null,
+        spellcasting: levelMeta.spellcastingProgression || null,
         features: featuresAtLevel,
       };
     });
