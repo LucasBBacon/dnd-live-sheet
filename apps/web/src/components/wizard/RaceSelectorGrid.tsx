@@ -52,12 +52,6 @@ export const RaceSelectorGrid = ({ races }: RaceSelectorGridProps) => {
   );
 };
 
-// padding: '1rem',
-//         border: `1px solid ${isSelected ? '#000' : '#ccc'}`,
-//         backgroundColor: isSelected ? '#f5f5f5' : '#fff',
-//         cursor: 'pointer',
-//         transition: 'background-color 0.1s ease'
-
 // Isolated & Memoized leaf component (maximizes virtualization frame budget)
 const RaceCard = React.memo(
   ({

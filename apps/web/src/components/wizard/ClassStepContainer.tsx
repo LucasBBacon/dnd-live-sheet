@@ -10,24 +10,22 @@ export const ClassStepContainer = () => {
   const setStep = useWizardStore((state) => state.setStep);
   const canProceed = useWizardStore((state) => state.canProceed);
 
-  const isActiveStep = currentStep === 3;
-  if (!isActiveStep) return null;
+  if (currentStep !== 3) return null;
 
-  // fetch only lightweight base class definitions
+  // Fetch only the lightweight base class definitions
   const { data, isLoading, isError } = useQuery({
     queryKey: ["reference", "classes"],
     queryFn: () => apiClient("/reference/classes"),
     staleTime: 1000 * 60 * 30,
-    enabled: isActiveStep,
   });
 
   if (isLoading)
     return (
-      <div style={{ fontStyle: "monospace" }}>Hydrating class matrix...</div>
+      <div style={{ fontFamily: "monospace" }}>Hydrating class matrix...</div>
     );
   if (isError || !data)
     return (
-      <div style={{ fontStyle: "monospace" }}>
+      <div style={{ fontFamily: "monospace" }}>
         Fatal: Failed to sync class schemas.
       </div>
     );
@@ -63,6 +61,7 @@ export const ClassStepContainer = () => {
         <div style={{ overflowY: "auto", flexGrow: 1, paddingBottom: "1rem" }}>
           <ClassDetailView classes={data.classes} />
         </div>
+
         <div
           style={{
             borderTop: "1px solid #333",

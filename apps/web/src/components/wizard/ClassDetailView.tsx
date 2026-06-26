@@ -1,17 +1,17 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useQuery } from "@tanstack/react-query";
 import { useWizardStore } from "../../store/wizardStore";
 import { apiClient } from "../../api/client";
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
 export const ClassDetailView = ({ classes }: { classes: any[] }) => {
   const selectedClassId = useWizardStore((state) => state.classId);
   const selectedSubclassId = useWizardStore((state) => state.subclassId);
   const setSubclass = useWizardStore((state) => state.setSubclass);
-  const targetLevel = useWizardStore((state) => state.targetLevel);
+  const targetLevel = useWizardStore((state) => state.targetLevel); // Defaults to 1
 
   const activeClass = classes.find((c) => c.id === selectedClassId);
 
-  // on demand data fetching
+  // On-Demand Data Fetching
   const { data: subclassesData } = useQuery({
     queryKey: ["reference", "subclasses", selectedClassId],
     queryFn: () =>
@@ -20,8 +20,13 @@ export const ClassDetailView = ({ classes }: { classes: any[] }) => {
   });
 
   const { data: timelineData, isLoading: timelineLoading } = useQuery({
-    queryKey: ["reference", "timeline", selectedClassId],
-    queryFn: () => apiClient(`/reference/classes/${selectedClassId}/timeline`),
+    queryKey: ["reference", "timeline", selectedClassId, selectedSubclassId],
+    queryFn: () => {
+      const timelineEndpoint = selectedSubclassId
+        ? `/reference/classes/${selectedClassId}/timeline?subclassId=${encodeURIComponent(selectedSubclassId)}`
+        : `/reference/classes/${selectedClassId}/timeline`;
+      return apiClient(timelineEndpoint);
+    },
     enabled: !!selectedClassId,
   });
 
@@ -65,19 +70,19 @@ export const ClassDetailView = ({ classes }: { classes: any[] }) => {
         </p>
       </section>
 
-      {/* TODO: EQUIPMENT PARSER */}
+      {/* TODO: Implement Starting Equipment parser (Phase 7) */}
       <section
         style={{
-          border: "1px dashed #333",
           padding: "1rem",
-          backgroundColor: "#fafafa",
+          backgroundColor: "#eef",
+          border: "1px solid #ccf",
         }}
       >
         <strong>STARTING EQUIPMENT:</strong> Allocation parser pending
-        deployment...
+        deployment.
       </section>
 
-      {/* SUBCLASS GATEKEEPER UI */}
+      {/* Subclass Gatekeeper UI */}
       {requiresSubclassNow && subclassesData?.subclasses && (
         <section
           style={{
@@ -87,7 +92,7 @@ export const ClassDetailView = ({ classes }: { classes: any[] }) => {
           }}
         >
           <h3 style={{ margin: "0 0 0.5rem 0", fontSize: "1rem" }}>
-            Required Selection: Archetype
+            Required Selection: Archetype/Domain
           </h3>
           <select
             value={selectedSubclassId || ""}
@@ -110,7 +115,7 @@ export const ClassDetailView = ({ classes }: { classes: any[] }) => {
         </section>
       )}
 
-      {/* 1-20 TIMELINE */}
+      {/* 1-to-20 Timeline Rendering */}
       <section>
         <h3
           style={{ borderBottom: "1px solid #333", paddingBottom: "0.25rem" }}

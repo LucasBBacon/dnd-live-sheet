@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import React, { useMemo, useState } from "react";
+import React, { useState, useMemo } from "react";
 import { useWizardStore } from "../../store/wizardStore";
 
 interface ClassSelectorGridProps {
@@ -79,7 +79,7 @@ const ClassCard = React.memo(
         <span>{name}</span>
         <span style={{ fontSize: "0.85rem", color: "#555" }}>d{hitDie}</span>
       </div>
-      <div style={{ fontSize: "0.5rem", color: "#777", marginTop: "0.25rem" }}>
+      <div style={{ fontSize: "0.85rem", color: "#666", marginTop: "0.25rem" }}>
         {shortDesc}
       </div>
     </div>

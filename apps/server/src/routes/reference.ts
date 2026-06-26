@@ -7,11 +7,12 @@ import {
   races,
   raceTraits,
   subclasses,
+  subclassProgressions,
   subraces,
   subraceTraits,
   traits,
 } from "@project/database/src/reference.js";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 
 const router: ExpressRouter = Router();
 
@@ -113,6 +114,8 @@ router.get("/classes/:id/subclasses", async (req, res, next) => {
 router.get('/classes/:id/timeline', async (req, res, next) => {
   try {
     const classId = req.params.id;
+    const requestedSubclassId =
+      typeof req.query.subclassId === "string" ? req.query.subclassId : undefined;
 
     // 1. Fetch the raw scaling metadata for levels 1-20
     const levels = await db
@@ -131,18 +134,55 @@ router.get('/classes/:id/timeline', async (req, res, next) => {
       .innerJoin(traits, eq(classProgressions.traitId, traits.id))
       .where(eq(classProgressions.classId, classId));
 
+    let subclassGrantedFeatures: Array<{ level: number; trait: any }> = [];
+    if (requestedSubclassId) {
+      const [validSubclass] = await db
+        .select()
+        .from(subclasses)
+        .where(
+          and(
+            eq(subclasses.id, requestedSubclassId),
+            eq(subclasses.parentClassId, classId),
+          ),
+        )
+        .limit(1);
+
+      if (validSubclass) {
+        const subclassFeatureRows = await db
+          .select({
+            level: subclassProgressions.level,
+            trait: traits,
+          })
+          .from(subclassProgressions)
+          .innerJoin(traits, eq(subclassProgressions.traitId, traits.id))
+          .where(eq(subclassProgressions.subclassId, requestedSubclassId));
+
+        subclassGrantedFeatures = subclassFeatureRows.map((row) => ({
+          level: row.level,
+          trait: {
+            ...row.trait,
+            sourceOrigin: `Subclass: ${validSubclass.name}`,
+          },
+        }));
+      }
+    }
+
     // 3. Assemble the timeline array for the frontend
     const timeline = Array.from({ length: 20 }, (_, i) => {
       const currentLevel = i + 1;
-      const levelMeta = levels.find(l => l.level === currentLevel) || {};
-      const featuresAtLevel = grantedFeatures
+      const levelMeta = levels.find(l => l.level === currentLevel);
+      const classFeaturesAtLevel = grantedFeatures
         .filter(f => f.level === currentLevel)
         .map(f => f.trait);
+      const subclassFeaturesAtLevel = subclassGrantedFeatures
+        .filter(f => f.level === currentLevel)
+        .map(f => f.trait);
+      const featuresAtLevel = [...classFeaturesAtLevel, ...subclassFeaturesAtLevel];
 
       return {
         level: currentLevel,
-        scaling: levelMeta.classSpecificScaling || null,
-        spellcasting: levelMeta.spellcastingProgression || null,
+        scaling: levelMeta?.classSpecificScaling || null,
+        spellcasting: levelMeta?.spellcastingProgression || null,
         features: featuresAtLevel,
       };
     });
