@@ -1,5 +1,6 @@
 import { describe, expect, it, beforeEach, vi } from "vitest";
-import { errorHandler } from "../../errorHandler";
+import { globalErrorHandler } from "../errorHandler";
+import { ZodError } from "zod";
 
 describe("Error Handler Middleware", () => {
   let res: any;
@@ -11,90 +12,166 @@ describe("Error Handler Middleware", () => {
       json: vi.fn().mockReturnThis(),
     };
     next = vi.fn();
+    // Mock console.error to avoid spam in test output
+    vi.spyOn(console, "error").mockImplementation(() => {});
   });
 
-  it("handles standard Error with message", () => {
+  it("returns 500 for standard Error", () => {
     const err = new Error("Test error message");
-    const req = {} as any;
+    const req = { method: "GET", path: "/test" } as any;
 
-    errorHandler(err, req, res, next);
+    globalErrorHandler(err, req, res, next);
 
     expect(res.status).toHaveBeenCalledWith(500);
-    expect(res.json).toHaveBeenCalledWith(
-      expect.objectContaining({
-        error: "Test error message",
-      })
+    expect(res.json).toHaveBeenCalled();
+  });
+
+  it("logs error details to console", () => {
+    const err = new Error("Test error") as any;
+    err.cause = "root cause";
+    const req = { method: "POST", path: "/api/test" } as any;
+
+    globalErrorHandler(err, req, res, next);
+
+    expect(console.error).toHaveBeenCalledWith(
+      expect.stringContaining("[Error] POST /api/test"),
+      expect.any(Object),
     );
   });
 
-  it("handles errors with custom status code", () => {
-    const err = new Error("Not found") as any;
-    err.statusCode = 404;
-    const req = {} as any;
+  it("includes error name and message in logging", () => {
+    const err = new Error("Something went wrong");
+    const req = { method: "GET", path: "/path" } as any;
 
-    errorHandler(err, req, res, next);
+    globalErrorHandler(err, req, res, next);
 
-    expect(res.status).toHaveBeenCalledWith(404);
+    expect(console.error).toHaveBeenCalledWith(
+      expect.any(String),
+      expect.objectContaining({
+        name: "Error",
+        message: "Something went wrong",
+      }),
+    );
   });
 
-  it("defaults to 500 status code when none specified", () => {
-    const err = new Error("Generic error");
-    const req = {} as any;
+  it("includes cause in logging when present", () => {
+    const err = new Error("Wrapped error") as any;
+    err.cause = "Original error";
+    const req = { method: "GET", path: "/test" } as any;
 
-    errorHandler(err, req, res, next);
+    globalErrorHandler(err, req, res, next);
 
-    expect(res.status).toHaveBeenCalledWith(500);
+    expect(console.error).toHaveBeenCalledWith(
+      expect.any(String),
+      expect.objectContaining({
+        cause: "Original error",
+      }),
+    );
   });
 
-  it("handles null error gracefully", () => {
-    errorHandler(null, {}, res, next);
+  it("handles ZodError with 400 status", () => {
+    const zodErr = new ZodError([
+      {
+        code: "invalid_type",
+        expected: "string",
+        received: "number",
+        path: ["name"],
+        message: "Expected string, received number",
+      } as any,
+    ]);
+    const req = { method: "POST", path: "/api/data" } as any;
 
-    expect(res.status).toHaveBeenCalled();
-  });
-
-  it("handles error without message", () => {
-    const err = {} as any;
-    const req = {} as any;
-
-    errorHandler(err, req, res, next);
-
-    expect(res.status).toHaveBeenCalledWith(500);
-  });
-
-  it("handles 400 Bad Request errors", () => {
-    const err = new Error("Validation failed") as any;
-    err.statusCode = 400;
-    const req = {} as any;
-
-    errorHandler(err, req, res, next);
+    globalErrorHandler(zodErr, req, res, next);
 
     expect(res.status).toHaveBeenCalledWith(400);
+    expect(res.json).toHaveBeenCalledWith(
+      expect.objectContaining({
+        error: "Validation Failed",
+        details: expect.any(Object),
+      }),
+    );
   });
 
-  it("handles 401 Unauthorized errors", () => {
-    const err = new Error("Unauthorized") as any;
-    err.statusCode = 401;
-    const req = {} as any;
+  it("returns development error message in dev mode", () => {
+    const originalEnv = process.env.NODE_ENV;
+    process.env.NODE_ENV = "development";
 
-    errorHandler(err, req, res, next);
+    const err = new Error("Dev error message");
+    const req = { method: "GET", path: "/test" } as any;
 
-    expect(res.status).toHaveBeenCalledWith(401);
+    globalErrorHandler(err, req, res, next);
+
+    expect(res.json).toHaveBeenCalledWith(
+      expect.objectContaining({
+        message: "Dev error message",
+      }),
+    );
+
+    process.env.NODE_ENV = originalEnv;
   });
 
-  it("handles 403 Forbidden errors", () => {
-    const err = new Error("Forbidden") as any;
-    err.statusCode = 403;
-    const req = {} as any;
+  it("returns generic error message in production mode", () => {
+    const originalEnv = process.env.NODE_ENV;
+    process.env.NODE_ENV = "production";
 
-    errorHandler(err, req, res, next);
+    const err = new Error("Sensitive error");
+    const req = { method: "GET", path: "/test" } as any;
 
-    expect(res.status).toHaveBeenCalledWith(403);
+    globalErrorHandler(err, req, res, next);
+
+    expect(res.json).toHaveBeenCalledWith(
+      expect.objectContaining({
+        message: "Unexpected failure while processing request.",
+      }),
+    );
+
+    process.env.NODE_ENV = originalEnv;
   });
 
   it("always calls json response", () => {
     const err = new Error("Test");
-    errorHandler(err, {}, res, next);
+    const req = { method: "GET", path: "/test" } as any;
+
+    globalErrorHandler(err, req, res, next);
 
     expect(res.json).toHaveBeenCalled();
+  });
+
+  it("chains status and json calls", () => {
+    const err = new Error("Test");
+    const req = { method: "GET", path: "/test" } as any;
+
+    globalErrorHandler(err, req, res, next);
+
+    expect(res.status).toHaveBeenCalledBefore(res.json as any);
+  });
+
+  it("handles errors with custom cause object", () => {
+    const err = new Error("Main error") as any;
+    err.cause = { details: "Some details", code: "ERR_001" };
+    const req = { method: "POST", path: "/api/users" } as any;
+
+    globalErrorHandler(err, req, res, next);
+
+    expect(console.error).toHaveBeenCalledWith(
+      expect.any(String),
+      expect.objectContaining({
+        cause: { details: "Some details", code: "ERR_001" },
+      }),
+    );
+  });
+
+  it("ignores cause if error object malformed", () => {
+    const err = { message: "Malformed" };
+    const req = { method: "GET", path: "/test" } as any;
+
+    globalErrorHandler(err as any, req, res, next);
+
+    expect(console.error).toHaveBeenCalledWith(
+      expect.any(String),
+      expect.objectContaining({
+        cause: undefined,
+      }),
+    );
   });
 });
