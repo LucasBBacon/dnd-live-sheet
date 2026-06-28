@@ -3,7 +3,7 @@ import { create } from "zustand";
 export type GenerationMethod = "STANDARD_ARRAY" | "POINT_BUY" | "MANUAL";
 export type Attributes = "str" | "dex" | "con" | "int" | "wis" | "cha";
 
-interface WizardState {
+export interface WizardState {
   currentStep: number;
   targetLevel: number;
 

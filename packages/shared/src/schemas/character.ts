@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 // ----------------------------------------------------------------------------------
-// 1. Core primitives and modifiers
+// CORE PRIMITIVES AND MODIFIERS
 // ----------------------------------------------------------------------------------
 
 // Flavor data: updates here do not trigger engine recalculations
@@ -35,7 +35,7 @@ export const ModifiersList = z.array(ModifierSchema).default([]);
 export type ModifiersListData = z.infer<typeof ModifiersList>;
 
 // ----------------------------------------------------------------------------------
-// 2. Progression and options (subrace / subclass enforcements)
+// PROGRESSION AND OPTIONS (subrace / subclass enforcements)
 // ----------------------------------------------------------------------------------
 
 export const RaceConfigurationSchema = z
@@ -74,7 +74,7 @@ export const ClassProgressionSchema = z
   });
 
 // ----------------------------------------------------------------------------------
-// 3. Unified character engine schema
+// UNIFIED CHARACTER ENGINE SCHEMA
 // ----------------------------------------------------------------------------------
 
 export const CharacterEngineSchema = z.object({
@@ -113,3 +113,55 @@ export const BaseCharacterSchema = z.object({
 });
 
 export type Character = z.infer<typeof BaseCharacterSchema>;
+
+// ----------------------------------------------------------------------------------
+// CHARACTER CREATION PAYLOAD
+// ----------------------------------------------------------------------------------
+
+export const CreateCharacterPayloadSchema = z.object({
+  name: z.string().min(1, "Character name is required"),
+  raceId: z.string(),
+  subraceId: z.string().nullable(),
+
+  // class configuration for lvl 1
+  classId: z.string(),
+  subclassId: z.string().nullable(),
+
+  baseAbilityScores: z
+    .object({
+      str: z.number().int().min(3).max(18),
+      dex: z.number().int().min(3).max(18),
+      con: z.number().int().min(3).max(18),
+      int: z.number().int().min(3).max(18),
+      wis: z.number().int().min(3).max(18),
+      cha: z.number().int().min(3).max(18),
+    })
+    .strict(),
+
+  alignment: z.string(),
+
+  background: z.object({
+    type: z.enum(["PRESET", "CUSTOM"]),
+    presetId: z.string().nullable(),
+    customData: z
+      .object({
+        name: z.string(),
+        featureName: z.string(),
+        featureDescription: z.string(),
+        skillTraitIds: z.array(z.string()),
+        toolLanguageTraitIds: z.array(z.string()),
+      })
+      .nullable(),
+  }),
+
+  personality: z.object({
+    traits: z.string(),
+    ideals: z.string(),
+    bonds: z.string(),
+    flaws: z.string(),
+  }),
+});
+
+export type CreateCharacterPayload = z.infer<
+  typeof CreateCharacterPayloadSchema
+>;
