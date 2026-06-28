@@ -73,7 +73,122 @@ export const BackgroundDetailView = ({
                 </p>
               </div>
             )}
-            {/* TODO: Render granted skill traits here using the provenance UX we built for Races */}
+
+            {!!activeBg && (
+              <section
+                style={{
+                  marginTop: "1rem",
+                }}
+              >
+                <h4
+                  style={{
+                    margin: "0 0 0.75rem 0",
+                    borderBottom: "1px solid #333",
+                    paddingBottom: "0.25rem",
+                  }}
+                >
+                  Granted Background Traits ({activeBg.traits?.length ?? 0})
+                </h4>
+
+                {!activeBg.traits || activeBg.traits.length === 0 ? (
+                  <p
+                    style={{
+                      margin: 0,
+                      fontSize: "0.85rem",
+                      color: "#888",
+                      fontStyle: "italic",
+                    }}
+                  >
+                    No trait payload found for this preset background.
+                  </p>
+                ) : (
+                  <div
+                    style={{
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: "0.75rem",
+                    }}
+                  >
+                    {activeBg.traits.map((trait: any) => (
+                      <div
+                        key={trait.id}
+                        style={{
+                          border: "1px solid #ddd",
+                          padding: "0.75rem",
+                          backgroundColor: "#fff",
+                          position: "relative",
+                        }}
+                      >
+                        <span
+                          style={{
+                            position: "absolute",
+                            top: "0.5rem",
+                            right: "0.5rem",
+                            fontSize: "0.75rem",
+                            background: "#e0f0ff",
+                            padding: "0.1rem 0.4rem",
+                            border: "1px solid #b3d7ff",
+                            fontWeight: "bold",
+                            color: "#004085",
+                          }}
+                        >
+                          {trait.sourceOrigin || `Background: ${activeBg.name}`}
+                        </span>
+
+                        <div
+                          style={{
+                            fontWeight: "bold",
+                            fontSize: "0.95rem",
+                            marginBottom: "0.25rem",
+                            paddingRight: "160px",
+                          }}
+                        >
+                          {trait.name}
+                        </div>
+
+                        <div
+                          style={{
+                            fontSize: "0.85rem",
+                            color: "#444",
+                            lineHeight: "1.4",
+                            paddingRight: "160px",
+                          }}
+                        >
+                          {trait.lore?.shortDescription ||
+                            "No summary provided for this trait."}
+                        </div>
+
+                        {Array.isArray(trait.effects) && trait.effects.length > 0 && (
+                          <div
+                            style={{
+                              marginTop: "0.5rem",
+                              display: "flex",
+                              gap: "0.5rem",
+                              flexWrap: "wrap",
+                            }}
+                          >
+                            {trait.effects.map((eff: any, idx: number) => (
+                              <span
+                                key={idx}
+                                style={{
+                                  fontSize: "0.7rem",
+                                  background: "#eef9ee",
+                                  border: "1px solid #cceecc",
+                                  padding: "0.1rem 0.3rem",
+                                  color: "#155724",
+                                }}
+                              >
+                                Mod: {eff.type} {eff.target || eff.category || ""}
+                              </span>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </section>
+            )}
           </section>
         )}
 
