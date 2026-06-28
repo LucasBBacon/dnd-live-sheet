@@ -18,13 +18,17 @@ Implemented right now:
 - Real-time HP modification flow over Socket.IO
 - Local mock authentication (`x-tester-id` header)
 - Shared package test suite with Vitest
+- Character creation wizard (race, subrace, class, subclass, abilities, background, personality steps)
+- `POST /api/character` endpoint — validates wizard payload and persists a new character in an atomic transaction
+- Reference data API (`/api/reference`) — serves races, subraces, classes, subclasses, backgrounds, and traits from the database
+- Zustand-powered wizard store managing multi-step draft state on the client
 
 Not implemented yet:
 
-- Character creation wizard
 - Level-up flow
 - Full dice system (digital/manual roll pipelines)
 - Broader action set beyond `MODIFY_HP`
+- Real authentication (currently mock via `x-tester-id` header)
 
 ## Monorepo Layout
 
@@ -118,20 +122,35 @@ Database (`@project/database`):
 
 ## API Overview
 
-All routes are currently mounted under `/api/character` and protected by mock auth.
+All routes are protected by mock auth.
 
 Auth requirement for local testing:
 
 - Header: `x-tester-id: dev-user-1`
 
-Endpoints:
+### Character routes (`/api/character`)
 
 - `GET /api/character`
 Returns the active character row for the authenticated user.
 
+- `POST /api/character`
+Validates a `CreateCharacterPayloadSchema` payload from the wizard and inserts a new character in an atomic transaction (character row + class associations + custom trait data).
+
 - `PATCH /api/character/flavor`
 Validates a partial `CharacterFlavorSchema` payload and merges it into `flavor_data`.
 This endpoint intentionally bypasses mechanical recalculation.
+
+### Reference routes (`/api/reference`)
+
+Serves static reference data for the character creation wizard:
+
+- `GET /api/reference/races` — all races with associated traits
+- `GET /api/reference/races/:id` — single race with subraces and traits
+- `GET /api/reference/classes` — all classes with level progressions
+- `GET /api/reference/classes/:id` — single class with subclasses and progressions
+- `GET /api/reference/backgrounds` — all backgrounds with associated traits
+- `GET /api/reference/backgrounds/:id` — single background with traits
+- `GET /api/reference/traits` — all general traits (skill/tool/language proficiencies)
 
 ## Socket Events
 
@@ -173,7 +192,8 @@ pnpm --filter @project/shared test:coverage
 ## Near-Term Roadmap
 
 - Expand action reducer pipeline beyond HP changes
-- Add character creation and level-up workflows
+- Add level-up workflow
 - Add full dice roll handling and validation surface
 - Replace mock auth with real identity/session auth
+- Wire wizard submission to `POST /api/character` and redirect to the live sheet
 
