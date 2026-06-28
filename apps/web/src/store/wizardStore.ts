@@ -20,6 +20,25 @@ interface WizardState {
   generationMethod: GenerationMethod;
   baseAbilityScores: Record<Attributes, number>;
 
+  alignment: string;
+  backgroundType: "PRESET" | "CUSTOM" | null;
+  backgroundId: string | null;
+
+  customBackground: {
+    name: string;
+    featureName: string;
+    featureDescription: string;
+    skillTraitIds: string[]; // strict limit of 2
+    toolLanguageTraitIds: string[]; // strict limit of 2
+  };
+
+  personality: {
+    traits: string;
+    ideals: string;
+    bonds: string;
+    flaws: string;
+  };
+
   // actions
   setStep: (step: number) => void;
   setName: (name: string) => void;
@@ -27,16 +46,28 @@ interface WizardState {
   setSubrace: (subraceId: string) => void;
   setClass: (classId: string, reqLevel: number) => void;
   setSubclass: (subclassId: string) => void;
+
   setGenerationMethod: (method: GenerationMethod) => void;
   setBaseAbilityScore: (stat: Attributes, value: number) => void;
   setAllAbilityScores: (scores: Record<Attributes, number>) => void;
+
+  setAlignment: (alignment: string) => void;
+  setBackgroundMode: (mode: "PRESET" | "CUSTOM") => void;
+  setPresetBackground: (id: string) => void;
+  updateCustomBackground: (
+    updates: Partial<WizardState["customBackground"]>,
+  ) => void;
+  updatePersonality: (
+    field: keyof WizardState["personality"],
+    value: string,
+  ) => void;
 
   // validation gatekeeper
   canProceed: () => boolean;
 }
 
 export const useWizardStore = create<WizardState>((set, get) => ({
-  currentStep: 4,
+  currentStep: 5,
   targetLevel: 1,
 
   characterName: "",
@@ -47,6 +78,25 @@ export const useWizardStore = create<WizardState>((set, get) => ({
 
   raceRequiresSubrace: false,
   classSubclassReqLevel: null,
+
+  alignment: "",
+  backgroundType: null,
+  backgroundId: null,
+
+  customBackground: {
+    name: "",
+    featureName: "",
+    featureDescription: "",
+    skillTraitIds: [],
+    toolLanguageTraitIds: [],
+  },
+
+  personality: {
+    traits: "",
+    ideals: "",
+    bonds: "",
+    flaws: "",
+  },
 
   setStep: (step) => set({ currentStep: step }),
 
@@ -88,6 +138,34 @@ export const useWizardStore = create<WizardState>((set, get) => ({
 
   setAllAbilityScores: (scores) => set({ baseAbilityScores: scores }),
 
+  setAlignment: (alignment) => set({ alignment }),
+
+  setBackgroundMode: (mode) =>
+    set({
+      backgroundType: mode,
+      // wipe specific selections when toggling
+      backgroundId: null,
+      customBackground: {
+        name: "",
+        featureName: "",
+        featureDescription: "",
+        skillTraitIds: [],
+        toolLanguageTraitIds: [],
+      },
+    }),
+
+  setPresetBackground: (id) => set({ backgroundId: id }),
+
+  updateCustomBackground: (updates) =>
+    set((state) => ({
+      customBackground: { ...state.customBackground, ...updates },
+    })),
+
+  updatePersonality: (field, value) =>
+    set((state) => ({
+      personality: { ...state.personality, [field]: value },
+    })),
+
   canProceed: () => {
     const state = get();
 
@@ -112,13 +190,25 @@ export const useWizardStore = create<WizardState>((set, get) => ({
         }
         return true;
 
-      case 4:
+      case 4: // ability score
         // ensure all ability scores are within valid phb bounds (3-18 pre racial)
         return Object.values(state.baseAbilityScores).every(
           (val) => val >= 3 && val <= 18,
         );
 
-      // TODO: Add more cases, Ability Scores, Backgrounds, etc...
+      case 5: // identity and background
+        if (state.alignment.trim().length === 0) return false;
+        if (!state.backgroundType) return false;
+
+        if (state.backgroundType === "PRESET" && !state.backgroundId)
+          return false;
+        if (state.backgroundType === "CUSTOM") {
+          const cb = state.customBackground;
+          if (!cb.name || !cb.featureName || !cb.featureDescription)
+            return false;
+          if (cb.skillTraitIds.length !== 2) return false;
+        }
+        return true;
 
       default:
         return false;

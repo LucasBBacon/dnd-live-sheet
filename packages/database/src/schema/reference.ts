@@ -246,3 +246,45 @@ export const subclassProgressions = pgTable(
     pk: primaryKey({ columns: [table.subclassId, table.level, table.traitId] }),
   }),
 );
+
+// --------------------------------------------------------------
+// BACKGROUNDS
+// --------------------------------------------------------------
+
+export const backgrounds = pgTable("backgrounds", {
+  id: varchar("id", { length: 100 }).primaryKey(),
+  name: varchar("name", { length: 255 }).notNull(),
+
+  // roleplay focused feature
+  featureName: varchar("feature_name", { length: 255 }).notNull(),
+  featureDescription: text("feature_description").notNull(),
+
+  // inspiration tables
+  ideals: jsonb("ideals").$type<string[]>().notNull(),
+  bonds: jsonb("bonds").$type<string[]>().notNull(),
+  flaws: jsonb("flaws").$type<string[]>().notNull(),
+  personalityTraits: jsonb("personality_traits").$type<string[]>().notNull(),
+
+  // TODO: INVENTORY PARSING
+  startingEquipment: jsonb("starting_equipment").notNull(),
+
+  lore: jsonb("lore")
+    .$type<{ shortDescription: string; fullText?: string }>()
+    .notNull(),
+});
+
+// Junction table linking the background to the universal traits table
+export const backgroundTraits = pgTable(
+  "background_traits",
+  {
+    backgroundId: varchar("background_id", { length: 100 })
+      .references(() => backgrounds.id)
+      .notNull(),
+    traitId: varchar("trait_id", { length: 100 })
+      .references(() => traits.id)
+      .notNull(),
+  },
+  (table) => ({
+    pk: primaryKey({ columns: [table.backgroundId, table.traitId] }),
+  }),
+);

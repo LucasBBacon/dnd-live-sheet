@@ -12,6 +12,8 @@ import {
   featTraits,
   traits,
   featPrerequisiteFeats,
+  backgrounds,
+  backgroundTraits,
   races,
   raceTraits,
   subraces,
@@ -22,7 +24,7 @@ import {
   subclasses,
   subclassLevels,
   subclassProgressions,
-} from "./reference.js";
+} from "./schema/reference.js";
 
 dotenv.config({ path: "../../.env" });
 
@@ -99,6 +101,7 @@ const runMigration = async () => {
     const rawSubraces = await loadJsonData<any>("subraces.json");
     const rawClasses = await loadJsonData<any>("classes.json");
     const rawSubclasses = await loadJsonData<any>("subclasses.json");
+    const rawBackgrounds = await loadJsonData<any>("backgrounds.json");
 
     const knownTraitIds = new Set<string>(
       rawTraits
@@ -142,6 +145,12 @@ const runMigration = async () => {
       }
     }
 
+    for (const background of rawBackgrounds) {
+      for (const traitId of background.backgroundTraits || []) {
+        if (typeof traitId === "string") referencedTraitIds.add(traitId);
+      }
+    }
+
     const missingTraitRows: Array<{
       id: string;
       name: string;
@@ -154,7 +163,8 @@ const runMigration = async () => {
         id: traitId,
         name: traitIdToName(traitId),
         lore: {
-          shortDescription: "Auto-generated placeholder trait from source references.",
+          shortDescription:
+            "Auto-generated placeholder trait from source references.",
           fullText:
             "This trait was generated during seeding because it is referenced by progression or reference data but is missing from traits.json.",
         },
@@ -416,6 +426,41 @@ const runMigration = async () => {
         await db
           .insert(subclassProgressions)
           .values(subclassProgressionsData)
+          .onConflictDoNothing();
+    }
+
+    if (rawBackgrounds.length > 0) {
+      console.log(`Processing ${rawBackgrounds.length} Backgrounds...`);
+
+      await db
+        .insert(backgrounds)
+        .values(
+          rawBackgrounds.map((b: any) => ({
+            id: b.id,
+            name: b.name,
+            featureName: b.featureName,
+            featureDescription: b.featureDescription,
+            ideals: b.ideals || [],
+            bonds: b.bonds || [],
+            flaws: b.flaws || [],
+            personalityTraits: b.personalityTraits || [],
+            startingEquipment: b.startingEquipment || {},
+            lore: normalizeLore(b.lore, b.name ?? b.id ?? "Background"),
+          })),
+        )
+        .onConflictDoNothing();
+
+      const backgroundTraitsData = rawBackgrounds.flatMap((b: any) =>
+        (b.backgroundTraits || []).map((traitId: string) => ({
+          backgroundId: b.id,
+          traitId,
+        })),
+      );
+
+      if (backgroundTraitsData.length > 0)
+        await db
+          .insert(backgroundTraits)
+          .values(backgroundTraitsData)
           .onConflictDoNothing();
     }
 

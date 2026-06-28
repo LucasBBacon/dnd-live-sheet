@@ -1,9 +1,9 @@
-import { AbilityStepContainer } from "./components/wizard/AbilityStepContainer";
+import { BackgroundStepContainer } from "./components/wizard/BackgroundStepContainer";
 
 const App = () => {
   return (
     <div>
-      <AbilityStepContainer />
+      <BackgroundStepContainer />
     </div>
   );
 };

@@ -1,6 +1,8 @@
 import { db } from "@project/database";
 import { Router, type Router as ExpressRouter } from "express";
 import {
+  backgrounds,
+  backgroundTraits,
   classes,
   classLevels,
   classProgressions,
@@ -11,10 +13,67 @@ import {
   subraces,
   subraceTraits,
   traits,
-} from "@project/database/src/reference.js";
+} from "@project/database/src/schema/reference.js";
 import { and, eq } from "drizzle-orm";
 
 const router: ExpressRouter = Router();
+
+type TraitEffectLike = {
+  type?: string;
+  category?: string;
+};
+
+const hasEffectCategory = (
+  effects: unknown,
+  categories: string[],
+): boolean => {
+  if (!Array.isArray(effects)) return false;
+
+  return effects.some((effect) => {
+    if (!effect || typeof effect !== "object") return false;
+    const typedEffect = effect as TraitEffectLike;
+
+    if (
+      typedEffect.type !== "proficiency" &&
+      typedEffect.type !== "proficiency_choice"
+    ) {
+      return false;
+    }
+
+    return (
+      typeof typedEffect.category === "string" &&
+      categories.includes(typedEffect.category)
+    );
+  });
+};
+
+const matchesTraitCategory = (
+  trait: { id: string; name: string; effects: unknown },
+  category: string,
+): boolean => {
+  const id = trait.id.toLowerCase();
+  const name = trait.name.toLowerCase();
+
+  if (category === "skills") {
+    return (
+      hasEffectCategory(trait.effects, ["skills"]) ||
+      id.includes("_prof_skills") ||
+      name.includes("skill")
+    );
+  }
+
+  if (category === "tools_and_languages") {
+    return (
+      hasEffectCategory(trait.effects, ["tools", "languages"]) ||
+      id.includes("_prof_tools") ||
+      id.includes("_languages") ||
+      name.includes("tool") ||
+      name.includes("language")
+    );
+  }
+
+  return false;
+};
 
 /**
  * GET /api/reference/races
@@ -111,11 +170,13 @@ router.get("/classes/:id/subclasses", async (req, res, next) => {
  * GET /api/reference/classes/:id/timeline
  * Builds on the 1-to-20 progression array, merging class level sand granted traits
  */
-router.get('/classes/:id/timeline', async (req, res, next) => {
+router.get("/classes/:id/timeline", async (req, res, next) => {
   try {
     const classId = req.params.id;
     const requestedSubclassId =
-      typeof req.query.subclassId === "string" ? req.query.subclassId : undefined;
+      typeof req.query.subclassId === "string"
+        ? req.query.subclassId
+        : undefined;
 
     // 1. Fetch the raw scaling metadata for levels 1-20
     const levels = await db
@@ -170,14 +231,17 @@ router.get('/classes/:id/timeline', async (req, res, next) => {
     // 3. Assemble the timeline array for the frontend
     const timeline = Array.from({ length: 20 }, (_, i) => {
       const currentLevel = i + 1;
-      const levelMeta = levels.find(l => l.level === currentLevel);
+      const levelMeta = levels.find((l) => l.level === currentLevel);
       const classFeaturesAtLevel = grantedFeatures
-        .filter(f => f.level === currentLevel)
-        .map(f => f.trait);
+        .filter((f) => f.level === currentLevel)
+        .map((f) => f.trait);
       const subclassFeaturesAtLevel = subclassGrantedFeatures
-        .filter(f => f.level === currentLevel)
-        .map(f => f.trait);
-      const featuresAtLevel = [...classFeaturesAtLevel, ...subclassFeaturesAtLevel];
+        .filter((f) => f.level === currentLevel)
+        .map((f) => f.trait);
+      const featuresAtLevel = [
+        ...classFeaturesAtLevel,
+        ...subclassFeaturesAtLevel,
+      ];
 
       return {
         level: currentLevel,
@@ -188,6 +252,71 @@ router.get('/classes/:id/timeline', async (req, res, next) => {
     });
 
     return res.status(200).json({ timeline });
+  } catch (error) {
+    next(error);
+  }
+});
+
+/**
+ * GET /api/reference/backgrounds
+ * Returns all backgrounds with fully resolved granted trait records.
+ */
+router.get("/backgrounds", async (req, res, next) => {
+  try {
+    const allBackgrounds = await db.select().from(backgrounds);
+
+    const resolvedBackgroundTraits = await db
+      .select({ backgroundId: backgroundTraits.backgroundId, trait: traits })
+      .from(backgroundTraits)
+      .innerJoin(traits, eq(backgroundTraits.traitId, traits.id));
+
+    const payload = allBackgrounds.map((background) => {
+      const grantedTraits = resolvedBackgroundTraits
+        .filter((bt) => bt.backgroundId === background.id)
+        .map((bt) => ({
+          ...bt.trait,
+          sourceOrigin: `Background: ${background.name}`,
+        }));
+
+      return {
+        ...background,
+        traits: grantedTraits,
+      };
+    });
+
+    return res.status(200).json({ backgrounds: payload });
+  } catch (error) {
+    next(error);
+  }
+});
+
+/**
+ * GET /api/reference/traits
+ * Query params:
+ * - category=skills | tools_and_languages
+ */
+router.get("/traits", async (req, res, next) => {
+  try {
+    const category =
+      typeof req.query.category === "string" ? req.query.category : undefined;
+
+    const allTraits = await db.select().from(traits);
+
+    if (!category) {
+      return res.status(200).json({ traits: allTraits });
+    }
+
+    if (category !== "skills" && category !== "tools_and_languages") {
+      return res.status(400).json({
+        error: "Invalid trait category. Use 'skills' or 'tools_and_languages'.",
+      });
+    }
+
+    const filteredTraits = allTraits.filter((trait) =>
+      matchesTraitCategory(trait as { id: string; name: string; effects: unknown }, category),
+    );
+
+    return res.status(200).json({ traits: filteredTraits });
   } catch (error) {
     next(error);
   }
