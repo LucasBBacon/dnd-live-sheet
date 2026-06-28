@@ -1,0 +1,166 @@
+import { describe, expect, it } from "vitest";
+import { compileCharacterPayload } from "../compileCharacter";
+
+describe("compileCharacterPayload", () => {
+  const validState: any = {
+    characterName: "Aragorn",
+    raceId: "human",
+    subraceId: null,
+    classId: "fighter",
+    subclassId: null,
+    baseAbilityScores: {
+      str: 15,
+      dex: 14,
+      con: 13,
+      int: 12,
+      wis: 10,
+      cha: 8,
+    },
+    alignment: "Lawful Good",
+    backgroundType: "PRESET",
+    backgroundId: "soldier",
+    customBackground: null,
+    personality: {
+      traits: "Bold",
+      ideals: "Duty",
+      bonds: "Friends",
+      flaws: "Reckless",
+    },
+  };
+
+  it("compiles valid wizard state to character payload", () => {
+    const result = compileCharacterPayload(validState);
+
+    expect(result).toEqual({
+      name: "Aragorn",
+      raceId: "human",
+      subraceId: null,
+      classId: "fighter",
+      subclassId: null,
+      baseAbilityScores: validState.baseAbilityScores,
+      alignment: "Lawful Good",
+      background: {
+        type: "PRESET",
+        presetId: "soldier",
+        customData: null,
+      },
+      personality: validState.personality,
+    });
+  });
+
+  it("trims character name whitespace", () => {
+    const state = { ...validState, characterName: "  Legolas  " };
+    const result = compileCharacterPayload(state);
+
+    expect(result.name).toBe("Legolas");
+  });
+
+  it("handles custom background", () => {
+    const customBg = {
+      name: "Noble",
+      featureName: "Position of Privilege",
+      featureDescription: "Thanks to your noble birth",
+      skillTraitIds: ["skill_insight"],
+      toolLanguageTraitIds: ["lang_noble"],
+    };
+
+    const state = {
+      ...validState,
+      backgroundType: "CUSTOM",
+      backgroundId: null,
+      customBackground: customBg,
+    };
+
+    const result = compileCharacterPayload(state);
+
+    expect(result.background).toEqual({
+      type: "CUSTOM",
+      presetId: null,
+      customData: customBg,
+    });
+  });
+
+  it("handles preset background", () => {
+    const state = {
+      ...validState,
+      backgroundType: "PRESET",
+      backgroundId: "criminal",
+    };
+
+    const result = compileCharacterPayload(state);
+
+    expect(result.background.type).toBe("PRESET");
+    expect(result.background.presetId).toBe("criminal");
+    expect(result.background.customData).toBeNull();
+  });
+
+  it("preserves ability scores exactly", () => {
+    const scores = {
+      str: 3,
+      dex: 18,
+      con: 15,
+      int: 8,
+      wis: 16,
+      cha: 10,
+    };
+
+    const state = { ...validState, baseAbilityScores: scores };
+    const result = compileCharacterPayload(state);
+
+    expect(result.baseAbilityScores).toEqual(scores);
+  });
+
+  it("preserves personality traits", () => {
+    const personality = {
+      traits: "Stoic and calm",
+      ideals: "Justice above all",
+      bonds: "Loyal to the party",
+      flaws: "Distrustful of magic",
+    };
+
+    const state = { ...validState, personality };
+    const result = compileCharacterPayload(state);
+
+    expect(result.personality).toEqual(personality);
+  });
+
+  it("handles null subrace ID correctly", () => {
+    const state = { ...validState, subraceId: null };
+    const result = compileCharacterPayload(state);
+
+    expect(result.subraceId).toBeNull();
+  });
+
+  it("preserves subrace ID when provided", () => {
+    const state = { ...validState, subraceId: "high_elf" };
+    const result = compileCharacterPayload(state);
+
+    expect(result.subraceId).toBe("high_elf");
+  });
+
+  it("handles special characters in personality", () => {
+    const personality = {
+      traits: "I love \"heroic\" deeds",
+      ideals: "Justice (at any cost)",
+      bonds: "My family - they're everything",
+      flaws: "I'm overly cautious & paranoid",
+    };
+
+    const state = { ...validState, personality };
+    const result = compileCharacterPayload(state);
+
+    expect(result.personality).toEqual(personality);
+  });
+
+  it("returns CreateCharacterPayload with all required fields", () => {
+    const result = compileCharacterPayload(validState);
+
+    expect(result).toHaveProperty("name");
+    expect(result).toHaveProperty("raceId");
+    expect(result).toHaveProperty("classId");
+    expect(result).toHaveProperty("baseAbilityScores");
+    expect(result).toHaveProperty("background");
+    expect(result).toHaveProperty("personality");
+    expect(result).toHaveProperty("alignment");
+  });
+});
