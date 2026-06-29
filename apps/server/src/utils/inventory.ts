@@ -1,4 +1,5 @@
 import { db } from "@project/database";
+import { characterInventory } from "@project/database/src/schema/operational.js";
 import {
   bundleContents,
   items,
@@ -12,6 +13,7 @@ import { eq } from "drizzle-orm";
  * @returns Flat array of base item IDs and quantities.
  */
 export async function resolveItemPayload(
+  tx: any,
   itemId: string,
   multiplier = 1,
 ): Promise<Array<{ id: string; quantity: number }>> {
@@ -33,6 +35,7 @@ export async function resolveItemPayload(
   for (const child of contents) {
     // allows bundles to contain other bundles safely
     const childItems = await resolveItemPayload(
+      tx,
       child.itemId,
       child.quantity * multiplier,
     );
@@ -40,4 +43,44 @@ export async function resolveItemPayload(
   }
 
   return resolved;
+}
+
+export async function processStartingEquipment(
+  tx: any,
+  characterId: string,
+  rawSelections: Array<{ itemId: string; quantity: number }>,
+) {
+  if (rawSelections.length === 0) return;
+
+  // unpack all selections (packs -> individual gear)
+  const unpackedItems = [];
+  for (const selection of rawSelections) {
+    const resolved = await resolveItemPayload(
+      tx,
+      selection.itemId,
+      selection.quantity,
+    );
+    unpackedItems.push(...resolved);
+  }
+
+  // aggregate duplicates using a Map
+  const aggregatedInventory = new Map<string, number>();
+  for (const item of unpackedItems) {
+    const currentQuantity = aggregatedInventory.get(item.id) || 0;
+    aggregatedInventory.set(item.id, currentQuantity + item.quantity);
+  }
+
+  // prepare relational payload
+  const insertData = Array.from(aggregatedInventory.entries()).map(
+    ([itemId, quantity]) => ({
+      characterId,
+      itemId,
+      quantity,
+    }),
+  );
+
+  // batch insert into operational inv
+  if (insertData.length > 0) {
+    await tx.insert(characterInventory).values(insertData);
+  }
 }

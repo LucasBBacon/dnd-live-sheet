@@ -160,6 +160,16 @@ export const CreateCharacterPayloadSchema = z.object({
     bonds: z.string(),
     flaws: z.string(),
   }),
+
+  // flat array of finalized equipment choices from wizard
+  startingEquipment: z
+    .array(
+      z.object({
+        itemId: z.string(),
+        quantity: z.number().int().min(1),
+      }),
+    )
+    .default([]),
 });
 
 export type CreateCharacterPayload = z.infer<
