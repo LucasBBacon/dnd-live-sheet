@@ -3,6 +3,8 @@ import type {
   ModifiersListData,
   TraitEffect,
 } from "@project/shared";
+import { sql } from "drizzle-orm";
+import { index } from "drizzle-orm/gel-core";
 import {
   boolean,
   integer,
@@ -286,5 +288,50 @@ export const backgroundTraits = pgTable(
   },
   (table) => ({
     pk: primaryKey({ columns: [table.backgroundId, table.traitId] }),
+  }),
+);
+
+// --------------------------------------------------------------
+// ITEMS AND INVENTORY
+// --------------------------------------------------------------
+
+export const items = pgTable(
+  "items",
+  {
+    id: varchar("id", { length: 100 }).primaryKey(), // e.g., 'item_longbow', 'item_pack_explorers'
+    name: varchar("name", { length: 255 }).notNull(),
+
+    // weight stored in ounces or fractions to avoid floating point math errors
+    // e.g., 1.5lbs = 150 (assuming 2 decimal places of precision)
+    weight: integer("weight").notNull().default(0),
+
+    description: text("description").notNull(),
+
+    // flag to tell API that this item contains other items
+    isBundle: boolean("is_bundle").default(false).notNull(),
+  },
+  (table) => ({
+    // GIN index for high-performance ILIKE text search across compendium
+    searchIdx: index("item_search_idx").using(
+      "gin",
+      sql`to_tsvector('english', ${table.name} || ' ' || ${table.description})`,
+    ),
+  }),
+);
+
+// Bill of Materials (BOM) for bundles
+export const bundleContents = pgTable(
+  "bundle_contents",
+  {
+    bundleId: varchar("bundle_id", { length: 100 })
+      .references(() => items.id)
+      .notNull(),
+    itemId: varchar("item_id", { length: 100 })
+      .references(() => items.id)
+      .notNull(),
+    quantity: integer("quantity").notNull().default(1),
+  },
+  (table) => ({
+    pk: primaryKey({ columns: [table.bundleId, table.itemId] }),
   }),
 );
