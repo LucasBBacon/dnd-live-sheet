@@ -19,5 +19,6 @@ export const compileCharacterPayload = (
         state.backgroundType === "CUSTOM" ? state.customBackground : null,
     },
     personality: state.personality,
+    startingEquipment: Object.values(state.selectedClassEquipmentChoices).flat(),
   };
 };

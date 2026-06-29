@@ -1,9 +1,9 @@
-import { BackgroundStepContainer } from "./components/wizard/BackgroundStepContainer";
+import { ClassStepContainer } from "./components/wizard/ClassStepContainer";
 
 const App = () => {
   return (
     <div>
-      <BackgroundStepContainer />
+      <ClassStepContainer />
     </div>
   );
 };

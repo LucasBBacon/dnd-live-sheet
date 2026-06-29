@@ -2,14 +2,29 @@
 import { useQuery } from "@tanstack/react-query";
 import { useWizardStore } from "../../store/wizardStore";
 import { apiClient } from "../../api/client";
+import { useEffect } from "react";
+import { ClassEquipmentDevSelector } from "./equipment/ClassEquipmentDevSelector";
 
 export const ClassDetailView = ({ classes }: { classes: any[] }) => {
   const selectedClassId = useWizardStore((state) => state.classId);
   const selectedSubclassId = useWizardStore((state) => state.subclassId);
   const setSubclass = useWizardStore((state) => state.setSubclass);
   const targetLevel = useWizardStore((state) => state.targetLevel); // Defaults to 1
+  const setRequiredEquipmentChoiceCount = useWizardStore(
+    (state) => state.setRequiredEquipmentChoiceCount,
+  );
 
   const activeClass = classes.find((c) => c.id === selectedClassId);
+
+  useEffect(() => {
+    if (activeClass?.startingEquipment?.choices) {
+      setRequiredEquipmentChoiceCount(
+        activeClass.startingEquipment.choices.length,
+      );
+    } else {
+      setRequiredEquipmentChoiceCount(0);
+    }
+  }, [activeClass, setRequiredEquipmentChoiceCount]);
 
   // On-Demand Data Fetching
   const { data: subclassesData } = useQuery({
@@ -70,16 +85,10 @@ export const ClassDetailView = ({ classes }: { classes: any[] }) => {
         </p>
       </section>
 
-      {/* TODO: Implement Starting Equipment parser (Phase 7) */}
-      <section
-        style={{
-          padding: "1rem",
-          backgroundColor: "#eef",
-          border: "1px solid #ccf",
-        }}
-      >
-        <strong>STARTING EQUIPMENT:</strong> Allocation parser pending
-        deployment.
+      <section>
+        <ClassEquipmentDevSelector
+          startingEquipment={activeClass.startingEquipment}
+        />
       </section>
 
       {/* Subclass Gatekeeper UI */}

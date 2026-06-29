@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { describe, expect, it } from "vitest";
 import { compileCharacterPayload } from "../compileCharacter";
 
@@ -26,6 +27,13 @@ describe("compileCharacterPayload", () => {
       bonds: "Friends",
       flaws: "Reckless",
     },
+    selectedClassEquipmentChoices: {
+      0: [
+        { itemId: "longsword", quantity: 1 },
+        { itemId: "shield", quantity: 1 },
+      ],
+      1: [{ itemId: "crossbow_bolt", quantity: 20 }],
+    },
   };
 
   it("compiles valid wizard state to character payload", () => {
@@ -45,6 +53,11 @@ describe("compileCharacterPayload", () => {
         customData: null,
       },
       personality: validState.personality,
+      startingEquipment: [
+        { itemId: "longsword", quantity: 1 },
+        { itemId: "shield", quantity: 1 },
+        { itemId: "crossbow_bolt", quantity: 20 },
+      ],
     });
   });
 
@@ -162,5 +175,27 @@ describe("compileCharacterPayload", () => {
     expect(result).toHaveProperty("background");
     expect(result).toHaveProperty("personality");
     expect(result).toHaveProperty("alignment");
+    expect(result).toHaveProperty("startingEquipment");
+  });
+
+  it("flattens selected class equipment choices", () => {
+    const state = {
+      ...validState,
+      selectedClassEquipmentChoices: {
+        0: [{ itemId: "dagger", quantity: 2 }],
+        2: [
+          { itemId: "rope", quantity: 1 },
+          { itemId: "torch", quantity: 5 },
+        ],
+      },
+    };
+
+    const result = compileCharacterPayload(state);
+
+    expect(result.startingEquipment).toEqual([
+      { itemId: "dagger", quantity: 2 },
+      { itemId: "rope", quantity: 1 },
+      { itemId: "torch", quantity: 5 },
+    ]);
   });
 });
