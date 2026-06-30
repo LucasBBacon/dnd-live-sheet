@@ -1,9 +1,9 @@
-import { ClassStepContainer } from "./components/wizard/ClassStepContainer";
+import { ReviewStepContainer } from "./components/wizard/ReviewStepContainer";
 
 const App = () => {
   return (
     <div>
-      <ClassStepContainer />
+      <ReviewStepContainer />
     </div>
   );
 };
