@@ -1,33 +1,55 @@
-import { describe, it, expect, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
-// Mock dependencies to avoid DATABASE_URL requirement
-vi.mock("postgres");
-vi.mock("drizzle-orm/postgres-js");
+const mockConfig = vi.fn();
+const mockPostgres = vi.fn();
+const mockDrizzle = vi.fn();
 
-describe("Database Client", () => {
-  describe("environment configuration", () => {
-    it("should load configuration via dotenv", () => {
-      // Verify that dotenv is configured to load from correct path
-      expect(true).toBe(true);
-    });
+vi.mock("dotenv", () => ({
+  config: mockConfig,
+}));
+
+vi.mock("postgres", () => ({
+  default: mockPostgres,
+}));
+
+vi.mock("drizzle-orm/postgres-js", () => ({
+  drizzle: mockDrizzle,
+}));
+
+describe("database client", () => {
+  beforeEach(() => {
+    vi.resetModules();
+    vi.clearAllMocks();
+    delete process.env.DATABASE_URL;
   });
 
-  describe("schema export structure", () => {
-    it("should export schema definitions", () => {
-      // Schema should be available for use in queries
-      expect(true).toBe(true);
-    });
+  it("throws when DATABASE_URL is missing", async () => {
+    await expect(import("../client")).rejects.toThrow("DATABASE_URL is missing");
+    expect(mockConfig).toHaveBeenCalledWith({ path: "../../.env" });
+    expect(mockPostgres).not.toHaveBeenCalled();
+    expect(mockDrizzle).not.toHaveBeenCalled();
   });
 
-  describe("database instance methods", () => {
-    it("should support basic CRUD operations", () => {
-      // Database instance should have CRUD methods
-      expect(true).toBe(true);
-    });
+  it("initializes postgres and drizzle with schema when DATABASE_URL is set", async () => {
+    process.env.DATABASE_URL = "postgresql://user:pass@localhost:5432/test_db";
 
-    it("should support transactions", () => {
-      // Database instance should support transactions
-      expect(true).toBe(true);
-    });
+    const postgresClient = { end: vi.fn() };
+    const drizzleDb = { select: vi.fn(), insert: vi.fn() };
+    mockPostgres.mockReturnValue(postgresClient);
+    mockDrizzle.mockReturnValue(drizzleDb);
+
+    const mod = await import("../client");
+
+    expect(mockConfig).toHaveBeenCalledWith({ path: "../../.env" });
+    expect(mockPostgres).toHaveBeenCalledWith(
+      "postgresql://user:pass@localhost:5432/test_db",
+    );
+    expect(mockDrizzle).toHaveBeenCalledWith(
+      postgresClient,
+      expect.objectContaining({
+        schema: expect.any(Object),
+      }),
+    );
+    expect(mod.db).toBe(drizzleDb);
   });
 });

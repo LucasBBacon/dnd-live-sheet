@@ -1,144 +1,101 @@
-import { describe, it, expect, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
-// Mock Socket.IO
+const mockIo = vi.fn();
+const mockUseQueryClient = vi.fn();
+const mockUseEffect = vi.fn();
+const mockUseRef = vi.fn();
+
 vi.mock("socket.io-client", () => ({
-  io: vi.fn(() => ({
-    emit: vi.fn(),
-    on: vi.fn(),
-    disconnect: vi.fn(),
-    connected: true,
-  })),
+  io: mockIo,
 }));
 
-// Mock React Query
 vi.mock("@tanstack/react-query", () => ({
-  useQueryClient: vi.fn(() => ({
-    invalidateQueries: vi.fn(),
-  })),
+  useQueryClient: mockUseQueryClient,
 }));
 
-describe("useCharacterSocket Hook", () => {
-  describe("hook behavior", () => {
-    it("should be a React hook that manages socket connection", () => {
-      // useCharacterSocket is a custom React hook
-      expect(true).toBe(true);
-    });
+vi.mock("react", () => ({
+  useEffect: mockUseEffect,
+  useRef: mockUseRef,
+}));
 
-    it("should accept characterId as parameter", () => {
-      // Hook signature: useCharacterSocket(characterId: string | undefined)
-      expect(true).toBe(true);
-    });
-
-    it("should return object with dispatch function", () => {
-      // Returns { dispatch: (action: GameAction) => void }
-      expect(true).toBe(true);
-    });
+describe("useCharacterSocket", () => {
+  beforeEach(() => {
+    vi.resetModules();
+    vi.clearAllMocks();
   });
 
-  describe("WebSocket connection", () => {
-    it("should connect to localhost:3000 WebSocket server", () => {
-      // io('http://localhost:3000')
-      expect(true).toBe(true);
+  it("connects, joins character room, and registers state listener", async () => {
+    const cleanupRef: { current?: () => void } = {};
+    const invalidateQueries = vi.fn();
+    const socket = {
+      emit: vi.fn(),
+      on: vi.fn(),
+      disconnect: vi.fn(),
+      connected: true,
+    };
+
+    mockUseQueryClient.mockReturnValue({ invalidateQueries });
+    mockUseRef.mockReturnValue({ current: null });
+    mockIo.mockReturnValue(socket);
+    mockUseEffect.mockImplementation((effect: () => void | (() => void)) => {
+      cleanupRef.current = effect() as () => void;
     });
 
-    it("should emit join_character event with character ID", () => {
-      // socket.emit('join_character', characterId) on connection
-      expect(true).toBe(true);
-    });
+    const { useCharacterSocket } = await import("../useCharacterSocket");
+    const { dispatch } = useCharacterSocket("char_1");
 
-    it("should register state_updated event listener", () => {
-      // socket.on('state_updated', (actionType) => ...)
-      expect(true).toBe(true);
-    });
+    expect(mockIo).toHaveBeenCalledWith("http://localhost:3000");
+    expect(socket.emit).toHaveBeenCalledWith("join_character", "char_1");
+    expect(socket.on).toHaveBeenCalledWith("state_updated", expect.any(Function));
 
-    it("should disconnect on component unmount", () => {
-      // Cleanup function: socket.disconnect()
-      expect(true).toBe(true);
-    });
+    const onStateUpdated = socket.on.mock.calls[0][1] as (actionType: string) => void;
+    onStateUpdated("MODIFY_HP");
+    expect(invalidateQueries).toHaveBeenCalledWith({ queryKey: ["character"] });
 
-    it("should skip connection when characterId is undefined", () => {
-      // Early return: if (!characterId) return
-      expect(true).toBe(true);
-    });
+    dispatch({ type: "MODIFY_HP", characterId: "char_1", payload: { amount: -3 } } as any);
+    expect(socket.emit).toHaveBeenCalledWith("dispatch_action", expect.any(Object));
+
+    cleanupRef.current?.();
+    expect(socket.disconnect).toHaveBeenCalled();
   });
 
-  describe("query invalidation", () => {
-    it("should invalidate character query when state updates", () => {
-      // queryClient.invalidateQueries({ queryKey: ['character'] })
-      expect(true).toBe(true);
+  it("skips socket connection when characterId is undefined", async () => {
+    mockUseQueryClient.mockReturnValue({ invalidateQueries: vi.fn() });
+    mockUseRef.mockReturnValue({ current: null });
+    mockUseEffect.mockImplementation((effect: () => void | (() => void)) => {
+      effect();
     });
 
-    it("should refetch data after state update", () => {
-      // Invalidation triggers React Query refetch
-      expect(true).toBe(true);
-    });
+    const { useCharacterSocket } = await import("../useCharacterSocket");
+    useCharacterSocket(undefined);
+
+    expect(mockIo).not.toHaveBeenCalled();
   });
 
-  describe("dispatch action function", () => {
-    it("should emit dispatch_action event with action payload", () => {
-      // socketRef.current.emit('dispatch_action', action)
-      expect(true).toBe(true);
+  it("logs error and does not emit when dispatching while disconnected", async () => {
+    const consoleError = vi.spyOn(console, "error").mockImplementation(() => {});
+    const socket = {
+      emit: vi.fn(),
+      on: vi.fn(),
+      disconnect: vi.fn(),
+      connected: false,
+    };
+
+    mockUseQueryClient.mockReturnValue({ invalidateQueries: vi.fn() });
+    mockUseRef.mockReturnValue({ current: null });
+    mockIo.mockReturnValue(socket);
+    mockUseEffect.mockImplementation((effect: () => void | (() => void)) => {
+      effect();
     });
 
-    it("should check socket connection before dispatching", () => {
-      // if (socketRef.current?.connected) { ... }
-      expect(true).toBe(true);
-    });
+    const { useCharacterSocket } = await import("../useCharacterSocket");
+    const { dispatch } = useCharacterSocket("char_2");
+    dispatch({ type: "MODIFY_HP", characterId: "char_2", payload: { amount: 1 } } as any);
 
-    it("should log error when socket is disconnected", () => {
-      // console.error('Socket disconnected, cannot dispatch action.')
-      expect(true).toBe(true);
-    });
-
-    it("should handle multiple consecutive dispatches", () => {
-      // Each dispatch() call emits independently
-      expect(true).toBe(true);
-    });
-  });
-
-  describe("effect dependencies", () => {
-    it("should re-run effect when characterId changes", () => {
-      // useEffect dependency: [characterId, queryClient]
-      expect(true).toBe(true);
-    });
-
-    it("should re-run effect when queryClient changes", () => {
-      // queryClient included in dependencies
-      expect(true).toBe(true);
-    });
-
-    it("should not reconnect unnecessarily", () => {
-      // Only reconnect when characterId changes, not on every render
-      expect(true).toBe(true);
-    });
-  });
-
-  describe("error handling", () => {
-    it("should handle socket connection errors gracefully", () => {
-      // Errors are logged, don't crash component
-      expect(true).toBe(true);
-    });
-
-    it("should gracefully handle emit failures", () => {
-      // emit() errors don't break subsequent operations
-      expect(true).toBe(true);
-    });
-
-    it("should handle missing socket references", () => {
-      // Check socketRef.current exists before using
-      expect(true).toBe(true);
-    });
-  });
-
-  describe("performance", () => {
-    it("should use useRef for socket to persist across renders", () => {
-      // socketRef doesn't cause re-renders on updates
-      expect(true).toBe(true);
-    });
-
-    it("should memoize dispatch function appropriately", () => {
-      // dispatch function doesn't change unless dependencies change
-      expect(true).toBe(true);
-    });
+    expect(socket.emit).not.toHaveBeenCalledWith("dispatch_action", expect.anything());
+    expect(consoleError).toHaveBeenCalledWith(
+      "Socket disconnected, cannot dispatch action.",
+    );
+    consoleError.mockRestore();
   });
 });
