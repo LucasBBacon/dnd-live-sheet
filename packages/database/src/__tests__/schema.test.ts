@@ -1,115 +1,83 @@
-import { describe, it, expect, vi } from "vitest";
+import { describe, expect, it } from "vitest";
+import { characters } from "../schema";
+import {
+  backgrounds,
+  backgroundTraits,
+  classes,
+  classLevels,
+  classProgressions,
+  featTraits,
+  feats,
+  races,
+  raceTraits,
+  subraces,
+  subclassLevels,
+  subclassProgressions,
+  traits,
+} from "../schema/reference";
 
-// Mock dependencies to avoid DATABASE_URL requirement during schema validation
-vi.mock("postgres");
-vi.mock("drizzle-orm/postgres-js");
+describe("database schema", () => {
+  it("defines character table with expected columns and nullability", () => {
+    expect(Object.keys(characters)).toEqual(
+      expect.arrayContaining([
+        "id",
+        "userId",
+        "totalLevel",
+        "currentHp",
+        "engineData",
+        "flavorData",
+        "createdAt",
+        "updatedAt",
+        "deletedAt",
+      ]),
+    );
 
-describe("Database Schema Structure", () => {
-  describe("schema table definitions", () => {
-    it("should define character table", () => {
-      // Schema should be importable and define required tables
-      expect(true).toBe(true);
-    });
-
-    it("should define trait table", () => {
-      expect(true).toBe(true);
-    });
-
-    it("should define feat table", () => {
-      expect(true).toBe(true);
-    });
-
-    it("should define race table", () => {
-      expect(true).toBe(true);
-    });
-
-    it("should define subrace table", () => {
-      expect(true).toBe(true);
-    });
-
-    it("should define class table", () => {
-      expect(true).toBe(true);
-    });
-
-    it("should define background table", () => {
-      expect(true).toBe(true);
-    });
+    expect(characters.id.primary).toBe(true);
+    expect(characters.userId.notNull).toBe(true);
+    expect(characters.engineData.dataType).toBe("json");
+    expect(characters.flavorData.dataType).toBe("json");
+    expect(characters.deletedAt.notNull).toBe(false);
   });
 
-  describe("schema relationships", () => {
-    it("should define foreign key relationships", () => {
-      // Schema should properly reference related entities
-      expect(true).toBe(true);
-    });
+  it("defines traits and feats with expected core fields", () => {
+    expect(traits.id.primary).toBe(true);
+    expect(traits.name.notNull).toBe(true);
+    expect(traits.effects.dataType).toBe("json");
 
-    it("should define junction tables for many-to-many relationships", () => {
-      // Schema should have feat_traits, race_traits, etc.
-      expect(true).toBe(true);
-    });
-
-    it("should support soft deletes on characters", () => {
-      // Character table should have a deletedAt column for soft deletes
-      expect(true).toBe(true);
-    });
-
-    it("should enforce unique character per user constraint", () => {
-      // Schema should define unique index on (user_id) where deleted_at is null
-      expect(true).toBe(true);
-    });
+    expect(feats.id.primary).toBe(true);
+    expect(feats.name.notNull).toBe(true);
+    expect(feats.category.notNull).toBe(true);
+    expect(feats.prerequisites.dataType).toBe("json");
   });
 
-  describe("schema JSONB columns", () => {
-    it("should define engineData as JSONB", () => {
-      // Character table should have engineData column for CharacterEngineData
-      expect(true).toBe(true);
-    });
+  it("defines race/class/background base entities", () => {
+    expect(races.id.primary).toBe(true);
+    expect(races.name.notNull).toBe(true);
+    expect(races.speed.notNull).toBe(true);
 
-    it("should define flavorData as JSONB", () => {
-      // Character table should have flavorData column for CharacterFlavorData
-      expect(true).toBe(true);
-    });
-
-    it("should define effects as JSONB in traits", () => {
-      // Trait table should have effects column for complex effect definitions
-      expect(true).toBe(true);
-    });
-
-    it("should define prerequisites as JSONB in feats", () => {
-      // Feat table should have prerequisites column for complex prerequisite logic
-      expect(true).toBe(true);
-    });
+    expect(subraces.parentRaceId.notNull).toBe(true);
+    expect(classes.hitDie.notNull).toBe(true);
+    expect(backgrounds.featureName.notNull).toBe(true);
+    expect(backgrounds.featureDescription.notNull).toBe(true);
   });
 
-  describe("schema constraints", () => {
-    it("should enforce primary keys on all tables", () => {
-      expect(true).toBe(true);
-    });
+  it("defines reference junction/progression tables", () => {
+    expect(featTraits.featId.notNull).toBe(true);
+    expect(featTraits.traitId.notNull).toBe(true);
 
-    it("should enforce NOT NULL on critical fields", () => {
-      expect(true).toBe(true);
-    });
+    expect(raceTraits.raceId.notNull).toBe(true);
+    expect(raceTraits.traitId.notNull).toBe(true);
 
-    it("should allow NULL for optional fields", () => {
-      expect(true).toBe(true);
-    });
+    expect(classLevels.classId.notNull).toBe(true);
+    expect(classLevels.level.notNull).toBe(true);
 
-    it("should support timestamps for audit trails", () => {
-      // Character table should have createdAt, updatedAt
-      expect(true).toBe(true);
-    });
-  });
+    expect(classProgressions.classId.notNull).toBe(true);
+    expect(classProgressions.traitId.notNull).toBe(true);
 
-  describe("reference data tables", () => {
-    it("should define all reference entity tables", () => {
-      expect(true).toBe(true);
-    });
+    expect(subclassLevels.subclassId.notNull).toBe(true);
+    expect(subclassProgressions.subclassId.notNull).toBe(true);
 
-    it("should define all junction tables for relationships", () => {
-      expect(true).toBe(true);
-    });
-
-    it("should support progression tracking for classes and subclasses", () => {
-      expect(true).toBe(true);
-    });
+    expect(backgroundTraits.backgroundId.notNull).toBe(true);
+    expect(backgroundTraits.traitId.notNull).toBe(true);
   });
 });
