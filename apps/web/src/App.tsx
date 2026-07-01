@@ -1,9 +1,9 @@
-import { BackgroundStepContainer } from "./components/wizard/BackgroundStepContainer";
+import { CharacterCreationWizard } from "./components/wizard/CharacterCreationWizard";
 
 const App = () => {
   return (
     <div>
-      <BackgroundStepContainer />
+      <CharacterCreationWizard />
     </div>
   );
 };

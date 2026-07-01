@@ -9,6 +9,7 @@ import {
 import { CreateCharacterPayloadSchema } from "@project/shared";
 import { eq } from "drizzle-orm";
 import { v4 as uuidv4 } from "uuid";
+import { processStartingEquipment } from "../utils/inventory.js";
 
 const router: ExpressRouter = Router();
 
@@ -91,8 +92,12 @@ router.post("/", async (req, res, next) => {
         }
       }
 
-      // TODO - Parse and allocate starting equipment based on class/background choices
-      // something like await processStartingEquipment(...)
+      // process and inject starting equipment
+      await processStartingEquipment(
+        tx,
+        newCharacterId,
+        payload.startingEquipment,
+      );
     }); // end transaction
 
     // return the created id so frontend can redirect to livesheet

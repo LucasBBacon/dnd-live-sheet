@@ -4,6 +4,11 @@ import type { CreateCharacterPayload } from "@project/shared";
 export const compileCharacterPayload = (
   state: WizardState,
 ): CreateCharacterPayload => {
+  // flatten the class equipment choices from Record<number, Item[]> into a single array
+  const compiledEquipment = Object.values(
+    state.selectedClassEquipmentChoices,
+  ).flat();
+
   return {
     name: state.characterName.trim(),
     raceId: state.raceId!,
@@ -19,5 +24,6 @@ export const compileCharacterPayload = (
         state.backgroundType === "CUSTOM" ? state.customBackground : null,
     },
     personality: state.personality,
+    startingEquipment: compiledEquipment,
   };
 };

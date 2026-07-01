@@ -1,4 +1,5 @@
 import {
+  boolean,
   integer,
   jsonb,
   pgTable,
@@ -10,6 +11,7 @@ import {
 import {
   backgrounds,
   classes,
+  items,
   races,
   subclasses,
   subraces,
@@ -112,3 +114,49 @@ export const characterCustomTraits = pgTable("character_custom_traits", {
   // provenance stamp
   sourceOrigin: varchar("source_origin", { length: 255 }).notNull(),
 });
+
+// --------------------------------------------------------------
+// INVENTORY
+// --------------------------------------------------------------
+
+export const EQUIPMENT_SLOTS = [
+  "backpack",
+  "main_hand",
+  "off_hand",
+  "armor",
+  "head",
+  "cloak",
+  "ring_1",
+  "ring_2",
+  "amulet",
+  "boots",
+  "gloves",
+] as const;
+
+export type EquipmentSlot = (typeof EQUIPMENT_SLOTS)[number];
+
+export const characterInventory = pgTable(
+  "character_inventory",
+  {
+    id: uuid("id").primaryKey().defaultRandom(), // unique instance id for this specific item
+    characterId: uuid("character_id")
+      .references(() => characters.id, { onDelete: "cascade" })
+      .notNull(),
+    itemId: varchar("item_id", { length: 100 })
+      .references(() => items.id)
+      .notNull(),
+
+    quantity: integer("quantity").notNull().default(1),
+
+    // operational slot placement
+    slot: varchar("slot", { length: 50 }).notNull().default("backpack"),
+
+    // attunement state tracker
+    isAttuned: boolean("is_attuned").notNull().default(false),
+  },
+  (table) => ({
+    // composite pk prevents duplicate rows for the same item
+    // UPDATE quantity instead
+    pk: primaryKey({ columns: [table.characterId, table.itemId] }),
+  }),
+);

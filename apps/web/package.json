@@ -14,6 +14,7 @@
   },
   "dependencies": {
     "@project/shared": "workspace:^",
+    "@project/engine": "workspace:*",
     "@tanstack/react-query": "^5.101.1",
     "react": "^19.2.6",
     "react-dom": "^19.2.6",

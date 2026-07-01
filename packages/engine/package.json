@@ -1,0 +1,10 @@
+{
+    "name": "@project/engine",
+    "version": "1.0.0",
+    "main": "./src/index.ts",
+    "type": "module",
+    "types": "./src/index.ts",
+    "devDependencies": {
+        "typescript": "latest"
+    }
+}

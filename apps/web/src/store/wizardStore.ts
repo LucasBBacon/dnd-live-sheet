@@ -3,6 +3,11 @@ import { create } from "zustand";
 export type GenerationMethod = "STANDARD_ARRAY" | "POINT_BUY" | "MANUAL";
 export type Attributes = "str" | "dex" | "con" | "int" | "wis" | "cha";
 
+export interface WizardEquipmentChoice {
+  itemId: string;
+  quantity: number;
+}
+
 export interface WizardState {
   currentStep: number;
   targetLevel: number;
@@ -39,6 +44,9 @@ export interface WizardState {
     flaws: string;
   };
 
+  selectedClassEquipmentChoices: Record<number, WizardEquipmentChoice[]>;
+  requiredEquipmentChoiceCount: number;
+
   // actions
   setStep: (step: number) => void;
   setName: (name: string) => void;
@@ -62,12 +70,18 @@ export interface WizardState {
     value: string,
   ) => void;
 
+  setClassEquipmentChoice: (
+    groupIndex: number,
+    bundleItems: WizardEquipmentChoice[],
+  ) => void;
+  setRequiredEquipmentChoiceCount: (count: number) => void;
+
   // validation gatekeeper
   canProceed: () => boolean;
 }
 
 export const useWizardStore = create<WizardState>((set, get) => ({
-  currentStep: 5,
+  currentStep: 1,
   targetLevel: 1,
 
   characterName: "",
@@ -98,6 +112,9 @@ export const useWizardStore = create<WizardState>((set, get) => ({
     flaws: "",
   },
 
+  selectedClassEquipmentChoices: {},
+  requiredEquipmentChoiceCount: 0,
+
   setStep: (step) => set({ currentStep: step }),
 
   setName: (name) => set({ characterName: name }),
@@ -117,6 +134,8 @@ export const useWizardStore = create<WizardState>((set, get) => ({
       classId,
       classSubclassReqLevel: reqLevel,
       subclassId: null,
+      selectedClassEquipmentChoices: {},
+      requiredEquipmentChoiceCount: 0,
     }),
 
   setSubclass: (subclassId) => set({ subclassId }),
@@ -166,6 +185,16 @@ export const useWizardStore = create<WizardState>((set, get) => ({
       personality: { ...state.personality, [field]: value },
     })),
 
+  setClassEquipmentChoice: (groupIndex, bundleItems) =>
+    set((state) => ({
+      selectedClassEquipmentChoices: {
+        ...state.selectedClassEquipmentChoices,
+        [groupIndex]: bundleItems,
+      },
+    })),
+  setRequiredEquipmentChoiceCount: (count) =>
+    set({ requiredEquipmentChoiceCount: count }),
+
   canProceed: () => {
     const state = get();
 
@@ -182,12 +211,22 @@ export const useWizardStore = create<WizardState>((set, get) => ({
 
       case 3: // class selection
         if (!state.classId) return false;
+
+        // subclass gatekeeper
         if (
           state.classSubclassReqLevel &&
           state.targetLevel >= state.classSubclassReqLevel
         ) {
           if (!state.subclassId) return false;
         }
+
+        // strict equipment gatekeeper
+        if (
+          Object.keys(state.selectedClassEquipmentChoices).length <
+          state.requiredEquipmentChoiceCount
+        )
+          return false;
+
         return true;
 
       case 4: // ability score

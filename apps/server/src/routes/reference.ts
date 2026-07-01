@@ -6,6 +6,7 @@ import {
   classes,
   classLevels,
   classProgressions,
+  items,
   races,
   raceTraits,
   subclasses,
@@ -14,7 +15,7 @@ import {
   subraceTraits,
   traits,
 } from "@project/database/src/schema/reference.js";
-import { and, eq } from "drizzle-orm";
+import { and, desc, eq, sql } from "drizzle-orm";
 
 const router: ExpressRouter = Router();
 
@@ -23,10 +24,7 @@ type TraitEffectLike = {
   category?: string;
 };
 
-const hasEffectCategory = (
-  effects: unknown,
-  categories: string[],
-): boolean => {
+const hasEffectCategory = (effects: unknown, categories: string[]): boolean => {
   if (!Array.isArray(effects)) return false;
 
   return effects.some((effect) => {
@@ -313,7 +311,10 @@ router.get("/traits", async (req, res, next) => {
     }
 
     const filteredTraits = allTraits.filter((trait) =>
-      matchesTraitCategory(trait as { id: string; name: string; effects: unknown }, category),
+      matchesTraitCategory(
+        trait as { id: string; name: string; effects: unknown },
+        category,
+      ),
     );
 
     return res.status(200).json({ traits: filteredTraits });
@@ -341,6 +342,59 @@ router.get("/traits/:id", async (req, res, next) => {
     }
 
     return res.status(200).json({ trait });
+  } catch (error) {
+    next(error);
+  }
+});
+
+/**
+ * GET /api/reference/items
+ * QUery Parameters:
+ * - q: string (Search keywords)
+ * - limit: number (Default 50, Max 100 for network safety)
+ * - offset: number (For infinite scroll/pagination)
+ */
+router.get("/items", async (req, res, next) => {
+  try {
+    const searchString =
+      typeof req.query.q === "string" ? req.query.q.trim() : "";
+
+    // enforce strict pagination window bounds
+    const limit = Math.min(parseInt(req.query.limit as string, 10) || 50, 100);
+    const offset = parseInt(req.query.offset as string, 10) || 0;
+
+    // base query definition
+    let query = db.select().from(items);
+
+    if (searchString) {
+      // leverage GIN index for ranked full-text search matching
+      // if the query contains spaces, plainto_tsquery converts it to an AND seq
+      query.where(
+        sql`to_tsvector('english', ${items.name} || ' ' || ${items.description}) @@ plainto_tsquery('english', ${searchString})`,
+      );
+
+      // optionally order by match relevance rank
+      query.orderBy(
+        desc(
+          sql`ts_rank(to_tsvector('english', ${items.name} || ' ' || ${items.description}), plainto_tsquery('english', ${searchString}))`,
+        ),
+      );
+    } else {
+      // fallback to alphabetical sorting when no query present
+      query.orderBy(items.name);
+    }
+
+    // apply strict chunking windows
+    const results = await query.limit(limit).offset(offset);
+
+    return res.status(200).json({
+      items: results,
+      meta: {
+        count: results.length,
+        limit,
+        offset,
+      },
+    });
   } catch (error) {
     next(error);
   }
