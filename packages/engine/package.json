@@ -1,10 +1,17 @@
 {
-    "name": "@project/engine",
-    "version": "1.0.0",
-    "main": "./src/index.ts",
-    "type": "module",
-    "types": "./src/index.ts",
-    "devDependencies": {
-        "typescript": "latest"
-    }
+  "name": "@project/engine",
+  "version": "1.0.0",
+  "main": "./src/index.ts",
+  "type": "module",
+  "types": "./src/index.ts",
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage"
+  },
+  "devDependencies": {
+    "@vitest/coverage-v8": "^4.1.9",
+    "typescript": "latest",
+    "vitest": "^4.1.9"
+  }
 }

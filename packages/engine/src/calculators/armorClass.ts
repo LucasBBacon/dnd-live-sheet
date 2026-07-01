@@ -28,6 +28,7 @@ export class DerivedStatEngine {
       const bestBase = baseSetters.reduce((prev, current) =>
         prev.value > current.value ? prev : current,
       );
+      baseAc = bestBase.value;
 
       breakdown.push({
         name: `Base AC (${bestBase.sourceName})`,
