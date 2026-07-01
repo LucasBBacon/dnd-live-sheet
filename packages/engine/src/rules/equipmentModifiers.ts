@@ -8,6 +8,18 @@ export const EQUIPMENT_RULES_MAP: Record<
   string,
   (instanceId: string) => Modifier[]
 > = {
+  item_armor_padded: (id) => [
+    {
+      id: `${id}_ac`,
+      target: "AC",
+      type: "set_base",
+      value: 11,
+      sourceName: "Padded Armor",
+      sourceOrigin: "item",
+      isActive: true,
+    },
+  ],
+
   item_armor_leather: (id) => [
     {
       id: `${id}_ac`,
@@ -16,6 +28,18 @@ export const EQUIPMENT_RULES_MAP: Record<
       value: 11, // leather armor sets base AC to 11 + dex
       sourceName: "Leather Armor",
       sourceOrigin: "Item",
+      isActive: true,
+    },
+  ],
+
+  item_armor_studded_leather: (id) => [
+    {
+      id: `${id}_ac`,
+      target: "AC",
+      type: "set_base",
+      value: 12,
+      sourceName: "Studded Leather Armor",
+      sourceOrigin: "item",
       isActive: true,
     },
   ],
