@@ -1,4 +1,3 @@
-/* eslint-disable react-hooks/rules-of-hooks */
 import { useQuery } from "@tanstack/react-query";
 import { useWizardStore } from "../../store/wizardStore";
 import { apiClient } from "../../api/client";
@@ -8,16 +7,21 @@ import { ClassDetailView } from "./ClassDetailView";
 export const ClassStepContainer = () => {
   const currentStep = useWizardStore((state) => state.currentStep);
   const setStep = useWizardStore((state) => state.setStep);
-  const canProceed = useWizardStore((state) => state.canProceed);
-
-  if (currentStep !== 3) return null;
+  const canProceedToAbilityScores = useWizardStore((state) =>
+    state.canProceed(),
+  );
+  const isActiveStep = currentStep === 3;
 
   // Fetch only the lightweight base class definitions
   const { data, isLoading, isError } = useQuery({
     queryKey: ["reference", "classes"],
     queryFn: () => apiClient("/reference/classes"),
     staleTime: 1000 * 60 * 30,
+    enabled: isActiveStep,
   });
+
+  // guard clause so react does not evaluate hidden steps
+  if (!isActiveStep) return null;
 
   if (isLoading)
     return (
@@ -82,18 +86,18 @@ export const ClassStepContainer = () => {
             ◄ Return to Lineage
           </button>
           <button
-            disabled={!canProceed()}
+            disabled={!canProceedToAbilityScores}
             onClick={() => setStep(4)}
             style={{
               padding: "0.75rem 1.5rem",
-              cursor: canProceed() ? "pointer" : "not-allowed",
-              background: canProceed() ? "#ccffcc" : "#ffcccc",
+              cursor: canProceedToAbilityScores ? "pointer" : "not-allowed",
+              background: canProceedToAbilityScores ? "#ccffcc" : "#ffcccc",
               border: "none",
               flexGrow: 1,
               fontWeight: "bold",
             }}
           >
-            {canProceed()
+            {canProceedToAbilityScores
               ? "Proceed to Ability Scores ►"
               : "Awaiting Required Selections..."}
           </button>

@@ -1,9 +1,9 @@
-import { ReviewStepContainer } from "./components/wizard/ReviewStepContainer";
+import { CharacterCreationWizard } from "./components/wizard/CharacterCreationWizard";
 
 const App = () => {
   return (
     <div>
-      <ReviewStepContainer />
+      <CharacterCreationWizard />
     </div>
   );
 };
