@@ -13,8 +13,8 @@
     "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
-    "@project/shared": "workspace:^",
     "@project/engine": "workspace:*",
+    "@project/shared": "workspace:^",
     "@tanstack/react-query": "^5.101.1",
     "react": "^19.2.6",
     "react-dom": "^19.2.6",
@@ -24,7 +24,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
-    "@types/node": "^24.12.3",
+    "@types/node": "^24.13.2",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^6.0.1",
