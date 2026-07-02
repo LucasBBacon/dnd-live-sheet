@@ -1,6 +1,12 @@
 {
   "name": "@project/engine",
   "version": "1.0.0",
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "default": "./src/index.ts"
+    }
+  },
   "main": "./src/index.ts",
   "type": "module",
   "types": "./src/index.ts",

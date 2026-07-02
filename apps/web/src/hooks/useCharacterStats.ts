@@ -1,0 +1,76 @@
+import { useMemo } from "react";
+import { useCharacterSheetStore } from "../store/characterSheetStore";
+import {
+  AbilityEngine,
+  DerivedStatEngine,
+  InventoryBridge,
+  SKILL_MAP,
+  SkillEngine,
+  type Ability,
+} from "@project/engine";
+
+export const useAbilities = () => {
+  const baseScores = useCharacterSheetStore((state) => state.baseScores);
+  const activeModifiers = useCharacterSheetStore(
+    (state) => state.activeModifiers,
+  );
+  const inventory = useCharacterSheetStore((state) => state.inventory);
+
+  return useMemo(() => {
+    // 1 - compile modifiers from equipped items
+    const equipmentMods = InventoryBridge.compileEquipmentModifiers(inventory);
+    const totalMods = [...activeModifiers, ...equipmentMods];
+
+    const finalAbilities = {} as Record<
+      Ability,
+      { score: number; modifier: number }
+    >;
+
+    // 2 - run raw scores through engine
+    (Object.keys(baseScores) as Ability[]).forEach((stat) => {
+      const score = AbilityEngine.calculateScore(
+        baseScores[stat],
+        stat,
+        totalMods,
+      );
+      finalAbilities[stat] = {
+        score,
+        modifier: AbilityEngine.getModifier(score),
+      };
+    });
+
+    return { finalAbilities, totalMods };
+  }, [baseScores, activeModifiers, inventory]);
+};
+
+export const useDerivedStats = () => {
+  const level = useCharacterSheetStore((state) => state.level);
+  const proficiencies = useCharacterSheetStore((state) => state.proficiencies);
+  const { finalAbilities, totalMods } = useAbilities();
+
+  return useMemo(() => {
+    const profBonus = AbilityEngine.getProficiencyBonus(level);
+    const dexMod = finalAbilities.dex.modifier;
+
+    // ac calc
+    const armorClass = DerivedStatEngine.calculateAC(dexMod, totalMods);
+
+    // skills calc
+    const skills = Object.values(SKILL_MAP).map((skillDef) => {
+      const governingScore = finalAbilities[skillDef.ability].score;
+      const profLevel = proficiencies[skillDef.id] || "none";
+
+      return SkillEngine.calculateSkill(
+        skillDef.id,
+        governingScore,
+        profLevel,
+        profBonus,
+      );
+    });
+
+    // initiative (TODO expand with traits like Alert)
+    const initiative = dexMod;
+
+    return { armorClass, skills, profBonus, initiative };
+  }, [level, proficiencies, finalAbilities, totalMods]);
+};
