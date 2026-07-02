@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useMutation } from "@tanstack/react-query";
+import { useNavigate } from "react-router-dom";
 import { useWizardStore } from "../../store/wizardStore";
 import { apiClient } from "../../api/client";
 import { compileCharacterPayload } from "../../utils/compileCharacter";
@@ -8,12 +9,12 @@ export const ReviewStepContainer = () => {
   const currentStep = useWizardStore((state) => state.currentStep);
   const setStep = useWizardStore((state) => state.setStep);
   const state = useWizardStore();
-  // const navigate = useNavigate TODO
+  const navigate = useNavigate();
 
   const mutation = useMutation({
     mutationFn: async (payload: any) => {
       // execute POST request to express
-      return apiClient("/characters", {
+      return apiClient("/character", {
         method: "POST",
         body: JSON.stringify(payload),
         headers: { "Content-Type": "application/json" },
@@ -22,7 +23,7 @@ export const ReviewStepContainer = () => {
     onSuccess: (data) => {
       // backend returns new UUID. route the user to livesheet
       console.log(`Character securely written to Postgres:`, data.characterId);
-      // navigate(`/character/${data.characterId}`)
+      navigate(`/character/${data.characterId}`);
     },
     onError: (error) => {
       console.error(`Fatal compilation or network error:`, error);

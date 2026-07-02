@@ -1,4 +1,4 @@
-export type Ability = "str" | "dex" | "int" | "wis" | "cha";
+export type Ability = "str" | "dex" | "con" | "int" | "wis" | "cha";
 export type ProficiencyLevel = "none" | "proficient" | "expertise";
 
 export interface SkillDefinition {
