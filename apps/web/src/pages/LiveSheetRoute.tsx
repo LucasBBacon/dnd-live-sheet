@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { apiClient } from "../api/client";
 import { useEffect } from "react";
 import { LiveSheetProvider } from "../components/sheet/LiveSheetProvider";
+import { DashboardLayout } from "../components/sheet/DashboardLayout";
 
 export const LiveSheetRoute = () => {
   const { characterId } = useParams<{ characterId: string }>();
@@ -43,7 +44,7 @@ export const LiveSheetRoute = () => {
   return (
     // LiveSheetProvider handles the socket.io connection using the characterId as the room
     <LiveSheetProvider campaignId={characterId!}>
-      <DashboardLayout TODO />
+      <DashboardLayout />
     </LiveSheetProvider>
   );
 };

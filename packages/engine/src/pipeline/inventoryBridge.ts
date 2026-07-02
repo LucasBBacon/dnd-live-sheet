@@ -4,6 +4,7 @@ import type { Modifier } from "../types/engine.js";
 export interface OperationalInventoryItem {
   id: string; // database instance UUID
   itemId: string; // reference ID (e.g., 'item_shield')
+  quantity: number;
   slot: string; // current equipment slot
   isAttuned: boolean;
   requiresAttunement?: boolean; // from metadata
