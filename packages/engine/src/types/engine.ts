@@ -4,7 +4,8 @@ export type ModTarget =
   | "SPEED"
   | "STR_SAVE"
   | "ALL_SAVES"
-  | "STEALTH_CHECK"; // TODO: ADD REST!!
+  | "STEALTH_CHECK"
+  | "ATTACK_BONUS"; // TODO: ADD REST!!
 export type ModType = "set_base" | "add" | "advantage" | "disadvantage";
 
 export interface Modifier {

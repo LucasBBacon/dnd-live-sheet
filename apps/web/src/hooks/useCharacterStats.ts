@@ -9,6 +9,10 @@ import {
   type Ability,
 } from "@project/engine";
 
+/**
+ * A custom React hook that calculates the character's final ability scores, modifiers, and total active modifiers based on base scores, active modifiers, and equipped inventory items.
+ * @returns An object containing the final ability scores and modifiers for each ability, as well as an array of all active modifiers affecting the character.
+ */
 export const useAbilities = () => {
   const baseScores = useCharacterSheetStore((state) => state.baseScores);
   const activeModifiers = useCharacterSheetStore(
