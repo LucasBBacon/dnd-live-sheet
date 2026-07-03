@@ -3,6 +3,7 @@ import {
   type HpModifiedPayload,
   type ItemConsumedPayload,
   type ItemEquippedPayload,
+  type ResourceConsumedPayload,
 } from "@project/shared";
 import { io, type Socket } from "socket.io-client";
 
@@ -46,8 +47,20 @@ class SocketManager {
     this.socket?.emit(SOCKET_EVENTS.ITEM_CONSUMED, payload);
   }
 
-  public subscribeToConsumed(callback: (payload: ItemConsumedPayload) => void) {
+  public subscribeToItemConsumed(
+    callback: (payload: ItemConsumedPayload) => void,
+  ) {
     this.socket?.on(SOCKET_EVENTS.ITEM_CONSUMED, callback);
+  }
+
+  public emitResourceConsumed(payload: ResourceConsumedPayload) {
+    this.socket?.emit(SOCKET_EVENTS.RESOURCE_CONSUMED, payload);
+  }
+
+  public subscribeToResourceConsumed(
+    callback: (payload: ResourceConsumedPayload) => void,
+  ) {
+    this.socket?.on(SOCKET_EVENTS.RESOURCE_CONSUMED, callback);
   }
 
   public disconnect() {

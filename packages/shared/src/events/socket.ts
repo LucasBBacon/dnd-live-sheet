@@ -3,6 +3,7 @@ export const SOCKET_EVENTS = {
   HP_MODIFIED: "character:hp_modified",
   ITEM_EQUIPPED: "character:item_equipped",
   ITEM_CONSUMED: "character:item_consumed",
+  RESOURCE_CONSUMED: "character:resource_consumed",
   CONDITION_ADDED: "character:condition_added",
 } as const;
 
@@ -24,6 +25,13 @@ export interface ItemConsumedPayload {
   characterId: string;
   inventoryId: string;
   amount: number; // usually 1, but allow for bulk drops
+  timestamp: number;
+}
+
+export interface ResourceConsumedPayload {
+  characterId: string;
+  resourceId: string; // e.g., 'trait_action_surge'
+  amount: number;
   timestamp: number;
 }
 

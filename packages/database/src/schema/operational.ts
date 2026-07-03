@@ -2,6 +2,7 @@ import {
   boolean,
   integer,
   jsonb,
+  pgEnum,
   pgTable,
   primaryKey,
   text,
@@ -18,9 +19,7 @@ import {
   traits,
 } from "./reference.js";
 
-// --------------------------------------------------------------
-// CORE CHARACTER ENTITY
-// --------------------------------------------------------------
+// #region CORE CHARACTER ENTITY
 
 export const characters = pgTable("character", {
   id: uuid("id").primaryKey().defaultRandom(),
@@ -68,9 +67,9 @@ export const characters = pgTable("character", {
   temporaryInventory: jsonb("temporary_inventory").default([]),
 });
 
-// --------------------------------------------------------------
-// MULTICLASSING & PROGRESSION TRACKER
-// --------------------------------------------------------------
+// #endregion
+
+// #region MULTICLASSING & PROGRESSION TRACKER
 
 /*
  * allows characters to have multiple classes,
@@ -96,9 +95,9 @@ export const characterClasses = pgTable(
   }),
 );
 
-// --------------------------------------------------------------
-// AD-HOC TRAITS
-// --------------------------------------------------------------
+// #endregion
+
+// #region AD-HOC TRAITS
 
 /**
  * Use to store traits granted by custom backgrounds, specific DM rewards,
@@ -117,9 +116,9 @@ export const characterCustomTraits = pgTable("character_custom_traits", {
   sourceOrigin: varchar("source_origin", { length: 255 }).notNull(),
 });
 
-// --------------------------------------------------------------
-// INVENTORY
-// --------------------------------------------------------------
+// #endregion
+
+// #region INVENTORY
 
 export const EQUIPMENT_SLOTS = [
   "backpack",
@@ -162,3 +161,39 @@ export const characterInventory = pgTable(
     pk: primaryKey({ columns: [table.characterId, table.itemId] }),
   }),
 );
+
+// #endregion
+
+// #region RESOURCES
+
+export const restConditionEnum = pgEnum("rest_condition", [
+  "short_rest",
+  "long_rest",
+  "long_rest_half",
+  "dawn",
+  "never",
+]);
+
+export const characterResources = pgTable(
+  "character_resources",
+  {
+    id: varchar("id", { length: 100 }).notNull(),
+    characterId: uuid("character_id")
+      .references(() => characters.id, { onDelete: "cascade" })
+      .notNull(),
+    name: varchar("name", { length: 255 }).notNull(),
+    current: integer("current").notNull().default(0),
+    max: integer("max").notNull().default(0),
+    resetCondition: restConditionEnum("reset_condition")
+      .notNull()
+      .default("never"),
+  },
+  (table) => ({
+    // a composite primary key ensures the character can never have duplicate
+    // ledgers for the exact same trait. If engine attempts to grant a character
+    // 'trait_action_surge' twice, database rejects it
+    pk: primaryKey({ columns: [table.characterId, table.id] }),
+  }),
+);
+
+// #endregion

@@ -1,6 +1,7 @@
 import { db } from "@project/database";
 import {
   characterInventory,
+  characterResources,
   characters,
 } from "@project/database/src/schema/operational.js";
 import {
@@ -8,6 +9,7 @@ import {
   type HpModifiedPayload,
   type ItemConsumedPayload,
   type ItemEquippedPayload,
+  type ResourceConsumedPayload,
 } from "@project/shared";
 import { Server, Socket } from "socket.io";
 import { and, eq, not, sql } from "drizzle-orm";
@@ -28,6 +30,8 @@ export function initializeWebSocketGateway(httpServer: any) {
     });
 
     // ATOMIC EVENT HANDLERS
+
+    // #region HP MODIFIED
 
     socket.on(SOCKET_EVENTS.HP_MODIFIED, async (payload: HpModifiedPayload) => {
       try {
@@ -55,6 +59,10 @@ export function initializeWebSocketGateway(httpServer: any) {
         });
       }
     });
+
+    // #endregion
+
+    // #region ITEM EQUIPPED
 
     socket.on(
       SOCKET_EVENTS.ITEM_EQUIPPED,
@@ -110,6 +118,10 @@ export function initializeWebSocketGateway(httpServer: any) {
       },
     );
 
+    // #endregion
+
+    // #region ITEM CONSUMED
+
     socket.on(
       SOCKET_EVENTS.ITEM_CONSUMED,
       async (payload: ItemConsumedPayload) => {
@@ -164,6 +176,49 @@ export function initializeWebSocketGateway(httpServer: any) {
         }
       },
     );
+
+    // #endregion
+
+    // region RESOURCE CONSUMED
+
+    socket.on(
+      SOCKET_EVENTS.RESOURCE_CONSUMED,
+      async (payload: ResourceConsumedPayload) => {
+        try {
+          await db.transaction(async (tx) => {
+            // decrement resource automatically, prevent neg values
+            await tx
+              .update(characterResources)
+              .set({
+                current: sql`GREATEST(${characterResources.current} - ${payload.amount}, 0)`,
+              })
+              .where(
+                and(
+                  eq(characterResources.id, payload.resourceId),
+                  eq(characterResources.characterId, payload.characterId),
+                ),
+              );
+          });
+
+          // broadcast to room
+          socket
+            .to(`campaign_${getCampaignId(socket)}`)
+            .emit(SOCKET_EVENTS.RESOURCE_CONSUMED, {
+              actorId: socket.id,
+              data: payload,
+            });
+        } catch (error) {
+          console.error("Failed to process resource consumption:", error);
+          socket.emit("action_error", {
+            event: SOCKET_EVENTS.RESOURCE_CONSUMED,
+            error: "Resource async failure. Rolling back state.",
+            payload,
+          });
+        }
+      },
+    );
+
+    // #endregion
 
     socket.on("disconnect", () => {
       console.log(`Client disconnected: ${socket.id}`);

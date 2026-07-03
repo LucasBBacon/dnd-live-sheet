@@ -1,5 +1,6 @@
 import type {
   Ability,
+  CharacterResource,
   Modifier,
   OperationalInventoryItem,
   ProficiencyLevel,
@@ -26,6 +27,8 @@ export interface CharacterSheetState {
   // transient or spell based mods
   activeModifiers: Modifier[];
 
+  resources: CharacterResource[];
+
   // actions
   initialize: (payload: Partial<CharacterSheetState>) => void;
 
@@ -36,6 +39,9 @@ export interface CharacterSheetState {
   syncRemoteEquipment: (inventoryId: string, targetSlot: string) => void;
   consumeItem: (inventoryId: string, amount: number) => void;
   syncRemoteConsumption: (inventoryId: string, amount: number) => void;
+
+  consumeResource: (resourceId: string, amount?: number) => void;
+  syncRemoteResource: (resourceId: string, amount: number) => void;
 
   toggleModifier: (modifierId: string, isActive: boolean) => void;
 }
@@ -51,6 +57,7 @@ export const useCharacterSheetStore = create<CharacterSheetState>(
     proficiencies: {},
     inventory: [],
     activeModifiers: [],
+    resources: [],
 
     initialize: (payload) => set((state) => ({ ...state, ...payload })),
 
@@ -158,6 +165,42 @@ export const useCharacterSheetStore = create<CharacterSheetState>(
         .filter((item) => item.quantity > 0);
 
       set({ inventory: updatedInventory });
+    },
+
+    consumeResource: (resourceId, amount = 1) => {
+      const state = get();
+
+      const targetResource = state.resources.find((r) => r.id === resourceId);
+      if (!targetResource || targetResource.current < amount) return;
+
+      // optimistically decrement, clamp 0
+      const updatedResources = state.resources.map((res) => {
+        if (res.id === resourceId) {
+          return { ...res, current: Math.max(0, res.current - amount) };
+        }
+        return res;
+      });
+
+      set({ resources: updatedResources });
+
+      // fire network transaction
+      socketService.emitResourceConsumed({
+        characterId: state.id,
+        resourceId,
+        amount,
+        timestamp: Date.now(),
+      });
+    },
+
+    syncRemoteResource: (resourceId, amount) => {
+      const state = get();
+      const updatedResources = state.resources.map((res) => {
+        if (res.id === resourceId) {
+          return { ...res, current: Math.max(0, res.current - amount) };
+        }
+        return res;
+      });
+      set({ resources: updatedResources });
     },
 
     toggleModifier: (modId, isActive) =>
