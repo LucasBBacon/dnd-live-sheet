@@ -1,8 +1,12 @@
-import { SOCKET_EVENTS, type HpModifiedPayload } from "@project/shared";
+import {
+  SOCKET_EVENTS,
+  type HpModifiedPayload,
+  type ItemEquippedPayload,
+} from "@project/shared";
 import { io, type Socket } from "socket.io-client";
 
 class SocketManager {
-  private socket: Socket | null = null;
+  public socket: Socket | null = null;
 
   public connect(campaignId: string) {
     if (this.socket) return;
@@ -25,6 +29,16 @@ class SocketManager {
 
   public subscribeToHpUpdates(callback: (payload: HpModifiedPayload) => void) {
     this.socket?.on(SOCKET_EVENTS.HP_MODIFIED, callback);
+  }
+
+  public emitInventoryUpdate(payload: ItemEquippedPayload) {
+    this.socket?.emit(SOCKET_EVENTS.ITEM_EQUIPPED, payload);
+  }
+
+  public subscribeToInventoryUpdates(
+    callback: (payload: ItemEquippedPayload) => void,
+  ) {
+    this.socket?.on(SOCKET_EVENTS.ITEM_EQUIPPED, callback);
   }
 
   public disconnect() {

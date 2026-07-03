@@ -33,6 +33,8 @@ export interface CharacterSheetState {
   syncRemoteHealthDelta: (delta: number) => void;
 
   equipItem: (inventoryId: string, targetSlot: string) => void;
+  syncRemoteEquipment: (inventoryId: string, targetSlot: string) => void;
+
   toggleModifier: (modifierId: string, isActive: boolean) => void;
 }
 
@@ -74,12 +76,47 @@ export const useCharacterSheetStore = create<CharacterSheetState>(
       set({ currentHp: newHp });
     },
 
-    equipItem: (inventoryId, targetSlot) =>
-      set((state) => ({
-        inventory: state.inventory.map((item) =>
-          item.id === inventoryId ? { ...item, slot: targetSlot } : item,
-        ),
-      })),
+    equipItem: (inventoryId, targetSlot) => {
+      const state = get();
+
+      // optimistically resolve slot contention locally
+      const updatedInventory = state.inventory.map((item) => {
+        // if another item is in the target slot, unequip it
+        if (item.slot === targetSlot && targetSlot !== "backpack") {
+          return { ...item, slot: "backpack" };
+        }
+        // equip target item
+        if (item.id === inventoryId) {
+          return { ...item, slot: targetSlot };
+        }
+        return item;
+      });
+
+      // update local state instantly 0-latency
+      set({ inventory: updatedInventory });
+
+      // dispatch to backend for persistence and broadcasting
+      socketService.emitInventoryUpdate({
+        characterId: state.id,
+        inventoryId,
+        targetSlot,
+        timestamp: Date.now(),
+      });
+    },
+
+    syncRemoteEquipment: (inventoryId, targetSlot) => {
+      const state = get();
+      const updatedInventory = state.inventory.map((item) => {
+        if (item.slot === targetSlot && targetSlot !== "backpack") {
+          return { ...item, slot: "backpack" };
+        }
+        if (item.id === inventoryId) {
+          return { ...item, slot: targetSlot };
+        }
+        return item;
+      });
+      set({ inventory: updatedInventory });
+    },
 
     toggleModifier: (modId, isActive) =>
       set((state) => ({
