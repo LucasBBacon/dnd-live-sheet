@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useAbilities, useDerivedStats } from "../../hooks/useCharacterStats";
-import { useCombat } from "../../hooks/useCombat";
 import { useCharacterSheetStore } from "../../store/characterSheetStore";
+import { CombatWidget } from "./CombatWidget";
 
 export const DashboardLayout = () => {
   const character = useCharacterSheetStore();
@@ -12,7 +12,6 @@ export const DashboardLayout = () => {
 
   const { armorClass, skills, initiative } = useDerivedStats();
   const { finalAbilities } = useAbilities();
-  const { attacks } = useCombat();
 
   const [hpInput, setHpInput] = useState(1);
 
@@ -79,43 +78,7 @@ export const DashboardLayout = () => {
 
         {/* ACTION ECONOMY */}
         <section className="col-span-6 bg-white border-2 border-gray-300 p-4 rounded overflow-y-auto">
-          <h2 className="font-bold border-b-2 border-gray-800 pb-1 mb-4 uppercase">
-            Actions
-          </h2>
-          {attacks.length === 0 ? (
-            <div className="text-gray-500 italic p-4 text-center border border-dashed border-gray-300">
-              No weapons equipped in active hand slots. Move item from Cargo
-              Hold to main_hand.
-            </div>
-          ) : (
-            <div className="flex flex-col gap-3">
-              {attacks.map((attack, i) => (
-                <div
-                  key={i}
-                  className="flex border border-gray-300 rounded overflow-hidden"
-                >
-                  <div className="bg-gray-100 p-2 w-1/3 border-r border-gray-300">
-                    <div className="font-bold">{attack.name}</div>
-                    <div className="text-xs text-gray-500">{attack.slot}</div>
-                  </div>
-                  <div className="bg-blue-50 p-2 w-1/4 text-center border-r border-gray-300">
-                    <div className="text-xs text-blue-800 uppercase">
-                      To Hit
-                    </div>
-                    <div className="font-bold text-lg">
-                      {attack.attackBonus}
-                    </div>
-                  </div>
-                  <div className="p-2 w-5/12 text-center bg-red-50">
-                    <div className="text-xs text-red-800 uppercase">Damage</div>
-                    <div className="font-bold text-lg">
-                      {attack.damageExpression}
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
+          <CombatWidget />
         </section>
 
         {/* ENGINE */}
