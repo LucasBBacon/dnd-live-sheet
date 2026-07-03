@@ -90,9 +90,28 @@ export const DashboardLayout = () => {
           ) : (
             <div className="flex flex-col gap-3">
               {attacks.map((attack, i) => (
-                <div key={i}>
-                  <div>{attack.name}</div>
-                  <div>{attack.slot}</div>
+                <div
+                  key={i}
+                  className="flex border border-gray-300 rounded overflow-hidden"
+                >
+                  <div className="bg-gray-100 p-2 w-1/3 border-r border-gray-300">
+                    <div className="font-bold">{attack.name}</div>
+                    <div className="text-xs text-gray-500">{attack.slot}</div>
+                  </div>
+                  <div className="bg-blue-50 p-2 w-1/4 text-center border-r border-gray-300">
+                    <div className="text-xs text-blue-800 uppercase">
+                      To Hit
+                    </div>
+                    <div className="font-bold text-lg">
+                      {attack.attackBonus}
+                    </div>
+                  </div>
+                  <div className="p-2 w-5/12 text-center bg-red-50">
+                    <div className="text-xs text-red-800 uppercase">Damage</div>
+                    <div className="font-bold text-lg">
+                      {attack.damageExpression}
+                    </div>
+                  </div>
                 </div>
               ))}
             </div>

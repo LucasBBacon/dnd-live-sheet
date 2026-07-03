@@ -20,4 +20,5 @@ export interface WeaponDefinition {
   damageDice: string; // e.g., '1d8'
   damageType: string; // e.g., 'slashing'
   properties: WeaponProperty[];
+  ammoItemId?: string;
 }

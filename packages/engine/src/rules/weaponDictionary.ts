@@ -24,5 +24,6 @@ export const WEAPON_DICTIONARY: Record<string, WeaponDefinition> = {
     damageDice: "1d8",
     damageType: "piercing",
     properties: ["ammunition", "heavy", "two_handed"],
+    ammoItemId: "item_arrow",
   },
 };

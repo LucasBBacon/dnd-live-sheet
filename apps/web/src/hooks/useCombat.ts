@@ -24,7 +24,7 @@ export const useCombat = () => {
 
     // 2 - map equipped items to their combat matrices
     const attacks = equippedHands.reduce((acc, item) => {
-      const weaponDef = WEAPON_DICTIONARY[item.id];
+      const weaponDef = WEAPON_DICTIONARY[item.itemId];
 
       // if equipped item is not a weapon, skip it
       if (!weaponDef) return acc;
@@ -52,8 +52,30 @@ export const useCombat = () => {
         magicBonus,
       );
 
+      // 6 - ammo logic
+      let currentAmmo = 0;
+      let ammoInventoryId = null;
+
+      if (weaponDef.ammoItemId) {
+        // find operational row in backpack for ammo
+        const ammoRow = inventory.find(
+          (i) => i.itemId === weaponDef.ammoItemId,
+        );
+        if (ammoRow) {
+          currentAmmo = ammoRow.quantity;
+          ammoInventoryId = ammoRow.id;
+        }
+      }
+
       // attach physical slot to output so ui knows where it is equipped
-      acc.push({ ...derivedAttack, slot: item.slot });
+      acc.push({
+        ...derivedAttack,
+        slot: item.slot,
+        requiresAmmo: !!weaponDef.ammoItemId,
+        currentAmmo,
+        ammoInventoryId,
+      });
+      
       return acc;
     }, [] as any[]);
 
