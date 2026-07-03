@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useAbilities, useDerivedStats } from "../../hooks/useCharacterStats";
 import { useCharacterSheetStore } from "../../store/characterSheetStore";
 import { CombatWidget } from "./CombatWidget";
+import { RestModal } from "./modals/RestModal";
 
 export const DashboardLayout = () => {
   const character = useCharacterSheetStore();
@@ -14,6 +15,7 @@ export const DashboardLayout = () => {
   const { finalAbilities } = useAbilities();
 
   const [hpInput, setHpInput] = useState(1);
+  const [isRestModalOpen, setIsRestModalOpen] = useState(false);
 
   return (
     <div className="h-screen w-full bg-gray-100 p-4 font-mono text-sm overflow-hidden flex flex-col">
@@ -23,6 +25,14 @@ export const DashboardLayout = () => {
           {character.id ? "Live Session Active" : "Loading..."}
         </h1>
         <span>Lvl {character.level}</span>
+
+        {/* GLOBAL  ACTION */}
+        <button
+          onClick={() => setIsRestModalOpen(true)}
+          className="bg-blue-600 hover:bg-blue-500 text-white px-4 py-1 rounded font-bold uppercase shadow"
+        >
+          Camp / Rest
+        </button>
       </header>
 
       {/* MAIN GRID */}
@@ -171,6 +181,10 @@ export const DashboardLayout = () => {
           ))}
         </div>
       </section>
+
+      {isRestModalOpen && (
+        <RestModal onClose={() => setIsRestModalOpen(false)} />
+      )}
     </div>
   );
 };
