@@ -1,9 +1,10 @@
-import type {
-  Ability,
-  CharacterResource,
-  Modifier,
-  OperationalInventoryItem,
-  ProficiencyLevel,
+import {
+  RestEngine,
+  type Ability,
+  type CharacterResource,
+  type Modifier,
+  type OperationalInventoryItem,
+  type ProficiencyLevel,
 } from "@project/engine";
 import { create } from "zustand";
 import { socketService } from "../services/socketService";
@@ -42,6 +43,8 @@ export interface CharacterSheetState {
 
   consumeResource: (resourceId: string, amount?: number) => void;
   syncRemoteResource: (resourceId: string, amount: number) => void;
+
+  triggerRest: (restType: "short" | "long") => void;
 
   toggleModifier: (modifierId: string, isActive: boolean) => void;
 }
@@ -201,6 +204,23 @@ export const useCharacterSheetStore = create<CharacterSheetState>(
         return res;
       });
       set({ resources: updatedResources });
+    },
+
+    triggerRest: (restType: "short" | "long") => {
+      const state = get();
+
+      // sweep resources
+      const updatedResources = RestEngine.applyRest(state.resources, restType);
+      // calc new HP
+      const updatedHp = restType === "long" ? state.maxHp : state.currentHp;
+
+      set({ resources: updatedResources, currentHp: updatedHp });
+
+      socketService.emitRestCompleted({
+        characterId: state.id,
+        restType,
+        timestamp: Date.now(),
+      });
     },
 
     toggleModifier: (modId, isActive) =>

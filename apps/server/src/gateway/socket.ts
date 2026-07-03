@@ -13,6 +13,7 @@ import {
 } from "@project/shared";
 import { Server, Socket } from "socket.io";
 import { and, eq, not, sql } from "drizzle-orm";
+import { RestEngine } from "@project/engine";
 
 export function initializeWebSocketGateway(httpServer: any) {
   const io = new Server(httpServer, {
@@ -218,6 +219,71 @@ export function initializeWebSocketGateway(httpServer: any) {
       },
     );
 
+    // #endregion
+
+    // #region REST COMPLETED
+    socket.on(
+      SOCKET_EVENTS.REST_COMPLETED,
+      async (payload: { characterId: string; restType: "short" | "long" }) => {
+        try {
+          await db.transaction(async (tx) => {
+            // 1 - fetch current resources
+            const currentResources = await tx
+              .select()
+              .from(characterResources)
+              .where(eq(characterResources.characterId, payload.characterId));
+
+            // 2 - calculate the swept state
+            const updatedResources = RestEngine.applyRest(
+              currentResources,
+              payload.restType,
+            );
+
+            // 3 - batch update the changed resources
+            for (const res of updatedResources) {
+              const original = currentResources.find((r) => r.id === res.id);
+              // only update if value changed to save db cycles
+              if (original && original.current !== res.current) {
+                await tx
+                  .update(characterResources)
+                  .set({ current: res.current })
+                  .where(
+                    and(
+                      eq(characterResources.id, res.id),
+                      eq(characterResources.characterId, payload.characterId),
+                    ),
+                  );
+              }
+            }
+
+            // 4 - long rest hp reset
+            if (payload.restType === "long") {
+              // in drizzle, doing an update with self-referencing column requires sql''
+              // or simply relying on the UI's maxHp calculation if stored directly
+              await tx
+                .update(characters)
+                .set({ currentHp: characters.maxHp })
+                .where(eq(characters.id, payload.characterId));
+            }
+          });
+
+          // 5 - broadcast to room
+          socket
+            .to(`campaign_${getCampaignId(socket)}`)
+            .emit(SOCKET_EVENTS.REST_COMPLETED, {
+              actorId: socket.id,
+              data: payload,
+            });
+        } catch (error) {
+          console.error("Failed to process rest:", error);
+          socket.emit("action_error", {
+            event: SOCKET_EVENTS.REST_COMPLETED,
+            error: "Rest async failure. Rolling back state.",
+            payload,
+          });
+        }
+      },
+    );
     // #endregion
 
     socket.on("disconnect", () => {

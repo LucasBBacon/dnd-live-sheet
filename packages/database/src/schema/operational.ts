@@ -62,6 +62,7 @@ export const characters = pgTable("character", {
   flaws: text("flaws"),
 
   currentHp: integer("current_hp"),
+  maxHp: integer("max_hp"),
 
   // TODO - INVENTORY
   temporaryInventory: jsonb("temporary_inventory").default([]),

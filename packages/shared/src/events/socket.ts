@@ -5,6 +5,7 @@ export const SOCKET_EVENTS = {
   ITEM_CONSUMED: "character:item_consumed",
   RESOURCE_CONSUMED: "character:resource_consumed",
   CONDITION_ADDED: "character:condition_added",
+  REST_COMPLETED: "character:rest_completed",
 } as const;
 
 export interface HpModifiedPayload {

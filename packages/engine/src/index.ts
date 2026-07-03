@@ -7,5 +7,6 @@ export * from "./rules/weaponDictionary.js";
 export * from "./calculators/abilities.js";
 export * from "./calculators/armorClass.js";
 export * from "./calculators/combat.js";
+export * from "./calculators/rests.js";
 export * from "./calculators/skills.js";
 export * from "./pipeline/index.js";

@@ -63,6 +63,14 @@ class SocketManager {
     this.socket?.on(SOCKET_EVENTS.RESOURCE_CONSUMED, callback);
   }
 
+  public emitRestCompleted(payload: {
+    characterId: string;
+    restType: "short" | "long";
+    timestamp: number;
+  }) {
+    this.socket?.emit(SOCKET_EVENTS.REST_COMPLETED, payload);
+  }
+
   public disconnect() {
     this.socket?.disconnect();
     this.socket = null;
