@@ -34,6 +34,8 @@ export interface CharacterSheetState {
 
   equipItem: (inventoryId: string, targetSlot: string) => void;
   syncRemoteEquipment: (inventoryId: string, targetSlot: string) => void;
+  consumeItem: (inventoryId: string, amount: number) => void;
+  syncRemoteConsumption: (inventoryId: string, amount: number) => void;
 
   toggleModifier: (modifierId: string, isActive: boolean) => void;
 }
@@ -115,6 +117,46 @@ export const useCharacterSheetStore = create<CharacterSheetState>(
         }
         return item;
       });
+      set({ inventory: updatedInventory });
+    },
+
+    consumeItem: (inventoryId, amount = 1) => {
+      const state = get();
+
+      // find the item and ensure it exists
+      const targetItem = state.inventory.find((i) => i.id === inventoryId);
+      if (!targetItem) return;
+
+      // optimistically update the array
+      const updatedInventory = state.inventory
+        .map((item) => {
+          if (item.id === inventoryId) {
+            return { ...item, quantity: item.quantity - amount };
+          }
+          return item;
+        })
+        .filter((item) => item.quantity > 0); // strip it out if it hits 0
+
+      set({ inventory: updatedInventory });
+
+      socketService.emitInventoryConsumed({
+        characterId: state.id,
+        inventoryId,
+        amount,
+        timestamp: Date.now(),
+      });
+    },
+
+    syncRemoteConsumption: (inventoryId, amount) => {
+      const state = get();
+      const updatedInventory = state.inventory
+        .map((item) =>
+          item.id === inventoryId
+            ? { ...item, quantity: item.quantity - amount }
+            : item,
+        )
+        .filter((item) => item.quantity > 0);
+
       set({ inventory: updatedInventory });
     },
 

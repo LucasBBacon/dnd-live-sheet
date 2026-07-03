@@ -6,6 +6,7 @@ import {
 import {
   SOCKET_EVENTS,
   type HpModifiedPayload,
+  type ItemConsumedPayload,
   type ItemEquippedPayload,
 } from "@project/shared";
 import { Server, Socket } from "socket.io";
@@ -20,7 +21,7 @@ export function initializeWebSocketGateway(httpServer: any) {
     console.log(`Client connected: ${socket.id}`);
 
     // ROOM ORCHESTRATION
-    
+
     socket.on(SOCKET_EVENTS.ROOM_JOIN, (campaignId: string) => {
       socket.join(`campaign_${campaignId}`);
       console.log(`Socket ${socket.id} joined campaign_${campaignId}`);
@@ -103,6 +104,61 @@ export function initializeWebSocketGateway(httpServer: any) {
           socket.emit("action_error", {
             event: SOCKET_EVENTS.ITEM_EQUIPPED,
             error: "Slot contention failure. Rolling back state.",
+            payload,
+          });
+        }
+      },
+    );
+
+    socket.on(
+      SOCKET_EVENTS.ITEM_CONSUMED,
+      async (payload: ItemConsumedPayload) => {
+        try {
+          await db.transaction(async (tx) => {
+            // 1 - fetch the current item state securely
+            const [item] = await tx
+              .select({ quantity: characterInventory.quantity })
+              .from(characterInventory)
+              .where(
+                and(
+                  eq(characterInventory.id, payload.inventoryId),
+                  eq(characterInventory.characterId, payload.characterId),
+                ),
+              );
+
+            if (!item) throw new Error("Item not found or authorized");
+
+            const remaining = item.quantity - payload.amount;
+
+            // 2 - route the operation based on remaining quantity
+            if (remaining <= 0) {
+              // sweep empty container from the database
+              await tx
+                .delete(characterInventory)
+                .where(eq(characterInventory.id, payload.inventoryId));
+            } else {
+              // decrement the value automatically
+              await tx
+                .update(characterInventory)
+                .set({
+                  quantity: sql`${characterInventory.quantity} - ${payload.amount}`,
+                })
+                .where(eq(characterInventory.id, payload.inventoryId));
+            }
+          });
+
+          // 3 - broadcast delta to campaign room
+          socket
+            .to(`campaign_${getCampaignId(socket)}`)
+            .emit(SOCKET_EVENTS.ITEM_CONSUMED, {
+              actorId: socket.id,
+              data: payload,
+            });
+        } catch (error) {
+          console.error("Failed to process item consumption:", error);
+          socket.emit("action_error", {
+            event: SOCKET_EVENTS.ITEM_CONSUMED,
+            error: "Inventory sync failure. Rolling back state.",
             payload,
           });
         }

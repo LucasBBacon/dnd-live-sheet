@@ -16,6 +16,9 @@ export const LiveSheetProvider = ({
   const syncRemoteEquipment = useCharacterSheetStore(
     (state) => state.syncRemoteEquipment,
   );
+  const syncRemoteConsumption = useCharacterSheetStore(
+    (state) => state.syncRemoteConsumption,
+  );
 
   useEffect(() => {
     // 1 - establish connection and join room
@@ -31,11 +34,20 @@ export const LiveSheetProvider = ({
       syncRemoteEquipment(broadcast.inventoryId, broadcast.targetSlot);
     });
 
+    socketService.subscribeToConsumed((broadcast) => {
+      syncRemoteConsumption(broadcast.inventoryId, broadcast.amount);
+    });
+
     // cleanup on dismount
     return () => {
       socketService.disconnect();
     };
-  }, [campaignId, syncRemoteHealthDelta, syncRemoteEquipment]);
+  }, [
+    campaignId,
+    syncRemoteHealthDelta,
+    syncRemoteEquipment,
+    syncRemoteConsumption,
+  ]);
 
   return <>{children}</>;
 };

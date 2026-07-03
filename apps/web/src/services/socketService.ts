@@ -1,12 +1,13 @@
 import {
   SOCKET_EVENTS,
   type HpModifiedPayload,
+  type ItemConsumedPayload,
   type ItemEquippedPayload,
 } from "@project/shared";
 import { io, type Socket } from "socket.io-client";
 
 class SocketManager {
-  public socket: Socket | null = null;
+  private socket: Socket | null = null;
 
   public connect(campaignId: string) {
     if (this.socket) return;
@@ -39,6 +40,14 @@ class SocketManager {
     callback: (payload: ItemEquippedPayload) => void,
   ) {
     this.socket?.on(SOCKET_EVENTS.ITEM_EQUIPPED, callback);
+  }
+
+  public emitInventoryConsumed(payload: ItemConsumedPayload) {
+    this.socket?.emit(SOCKET_EVENTS.ITEM_CONSUMED, payload);
+  }
+
+  public subscribeToConsumed(callback: (payload: ItemConsumedPayload) => void) {
+    this.socket?.on(SOCKET_EVENTS.ITEM_CONSUMED, callback);
   }
 
   public disconnect() {

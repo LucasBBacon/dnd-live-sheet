@@ -2,6 +2,7 @@ export const SOCKET_EVENTS = {
   ROOM_JOIN: "room:join",
   HP_MODIFIED: "character:hp_modified",
   ITEM_EQUIPPED: "character:item_equipped",
+  ITEM_CONSUMED: "character:item_consumed",
   CONDITION_ADDED: "character:condition_added",
 } as const;
 
@@ -16,6 +17,13 @@ export interface ItemEquippedPayload {
   characterId: string;
   inventoryId: string; // operational UUID of item instance
   targetSlot: string; // e.g., 'main_hand', 'backpack'
+  timestamp: number;
+}
+
+export interface ItemConsumedPayload {
+  characterId: string;
+  inventoryId: string;
+  amount: number; // usually 1, but allow for bulk drops
   timestamp: number;
 }
 
