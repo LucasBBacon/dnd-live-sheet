@@ -1,30 +1,40 @@
-import type { CharacterResource } from "../types/resources.js";
+import { RESOURCE_DICTIONARY } from "../rules/resourceDictionary.js";
+import type { OperationalResource } from "../types/resources.js";
 
 export class RestEngine {
   public static applyRest(
-    resources: CharacterResource[],
+    resources: OperationalResource[],
     restType: "short" | "long",
-  ): CharacterResource[] {
+    totalLevel: number,
+    classLevels: Record<string, number>,
+  ): OperationalResource[] {
     return resources.map((resource) => {
+      const def = RESOURCE_DICTIONARY[resource.id];
+
+      // failsafe: not in dictionary, return untouched
+      if (!def) return resource;
+
+      const maxUses = def.getMax(totalLevel, classLevels);
+
       // 1 - short rest recovery
-      if (restType === "short" && resource.resetCondition === "short_rest") {
-        return { ...resource, current: resource.max };
+      if (restType === "short" && def.resetCondition === "short_rest") {
+        return { ...resource, current: maxUses };
       }
 
       // 2 - long rest recovery
       if (restType === "long") {
         if (
-          resource.resetCondition === "short_rest" ||
-          resource.resetCondition === "long_rest"
+          def.resetCondition === "short_rest" ||
+          def.resetCondition === "long_rest"
         ) {
-          return { ...resource, current: resource.max };
+          return { ...resource, current: maxUses };
         }
 
         // dnd 5e: long rests recover exactly half of total max hit dice!!!! (min 1)
-        if (resource.resetCondition === "long_rest_half") {
-          const recoveryAmount = Math.max(1, Math.floor(resource.max / 2));
+        if (def.resetCondition === "long_rest_half") {
+          const recoveryAmount = Math.max(1, Math.floor(maxUses / 2));
           const newCurrent = Math.min(
-            resource.max,
+            maxUses,
             resource.current + recoveryAmount,
           );
           return { ...resource, current: newCurrent };

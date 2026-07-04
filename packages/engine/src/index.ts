@@ -3,6 +3,7 @@ export * from "./types/core.js";
 export * from "./types/combat.js";
 export * from "./types/resources.js";
 export * from "./rules/equipmentModifiers.js";
+export * from "./rules/resourceDictionary.js";
 export * from "./rules/weaponDictionary.js";
 export * from "./calculators/abilities.js";
 export * from "./calculators/armorClass.js";

@@ -1,9 +1,9 @@
 import {
   RestEngine,
   type Ability,
-  type CharacterResource,
   type Modifier,
   type OperationalInventoryItem,
+  type OperationalResource,
   type ProficiencyLevel,
 } from "@project/engine";
 import { create } from "zustand";
@@ -12,6 +12,7 @@ import { socketService } from "../services/socketService";
 export interface CharacterSheetState {
   id: string;
   level: number;
+  classLevels: Record<string, number>;
 
   currentHp: number;
   maxHp: number;
@@ -28,7 +29,7 @@ export interface CharacterSheetState {
   // transient or spell based mods
   activeModifiers: Modifier[];
 
-  resources: CharacterResource[];
+  resources: OperationalResource[];
 
   // actions
   initialize: (payload: Partial<CharacterSheetState>) => void;
@@ -53,6 +54,7 @@ export const useCharacterSheetStore = create<CharacterSheetState>(
   (set, get) => ({
     id: "",
     level: 1,
+    classLevels: {},
     currentHp: 10,
     maxHp: 10,
 
@@ -210,7 +212,12 @@ export const useCharacterSheetStore = create<CharacterSheetState>(
       const state = get();
 
       // sweep resources
-      const updatedResources = RestEngine.applyRest(state.resources, restType);
+      const updatedResources = RestEngine.applyRest(
+        state.resources,
+        restType,
+        state.level,
+        state.classLevels,
+      );
       // calc new HP
       const updatedHp = restType === "long" ? state.maxHp : state.currentHp;
 

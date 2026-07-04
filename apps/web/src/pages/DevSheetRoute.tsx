@@ -10,6 +10,7 @@ export const DevSheetRoute = () => {
     initializeStore({
       id: "dev-tester-001",
       level: 3,
+      classLevels: { class_fighter: 3 },
       currentHp: 28,
       maxHp: 28,
       baseScores: {
@@ -73,10 +74,15 @@ export const DevSheetRoute = () => {
       resources: [
         {
           id: "hd_d6",
-          name: "Hit Dice: d6",
           current: 1,
-          max: 1,
-          resetCondition: "long_rest",
+        },
+        {
+          id: "trait_action_surge",
+          current: 1,
+        },
+        {
+          id: "trait_second_wind",
+          current: 1,
         },
       ],
     });
