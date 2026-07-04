@@ -2,6 +2,8 @@
 import { useState, useMemo } from "react";
 import { useCharacterSheetStore } from "../../../store/characterSheetStore";
 import { RestEngine } from "@project/engine";
+import { useRollStore } from "../../../store/rollStore";
+import { useAbilities } from "../../../hooks/useCharacterStats";
 
 interface RestModalProps {
   onClose: () => void;
@@ -14,6 +16,36 @@ export const RestModal = ({ onClose }: RestModalProps) => {
   const currentHp = useCharacterSheetStore((state) => state.currentHp);
   const maxHp = useCharacterSheetStore((state) => state.maxHp);
   const triggerRest = useCharacterSheetStore((state) => state.triggerRest);
+
+  const requestRoll = useRollStore((state) => state.requestRoll);
+  const applyHealthDelta = useCharacterSheetStore(
+    (state) => state.applyHealthDelta,
+  );
+  const consumeResource = useCharacterSheetStore(
+    (state) => state.consumeResource,
+  );
+  const { finalAbilities } = useAbilities();
+  const conMod = finalAbilities.con.modifier;
+
+  const hitDiceResources = resources.filter((r) => r.id.startsWith("hd_"));
+
+  const handleSpendHitDie = async (resourceId: string, sides: number) => {
+    try {
+      const expression = `1d${sides} ${conMod >= 0 ? "+" : "0"} ${Math.abs(conMod)}`;
+
+      // execution halts here until user interacts with global RollInterceptor
+      const totalHeal = await requestRoll(
+        expression,
+        "Short Rest: Hit Die Recovery",
+      );
+
+      consumeResource(resourceId, 1);
+      applyHealthDelta(totalHeal, "Hit Die");
+    } catch (err) {
+      // fails safely if user clicks cancel exec on interceptor
+      console.log("Roll cancelled:", err);
+    }
+  };
 
   // 1. Generate the Predictive State
   const recoveryPreview = useMemo(() => {
@@ -71,8 +103,33 @@ export const RestModal = ({ onClose }: RestModalProps) => {
               rest.
             </p>
             {/* TODO: Map over available Hit Dice resources and add Roll/Spend buttons */}
-            <div className="text-center text-gray-500 italic border border-dashed border-gray-300 p-2">
-              Hit Dice Interface Pending...
+            <div className="flex flex-col gap-2">
+              {hitDiceResources.map((hd) => {
+                // parse dice size from id (e.g, 'hd_d10' -> 10)
+                const sides = parseInt(hd.id.split("_d")[1], 10);
+                const isEmpty = hd.current <= 0;
+
+                return (
+                  <div
+                    key={hd.id}
+                    className="flex justify-between items-center border p-2 bg-white rounded shadow-sm"
+                  >
+                    <span className="font-bold text-gray-800 uppercase text-xs">
+                      Hit Dice
+                    </span>
+                    <span className="font-mono text-sm text-gray-600">
+                      Available {hd.current} / {hd.max}
+                    </span>
+                    <button
+                      onClick={() => handleSpendHitDie(hd.id, sides)}
+                      disabled={isEmpty}
+                      className={`px-3 py-1 font-bold text-xs rounded uppercase ${isEmpty ? "bg-gray-200 text-gray-400" : "bg-red-600 hover:bg-red-700 text-white"}`}
+                    >
+                      Spend & Roll
+                    </button>
+                  </div>
+                );
+              })}
             </div>
           </div>
         )}

@@ -34,6 +34,7 @@ export const LiveSheetRoute = () => {
         proficiencies: data.character.proficiencies || {},
         currentHp: data.character.currentHp,
         maxHp: data.character.maxHp,
+        resources: data.character.resources || [],
       });
     }
   }, [data, initializeStore]);

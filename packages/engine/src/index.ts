@@ -10,3 +10,4 @@ export * from "./calculators/combat.js";
 export * from "./calculators/rests.js";
 export * from "./calculators/skills.js";
 export * from "./pipeline/index.js";
+export * from "./utils/diceParser.js";
