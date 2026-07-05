@@ -1,3 +1,4 @@
+import { MULTICLASS_DICTIONARY } from "../rules/multiclassDictionary.js";
 import { CLASS_PROGRESSION_DICTIONARY } from "../rules/progressionDictionary.js";
 import type { ClassProgression } from "../types/progression.js";
 
@@ -58,5 +59,39 @@ export class ProgressionEngine {
         }
       }
     }
+  }
+
+  public static validateMulticlassPrerequisites(
+    targetClassId: string,
+    currentBaseScores: Record<string, number>,
+  ): void {
+    const requirements = MULTICLASS_DICTIONARY[targetClassId];
+
+    if (!requirements) {
+      throw new Error(`Multiclass definitions not found for ${targetClassId}`);
+    }
+
+    if (!requirements.meetsPrerequisites(currentBaseScores)) {
+      throw new Error(
+        `You do not meet the ability score prerequisites to multiclass into this class.`,
+      );
+    }
+  }
+
+  public static getGrantedTraitsForLevel(
+    classId: string,
+    targetLevel: number,
+    isMulticlassDip: boolean, // true if taking lvl 1 in a class that isn't their primary
+  ): string[] {
+    const progression = CLASS_PROGRESSION_DICTIONARY[classId]?.[targetLevel];
+    if (!progression) return [];
+
+    // if taking lvl 1 of a new secondary class, override standard level 1 traits
+    // with restricted multiclass traits
+    if (targetLevel === 1 && isMulticlassDip) {
+      return MULTICLASS_DICTIONARY[classId]?.grantedTraits || [];
+    }
+
+    return progression.grantedTraits;
   }
 }

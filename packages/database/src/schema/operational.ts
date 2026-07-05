@@ -24,6 +24,7 @@ import {
 export const characters = pgTable("character", {
   id: uuid("id").primaryKey().defaultRandom(),
   name: varchar("name", { length: 255 }).notNull(),
+  level: integer("level").notNull(),
 
   // lineage links
   raceId: varchar("race_id", { length: 100 })
@@ -79,22 +80,31 @@ export const characters = pgTable("character", {
 export const characterClasses = pgTable(
   "character_classes",
   {
+    id: uuid("id").primaryKey().defaultRandom(),
     characterId: uuid("character_id")
       .references(() => characters.id, { onDelete: "cascade" })
       .notNull(),
     classId: varchar("class_id", { length: 100 })
       .references(() => classes.id)
       .notNull(),
+    classLevel: integer("class_level").notNull().default(1),
     subclassId: varchar("subclass_id", { length: 100 }).references(
       () => subclasses.id,
     ),
-
-    level: integer("level").notNull().default(1),
   },
   (table) => ({
     pk: primaryKey({ columns: [table.characterId, table.classId] }),
   }),
 );
+
+export const characterTraits = pgTable("character_traits", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  characterId: varchar("character_id")
+    .references(() => characters.id, { onDelete: "cascade" })
+    .notNull(),
+  traitId: varchar("trait_id", { length: 100 }).notNull(),
+  source: varchar("source", { length: 100 }).notNull(),
+});
 
 // #endregion
 
