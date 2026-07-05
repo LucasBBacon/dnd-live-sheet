@@ -41,12 +41,17 @@ export const RuntimeModifierSchema = BaseModifierSchema.extend({
   isActive: z.boolean().default(true),
 });
 
+export const RuntimeModifiersListSchema = z.array(RuntimeModifierSchema).default(
+  [],
+);
+
 export type ModifierTarget = z.infer<typeof ModifierTargetSchema>;
 export type ModifierType = z.infer<typeof ModifierTypeSchema>;
 export type ModifierScaling = z.infer<typeof ModifierScalingSchema>;
 
 export type TraitModifier = z.infer<typeof BaseModifierSchema>;
 export type RuntimeModifier = z.infer<typeof RuntimeModifierSchema>;
+export type RuntimeModifiersList = z.infer<typeof RuntimeModifiersListSchema>;
 
 export interface CalculationResult {
   total: number;

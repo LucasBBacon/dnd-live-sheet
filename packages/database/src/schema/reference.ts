@@ -1,6 +1,5 @@
 import type {
   FeatPrerequisites,
-  ModifiersListData,
   TraitEffect,
 } from "@project/shared";
 import { sql } from "drizzle-orm";

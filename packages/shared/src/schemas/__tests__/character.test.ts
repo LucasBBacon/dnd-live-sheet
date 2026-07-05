@@ -1,14 +1,16 @@
 import { describe, expect, it } from "vitest";
 import {
   CharacterFlavorSchema,
-  ModifierSchema,
-  ModifiersList,
   RaceConfigurationSchema,
   ClassProgressionSchema,
   CharacterEngineSchema,
   BaseCharacterSchema,
   CreateCharacterPayloadSchema,
 } from "../character.js";
+import {
+  RuntimeModifierSchema,
+  RuntimeModifiersListSchema,
+} from "../modifiers.js";
 
 describe("Character Flavor Schema", () => {
   it("accepts valid flavor data with all fields", () => {
@@ -70,103 +72,112 @@ describe("Character Flavor Schema", () => {
   });
 });
 
-describe("Modifier Schema", () => {
+describe("Runtime Modifier Schema", () => {
   const validModifier = {
-    id: "f47ac10b-58cc-4372-a567-0e02b2c3d479",
-    sourceId: "feat_lucky",
-    type: "bonus",
-    target: "ac",
+    id: "feat_lucky_0",
+    sourceName: "Lucky",
+    sourceOrigin: "feat",
+    type: "add",
+    target: "ARMOR_CLASS",
     value: 2,
+    scalingFactor: "none",
+    isActive: true,
   };
 
   it("accepts valid modifier with all required fields", () => {
-    expect(ModifierSchema.parse(validModifier)).toEqual(validModifier);
+    expect(RuntimeModifierSchema.parse(validModifier)).toEqual(validModifier);
   });
 
-  it("accepts modifier without optional value field", () => {
-    const noValue = { ...validModifier, value: undefined };
-    const result = ModifierSchema.parse(noValue);
-    expect(result.value).toBeUndefined();
+  it("defaults value to 0 when omitted", () => {
+    const noValue = {
+      id: "mage_armor_0",
+      sourceName: "Mage Armor",
+      sourceOrigin: "spell",
+      type: "set_base",
+      target: "ARMOR_CLASS",
+      scalingFactor: "none",
+      isActive: true,
+    };
+    const result = RuntimeModifierSchema.parse(noValue);
+    expect(result.value).toBe(0);
   });
 
   it("accepts all modifier types", () => {
-    const types = [
-      "bonus",
-      "advantage",
-      "disadvantage",
-      "resistance",
-      "immunity",
-    ] as const;
+    const types = ["set_base", "add", "multiplier", "advantage", "disadvantage"] as const;
     types.forEach((type) => {
       expect(
-        ModifierSchema.parse({ ...validModifier, type })
+        RuntimeModifierSchema.parse({ ...validModifier, type })
       ).toHaveProperty("type", type);
     });
   });
 
   it("rejects invalid modifier type", () => {
     expect(() =>
-      ModifierSchema.parse({ ...validModifier, type: "invalid_type" })
+      RuntimeModifierSchema.parse({ ...validModifier, type: "invalid_type" })
     ).toThrow();
   });
 
-  it("rejects invalid UUID", () => {
-    expect(() =>
-      ModifierSchema.parse({ ...validModifier, id: "not-a-uuid" })
-    ).toThrow();
+  it("accepts string ids used by runtime compilers", () => {
+    const result = RuntimeModifierSchema.parse({ ...validModifier, id: "ring_1_item_ring_of_protection_0" });
+    expect(result.id).toBe("ring_1_item_ring_of_protection_0");
   });
 
-  it("rejects non-integer value", () => {
-    expect(() =>
-      ModifierSchema.parse({ ...validModifier, value: 2.5 })
-    ).toThrow();
+  it("accepts non-integer value", () => {
+    const result = RuntimeModifierSchema.parse({ ...validModifier, value: 2.5 });
+    expect(result.value).toBe(2.5);
   });
 
   it("accepts negative value", () => {
-    const result = ModifierSchema.parse({ ...validModifier, value: -3 });
+    const result = RuntimeModifierSchema.parse({ ...validModifier, value: -3 });
     expect(result.value).toBe(-3);
   });
 
   it("accepts zero value", () => {
-    const result = ModifierSchema.parse({ ...validModifier, value: 0 });
+    const result = RuntimeModifierSchema.parse({ ...validModifier, value: 0 });
     expect(result.value).toBe(0);
   });
 });
 
-describe("Modifiers List Schema", () => {
+describe("Runtime Modifiers List Schema", () => {
   it("accepts empty array", () => {
-    const result = ModifiersList.parse([]);
+    const result = RuntimeModifiersListSchema.parse([]);
     expect(result).toEqual([]);
   });
 
   it("has default value of empty array", () => {
-    const result = ModifiersList.parse(undefined);
+    const result = RuntimeModifiersListSchema.parse(undefined);
     expect(result).toEqual([]);
   });
 
   it("accepts array of valid modifiers", () => {
     const modifiers = [
       {
-        id: "f47ac10b-58cc-4372-a567-0e02b2c3d479",
-        sourceId: "feat_lucky",
-        type: "bonus",
-        target: "ac",
+        id: "feat_lucky_0",
+        sourceName: "Lucky",
+        sourceOrigin: "feat",
+        type: "add",
+        target: "ARMOR_CLASS",
         value: 2,
+        scalingFactor: "none",
+        isActive: true,
       },
       {
-        id: "f47ac10b-58cc-4372-a567-0e02b2c3d480",
-        sourceId: "spell_shield",
-        type: "bonus",
-        target: "ac",
+        id: "spell_shield_0",
+        sourceName: "Shield",
+        sourceOrigin: "spell",
+        type: "set_base",
+        target: "ARMOR_CLASS",
         value: 5,
+        scalingFactor: "none",
+        isActive: true,
       },
     ];
-    const result = ModifiersList.parse(modifiers);
+    const result = RuntimeModifiersListSchema.parse(modifiers);
     expect(result).toHaveLength(2);
   });
 
   it("rejects non-array input", () => {
-    expect(() => ModifiersList.parse({ invalid: true })).toThrow();
+    expect(() => RuntimeModifiersListSchema.parse({ invalid: true })).toThrow();
   });
 });
 

@@ -1,4 +1,7 @@
 import { z } from "zod";
+import {
+  RuntimeModifiersListSchema,
+} from "./modifiers.js";
 
 // ----------------------------------------------------------------------------------
 // CORE PRIMITIVES AND MODIFIERS
@@ -13,26 +16,6 @@ export const CharacterFlavorSchema = z.object({
 });
 
 export type CharacterFlavorData = z.infer<typeof CharacterFlavorSchema>;
-
-// Modifiers must always be stored and parsed as lists to ensure map/reduce
-// operations never throw "undefined is not a function" during stat calculation
-export const ModifierSchema = z.object({
-  id: z.uuid(),
-  sourceId: z.string(),
-  type: z.enum([
-    "bonus",
-    "advantage",
-    "disadvantage",
-    "resistance",
-    "immunity",
-  ]),
-  target: z.string(),
-  value: z.number().int().optional(),
-});
-
-export const ModifiersList = z.array(ModifierSchema).default([]);
-
-export type ModifiersListData = z.infer<typeof ModifiersList>;
 
 // ----------------------------------------------------------------------------------
 // PROGRESSION AND OPTIONS (subrace / subclass enforcements)
@@ -100,7 +83,7 @@ export const CharacterEngineSchema = z.object({
   }),
 
   // aggregate modifiers
-  globalModifiers: ModifiersList,
+  globalModifiers: RuntimeModifiersListSchema,
 });
 
 export type CharacterEngineData = z.infer<typeof CharacterEngineSchema>;
