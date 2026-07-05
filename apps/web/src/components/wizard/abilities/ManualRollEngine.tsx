@@ -1,6 +1,5 @@
 import { useWizardStore, type Attributes } from "../../../store/wizardStore";
-
-const STATS: Attributes[] = ["str", "dex", "con", "int", "wis", "cha"];
+import { ABILITY_STATS } from "../../../utils/abilityConstants";
 
 export const ManualRollEngine = () => {
   const scores = useWizardStore((state) => state.baseAbilityScores);
@@ -59,7 +58,7 @@ export const ManualRollEngine = () => {
       </div>
 
       <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
-        {STATS.map((stat) => (
+        {ABILITY_STATS.map((stat: Attributes) => (
           <div
             key={stat}
             style={{

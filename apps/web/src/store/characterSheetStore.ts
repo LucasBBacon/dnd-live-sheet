@@ -1,12 +1,12 @@
 import {
   RestEngine,
   type Ability,
-  type Modifier,
   type OperationalInventoryItem,
   type OperationalResource,
   type ProficiencyLevel,
   type TraitDefinition,
 } from "@project/engine";
+import type { RuntimeModifier } from "@project/shared";
 import { create } from "zustand";
 import { socketService } from "../services/socketService";
 
@@ -31,7 +31,7 @@ export interface CharacterSheetState {
   inventory: OperationalInventoryItem[];
 
   // transient or spell based mods
-  activeModifiers: Modifier[];
+  activeModifiers: RuntimeModifier[];
 
   resources: OperationalResource[];
 

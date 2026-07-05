@@ -1,6 +1,15 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { useCharacterSheet, useUpdateFlavor } from "../queries";
 
+type QueryHookOptions = {
+  queryFn: () => Promise<unknown>;
+};
+
+type MutationHookOptions = {
+  mutationFn: (args: unknown) => Promise<unknown>;
+  onSuccess: () => void;
+};
+
 const { mockUseQuery, mockUseMutation, mockUseQueryClient, mockApiClient } =
   vi.hoisted(() => ({
     mockUseQuery: vi.fn(),
@@ -25,12 +34,13 @@ describe("api query hooks", () => {
   });
 
   it("configures useCharacterSheet query key and maps character payload", async () => {
-    mockUseQuery.mockImplementation((options: any) => options);
+    mockUseQuery.mockImplementation((options: QueryHookOptions) => options);
     mockApiClient.mockResolvedValue({
       character: { id: "char_1", totalLevel: 2, currentHp: 17 },
     });
 
-    const queryOptions = useCharacterSheet() as any;
+    useCharacterSheet();
+    const queryOptions = mockUseQuery.mock.calls[0][0] as QueryHookOptions;
     const data = await queryOptions.queryFn();
 
     expect(mockUseQuery).toHaveBeenCalledWith(
@@ -46,10 +56,11 @@ describe("api query hooks", () => {
   it("configures useUpdateFlavor mutation and invalidates character cache", async () => {
     const invalidateQueries = vi.fn();
     mockUseQueryClient.mockReturnValue({ invalidateQueries });
-    mockUseMutation.mockImplementation((options: any) => options);
+    mockUseMutation.mockImplementation((options: MutationHookOptions) => options);
     mockApiClient.mockResolvedValue({ ok: true });
 
-    const mutationOptions = useUpdateFlavor() as any;
+    useUpdateFlavor();
+    const mutationOptions = mockUseMutation.mock.calls[0][0] as MutationHookOptions;
     await mutationOptions.mutationFn({ alignment: "Neutral Good" });
     mutationOptions.onSuccess();
 

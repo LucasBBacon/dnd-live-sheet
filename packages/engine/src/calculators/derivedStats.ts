@@ -1,5 +1,4 @@
 import type { CalculationResult, RuntimeModifier } from "@project/shared";
-import { TRAIT_DICTIONARY } from "../rules/traitDictionary.js";
 
 export class DerivedStatEngine {
   public static calculateMaxHp(

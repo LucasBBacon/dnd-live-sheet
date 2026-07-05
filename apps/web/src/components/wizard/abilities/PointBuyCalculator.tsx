@@ -1,16 +1,8 @@
 import { useWizardStore, type Attributes } from "../../../store/wizardStore";
-
-const POINT_COSTS: Record<number, number> = {
-  8: 0,
-  9: 1,
-  10: 2,
-  11: 3,
-  12: 4,
-  13: 5,
-  14: 7,
-  15: 9,
-};
-const STATS: Attributes[] = ["str", "dex", "con", "int", "wis", "cha"];
+import {
+  ABILITY_STATS,
+  POINT_BUY_COSTS,
+} from "../../../utils/abilityConstants";
 
 export const PointBuyCalculator = () => {
   const scores = useWizardStore((state) => state.baseAbilityScores);
@@ -18,7 +10,7 @@ export const PointBuyCalculator = () => {
 
   // derive points dynamically, intermediate states are skipped over
   const pointsSpent = Object.values(scores).reduce(
-    (total, val) => total + (POINT_COSTS[val] || 0),
+    (total, val) => total + (POINT_BUY_COSTS[val] || 0),
     0,
   );
   const pointsRemaining = 27 - pointsSpent;
@@ -29,7 +21,7 @@ export const PointBuyCalculator = () => {
 
     if (next < 8 || next > 15) return; // out of bounds
 
-    const costDiff = POINT_COSTS[next] - POINT_COSTS[current];
+    const costDiff = POINT_BUY_COSTS[next] - POINT_BUY_COSTS[current];
     if (pointsRemaining - costDiff < 0) return; // insufficient funds
 
     setScore(stat, next);
@@ -53,7 +45,7 @@ export const PointBuyCalculator = () => {
       </div>
 
       <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
-        {STATS.map((stat) => (
+        {ABILITY_STATS.map((stat: Attributes) => (
           <div
             key={stat}
             style={{
@@ -106,7 +98,7 @@ export const PointBuyCalculator = () => {
                 textAlign: "right",
               }}
             >
-              Cost: {POINT_COSTS[scores[stat]]}
+              Cost: {POINT_BUY_COSTS[scores[stat]]}
             </span>
           </div>
         ))}

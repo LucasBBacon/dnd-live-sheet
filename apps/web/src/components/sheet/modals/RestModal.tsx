@@ -1,7 +1,7 @@
 // apps/web/src/components/sheet/modals/RestModal.tsx
 import { useState, useMemo } from "react";
 import { useCharacterSheetStore } from "../../../store/characterSheetStore";
-import { RestEngine } from "@project/engine";
+import { RESOURCE_DICTIONARY, RestEngine } from "@project/engine";
 import { useRollStore } from "../../../store/rollStore";
 import { useAbilities } from "../../../hooks/useCharacterStats";
 
@@ -13,6 +13,8 @@ export const RestModal = ({ onClose }: RestModalProps) => {
   const [restType, setRestType] = useState<"short" | "long">("short");
 
   const resources = useCharacterSheetStore((state) => state.resources);
+  const level = useCharacterSheetStore((state) => state.level);
+  const classLevels = useCharacterSheetStore((state) => state.classLevels);
   const currentHp = useCharacterSheetStore((state) => state.currentHp);
   const maxHp = useCharacterSheetStore((state) => state.maxHp);
   const triggerRest = useCharacterSheetStore((state) => state.triggerRest);
@@ -49,19 +51,36 @@ export const RestModal = ({ onClose }: RestModalProps) => {
 
   // 1. Generate the Predictive State
   const recoveryPreview = useMemo(() => {
-    const futureResources = RestEngine.applyRest(resources, restType);
+    const futureResources = RestEngine.applyRest(
+      resources,
+      restType,
+      level,
+      classLevels,
+    );
 
     // Compare future state to current state to find what actually changes
     const recoveredItems = futureResources
-      .filter((future, idx) => future.current > resources[idx].current)
-      .map((future, idx) => ({
-        name: future.name,
-        recoveredAmount: future.current - resources[idx].current,
-        newTotal: future.current,
-      }));
+      .map((future, idx) => {
+        const current = resources[idx];
+        if (!current || future.current <= current.current) {
+          return null;
+        }
+
+        const definition = RESOURCE_DICTIONARY[future.id];
+        const maxUses = definition?.getMax(level, classLevels) ?? future.current;
+
+        return {
+          id: future.id,
+          name: definition?.name ?? future.id,
+          recoveredAmount: future.current - current.current,
+          newTotal: future.current,
+          max: maxUses,
+        };
+      })
+      .filter((item) => item !== null);
 
     return recoveredItems;
-  }, [resources, restType]);
+  }, [resources, restType, level, classLevels]);
 
   // 2. Handle the Commit
   const handleConfirm = () => {
@@ -108,6 +127,9 @@ export const RestModal = ({ onClose }: RestModalProps) => {
                 // parse dice size from id (e.g, 'hd_d10' -> 10)
                 const sides = parseInt(hd.id.split("_d")[1], 10);
                 const isEmpty = hd.current <= 0;
+                const maxUses =
+                  RESOURCE_DICTIONARY[hd.id]?.getMax(level, classLevels) ??
+                  hd.current;
 
                 return (
                   <div
@@ -118,7 +140,7 @@ export const RestModal = ({ onClose }: RestModalProps) => {
                       Hit Dice
                     </span>
                     <span className="font-mono text-sm text-gray-600">
-                      Available {hd.current} / {hd.max}
+                      Available {hd.current} / {maxUses}
                     </span>
                     <button
                       onClick={() => handleSpendHitDie(hd.id, sides)}
@@ -154,16 +176,16 @@ export const RestModal = ({ onClose }: RestModalProps) => {
             </div>
           ) : (
             <ul className="text-sm flex flex-col gap-2">
-              {recoveryPreview.map((item, idx) => (
+              {recoveryPreview.map((item) => (
                 <li
-                  key={idx}
+                  key={item.id}
                   className="flex justify-between items-center border-b border-gray-100 py-1"
                 >
                   <span className="font-bold text-gray-800">{item.name}</span>
                   <span className="text-green-600 font-bold">
                     +{item.recoveredAmount}{" "}
                     <span className="text-gray-400 text-xs font-normal">
-                      (Total: {item.newTotal})
+                      (Total: {item.newTotal}/{item.max})
                     </span>
                   </span>
                 </li>

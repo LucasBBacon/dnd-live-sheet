@@ -30,7 +30,6 @@ export class CombatEngine {
     strMod: number,
     dexMod: number,
   ): { statName: string; mod: number } {
-    const isMelee = weapon.category.includes("melee");
     const isRanged = weapon.category.includes("ranged");
     const hasFinesse = weapon.properties.includes("finesse");
 

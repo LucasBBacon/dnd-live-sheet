@@ -34,7 +34,7 @@ export const LiveSheetProvider = ({
       syncRemoteEquipment(broadcast.inventoryId, broadcast.targetSlot);
     });
 
-    socketService.subscribeToConsumed((broadcast) => {
+    socketService.subscribeToItemConsumed((broadcast) => {
       syncRemoteConsumption(broadcast.inventoryId, broadcast.amount);
     });
 

@@ -4,7 +4,6 @@ import { useWizardStore } from "../wizardStore";
 describe("Wizard Store State Management", () => {
   beforeEach(() => {
     // Reset store to initial state before each test
-    const store = useWizardStore.getState();
     useWizardStore.setState({
       currentStep: 5,
       targetLevel: 1,

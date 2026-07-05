@@ -1,7 +1,9 @@
 import { create } from "zustand";
+import type { Ability } from "@project/engine";
+import { STANDARD_ARRAY } from "../utils/abilityConstants";
 
 export type GenerationMethod = "STANDARD_ARRAY" | "POINT_BUY" | "MANUAL";
-export type Attributes = "str" | "dex" | "con" | "int" | "wis" | "cha";
+export type Attributes = Ability;
 
 export interface WizardEquipmentChoice {
   itemId: string;
@@ -141,13 +143,27 @@ export const useWizardStore = create<WizardState>((set, get) => ({
   setSubclass: (subclassId) => set({ subclassId }),
 
   generationMethod: "STANDARD_ARRAY",
-  baseAbilityScores: { str: 8, dex: 8, con: 8, int: 8, wis: 8, cha: 8 },
+  baseAbilityScores: {
+    str: STANDARD_ARRAY[5],
+    dex: STANDARD_ARRAY[5],
+    con: STANDARD_ARRAY[5],
+    int: STANDARD_ARRAY[5],
+    wis: STANDARD_ARRAY[5],
+    cha: STANDARD_ARRAY[5],
+  },
 
   setGenerationMethod: (method) =>
     set({
       generationMethod: method,
       // reset ot baseline when switching methods!!
-      baseAbilityScores: { str: 8, dex: 8, con: 8, int: 8, wis: 8, cha: 8 },
+      baseAbilityScores: {
+        str: STANDARD_ARRAY[5],
+        dex: STANDARD_ARRAY[5],
+        con: STANDARD_ARRAY[5],
+        int: STANDARD_ARRAY[5],
+        wis: STANDARD_ARRAY[5],
+        cha: STANDARD_ARRAY[5],
+      },
     }),
 
   setBaseAbilityScore: (stat, value) =>

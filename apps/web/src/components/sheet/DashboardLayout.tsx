@@ -80,8 +80,8 @@ export const DashboardLayout = () => {
           <div className="flex justify-between items-center bg-gray-50 border p-3 rounded mt-2">
             <span className="font-bold">Initiative</span>
             <span className="text-xl">
-              {initiative >= 0 ? "+" : ""}
-              {initiative}
+              {initiative.total >= 0 ? "+" : ""}
+              {initiative.total}
             </span>
           </div>
         </section>

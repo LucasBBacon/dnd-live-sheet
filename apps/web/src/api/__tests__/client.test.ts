@@ -3,7 +3,7 @@ import { apiClient } from "../client";
 
 describe("API Client", () => {
   const mockFetch = vi.fn();
-  global.fetch = mockFetch;
+  globalThis.fetch = mockFetch;
 
   beforeEach(() => {
     mockFetch.mockClear();

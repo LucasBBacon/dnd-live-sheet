@@ -1,8 +1,9 @@
 import { useEffect } from "react";
 import { useWizardStore, type Attributes } from "../../../store/wizardStore";
-
-const STATS: Attributes[] = ["str", "dex", "con", "int", "wis", "cha"];
-const STANDARD_ARRAY = [15, 14, 13, 12, 10, 8];
+import {
+  ABILITY_STATS,
+  STANDARD_ARRAY,
+} from "../../../utils/abilityConstants";
 
 export const StandardArrayAssigner = () => {
   const scores = useWizardStore((state) => state.baseAbilityScores);
@@ -17,13 +18,20 @@ export const StandardArrayAssigner = () => {
     );
 
     if (!isValidArray) {
-      setAllScores({ str: 15, dex: 14, con: 13, int: 12, wis: 10, cha: 8 });
+      setAllScores({
+        str: STANDARD_ARRAY[0],
+        dex: STANDARD_ARRAY[1],
+        con: STANDARD_ARRAY[2],
+        int: STANDARD_ARRAY[3],
+        wis: STANDARD_ARRAY[4],
+        cha: STANDARD_ARRAY[5],
+      });
     }
   }, [scores, setAllScores]);
 
   const handleAssignment = (targetStat: Attributes, newValue: number) => {
     // identify which stat currently holds the number the user just selected
-    const statToSwap = STATS.find((s) => scores[s] === newValue);
+    const statToSwap = ABILITY_STATS.find((s: Attributes) => scores[s] === newValue);
 
     // perform bidirectional swap to maintain strict array integrity
     if (statToSwap && statToSwap !== targetStat) {
@@ -51,7 +59,7 @@ export const StandardArrayAssigner = () => {
       </div>
 
       <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
-        {STATS.map((stat) => (
+        {ABILITY_STATS.map((stat: Attributes) => (
           <div
             key={stat}
             style={{

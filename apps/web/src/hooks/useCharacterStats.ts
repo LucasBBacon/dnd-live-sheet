@@ -51,9 +51,6 @@ export const useDerivedStats = () => {
   const level = useCharacterSheetStore((state) => state.level);
   const proficiencies = useCharacterSheetStore((state) => state.proficiencies);
   const baseHpRolled = useCharacterSheetStore((state) => state.baseHpRolled);
-  const traits = useCharacterSheetStore((state) => state.traits || []);
-
-  const activeTraitIds = useMemo(() => traits.map((t) => t.id), [traits]);
 
   const { finalAbilities, totalMods } = useAbilities();
 
@@ -66,13 +63,13 @@ export const useDerivedStats = () => {
       baseHpRolled,
       finalAbilities.con.modifier,
       level,
-      activeTraitIds,
+      totalMods,
     );
 
     // initiative
     const initiative = DerivedStatEngine.calculateInitiative(
       finalAbilities.dex.modifier,
-      activeTraitIds,
+      totalMods,
     );
 
     // ac calc
@@ -95,7 +92,6 @@ export const useDerivedStats = () => {
   }, [
     level,
     baseHpRolled,
-    activeTraitIds,
     proficiencies,
     finalAbilities,
     totalMods,

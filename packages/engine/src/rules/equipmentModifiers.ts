@@ -1,4 +1,4 @@
-import type { ItemDefinition, RuntimeModifier } from "@project/shared";
+import type { ItemDefinition } from "@project/shared";
 
 /**
  * A static compilation dictionary that acts as the rules compilation layer.

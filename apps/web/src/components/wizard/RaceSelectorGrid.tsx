@@ -40,7 +40,6 @@ export const RaceSelectorGrid = ({ races }: RaceSelectorGridProps) => {
         {filteredRaces.map((race) => (
           <RaceCard
             key={race.id}
-            id={race.id}
             name={race.name}
             shortDesc={race.lore.shortDescription}
             isSelected={race.id === selectedRaceId}
@@ -55,13 +54,11 @@ export const RaceSelectorGrid = ({ races }: RaceSelectorGridProps) => {
 // Isolated & Memoized leaf component (maximizes virtualization frame budget)
 const RaceCard = React.memo(
   ({
-    id,
     name,
     shortDesc,
     isSelected,
     onSelect,
   }: {
-    id: string;
     name: string;
     shortDesc: string;
     isSelected: boolean;
