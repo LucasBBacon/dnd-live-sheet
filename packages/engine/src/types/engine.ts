@@ -1,16 +1,25 @@
-export type ModTarget =
+export type ModifierTarget =
   | "AC"
   | "INITIATIVE"
   | "SPEED"
   | "STR_SAVE"
   | "ALL_SAVES"
   | "STEALTH_CHECK"
-  | "ATTACK_BONUS"; // TODO: ADD REST!!
-export type ModType = "set_base" | "add" | "advantage" | "disadvantage";
+  | "ATTACK_BONUS"
+  | "MAX_HP"
+  | "ARMOR_CLASS"
+  | "INITIATIVE"
+  | "SPEED"; // TODO: ADD REST!!
+export type ModType =
+  | "set_base"
+  | "add"
+  | "multiplier"
+  | "advantage"
+  | "disadvantage";
 
 export interface Modifier {
   id: string; // unique instance ID
-  target: ModTarget; // what is being modified
+  target: ModifierTarget; // what is being modified
   type: ModType; // how it is modified
   value: number; // numerical payload
 

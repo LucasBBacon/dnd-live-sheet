@@ -50,11 +50,30 @@ export const useAbilities = () => {
 export const useDerivedStats = () => {
   const level = useCharacterSheetStore((state) => state.level);
   const proficiencies = useCharacterSheetStore((state) => state.proficiencies);
+  const baseHpRolled = useCharacterSheetStore((state) => state.baseHpRolled);
+  const traits = useCharacterSheetStore((state) => state.traits || []);
+
+  const activeTraitIds = useMemo(() => traits.map((t) => t.id), [traits]);
+
   const { finalAbilities, totalMods } = useAbilities();
 
   return useMemo(() => {
     const profBonus = AbilityEngine.getProficiencyBonus(level);
     const dexMod = finalAbilities.dex.modifier;
+
+    // hp calc
+    const maxHp = DerivedStatEngine.calculateMaxHp(
+      baseHpRolled,
+      finalAbilities.con.modifier,
+      level,
+      activeTraitIds,
+    );
+
+    // initiative
+    const initiative = DerivedStatEngine.calculateInitiative(
+      finalAbilities.dex.modifier,
+      activeTraitIds,
+    );
 
     // ac calc
     const armorClass = DerivedStatEngine.calculateAC(dexMod, totalMods);
@@ -72,9 +91,13 @@ export const useDerivedStats = () => {
       );
     });
 
-    // initiative (TODO expand with traits like Alert)
-    const initiative = dexMod;
-
-    return { armorClass, skills, profBonus, initiative };
-  }, [level, proficiencies, finalAbilities, totalMods]);
+    return { profBonus, maxHp, initiative, armorClass, skills };
+  }, [
+    level,
+    baseHpRolled,
+    activeTraitIds,
+    proficiencies,
+    finalAbilities,
+    totalMods,
+  ]);
 };

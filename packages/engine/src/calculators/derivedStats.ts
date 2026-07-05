@@ -1,3 +1,4 @@
+import { TRAIT_DICTIONARY } from "../rules/traitDictionary.js";
 import type { Modifier } from "../types/engine.js";
 
 export interface CalculationResult {
@@ -77,5 +78,60 @@ export class DerivedStatEngine {
       total: baseAc + finalDex + addedBonus,
       breakdown,
     };
+  }
+
+  public static calculateProficiencyBonus(totalLevel: number): number {
+    return Math.ceil(totalLevel / 4) + 1;
+  }
+
+  public static calculateMaxHp(
+    baseHpRolled: number,
+    conModifier: number,
+    totalLevel: number,
+    activeTraitIds: string[],
+    primaryClassLevel: number = totalLevel,
+  ): number {
+    // 5e hp rule: base + (con * level)
+    // min 1 hp granted per lvl regardless of negative con mod
+    const conContribution = Math.max(1, conModifier) * totalLevel;
+    let maxHp = baseHpRolled + conContribution;
+
+    // process trait mods
+    for (const traitId of activeTraitIds) {
+      const trait = TRAIT_DICTIONARY[traitId];
+      if (!trait) continue;
+
+      for (const mod of trait.modifiers) {
+        if (mod.target === "MAX_HP") {
+          let modValue = mod.value;
+          if (mod.scalingFactor === "total_level") modValue *= totalLevel;
+          if (mod.scalingFactor === "class_level")
+            modValue *= primaryClassLevel;
+          if (mod.type === "flat") maxHp += modValue;
+        }
+      }
+    }
+
+    return maxHp;
+  }
+
+  public static calculateInitiative(
+    dexModifier: number,
+    activeTraitIds: string[],
+  ): number {
+    let initiative = dexModifier;
+
+    for (const traitId of activeTraitIds) {
+      const trait = TRAIT_DICTIONARY[traitId];
+      if (!trait) continue;
+
+      for (const mod of trait.modifiers) {
+        if (mod.target === "INITIATIVE" && mod.type === "flat") {
+          initiative += mod.value;
+        }
+      }
+    }
+
+    return initiative;
   }
 }
