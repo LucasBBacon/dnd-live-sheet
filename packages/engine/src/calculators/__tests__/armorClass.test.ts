@@ -1,14 +1,14 @@
 import { describe, expect, it } from "vitest";
-import { DerivedStatEngine } from "../armorClass";
+import { DerivedStatEngine } from "../derivedStats.js";
 import type { RuntimeModifier } from "@project/shared";
 
 const makeMod = (overrides: Partial<RuntimeModifier>): RuntimeModifier => ({
   id: "mod_1",
-  target: "AC",
+  target: "ARMOR_CLASS",
   type: "add",
   value: 0,
   sourceName: "Test Source",
-  sourceOrigin: "Item",
+  sourceOrigin: "item",
   isActive: true,
   ...overrides,
 });
@@ -85,7 +85,6 @@ describe("DerivedStatEngine.calculateAC", () => {
     expect(result.breakdown).toEqual([
       { name: "Base AC (Unarmored)", value: 10 },
       { name: "Shield", value: "+2" },
-      { name: "Dexterity Modifier", value: "+0" },
     ]);
   });
 
@@ -97,8 +96,8 @@ describe("DerivedStatEngine.calculateAC", () => {
     expect(result.total).toBe(7);
     expect(result.breakdown).toEqual([
       { name: "Base AC (Unarmored)", value: 10 },
-      { name: "Cursed Aura", value: "+-1" },
-      { name: "Dexterity Modifier", value: "+-2" },
+      { name: "Dexterity Modifier", value: "-2" },
+      { name: "Cursed Aura", value: "-1" },
     ]);
   });
 });

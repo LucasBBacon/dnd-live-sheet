@@ -102,7 +102,7 @@ export class DerivedStatEngine {
       // explicitly show +0 for heavy armor so user knows it was processed
       breakdown.push({
         name: dexLabel,
-        value: dexCap === 0 ? "+0" : `${sign}{finalDex}`,
+        value: dexCap === 0 ? "+0" : `${sign}${finalDex}`,
       });
     }
 
