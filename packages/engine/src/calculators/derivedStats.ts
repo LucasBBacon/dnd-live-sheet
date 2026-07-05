@@ -2,10 +2,6 @@ import type { CalculationResult, RuntimeModifier } from "@project/shared";
 import { TRAIT_DICTIONARY } from "../rules/traitDictionary.js";
 
 export class DerivedStatEngine {
-  public static calculateProficiencyBonus(totalLevel: number): number {
-    return Math.ceil(totalLevel / 4) + 1;
-  }
-
   public static calculateMaxHp(
     baseHpRolled: number,
     conModifier: number,

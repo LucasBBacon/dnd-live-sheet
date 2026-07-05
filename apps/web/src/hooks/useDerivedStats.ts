@@ -3,6 +3,7 @@ import { useCharacterSheetStore } from "../store/characterSheetStore";
 import { useAbilities } from "./useCharacterStats";
 import type { RuntimeModifier } from "@project/shared";
 import {
+  AbilityEngine,
   DerivedStatEngine,
   ITEM_DICTIONARY,
   TRAIT_DICTIONARY,
@@ -75,7 +76,7 @@ export const useDerivedStats = () => {
 
   // 2- feed the mapped modifiers into the pure math engine
   return useMemo(() => {
-    const profBonus = DerivedStatEngine.calculateProficiencyBonus(level);
+    const profBonus = AbilityEngine.getProficiencyBonus(level);
 
     const hpResult = DerivedStatEngine.calculateMaxHp(
       baseHpRolled,

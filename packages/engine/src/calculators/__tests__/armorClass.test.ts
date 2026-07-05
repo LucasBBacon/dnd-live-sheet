@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { DerivedStatEngine } from "../armorClass";
-import type { Modifier } from "../../types/engine";
+import type { RuntimeModifier } from "@project/shared";
 
-const makeMod = (overrides: Partial<Modifier>): Modifier => ({
+const makeMod = (overrides: Partial<RuntimeModifier>): RuntimeModifier => ({
   id: "mod_1",
   target: "AC",
   type: "add",
