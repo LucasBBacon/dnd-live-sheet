@@ -1,11 +1,4 @@
-import type { Modifier, ModifierTarget } from "../types/engine.js";
-
-export interface TraitModifier {
-  target: ModifierTarget;
-  type: "flat" | "multiplier" | "override";
-  value: number;
-  scalingFactor?: "total_level" | "class_level";
-}
+import type { TraitModifier } from "@project/shared";
 
 export interface TraitDefinition {
   id: string;
@@ -20,7 +13,7 @@ export const TRAIT_DICTIONARY: Record<string, TraitDefinition> = {
     modifiers: [
       {
         target: "MAX_HP",
-        type: "flat",
+        type: "add",
         value: 2,
         scalingFactor: "total_level",
       },
@@ -32,8 +25,9 @@ export const TRAIT_DICTIONARY: Record<string, TraitDefinition> = {
     modifiers: [
       {
         target: "INITIATIVE",
-        type: "flat",
+        type: "add",
         value: 5,
+        scalingFactor: "none",
       },
     ],
   },
@@ -43,14 +37,15 @@ export const TRAIT_DICTIONARY: Record<string, TraitDefinition> = {
     modifiers: [
       {
         target: "MAX_HP",
-        type: "flat",
+        type: "add",
         value: 1,
         scalingFactor: "class_level",
       },
       {
         target: "ARMOR_CLASS",
-        type: "override",
+        type: "set_base",
         value: 13,
+        scalingFactor: "none",
       },
     ],
   },

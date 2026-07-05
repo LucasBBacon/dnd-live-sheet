@@ -1,100 +1,109 @@
-import type { Modifier } from "../types/engine.js";
+import type { ItemDefinition, RuntimeModifier } from "@project/shared";
 
 /**
  * A static compilation dictionary that acts as the rules compilation layer.
  * Maps item IDs directly to their implicit mechanical modifier rules.
  */
-export const EQUIPMENT_RULES_MAP: Record<
-  string,
-  (instanceId: string) => Modifier[]
-> = {
-  item_armor_padded: (id) => [
-    {
-      id: `${id}_ac`,
-      target: "AC",
-      type: "set_base",
-      value: 11,
-      sourceName: "Padded Armor",
-      sourceOrigin: "item",
-      isActive: true,
-    },
-  ],
+export const ITEM_DICTIONARY: Record<string, ItemDefinition> = {
+  item_armor_padded: {
+    id: "item_armor_padded",
+    name: "Padded Armor",
+    type: "armor",
+    modifiers: [
+      {
+        target: "ARMOR_CLASS",
+        type: "set_base",
+        value: 11,
+        scalingFactor: "none",
+      },
+      {
+        target: "STEALTH_CHECK",
+        type: "disadvantage",
+        value: 0,
+        scalingFactor: "none",
+      },
+    ],
+  },
 
-  item_armor_leather: (id) => [
-    {
-      id: `${id}_ac`,
-      target: "AC",
-      type: "set_base",
-      value: 11, // leather armor sets base AC to 11 + dex
-      sourceName: "Leather Armor",
-      sourceOrigin: "Item",
-      isActive: true,
-    },
-  ],
+  item_armor_leather: {
+    id: "item_armor_leather",
+    name: "Leather Armor",
+    type: "armor",
+    modifiers: [
+      {
+        target: "ARMOR_CLASS",
+        type: "set_base",
+        value: 11, // leather armor sets base ARMOR_CLASS to 11 + dex
+        scalingFactor: "none",
+      },
+    ],
+  },
 
-  item_armor_studded_leather: (id) => [
-    {
-      id: `${id}_ac`,
-      target: "AC",
-      type: "set_base",
-      value: 12,
-      sourceName: "Studded Leather Armor",
-      sourceOrigin: "item",
-      isActive: true,
-    },
-  ],
+  item_armor_studded_leather: {
+    id: "item_armor_studded_leather",
+    name: "Studded Leather Armor",
+    type: "armor",
+    modifiers: [
+      {
+        target: "ARMOR_CLASS",
+        type: "set_base",
+        value: 12,
+        scalingFactor: "none",
+      },
+    ],
+  },
 
-  item_armor_plate: (id) => [
-    {
-      id: `${id}_ac`,
-      target: "AC",
-      type: "set_base",
-      value: 18, // plate armor sets base AC to a flat 18
-      sourceName: "Plate Armor",
-      sourceOrigin: "Item",
-      isActive: true,
-    },
-    {
-      id: `${id}_stealth_dis`,
-      target: "STEALTH_CHECK",
-      type: "disadvantage",
-      value: 0,
-      sourceName: "Plate Armor (Heavy)",
-      sourceOrigin: "Item",
-      isActive: true,
-    },
-  ],
+  item_armor_plate: {
+    id: "item_armor_plate",
+    name: "Plate Armor",
+    type: "armor",
+    modifiers: [
+      {
+        target: "ARMOR_CLASS",
+        type: "set_base",
+        value: 18, // plate armor sets base ARMOR_CLASS to a flat 18
+        scalingFactor: "none",
+      },
+      {
+        target: "STEALTH_CHECK",
+        type: "disadvantage",
+        value: 0,
+        scalingFactor: "none",
+      },
+    ],
+  },
 
-  item_shield: (id) => [
-    {
-      id: `${id}_shield_ac`,
-      target: "AC",
-      type: "add",
-      value: 2, // shield adds a flat + 2 to AC
-      sourceName: "Shield",
-      sourceOrigin: "Item",
-      isActive: true,
-    },
-  ],
+  item_shield: {
+    id: "item_shield",
+    name: "Shield",
+    type: "armor",
+    modifiers: [
+      {
+        target: "ARMOR_CLASS",
+        type: "add",
+        value: 2, // shield adds a flat + 2 to ARMOR_CLASS
+        scalingFactor: "none",
+      },
+    ],
+  },
 
-  item_ring_of_protection: (id) => [
-    {
-      id: `${id}_rop_ac`,
-      target: "AC",
-      type: "add",
-      value: 1,
-      sourceName: "Ring of Protection",
-      sourceOrigin: "Item",
-      isActive: true, // this will be conditioned on the 'isAttuned' flag during compilation
-    },
-    {
-      id: `${id}_rop_saves`,
-      target: "ALL_SAVES",
-      type: "add",
-      value: 1,
-      sourceName: "Ring of Protection",
-      sourceOrigin: "Item",
-      isActive: true,
-    },
-  ],
+  item_ring_of_protection: {
+    id: "item_ring_of_protection",
+    name: "Ring of Protection",
+    type: "armor",
+    modifiers: [
+      {
+        target: "ARMOR_CLASS",
+        type: "add",
+        value: 1,
+        scalingFactor: "none",
+      },
+      {
+        target: "ALL_SAVES",
+        type: "add",
+        value: 1,
+        scalingFactor: "none",
+      },
+    ],
+  },
 };

@@ -1,4 +1,4 @@
-import { EQUIPMENT_RULES_MAP } from "../rules/equipmentModifiers.js";
+import { EQUIPMENT_DICTIONARY } from "../rules/equipmentModifiers.js";
 import type { Modifier } from "../types/engine.js";
 
 export interface OperationalInventoryItem {
@@ -21,7 +21,7 @@ export class InventoryBridge {
       if (item.slot === "backpack") continue;
 
       // 2 - check if a rule definition exists for this item type
-      const ruleGenerator = EQUIPMENT_RULES_MAP[item.itemId];
+      const ruleGenerator = EQUIPMENT_DICTIONARY[item.itemId];
       if (!ruleGenerator) continue;
 
       // 3 - evaluate and execute payload

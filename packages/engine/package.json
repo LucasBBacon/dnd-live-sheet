@@ -1,6 +1,9 @@
 {
   "name": "@project/engine",
   "version": "1.0.0",
+  "dependencies": {
+    "@project/shared": "workspace:^"
+  },
   "exports": {
     ".": {
       "types": "./src/index.ts",
