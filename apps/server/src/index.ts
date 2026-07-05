@@ -9,16 +9,10 @@ import { MockAuthProvider } from "./core/auth/MockAuthProvider.js";
 import { globalErrorHandler } from "./middleware/errorHandler.js";
 import { Server } from "socket.io";
 import { initializeWebSockets } from "./socket/controller.js";
+import { initializeWebSocketGateway } from "./gateway/socket.js";
 
 const app = express();
 const server = http.createServer(app); // wrap express in standard http server
-
-const io = new Server(server, {
-  cors: {
-    origin: process.env.CLIENT_URL || "http://localhost:5173",
-    methods: ["GET", "POST"],
-  },
-});
 
 // security and parsing middleware
 app.use(helmet());
@@ -35,7 +29,20 @@ app.use("/api/reference", referenceRoutes);
 // global error catcher (REGISTER LAST)
 app.use(globalErrorHandler);
 
-initializeWebSockets(io);
+const useGatewaySockets = process.env.USE_GATEWAY_SOCKETS === "true";
+
+if (useGatewaySockets) {
+  initializeWebSocketGateway(server);
+} else {
+  const io = new Server(server, {
+    cors: {
+      origin: process.env.CLIENT_URL || "http://localhost:5173",
+      methods: ["GET", "POST"],
+    },
+  });
+
+  initializeWebSockets(io);
+}
 
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {

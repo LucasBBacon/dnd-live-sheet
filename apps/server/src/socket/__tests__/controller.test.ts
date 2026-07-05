@@ -1,15 +1,22 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { initializeWebSockets } from "../controller";
+import { initializeWebSockets } from "../controller.ts";
 
-const { mockSafeParse, mockModifyCharacterHp } = vi.hoisted(() => ({
+const { mockSafeParse, mockModifyCharacterHp, mockSocketEvents } = vi.hoisted(
+  () => ({
   mockSafeParse: vi.fn(),
   mockModifyCharacterHp: vi.fn(),
-}));
+    mockSocketEvents: {
+      ROOM_JOIN: "room:join",
+      HP_MODIFIED: "character:hp_modified",
+    },
+  }),
+);
 
 vi.mock("@project/shared", () => ({
   GameActionSchema: {
     safeParse: mockSafeParse,
   },
+  SOCKET_EVENTS: mockSocketEvents,
 }));
 
 vi.mock("../../services/combatService.js", () => ({
@@ -49,10 +56,22 @@ describe("socket controller", () => {
 
     expect(io.on).toHaveBeenCalledWith("connection", expect.any(Function));
     expect(socket.on).toHaveBeenCalledWith("join_character", expect.any(Function));
+    expect(socket.on).toHaveBeenCalledWith("room:join", expect.any(Function));
 
     const joinHandler = eventHandlers.get("join_character");
     joinHandler?.("char_123");
     expect(socket.join).toHaveBeenCalledWith("char_char_123");
+    expect(socket.join).toHaveBeenCalledWith("campaign_char_123");
+  });
+
+  it("handles shared ROOM_JOIN alias", () => {
+    const { io, socket, eventHandlers } = createSocketHarness();
+    initializeWebSockets(io as any);
+
+    const joinHandler = eventHandlers.get("room:join");
+    joinHandler?.("campaign_55");
+    expect(socket.join).toHaveBeenCalledWith("char_campaign_55");
+    expect(socket.join).toHaveBeenCalledWith("campaign_campaign_55");
   });
 
   it("emits action_error when payload validation fails", async () => {
@@ -112,5 +131,24 @@ describe("socket controller", () => {
     expect(socket.emit).toHaveBeenCalledWith("action_error", {
       message: "Server failed to process action",
     });
+  });
+
+  it("handles shared HP_MODIFIED event", async () => {
+    const { io, eventHandlers, roomEmitter } = createSocketHarness();
+    initializeWebSockets(io as any);
+
+    mockModifyCharacterHp.mockResolvedValue({ current: 8, temporary: 0, max: 12 });
+
+    const handler = eventHandlers.get("character:hp_modified");
+    await handler?.({
+      characterId: "char_1",
+      delta: -4,
+      source: "test",
+      timestamp: Date.now(),
+    });
+
+    expect(mockModifyCharacterHp).toHaveBeenCalledWith("char_1", -4);
+    expect(io.to).toHaveBeenCalledWith("char_char_1");
+    expect(roomEmitter.emit).toHaveBeenCalledWith("state_updated", "MODIFY_HP");
   });
 });

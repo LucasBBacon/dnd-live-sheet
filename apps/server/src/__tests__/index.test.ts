@@ -13,6 +13,7 @@ const mockServerCtor = vi.fn(() => mockIoInstance);
 
 const mockCreateAuthMiddleware = vi.fn(() => "auth_middleware");
 const mockInitializeWebSockets = vi.fn();
+const mockInitializeWebSocketGateway = vi.fn();
 
 vi.mock("express", () => {
   (mockExpressFactory as any).json = mockExpressJson;
@@ -66,26 +67,32 @@ vi.mock("../socket/controller.js", () => ({
   initializeWebSockets: mockInitializeWebSockets,
 }));
 
+vi.mock("../gateway/socket.js", () => ({
+  initializeWebSocketGateway: mockInitializeWebSocketGateway,
+}));
+
 describe("server bootstrap", () => {
   beforeEach(() => {
     vi.resetModules();
     vi.clearAllMocks();
     delete process.env.PORT;
     delete process.env.CLIENT_URL;
+    delete process.env.USE_GATEWAY_SOCKETS;
 
     mockCreateServer.mockReturnValue({
       listen: mockListen,
     });
   });
 
-  it("wires middleware, routes, websockets, and starts server", async () => {
+  it("wires middleware, routes, controller sockets, and starts server by default", async () => {
     process.env.CLIENT_URL = "http://localhost:5173";
-    await import("../index");
+    await import("../index.ts");
 
     expect(mockCreateServer).toHaveBeenCalled();
     expect(mockServerCtor).toHaveBeenCalled();
     expect(mockCreateAuthMiddleware).toHaveBeenCalled();
     expect(mockInitializeWebSockets).toHaveBeenCalledWith(mockIoInstance);
+    expect(mockInitializeWebSocketGateway).not.toHaveBeenCalled();
 
     expect(mockAppUse).toHaveBeenNthCalledWith(1, "helmet_middleware");
     expect(mockAppUse).toHaveBeenNthCalledWith(2, "cors_middleware");
@@ -102,6 +109,21 @@ describe("server bootstrap", () => {
       "reference_routes",
     );
     expect(mockAppUse).toHaveBeenNthCalledWith(6, "global_error_handler");
+
+    expect(mockListen).toHaveBeenCalledWith(3000, expect.any(Function));
+  });
+
+  it("uses gateway sockets when USE_GATEWAY_SOCKETS=true", async () => {
+    process.env.USE_GATEWAY_SOCKETS = "true";
+    await import("../index.ts");
+
+    expect(mockCreateServer).toHaveBeenCalled();
+    expect(mockCreateAuthMiddleware).toHaveBeenCalled();
+    expect(mockInitializeWebSocketGateway).toHaveBeenCalledWith(
+      expect.objectContaining({ listen: mockListen }),
+    );
+    expect(mockInitializeWebSockets).not.toHaveBeenCalled();
+    expect(mockServerCtor).not.toHaveBeenCalled();
 
     expect(mockListen).toHaveBeenCalledWith(3000, expect.any(Function));
   });
