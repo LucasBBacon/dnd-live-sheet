@@ -1,242 +1,195 @@
-# Redundancy Audit
+# Redundancy Audit (Current State)
 
-Date: 2026-07-05
-Scope: apps, packages (server, web, engine, shared)
-Focus: duplicate definitions, repeated logic, and reimplementation opportunities with readability preserved.
+Date: 2026-07-05  
+Scope: apps + packages in current main working tree  
+Focus: repeated definitions, duplicated logic paths, stale/parallel implementations
 
 ## Executive Summary
 
 - Confirmed findings: 8
 - Likely candidates: 3
-- Most critical area: modifier model/semantics split across engine and shared schemas.
-- Most immediate low-risk win: remove or archive dead inventory store path in web.
+- Most critical current issue: duplicate socket pipelines in server with only one wired at runtime
+- Most immediate low-risk wins: remove stale test importing deleted hook, remove broken engine type imports, unify proficiency formula
 
-## Method
+## What Changed Since Last Audit
 
-- Repo-wide symbol/pattern search for repeated formulas, repeated types, and parallel implementations.
-- Direct source validation in affected files.
-- Classification by confidence:
-  - Confirmed: evidence of active duplication or dead redundant code.
-  - Likely candidate: strong signal, but team intent may justify current design.
-- Priority balances correctness risk, maintenance burden, and readability impact.
+Resolved from prior report:
+- Inventory store dead path removed from web: [apps/web/src/store](apps/web/src/store)
+- Hook-based duplicate socket client removed from web runtime (hook file no longer exists): [apps/web/src/hooks](apps/web/src/hooks)
+- Shared engine duplicate module set removed (no shared engine folder now): [packages/shared/src](packages/shared/src)
+
+Still active after update:
+- Generated server artifacts checked into src
+- Multiple duplicate schema/model definitions around modifiers
+- Duplicate formulas and parallel server websocket pipelines
 
 ## Findings Table
 
 | ID | Confidence | Severity | Category | Summary | Effort | Risk |
 |---|---|---|---|---|---|---|
-| F1 | Confirmed | Critical | Domain Model | Modifier definitions diverge between engine and shared schemas | M | Medium |
-| F2 | Confirmed | Critical | Formula Duplication | Ability modifier formula implemented in multiple places | S | Low |
-| F3 | Confirmed | Critical | Formula Duplication | Proficiency bonus formula implemented in multiple places | S | Low |
-| F4 | Confirmed | High | Logic Duplication | AC computation duplicated with incompatible semantics | M | Medium |
-| F5 | Confirmed | High | Logic Duplication | Max HP calculation duplicated with differing rule handling | M | Medium |
-| F6 | Confirmed | High | Dead/Redundant Path | Web inventory store appears unused outside its own tests | S | Low |
-| F7 | Confirmed | High | Integration Pattern | Parallel socket implementations create duplicate connection patterns | M | Medium |
-| F8 | Confirmed | Medium | Generated Artifacts | Compiled JS/d.ts artifacts present under server source tree | S | Low |
-| L1 | Likely | Medium | Domain Split | Trait effect systems split between engine dictionary and shared schema | L | Medium |
-| L2 | Likely | Medium | Constant Duplication | Point-buy and standard-array constants embedded in UI components | S | Low |
-| L3 | Likely | Low | Type Duplication | Wizard local Attributes type duplicates engine Ability | S | Low |
+| F1 | Confirmed | Critical | Runtime Duplication | Two server websocket implementations overlap in behavior | M | High |
+| F2 | Confirmed | Critical | Source Hygiene | 36 generated artifacts (.js/.d.ts/.map) coexist with TS source under server/src | S | Low |
+| F3 | Confirmed | High | Type Path Drift | Engine imports non-existent local type module ../types/engine.js | S | Medium |
+| F4 | Confirmed | High | Formula Duplication | Proficiency bonus formula duplicated in two engine calculators | S | Low |
+| F5 | Confirmed | High | Schema Duplication | Two incompatible modifier schema systems exist in shared | M | Medium |
+| F6 | Confirmed | Medium | Dead Test Path | Web test still imports deleted hook useCharacterSocket | S | Low |
+| F7 | Confirmed | Medium | Constant Duplication | STATS/ability generation constants duplicated across wizard components | S | Low |
+| F8 | Confirmed | Medium | Type Alias Drift | Wizard uses local Attributes type while rest of app uses Ability | S | Low |
+| L1 | Likely | Medium | Architectural Split | gateway/socket.ts appears unused but duplicates live socket responsibilities | M | Medium |
+| L2 | Likely | Medium | Domain Coupling | characterSheetStore still combines many concerns into one store | M | Medium |
+| L3 | Likely | Low | Validation Duplication | Wizard keeps progression flags that overlap engine-level validation logic | S | Low |
 
 ## Detailed Findings
 
-### F1 - Modifier definitions diverge between engine and shared schemas
+### F1 - Duplicate server websocket pipelines
 
-- Confidence: Confirmed
 - Severity: Critical
-- Why it is redundant/risky:
-  - Two definitions represent the same domain concept with incompatible fields and enum semantics.
-  - This creates conversion pressure and semantic drift over time.
-- Evidence:
-  - Engine modifier model: [packages/engine/src/types/engine.ts#L1](packages/engine/src/types/engine.ts#L1), [packages/engine/src/types/engine.ts#L13](packages/engine/src/types/engine.ts#L13), [packages/engine/src/types/engine.ts#L20](packages/engine/src/types/engine.ts#L20)
-  - Shared modifier schema: [packages/shared/src/schemas/character.ts#L19](packages/shared/src/schemas/character.ts#L19), [packages/shared/src/schemas/character.ts#L22](packages/shared/src/schemas/character.ts#L22)
-  - Active web state uses engine modifier: [apps/web/src/store/characterSheetStore.ts#L34](apps/web/src/store/characterSheetStore.ts#L34)
-- Recommendation:
-  - Choose a canonical modifier model (recommended: runtime model in engine with explicit boundary adapters in shared/API, or shared canonical with engine re-export).
-  - Create one translation module if dual models must remain temporarily.
-- Readability impact: Positive if canonical model is documented and centrally exported.
-- Effort/Risk: Medium effort, medium risk (touches schema/runtime boundaries).
-
-### F2 - Ability modifier formula duplicated
-
 - Confidence: Confirmed
-- Severity: Critical
-- Why it is redundant/risky:
-  - Same formula appears in both engine and shared utilities, increasing drift risk.
+- Why this is redundant:
+  - Two independent websocket handling implementations exist with overlapping mechanics.
+  - One path uses action dispatch + service processing, another uses event-specific atomic DB handlers.
 - Evidence:
-  - Engine: [packages/engine/src/calculators/abilities.ts#L50](packages/engine/src/calculators/abilities.ts#L50)
-  - Shared: [packages/shared/src/engine/core.ts#L7](packages/shared/src/engine/core.ts#L7)
+  - Active initialization in app entrypoint: [apps/server/src/index.ts#L11](apps/server/src/index.ts#L11), [apps/server/src/index.ts#L38](apps/server/src/index.ts#L38)
+  - Controller pipeline: [apps/server/src/socket/controller.ts#L5](apps/server/src/socket/controller.ts#L5), [apps/server/src/socket/controller.ts#L16](apps/server/src/socket/controller.ts#L16)
+  - Gateway pipeline: [apps/server/src/gateway/socket.ts#L18](apps/server/src/gateway/socket.ts#L18), [apps/server/src/gateway/socket.ts#L37](apps/server/src/gateway/socket.ts#L37)
 - Recommendation:
-  - Keep one implementation in a single canonical package and re-export where needed.
-- Readability impact: Positive.
+  - Keep one websocket pipeline as canonical runtime path.
+  - If gateway is future direction, migrate index initialization first, then remove controller implementation.
+- Effort/Risk: Medium effort, high risk if migrated without event-compatibility plan.
+
+### F2 - Generated artifacts under server source
+
+- Severity: Critical
+- Confidence: Confirmed
+- Why this is redundant:
+  - Compiled outputs are committed next to source, creating review noise and merge overhead.
+- Evidence:
+  - Artifact count under src: 36 files in [apps/server/src](apps/server/src)
+  - Examples: [apps/server/src/index.js](apps/server/src/index.js), [apps/server/src/index.d.ts](apps/server/src/index.d.ts), [apps/server/src/routes/character.js](apps/server/src/routes/character.js), [apps/server/src/middleware/requireAuth.js](apps/server/src/middleware/requireAuth.js)
+- Recommendation:
+  - Emit build artifacts to a dedicated output directory and exclude from source tree.
 - Effort/Risk: Small effort, low risk.
 
-### F3 - Proficiency bonus formula duplicated
+### F3 - Broken engine type import path
 
+- Severity: High
 - Confidence: Confirmed
-- Severity: Critical
-- Why it is redundant/risky:
-  - Same formula appears in three active definitions.
+- Why this is redundant/risky:
+  - Code imports a local type module that does not exist, while modifier types are available via shared schemas.
 - Evidence:
-  - Engine ability utility: [packages/engine/src/calculators/abilities.ts#L59](packages/engine/src/calculators/abilities.ts#L59)
-  - Engine derived stats: [packages/engine/src/calculators/derivedStats.ts#L83](packages/engine/src/calculators/derivedStats.ts#L83)
-  - Shared core: [packages/shared/src/engine/core.ts#L17](packages/shared/src/engine/core.ts#L17)
+  - Missing local types file path namespace: [packages/engine/src/types](packages/engine/src/types)
+  - Broken imports: [packages/engine/src/calculators/abilities.ts#L2](packages/engine/src/calculators/abilities.ts#L2), [packages/engine/src/pipeline/inventoryBridge.ts#L2](packages/engine/src/pipeline/inventoryBridge.ts#L2)
 - Recommendation:
-  - Consolidate to one exported function and remove duplicate entry points.
-- Readability impact: Positive.
+  - Replace with a single exported modifier/runtime type import source and remove dead path assumption.
+- Effort/Risk: Small effort, medium risk.
+
+### F4 - Proficiency bonus formula duplicated in engine
+
+- Severity: High
+- Confidence: Confirmed
+- Why this is redundant:
+  - Same formula appears in two calculators.
+- Evidence:
+  - [packages/engine/src/calculators/abilities.ts#L59](packages/engine/src/calculators/abilities.ts#L59)
+  - [packages/engine/src/calculators/derivedStats.ts#L5](packages/engine/src/calculators/derivedStats.ts#L5)
+- Recommendation:
+  - Keep one canonical implementation and delegate from the other call sites.
 - Effort/Risk: Small effort, low risk.
 
-### F4 - AC calculation duplicated with incompatible semantics
+### F5 - Modifier schema duplication and incompatibility in shared
 
-- Confidence: Confirmed
 - Severity: High
-- Why it is redundant/risky:
-  - Different AC pipelines with different assumptions (setters/adders/source dedupe/breakdown vs generic bonus sum).
-  - Harder to reason about correctness and expected behavior.
+- Confidence: Confirmed
+- Why this is redundant:
+  - Legacy character modifier schema and newer runtime/base modifier schema coexist with different fields and semantics.
 - Evidence:
-  - Engine AC with stacking logic: [packages/engine/src/calculators/derivedStats.ts#L14](packages/engine/src/calculators/derivedStats.ts#L14)
-  - Shared AC utility: [packages/shared/src/engine/combat.ts#L19](packages/shared/src/engine/combat.ts#L19)
+  - Legacy schema: [packages/shared/src/schemas/character.ts#L19](packages/shared/src/schemas/character.ts#L19), [packages/shared/src/schemas/character.ts#L33](packages/shared/src/schemas/character.ts#L33)
+  - New runtime/base schema: [packages/shared/src/schemas/modifiers.ts#L29](packages/shared/src/schemas/modifiers.ts#L29), [packages/shared/src/schemas/modifiers.ts#L37](packages/shared/src/schemas/modifiers.ts#L37)
+  - Legacy schema usage is test-heavy: [packages/shared/src/schemas/__tests__/character.test.ts#L4](packages/shared/src/schemas/__tests__/character.test.ts#L4)
 - Recommendation:
-  - Consolidate rule logic into one core AC function, with optional breakdown output for UI.
-- Readability impact: Positive if options are explicit.
+  - Pick one canonical modifier schema family and add adapters only at boundaries where unavoidable.
 - Effort/Risk: Medium effort, medium risk.
 
-### F5 - Max HP calculation duplicated with differing rule handling
+### F6 - Dead web test imports removed hook
 
-- Confidence: Confirmed
-- Severity: High
-- Why it is redundant/risky:
-  - Two max HP implementations use different assumptions and effect ingestion.
-- Evidence:
-  - Engine max HP: [packages/engine/src/calculators/derivedStats.ts#L87](packages/engine/src/calculators/derivedStats.ts#L87)
-  - Shared max HP: [packages/shared/src/engine/combat.ts#L54](packages/shared/src/engine/combat.ts#L54)
-- Recommendation:
-  - Define one canonical HP rule path and make alternate call sites delegate to it.
-- Readability impact: Positive.
-- Effort/Risk: Medium effort, medium risk.
-
-### F6 - Redundant web inventory store appears dead
-
-- Confidence: Confirmed
-- Severity: High
-- Why it is redundant/risky:
-  - Store implementation exists but app usage appears absent outside its own test file.
-  - Inventory is actively modeled elsewhere in character sheet store.
-- Evidence:
-  - Inventory store definition: [apps/web/src/store/inventoryStore.ts#L20](apps/web/src/store/inventoryStore.ts#L20)
-  - Inventory state in active character store: [apps/web/src/store/characterSheetStore.ts#L31](apps/web/src/store/characterSheetStore.ts#L31)
-  - Usage appears isolated to test file: [apps/web/src/store/__tests__/inventoryStore.test.ts#L2](apps/web/src/store/__tests__/inventoryStore.test.ts#L2)
-- Recommendation:
-  - Remove or archive the dead store path after team confirmation.
-  - If retained for future work, mark explicitly as experimental/deprecated.
-- Readability impact: Positive.
-- Effort/Risk: Small effort, low risk.
-
-### F7 - Parallel socket implementations in web
-
-- Confidence: Confirmed
-- Severity: High
-- Why it is redundant/risky:
-  - One singleton socket service and one hook-local socket connection pattern coexist.
-  - Increases chance of duplicate listeners, inconsistent event contracts, and debugging overhead.
-- Evidence:
-  - Socket manager singleton: [apps/web/src/services/socketService.ts#L10](apps/web/src/services/socketService.ts#L10), [apps/web/src/services/socketService.ts#L80](apps/web/src/services/socketService.ts#L80)
-  - Hook-local socket connection: [apps/web/src/hooks/useCharacterSocket.ts#L6](apps/web/src/hooks/useCharacterSocket.ts#L6), [apps/web/src/hooks/useCharacterSocket.ts#L16](apps/web/src/hooks/useCharacterSocket.ts#L16)
-  - Service is actively used by provider/store: [apps/web/src/components/sheet/LiveSheetProvider.tsx#L25](apps/web/src/components/sheet/LiveSheetProvider.tsx#L25), [apps/web/src/store/characterSheetStore.ts#L85](apps/web/src/store/characterSheetStore.ts#L85)
-- Recommendation:
-  - Standardize on one socket ownership pattern (recommended: single service with typed subscribe/dispatch API).
-- Readability impact: Positive.
-- Effort/Risk: Medium effort, medium risk.
-
-### F8 - Generated artifacts in server source tree
-
-- Confidence: Confirmed
 - Severity: Medium
-- Why it is redundant/risky:
-  - Build outputs (.js, .d.ts, maps) live alongside TypeScript source under server src.
-  - This increases review noise and merge conflict surface.
+- Confidence: Confirmed
+- Why this is redundant:
+  - Test suite references a hook file that no longer exists.
 - Evidence:
-  - 36 generated-artifact files under apps/server/src were detected (examples):
-    - [apps/server/src/index.js](apps/server/src/index.js)
-    - [apps/server/src/index.d.ts](apps/server/src/index.d.ts)
-    - [apps/server/src/core/auth/AuthInterface.js](apps/server/src/core/auth/AuthInterface.js)
-    - [apps/server/src/routes/character.js](apps/server/src/routes/character.js)
-    - [apps/server/src/middleware/requireAuth.js](apps/server/src/middleware/requireAuth.js)
+  - Stale imports in test: [apps/web/src/hooks/__tests__/useCharacterSocket.test.ts#L44](apps/web/src/hooks/__tests__/useCharacterSocket.test.ts#L44), [apps/web/src/hooks/__tests__/useCharacterSocket.test.ts#L69](apps/web/src/hooks/__tests__/useCharacterSocket.test.ts#L69), [apps/web/src/hooks/__tests__/useCharacterSocket.test.ts#L91](apps/web/src/hooks/__tests__/useCharacterSocket.test.ts#L91)
 - Recommendation:
-  - Emit artifacts to a dedicated build output directory and align ignore rules.
-  - If checked in intentionally, document policy and narrow to required artifacts only.
-- Readability impact: Positive.
+  - Remove this test file or rewrite it to validate the active socket service/provider path.
 - Effort/Risk: Small effort, low risk.
 
-## Likely Candidates (Require Team Intent Check)
+### F7 - Duplicated ability constants in wizard UI
 
-### L1 - Trait effect systems are split across packages
-
-- Signal:
-  - Engine trait dictionary model: [packages/engine/src/rules/traitDictionary.ts#L3](packages/engine/src/rules/traitDictionary.ts#L3), [packages/engine/src/rules/traitDictionary.ts#L16](packages/engine/src/rules/traitDictionary.ts#L16)
-  - Shared trait effect schema model: [packages/shared/src/schemas/effects.ts#L21](packages/shared/src/schemas/effects.ts#L21), [packages/shared/src/schemas/effects.ts#L58](packages/shared/src/schemas/effects.ts#L58)
-- Why likely:
-  - Could be intentional separation (runtime rule map vs serialized schema), but shapes are far apart.
+- Severity: Medium
+- Confidence: Confirmed
+- Why this is redundant:
+  - Ability stat arrays and rules constants are repeated across components.
+- Evidence:
+  - [apps/web/src/components/wizard/abilities/ManualRollEngine.tsx#L3](apps/web/src/components/wizard/abilities/ManualRollEngine.tsx#L3)
+  - [apps/web/src/components/wizard/abilities/PointBuyCalculator.tsx#L3](apps/web/src/components/wizard/abilities/PointBuyCalculator.tsx#L3), [apps/web/src/components/wizard/abilities/PointBuyCalculator.tsx#L13](apps/web/src/components/wizard/abilities/PointBuyCalculator.tsx#L13)
+  - [apps/web/src/components/wizard/abilities/StandardArrayAssigner.tsx#L4](apps/web/src/components/wizard/abilities/StandardArrayAssigner.tsx#L4), [apps/web/src/components/wizard/abilities/StandardArrayAssigner.tsx#L5](apps/web/src/components/wizard/abilities/StandardArrayAssigner.tsx#L5)
 - Recommendation:
-  - Document explicit ownership and conversion strategy, or unify into one effect vocabulary.
-- Effort/Risk: Large effort, medium risk.
-
-### L2 - Point-buy and standard array constants embedded in UI
-
-- Signal:
-  - Point-buy costs in component: [apps/web/src/components/wizard/abilities/PointBuyCalculator.tsx#L3](apps/web/src/components/wizard/abilities/PointBuyCalculator.tsx#L3)
-  - Standard array in component: [apps/web/src/components/wizard/abilities/StandardArrayAssigner.tsx#L5](apps/web/src/components/wizard/abilities/StandardArrayAssigner.tsx#L5)
-- Why likely:
-  - May be acceptable UI-local constants, but these are game rules that may deserve centralization.
-- Recommendation:
-  - Move to shared rules/constants package if validation or server parity is required.
+  - Centralize these constants in shared or a single web-domain constants file.
 - Effort/Risk: Small effort, low risk.
 
-### L3 - Duplicate local Attributes type in wizard store
+### F8 - Ability type naming drift in web
 
-- Signal:
+- Severity: Medium
+- Confidence: Confirmed
+- Why this is redundant:
+  - Local Attributes union duplicates core Ability semantics already used elsewhere.
+- Evidence:
   - Local type: [apps/web/src/store/wizardStore.ts#L4](apps/web/src/store/wizardStore.ts#L4)
-  - Existing engine ability type is available and used elsewhere.
-- Why likely:
-  - Low impact duplication but can drift if union expands.
+  - Existing Ability usage: [apps/web/src/store/characterSheetStore.ts#L3](apps/web/src/store/characterSheetStore.ts#L3), [apps/web/src/hooks/useCharacterStats.ts#L9](apps/web/src/hooks/useCharacterStats.ts#L9)
 - Recommendation:
-  - Reuse exported ability type from engine package for consistency.
+  - Reuse one Ability type source and keep alias only during migration if needed.
 - Effort/Risk: Small effort, low risk.
 
-## Modifier-Specific Crosswalk
+## Likely Candidates (Needs Team Intent Confirmation)
 
-| Dimension | Engine Runtime | Shared Schema |
-|---|---|---|
-| Type location | [packages/engine/src/types/engine.ts#L20](packages/engine/src/types/engine.ts#L20) | [packages/shared/src/schemas/character.ts#L19](packages/shared/src/schemas/character.ts#L19) |
-| Target style | Strong enum-like union via ModifierTarget | Free-form string target |
-| Modifier kind vocabulary | set_base, add, multiplier, advantage, disadvantage | bonus, advantage, disadvantage, resistance, immunity |
-| Metadata | sourceName, sourceOrigin, isActive | sourceId (+ optional value) |
-| Primary consumer | Engine calculators / web state | Shared schema validation and shared engine utils |
+### L1 - gateway/socket.ts appears unused but duplicates runtime behavior
 
-Decision needed: choose canonical semantics first, then refactor formulas and adapters.
+- Signal:
+  - Declared but not referenced elsewhere: [apps/server/src/gateway/socket.ts#L18](apps/server/src/gateway/socket.ts#L18)
+  - Search usage: only definition found for initializeWebSocketGateway.
+- Recommendation:
+  - Confirm intended socket architecture, then delete or wire explicitly.
 
-## Prioritized Remediation Roadmap
+### L2 - characterSheetStore has broad mixed domain responsibilities
 
-1. Quick wins (low risk)
-- Consolidate ability modifier and proficiency bonus formulas into one exported implementation.
-- Remove or deprecate dead inventory store path after confirmation.
-- Normalize generated artifact policy for server source tree.
+- Signal:
+  - Health, progression, inventory, resources, modifiers and socket-emitting actions in one store: [apps/web/src/store/characterSheetStore.ts#L13](apps/web/src/store/characterSheetStore.ts#L13), [apps/web/src/store/characterSheetStore.ts#L57](apps/web/src/store/characterSheetStore.ts#L57)
+- Recommendation:
+  - Consider domain slices if rerender/test complexity grows.
 
-2. Mid-scope unification
-- Consolidate AC and HP calculation ownership to one canonical path with optional explanation payloads.
-- Standardize one socket ownership pattern in web.
+### L3 - wizard validation metadata overlaps engine progression logic
 
-3. High-impact domain consolidation
-- Resolve modifier model split (canonical schema/runtime + adapters).
-- Reconcile trait effect vocabulary between engine runtime dictionary and shared schemas.
+- Signal:
+  - wizard store keeps class/race gating flags: [apps/web/src/store/wizardStore.ts#L20](apps/web/src/store/wizardStore.ts#L20), [apps/web/src/store/wizardStore.ts#L21](apps/web/src/store/wizardStore.ts#L21)
+  - level-up flow already uses progression engine checks: [apps/web/src/store/levelUpStore.ts](apps/web/src/store/levelUpStore.ts)
+- Recommendation:
+  - Reuse progression engine for consistency, keep UI-only flags minimal.
 
-## Suggested PR Slicing
+## Updated Priority Roadmap
 
-- PR A: Formula deduplication (F2, F3)
-- PR B: Dead code and artifact hygiene (F6, F8)
-- PR C: Socket unification (F7)
-- PR D: Combat/derived stat consolidation (F4, F5)
-- PR E: Modifier and trait model consolidation (F1, L1)
+1. P1 quick fixes
+- Remove stale web hook test file.
+- Fix engine modifier type imports to a real canonical type path.
+- Consolidate proficiency formula implementation.
 
-## Notes and Constraints
+2. P2 cleanup and consolidation
+- Choose one server websocket runtime path.
+- Move server build outputs out of src and enforce ignore/build policy.
 
-- Recommendations intentionally avoid overly clever abstractions; readability-first is preserved.
-- Some likely candidates may be intentional architecture boundaries and should be validated with maintainers before removal.
+3. P3 schema/model alignment
+- Consolidate modifier schemas and deprecate legacy shape safely.
+- Normalize Ability type usage in wizard flow and centralize ability constants.
+
+## Notes
+
+- This report supersedes prior stale references to removed files.
+- Recommendations are readability-first and avoid introducing heavy abstraction where a simple consolidation works.
