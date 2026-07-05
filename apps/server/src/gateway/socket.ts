@@ -237,6 +237,8 @@ export function initializeWebSocketGateway(httpServer: any) {
             const updatedResources = RestEngine.applyRest(
               currentResources,
               payload.restType,
+              1,
+              {},
             );
 
             // 3 - batch update the changed resources

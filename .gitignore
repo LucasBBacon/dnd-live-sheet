@@ -11,6 +11,12 @@ out/
 coverage/
 **/coverage/
 
+# Server generated artifacts should never live in source tree
+apps/server/src/**/*.js
+apps/server/src/**/*.js.map
+apps/server/src/**/*.d.ts
+apps/server/src/**/*.d.ts.map
+
 # TypeScript incremental artifacts
 *.tsbuildinfo
 **/*.tsbuildinfo

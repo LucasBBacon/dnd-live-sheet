@@ -27,12 +27,16 @@ router.post("/", async (req, res, next) => {
 
     // execute atomic transaction
     await db.transaction(async (tx) => {
+      if (!payload.subraceId) {
+        throw new Error("subraceId is required for character creation");
+      }
+
       // insert the base character record
       await tx.insert(characters).values({
-        id: newCharacterId,
         name: payload.name,
+        level: 1,
         raceId: payload.raceId,
-        subraceId: payload.subraceId ?? undefined,
+        subraceId: payload.subraceId,
 
         // flatten ability scores for relational queries
         str: payload.baseAbilityScores.str,
@@ -66,7 +70,7 @@ router.post("/", async (req, res, next) => {
         characterId: newCharacterId,
         classId: payload.classId,
         subclassId: payload.subclassId ?? undefined,
-        level: 1, // fresh characters always start at lvl 1 in this class
+        classLevel: 1,
       });
 
       // handle custom background traits

@@ -1,5 +1,5 @@
 import type { Ability } from "../types/core.js";
-import type { Modifier } from "../types/engine.js";
+import type { RuntimeModifier } from "@project/shared";
 
 /**
  * AbilityEngine is a utility class that provides methods for calculating ability scores, modifiers, and proficiency bonuses in a Dungeons & Dragons 5e ruleset context.
@@ -16,7 +16,7 @@ export class AbilityEngine {
   public static calculateScore(
     base: number,
     stat: Ability,
-    modifiers: Modifier[],
+    modifiers: RuntimeModifier[],
   ): number {
     const activeMods = modifiers.filter(
       (m) => m.target === stat.toUpperCase() && m.isActive,
