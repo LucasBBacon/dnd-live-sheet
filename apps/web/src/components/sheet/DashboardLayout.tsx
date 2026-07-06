@@ -50,7 +50,15 @@ export const DashboardLayout = () => {
                 return;
               }
 
-              beginLevelUp(character.id, activeClassId, character.level);
+              const currentLevelInActiveClass =
+                character.classLevels[activeClassId] ?? 0;
+
+              beginLevelUp(
+                character.id,
+                activeClassId,
+                currentLevelInActiveClass,
+                character.level + 1,
+              );
             }}
             disabled={!character.id || !activeClassId}
             className="bg-blue-600 hover:bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed text-white px-4 py-1 rounded font-bold uppercase shadow"

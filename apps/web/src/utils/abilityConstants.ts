@@ -1,6 +1,13 @@
 import type { Ability } from "@project/engine";
 
-export const ABILITY_STATS: Ability[] = ["str", "dex", "con", "int", "wis", "cha"];
+export const ABILITY_STATS: Ability[] = [
+  "str",
+  "dex",
+  "con",
+  "int",
+  "wis",
+  "cha",
+];
 
 export const STANDARD_ARRAY = [15, 14, 13, 12, 10, 8] as const;
 

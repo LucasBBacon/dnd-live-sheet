@@ -10,7 +10,8 @@ interface LevelUpState {
   beginLevelUp: (
     characterId: string,
     classId: string,
-    currentLevel: number,
+    currentClassLevel: number,
+    newTotalLevel: number,
   ) => void;
   updateDraft: (updates: Partial<LevelUpPayload>) => void;
   validateAndSubmit: () => Promise<void>;
@@ -22,11 +23,11 @@ export const useLevelUpStore = create<LevelUpState>((set, get) => ({
   progressionContext: null,
   draftPayload: {},
 
-  beginLevelUp: (characterId, classId, currentLevel) => {
+  beginLevelUp: (characterId, classId, currentClassLevel, newTotalLevel) => {
     // 1 - fetch required decisions for the next level from engine
     const nextLevelDef = ProgressionEngine.getLevelDefinition(
       classId,
-      currentLevel + 1,
+      currentClassLevel + 1,
     );
 
     set({
@@ -35,7 +36,7 @@ export const useLevelUpStore = create<LevelUpState>((set, get) => ({
       draftPayload: {
         characterId,
         targetClassId: classId,
-        newTotalLevel: currentLevel + 1,
+        newTotalLevel,
       },
     });
   },
