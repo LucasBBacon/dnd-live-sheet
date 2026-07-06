@@ -1,8 +1,10 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useAbilities, useDerivedStats } from "../../hooks/useCharacterStats";
 import { useCharacterSheetStore } from "../../store/characterSheetStore";
+import { useLevelUpStore } from "../../store/levelUpStore";
 import { CombatWidget } from "./CombatWidget";
 import { RestModal } from "./modals/RestModal";
+import { LevelUpWizard } from "../wizard/LevelUpWizard";
 
 export const DashboardLayout = () => {
   const character = useCharacterSheetStore();
@@ -10,9 +12,24 @@ export const DashboardLayout = () => {
     (state) => state.applyHealthDelta,
   );
   const equipItem = useCharacterSheetStore((state) => state.equipItem);
+  const beginLevelUp = useLevelUpStore((state) => state.beginLevelUp);
 
   const { armorClass, skills, initiative } = useDerivedStats();
   const { finalAbilities } = useAbilities();
+
+  const activeClassId = useMemo(() => {
+    const classEntries = Object.entries(character.classLevels);
+
+    if (classEntries.length === 0) {
+      return null;
+    }
+
+    return (
+      classEntries.sort(
+        ([, leftLevel], [, rightLevel]) => rightLevel - leftLevel,
+      )[0]?.[0] ?? null
+    );
+  }, [character.classLevels]);
 
   const [hpInput, setHpInput] = useState(1);
   const [isRestModalOpen, setIsRestModalOpen] = useState(false);
@@ -24,15 +41,31 @@ export const DashboardLayout = () => {
         <h1 className="text-xl font-bold uppercase">
           {character.id ? "Live Session Active" : "Loading..."}
         </h1>
-        <span>Lvl {character.level}</span>
+        <div className="flex items-center gap-3">
+          <span>Lvl {character.level}</span>
 
-        {/* GLOBAL  ACTION */}
-        <button
-          onClick={() => setIsRestModalOpen(true)}
-          className="bg-blue-600 hover:bg-blue-500 text-white px-4 py-1 rounded font-bold uppercase shadow"
-        >
-          Camp / Rest
-        </button>
+          <button
+            onClick={() => {
+              if (!character.id || !activeClassId) {
+                return;
+              }
+
+              beginLevelUp(character.id, activeClassId, character.level);
+            }}
+            disabled={!character.id || !activeClassId}
+            className="bg-blue-600 hover:bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed text-white px-4 py-1 rounded font-bold uppercase shadow"
+          >
+            Level Up
+          </button>
+
+          {/* GLOBAL ACTION */}
+          <button
+            onClick={() => setIsRestModalOpen(true)}
+            className="bg-blue-600 hover:bg-blue-500 text-white px-4 py-1 rounded font-bold uppercase shadow"
+          >
+            Camp / Rest
+          </button>
+        </div>
       </header>
 
       {/* MAIN GRID */}
@@ -185,6 +218,8 @@ export const DashboardLayout = () => {
       {isRestModalOpen && (
         <RestModal onClose={() => setIsRestModalOpen(false)} />
       )}
+
+      <LevelUpWizard />
     </div>
   );
 };

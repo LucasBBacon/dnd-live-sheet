@@ -131,11 +131,23 @@ router.get("/", async (req, res, next) => {
       .where(eq(characters.id, userId))
       .limit(1);
 
+    const classLedger = await db
+      .select()
+      .from(characterClasses)
+      .where(eq(characterClasses.characterId, userId));
+
     if (!character) {
       return res.status(404).json({ error: "No active character found." });
     }
 
-    return res.status(200).json({ character });
+    return res.status(200).json({
+      character: {
+        ...character,
+        classLevels: Object.fromEntries(
+          classLedger.map((entry) => [entry.classId, entry.classLevel]),
+        ),
+      },
+    });
   } catch (error) {
     next(error);
   }

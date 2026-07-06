@@ -22,6 +22,7 @@ export const LiveSheetRoute = () => {
       initializeStore({
         id: data.character.id,
         level: data.character.level || 1,
+        classLevels: data.character.classLevels || {},
         baseScores: {
           str: data.character.str,
           dex: data.character.dex,
