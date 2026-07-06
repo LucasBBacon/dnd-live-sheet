@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { useLevelUpStore } from "../../store/levelUpStore";
 import { WizardStepRouter } from "./WizardStepRouter";
+import { isStepComplete } from "../../utils/wizardValidation";
 
 export const LevelUpWizard = () => {
   const {
@@ -30,8 +31,12 @@ export const LevelUpWizard = () => {
   if (!isActive || !progressionContext) return null;
 
   const activeStepType = wizardSteps[currentStepIndex];
-  const isFirstStep = currentStepIndex === 0;
-  const isLastStep = currentStepIndex === wizardSteps.length - 1;
+  const isNextEnabled = isStepComplete(
+    activeStepType,
+    draftPayload,
+    progressionContext.decisions,
+  );
+  const isLastStep = currentStepIndex === wizardSteps.length + 1;
 
   const handleNext = () =>
     setCurrentStepIndex((prev) => Math.min(prev + 1, wizardSteps.length - 1));
@@ -87,7 +92,7 @@ export const LevelUpWizard = () => {
           <div className="flex gap-3">
             <button
               onClick={handleBack}
-              disabled={isFirstStep}
+              disabled={currentStepIndex === 0}
               className="px-4 py-2 font-bold text-gray-700 bg-gray-200 rounded disabled:opacity-50 hover:bg-gray-300"
             >
               BACK
@@ -96,14 +101,16 @@ export const LevelUpWizard = () => {
             {isLastStep ? (
               <button
                 onClick={handleSubmit}
-                className="px-6 py-2 text-white bg-green-600 rounded hover:bg-green-700 shadow-sm"
+                disabled={!isNextEnabled}
+                className="px-6 py-2 font-bold text-white bg-green-600 rounded hover:bg-green-700 shadow-sm disabled:bg-green-300 disabled:cursor-not-allowed"
               >
                 COMMIT LEVEL UP
               </button>
             ) : (
               <button
                 onClick={handleNext}
-                className="px-6 py-2 font-bold text-white bg-indigo-600 rounded hover:bg-indigo-700 shadow-sm"
+                disabled={!isNextEnabled}
+                className="px-6 py-2 font-bold text-white bg-indigo-600 rounded hover:bg-indigo-700 shadow-sm disabled:bg-indigo-300 disabled:cursor-not-allowed"
               >
                 NEXT
               </button>
