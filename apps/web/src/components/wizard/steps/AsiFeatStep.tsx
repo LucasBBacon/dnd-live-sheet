@@ -1,6 +1,8 @@
 import type { LevelDecision } from "@project/engine";
 import { useLevelUpStore } from "../../../store/levelUpStore";
 import { useState } from "react";
+import { AsiDistribution } from "./subcomponents/AsiDistribution";
+import { FeatSelection } from "./subcomponents/FeatSelection";
 
 export const AsiFeatStep = ({ context }: { context: LevelDecision }) => {
   const { draftPayload, updateDraft } = useLevelUpStore();
@@ -39,12 +41,12 @@ export const AsiFeatStep = ({ context }: { context: LevelDecision }) => {
       <div className="flex-grow bg-gray-50 border border-gray-200 p-4 rounded overflow-y-auto">
         {mode === "asi" && (
           <div className="text-gray-500 italic text-center mt-10">
-            TODO ASI DISTRIBUTION INTERFACE COMPONENT
+            <AsiDistribution />
           </div>
         )}
         {mode === "feat" && (
           <div className="text-gray-500 italic text-center mt-10">
-            TODO FEAT SELECTION DROPDOWN COMPONENT
+            <FeatSelection />
           </div>
         )}
 

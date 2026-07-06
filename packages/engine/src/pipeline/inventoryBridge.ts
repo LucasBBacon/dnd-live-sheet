@@ -1,4 +1,4 @@
-import { ITEM_DICTIONARY } from "../rules/equipmentModifiers.js";
+import { ITEM_DICTIONARY } from "../rules/itemDictionary.js";
 import type { RuntimeModifier } from "@project/shared";
 
 export interface OperationalInventoryItem {
