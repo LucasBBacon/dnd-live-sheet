@@ -36,7 +36,7 @@ export const LevelUpWizard = () => {
     draftPayload,
     progressionContext.decisions,
   );
-  const isLastStep = currentStepIndex === wizardSteps.length + 1;
+  const isLastStep = currentStepIndex === wizardSteps.length - 1;
 
   const handleNext = () =>
     setCurrentStepIndex((prev) => Math.min(prev + 1, wizardSteps.length - 1));
