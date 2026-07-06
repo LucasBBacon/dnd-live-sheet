@@ -1,5 +1,6 @@
 import type { LevelDecision } from "@project/engine";
 import { AsiFeatStep } from "./steps/AsiFeatStep";
+import { HpRollStep } from "./steps/HpRollStep";
 
 interface RouterProps {
   stepType: string;
@@ -15,7 +16,11 @@ export const WizardStepRouter = ({ stepType, decisions }: RouterProps) => {
     case "overview":
       return <div>OverviewStep</div>;
     case "hp_increase":
-      return <div>HpRollStep</div>;
+      return (
+        <div>
+          <HpRollStep />
+        </div>
+      );
     case "subclass":
       return <div>SubclassStep</div>;
     case "asi_or_feat":
