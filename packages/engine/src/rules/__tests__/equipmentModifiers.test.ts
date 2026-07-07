@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { ITEM_DICTIONARY } from "../equipmentModifiers";
+import { ITEM_DICTIONARY } from "../itemDictionary";
 
 describe("ITEM_DICTIONARY", () => {
   it("contains expected rule keys", () => {

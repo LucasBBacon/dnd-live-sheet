@@ -1,21 +1,14 @@
 import { db } from "@project/database";
 import { Router, type Router as ExpressRouter } from "express";
 import {
-  backgrounds,
-  backgroundTraits,
-  classes,
-  classLevels,
-  classProgressions,
   items,
-  races,
-  raceTraits,
-  subclasses,
-  subclassProgressions,
-  subraces,
-  subraceTraits,
   traits,
 } from "@project/database/src/schema/reference.js";
-import { and, desc, eq, sql } from "drizzle-orm";
+import { desc, sql } from "drizzle-orm";
+import {
+  getReferenceCache,
+  getReferenceCacheVersion,
+} from "../services/referenceCache.js";
 
 const router: ExpressRouter = Router();
 
@@ -79,51 +72,28 @@ const matchesTraitCategory = (
  */
 router.get("/races", async (req, res, next) => {
   try {
-    // fetch all base races
-    const allRaces = await db.select().from(races);
-    // fetch all subraces and bundle them efficiently in memory
-    const allSubraces = await db.select().from(subraces);
-
-    // fetch all traits tied to base races
-    const fullyResolvedRaceTraits = await db
-      .select({ raceId: raceTraits.raceId, trait: traits })
-      .from(raceTraits)
-      .innerJoin(traits, eq(raceTraits.traitId, traits.id));
-
-    // fetch all traits tied to subraces
-    const fullyResolvedSubraceTraits = await db
-      .select({ subraceId: subraceTraits.subraceId, traits: traits })
-      .from(subraceTraits)
-      .innerJoin(traits, eq(subraceTraits.traitId, traits.id));
-
-    // map subraces to their parent race with explicit provenance
-    const payload = allRaces.map((race) => {
-      // filter traits for this race and map them with an explicit source header
-      const baseTraits = fullyResolvedRaceTraits
-        .filter((rt) => rt.raceId === race.id)
-        .map((rt) => ({ ...rt.trait, sourceOrigin: `Race: ${race.name}` }));
-
-      const associatedSubraces = allSubraces
-        .filter((sr) => sr.parentRaceId === race.id)
-        .map((subrace) => {
-          const subTraits = fullyResolvedSubraceTraits
-            .filter((st) => st.subraceId === subrace.id)
-            .map((st) => ({
-              ...st.traits,
-              sourceOrigin: `Subrace: ${subrace.name}`, // hard metadata source track
-            }));
+    const cache = await getReferenceCache();
+    const payload = cache.races.map((race) => {
+      const baseTraits = (cache.raceTraitsByRaceId.get(race.id) ?? []).map(
+        (trait) => ({ ...trait, sourceOrigin: `Race: ${race.name}` }),
+      );
+      const associatedSubraces = (cache.subracesByRaceId.get(race.id) ?? []).map(
+        (subrace) => {
+          const subTraits = (cache.subraceTraitsBySubraceId.get(subrace.id) ?? []).map(
+            (trait) => ({
+              ...trait,
+              sourceOrigin: `Subrace: ${subrace.name}`,
+            }),
+          );
 
           return {
             ...subrace,
             traits: subTraits,
           };
-        });
+        },
+      );
 
-      return {
-        ...race,
-        traits: baseTraits,
-        subraces: associatedSubraces,
-      };
+      return { ...race, traits: baseTraits, subraces: associatedSubraces };
     });
 
     return res.status(200).json({ races: payload });
@@ -138,8 +108,8 @@ router.get("/races", async (req, res, next) => {
  */
 router.get("/classes", async (req, res, next) => {
   try {
-    const allClasses = await db.select().from(classes);
-    return res.status(200).json({ classes: allClasses });
+    const cache = await getReferenceCache();
+    return res.status(200).json({ classes: cache.classes });
   } catch (error) {
     next(error);
   }
@@ -152,11 +122,8 @@ router.get("/classes", async (req, res, next) => {
 router.get("/classes/:id/subclasses", async (req, res, next) => {
   try {
     const classId = req.params.id;
-
-    const validSubclasses = await db
-      .select()
-      .from(subclasses)
-      .where(eq(subclasses.parentClassId, classId));
+    const cache = await getReferenceCache();
+    const validSubclasses = cache.subclassesByClassId.get(classId) ?? [];
 
     return res.status(200).json({ subclasses: validSubclasses });
   } catch (error) {
@@ -176,70 +143,59 @@ router.get("/classes/:id/timeline", async (req, res, next) => {
         ? req.query.subclassId
         : undefined;
 
-    // 1. Fetch the raw scaling metadata for levels 1-20
-    const levels = await db
-      .select()
-      .from(classLevels)
-      .where(eq(classLevels.classId, classId));
-
-    // 2. Fetch all traits granted by this class across all levels
-    // We join the classProgressions junction table with the actual traits table
-    const grantedFeatures = await db
-      .select({
-        level: classProgressions.level,
-        trait: traits, // Pull the entire trait object (including flavor lore)
-      })
-      .from(classProgressions)
-      .innerJoin(traits, eq(classProgressions.traitId, traits.id))
-      .where(eq(classProgressions.classId, classId));
+    const cache = await getReferenceCache();
+    const levels = cache.classLevelsByClassId.get(classId) ?? [];
+    const levelMetaByLevel = new Map(levels.map((row) => [row.level, row]));
 
     let subclassGrantedFeatures: Array<{ level: number; trait: any }> = [];
     if (requestedSubclassId) {
-      const [validSubclass] = await db
-        .select()
-        .from(subclasses)
-        .where(
-          and(
-            eq(subclasses.id, requestedSubclassId),
-            eq(subclasses.parentClassId, classId),
-          ),
-        )
-        .limit(1);
+      const validSubclass = cache.subclassById.get(requestedSubclassId);
+      const isValidSubclass = validSubclass?.parentClassId === classId;
 
-      if (validSubclass) {
-        const subclassFeatureRows = await db
-          .select({
-            level: subclassProgressions.level,
-            trait: traits,
-          })
-          .from(subclassProgressions)
-          .innerJoin(traits, eq(subclassProgressions.traitId, traits.id))
-          .where(eq(subclassProgressions.subclassId, requestedSubclassId));
-
-        subclassGrantedFeatures = subclassFeatureRows.map((row) => ({
-          level: row.level,
-          trait: {
-            ...row.trait,
-            sourceOrigin: `Subclass: ${validSubclass.name}`,
-          },
-        }));
+      if (validSubclass && isValidSubclass) {
+        subclassGrantedFeatures = Array.from({ length: 20 }, (_, i) => i + 1)
+          .flatMap((level) =>
+            (cache.subclassTraitsBySubclassLevel.get(
+              `${requestedSubclassId}::${level}`,
+            ) ?? []
+            ).map((trait) => ({
+              level,
+              trait: {
+                ...trait,
+                sourceOrigin: `Subclass: ${validSubclass.name}`,
+              },
+            })),
+          )
+          .map((row) => ({
+            level: row.level,
+            trait: row.trait,
+          }));
       }
     }
 
-    // 3. Assemble the timeline array for the frontend
+    const classFeaturesByLevel = new Map<number, Array<(typeof traits.$inferSelect)>>(
+      Array.from({ length: 20 }, (_, i) => i + 1).map((level) => [
+        level,
+        cache.classTraitsByClassLevel.get(`${classId}::${level}`) ?? [],
+      ]),
+    );
+
+    const subclassFeaturesByLevel = new Map<number, Array<(typeof traits.$inferSelect)>>(
+      Array.from({ length: 20 }, (_, i) => i + 1).map((level) => [
+        level,
+        subclassGrantedFeatures
+          .filter((feature) => feature.level === level)
+          .map((feature) => feature.trait),
+      ]),
+    );
+
     const timeline = Array.from({ length: 20 }, (_, i) => {
       const currentLevel = i + 1;
-      const levelMeta = levels.find((l) => l.level === currentLevel);
-      const classFeaturesAtLevel = grantedFeatures
-        .filter((f) => f.level === currentLevel)
-        .map((f) => f.trait);
-      const subclassFeaturesAtLevel = subclassGrantedFeatures
-        .filter((f) => f.level === currentLevel)
-        .map((f) => f.trait);
-      const featuresAtLevel = [
-        ...classFeaturesAtLevel,
-        ...subclassFeaturesAtLevel,
-      ];
+      const levelMeta = levelMetaByLevel.get(currentLevel);
+      const classFeaturesAtLevel = classFeaturesByLevel.get(currentLevel) ?? [];
+      const subclassFeaturesAtLevel =
+        subclassFeaturesByLevel.get(currentLevel) ?? [];
+      const featuresAtLevel = [...classFeaturesAtLevel, ...subclassFeaturesAtLevel];
 
       return {
         level: currentLevel,
@@ -261,20 +217,16 @@ router.get("/classes/:id/timeline", async (req, res, next) => {
  */
 router.get("/backgrounds", async (req, res, next) => {
   try {
-    const allBackgrounds = await db.select().from(backgrounds);
+    const cache = await getReferenceCache();
 
-    const resolvedBackgroundTraits = await db
-      .select({ backgroundId: backgroundTraits.backgroundId, trait: traits })
-      .from(backgroundTraits)
-      .innerJoin(traits, eq(backgroundTraits.traitId, traits.id));
-
-    const payload = allBackgrounds.map((background) => {
-      const grantedTraits = resolvedBackgroundTraits
-        .filter((bt) => bt.backgroundId === background.id)
-        .map((bt) => ({
-          ...bt.trait,
-          sourceOrigin: `Background: ${background.name}`,
-        }));
+    const payload = cache.backgrounds.map((background) => {
+      const grantedTraits = (cache.backgroundTraitsByBackgroundId.get(
+        background.id,
+      ) ?? []
+      ).map((trait) => ({
+        ...trait,
+        sourceOrigin: `Background: ${background.name}`,
+      }));
 
       return {
         ...background,
@@ -297,8 +249,8 @@ router.get("/traits", async (req, res, next) => {
   try {
     const category =
       typeof req.query.category === "string" ? req.query.category : undefined;
-
-    const allTraits = await db.select().from(traits);
+    const cache = await getReferenceCache();
+    const allTraits = cache.traits;
 
     if (!category) {
       return res.status(200).json({ traits: allTraits });
@@ -330,18 +282,30 @@ router.get("/traits", async (req, res, next) => {
 router.get("/traits/:id", async (req, res, next) => {
   try {
     const traitId = req.params.id;
-
-    const [trait] = await db
-      .select()
-      .from(traits)
-      .where(eq(traits.id, traitId))
-      .limit(1);
+    const cache = await getReferenceCache();
+    const trait = cache.traitsById.get(traitId);
 
     if (!trait) {
       return res.status(404).json({ error: "Reference data not found" });
     }
 
     return res.status(200).json({ trait });
+  } catch (error) {
+    next(error);
+  }
+});
+
+/**
+ * GET /api/reference/version
+ * Exposes current server-side reference cache version for client invalidation strategies.
+ */
+router.get("/version", async (_req, res, next) => {
+  try {
+    const cache = await getReferenceCache();
+    return res.status(200).json({
+      version: getReferenceCacheVersion(),
+      loadedAt: cache.loadedAt,
+    });
   } catch (error) {
     next(error);
   }

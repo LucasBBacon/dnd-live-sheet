@@ -1,5 +1,5 @@
 import { db } from "@project/database";
-import { characters } from "@project/database/src/schema.js";
+import { characters } from "@project/database/src/schema/operational.js";
 import { eq } from "drizzle-orm";
 
 export const modifyCharacterHp = async (
@@ -19,44 +19,28 @@ export const modifyCharacterHp = async (
       throw new Error(`Character ${characterId} not found`);
     }
 
-    const engineData = character.engineData;
-    let { current, temporary, max } = engineData.hp;
+    const currentHp = character.currentHp ?? 0;
+    const maxHp = character.maxHp ?? currentHp;
+    let nextCurrentHp = currentHp;
 
     // 5E 2014 hp mechanics
     if (amount < 0) {
-      // take damage
-      let damage = Math.abs(amount);
-
-      // temp hp absorbs damage first
-      if (temporary > 0) {
-        const tempDamage = Math.min(temporary, damage);
-        temporary -= tempDamage;
-        damage -= tempDamage;
-      }
-
-      // remaining damage applies to current hp
-      current = Math.max(0, current - damage);
-
-      // TODO: add instant death mechanics (massive damage) checks here
+      nextCurrentHp = Math.max(0, currentHp + amount);
     } else {
-      // healing
-      // does not exceed max hp
-      current = Math.min(max, current + amount);
+      nextCurrentHp = Math.min(maxHp, currentHp + amount);
     }
 
-    // assign mutated values back to the engineData obj
-    engineData.hp = { current, temporary, max };
-
-    // commit updated state
     await tx
       .update(characters)
       .set({
-        engineData: engineData,
-        currentHp: current, // keep top-level indexed col in sync
-        updatedAt: new Date(),
+        currentHp: nextCurrentHp,
       })
       .where(eq(characters.id, characterId));
 
-    return engineData.hp;
+    return {
+      current: nextCurrentHp,
+      temporary: 0,
+      max: maxHp,
+    };
   });
 };
