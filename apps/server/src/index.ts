@@ -4,6 +4,7 @@ import cors from "cors";
 import helmet from "helmet";
 import characterRoutes from "./routes/character.js";
 import referenceRoutes from "./routes/reference.js";
+import homebrewRoutes from "./routes/homebrew.js";
 import { createAuthMiddleware } from "./middleware/requireAuth.js";
 import { MockAuthProvider } from "./core/auth/MockAuthProvider.js";
 import { globalErrorHandler } from "./middleware/errorHandler.js";
@@ -25,6 +26,7 @@ const authMiddleware = createAuthMiddleware(new MockAuthProvider());
 // route registration
 app.use("/api/character", authMiddleware, characterRoutes);
 app.use("/api/reference", referenceRoutes);
+app.use("/api/homebrew", authMiddleware, homebrewRoutes);
 
 // global error catcher (REGISTER LAST)
 app.use(globalErrorHandler);

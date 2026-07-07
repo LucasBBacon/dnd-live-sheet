@@ -59,7 +59,7 @@ export const traits = pgTable("traits", {
 
   // effects are kept as JSONB because structure is highly variable
   // it's evaluated entirely in memory during math calcs
-  effects: jsonb("effects").$type<TraitEffect>().notNull(),
+  effects: jsonb("effects").$type<TraitEffect[]>().notNull(),
 
   isStartingProficiency: boolean("is_starting_proficiency")
     .default(false)

@@ -42,6 +42,10 @@ vi.mock("../routes/reference.js", () => ({
   default: "reference_routes",
 }));
 
+vi.mock("../routes/homebrew.js", () => ({
+  default: "homebrew_routes",
+}));
+
 vi.mock("../middleware/requireAuth.js", () => ({
   createAuthMiddleware: mockCreateAuthMiddleware,
 }));
@@ -108,7 +112,13 @@ describe("server bootstrap", () => {
       "/api/reference",
       "reference_routes",
     );
-    expect(mockAppUse).toHaveBeenNthCalledWith(6, "global_error_handler");
+    expect(mockAppUse).toHaveBeenNthCalledWith(
+      6,
+      "/api/homebrew",
+      "auth_middleware",
+      "homebrew_routes",
+    );
+    expect(mockAppUse).toHaveBeenNthCalledWith(7, "global_error_handler");
 
     expect(mockListen).toHaveBeenCalledWith(3000, expect.any(Function));
   });
