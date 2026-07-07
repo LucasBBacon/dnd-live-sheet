@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { apiClient } from "../client";
+import { apiClient, buildScopedReferenceEndpoint } from "../client";
 
 describe("API Client", () => {
   const mockFetch = vi.fn();
@@ -198,6 +198,30 @@ describe("API Client", () => {
       expect(mockFetch).toHaveBeenCalledWith(
         "http://localhost:3000/api/character/reference/races",
         expect.any(Object)
+      );
+    });
+
+    it("should build scoped reference endpoint with campaign context", () => {
+      const endpoint = buildScopedReferenceEndpoint("/reference/races", {
+        campaignId: "11111111-1111-1111-1111-111111111111",
+      });
+      expect(endpoint).toBe(
+        "/reference/races?campaignId=11111111-1111-1111-1111-111111111111"
+      );
+    });
+
+    it("should build scoped reference endpoint with campaign, character and params", () => {
+      const endpoint = buildScopedReferenceEndpoint(
+        "/reference/traits",
+        {
+          campaignId: "11111111-1111-1111-1111-111111111111",
+          characterId: "22222222-2222-2222-2222-222222222222",
+        },
+        { category: "skills" }
+      );
+
+      expect(endpoint).toBe(
+        "/reference/traits?category=skills&campaignId=11111111-1111-1111-1111-111111111111&characterId=22222222-2222-2222-2222-222222222222"
       );
     });
   });

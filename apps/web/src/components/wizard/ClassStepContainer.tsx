@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { useWizardStore } from "../../store/wizardStore";
-import { apiClient } from "../../api/client";
+import { apiClient, buildScopedReferenceEndpoint } from "../../api/client";
 import { ClassSelectorGrid } from "./ClassSelectorGrid";
 import { ClassDetailView } from "./ClassDetailView";
 
@@ -10,12 +10,18 @@ export const ClassStepContainer = () => {
   const canProceedToAbilityScores = useWizardStore((state) =>
     state.canProceed(),
   );
+  const campaignId = useWizardStore((state) => state.campaignId);
   const isActiveStep = currentStep === 3;
 
   // Fetch only the lightweight base class definitions
   const { data, isLoading, isError } = useQuery({
-    queryKey: ["reference", "classes"],
-    queryFn: () => apiClient("/reference/classes"),
+    queryKey: ["reference", "classes", campaignId],
+    queryFn: () =>
+      apiClient(
+        buildScopedReferenceEndpoint("/reference/classes", {
+          campaignId,
+        }),
+      ),
     staleTime: 1000 * 60 * 30,
     enabled: isActiveStep,
   });

@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { useWizardStore } from "../../store/wizardStore";
-import { apiClient } from "../../api/client";
+import { apiClient, buildScopedReferenceEndpoint } from "../../api/client";
 import { BackgroundSelectorGrid } from "./backgrounds/BackgroundSelectorGrid";
 import { BackgroundDetailView } from "./backgrounds/BackgroundDetailView";
 
@@ -12,11 +12,17 @@ export const BackgroundStepContainer = () => {
 
   const bgType = useWizardStore((state) => state.backgroundType);
   const setBgType = useWizardStore((state) => state.setBackgroundMode);
+  const campaignId = useWizardStore((state) => state.campaignId);
 
   // We only fetch preset backgrounds. Custom backgrounds are strictly local state.
   const { data, isLoading, isError } = useQuery({
-    queryKey: ["reference", "backgrounds"],
-    queryFn: () => apiClient("/reference/backgrounds"),
+    queryKey: ["reference", "backgrounds", campaignId],
+    queryFn: () =>
+      apiClient(
+        buildScopedReferenceEndpoint("/reference/backgrounds", {
+          campaignId,
+        }),
+      ),
     staleTime: 1000 * 60 * 30,
     enabled: isActiveStep,
   });

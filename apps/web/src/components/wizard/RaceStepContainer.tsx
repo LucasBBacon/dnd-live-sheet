@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { useWizardStore } from "../../store/wizardStore";
-import { apiClient } from "../../api/client";
+import { apiClient, buildScopedReferenceEndpoint } from "../../api/client";
 import { RaceSelectorGrid } from "./RaceSelectorGrid";
 import { RaceDetailView } from "./RaceDetailView";
 
@@ -8,11 +8,17 @@ export const RaceStepContainer = () => {
   const currentStep = useWizardStore((state) => state.currentStep);
   const setStep = useWizardStore((state) => state.setStep);
   const canProceedToClassMatrix = useWizardStore((state) => state.canProceed());
+  const campaignId = useWizardStore((state) => state.campaignId);
   const isActiveStep = currentStep === 2;
 
   const { data, isLoading, isError } = useQuery({
-    queryKey: ["reference", "races"],
-    queryFn: () => apiClient("/reference/races"),
+    queryKey: ["reference", "races", campaignId],
+    queryFn: () =>
+      apiClient(
+        buildScopedReferenceEndpoint("/reference/races", {
+          campaignId,
+        }),
+      ),
     staleTime: 1000 * 60 * 30, // reference data changes rarely
     enabled: isActiveStep,
   });

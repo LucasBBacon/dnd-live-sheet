@@ -1,4 +1,6 @@
 import { useWizardStore } from "../../store/wizardStore";
+import { useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import { AbilityStepContainer } from "./AbilityStepContainer";
 import { BackgroundStepContainer } from "./BackgroundStepContainer";
 import { BasicsStepContainer } from "./BasicsStepContainer";
@@ -17,9 +19,25 @@ const WIZARD_STEPS = [
 
 export const CharacterCreationWizard = () => {
   const currentStep = useWizardStore((state) => state.currentStep);
+  const setCampaignId = useWizardStore((state) => state.setCampaignId);
+  const [searchParams] = useSearchParams();
 
   // selectively pull setStep to allow clicking previous steps in the header
   const setStep = useWizardStore((state) => state.setStep);
+
+  useEffect(() => {
+    const campaignId = searchParams.get("campaignId");
+    if (!campaignId) {
+      setCampaignId(null);
+      return;
+    }
+
+    const isUuid =
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
+        campaignId,
+      );
+    setCampaignId(isUuid ? campaignId : null);
+  }, [searchParams, setCampaignId]);
 
   return (
     <div
