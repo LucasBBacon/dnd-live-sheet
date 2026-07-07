@@ -1,16 +1,87 @@
 import { db } from "@project/database";
 import { Router, type Router as ExpressRouter } from "express";
+import { campaignMembers } from "@project/database/src/schema/operational.js";
 import {
   items,
   traits,
 } from "@project/database/src/schema/reference.js";
-import { desc, sql } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import {
-  getReferenceCache,
+  getEffectiveReferenceSnapshot,
+  searchEffectiveItems,
+} from "../services/effectiveReferenceResolver.js";
+import {
   getReferenceCacheVersion,
+  getReferenceCache,
 } from "../services/referenceCache.js";
 
 const router: ExpressRouter = Router();
+
+type ScopedContext = {
+  campaignId?: string;
+  characterId?: string;
+};
+
+const getHeaderUserId = (req: {
+  user?: { id?: string };
+  headers: Record<string, unknown>;
+}): string | undefined => {
+  if (typeof req.user?.id === "string") return req.user.id;
+  const testerHeader = req.headers["x-tester-id"];
+  return typeof testerHeader === "string" ? testerHeader : undefined;
+};
+
+const requireScopedAccessIfPresent = async (
+  req: {
+    query: Record<string, unknown>;
+    user?: { id?: string };
+    headers: Record<string, unknown>;
+  },
+  res: {
+    status: (code: number) => { json: (body: unknown) => unknown };
+  },
+): Promise<{ ok: true; scope: ScopedContext } | { ok: false }> => {
+  const campaignId =
+    typeof req.query.campaignId === "string" ? req.query.campaignId : undefined;
+  const characterId =
+    typeof req.query.characterId === "string" ? req.query.characterId : undefined;
+
+  if (!campaignId && characterId) {
+    res.status(400).json({
+      error: "characterId scoped reads require campaignId context.",
+    });
+    return { ok: false };
+  }
+
+  if (!campaignId) return { ok: true, scope: {} };
+
+  const userId = getHeaderUserId(req);
+  if (!userId) {
+    res.status(401).json({ error: "campaignId scoped reads require auth." });
+    return { ok: false };
+  }
+
+  const [membership] = await db
+    .select({ userId: campaignMembers.userId })
+    .from(campaignMembers)
+    .where(
+      and(
+        eq(campaignMembers.campaignId, campaignId),
+        eq(campaignMembers.userId, userId),
+      ),
+    )
+    .limit(1);
+
+  if (!membership) {
+    res.status(403).json({ error: "Forbidden campaign access." });
+    return { ok: false };
+  }
+
+  return {
+    ok: true,
+    scope: characterId ? { campaignId, characterId } : { campaignId },
+  };
+};
 
 type TraitEffectLike = {
   type?: string;
@@ -72,7 +143,9 @@ const matchesTraitCategory = (
  */
 router.get("/races", async (req, res, next) => {
   try {
-    const cache = await getReferenceCache();
+    const scoped = await requireScopedAccessIfPresent(req, res);
+    if (!scoped.ok) return;
+    const cache = await getEffectiveReferenceSnapshot(scoped.scope);
     const payload = cache.races.map((race) => {
       const baseTraits = (cache.raceTraitsByRaceId.get(race.id) ?? []).map(
         (trait) => ({ ...trait, sourceOrigin: `Race: ${race.name}` }),
@@ -108,7 +181,9 @@ router.get("/races", async (req, res, next) => {
  */
 router.get("/classes", async (req, res, next) => {
   try {
-    const cache = await getReferenceCache();
+    const scoped = await requireScopedAccessIfPresent(req, res);
+    if (!scoped.ok) return;
+    const cache = await getEffectiveReferenceSnapshot(scoped.scope);
     return res.status(200).json({ classes: cache.classes });
   } catch (error) {
     next(error);
@@ -122,7 +197,9 @@ router.get("/classes", async (req, res, next) => {
 router.get("/classes/:id/subclasses", async (req, res, next) => {
   try {
     const classId = req.params.id;
-    const cache = await getReferenceCache();
+    const scoped = await requireScopedAccessIfPresent(req, res);
+    if (!scoped.ok) return;
+    const cache = await getEffectiveReferenceSnapshot(scoped.scope);
     const validSubclasses = cache.subclassesByClassId.get(classId) ?? [];
 
     return res.status(200).json({ subclasses: validSubclasses });
@@ -137,13 +214,15 @@ router.get("/classes/:id/subclasses", async (req, res, next) => {
  */
 router.get("/classes/:id/timeline", async (req, res, next) => {
   try {
+    const scoped = await requireScopedAccessIfPresent(req, res);
+    if (!scoped.ok) return;
     const classId = req.params.id;
     const requestedSubclassId =
       typeof req.query.subclassId === "string"
         ? req.query.subclassId
         : undefined;
 
-    const cache = await getReferenceCache();
+    const cache = await getEffectiveReferenceSnapshot(scoped.scope);
     const levels = cache.classLevelsByClassId.get(classId) ?? [];
     const levelMetaByLevel = new Map(levels.map((row) => [row.level, row]));
 
@@ -217,7 +296,9 @@ router.get("/classes/:id/timeline", async (req, res, next) => {
  */
 router.get("/backgrounds", async (req, res, next) => {
   try {
-    const cache = await getReferenceCache();
+    const scoped = await requireScopedAccessIfPresent(req, res);
+    if (!scoped.ok) return;
+    const cache = await getEffectiveReferenceSnapshot(scoped.scope);
 
     const payload = cache.backgrounds.map((background) => {
       const grantedTraits = (cache.backgroundTraitsByBackgroundId.get(
@@ -247,9 +328,11 @@ router.get("/backgrounds", async (req, res, next) => {
  */
 router.get("/traits", async (req, res, next) => {
   try {
+    const scoped = await requireScopedAccessIfPresent(req, res);
+    if (!scoped.ok) return;
     const category =
       typeof req.query.category === "string" ? req.query.category : undefined;
-    const cache = await getReferenceCache();
+    const cache = await getEffectiveReferenceSnapshot(scoped.scope);
     const allTraits = cache.traits;
 
     if (!category) {
@@ -281,8 +364,10 @@ router.get("/traits", async (req, res, next) => {
  */
 router.get("/traits/:id", async (req, res, next) => {
   try {
+    const scoped = await requireScopedAccessIfPresent(req, res);
+    if (!scoped.ok) return;
     const traitId = req.params.id;
-    const cache = await getReferenceCache();
+    const cache = await getEffectiveReferenceSnapshot(scoped.scope);
     const trait = cache.traitsById.get(traitId);
 
     if (!trait) {
@@ -320,6 +405,8 @@ router.get("/version", async (_req, res, next) => {
  */
 router.get("/items", async (req, res, next) => {
   try {
+    const scoped = await requireScopedAccessIfPresent(req, res);
+    if (!scoped.ok) return;
     const searchString =
       typeof req.query.q === "string" ? req.query.q.trim() : "";
 
@@ -327,34 +414,17 @@ router.get("/items", async (req, res, next) => {
     const limit = Math.min(parseInt(req.query.limit as string, 10) || 50, 100);
     const offset = parseInt(req.query.offset as string, 10) || 0;
 
-    // base query definition
-    let query = db.select().from(items);
-
-    if (searchString) {
-      // leverage GIN index for ranked full-text search matching
-      // if the query contains spaces, plainto_tsquery converts it to an AND seq
-      query.where(
-        sql`to_tsvector('english', ${items.name} || ' ' || ${items.description}) @@ plainto_tsquery('english', ${searchString})`,
-      );
-
-      // optionally order by match relevance rank
-      query.orderBy(
-        desc(
-          sql`ts_rank(to_tsvector('english', ${items.name} || ' ' || ${items.description}), plainto_tsquery('english', ${searchString}))`,
-        ),
-      );
-    } else {
-      // fallback to alphabetical sorting when no query present
-      query.orderBy(items.name);
-    }
-
-    // apply strict chunking windows
-    const results = await query.limit(limit).offset(offset);
+    const { rows: results, total } = await searchEffectiveItems({
+      scope: scoped.scope,
+      query: searchString,
+      limit,
+      offset,
+    });
 
     return res.status(200).json({
       items: results,
       meta: {
-        count: results.length,
+        count: total,
         limit,
         offset,
       },

@@ -78,13 +78,35 @@ const buildReferenceCache = async (): Promise<ReferenceCacheSnapshot> => {
     classTraitLinks,
     subclassTraitLinks,
   ] = await Promise.all([
-    db.select().from(races),
-    db.select().from(subraces),
-    db.select().from(classes),
-    db.select().from(subclasses),
+    db
+      .select()
+      .from(races)
+      .where(and(eq(races.sourceType, "core"), eq(races.isPublished, true))),
+    db
+      .select()
+      .from(subraces)
+      .where(and(eq(subraces.sourceType, "core"), eq(subraces.isPublished, true))),
+    db
+      .select()
+      .from(classes)
+      .where(and(eq(classes.sourceType, "core"), eq(classes.isPublished, true))),
+    db
+      .select()
+      .from(subclasses)
+      .where(
+        and(eq(subclasses.sourceType, "core"), eq(subclasses.isPublished, true)),
+      ),
     db.select().from(classLevels),
-    db.select().from(backgrounds),
-    db.select().from(traits),
+    db
+      .select()
+      .from(backgrounds)
+      .where(
+        and(eq(backgrounds.sourceType, "core"), eq(backgrounds.isPublished, true)),
+      ),
+    db
+      .select()
+      .from(traits)
+      .where(and(eq(traits.sourceType, "core"), eq(traits.isPublished, true))),
     db
       .select({ raceId: raceTraits.raceId, trait: traits })
       .from(raceTraits)
@@ -104,7 +126,20 @@ const buildReferenceCache = async (): Promise<ReferenceCacheSnapshot> => {
         trait: traits,
       })
       .from(classProgressions)
-      .innerJoin(traits, eq(classProgressions.traitId, traits.id)),
+      .innerJoin(
+        traits,
+        and(
+          eq(classProgressions.traitId, traits.id),
+          eq(traits.sourceType, "core"),
+          eq(traits.isPublished, true),
+        ),
+      )
+      .where(
+        and(
+          eq(classProgressions.sourceType, "core"),
+          eq(classProgressions.isPublished, true),
+        ),
+      ),
     db
       .select({
         subclassId: subclassProgressions.subclassId,
@@ -112,7 +147,20 @@ const buildReferenceCache = async (): Promise<ReferenceCacheSnapshot> => {
         trait: traits,
       })
       .from(subclassProgressions)
-      .innerJoin(traits, eq(subclassProgressions.traitId, traits.id)),
+      .innerJoin(
+        traits,
+        and(
+          eq(subclassProgressions.traitId, traits.id),
+          eq(traits.sourceType, "core"),
+          eq(traits.isPublished, true),
+        ),
+      )
+      .where(
+        and(
+          eq(subclassProgressions.sourceType, "core"),
+          eq(subclassProgressions.isPublished, true),
+        ),
+      ),
   ]);
 
   const nextVersion = ++cacheVersion;
@@ -250,4 +298,3 @@ export const getClassGrantedTraitIdsAtLevel = async (
 
   return rows.map((row) => row.traitId);
 };
-
