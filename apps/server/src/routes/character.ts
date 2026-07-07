@@ -2,18 +2,69 @@
 import { Router, type Router as ExpressRouter } from "express";
 import { db } from "@project/database";
 import {
+  campaignMembers,
+  campaigns,
   characterClasses,
   characterCustomTraits,
   characters,
 } from "@project/database/src/schema/operational.js";
 import { CreateCharacterPayloadSchema } from "@project/shared";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { v4 as uuidv4 } from "uuid";
 import { processStartingEquipment } from "../utils/inventory.js";
 
 const router: ExpressRouter = Router();
+type CampaignWriteDb = Pick<typeof db, "select" | "insert">;
 
-const fetchCharacterPayload = async (characterId: string) => {
+const isUserCampaignMember = async (
+  userId: string,
+  campaignId: string,
+): Promise<boolean> => {
+  const [membership] = await db
+    .select()
+    .from(campaignMembers)
+    .where(
+      and(
+        eq(campaignMembers.userId, userId),
+        eq(campaignMembers.campaignId, campaignId),
+      ),
+    )
+    .limit(1);
+
+  return !!membership;
+};
+
+const resolveDefaultCampaignForUser = async (
+  tx: CampaignWriteDb,
+  userId: string,
+): Promise<string> => {
+  const [existingMembership] = await tx
+    .select()
+    .from(campaignMembers)
+    .where(eq(campaignMembers.userId, userId))
+    .limit(1);
+
+  if (existingMembership) {
+    return existingMembership.campaignId;
+  }
+
+  const campaignId = uuidv4();
+  await tx.insert(campaigns).values({
+    id: campaignId,
+    name: `${userId}'s Campaign`,
+    createdByUserId: userId,
+  });
+
+  await tx.insert(campaignMembers).values({
+    campaignId,
+    userId,
+    role: "owner",
+  });
+
+  return campaignId;
+};
+
+const fetchCharacterPayload = async (userId: string, characterId: string) => {
   const [character] = await db
     .select()
     .from(characters)
@@ -21,6 +72,8 @@ const fetchCharacterPayload = async (characterId: string) => {
     .limit(1);
 
   if (!character) return null;
+  const canAccess = await isUserCampaignMember(userId, character.campaignId);
+  if (!canAccess) return null;
 
   const classLedger = await db
     .select()
@@ -43,6 +96,18 @@ router.post("/", async (req, res, next) => {
   try {
     // strict boundary validation
     const payload = CreateCharacterPayloadSchema.parse(req.body);
+    const userId = req.user?.id;
+
+    if (!userId) {
+      return res.status(401).json({ error: "Unauthorized request" });
+    }
+
+    if (
+      payload.campaignId &&
+      !(await isUserCampaignMember(userId, payload.campaignId))
+    ) {
+      return res.status(403).json({ error: "Forbidden campaign access." });
+    }
 
     // generate the UUID for the new character
     const newCharacterId = uuidv4();
@@ -53,9 +118,14 @@ router.post("/", async (req, res, next) => {
         throw new Error("subraceId is required for character creation");
       }
 
+      const campaignId = payload.campaignId
+        ? payload.campaignId
+        : await resolveDefaultCampaignForUser(tx, userId);
+
       // insert the base character record
       await tx.insert(characters).values({
         id: newCharacterId,
+        campaignId,
         name: payload.name,
         level: 1,
         raceId: payload.raceId,
@@ -145,18 +215,22 @@ router.post("/", async (req, res, next) => {
  */
 router.get("/", async (req, res, next) => {
   try {
+    const userId = req.user?.id;
+    if (!userId) {
+      return res.status(401).json({ error: "Unauthorized request" });
+    }
+
     const requestedCharacterId =
       typeof req.query.characterId === "string" ? req.query.characterId : undefined;
-    const fallbackCharacterId = req.user?.id;
-    const characterId = requestedCharacterId ?? fallbackCharacterId;
+    const characterId = requestedCharacterId;
 
     if (!characterId) {
       return res.status(400).json({
-        error: "characterId is required (query parameter or authenticated context).",
+        error: "characterId query parameter is required.",
       });
     }
 
-    const payload = await fetchCharacterPayload(characterId);
+    const payload = await fetchCharacterPayload(userId, characterId);
     if (!payload) {
       return res.status(404).json({ error: "No active character found." });
     }
@@ -173,7 +247,12 @@ router.get("/", async (req, res, next) => {
  */
 router.get("/:characterId", async (req, res, next) => {
   try {
-    const payload = await fetchCharacterPayload(req.params.characterId);
+    const userId = req.user?.id;
+    if (!userId) {
+      return res.status(401).json({ error: "Unauthorized request" });
+    }
+
+    const payload = await fetchCharacterPayload(userId, req.params.characterId);
     if (!payload) {
       return res.status(404).json({ error: "No active character found." });
     }

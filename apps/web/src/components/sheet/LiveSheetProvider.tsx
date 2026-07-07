@@ -5,9 +5,13 @@ import { socketService } from "../../services/socketService";
 
 export const LiveSheetProvider = ({
   campaignId,
+  userId,
+  characterId,
   children,
 }: {
   campaignId: string;
+  userId: string;
+  characterId: string;
   children: React.ReactNode;
 }) => {
   const syncRemoteHealthDelta = useCharacterSheetStore(
@@ -22,7 +26,7 @@ export const LiveSheetProvider = ({
 
   useEffect(() => {
     // 1 - establish connection and join room
-    socketService.connect(campaignId);
+    socketService.connect(campaignId, userId, characterId);
 
     // 2. Bind remote events to zustand state mutations
     socketService.subscribeToHpUpdates((broadcast) => {
@@ -44,6 +48,8 @@ export const LiveSheetProvider = ({
     };
   }, [
     campaignId,
+    userId,
+    characterId,
     syncRemoteHealthDelta,
     syncRemoteEquipment,
     syncRemoteConsumption,

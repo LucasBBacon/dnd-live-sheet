@@ -16,13 +16,14 @@ interface HydratedCharacter {
   flavorData: z.infer<typeof CharacterFlavorSchema>;
 }
 
-export const useCharacterSheet = () => {
+export const useCharacterSheet = (characterId: string) => {
   return useQuery({
-    queryKey: ["character"],
+    queryKey: ["character", characterId],
     queryFn: async (): Promise<HydratedCharacter> => {
-      const data = await apiClient("/character");
+      const data = await apiClient(`/character/${characterId}`);
       return data.character;
     },
+    enabled: !!characterId,
     // prevent aggressive refetching while testing locally
     staleTime: 1000 * 60 * 5,
   });

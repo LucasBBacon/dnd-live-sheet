@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import {
   EQUIPMENT_SLOTS,
+  campaignMembers,
+  campaigns,
   characterClasses,
   characterCustomTraits,
   characterInventory,
@@ -12,6 +14,7 @@ describe("operational schema", () => {
     expect(Object.keys(characters)).toEqual(
       expect.arrayContaining([
         "id",
+        "campaignId",
         "name",
         "raceId",
         "subraceId",
@@ -22,11 +25,22 @@ describe("operational schema", () => {
     );
 
     expect(characters.id.primary).toBe(true);
+    expect(characters.campaignId.notNull).toBe(true);
     expect(characters.name.notNull).toBe(true);
     expect(characters.raceId.notNull).toBe(true);
     expect(characters.subraceId.notNull).toBe(true);
     expect(characters.customBackgroundData.dataType).toBe("json");
     expect(characters.temporaryInventory.dataType).toBe("json");
+  });
+
+  it("defines campaign and membership tables", () => {
+    expect(campaigns.id.primary).toBe(true);
+    expect(campaigns.name.notNull).toBe(true);
+    expect(campaigns.createdByUserId.notNull).toBe(true);
+
+    expect(campaignMembers.campaignId.notNull).toBe(true);
+    expect(campaignMembers.userId.notNull).toBe(true);
+    expect(campaignMembers.role.notNull).toBe(true);
   });
 
   it("defines class progression and custom traits tables", () => {

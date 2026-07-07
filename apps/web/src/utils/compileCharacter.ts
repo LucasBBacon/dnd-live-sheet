@@ -10,6 +10,7 @@ export const compileCharacterPayload = (
   ).flat();
 
   return {
+    campaignId: state.campaignId ?? undefined,
     name: state.characterName.trim(),
     raceId: state.raceId!,
     subraceId: state.subraceId,

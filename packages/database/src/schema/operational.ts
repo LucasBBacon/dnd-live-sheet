@@ -6,6 +6,7 @@ import {
   pgTable,
   primaryKey,
   text,
+  timestamp,
   uuid,
   varchar,
 } from "drizzle-orm/pg-core";
@@ -21,8 +22,39 @@ import {
 
 // #region CORE CHARACTER ENTITY
 
+export const campaignRoleEnum = pgEnum("campaign_role", [
+  "owner",
+  "dm",
+  "player",
+]);
+
+export const campaigns = pgTable("campaigns", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  name: varchar("name", { length: 255 }).notNull(),
+  createdByUserId: varchar("created_by_user_id", { length: 255 }).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const campaignMembers = pgTable(
+  "campaign_members",
+  {
+    campaignId: uuid("campaign_id")
+      .references(() => campaigns.id, { onDelete: "cascade" })
+      .notNull(),
+    userId: varchar("user_id", { length: 255 }).notNull(),
+    role: campaignRoleEnum("role").notNull().default("player"),
+    joinedAt: timestamp("joined_at").defaultNow().notNull(),
+  },
+  (table) => ({
+    pk: primaryKey({ columns: [table.campaignId, table.userId] }),
+  }),
+);
+
 export const characters = pgTable("character", {
   id: uuid("id").primaryKey().defaultRandom(),
+  campaignId: uuid("campaign_id")
+    .references(() => campaigns.id, { onDelete: "cascade" })
+    .notNull(),
   name: varchar("name", { length: 255 }).notNull(),
   level: integer("level").notNull(),
 

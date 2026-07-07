@@ -39,17 +39,18 @@ describe("api query hooks", () => {
       character: { id: "char_1", totalLevel: 2, currentHp: 17 },
     });
 
-    useCharacterSheet();
+    useCharacterSheet("char_1");
     const queryOptions = mockUseQuery.mock.calls[0][0] as QueryHookOptions;
     const data = await queryOptions.queryFn();
 
     expect(mockUseQuery).toHaveBeenCalledWith(
       expect.objectContaining({
-        queryKey: ["character"],
+        queryKey: ["character", "char_1"],
+        enabled: true,
         staleTime: 1000 * 60 * 5,
       }),
     );
-    expect(mockApiClient).toHaveBeenCalledWith("/character");
+    expect(mockApiClient).toHaveBeenCalledWith("/character/char_1");
     expect(data).toEqual({ id: "char_1", totalLevel: 2, currentHp: 17 });
   });
 

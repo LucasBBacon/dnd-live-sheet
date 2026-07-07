@@ -1,7 +1,7 @@
 import { useParams } from "react-router-dom";
 import { useCharacterSheetStore } from "../store/characterSheetStore";
 import { useQuery } from "@tanstack/react-query";
-import { apiClient } from "../api/client";
+import { apiClient, MOCK_USER_ID } from "../api/client";
 import { useEffect } from "react";
 import { LiveSheetProvider } from "../components/sheet/LiveSheetProvider";
 import { DashboardLayout } from "../components/sheet/DashboardLayout";
@@ -44,8 +44,12 @@ export const LiveSheetRoute = () => {
   if (isError || !data) return <div>Failed to load character matrix.</div>;
 
   return (
-    // LiveSheetProvider handles the socket.io connection using the characterId as the room
-    <LiveSheetProvider campaignId={characterId!}>
+    // LiveSheetProvider joins a campaign room tied to the loaded character.
+    <LiveSheetProvider
+      campaignId={data.character.campaignId}
+      userId={MOCK_USER_ID}
+      characterId={data.character.id}
+    >
       <DashboardLayout />
     </LiveSheetProvider>
   );

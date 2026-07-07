@@ -1,7 +1,7 @@
 // Centralized fetch wrapper to ensure mock auth header is always present
 
 const BASE_URL = "http://localhost:3000/api";
-const MOCK_USER_ID = "dev-user-1";
+export const MOCK_USER_ID = "dev-user-1";
 
 export const apiClient = async (
   endpoint: string,
