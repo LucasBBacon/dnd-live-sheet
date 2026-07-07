@@ -6,13 +6,45 @@ import { sql } from "drizzle-orm";
 import { index } from "drizzle-orm/gel-core";
 import {
   boolean,
+  check,
   integer,
   jsonb,
+  pgEnum,
   pgTable,
   primaryKey,
   text,
+  uuid,
   varchar,
 } from "drizzle-orm/pg-core";
+
+export const referenceSourceTypeEnum = pgEnum("reference_source_type", [
+  "core",
+  "homebrew",
+]);
+
+const buildReferenceScopeChecks = (
+  tableName: string,
+  table: {
+    sourceType: unknown;
+    ownerCampaignId: unknown;
+    ownerCharacterId: unknown;
+    createdByUserId: unknown;
+    isPublished: unknown;
+  },
+) => ({
+  [`${tableName}_core_scope_check`]: check(
+    `${tableName}_core_scope_check`,
+    sql`(
+      (${table.sourceType} = 'core' AND ${table.ownerCampaignId} IS NULL AND ${table.ownerCharacterId} IS NULL AND ${table.createdByUserId} IS NULL AND ${table.isPublished} = true)
+      OR
+      (${table.sourceType} = 'homebrew' AND ${table.createdByUserId} IS NOT NULL AND ${table.ownerCampaignId} IS NOT NULL)
+    )`,
+  ),
+  [`${tableName}_character_scope_check`]: check(
+    `${tableName}_character_scope_check`,
+    sql`${table.ownerCharacterId} IS NULL OR ${table.ownerCampaignId} IS NOT NULL`,
+  ),
+});
 
 // --------------------------------------------------------------
 // CORE REFERENCE ENTITIES
@@ -32,7 +64,15 @@ export const traits = pgTable("traits", {
   isStartingProficiency: boolean("is_starting_proficiency")
     .default(false)
     .notNull(),
-});
+  sourceType: referenceSourceTypeEnum("source_type").default("core").notNull(),
+  ownerCampaignId: uuid("owner_campaign_id"),
+  ownerCharacterId: uuid("owner_character_id"),
+  createdByUserId: varchar("created_by_user_id", { length: 255 }),
+  isPublished: boolean("is_published").default(true).notNull(),
+  supersedesId: varchar("supersedes_id", { length: 100 }),
+}, (table) => ({
+  ...buildReferenceScopeChecks("traits", table),
+}));
 
 export const feats = pgTable("feats", {
   id: varchar("id", { length: 100 }).primaryKey(),
@@ -47,7 +87,15 @@ export const feats = pgTable("feats", {
 
   // complex logical prerequisites remain jsonb they're evaluated in the ui wizard
   prerequisites: jsonb("prerequisites").$type<FeatPrerequisites>(),
-});
+  sourceType: referenceSourceTypeEnum("source_type").default("core").notNull(),
+  ownerCampaignId: uuid("owner_campaign_id"),
+  ownerCharacterId: uuid("owner_character_id"),
+  createdByUserId: varchar("created_by_user_id", { length: 255 }),
+  isPublished: boolean("is_published").default(true).notNull(),
+  supersedesId: varchar("supersedes_id", { length: 100 }),
+}, (table) => ({
+  ...buildReferenceScopeChecks("feats", table),
+}));
 
 // --------------------------------------------------------------
 // RELATIONAL JUNCTION TABLES
@@ -99,7 +147,15 @@ export const races = pgTable("races", {
   lore: jsonb("lore")
     .$type<{ shortDescription: string; fullText?: string }>()
     .notNull(),
-});
+  sourceType: referenceSourceTypeEnum("source_type").default("core").notNull(),
+  ownerCampaignId: uuid("owner_campaign_id"),
+  ownerCharacterId: uuid("owner_character_id"),
+  createdByUserId: varchar("created_by_user_id", { length: 255 }),
+  isPublished: boolean("is_published").default(true).notNull(),
+  supersedesId: varchar("supersedes_id", { length: 100 }),
+}, (table) => ({
+  ...buildReferenceScopeChecks("races", table),
+}));
 
 export const subraces = pgTable("subraces", {
   id: varchar("id", { length: 100 }).primaryKey(), //e.g., 'subrace_dwarf_hill'
@@ -110,7 +166,15 @@ export const subraces = pgTable("subraces", {
   lore: jsonb("lore")
     .$type<{ shortDescription: string; fullText?: string }>()
     .notNull(),
-});
+  sourceType: referenceSourceTypeEnum("source_type").default("core").notNull(),
+  ownerCampaignId: uuid("owner_campaign_id"),
+  ownerCharacterId: uuid("owner_character_id"),
+  createdByUserId: varchar("created_by_user_id", { length: 255 }),
+  isPublished: boolean("is_published").default(true).notNull(),
+  supersedesId: varchar("supersedes_id", { length: 100 }),
+}, (table) => ({
+  ...buildReferenceScopeChecks("subraces", table),
+}));
 
 export const raceTraits = pgTable(
   "race_traits",
@@ -158,7 +222,15 @@ export const classes = pgTable("classes", {
 
   // starting equipment/wealth options can be stored as jsonb as they're only used once
   startingEquipment: jsonb("starting_equipment").notNull(),
-});
+  sourceType: referenceSourceTypeEnum("source_type").default("core").notNull(),
+  ownerCampaignId: uuid("owner_campaign_id"),
+  ownerCharacterId: uuid("owner_character_id"),
+  createdByUserId: varchar("created_by_user_id", { length: 255 }),
+  isPublished: boolean("is_published").default(true).notNull(),
+  supersedesId: varchar("supersedes_id", { length: 100 }),
+}, (table) => ({
+  ...buildReferenceScopeChecks("classes", table),
+}));
 
 export const subclasses = pgTable("subclasses", {
   id: varchar("id", { length: 100 }).primaryKey(),
@@ -169,7 +241,15 @@ export const subclasses = pgTable("subclasses", {
   lore: jsonb("lore")
     .$type<{ shortDescription: string; fullText?: string }>()
     .notNull(),
-});
+  sourceType: referenceSourceTypeEnum("source_type").default("core").notNull(),
+  ownerCampaignId: uuid("owner_campaign_id"),
+  ownerCharacterId: uuid("owner_character_id"),
+  createdByUserId: varchar("created_by_user_id", { length: 255 }),
+  isPublished: boolean("is_published").default(true).notNull(),
+  supersedesId: varchar("supersedes_id", { length: 100 }),
+}, (table) => ({
+  ...buildReferenceScopeChecks("subclasses", table),
+}));
 
 export const classMulticlassTraits = pgTable(
   "class_multiclass_traits",
@@ -226,9 +306,15 @@ export const classProgressions = pgTable(
     traitId: varchar("trait_id", { length: 100 })
       .references(() => traits.id)
       .notNull(),
+    sourceType: referenceSourceTypeEnum("source_type").default("core").notNull(),
+    ownerCampaignId: uuid("owner_campaign_id"),
+    ownerCharacterId: uuid("owner_character_id"),
+    createdByUserId: varchar("created_by_user_id", { length: 255 }),
+    isPublished: boolean("is_published").default(true).notNull(),
   },
   (table) => ({
     pk: primaryKey({ columns: [table.classId, table.level, table.traitId] }),
+    ...buildReferenceScopeChecks("class_progressions", table),
   }),
 );
 
@@ -242,9 +328,15 @@ export const subclassProgressions = pgTable(
     traitId: varchar("trait_id", { length: 100 })
       .references(() => traits.id)
       .notNull(),
+    sourceType: referenceSourceTypeEnum("source_type").default("core").notNull(),
+    ownerCampaignId: uuid("owner_campaign_id"),
+    ownerCharacterId: uuid("owner_character_id"),
+    createdByUserId: varchar("created_by_user_id", { length: 255 }),
+    isPublished: boolean("is_published").default(true).notNull(),
   },
   (table) => ({
     pk: primaryKey({ columns: [table.subclassId, table.level, table.traitId] }),
+    ...buildReferenceScopeChecks("subclass_progressions", table),
   }),
 );
 
@@ -272,7 +364,15 @@ export const backgrounds = pgTable("backgrounds", {
   lore: jsonb("lore")
     .$type<{ shortDescription: string; fullText?: string }>()
     .notNull(),
-});
+  sourceType: referenceSourceTypeEnum("source_type").default("core").notNull(),
+  ownerCampaignId: uuid("owner_campaign_id"),
+  ownerCharacterId: uuid("owner_character_id"),
+  createdByUserId: varchar("created_by_user_id", { length: 255 }),
+  isPublished: boolean("is_published").default(true).notNull(),
+  supersedesId: varchar("supersedes_id", { length: 100 }),
+}, (table) => ({
+  ...buildReferenceScopeChecks("backgrounds", table),
+}));
 
 // Junction table linking the background to the universal traits table
 export const backgroundTraits = pgTable(
@@ -308,6 +408,12 @@ export const items = pgTable(
 
     // flag to tell API that this item contains other items
     isBundle: boolean("is_bundle").default(false).notNull(),
+    sourceType: referenceSourceTypeEnum("source_type").default("core").notNull(),
+    ownerCampaignId: uuid("owner_campaign_id"),
+    ownerCharacterId: uuid("owner_character_id"),
+    createdByUserId: varchar("created_by_user_id", { length: 255 }),
+    isPublished: boolean("is_published").default(true).notNull(),
+    supersedesId: varchar("supersedes_id", { length: 100 }),
   },
   (table) => ({
     // GIN index for high-performance ILIKE text search across compendium
@@ -315,6 +421,7 @@ export const items = pgTable(
       "gin",
       sql`to_tsvector('english', ${table.name} || ' ' || ${table.description})`,
     ),
+    ...buildReferenceScopeChecks("items", table),
   }),
 );
 
