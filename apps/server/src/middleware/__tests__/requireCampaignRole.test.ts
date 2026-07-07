@@ -1,10 +1,13 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { Request, Response } from "express";
+import { createCampaignRoleGuard } from "../requireCampaignRole";
 
-const selectMock = vi.fn();
-const fromMock = vi.fn();
-const whereMock = vi.fn();
-const limitMock = vi.fn();
+const { selectMock, fromMock, whereMock, limitMock } = vi.hoisted(() => ({
+  selectMock: vi.fn(),
+  fromMock: vi.fn(),
+  whereMock: vi.fn(),
+  limitMock: vi.fn(),
+}));
 
 vi.mock("@project/database", () => ({
   db: {
@@ -27,7 +30,6 @@ describe("createCampaignRoleGuard", () => {
     }) as unknown as Response;
 
   it("returns 401 when request user is missing", async () => {
-    const { createCampaignRoleGuard } = await import("../requireCampaignRole.js");
     const guard = createCampaignRoleGuard({
       resolveCampaignId: () => "7a0c5bb8-0dc5-4c39-a58f-8f7baae6f27f",
     });
@@ -44,7 +46,6 @@ describe("createCampaignRoleGuard", () => {
 
   it("returns 403 when user is not a campaign member", async () => {
     limitMock.mockResolvedValue([]);
-    const { createCampaignRoleGuard } = await import("../requireCampaignRole.js");
     const guard = createCampaignRoleGuard({
       resolveCampaignId: () => "7a0c5bb8-0dc5-4c39-a58f-8f7baae6f27f",
     });
@@ -61,7 +62,6 @@ describe("createCampaignRoleGuard", () => {
 
   it("returns 403 when role is not allowed", async () => {
     limitMock.mockResolvedValue([{ role: "player" }]);
-    const { createCampaignRoleGuard } = await import("../requireCampaignRole.js");
     const guard = createCampaignRoleGuard({
       resolveCampaignId: () => "7a0c5bb8-0dc5-4c39-a58f-8f7baae6f27f",
       allowedRoles: ["owner", "dm"],
@@ -79,7 +79,6 @@ describe("createCampaignRoleGuard", () => {
 
   it("calls next when membership role is allowed", async () => {
     limitMock.mockResolvedValue([{ role: "dm" }]);
-    const { createCampaignRoleGuard } = await import("../requireCampaignRole.js");
     const guard = createCampaignRoleGuard({
       resolveCampaignId: () => "7a0c5bb8-0dc5-4c39-a58f-8f7baae6f27f",
     });
