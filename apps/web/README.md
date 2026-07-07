@@ -1,73 +1,78 @@
-# React + TypeScript + Vite
+# Web client (`@project/web`)
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+This package contains the React/Vite front-end for:
 
-Currently, two official plugins are available:
+- Character creation wizard
+- Live sheet view
+- Socket-powered runtime interactions
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## Responsibilities
 
-## React Compiler
+The web client is responsible for:
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+1. Collecting and validating user input before API submission.
+2. Fetching scoped reference data (`campaignId`/`characterId` aware).
+3. Rendering live character state from server-managed data.
+4. Emitting runtime socket events using campaign-scoped room identity.
 
-## Expanding the ESLint configuration
+It is **not** the source of truth for reference or operational state.
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+## Core modules
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+- `src/components/wizard/*` - multi-step character creation flow
+- `src/components/sheet/*` - live sheet UI
+- `src/services/socketService.ts` - socket connection and event plumbing
+- `src/api/client.ts` - fetch wrapper and scoped endpoint builder
+- `src/store/wizardStore.ts` - wizard local state
+- `src/store/characterSheetStore.ts` - live sheet interaction state
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+## Scoped reference access
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+The wizard now uses `buildScopedReferenceEndpoint(...)` from `src/api/client.ts`.
+
+This ensures:
+
+- campaign context is propagated to reference calls when present;
+- query keys include campaign context to prevent stale cross-campaign data reuse;
+- optional character scope can be added consistently.
+
+Example:
+
+```ts
+buildScopedReferenceEndpoint("/reference/traits", { campaignId }, { category: "skills" });
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## Wizard campaign context
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+`CharacterCreationWizard` reads an optional `campaignId` from URL search params:
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+- `/` -> core-only wizard context
+- `/?campaignId=<uuid>` -> campaign-scoped wizard context
+
+Invalid campaign IDs are ignored and treated as core-only.
+
+## Running locally
+
+From repository root:
+
+```bash
+pnpm --filter @project/web dev
 ```
+
+Default URL: `http://localhost:5173`
+
+Ensure server API is running and accessible at `http://localhost:3000/api`.
+
+## Testing and build
+
+```bash
+pnpm --filter @project/web test
+pnpm --filter @project/web build
+```
+
+## Implementation notes for maintainers
+
+1. Keep API interactions in `apiClient` and helper builders. Avoid ad-hoc `fetch` calls.
+2. Include scope dimensions in React Query keys whenever a response can vary by campaign/character.
+3. Avoid introducing local reference dictionaries; reference data should always come from API-backed resolution.
+4. Keep wizard state serialisable and explicit; all server-side identifiers should be tracked as primitives.
