@@ -8,6 +8,11 @@ export const SOCKET_EVENTS = {
   REST_COMPLETED: "character:rest_completed",
 } as const;
 
+export interface RoomJoinPayload {
+  campaignId: string;
+  characterId?: string;
+}
+
 export interface HpModifiedPayload {
   characterId: string;
   delta: number; // e.g., -5 dmg, +8 healing

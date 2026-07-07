@@ -15,6 +15,7 @@ export interface WizardState {
   targetLevel: number;
 
   // draft data
+  campaignId: string | null;
   characterName: string;
   raceId: string | null;
   subraceId: string | null;
@@ -51,6 +52,7 @@ export interface WizardState {
 
   // actions
   setStep: (step: number) => void;
+  setCampaignId: (campaignId: string | null) => void;
   setName: (name: string) => void;
   setRace: (raceId: string, requiresSubrace: boolean) => void;
   setSubrace: (subraceId: string) => void;
@@ -86,6 +88,7 @@ export const useWizardStore = create<WizardState>((set, get) => ({
   currentStep: 1,
   targetLevel: 1,
 
+  campaignId: null,
   characterName: "",
   raceId: null,
   subraceId: null,
@@ -118,6 +121,7 @@ export const useWizardStore = create<WizardState>((set, get) => ({
   requiredEquipmentChoiceCount: 0,
 
   setStep: (step) => set({ currentStep: step }),
+  setCampaignId: (campaignId) => set({ campaignId }),
 
   setName: (name) => set({ characterName: name }),
 

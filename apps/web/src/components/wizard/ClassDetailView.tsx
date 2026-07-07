@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useQuery } from "@tanstack/react-query";
 import { useWizardStore } from "../../store/wizardStore";
-import { apiClient } from "../../api/client";
+import { apiClient, buildScopedReferenceEndpoint } from "../../api/client";
 import { useEffect } from "react";
 import { ClassEquipmentDevSelector } from "./equipment/ClassEquipmentDevSelector";
 
@@ -9,6 +9,7 @@ export const ClassDetailView = ({ classes }: { classes: any[] }) => {
   const selectedClassId = useWizardStore((state) => state.classId);
   const selectedSubclassId = useWizardStore((state) => state.subclassId);
   const setSubclass = useWizardStore((state) => state.setSubclass);
+  const campaignId = useWizardStore((state) => state.campaignId);
   const targetLevel = useWizardStore((state) => state.targetLevel); // Defaults to 1
   const setRequiredEquipmentChoiceCount = useWizardStore(
     (state) => state.setRequiredEquipmentChoiceCount,
@@ -28,19 +29,39 @@ export const ClassDetailView = ({ classes }: { classes: any[] }) => {
 
   // On-Demand Data Fetching
   const { data: subclassesData } = useQuery({
-    queryKey: ["reference", "subclasses", selectedClassId],
+    queryKey: ["reference", "subclasses", selectedClassId, campaignId],
     queryFn: () =>
-      apiClient(`/reference/classes/${selectedClassId}/subclasses`),
+      apiClient(
+        buildScopedReferenceEndpoint(
+          `/reference/classes/${selectedClassId}/subclasses`,
+          {
+            campaignId,
+          },
+        ),
+      ),
     enabled: !!selectedClassId,
   });
 
   const { data: timelineData, isLoading: timelineLoading } = useQuery({
-    queryKey: ["reference", "timeline", selectedClassId, selectedSubclassId],
+    queryKey: [
+      "reference",
+      "timeline",
+      selectedClassId,
+      selectedSubclassId,
+      campaignId,
+    ],
     queryFn: () => {
-      const timelineEndpoint = selectedSubclassId
-        ? `/reference/classes/${selectedClassId}/timeline?subclassId=${encodeURIComponent(selectedSubclassId)}`
-        : `/reference/classes/${selectedClassId}/timeline`;
-      return apiClient(timelineEndpoint);
+      return apiClient(
+        buildScopedReferenceEndpoint(
+          `/reference/classes/${selectedClassId}/timeline`,
+          {
+            campaignId,
+          },
+          {
+            subclassId: selectedSubclassId ?? undefined,
+          },
+        ),
+      );
     },
     enabled: !!selectedClassId,
   });

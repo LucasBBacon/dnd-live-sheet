@@ -4,6 +4,7 @@ import { compileCharacterPayload } from "../compileCharacter";
 
 describe("compileCharacterPayload", () => {
   const validState: any = {
+    campaignId: "11111111-1111-1111-1111-111111111111",
     characterName: "Aragorn",
     raceId: "human",
     subraceId: null,
@@ -40,6 +41,7 @@ describe("compileCharacterPayload", () => {
     const result = compileCharacterPayload(validState);
 
     expect(result).toEqual({
+      campaignId: "11111111-1111-1111-1111-111111111111",
       name: "Aragorn",
       raceId: "human",
       subraceId: null,
@@ -197,5 +199,11 @@ describe("compileCharacterPayload", () => {
       { itemId: "rope", quantity: 1 },
       { itemId: "torch", quantity: 5 },
     ]);
+  });
+
+  it("omits campaignId when no campaign is selected", () => {
+    const state = { ...validState, campaignId: null };
+    const result = compileCharacterPayload(state);
+    expect(result.campaignId).toBeUndefined();
   });
 });

@@ -1,59 +1,37 @@
-# DND Live Sheet
+# DnD Live Sheet
 
-Live character sheet platform for **Dungeons & Dragons 5e (2014 ruleset)**.
+Live character sheet and character builder for **Dungeons & Dragons 5e (2014 rules)**.
 
-This repository is a **pnpm + Turborepo monorepo** with:
+This repository is a pnpm + Turborepo monorepo containing:
 
-- React + Vite web app
-- Express + Socket.IO server
-- Shared contracts and schemas package
-- Dedicated engine package for rules/math
-- Drizzle + PostgreSQL data layer
+- `apps/web`: React + Vite client (wizard + live sheet)
+- `apps/server`: Express + Socket.IO API/runtime
+- `packages/database`: Drizzle schema, client, and seed tooling
+- `packages/shared`: shared Zod schemas, API/event contracts
+- `packages/engine`: deterministic rules/math engine
 
-## Current Project State
+## Current architecture in one page
 
-### Implemented
+The system follows a **3-layer authority model**:
 
-- Monorepo workspace orchestration with Turbo
-- Shared Zod schemas and action contracts in `@project/shared`
-- Engine calculators and combat/ability utilities in `@project/engine`
-- PostgreSQL persistence with Drizzle ORM in `@project/database`
-- Character creation flow in web app (multi-step wizard)
-- `POST /api/character` to create a character transactionally
-- `GET /api/character` hydration endpoint
-- Extensive reference API (`/api/reference/*`) for races/classes/backgrounds/traits/items
-- Socket action dispatch pipeline with runtime schema validation
-- Mock auth middleware using `x-tester-id`
-- Vitest test suites across workspaces
+1. **Core reference layer** (static compendium): canonical core 5e records in PostgreSQL.
+2. **Scoped homebrew layer** (mutable reference): campaign and character overrides, also in PostgreSQL.
+3. **Operational layer** (live state): transactional character/campaign runtime data.
 
-### In Progress / Known Gaps
+Reference reads are resolved through precedence:
 
-- Real auth is not integrated yet (currently mock header auth)
-- Action surface is currently centered on `MODIFY_HP`
-- Level-up and full dice workflows are still pending
-- Web app entrypoint currently renders the character creation wizard (live sheet routing is not the default path yet)
-- Wizard review submission currently targets `/api/characters` in client code, while server exposes `/api/character`
+1. Character-scoped homebrew
+2. Campaign-scoped homebrew
+3. Core compendium
 
-## Monorepo Layout
+See `docs/architecture/authority-model.md` for details.
 
-```text
-apps/
-	web/       React + Vite + React Query + Zustand
-	server/    Express 5 + Socket.IO API gateway
-packages/
-	shared/    Zod schemas, shared event constants, action contracts
-	engine/    Rules/calculators/pipeline for derived gameplay logic
-	database/  Drizzle schema/client/config + seed pipeline + reference JSON data
-```
+## Documentation map
 
-## Tech Stack
-
-- Runtime: Node.js, TypeScript
-- Frontend: React 19, Vite, TanStack Query, Zustand
-- Backend: Express 5, Socket.IO, Zod
-- Data: PostgreSQL, Drizzle ORM, drizzle-kit
-- Testing: Vitest (+ coverage via `@vitest/coverage-v8`)
-- Build Orchestration: Turborepo
+- `docs/architecture/authority-model.md` - data ownership, precedence, cache design, authorisation model
+- `docs/operations/migration-rollout-runbook.md` - migration, rollout, rollback, and release checklist
+- `docs/operations/troubleshooting.md` - practical diagnostics and recovery steps
+- `apps/web/README.md` - web client architecture and workflow notes
 
 ## Prerequisites
 
@@ -61,24 +39,24 @@ packages/
 - pnpm 10+
 - PostgreSQL 15+
 
-## Environment Configuration
+## Environment configuration
 
-Create a root `.env` file:
+Create `.env` in repository root:
 
 ```env
-DATABASE_URL=postgres://user:password@localhost:5432/dnd_live_sheet
+DATABASE_URL=******localhost:5432/dnd_live_sheet
 PORT=3000
 CLIENT_URL=http://localhost:5173
+USE_GATEWAY_SOCKETS=false
 ```
 
 Notes:
 
 - `DATABASE_URL` is required.
-- `PORT` and `CLIENT_URL` are optional (defaults are used in server code).
-- Database package loads env from the repository root using `../../.env`.
-- If you wire up the optional web socket service path that expects a Vite env var, set `VITE_API_URL` in `apps/web/.env`.
+- `USE_GATEWAY_SOCKETS` controls which server socket pipeline is initialised.
+- Web socket client expects `VITE_API_URL` in `apps/web/.env` when needed.
 
-## Quick Start
+## Quick start
 
 1. Install dependencies:
 
@@ -86,19 +64,19 @@ Notes:
 pnpm install
 ```
 
-2. Push schema to Postgres:
+2. Push schema:
 
 ```bash
 pnpm --filter @project/database db:push
 ```
 
-3. Seed reference data:
+3. Seed core reference data:
 
 ```bash
 pnpm --filter @project/database db:seed
 ```
 
-4. Start all dev tasks:
+4. Start development:
 
 ```bash
 pnpm dev
@@ -107,141 +85,102 @@ pnpm dev
 Default local endpoints:
 
 - Web: `http://localhost:5173`
-- API + Socket server: `http://localhost:3000`
+- API/socket server: `http://localhost:3000`
 
-## Scripts
+## Common scripts
 
-### Root
+- `pnpm dev` - run workspace development tasks
+- `pnpm build` - run workspace builds
+- `pnpm test:all` - shared, database, server, and web tests (serial)
+- `pnpm test:coverage` - workspace coverage runs
 
-- `pnpm dev` -> run workspace `dev` tasks via Turbo
-- `pnpm build` -> run workspace `build` tasks via Turbo
-- `pnpm test` -> run workspace `test` tasks via Turbo
-- `pnpm test:shared` -> run only `@project/shared` tests
-- `pnpm test:all` -> run shared, database, server, and web tests serially
-- `pnpm test:coverage` -> run coverage in shared, database, server, and web
+Package-specific examples:
 
-### Web (`@project/web`)
-
-- `pnpm --filter @project/web dev`
-- `pnpm --filter @project/web build`
-- `pnpm --filter @project/web lint`
-- `pnpm --filter @project/web preview`
-- `pnpm --filter @project/web test`
-- `pnpm --filter @project/web test:coverage`
-
-### Server (`@project/server`)
-
-- `pnpm --filter @project/server dev`
 - `pnpm --filter @project/server build`
-- `pnpm --filter @project/server start`
 - `pnpm --filter @project/server test`
-- `pnpm --filter @project/server test:coverage`
-
-### Database (`@project/database`)
-
-- `pnpm --filter @project/database db:push`
-- `pnpm --filter @project/database db:generate`
-- `pnpm --filter @project/database db:migrate`
+- `pnpm --filter @project/web test`
 - `pnpm --filter @project/database db:studio`
-- `pnpm --filter @project/database db:seed`
-- `pnpm --filter @project/database test`
 
-### Engine (`@project/engine`) and Shared (`@project/shared`)
-
-- `pnpm --filter @project/engine test`
-- `pnpm --filter @project/shared test`
-
-## API Surface (Current)
+## API summary (current)
 
 Base URL: `http://localhost:3000/api`
 
-Auth behavior:
+### Authentication model (current)
 
-- `/api/character/*` uses mock auth middleware.
-- `/api/reference/*` is currently public.
-- Mock auth header for local dev: `x-tester-id: dev-user-1`
+- Character and homebrew routes use middleware auth (`x-tester-id` in local development).
+- Reference routes can be called without auth for core-only reads.
+- Reference calls with `campaignId` require campaign membership.
 
-### Character Routes
+### Character routes
 
-- `GET /api/character`
-	- Returns authenticated user character payload.
-- `POST /api/character`
-	- Validates `CreateCharacterPayloadSchema`
-	- Creates character + class row + custom traits + starting equipment in a transaction
-	- Returns `201` with created `characterId`
+- `POST /api/character` - create character transactionally
+- `GET /api/character?characterId=<id>` - fetch by query id
+- `GET /api/character/:characterId` - fetch by path id
 
-### Reference Routes
+### Reference routes
 
 - `GET /api/reference/races`
 - `GET /api/reference/classes`
 - `GET /api/reference/classes/:id/subclasses`
-- `GET /api/reference/classes/:id/timeline?subclassId=...`
+- `GET /api/reference/classes/:id/timeline`
 - `GET /api/reference/backgrounds`
 - `GET /api/reference/traits`
-- `GET /api/reference/traits?category=skills|tools_and_languages`
 - `GET /api/reference/traits/:id`
-- `GET /api/reference/items?q=...&limit=...&offset=...`
+- `GET /api/reference/items`
+- `GET /api/reference/version`
 
-## Socket Events (Active Controller)
+Optional scoped query parameters:
 
-Client -> server:
+- `campaignId=<uuid>`
+- `characterId=<uuid>` (requires `campaignId`)
 
-- `join_character` with `characterId`
-- `dispatch_action` with validated `GameAction`
+### Homebrew routes
 
-Server -> client:
+- `POST /api/homebrew/traits`
+- `PATCH /api/homebrew/traits/:id`
+- `POST /api/homebrew/traits/:id/publish`
+- `POST /api/homebrew/traits/:id/archive`
+- `POST /api/homebrew/items`
+- `PATCH /api/homebrew/items/:id`
+- `POST /api/homebrew/items/:id/publish`
+- `POST /api/homebrew/items/:id/archive`
 
-- `state_updated` with action type
-- `action_error` when validation or processing fails
+All homebrew writes require campaign role `owner` or `dm`.
 
-Currently supported action type:
+## Sockets
 
-- `MODIFY_HP`
+Two socket implementations currently exist server-side. Runtime selection is controlled via `USE_GATEWAY_SOCKETS`:
 
-## Testing
+- `false` (default): controller pipeline
+- `true`: gateway pipeline
 
-Run the full workspace test suite:
+The modern room-join contract is `RoomJoinPayload` (`campaignId`, optional `characterId`) and campaign membership is enforced before scoped mutations.
+
+## Testing and quality checks
+
+Run full tests:
 
 ```bash
 pnpm test:all
 ```
 
-Run full coverage:
+Run server build:
 
 ```bash
-pnpm test:coverage
+pnpm --filter @project/server build
 ```
 
-Run one package only:
+## Contribution guidance
 
-```bash
-pnpm --filter @project/server test
-```
+When adding new behaviour:
 
-## Architecture Notes
+1. Keep database as source of truth for reference and operational data.
+2. Add schema-level constraints first, then API-level guards.
+3. Thread campaign/character scope end-to-end (request, resolver, cache key, client query key).
+4. Invalidate targeted cache entries on homebrew mutation lifecycle events.
 
-- `@project/shared` is the contract boundary for schemas and event constants.
-- `@project/engine` houses gameplay calculations and reusable combat/stat logic.
-- `@project/database` seed process ingests JSON reference files and hydrates relational tables.
-- Seeding now auto-generates placeholder traits when source data references missing trait IDs (to preserve foreign-key integrity).
-- If local workspace links are stale for `@project/*` packages, rerun:
+If you are new to the repository, start with:
 
-```bash
-corepack pnpm install
-```
-
-## Data and Seeding Notes
-
-- Seed data lives in `packages/database/data/*.json`.
-- Seed includes ETL-style transform/normalization logic before inserts.
-- Race data is upserted (existing rows can be refreshed).
-- Trait relationships for classes, subclasses, feats, races, subraces, and backgrounds are resolved through junction tables.
-
-## Near-Term Roadmap
-
-- Finish wizard -> server submission endpoint alignment
-- Route successfully created characters into the live sheet experience
-- Expand action reducer support beyond HP
-- Add real auth/session identity pipeline
-- Implement richer dice and level-up systems
-
+1. `docs/architecture/authority-model.md`
+2. `docs/operations/migration-rollout-runbook.md`
+3. `apps/web/README.md`

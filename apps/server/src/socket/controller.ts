@@ -1,5 +1,6 @@
 import {
   GameActionSchema,
+  type RoomJoinPayload,
   SOCKET_EVENTS,
   type HpModifiedPayload,
 } from "@project/shared";
@@ -10,10 +11,20 @@ export const initializeWebSockets = (io: Server) => {
   io.on("connection", (socket: Socket) => {
     console.log(`[Socket] Client connected: ${socket.id}`);
 
-    const joinRooms = (roomId: string) => {
-      socket.join(`char_${roomId}`);
-      socket.join(`campaign_${roomId}`);
-      console.log(`[Socket] Client joined room aliases for: ${roomId}`);
+    const joinRooms = (payload: string | RoomJoinPayload) => {
+      const roomPayload =
+        typeof payload === "string"
+          ? { campaignId: payload, characterId: payload }
+          : payload;
+      const { campaignId, characterId } = roomPayload;
+
+      if (characterId) {
+        socket.join(`char_${characterId}`);
+      }
+      socket.join(`campaign_${campaignId}`);
+      console.log(
+        `[Socket] Client joined rooms: campaign_${campaignId}${characterId ? `, char_${characterId}` : ""}`,
+      );
     };
 
     // join aliases during migration to a single event protocol

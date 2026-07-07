@@ -1,23 +1,38 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useQuery } from "@tanstack/react-query";
 import { useWizardStore } from "../../../store/wizardStore";
-import { apiClient } from "../../../api/client";
+import { apiClient, buildScopedReferenceEndpoint } from "../../../api/client";
 
 export const CustomBackgroundBuilder = () => {
   const customBg = useWizardStore((state) => state.customBackground);
   const updateCustomBg = useWizardStore(
     (state) => state.updateCustomBackground,
   );
+  const campaignId = useWizardStore((state) => state.campaignId);
 
   // Fetch the universal traits filtered by category for our selection grids
   const { data: skillsData, isLoading: loadingSkills } = useQuery({
-    queryKey: ["reference", "traits", "skills"],
-    queryFn: () => apiClient("/reference/traits?category=skills"),
+    queryKey: ["reference", "traits", "skills", campaignId],
+    queryFn: () =>
+      apiClient(
+        buildScopedReferenceEndpoint(
+          "/reference/traits",
+          { campaignId },
+          { category: "skills" },
+        ),
+      ),
   });
 
   const { data: toolsData, isLoading: loadingTools } = useQuery({
-    queryKey: ["reference", "traits", "tools_and_languages"],
-    queryFn: () => apiClient("/reference/traits?category=tools_and_languages"),
+    queryKey: ["reference", "traits", "tools_and_languages", campaignId],
+    queryFn: () =>
+      apiClient(
+        buildScopedReferenceEndpoint(
+          "/reference/traits",
+          { campaignId },
+          { category: "tools_and_languages" },
+        ),
+      ),
   });
 
   // Strict bounds controller for array toggling

@@ -102,6 +102,7 @@ export type Character = z.infer<typeof BaseCharacterSchema>;
 // ----------------------------------------------------------------------------------
 
 export const CreateCharacterPayloadSchema = z.object({
+  campaignId: z.uuid().optional(),
   name: z.string().min(1, "Character name is required"),
   raceId: z.string(),
   subraceId: z.string().nullable(),

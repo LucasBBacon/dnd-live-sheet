@@ -1,10 +1,12 @@
 import { db } from "@project/database";
 import {
+  campaignMembers,
   characterInventory,
   characterResources,
   characters,
 } from "@project/database/src/schema/operational.js";
 import {
+  type RoomJoinPayload,
   SOCKET_EVENTS,
   type HpModifiedPayload,
   type ItemConsumedPayload,
@@ -14,6 +16,54 @@ import {
 import { Server, Socket } from "socket.io";
 import { and, eq, not, sql } from "drizzle-orm";
 import { RestEngine } from "@project/engine";
+
+type SocketDataContext = {
+  campaignId?: string;
+  userId?: string;
+};
+
+const getSocketContext = (socket: Socket): SocketDataContext =>
+  (socket.data as SocketDataContext);
+
+const setSocketContext = (
+  socket: Socket,
+  context: Partial<SocketDataContext>,
+): void => {
+  socket.data = { ...(socket.data as SocketDataContext), ...context };
+};
+
+const getUserIdFromSocket = (socket: Socket): string | undefined => {
+  const authUserId =
+    typeof socket.handshake.auth?.userId === "string"
+      ? socket.handshake.auth.userId
+      : undefined;
+  if (authUserId) return authUserId;
+
+  const headerUserId = socket.handshake.headers["x-tester-id"];
+  return typeof headerUserId === "string" ? headerUserId : undefined;
+};
+
+const ensureCharacterInSocketCampaign = async (
+  socket: Socket,
+  characterId: string,
+): Promise<string> => {
+  const context = getSocketContext(socket);
+  if (!context.campaignId) {
+    throw new Error("Socket is not joined to a campaign context.");
+  }
+
+  const [character] = await db
+    .select({ campaignId: characters.campaignId })
+    .from(characters)
+    .where(eq(characters.id, characterId))
+    .limit(1);
+
+  if (!character || character.campaignId !== context.campaignId) {
+    throw new Error("Character does not belong to the joined campaign.");
+  }
+
+  return context.campaignId;
+};
 
 export function initializeWebSocketGateway(httpServer: any) {
   const io = new Server(httpServer, {
@@ -25,10 +75,47 @@ export function initializeWebSocketGateway(httpServer: any) {
 
     // ROOM ORCHESTRATION
 
-    socket.on(SOCKET_EVENTS.ROOM_JOIN, (campaignId: string) => {
-      socket.join(`campaign_${campaignId}`);
-      console.log(`Socket ${socket.id} joined campaign_${campaignId}`);
-    });
+    socket.on(
+      SOCKET_EVENTS.ROOM_JOIN,
+      async (payload: string | RoomJoinPayload) => {
+        const campaignId =
+          typeof payload === "string" ? payload : payload.campaignId;
+
+        const userId = getUserIdFromSocket(socket);
+        if (!userId) {
+          socket.emit("action_error", {
+            event: SOCKET_EVENTS.ROOM_JOIN,
+            error: "Missing socket auth user context.",
+            payload: { campaignId },
+          });
+          return;
+        }
+
+        const [membership] = await db
+          .select()
+          .from(campaignMembers)
+          .where(
+            and(
+              eq(campaignMembers.userId, userId),
+              eq(campaignMembers.campaignId, campaignId),
+            ),
+          )
+          .limit(1);
+
+        if (!membership) {
+          socket.emit("action_error", {
+            event: SOCKET_EVENTS.ROOM_JOIN,
+            error: "Not authorized for campaign room.",
+            payload: { campaignId },
+          });
+          return;
+        }
+
+        socket.join(`campaign_${campaignId}`);
+        setSocketContext(socket, { campaignId, userId });
+        console.log(`Socket ${socket.id} joined campaign_${campaignId}`);
+      },
+    );
 
     // ATOMIC EVENT HANDLERS
 
@@ -36,6 +123,11 @@ export function initializeWebSocketGateway(httpServer: any) {
 
     socket.on(SOCKET_EVENTS.HP_MODIFIED, async (payload: HpModifiedPayload) => {
       try {
+        const campaignId = await ensureCharacterInSocketCampaign(
+          socket,
+          payload.characterId,
+        );
+
         // 1 - persist the delta immediately using an atomic SQL update
         // this prevents race conditions if 2 sources damage the character at the exact same millisecond
         await db
@@ -46,7 +138,7 @@ export function initializeWebSocketGateway(httpServer: any) {
         // 2 - broadcast to everyone in the room EXCEPT sender
         // sender already updated UI optimistically
         socket
-          .to(`campaign_${getCampaignId(socket)}`)
+          .to(`campaign_${campaignId}`)
           .emit(SOCKET_EVENTS.HP_MODIFIED, {
             actorId: socket.id,
             data: payload,
@@ -69,6 +161,11 @@ export function initializeWebSocketGateway(httpServer: any) {
       SOCKET_EVENTS.ITEM_EQUIPPED,
       async (payload: ItemEquippedPayload) => {
         try {
+          const campaignId = await ensureCharacterInSocketCampaign(
+            socket,
+            payload.characterId,
+          );
+
           await db.transaction(async (tx) => {
             // 1 - resolve contention
             // if equipping to an active body slot (not just unequip from backpack)
@@ -102,7 +199,7 @@ export function initializeWebSocketGateway(httpServer: any) {
           // 3 - broadcast to campaign room
           // sender already updated zustand store optimistically, so exclude them
           socket
-            .to(`campaign_${getCampaignId(socket)}`)
+            .to(`campaign_${campaignId}`)
             .emit(SOCKET_EVENTS.ITEM_EQUIPPED, {
               actorId: socket.id,
               data: payload,
@@ -127,6 +224,11 @@ export function initializeWebSocketGateway(httpServer: any) {
       SOCKET_EVENTS.ITEM_CONSUMED,
       async (payload: ItemConsumedPayload) => {
         try {
+          const campaignId = await ensureCharacterInSocketCampaign(
+            socket,
+            payload.characterId,
+          );
+
           await db.transaction(async (tx) => {
             // 1 - fetch the current item state securely
             const [item] = await tx
@@ -162,7 +264,7 @@ export function initializeWebSocketGateway(httpServer: any) {
 
           // 3 - broadcast delta to campaign room
           socket
-            .to(`campaign_${getCampaignId(socket)}`)
+            .to(`campaign_${campaignId}`)
             .emit(SOCKET_EVENTS.ITEM_CONSUMED, {
               actorId: socket.id,
               data: payload,
@@ -186,6 +288,11 @@ export function initializeWebSocketGateway(httpServer: any) {
       SOCKET_EVENTS.RESOURCE_CONSUMED,
       async (payload: ResourceConsumedPayload) => {
         try {
+          const campaignId = await ensureCharacterInSocketCampaign(
+            socket,
+            payload.characterId,
+          );
+
           await db.transaction(async (tx) => {
             // decrement resource automatically, prevent neg values
             await tx
@@ -203,7 +310,7 @@ export function initializeWebSocketGateway(httpServer: any) {
 
           // broadcast to room
           socket
-            .to(`campaign_${getCampaignId(socket)}`)
+            .to(`campaign_${campaignId}`)
             .emit(SOCKET_EVENTS.RESOURCE_CONSUMED, {
               actorId: socket.id,
               data: payload,
@@ -226,6 +333,11 @@ export function initializeWebSocketGateway(httpServer: any) {
       SOCKET_EVENTS.REST_COMPLETED,
       async (payload: { characterId: string; restType: "short" | "long" }) => {
         try {
+          const campaignId = await ensureCharacterInSocketCampaign(
+            socket,
+            payload.characterId,
+          );
+
           await db.transaction(async (tx) => {
             // 1 - fetch current resources
             const currentResources = await tx
@@ -271,7 +383,7 @@ export function initializeWebSocketGateway(httpServer: any) {
 
           // 5 - broadcast to room
           socket
-            .to(`campaign_${getCampaignId(socket)}`)
+            .to(`campaign_${campaignId}`)
             .emit(SOCKET_EVENTS.REST_COMPLETED, {
               actorId: socket.id,
               data: payload,
@@ -292,10 +404,4 @@ export function initializeWebSocketGateway(httpServer: any) {
       console.log(`Client disconnected: ${socket.id}`);
     });
   });
-}
-
-function getCampaignId(socket: Socket): string {
-  const rooms = Array.from(socket.rooms);
-  const campaignRoom = rooms.find((r) => r.startsWith("campaign_"));
-  return campaignRoom ? campaignRoom.replace("campaign_", "") : "";
 }

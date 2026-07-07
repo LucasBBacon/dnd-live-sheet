@@ -1,4 +1,5 @@
 import {
+  type RoomJoinPayload,
   SOCKET_EVENTS,
   type HpModifiedPayload,
   type ItemConsumedPayload,
@@ -10,7 +11,7 @@ import { io, type Socket } from "socket.io-client";
 class SocketManager {
   private socket: Socket | null = null;
 
-  public connect(campaignId: string) {
+  public connect(campaignId: string, userId: string, characterId?: string) {
     if (this.socket) return;
     const apiUrl = import.meta.env.VITE_API_URL;
 
@@ -18,10 +19,15 @@ class SocketManager {
       throw new Error("Missing VITE_API_URL environment variable");
     }
 
-    this.socket = io(apiUrl);
+    this.socket = io(apiUrl, {
+      auth: {
+        userId,
+      },
+    });
 
     this.socket.on("connect", () => {
-      this.socket?.emit(SOCKET_EVENTS.ROOM_JOIN, campaignId);
+      const payload: RoomJoinPayload = { campaignId, characterId };
+      this.socket?.emit(SOCKET_EVENTS.ROOM_JOIN, payload);
     });
   }
 
