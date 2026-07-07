@@ -11,7 +11,11 @@ export const FEAT_DICTIONARY = [
     name: "Heavy Armor Master",
     description: "You can use your armor to deflect strikes...",
     // Example of engine evaluation protecting the UI
-    prerequisites: (abilities, proficiencies) =>
+    prerequisites: (
+      abilities: Record<string, number>,
+      proficiencies: string[],
+    ) =>
+      abilities &&
       proficiencies.includes("trait_prof_heavy_armor"),
   },
 ];

@@ -13,6 +13,28 @@ import { processStartingEquipment } from "../utils/inventory.js";
 
 const router: ExpressRouter = Router();
 
+const fetchCharacterPayload = async (characterId: string) => {
+  const [character] = await db
+    .select()
+    .from(characters)
+    .where(eq(characters.id, characterId))
+    .limit(1);
+
+  if (!character) return null;
+
+  const classLedger = await db
+    .select()
+    .from(characterClasses)
+    .where(eq(characterClasses.characterId, characterId));
+
+  return {
+    ...character,
+    classLevels: Object.fromEntries(
+      classLedger.map((entry) => [entry.classId, entry.classLevel]),
+    ),
+  };
+};
+
 /**
  * POST /api/character
  * Fetches the active user's single character sheet for initial hydration.
@@ -33,6 +55,7 @@ router.post("/", async (req, res, next) => {
 
       // insert the base character record
       await tx.insert(characters).values({
+        id: newCharacterId,
         name: payload.name,
         level: 1,
         raceId: payload.raceId,
@@ -122,32 +145,39 @@ router.post("/", async (req, res, next) => {
  */
 router.get("/", async (req, res, next) => {
   try {
-    const userId = req.user!.id;
+    const requestedCharacterId =
+      typeof req.query.characterId === "string" ? req.query.characterId : undefined;
+    const fallbackCharacterId = req.user?.id;
+    const characterId = requestedCharacterId ?? fallbackCharacterId;
 
-    // Utilize Drizzle to fetch the specific user's character
-    const [character] = await db
-      .select()
-      .from(characters)
-      .where(eq(characters.id, userId))
-      .limit(1);
+    if (!characterId) {
+      return res.status(400).json({
+        error: "characterId is required (query parameter or authenticated context).",
+      });
+    }
 
-    const classLedger = await db
-      .select()
-      .from(characterClasses)
-      .where(eq(characterClasses.characterId, userId));
-
-    if (!character) {
+    const payload = await fetchCharacterPayload(characterId);
+    if (!payload) {
       return res.status(404).json({ error: "No active character found." });
     }
 
-    return res.status(200).json({
-      character: {
-        ...character,
-        classLevels: Object.fromEntries(
-          classLedger.map((entry) => [entry.classId, entry.classLevel]),
-        ),
-      },
-    });
+    return res.status(200).json({ character: payload });
+  } catch (error) {
+    next(error);
+  }
+});
+
+/**
+ * GET /api/character/:characterId
+ * Fetches a character by explicit character id.
+ */
+router.get("/:characterId", async (req, res, next) => {
+  try {
+    const payload = await fetchCharacterPayload(req.params.characterId);
+    if (!payload) {
+      return res.status(404).json({ error: "No active character found." });
+    }
+    return res.status(200).json({ character: payload });
   } catch (error) {
     next(error);
   }

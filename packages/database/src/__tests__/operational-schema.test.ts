@@ -32,7 +32,7 @@ describe("operational schema", () => {
   it("defines class progression and custom traits tables", () => {
     expect(characterClasses.characterId.notNull).toBe(true);
     expect(characterClasses.classId.notNull).toBe(true);
-    expect(characterClasses.level.notNull).toBe(true);
+    expect(characterClasses.classLevel.notNull).toBe(true);
 
     expect(characterCustomTraits.id.primary).toBe(true);
     expect(characterCustomTraits.characterId.notNull).toBe(true);

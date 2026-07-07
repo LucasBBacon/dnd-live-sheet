@@ -41,7 +41,7 @@ export const CLASS_PROGRESSION_DICTIONARY: Record<
     2: {
       classId: "class_fighter",
       level: 2,
-      grantedTraits: ["trait_action_surger"],
+      grantedTraits: ["trait_action_surge"],
       decisions: [],
     },
     3: {

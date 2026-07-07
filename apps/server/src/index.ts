@@ -45,6 +45,18 @@ if (useGatewaySockets) {
 }
 
 const PORT = process.env.PORT || 3000;
-server.listen(PORT, () => {
-  console.log(`Server & WebSockets initialized on port ${PORT}`);
+
+const bootstrap = async () => {
+  if (process.env.DATABASE_URL) {
+    const { warmReferenceCache } = await import("./services/referenceCache.js");
+    await warmReferenceCache();
+  }
+  server.listen(PORT, () => {
+    console.log(`Server & WebSockets initialized on port ${PORT}`);
+  });
+};
+
+bootstrap().catch((error) => {
+  console.error("Failed to bootstrap server:", error);
+  process.exit(1);
 });
