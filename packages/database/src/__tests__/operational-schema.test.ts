@@ -55,7 +55,7 @@ describe("operational schema", () => {
   });
 
   it("defines inventory table with defaults and constraints", () => {
-    expect(characterInventory.id.primary).toBe(true);
+    expect(characterInventory.id.notNull).toBe(true);
     expect(characterInventory.characterId.notNull).toBe(true);
     expect(characterInventory.itemId.notNull).toBe(true);
     expect(characterInventory.quantity.notNull).toBe(true);

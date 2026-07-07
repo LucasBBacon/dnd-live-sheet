@@ -6,6 +6,7 @@ interface LevelUpState {
   isActive: boolean;
   progressionContext: ClassProgression | null;
   draftPayload: Partial<LevelUpPayload>;
+  errorMessage: string | null;
 
   beginLevelUp: (
     characterId: string,
@@ -22,6 +23,7 @@ export const useLevelUpStore = create<LevelUpState>((set, get) => ({
   isActive: false,
   progressionContext: null,
   draftPayload: {},
+  errorMessage: null,
 
   beginLevelUp: (characterId, classId, currentClassLevel, newTotalLevel) => {
     // 1 - fetch required decisions for the next level from engine
@@ -29,6 +31,17 @@ export const useLevelUpStore = create<LevelUpState>((set, get) => ({
       classId,
       currentClassLevel + 1,
     );
+
+    if (!nextLevelDef) {
+      set((state) => ({
+        isActive: state.isActive,
+        progressionContext: state.progressionContext,
+        draftPayload: state.draftPayload,
+        errorMessage:
+          `Level-up progression for ${classId} level ${currentClassLevel + 1} is not configured yet.`,
+      }));
+      return;
+    }
 
     set({
       isActive: true,
@@ -38,6 +51,7 @@ export const useLevelUpStore = create<LevelUpState>((set, get) => ({
         targetClassId: classId,
         newTotalLevel,
       },
+      errorMessage: null,
     });
   },
 
@@ -46,7 +60,11 @@ export const useLevelUpStore = create<LevelUpState>((set, get) => ({
   },
 
   validateAndSubmit: async () => {
-    const { draftPayload, progressionContext } = get();
+    const { draftPayload, progressionContext, errorMessage } = get();
+
+    if (errorMessage) {
+      throw new Error(errorMessage);
+    }
 
     // STRICT VALIDATION - ensure subclass is selected if progression demands it
     const requiresSubclass = progressionContext?.decisions.some(
@@ -60,6 +78,11 @@ export const useLevelUpStore = create<LevelUpState>((set, get) => ({
   },
 
   cancelLevelUp: () => {
-    set({ isActive: false, progressionContext: null, draftPayload: {} });
+    set({
+      isActive: false,
+      progressionContext: null,
+      draftPayload: {},
+      errorMessage: null,
+    });
   },
 }));

@@ -1,9 +1,7 @@
-import type { CharacterEngineData } from "@project/shared";
 import * as dotenv from "dotenv";
 import { sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
-import { characters } from "./schema.js";
 import path from "node:path";
 import fs from "node:fs/promises";
 import { fileURLToPath } from "node:url";
@@ -27,6 +25,13 @@ import {
   items,
   bundleContents,
 } from "./schema/reference.js";
+import {
+  campaignMembers,
+  campaigns,
+  characterClasses,
+  characters,
+  characterTraits,
+} from "./schema/operational.js";
 
 dotenv.config({ path: "../../.env" });
 
@@ -527,41 +532,68 @@ const runMigration = async () => {
 const seed = async () => {
   console.log("Seeding database...");
 
-  // strictly typed mock engine data
-  const mockEngineData: CharacterEngineData = {
-    attributes: { str: 16, dex: 14, con: 15, int: 8, wis: 10, cha: 12 },
-    race: {
-      baseRaceId: "race_dwarf",
-      hasSubraces: true,
-      subraceId: "subrace_hill_dwarf",
-    },
-    classes: [
-      {
-        classId: "class_fighter",
-        level: 1,
-        subclassRequirementLevel: 3,
-        subclassId: null,
-      },
-    ],
-    hp: { max: 12, current: 12, temporary: 0 },
-    globalModifiers: [],
-  };
-
   try {
+    const campaignId = "00000000-0000-0000-0000-000000000001";
+    const characterId = "00000000-0000-0000-0000-000000000101";
+
+    await db
+      .insert(campaigns)
+      .values({
+        id: campaignId,
+        name: "Dev Smoke Campaign",
+        createdByUserId: "dev-user-1",
+      })
+      .onConflictDoNothing({ target: campaigns.id });
+
+    await db
+      .insert(campaignMembers)
+      .values({
+        campaignId,
+        userId: "dev-user-1",
+        role: "owner",
+      })
+      .onConflictDoNothing();
+
     await db
       .insert(characters)
       .values({
-        userId: "dev-user-1",
-        totalLevel: 1,
+        id: characterId,
+        campaignId,
+        name: "Thoradin",
+        level: 1,
+        raceId: "race_dwarf",
+        subraceId: "subrace_dwarf_hill",
+        str: 16,
+        dex: 14,
+        con: 15,
+        int: 8,
+        wis: 10,
+        cha: 12,
+        alignment: "Lawful Good",
         currentHp: 12,
-        engineData: mockEngineData,
-        flavorData: {
-          name: "Thoradin",
-          alignment: "Lawful Good",
-          eyeColor: "Brown",
-        },
+        maxHp: 12,
+        temporaryInventory: [],
+      })
+      .onConflictDoNothing({ target: characters.id });
+
+    await db
+      .insert(characterClasses)
+      .values({
+        characterId,
+        classId: "class_fighter",
+        classLevel: 1,
       })
       .onConflictDoNothing();
+
+    await db
+      .insert(characterTraits)
+      .values({
+        id: "00000000-0000-0000-0000-000000000201",
+        characterId,
+        traitId: "trait_fighter_proficiencies",
+        source: "class_fighter_level_1",
+      })
+      .onConflictDoNothing({ target: characterTraits.id });
 
     console.log("Seeding complete.");
   } catch (err) {

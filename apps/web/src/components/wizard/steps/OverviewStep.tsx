@@ -1,7 +1,7 @@
 import React, { useMemo } from "react";
 import { useCharacterSheetStore } from "../../../store/characterSheetStore";
 import { useLevelUpStore } from "../../../store/levelUpStore";
-import { TRAIT_DICTIONARY } from "@project/engine";
+import { ProgressionEngine, TRAIT_DICTIONARY } from "@project/engine";
 
 // Mocked for the snippet; TODO: GET THIS FROM OUR DB
 const AVAILABLE_CLASSES = [
@@ -11,7 +11,8 @@ const AVAILABLE_CLASSES = [
 ];
 
 export const OverviewStep = () => {
-  const { draftPayload, progressionContext, beginLevelUp } = useLevelUpStore();
+  const { draftPayload, progressionContext, beginLevelUp, errorMessage } =
+    useLevelUpStore();
   const characterId = useCharacterSheetStore((state) => state.id);
   const totalLevel = useCharacterSheetStore((state) => state.level);
   const classLevels = useCharacterSheetStore((state) => state.classLevels);
@@ -75,17 +76,34 @@ export const OverviewStep = () => {
           {AVAILABLE_CLASSES.map((cls) => {
             const lvl = classLevels[cls.id] || 0;
             const isDip = lvl === 0;
+            const nextClassLevel = lvl + 1;
+            const isSupported = !!ProgressionEngine.getLevelDefinition(
+              cls.id,
+              nextClassLevel,
+            );
+
             return (
-              <option key={cls.id} value={cls.id}>
+              <option key={cls.id} value={cls.id} disabled={!isSupported}>
                 {cls.name}{" "}
-                {isDip
+                {!isSupported
+                  ? `(Unavailable - Level ${nextClassLevel} not configured)`
+                  : isDip
                   ? "(Multiclass - Level 1)"
                   : `Progress to Level ${lvl + 1}`}
               </option>
             );
           })}
         </select>
+        <p className="text-xs text-gray-500">
+          Only classes with configured progression data can be selected here.
+        </p>
       </div>
+
+      {errorMessage ? (
+        <div className="mb-6 rounded border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-700">
+          {errorMessage}
+        </div>
+      ) : null}
 
       {/* AUTOMATIC FEATURE PREVIEW */}
       <div className="flex-grow">

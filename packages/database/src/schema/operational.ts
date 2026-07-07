@@ -1,12 +1,14 @@
 import {
   boolean,
   integer,
+  index,
   jsonb,
   pgEnum,
   pgTable,
   primaryKey,
   text,
   timestamp,
+  uniqueIndex,
   uuid,
   varchar,
 } from "drizzle-orm/pg-core";
@@ -50,7 +52,7 @@ export const campaignMembers = pgTable(
   }),
 );
 
-export const characters = pgTable("character", {
+export const characters = pgTable("characters", {
   id: uuid("id").primaryKey().defaultRandom(),
   campaignId: uuid("campaign_id")
     .references(() => campaigns.id, { onDelete: "cascade" })
@@ -62,7 +64,7 @@ export const characters = pgTable("character", {
   raceId: varchar("race_id", { length: 100 })
     .references(() => races.id)
     .notNull(),
-  subraceId: varchar("race_id", { length: 100 })
+  subraceId: varchar("subrace_id", { length: 100 })
     .references(() => subraces.id)
     .notNull(),
 
@@ -112,7 +114,7 @@ export const characters = pgTable("character", {
 export const characterClasses = pgTable(
   "character_classes",
   {
-    id: uuid("id").primaryKey().defaultRandom(),
+    id: uuid("id").defaultRandom().notNull(),
     characterId: uuid("character_id")
       .references(() => characters.id, { onDelete: "cascade" })
       .notNull(),
@@ -125,13 +127,14 @@ export const characterClasses = pgTable(
     ),
   },
   (table) => ({
+    idIdx: uniqueIndex("character_classes_id_idx").on(table.id),
     pk: primaryKey({ columns: [table.characterId, table.classId] }),
   }),
 );
 
 export const characterTraits = pgTable("character_traits", {
   id: uuid("id").primaryKey().defaultRandom(),
-  characterId: varchar("character_id")
+  characterId: uuid("character_id")
     .references(() => characters.id, { onDelete: "cascade" })
     .notNull(),
   traitId: varchar("trait_id", { length: 100 }).notNull(),
@@ -182,7 +185,7 @@ export type EquipmentSlot = (typeof EQUIPMENT_SLOTS)[number];
 export const characterInventory = pgTable(
   "character_inventory",
   {
-    id: uuid("id").primaryKey().defaultRandom(), // unique instance id for this specific item
+    id: uuid("id").defaultRandom().notNull(), // unique instance id for this specific item
     characterId: uuid("character_id")
       .references(() => characters.id, { onDelete: "cascade" })
       .notNull(),
@@ -199,6 +202,7 @@ export const characterInventory = pgTable(
     isAttuned: boolean("is_attuned").notNull().default(false),
   },
   (table) => ({
+    idIdx: uniqueIndex("character_inventory_id_idx").on(table.id),
     // composite pk prevents duplicate rows for the same item
     // UPDATE quantity instead
     pk: primaryKey({ columns: [table.characterId, table.itemId] }),

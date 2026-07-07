@@ -1,5 +1,4 @@
 import { describe, expect, it } from "vitest";
-import { characters } from "../schema";
 import {
   backgrounds,
   backgroundTraits,
@@ -17,28 +16,6 @@ import {
 } from "../schema/reference";
 
 describe("database schema", () => {
-  it("defines character table with expected columns and nullability", () => {
-    expect(Object.keys(characters)).toEqual(
-      expect.arrayContaining([
-        "id",
-        "userId",
-        "totalLevel",
-        "currentHp",
-        "engineData",
-        "flavorData",
-        "createdAt",
-        "updatedAt",
-        "deletedAt",
-      ]),
-    );
-
-    expect(characters.id.primary).toBe(true);
-    expect(characters.userId.notNull).toBe(true);
-    expect(characters.engineData.dataType).toBe("json");
-    expect(characters.flavorData.dataType).toBe("json");
-    expect(characters.deletedAt.notNull).toBe(false);
-  });
-
   it("defines traits and feats with expected core fields", () => {
     expect(traits.id.primary).toBe(true);
     expect(traits.name.notNull).toBe(true);

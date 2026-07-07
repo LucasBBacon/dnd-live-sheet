@@ -8,6 +8,20 @@
       "when": 1782167487415,
       "tag": "0000_tired_mercury",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1783451608244,
+      "tag": "0001_previous_ghost_rider",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1783453742142,
+      "tag": "0002_careful_stingray",
+      "breakpoints": true
     }
   ]
 }
