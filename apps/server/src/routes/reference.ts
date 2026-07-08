@@ -1,6 +1,10 @@
 import { db } from "@project/database";
 import { Router, type Router as ExpressRouter } from "express";
-import { campaignMembers } from "@project/database/src/schema/operational.js";
+import {
+  campaignMembers,
+  characterClasses,
+  characters,
+} from "@project/database/src/schema/operational.js";
 import { traits } from "@project/database/src/schema/reference.js";
 import { and, eq } from "drizzle-orm";
 import {
@@ -8,6 +12,7 @@ import {
   listEffectiveFeats,
   searchEffectiveItems,
 } from "../services/effectiveReferenceResolver.js";
+import { resolveNextLevelValidationContextFromSnapshot } from "../services/levelUpValidation.js";
 import {
   getReferenceCacheVersion,
   getReferenceCache,
@@ -137,6 +142,165 @@ const matchesTraitCategory = (
   return false;
 };
 
+const buildClassTimeline = ({
+  cache,
+  classId,
+  requestedSubclassId,
+}: {
+  cache: Awaited<ReturnType<typeof getEffectiveReferenceSnapshot>>;
+  classId: string;
+  requestedSubclassId: string | undefined;
+}) => {
+  const levels = cache.classLevelsByClassId.get(classId) ?? [];
+  const levelMetaByLevel = new Map(levels.map((row) => [row.level, row]));
+
+  let subclassGrantedFeatures: Array<{
+    level: number;
+    trait: typeof traits.$inferSelect;
+  }> = [];
+
+  if (requestedSubclassId) {
+    const validSubclass = cache.subclassById.get(requestedSubclassId);
+    const isValidSubclass = validSubclass?.parentClassId === classId;
+
+    if (validSubclass && isValidSubclass) {
+      subclassGrantedFeatures = Array.from({ length: 20 }, (_, i) => i + 1)
+        .flatMap((level) =>
+          (
+            cache.subclassTraitsBySubclassLevel.get(
+              `${requestedSubclassId}::${level}`,
+            ) ?? []
+          ).map((trait) => ({
+            level,
+            trait: {
+              ...trait,
+              sourceOrigin: `Subclass: ${validSubclass.name}`,
+            },
+          })),
+        )
+        .map((row) => ({
+          level: row.level,
+          trait: row.trait,
+        }));
+    }
+  }
+
+  const classFeaturesByLevel = new Map<
+    number,
+    Array<typeof traits.$inferSelect>
+  >(
+    Array.from({ length: 20 }, (_, i) => i + 1).map((level) => [
+      level,
+      cache.classTraitsByClassLevel.get(`${classId}::${level}`) ?? [],
+    ]),
+  );
+
+  const subclassFeaturesByLevel = new Map<
+    number,
+    Array<typeof traits.$inferSelect>
+  >(
+    Array.from({ length: 20 }, (_, i) => i + 1).map((level) => [
+      level,
+      subclassGrantedFeatures
+        .filter((feature) => feature.level === level)
+        .map((feature) => feature.trait),
+    ]),
+  );
+
+  return Array.from({ length: 20 }, (_, i) => {
+    const currentLevel = i + 1;
+    const levelMeta = levelMetaByLevel.get(currentLevel);
+    const classFeaturesAtLevel = classFeaturesByLevel.get(currentLevel) ?? [];
+    const subclassFeaturesAtLevel =
+      subclassFeaturesByLevel.get(currentLevel) ?? [];
+    const featuresAtLevel = [
+      ...classFeaturesAtLevel,
+      ...subclassFeaturesAtLevel,
+    ];
+
+    return {
+      level: currentLevel,
+      scaling: levelMeta?.classSpecificScaling || null,
+      spellcasting: levelMeta?.spellcastingProgression || null,
+      features: featuresAtLevel,
+    };
+  });
+};
+
+const buildNextLevelContext = ({
+  cache,
+  classId,
+  currentClassLevel,
+  requestedSubclassId,
+}: {
+  cache: Awaited<ReturnType<typeof getEffectiveReferenceSnapshot>>;
+  classId: string;
+  currentClassLevel: number;
+  requestedSubclassId: string | undefined;
+}) => {
+  const nextLevelContext = resolveNextLevelValidationContextFromSnapshot({
+    cache,
+    classId,
+    currentClassLevel,
+    requestedSubclassId,
+  });
+
+  if (!nextLevelContext.isConfigured) {
+    return nextLevelContext;
+  }
+
+  const timeline = buildClassTimeline({
+    cache,
+    classId,
+    requestedSubclassId,
+  });
+
+  const targetTier = timeline.find(
+    (tier) => tier.level === nextLevelContext.targetLevel,
+  );
+  const grantedTraitIds = (targetTier?.features ?? []).map((feature) => feature.id);
+
+  return {
+    ...nextLevelContext,
+    grantedTraitIds,
+  };
+};
+
+const loadCharacterClassLevels = async ({
+  characterId,
+  campaignId,
+}: {
+  characterId: string | undefined;
+  campaignId: string | undefined;
+}): Promise<Record<string, number>> => {
+  if (!characterId) {
+    return {};
+  }
+
+  const characterScopeFilter = campaignId
+    ? and(eq(characters.id, characterId), eq(characters.campaignId, campaignId))
+    : eq(characters.id, characterId);
+
+  const [character] = await db
+    .select({ id: characters.id })
+    .from(characters)
+    .where(characterScopeFilter)
+    .limit(1);
+
+  if (!character) {
+    return {};
+  }
+
+  const classRows = await db
+    .select({ classId: characterClasses.classId, classLevel: characterClasses.classLevel })
+    .from(characterClasses)
+    .where(eq(characterClasses.characterId, characterId));
+
+  return Object.fromEntries(
+    classRows.map((row) => [row.classId, row.classLevel]),
+  );
+};
+
 /**
  * GET /api/reference/races
  * Returns all races. If `requiresSubrace` is true, the `subraces` array will be populated.
@@ -206,6 +370,97 @@ router.get("/feats", async (req, res, next) => {
 });
 
 /**
+ * GET /api/reference/level-up/options
+ * Consolidated level-up payload for wizard steps.
+ * Query params:
+ * - classId?: string
+ * - subclassId?: string (requires classId)
+ */
+router.get("/level-up/options", async (req, res, next) => {
+  try {
+    const scoped = await requireScopedAccessIfPresent(req, res);
+    if (!scoped.ok) return;
+
+    const classId =
+      typeof req.query.classId === "string" ? req.query.classId : undefined;
+    const subclassId =
+      typeof req.query.subclassId === "string"
+        ? req.query.subclassId
+        : undefined;
+    const currentClassLevelRaw =
+      typeof req.query.currentClassLevel === "string"
+        ? Number.parseInt(req.query.currentClassLevel, 10)
+        : 0;
+    const currentClassLevel = Number.isFinite(currentClassLevelRaw)
+      ? Math.max(0, currentClassLevelRaw)
+      : 0;
+
+    if (!classId && subclassId) {
+      return res.status(400).json({
+        error: "subclassId requires classId context.",
+      });
+    }
+
+    const cache = await getEffectiveReferenceSnapshot(scoped.scope);
+    const feats = await listEffectiveFeats(scoped.scope);
+    const classLevelsByClassId = await loadCharacterClassLevels({
+      characterId: scoped.scope.characterId,
+      campaignId: scoped.scope.campaignId,
+    });
+
+    const subclasses = classId
+      ? (cache.subclassesByClassId.get(classId) ?? [])
+      : [];
+
+    const timeline = classId
+      ? buildClassTimeline({
+          cache,
+          classId,
+          requestedSubclassId: subclassId,
+        })
+      : [];
+
+    const nextLevel = classId
+      ? buildNextLevelContext({
+          cache,
+          classId,
+          currentClassLevel,
+          requestedSubclassId: subclassId,
+        })
+      : null;
+
+    const supportByClass = Object.fromEntries(
+      cache.classes.map((cls) => {
+        const clsCurrentLevel = classLevelsByClassId[cls.id] ?? 0;
+        const support = buildNextLevelContext({
+          cache,
+          classId: cls.id,
+          currentClassLevel: clsCurrentLevel,
+          requestedSubclassId: undefined,
+        });
+
+        return [cls.id, support] as const;
+      }),
+    );
+
+    return res.status(200).json({
+      classes: cache.classes,
+      feats,
+      subclasses,
+      timeline,
+      nextLevel,
+      supportByClass,
+      selected: {
+        classId: classId ?? null,
+        subclassId: subclassId ?? null,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+/**
  * GET /api/reference/classes/:id/subclasses
  * Fetches the valid subclasses for a specific base class.
  */
@@ -238,75 +493,10 @@ router.get("/classes/:id/timeline", async (req, res, next) => {
         : undefined;
 
     const cache = await getEffectiveReferenceSnapshot(scoped.scope);
-    const levels = cache.classLevelsByClassId.get(classId) ?? [];
-    const levelMetaByLevel = new Map(levels.map((row) => [row.level, row]));
-
-    let subclassGrantedFeatures: Array<{ level: number; trait: any }> = [];
-    if (requestedSubclassId) {
-      const validSubclass = cache.subclassById.get(requestedSubclassId);
-      const isValidSubclass = validSubclass?.parentClassId === classId;
-
-      if (validSubclass && isValidSubclass) {
-        subclassGrantedFeatures = Array.from({ length: 20 }, (_, i) => i + 1)
-          .flatMap((level) =>
-            (
-              cache.subclassTraitsBySubclassLevel.get(
-                `${requestedSubclassId}::${level}`,
-              ) ?? []
-            ).map((trait) => ({
-              level,
-              trait: {
-                ...trait,
-                sourceOrigin: `Subclass: ${validSubclass.name}`,
-              },
-            })),
-          )
-          .map((row) => ({
-            level: row.level,
-            trait: row.trait,
-          }));
-      }
-    }
-
-    const classFeaturesByLevel = new Map<
-      number,
-      Array<typeof traits.$inferSelect>
-    >(
-      Array.from({ length: 20 }, (_, i) => i + 1).map((level) => [
-        level,
-        cache.classTraitsByClassLevel.get(`${classId}::${level}`) ?? [],
-      ]),
-    );
-
-    const subclassFeaturesByLevel = new Map<
-      number,
-      Array<typeof traits.$inferSelect>
-    >(
-      Array.from({ length: 20 }, (_, i) => i + 1).map((level) => [
-        level,
-        subclassGrantedFeatures
-          .filter((feature) => feature.level === level)
-          .map((feature) => feature.trait),
-      ]),
-    );
-
-    const timeline = Array.from({ length: 20 }, (_, i) => {
-      const currentLevel = i + 1;
-      const levelMeta = levelMetaByLevel.get(currentLevel);
-      const classFeaturesAtLevel = classFeaturesByLevel.get(currentLevel) ?? [];
-      const subclassFeaturesAtLevel =
-        subclassFeaturesByLevel.get(currentLevel) ?? [];
-      const featuresAtLevel = [
-        ...classFeaturesAtLevel,
-        ...subclassFeaturesAtLevel,
-      ];
-
-      return {
-        level: currentLevel,
-        scaling: levelMeta?.classSpecificScaling || null,
-        spellcasting: levelMeta?.spellcastingProgression || null,
-        features: featuresAtLevel,
-      };
+    const timeline = buildClassTimeline({
+      cache,
+      classId,
+      requestedSubclassId,
     });
 
     return res.status(200).json({ timeline });

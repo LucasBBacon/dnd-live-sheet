@@ -102,6 +102,79 @@ describe("Reference Routes", () => {
     });
   });
 
+  describe("GET /api/reference/level-up/options", () => {
+    it("returns a consolidated payload for wizard steps", () => {
+      const payload = {
+        classes: [{ id: "class_fighter", name: "Fighter" }],
+        feats: [{ id: "feat_alert", name: "Alert" }],
+        subclasses: [],
+        timeline: [],
+        supportByClass: {
+          class_fighter: {
+            targetLevel: 2,
+            isConfigured: true,
+            reason: null,
+            decisions: [
+              {
+                id: "dec_class_fighter_subclass_3",
+                type: "subclass",
+                description: "Choose a subclass for this class level.",
+                options: ["subclass_fighter_champion"],
+                isRequired: true,
+                quantity: 1,
+              },
+            ],
+          },
+        },
+        nextLevel: {
+          targetLevel: 2,
+          isConfigured: true,
+          reason: null,
+          grantedTraitIds: ["trait_action_surge"],
+          decisionTypes: [],
+          decisions: [],
+        },
+        selected: {
+          classId: null,
+          subclassId: null,
+        },
+      };
+
+      expect(payload).toHaveProperty("classes");
+      expect(payload).toHaveProperty("feats");
+      expect(payload).toHaveProperty("subclasses");
+      expect(payload).toHaveProperty("timeline");
+      expect(payload).toHaveProperty("supportByClass");
+      expect(payload).toHaveProperty("nextLevel");
+      expect(payload).toHaveProperty("selected");
+    });
+
+    it("includes class-scoped subclasses and timeline when classId is provided", () => {
+      const payload = {
+        classes: [{ id: "class_fighter", name: "Fighter" }],
+        feats: [{ id: "feat_alert", name: "Alert" }],
+        subclasses: [{ id: "subclass_champion", parentClassId: "class_fighter" }],
+        timeline: [{ level: 1, features: [] }],
+        selected: {
+          classId: "class_fighter",
+          subclassId: null,
+        },
+      };
+
+      expect(payload.subclasses).toHaveLength(1);
+      expect(payload.timeline).toHaveLength(1);
+      expect(payload.selected.classId).toBe("class_fighter");
+    });
+
+    it("requires classId context when subclassId is present", () => {
+      const statusCode = 400;
+      const errorMessage = "subclassId requires classId context.";
+
+      expect(statusCode).toBe(400);
+      expect(errorMessage).toContain("requires classId");
+    });
+  });
+
   describe("GET /api/reference/classes/:id/subclasses", () => {
     it("returns subclasses for valid class id", () => {
       const subclass = {

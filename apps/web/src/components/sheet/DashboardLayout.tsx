@@ -53,11 +53,12 @@ export const DashboardLayout = () => {
               const currentLevelInActiveClass =
                 character.classLevels[activeClassId] ?? 0;
 
-              beginLevelUp(
+              void beginLevelUp(
                 character.id,
                 activeClassId,
                 currentLevelInActiveClass,
                 character.level + 1,
+                { campaignId: character.campaignId },
               );
             }}
             disabled={!character.id || !activeClassId}

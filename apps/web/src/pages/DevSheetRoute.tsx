@@ -1,92 +1,86 @@
 import { useEffect } from "react";
+import type {
+  OperationalInventoryItem,
+  OperationalResource,
+  ProficiencyLevel,
+} from "@project/engine";
 import { useCharacterSheetStore } from "../store/characterSheetStore";
 import { DashboardLayout } from "../components/sheet/DashboardLayout";
+import { useQuery } from "@tanstack/react-query";
+import { apiClient } from "../api/client";
+
+const DEV_FIXTURE_CHARACTER_ID = "00000000-0000-0000-0000-000000000101";
+
+type DevFixtureCharacterResponse = {
+  character: {
+    id: string;
+    campaignId: string;
+    level: number;
+    classLevels: Record<string, number>;
+    raceId: string | null;
+    subraceId: string | null;
+    str: number;
+    dex: number;
+    con: number;
+    int: number;
+    wis: number;
+    cha: number;
+    inventory?: OperationalInventoryItem[];
+    proficiencies?: Record<string, ProficiencyLevel>;
+    currentHp: number;
+    maxHp: number;
+    resources?: OperationalResource[];
+  };
+};
 
 export const DevSheetRoute = () => {
   const initializeStore = useCharacterSheetStore((state) => state.initialize);
 
+  const { data, isLoading, isError } = useQuery<DevFixtureCharacterResponse>({
+    queryKey: ["character", "dev-fixture", DEV_FIXTURE_CHARACTER_ID],
+    queryFn: () => apiClient(`/character/${DEV_FIXTURE_CHARACTER_ID}`),
+    staleTime: 1000 * 60 * 5,
+    retry: false,
+  });
+
   useEffect(() => {
-    // inject comprehensive test payload into store
+    if (!data?.character) {
+      return;
+    }
+
     initializeStore({
-      id: "dev-tester-001",
-      level: 3,
-      classLevels: { class_fighter: 3 },
-      currentHp: 28,
-      maxHp: 28,
+      id: data.character.id,
+      campaignId: data.character.campaignId,
+      level: data.character.level || 1,
+      classLevels: data.character.classLevels || {},
+      raceId: data.character.raceId ?? null,
+      subraceId: data.character.subraceId ?? null,
       baseScores: {
-        str: 16, // +3
-        dex: 12, // +1
-        con: 14, // +2
-        int: 10, // +0
-        wis: 13, // +1
-        cha: 8, // -1
+        str: data.character.str,
+        dex: data.character.dex,
+        con: data.character.con,
+        int: data.character.int,
+        wis: data.character.wis,
+        cha: data.character.cha,
       },
-      proficiencies: {
-        athletics: "proficient",
-        perception: "proficient",
-        martial_melee: "proficient",
-        simple_melee: "proficient",
-      },
-      inventory: [
-        {
-          id: "inv_1",
-          itemId: "item_chain_mail",
-          quantity: 1,
-          slot: "armor",
-          isAttuned: false,
-        },
-        {
-          id: "inv_2",
-          itemId: "item_longsword",
-          quantity: 1,
-          slot: "backpack",
-          isAttuned: false,
-        },
-        {
-          id: "inv_3",
-          itemId: "item_longbow",
-          quantity: 1,
-          slot: "main_hand",
-          isAttuned: false,
-        },
-        {
-          id: "inv_4",
-          itemId: "item_shield",
-          quantity: 1,
-          slot: "off_hand",
-          isAttuned: false,
-        },
-        {
-          id: "inv_5",
-          itemId: "item_potion_of_healing",
-          quantity: 2,
-          slot: "backpack",
-          isAttuned: false,
-        },
-        {
-          id: "inv_6",
-          itemId: "item_arrow",
-          quantity: 5,
-          slot: "backpack",
-          isAttuned: false,
-        },
-      ],
-      resources: [
-        {
-          id: "hd_d6",
-          current: 1,
-        },
-        {
-          id: "trait_action_surge",
-          current: 1,
-        },
-        {
-          id: "trait_second_wind",
-          current: 1,
-        },
-      ],
+      inventory: data.character.inventory || [],
+      proficiencies: data.character.proficiencies || {},
+      currentHp: data.character.currentHp,
+      maxHp: data.character.maxHp,
+      resources: data.character.resources || [],
     });
-  }, [initializeStore]);
+  }, [data, initializeStore]);
+
+  if (isLoading) return <div>Booting dev fixture...</div>;
+
+  if (isError || !data?.character) {
+    return (
+      <div className="p-4 text-sm text-red-700">
+        Failed to load dev fixture character. Ensure the server is running and
+        seed data has been applied with <code>pnpm --filter @project/database db:seed</code>.
+      </div>
+    );
+  }
 
   return (
     // We do NOT wrap this in LiveSheetProvider because we don't want

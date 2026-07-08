@@ -1,10 +1,117 @@
-import { describe, expect, it, vi, beforeEach } from "vitest";
+import { describe, expect, it, vi, beforeEach, afterAll } from "vitest";
 import { CreateCharacterPayloadSchema } from "@project/shared";
+import type { Request, Response } from "express";
 
 describe("Character Routes", () => {
+  const consoleErrorSpy = vi
+    .spyOn(console, "error")
+    .mockImplementation(() => undefined);
+
   beforeEach(() => {
     vi.clearAllMocks();
   });
+
+  afterAll(() => {
+    consoleErrorSpy.mockRestore();
+  });
+
+  const createMockResponse = () => {
+    const res = {} as Response;
+    const status = vi.fn().mockReturnValue(res);
+    const json = vi.fn().mockReturnValue(res);
+
+    res.status = status as Response["status"];
+    res.json = json as Response["json"];
+
+    return {
+      res,
+      status,
+      json,
+    };
+  };
+
+  const createLevelUpRequest = (bodyOverrides: Record<string, unknown> = {}) =>
+    ({
+      body: {
+        characterId: "char-1",
+        targetClassId: "class_fighter",
+        newTotalLevel: 3,
+        hpRoll: 7,
+        ...bodyOverrides,
+      },
+    }) as Request;
+
+  const setupLevelUpHarness = async (resolverErrorMessage: string) => {
+    vi.resetModules();
+
+    const tx = {
+      select: vi.fn().mockReturnThis(),
+      from: vi.fn().mockReturnThis(),
+      where: vi
+        .fn()
+        .mockResolvedValueOnce([
+          {
+            id: "char-1",
+            campaignId: "camp-1",
+            str: 16,
+            dex: 12,
+            con: 14,
+            int: 10,
+            wis: 10,
+            cha: 8,
+          },
+        ])
+        .mockResolvedValueOnce([
+          {
+            id: "ledger-1",
+            characterId: "char-1",
+            classId: "class_fighter",
+            classLevel: 2,
+            subclassId: null,
+          },
+        ]),
+      update: vi.fn().mockReturnThis(),
+      set: vi.fn().mockReturnThis(),
+      insert: vi.fn().mockReturnThis(),
+      values: vi.fn().mockResolvedValue(undefined),
+    };
+
+    const transactionMock = vi.fn().mockImplementation(
+      async (callback: (trx: unknown) => Promise<unknown>) => callback(tx),
+    );
+
+    const resolveContextMock = vi.fn().mockResolvedValue({
+      targetLevel: 3,
+      isConfigured: true,
+      reason: null,
+      grantedTraitIds: [],
+      decisionTypes: [],
+      decisions: [],
+    });
+
+    const validatePayloadMock = vi.fn().mockImplementation(() => {
+      throw new Error(resolverErrorMessage);
+    });
+
+    vi.doMock("@project/database", () => ({
+      db: {
+        transaction: transactionMock,
+      },
+    }));
+
+    vi.doMock("../../services/levelUpValidation.js", () => ({
+      resolveNextLevelValidationContext: resolveContextMock,
+      validateLevelUpPayloadFromResolver: validatePayloadMock,
+    }));
+
+    const { applyLevelUp } = await import("../../controllers/characterController.js");
+
+    return {
+      applyLevelUp,
+      resolveContextMock,
+      validatePayloadMock,
+    };
+  };
 
   const validCreatePayload = {
     name: "Aragorn",
@@ -446,6 +553,46 @@ describe("Character Routes", () => {
 
       const result = CreateCharacterPayloadSchema.safeParse(payload);
       expect(result.success).toBe(true);
+    });
+  });
+
+  describe("POST /api/character/:characterId/level-up", () => {
+    it("returns 400 with resolver subclass validation error", async () => {
+      const { applyLevelUp } = await setupLevelUpHarness(
+        "A subclass selection is required at this level",
+      );
+
+      const req = createLevelUpRequest();
+      const { res, status, json } = createMockResponse();
+
+      await applyLevelUp(req, res);
+
+      expect(status).toHaveBeenCalledWith(400);
+      expect(json).toHaveBeenCalledWith({
+        success: false,
+        error: "A subclass selection is required at this level",
+      });
+    });
+
+    it("returns 400 with resolver trait-selection quantity validation error", async () => {
+      const { applyLevelUp } = await setupLevelUpHarness(
+        "You must select exactly 2 option(s) for Choose two skills.",
+      );
+
+      const req = createLevelUpRequest({
+        selectedTraits: {
+          dec_skills: ["trait_prof_athletics"],
+        },
+      });
+      const { res, status, json } = createMockResponse();
+
+      await applyLevelUp(req, res);
+
+      expect(status).toHaveBeenCalledWith(400);
+      expect(json).toHaveBeenCalledWith({
+        success: false,
+        error: "You must select exactly 2 option(s) for Choose two skills.",
+      });
     });
   });
 });

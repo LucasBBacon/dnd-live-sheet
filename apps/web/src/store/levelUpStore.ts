@@ -1,7 +1,53 @@
-import { ProgressionEngine, type ClassProgression } from "@project/engine";
+import type { ClassProgression, LevelDecision } from "@project/engine";
 import type { LevelUpPayload } from "@project/shared";
 import { create } from "zustand";
-import { apiClient } from "../api/client";
+import {
+  apiClient,
+  buildLevelUpOptionsEndpoint,
+  type ReferenceScope,
+} from "../api/client";
+
+type LevelUpOptionsResponse = {
+  subclasses: Array<{ id: string }>;
+  nextLevel: {
+    targetLevel: number;
+    isConfigured: boolean;
+    reason: string | null;
+    grantedTraitIds: string[];
+    decisionTypes: Array<"subclass" | "asi_or_feat">;
+  } | null;
+};
+
+export type PreResolvedNextLevelSupport = {
+  targetLevel: number;
+  isConfigured: boolean;
+  reason: string | null;
+};
+
+const mapServerDecisions = (
+  decisionTypes: Array<"subclass" | "asi_or_feat">,
+  subclasses: Array<{ id: string }>,
+): LevelDecision[] =>
+  decisionTypes.map((type): LevelDecision => {
+    if (type === "subclass") {
+      return {
+        id: "dec_server_subclass",
+        type: "subclass",
+        description: "Choose a subclass for this class level.",
+        options: subclasses.map((subclass) => subclass.id),
+        isRequired: true,
+        quantity: 1,
+      };
+    }
+
+    return {
+      id: "dec_server_asi_or_feat",
+      type: "asi_or_feat",
+      description: "Increase one ability score by 2, or two by 1, or choose a feat.",
+      isRequired: true,
+      quantity: 1,
+    };
+  });
 
 interface LevelUpState {
   isActive: boolean;
@@ -14,7 +60,9 @@ interface LevelUpState {
     classId: string,
     currentClassLevel: number,
     newTotalLevel: number,
-  ) => void;
+    scope?: ReferenceScope,
+    preResolvedSupport?: PreResolvedNextLevelSupport,
+  ) => Promise<void>;
   updateDraft: (updates: Partial<LevelUpPayload>) => void;
   validateAndSubmit: () => Promise<void>;
   cancelLevelUp: () => void;
@@ -26,33 +74,82 @@ export const useLevelUpStore = create<LevelUpState>((set, get) => ({
   draftPayload: {},
   errorMessage: null,
 
-  beginLevelUp: (characterId, classId, currentClassLevel, newTotalLevel) => {
-    // 1 - fetch required decisions for the next level from engine
-    const nextLevelDef = ProgressionEngine.getLevelDefinition(
-      classId,
-      currentClassLevel + 1,
-    );
-
-    if (!nextLevelDef) {
+  beginLevelUp: async (
+    characterId,
+    classId,
+    currentClassLevel,
+    newTotalLevel,
+    scope,
+    preResolvedSupport,
+  ) => {
+    if (preResolvedSupport && !preResolvedSupport.isConfigured) {
       set((state) => ({
         isActive: state.isActive,
         progressionContext: state.progressionContext,
         draftPayload: state.draftPayload,
-        errorMessage: `Level-up progression for ${classId} level ${currentClassLevel + 1} is not configured yet.`,
+        errorMessage:
+          preResolvedSupport.reason ||
+          `Level-up progression for ${classId} level ${preResolvedSupport.targetLevel} is not configured yet.`,
       }));
       return;
     }
 
-    set({
-      isActive: true,
-      progressionContext: nextLevelDef,
-      draftPayload: {
-        characterId,
-        targetClassId: classId,
-        newTotalLevel,
-      },
-      errorMessage: null,
-    });
+    try {
+      const response = await apiClient(
+        buildLevelUpOptionsEndpoint(
+          {
+            campaignId: scope?.campaignId,
+            characterId,
+          },
+          {
+            classId,
+            currentClassLevel,
+          },
+        ),
+      );
+
+      const { nextLevel, subclasses } = response as LevelUpOptionsResponse;
+
+      if (!nextLevel || !nextLevel.isConfigured) {
+        set((state) => ({
+          isActive: state.isActive,
+          progressionContext: state.progressionContext,
+          draftPayload: state.draftPayload,
+          errorMessage:
+            nextLevel?.reason ||
+            `Level-up progression for ${classId} level ${currentClassLevel + 1} is not configured yet.`,
+        }));
+        return;
+      }
+
+      set({
+        isActive: true,
+        progressionContext: {
+          classId,
+          level: nextLevel.targetLevel,
+          grantedTraits: nextLevel.grantedTraitIds,
+          decisions: mapServerDecisions(nextLevel.decisionTypes, subclasses),
+        },
+        draftPayload: {
+          characterId,
+          targetClassId: classId,
+          newTotalLevel,
+        },
+        errorMessage: null,
+      });
+    } catch (error) {
+      const message =
+        error instanceof Error
+          ? error.message
+          : "Failed to resolve level-up progression from server.";
+
+      set((state) => ({
+        isActive: state.isActive,
+        progressionContext: state.progressionContext,
+        draftPayload: state.draftPayload,
+        errorMessage: message,
+      }));
+    }
   },
 
   updateDraft: (updates) => {

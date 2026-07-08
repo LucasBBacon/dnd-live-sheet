@@ -9,6 +9,10 @@ import type { LevelUpPayload } from "@project/shared";
 import type { Request, Response } from "express";
 import { and, eq, sql } from "drizzle-orm";
 import { ProgressionEngine } from "@project/engine";
+import {
+  resolveNextLevelValidationContext,
+  validateLevelUpPayloadFromResolver,
+} from "../services/levelUpValidation.js";
 
 export const applyLevelUp = async (req: Request, res: Response) => {
   const payload: LevelUpPayload = req.body;
@@ -46,6 +50,21 @@ export const applyLevelUp = async (req: Request, res: Response) => {
           cha: character.cha,
         });
       }
+
+      const resolverContext = await resolveNextLevelValidationContext({
+        scope: {
+          campaignId: character.campaignId,
+          characterId,
+        },
+        classId: targetClassId,
+        currentClassLevel: targetClassLevel - 1,
+        requestedSubclassId: payload.subclassId,
+      });
+
+      validateLevelUpPayloadFromResolver({
+        payload,
+        context: resolverContext,
+      });
 
       // validate the payload structure against dict
       ProgressionEngine.validateLevelUp(

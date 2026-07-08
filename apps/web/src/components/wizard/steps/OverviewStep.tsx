@@ -1,13 +1,33 @@
 import React, { useMemo } from "react";
 import { useCharacterSheetStore } from "../../../store/characterSheetStore";
 import { useLevelUpStore } from "../../../store/levelUpStore";
-import { ProgressionEngine, TRAIT_DICTIONARY } from "@project/engine";
+import { TRAIT_DICTIONARY } from "@project/engine";
 import { useQuery } from "@tanstack/react-query";
-import { apiClient, buildScopedReferenceEndpoint } from "../../../api/client";
+import {
+  apiClient,
+  buildLevelUpOptionsEndpoint,
+} from "../../../api/client";
 
 type ReferenceClass = {
   id: string;
   name: string;
+};
+
+type LevelUpOptionsResponse = {
+  classes: ReferenceClass[];
+  supportByClass: Record<
+    string,
+    {
+      targetLevel: number;
+      isConfigured: boolean;
+      reason: string | null;
+    }
+  >;
+  nextLevel: {
+    targetLevel: number;
+    isConfigured: boolean;
+    reason: string | null;
+  } | null;
 };
 
 export const OverviewStep = () => {
@@ -19,14 +39,14 @@ export const OverviewStep = () => {
   const classLevels = useCharacterSheetStore((state) => state.classLevels);
 
   const {
-    data: classesData,
+    data: optionsData,
     isLoading: classesLoading,
     isError: classesError,
-  } = useQuery<{ classes: ReferenceClass[] }>({
-    queryKey: ["reference", "level-up", "classes", campaignId, characterId],
+  } = useQuery<LevelUpOptionsResponse>({
+    queryKey: ["reference", "level-up", "options", campaignId, characterId],
     queryFn: () =>
       apiClient(
-        buildScopedReferenceEndpoint("/reference/classes", {
+        buildLevelUpOptionsEndpoint({
           campaignId,
           characterId,
         }),
@@ -35,7 +55,8 @@ export const OverviewStep = () => {
     enabled: Boolean(characterId),
   });
 
-  const availableClasses = classesData?.classes ?? [];
+  const availableClasses = useMemo(() => optionsData?.classes ?? [], [optionsData]);
+  const supportByClassId = optionsData?.supportByClass ?? {};
 
   // fetch human-readable names for traits automatically received
   const automaticFeatures = useMemo(() => {
@@ -56,13 +77,16 @@ export const OverviewStep = () => {
 
     const newClassId = e.target.value;
     const currentLevelInNewClass = classLevels[newClassId] || 0;
+    const preResolvedSupport = supportByClassId[newClassId];
 
     // this instantly recalculates progressionContext and parent wizard steps
-    beginLevelUp(
+    void beginLevelUp(
       characterId,
       newClassId,
       currentLevelInNewClass,
       totalLevel + 1,
+      { campaignId },
+      preResolvedSupport,
     );
   };
 
@@ -96,17 +120,19 @@ export const OverviewStep = () => {
           {availableClasses.map((cls) => {
             const lvl = classLevels[cls.id] || 0;
             const isDip = lvl === 0;
-            const nextClassLevel = lvl + 1;
-            const isSupported = !!ProgressionEngine.getLevelDefinition(
-              cls.id,
-              nextClassLevel,
-            );
+            const support = supportByClassId[cls.id] ?? {
+              isConfigured: false,
+              reason: null,
+              targetLevel: lvl + 1,
+            };
+            const nextClassLevel = support.targetLevel ?? lvl + 1;
+            const isSupported = support.isConfigured;
 
             return (
               <option key={cls.id} value={cls.id} disabled={!isSupported}>
                 {cls.name}{" "}
                 {!isSupported
-                  ? `(Unavailable - Level ${nextClassLevel} not configured)`
+                  ? `(Unavailable - ${support.reason || `Level ${nextClassLevel} not configured`})`
                   : isDip
                     ? "(Multiclass - Level 1)"
                     : `Progress to Level ${lvl + 1}`}

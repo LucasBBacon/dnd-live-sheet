@@ -3,6 +3,7 @@ import { AsiFeatStep } from "./steps/AsiFeatStep";
 import { HpRollStep } from "./steps/HpRollStep";
 import { ReviewStep } from "./steps/ReviewStep";
 import { OverviewStep } from "./steps/OverviewStep";
+import { SubclassStep } from "./steps/SubclassStep";
 
 interface RouterProps {
   stepType: string;
@@ -24,7 +25,7 @@ export const WizardStepRouter = ({ stepType, decisions }: RouterProps) => {
         </div>
       );
     case "subclass":
-      return <div>SubclassStep</div>;
+      return <SubclassStep context={getDecisionContext("subclass")!} />;
     case "asi_or_feat":
       return <AsiFeatStep context={getDecisionContext("asi_or_feat")!} />;
     case "review":
