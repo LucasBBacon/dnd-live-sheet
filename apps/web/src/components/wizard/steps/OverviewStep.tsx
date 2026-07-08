@@ -2,28 +2,45 @@ import React, { useMemo } from "react";
 import { useCharacterSheetStore } from "../../../store/characterSheetStore";
 import { useLevelUpStore } from "../../../store/levelUpStore";
 import { ProgressionEngine, TRAIT_DICTIONARY } from "@project/engine";
+import { useQuery } from "@tanstack/react-query";
+import { apiClient, buildScopedReferenceEndpoint } from "../../../api/client";
 
-// Mocked for the snippet; TODO: GET THIS FROM OUR DB
-const AVAILABLE_CLASSES = [
-  { id: "class_fighter", name: "Fighter" },
-  { id: "class_rogue", name: "Rogue" },
-  { id: "class_wizard", name: "Wizard" },
-];
+type ReferenceClass = {
+  id: string;
+  name: string;
+};
 
 export const OverviewStep = () => {
   const { draftPayload, progressionContext, beginLevelUp, errorMessage } =
     useLevelUpStore();
   const characterId = useCharacterSheetStore((state) => state.id);
+  const campaignId = useCharacterSheetStore((state) => state.campaignId);
   const totalLevel = useCharacterSheetStore((state) => state.level);
   const classLevels = useCharacterSheetStore((state) => state.classLevels);
 
+  const {
+    data: classesData,
+    isLoading: classesLoading,
+    isError: classesError,
+  } = useQuery<{ classes: ReferenceClass[] }>({
+    queryKey: ["reference", "level-up", "classes", campaignId, characterId],
+    queryFn: () =>
+      apiClient(
+        buildScopedReferenceEndpoint("/reference/classes", {
+          campaignId,
+          characterId,
+        }),
+      ),
+    staleTime: 1000 * 60 * 30,
+    enabled: Boolean(characterId),
+  });
+
+  const availableClasses = classesData?.classes ?? [];
+
   // fetch human-readable names for traits automatically received
   const automaticFeatures = useMemo(() => {
-    console.log("Progression context")
-    console.log(progressionContext)
     if (!progressionContext) return [];
     return progressionContext.grantedTraits.map((traitId) => {
-      console.log(traitId);
       return (
         TRAIT_DICTIONARY[traitId]?.name ||
         traitId.replace(/_/g, " ").toUpperCase()
@@ -69,11 +86,14 @@ export const OverviewStep = () => {
           Target Class Progression
         </label>
         <select
-          value={draftPayload.targetClassId}
+          value={draftPayload.targetClassId ?? ""}
           onChange={handleClassChange}
+          disabled={
+            classesLoading || classesError || availableClasses.length === 0
+          }
           className="border border-gray-300 p-2 rounded font-bold text-lg text-indigo-900 bg-white shadow-sm"
         >
-          {AVAILABLE_CLASSES.map((cls) => {
+          {availableClasses.map((cls) => {
             const lvl = classLevels[cls.id] || 0;
             const isDip = lvl === 0;
             const nextClassLevel = lvl + 1;
@@ -88,14 +108,18 @@ export const OverviewStep = () => {
                 {!isSupported
                   ? `(Unavailable - Level ${nextClassLevel} not configured)`
                   : isDip
-                  ? "(Multiclass - Level 1)"
-                  : `Progress to Level ${lvl + 1}`}
+                    ? "(Multiclass - Level 1)"
+                    : `Progress to Level ${lvl + 1}`}
               </option>
             );
           })}
         </select>
         <p className="text-xs text-gray-500">
-          Only classes with configured progression data can be selected here.
+          {classesLoading
+            ? "Loading class options..."
+            : classesError
+              ? "Failed to load class options for this campaign scope."
+              : "Only classes with configured progression data can be selected here."}
         </p>
       </div>
 

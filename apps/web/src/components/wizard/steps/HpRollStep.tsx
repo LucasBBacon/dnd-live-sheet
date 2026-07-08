@@ -1,23 +1,43 @@
 import { useAbilities } from "../../../hooks/useCharacterStats";
 import { useLevelUpStore } from "../../../store/levelUpStore";
 import { useRollStore } from "../../../store/rollStore";
+import { useCharacterSheetStore } from "../../../store/characterSheetStore";
+import { useQuery } from "@tanstack/react-query";
+import { apiClient, buildScopedReferenceEndpoint } from "../../../api/client";
 
-const CLASS_HIT_DICE: Record<string, number> = {
-  class_fighter: 10,
-  class_rogue: 8,
-  class_wizard: 6,
+type ReferenceClass = {
+  id: string;
+  hitDie: number;
 };
 
 export const HpRollStep = () => {
   const { draftPayload, updateDraft } = useLevelUpStore();
   const requestRoll = useRollStore((state) => state.requestRoll);
+  const campaignId = useCharacterSheetStore((state) => state.campaignId);
+  const characterId = useCharacterSheetStore((state) => state.id);
+
+  const { data: classesData } = useQuery<{ classes: ReferenceClass[] }>({
+    queryKey: ["reference", "level-up", "classes", campaignId, characterId],
+    queryFn: () =>
+      apiClient(
+        buildScopedReferenceEndpoint("/reference/classes", {
+          campaignId,
+          characterId,
+        }),
+      ),
+    staleTime: 1000 * 60 * 30,
+    enabled: Boolean(characterId),
+  });
 
   // get live CON modifier
   const { finalAbilities } = useAbilities();
   const conMod = finalAbilities.con.modifier;
 
   // determine die size based on the class being leveled up
-  const hitDieSize = CLASS_HIT_DICE[draftPayload.targetClassId!] || 8;
+  const selectedClass = classesData?.classes.find(
+    (cls) => cls.id === draftPayload.targetClassId,
+  );
+  const hitDieSize = selectedClass?.hitDie ?? 8;
 
   // 5e rule: average = half die size + 1
   const averageRoll = hitDieSize / 2 + 1;

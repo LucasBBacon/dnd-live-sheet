@@ -1,6 +1,7 @@
 import { ProgressionEngine, type ClassProgression } from "@project/engine";
 import type { LevelUpPayload } from "@project/shared";
 import { create } from "zustand";
+import { apiClient } from "../api/client";
 
 interface LevelUpState {
   isActive: boolean;
@@ -37,8 +38,7 @@ export const useLevelUpStore = create<LevelUpState>((set, get) => ({
         isActive: state.isActive,
         progressionContext: state.progressionContext,
         draftPayload: state.draftPayload,
-        errorMessage:
-          `Level-up progression for ${classId} level ${currentClassLevel + 1} is not configured yet.`,
+        errorMessage: `Level-up progression for ${classId} level ${currentClassLevel + 1} is not configured yet.`,
       }));
       return;
     }
@@ -74,7 +74,40 @@ export const useLevelUpStore = create<LevelUpState>((set, get) => ({
       throw new Error("Subclass selection is strictly required to proceed.");
     }
 
-    // TODO: Execute API submission
+    const {
+      characterId,
+      targetClassId,
+      newTotalLevel,
+      hpRoll,
+      subclassId,
+      asiChoices,
+      featId,
+      selectedTraits,
+      addedSpells,
+      replacedSpells,
+    } = draftPayload;
+
+    if (!characterId || !targetClassId || !newTotalLevel || !hpRoll) {
+      throw new Error("Level-up payload is incomplete.");
+    }
+
+    const payload: LevelUpPayload = {
+      characterId,
+      targetClassId,
+      newTotalLevel,
+      hpRoll,
+      subclassId,
+      asiChoices,
+      featId,
+      selectedTraits,
+      addedSpells,
+      replacedSpells,
+    };
+
+    await apiClient(`/character/${characterId}/level-up`, {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
   },
 
   cancelLevelUp: () => {

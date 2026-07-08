@@ -1,24 +1,39 @@
-import { useMemo } from "react";
-import { useAbilities } from "../../../../hooks/useCharacterStats";
+import { useQuery } from "@tanstack/react-query";
+import {
+  apiClient,
+  buildScopedReferenceEndpoint,
+} from "../../../../api/client";
 import { useCharacterSheetStore } from "../../../../store/characterSheetStore";
 import { useLevelUpStore } from "../../../../store/levelUpStore";
-import { FEAT_DICTIONARY } from "@project/engine";
+
+type ReferenceFeat = {
+  id: string;
+  name: string;
+  lore?: {
+    shortDescription?: string;
+    fullText?: string;
+  } | null;
+};
 
 export const FeatSelection = () => {
   const { draftPayload, updateDraft } = useLevelUpStore();
-  const { finalAbilities } = useAbilities();
-  const traits = useCharacterSheetStore((state) => state.traits);
+  const campaignId = useCharacterSheetStore((state) => state.campaignId);
+  const characterId = useCharacterSheetStore((state) => state.id);
 
-  const proficiencies = useMemo(
-    () => traits.map((trait) => trait.id),
-    [traits],
-  );
+  const { data, isLoading, isError } = useQuery<{ feats: ReferenceFeat[] }>({
+    queryKey: ["reference", "level-up", "feats", campaignId, characterId],
+    queryFn: () =>
+      apiClient(
+        buildScopedReferenceEndpoint("/reference/feats", {
+          campaignId,
+          characterId,
+        }),
+      ),
+    staleTime: 1000 * 60 * 30,
+    enabled: Boolean(characterId),
+  });
 
-  const availableFeats = useMemo(() => {
-    return FEAT_DICTIONARY.filter(
-      (feat) => feat.prerequisites(finalAbilities, proficiencies) === true,
-    );
-  }, [finalAbilities, proficiencies]);
+  const availableFeats = data?.feats ?? [];
 
   const selectedFeat = availableFeats.find((f) => f.id === draftPayload.featId);
 
@@ -41,7 +56,11 @@ export const FeatSelection = () => {
           ))}
         </select>
         <p className="mt-2 text-xs text-gray-500">
-          {availableFeats.length} feat{availableFeats.length === 1 ? "" : "s"} available for this character.
+          {isLoading
+            ? "Loading feat options..."
+            : isError
+              ? "Failed to load feats for the current campaign scope."
+              : `${availableFeats.length} feat${availableFeats.length === 1 ? "" : "s"} available in this scope.`}
         </p>
       </div>
 
@@ -53,7 +72,9 @@ export const FeatSelection = () => {
               {selectedFeat.name}
             </h4>
             <p className="text-sm text-gray-700 leading-relaxed">
-              {selectedFeat.description}
+              {selectedFeat.lore?.fullText ||
+                selectedFeat.lore?.shortDescription ||
+                "No feat description available."}
             </p>
           </>
         ) : (

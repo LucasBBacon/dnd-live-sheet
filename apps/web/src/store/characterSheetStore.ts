@@ -12,8 +12,11 @@ import { socketService } from "../services/socketService";
 
 export interface CharacterSheetState {
   id: string;
+  campaignId: string | null;
   level: number;
   classLevels: Record<string, number>;
+  raceId: string | null;
+  subraceId: string | null;
 
   currentHp: number;
   maxHp: number;
@@ -57,8 +60,11 @@ export interface CharacterSheetState {
 export const useCharacterSheetStore = create<CharacterSheetState>(
   (set, get) => ({
     id: "",
+    campaignId: null,
     level: 1,
     classLevels: {},
+    raceId: null,
+    subraceId: null,
     currentHp: 10,
     maxHp: 10,
     baseHpRolled: 1,

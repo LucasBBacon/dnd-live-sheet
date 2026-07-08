@@ -12,6 +12,7 @@ import { CreateCharacterPayloadSchema } from "@project/shared";
 import { and, eq } from "drizzle-orm";
 import { v4 as uuidv4 } from "uuid";
 import { processStartingEquipment } from "../utils/inventory.js";
+import { applyLevelUp } from "../controllers/characterController.js";
 
 const router: ExpressRouter = Router();
 type CampaignWriteDb = Pick<typeof db, "select" | "insert">;
@@ -221,7 +222,9 @@ router.get("/", async (req, res, next) => {
     }
 
     const requestedCharacterId =
-      typeof req.query.characterId === "string" ? req.query.characterId : undefined;
+      typeof req.query.characterId === "string"
+        ? req.query.characterId
+        : undefined;
     const characterId = requestedCharacterId;
 
     if (!characterId) {
@@ -257,6 +260,50 @@ router.get("/:characterId", async (req, res, next) => {
       return res.status(404).json({ error: "No active character found." });
     }
     return res.status(200).json({ character: payload });
+  } catch (error) {
+    next(error);
+  }
+});
+
+/**
+ * POST /api/character/:characterId/level-up
+ * Applies a validated level-up payload for the requested character.
+ */
+router.post("/:characterId/level-up", async (req, res, next) => {
+  try {
+    const userId = req.user?.id;
+    if (!userId) {
+      return res.status(401).json({ error: "Unauthorized request" });
+    }
+
+    const characterId = req.params.characterId;
+    const [character] = await db
+      .select({ id: characters.id, campaignId: characters.campaignId })
+      .from(characters)
+      .where(eq(characters.id, characterId))
+      .limit(1);
+
+    if (!character) {
+      return res.status(404).json({ error: "Character not found." });
+    }
+
+    const canAccess = await isUserCampaignMember(userId, character.campaignId);
+    if (!canAccess) {
+      return res.status(403).json({ error: "Forbidden campaign access." });
+    }
+
+    if (req.body?.characterId && req.body.characterId !== characterId) {
+      return res
+        .status(400)
+        .json({ error: "Character id mismatch in payload." });
+    }
+
+    req.body = {
+      ...req.body,
+      characterId,
+    };
+
+    return applyLevelUp(req, res);
   } catch (error) {
     next(error);
   }

@@ -1,5 +1,5 @@
 import { db } from "@project/database";
-import { items, traits } from "@project/database/src/schema/reference.js";
+import { feats, items, traits } from "@project/database/src/schema/reference.js";
 import { and, asc, desc, eq, or, sql } from "drizzle-orm";
 import {
   type ReferenceCacheSnapshot,
@@ -8,6 +8,7 @@ import {
 } from "./referenceCache.js";
 
 type TraitRow = typeof traits.$inferSelect;
+type FeatRow = typeof feats.$inferSelect;
 type ItemRow = typeof items.$inferSelect;
 
 export type ReferenceScope = {
@@ -178,6 +179,58 @@ const itemPrecedence = (row: ItemRow, scope: ReferenceScope): number => {
 };
 
 const canonicalItemKey = (row: ItemRow): string => row.supersedesId ?? row.id;
+
+const featPrecedence = (row: FeatRow, scope: ReferenceScope): number => {
+  if (row.sourceType === "core") return 0;
+  if (row.ownerCharacterId && row.ownerCharacterId === scope.characterId) return 2;
+  return 1;
+};
+
+const canonicalFeatKey = (row: FeatRow): string => row.supersedesId ?? row.id;
+
+export const listEffectiveFeats = async (
+  scope: ReferenceScope,
+): Promise<FeatRow[]> => {
+  const visibilityFilter = scope.campaignId
+    ? or(
+        and(eq(feats.sourceType, "core"), eq(feats.isPublished, true)),
+        and(
+          eq(feats.sourceType, "homebrew"),
+          eq(feats.isPublished, true),
+          eq(feats.ownerCampaignId, scope.campaignId),
+          scope.characterId
+            ? or(
+                eq(feats.ownerCharacterId, scope.characterId),
+                sql`${feats.ownerCharacterId} IS NULL`,
+              )
+            : sql`${feats.ownerCharacterId} IS NULL`,
+        ),
+      )
+    : and(eq(feats.sourceType, "core"), eq(feats.isPublished, true));
+
+  const candidates = await db
+    .select()
+    .from(feats)
+    .where(visibilityFilter)
+    .orderBy(asc(feats.name));
+
+  const dedupedByCanonical = new Map<string, FeatRow>();
+  for (const row of candidates) {
+    const key = canonicalFeatKey(row);
+    const existing = dedupedByCanonical.get(key);
+    if (!existing) {
+      dedupedByCanonical.set(key, row);
+      continue;
+    }
+    if (featPrecedence(row, scope) > featPrecedence(existing, scope)) {
+      dedupedByCanonical.set(key, row);
+    }
+  }
+
+  return Array.from(dedupedByCanonical.values()).sort((a, b) =>
+    a.name.localeCompare(b.name),
+  );
+};
 
 export const searchEffectiveItems = async ({
   scope,

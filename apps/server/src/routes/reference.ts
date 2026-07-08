@@ -1,13 +1,11 @@
 import { db } from "@project/database";
 import { Router, type Router as ExpressRouter } from "express";
 import { campaignMembers } from "@project/database/src/schema/operational.js";
-import {
-  items,
-  traits,
-} from "@project/database/src/schema/reference.js";
+import { traits } from "@project/database/src/schema/reference.js";
 import { and, eq } from "drizzle-orm";
 import {
   getEffectiveReferenceSnapshot,
+  listEffectiveFeats,
   searchEffectiveItems,
 } from "../services/effectiveReferenceResolver.js";
 import {
@@ -44,7 +42,9 @@ const requireScopedAccessIfPresent = async (
   const campaignId =
     typeof req.query.campaignId === "string" ? req.query.campaignId : undefined;
   const characterId =
-    typeof req.query.characterId === "string" ? req.query.characterId : undefined;
+    typeof req.query.characterId === "string"
+      ? req.query.characterId
+      : undefined;
 
   if (!campaignId && characterId) {
     res.status(400).json({
@@ -150,21 +150,21 @@ router.get("/races", async (req, res, next) => {
       const baseTraits = (cache.raceTraitsByRaceId.get(race.id) ?? []).map(
         (trait) => ({ ...trait, sourceOrigin: `Race: ${race.name}` }),
       );
-      const associatedSubraces = (cache.subracesByRaceId.get(race.id) ?? []).map(
-        (subrace) => {
-          const subTraits = (cache.subraceTraitsBySubraceId.get(subrace.id) ?? []).map(
-            (trait) => ({
-              ...trait,
-              sourceOrigin: `Subrace: ${subrace.name}`,
-            }),
-          );
+      const associatedSubraces = (
+        cache.subracesByRaceId.get(race.id) ?? []
+      ).map((subrace) => {
+        const subTraits = (
+          cache.subraceTraitsBySubraceId.get(subrace.id) ?? []
+        ).map((trait) => ({
+          ...trait,
+          sourceOrigin: `Subrace: ${subrace.name}`,
+        }));
 
-          return {
-            ...subrace,
-            traits: subTraits,
-          };
-        },
-      );
+        return {
+          ...subrace,
+          traits: subTraits,
+        };
+      });
 
       return { ...race, traits: baseTraits, subraces: associatedSubraces };
     });
@@ -185,6 +185,21 @@ router.get("/classes", async (req, res, next) => {
     if (!scoped.ok) return;
     const cache = await getEffectiveReferenceSnapshot(scoped.scope);
     return res.status(200).json({ classes: cache.classes });
+  } catch (error) {
+    next(error);
+  }
+});
+
+/**
+ * GET /api/reference/feats
+ * Returns feats resolved through the scoped 3-layer authority model.
+ */
+router.get("/feats", async (req, res, next) => {
+  try {
+    const scoped = await requireScopedAccessIfPresent(req, res);
+    if (!scoped.ok) return;
+    const effectiveFeats = await listEffectiveFeats(scoped.scope);
+    return res.status(200).json({ feats: effectiveFeats });
   } catch (error) {
     next(error);
   }
@@ -234,9 +249,10 @@ router.get("/classes/:id/timeline", async (req, res, next) => {
       if (validSubclass && isValidSubclass) {
         subclassGrantedFeatures = Array.from({ length: 20 }, (_, i) => i + 1)
           .flatMap((level) =>
-            (cache.subclassTraitsBySubclassLevel.get(
-              `${requestedSubclassId}::${level}`,
-            ) ?? []
+            (
+              cache.subclassTraitsBySubclassLevel.get(
+                `${requestedSubclassId}::${level}`,
+              ) ?? []
             ).map((trait) => ({
               level,
               trait: {
@@ -252,14 +268,20 @@ router.get("/classes/:id/timeline", async (req, res, next) => {
       }
     }
 
-    const classFeaturesByLevel = new Map<number, Array<(typeof traits.$inferSelect)>>(
+    const classFeaturesByLevel = new Map<
+      number,
+      Array<typeof traits.$inferSelect>
+    >(
       Array.from({ length: 20 }, (_, i) => i + 1).map((level) => [
         level,
         cache.classTraitsByClassLevel.get(`${classId}::${level}`) ?? [],
       ]),
     );
 
-    const subclassFeaturesByLevel = new Map<number, Array<(typeof traits.$inferSelect)>>(
+    const subclassFeaturesByLevel = new Map<
+      number,
+      Array<typeof traits.$inferSelect>
+    >(
       Array.from({ length: 20 }, (_, i) => i + 1).map((level) => [
         level,
         subclassGrantedFeatures
@@ -274,7 +296,10 @@ router.get("/classes/:id/timeline", async (req, res, next) => {
       const classFeaturesAtLevel = classFeaturesByLevel.get(currentLevel) ?? [];
       const subclassFeaturesAtLevel =
         subclassFeaturesByLevel.get(currentLevel) ?? [];
-      const featuresAtLevel = [...classFeaturesAtLevel, ...subclassFeaturesAtLevel];
+      const featuresAtLevel = [
+        ...classFeaturesAtLevel,
+        ...subclassFeaturesAtLevel,
+      ];
 
       return {
         level: currentLevel,
@@ -301,9 +326,8 @@ router.get("/backgrounds", async (req, res, next) => {
     const cache = await getEffectiveReferenceSnapshot(scoped.scope);
 
     const payload = cache.backgrounds.map((background) => {
-      const grantedTraits = (cache.backgroundTraitsByBackgroundId.get(
-        background.id,
-      ) ?? []
+      const grantedTraits = (
+        cache.backgroundTraitsByBackgroundId.get(background.id) ?? []
       ).map((trait) => ({
         ...trait,
         sourceOrigin: `Background: ${background.name}`,

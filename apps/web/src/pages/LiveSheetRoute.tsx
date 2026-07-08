@@ -21,8 +21,11 @@ export const LiveSheetRoute = () => {
       // hydrate zustand store with db payload
       initializeStore({
         id: data.character.id,
+        campaignId: data.character.campaignId ?? null,
         level: data.character.level || 1,
         classLevels: data.character.classLevels || {},
+        raceId: data.character.raceId ?? null,
+        subraceId: data.character.subraceId ?? null,
         baseScores: {
           str: data.character.str,
           dex: data.character.dex,
