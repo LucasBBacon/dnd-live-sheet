@@ -25,15 +25,31 @@ type ScopedContext = {
   characterId?: string;
 };
 
+// #region Helper Functions
+
+/**
+ * Extracts the user ID from the request headers or user object.
+ * @param req The incoming request object containing headers and user information.
+ * @returns The user ID if present, otherwise undefined.
+ */
 const getHeaderUserId = (req: {
   user?: { id?: string };
   headers: Record<string, unknown>;
 }): string | undefined => {
+  // If the user object has an ID, return it directly
   if (typeof req.user?.id === "string") return req.user.id;
+  // Otherwise, check the "x-tester-id" header for a user ID
+  // if the header is a string, return it; otherwise, return undefined
   const testerHeader = req.headers["x-tester-id"];
   return typeof testerHeader === "string" ? testerHeader : undefined;
 };
 
+/**
+ * Requires scoped access for the request if a campaignId is present.
+ * @param req The incoming request object containing query parameters, headers, and user information.
+ * @param res The response object used to send HTTP responses.
+ * @returns An object indicating whether access is granted and the scoped context if applicable.
+ */
 const requireScopedAccessIfPresent = async (
   req: {
     query: Record<string, unknown>;
@@ -44,6 +60,7 @@ const requireScopedAccessIfPresent = async (
     status: (code: number) => { json: (body: unknown) => unknown };
   },
 ): Promise<{ ok: true; scope: ScopedContext } | { ok: false }> => {
+  // Extract campaignId and characterId from query parameters
   const campaignId =
     typeof req.query.campaignId === "string" ? req.query.campaignId : undefined;
   const characterId =
@@ -51,6 +68,7 @@ const requireScopedAccessIfPresent = async (
       ? req.query.characterId
       : undefined;
 
+  // If characterId is provided without campaignId, return a 400 error
   if (!campaignId && characterId) {
     res.status(400).json({
       error: "characterId scoped reads require campaignId context.",
@@ -58,14 +76,18 @@ const requireScopedAccessIfPresent = async (
     return { ok: false };
   }
 
+  // If neither campaignId nor characterId is provided, return an empty scope
   if (!campaignId) return { ok: true, scope: {} };
 
+  // If campaignId is provided, check for user authentication
+  // If the user is not authenticated, return a 401 error
   const userId = getHeaderUserId(req);
   if (!userId) {
     res.status(401).json({ error: "campaignId scoped reads require auth." });
     return { ok: false };
   }
 
+  // Query the database to check if the user is a member of the specified campaign
   const [membership] = await db
     .select({ userId: campaignMembers.userId })
     .from(campaignMembers)
@@ -77,11 +99,13 @@ const requireScopedAccessIfPresent = async (
     )
     .limit(1);
 
+  // If the user is not a member of the campaign, return a 403 error
   if (!membership) {
     res.status(403).json({ error: "Forbidden campaign access." });
     return { ok: false };
   }
 
+  // If all checks pass, return the scoped context with campaignId and characterId (if provided)
   return {
     ok: true,
     scope: characterId ? { campaignId, characterId } : { campaignId },
@@ -114,6 +138,12 @@ const hasEffectCategory = (effects: unknown, categories: string[]): boolean => {
   });
 };
 
+/**
+ * Determines if a given trait matches a specified category (skills or tools_and_languages).
+ * @param trait An object representing the trait, containing its ID, name, and effects.
+ * @param category The category to match against, either "skills" or "tools_and_languages".
+ * @returns A boolean indicating whether the trait matches the specified category.
+ */
 const matchesTraitCategory = (
   trait: { id: string; name: string; effects: unknown },
   category: string,
@@ -142,6 +172,11 @@ const matchesTraitCategory = (
   return false;
 };
 
+/**
+ * Builds a class timeline for a given class and optional subclass, resolving features granted at each level.
+ * @param param0 An object containing the effective reference snapshot, class ID, and optional requested subclass ID.
+ * @returns An array representing the class timeline, with each entry containing the level, scaling, spellcasting progression, and features granted at that level.
+ */
 const buildClassTimeline = ({
   cache,
   classId,
@@ -151,6 +186,8 @@ const buildClassTimeline = ({
   classId: string;
   requestedSubclassId: string | undefined;
 }) => {
+  // retrieve class levels for the specified class ID from cache, default to empty array if not found
+  // create a map of level metadata for quick access by level
   const levels = cache.classLevelsByClassId.get(classId) ?? [];
   const levelMetaByLevel = new Map(levels.map((row) => [row.level, row]));
 
@@ -159,10 +196,14 @@ const buildClassTimeline = ({
     trait: typeof traits.$inferSelect;
   }> = [];
 
+  // if a requested subclass ID is provided, validate it against cache and check if it belongs to specified class
   if (requestedSubclassId) {
     const validSubclass = cache.subclassById.get(requestedSubclassId);
     const isValidSubclass = validSubclass?.parentClassId === classId;
 
+    // if the subclass is valid,
+    // build list of granted features for each level (1-20) by retrieving traits from cache
+    // annotate with source origin
     if (validSubclass && isValidSubclass) {
       subclassGrantedFeatures = Array.from({ length: 20 }, (_, i) => i + 1)
         .flatMap((level) =>
@@ -185,6 +226,7 @@ const buildClassTimeline = ({
     }
   }
 
+  // build maps of class features and subclass features by level for quick access
   const classFeaturesByLevel = new Map<
     number,
     Array<typeof traits.$inferSelect>
@@ -195,6 +237,7 @@ const buildClassTimeline = ({
     ]),
   );
 
+  // build maps of subclass features by level for quick access, filtering granted features by level
   const subclassFeaturesByLevel = new Map<
     number,
     Array<typeof traits.$inferSelect>
@@ -207,6 +250,8 @@ const buildClassTimeline = ({
     ]),
   );
 
+  // return an array representing the class timeline
+  // each entry contains the level, scaling, spellcasting progression, and features granted at that level
   return Array.from({ length: 20 }, (_, i) => {
     const currentLevel = i + 1;
     const levelMeta = levelMetaByLevel.get(currentLevel);
@@ -227,6 +272,11 @@ const buildClassTimeline = ({
   });
 };
 
+/**
+ * Builds the next level context for a character's class progression, including the target level and granted traits at that level.
+ * @param param0 An object containing the effective reference snapshot, class ID, current class level, and optional requested subclass ID.
+ * @returns An object representing the next level context, including the target level and an array of granted trait IDs at that level.
+ */
 const buildNextLevelContext = ({
   cache,
   classId,
@@ -238,27 +288,35 @@ const buildNextLevelContext = ({
   currentClassLevel: number;
   requestedSubclassId: string | undefined;
 }) => {
+  // resolve the next level context from the effective reference snapshot
   const nextLevelContext = resolveNextLevelValidationContextFromSnapshot({
     cache,
     classId,
     currentClassLevel,
-    requestedSubclassId,
+    ...(requestedSubclassId !== undefined ? { requestedSubclassId } : {}),
   });
 
+  // if next level context is not configured, return it
   if (!nextLevelContext.isConfigured) {
     return nextLevelContext;
   }
 
+  // build class timeline for class and optional subclass
   const timeline = buildClassTimeline({
     cache,
     classId,
     requestedSubclassId,
   });
 
+  // find the target tier in the timeline based on target level from next level context
   const targetTier = timeline.find(
     (tier) => tier.level === nextLevelContext.targetLevel,
   );
-  const grantedTraitIds = (targetTier?.features ?? []).map((feature) => feature.id);
+  // extract granted trait IDs from the features at the target tier,
+  // defaulting to empty array if no features are found
+  const grantedTraitIds = (targetTier?.features ?? []).map(
+    (feature) => feature.id,
+  );
 
   return {
     ...nextLevelContext,
@@ -266,6 +324,11 @@ const buildNextLevelContext = ({
   };
 };
 
+/**
+ * Loads the character's class levels based on the provided characterId and campaignId.
+ * @param param0 An object containing characterId and campaignId.
+ * @returns A promise that resolves to a record mapping class IDs to their corresponding class levels for the specified character.
+ */
 const loadCharacterClassLevels = async ({
   characterId,
   campaignId,
@@ -292,7 +355,10 @@ const loadCharacterClassLevels = async ({
   }
 
   const classRows = await db
-    .select({ classId: characterClasses.classId, classLevel: characterClasses.classLevel })
+    .select({
+      classId: characterClasses.classId,
+      classLevel: characterClasses.classLevel,
+    })
     .from(characterClasses)
     .where(eq(characterClasses.characterId, characterId));
 
@@ -301,15 +367,27 @@ const loadCharacterClassLevels = async ({
   );
 };
 
+// #endregion
+
+// #region GET /api/reference/races
+
 /**
  * GET /api/reference/races
+ *
  * Returns all races. If `requiresSubrace` is true, the `subraces` array will be populated.
  */
 router.get("/races", async (req, res, next) => {
   try {
+    // check for scoped access based on campaignId and characterId in the request
+    // if access not granted, response has already been sent with an error status
     const scoped = await requireScopedAccessIfPresent(req, res);
     if (!scoped.ok) return;
+
+    // fetch effective reference snapshot based on scoped context
     const cache = await getEffectiveReferenceSnapshot(scoped.scope);
+
+    // map over races in cache to build response payload
+    // include base traits and associated subraces with their traits
     const payload = cache.races.map((race) => {
       const baseTraits = (cache.raceTraitsByRaceId.get(race.id) ?? []).map(
         (trait) => ({ ...trait, sourceOrigin: `Race: ${race.name}` }),
@@ -330,23 +408,33 @@ router.get("/races", async (req, res, next) => {
         };
       });
 
+      // return race obj with base traits and associated subraces
       return { ...race, traits: baseTraits, subraces: associatedSubraces };
     });
 
+    // send the response with the constructed payload
     return res.status(200).json({ races: payload });
   } catch (error) {
     next(error);
   }
 });
 
+// #endregion
+
+// #region GET /api/reference/classes
+
 /**
  * GET /api/reference/classes
- * Returns all base classes with their strict subclass requirement triggers.
+ *
+ * Returns all classes with their associated subclasses and traits resolved through the scoped 3-layer authority model.
  */
 router.get("/classes", async (req, res, next) => {
   try {
+    // check for scoped access based on campaignId and characterId in the request
     const scoped = await requireScopedAccessIfPresent(req, res);
     if (!scoped.ok) return;
+
+    // fetch effective reference snapshot based on scoped context, and return the classes from the cache
     const cache = await getEffectiveReferenceSnapshot(scoped.scope);
     return res.status(200).json({ classes: cache.classes });
   } catch (error) {
@@ -354,14 +442,22 @@ router.get("/classes", async (req, res, next) => {
   }
 });
 
+// #endregion
+
+// #region GET /api/reference/feats
+
 /**
  * GET /api/reference/feats
+ *
  * Returns feats resolved through the scoped 3-layer authority model.
  */
 router.get("/feats", async (req, res, next) => {
   try {
+    // check for scoped access based on campaignId and characterId in the request
     const scoped = await requireScopedAccessIfPresent(req, res);
     if (!scoped.ok) return;
+
+    // fetch effective feats based on scoped context, and return the feats in the response
     const effectiveFeats = await listEffectiveFeats(scoped.scope);
     return res.status(200).json({ feats: effectiveFeats });
   } catch (error) {
@@ -369,18 +465,22 @@ router.get("/feats", async (req, res, next) => {
   }
 });
 
+// #endregion
+
+// #region GET /api/reference/level-up/options
+
 /**
  * GET /api/reference/level-up/options
+ *
  * Consolidated level-up payload for wizard steps.
- * Query params:
- * - classId?: string
- * - subclassId?: string (requires classId)
  */
 router.get("/level-up/options", async (req, res, next) => {
   try {
+    // check for scoped access based on campaignId and characterId in the request
     const scoped = await requireScopedAccessIfPresent(req, res);
     if (!scoped.ok) return;
 
+    // extract query params for classId, subclassId, and currentClassLevel
     const classId =
       typeof req.query.classId === "string" ? req.query.classId : undefined;
     const subclassId =
@@ -395,12 +495,14 @@ router.get("/level-up/options", async (req, res, next) => {
       ? Math.max(0, currentClassLevelRaw)
       : 0;
 
+    // if subclassId and no classId, return a 400 error
     if (!classId && subclassId) {
       return res.status(400).json({
         error: "subclassId requires classId context.",
       });
     }
 
+    // fetch the effective reference snapshot, effective feats, and character class levels based on scoped context
     const cache = await getEffectiveReferenceSnapshot(scoped.scope);
     const feats = await listEffectiveFeats(scoped.scope);
     const classLevelsByClassId = await loadCharacterClassLevels({
@@ -408,10 +510,12 @@ router.get("/level-up/options", async (req, res, next) => {
       campaignId: scoped.scope.campaignId,
     });
 
+    // determine valid subclasses for classId
     const subclasses = classId
       ? (cache.subclassesByClassId.get(classId) ?? [])
       : [];
 
+    // build class timeline
     const timeline = classId
       ? buildClassTimeline({
           cache,
@@ -420,6 +524,7 @@ router.get("/level-up/options", async (req, res, next) => {
         })
       : [];
 
+    // build next level context
     const nextLevel = classId
       ? buildNextLevelContext({
           cache,
@@ -429,6 +534,7 @@ router.get("/level-up/options", async (req, res, next) => {
         })
       : null;
 
+    // build supportByClass mapping for all classes in cache
     const supportByClass = Object.fromEntries(
       cache.classes.map((cls) => {
         const clsCurrentLevel = classLevelsByClassId[cls.id] ?? 0;
@@ -443,6 +549,7 @@ router.get("/level-up/options", async (req, res, next) => {
       }),
     );
 
+    // return the consolidated level-up options payload in res
     return res.status(200).json({
       classes: cache.classes,
       feats,
@@ -460,15 +567,23 @@ router.get("/level-up/options", async (req, res, next) => {
   }
 });
 
+// #endregion
+
+// #region GET /classes/:id/subclasses
+
 /**
  * GET /api/reference/classes/:id/subclasses
+ *
  * Fetches the valid subclasses for a specific base class.
  */
 router.get("/classes/:id/subclasses", async (req, res, next) => {
   try {
+    // check for scoped access based on campaignId and characterId in the request
     const classId = req.params.id;
     const scoped = await requireScopedAccessIfPresent(req, res);
     if (!scoped.ok) return;
+
+    // fetch the effective reference snapshot based on scoped context, and retrieve valid subclasses for the specified classId
     const cache = await getEffectiveReferenceSnapshot(scoped.scope);
     const validSubclasses = cache.subclassesByClassId.get(classId) ?? [];
 
@@ -478,20 +593,29 @@ router.get("/classes/:id/subclasses", async (req, res, next) => {
   }
 });
 
+// #endregion
+
+// #region GET /classes/:id/timeline
+
 /**
  * GET /api/reference/classes/:id/timeline
- * Builds on the 1-to-20 progression array, merging class level sand granted traits
+ *
+ * Builds on the 1-to-20 progression array, merging class levels and granted traits
  */
 router.get("/classes/:id/timeline", async (req, res, next) => {
   try {
+    // check for scoped access based on campaignId and characterId in request
     const scoped = await requireScopedAccessIfPresent(req, res);
     if (!scoped.ok) return;
     const classId = req.params.id;
+    // extract optional subclassId from query parameters
     const requestedSubclassId =
       typeof req.query.subclassId === "string"
         ? req.query.subclassId
         : undefined;
 
+    // fetch effective reference snapshot based on scoped context
+    // build class timeline for classId and optional requestedSubclassId
     const cache = await getEffectiveReferenceSnapshot(scoped.scope);
     const timeline = buildClassTimeline({
       cache,
@@ -505,16 +629,24 @@ router.get("/classes/:id/timeline", async (req, res, next) => {
   }
 });
 
+// #endregion
+
+// region GET /api/reference/backgrounds
+
 /**
  * GET /api/reference/backgrounds
+ *
  * Returns all backgrounds with fully resolved granted trait records.
  */
 router.get("/backgrounds", async (req, res, next) => {
   try {
+    // check for scoped access based on campaignId and characterId in request
     const scoped = await requireScopedAccessIfPresent(req, res);
     if (!scoped.ok) return;
     const cache = await getEffectiveReferenceSnapshot(scoped.scope);
 
+    // map over backgrounds in cache to build response payload
+    // include granted traits for each background, annotated with source origin
     const payload = cache.backgrounds.map((background) => {
       const grantedTraits = (
         cache.backgroundTraitsByBackgroundId.get(background.id) ?? []
@@ -535,15 +667,22 @@ router.get("/backgrounds", async (req, res, next) => {
   }
 });
 
+// #endregion
+
+// #region GET /api/reference/traits
 /**
  * GET /api/reference/traits
+ *
+ * Returns all traits, optionally filtered by category (skills or tools_and_languages).
  * Query params:
  * - category=skills | tools_and_languages
  */
 router.get("/traits", async (req, res, next) => {
   try {
+    // check for scoped access based on campaignId and characterId in request
     const scoped = await requireScopedAccessIfPresent(req, res);
     if (!scoped.ok) return;
+    // extract optional category query parameter for filtering traits
     const category =
       typeof req.query.category === "string" ? req.query.category : undefined;
     const cache = await getEffectiveReferenceSnapshot(scoped.scope);
@@ -553,12 +692,14 @@ router.get("/traits", async (req, res, next) => {
       return res.status(200).json({ traits: allTraits });
     }
 
+    // validate category query parameter, returning 400 error for invalid values
     if (category !== "skills" && category !== "tools_and_languages") {
       return res.status(400).json({
         error: "Invalid trait category. Use 'skills' or 'tools_and_languages'.",
       });
     }
 
+    // filter traits based on specified category using matchesTraitCategory helper function
     const filteredTraits = allTraits.filter((trait) =>
       matchesTraitCategory(
         trait as { id: string; name: string; effects: unknown },
@@ -572,18 +713,25 @@ router.get("/traits", async (req, res, next) => {
   }
 });
 
+// #endregion
+
+// #region GET /api/reference/traits/:id
+
 /**
  * GET /api/reference/traits/:id
- * Dedicated lookup for in-game Compendium modal.
+ *
+ * Dedicated trait lookup for in-game Compendium modal.
  */
 router.get("/traits/:id", async (req, res, next) => {
   try {
+    // check for scoped access based on campaignId and characterId in request
     const scoped = await requireScopedAccessIfPresent(req, res);
     if (!scoped.ok) return;
     const traitId = req.params.id;
     const cache = await getEffectiveReferenceSnapshot(scoped.scope);
     const trait = cache.traitsById.get(traitId);
 
+    // if trait is not found in cache, return a 404 error
     if (!trait) {
       return res.status(404).json({ error: "Reference data not found" });
     }
@@ -594,8 +742,13 @@ router.get("/traits/:id", async (req, res, next) => {
   }
 });
 
+// #endregion
+
+// #region GET /api/reference/version
+
 /**
  * GET /api/reference/version
+ *
  * Exposes current server-side reference cache version for client invalidation strategies.
  */
 router.get("/version", async (_req, res, next) => {
@@ -610,8 +763,14 @@ router.get("/version", async (_req, res, next) => {
   }
 });
 
+// #endregion
+
+// #region GET /api/reference/items
+
 /**
  * GET /api/reference/items
+ *
+ * Dedicated item lookup for in-game Compendium modal.
  * QUery Parameters:
  * - q: string (Search keywords)
  * - limit: number (Default 50, Max 100 for network safety)
@@ -619,6 +778,7 @@ router.get("/version", async (_req, res, next) => {
  */
 router.get("/items", async (req, res, next) => {
   try {
+    // check for scoped access based on campaignId and characterId in request
     const scoped = await requireScopedAccessIfPresent(req, res);
     if (!scoped.ok) return;
     const searchString =
@@ -628,6 +788,7 @@ router.get("/items", async (req, res, next) => {
     const limit = Math.min(parseInt(req.query.limit as string, 10) || 50, 100);
     const offset = parseInt(req.query.offset as string, 10) || 0;
 
+    // search effective items based on scoped context, search string, limit, and offset
     const { rows: results, total } = await searchEffectiveItems({
       scope: scoped.scope,
       query: searchString,
@@ -647,5 +808,7 @@ router.get("/items", async (req, res, next) => {
     next(error);
   }
 });
+
+// #endregion
 
 export default router;

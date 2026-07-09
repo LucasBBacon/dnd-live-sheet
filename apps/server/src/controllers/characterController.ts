@@ -14,6 +14,11 @@ import {
   validateLevelUpPayloadFromResolver,
 } from "../services/levelUpValidation.js";
 
+/**
+ * Applies a level-up to a character.
+ * @param req The incoming request object containing the level-up payload.
+ * @param res The response object used to send HTTP responses.
+ */
 export const applyLevelUp = async (req: Request, res: Response) => {
   const payload: LevelUpPayload = req.body;
   const { characterId, targetClassId, newTotalLevel } = payload;
@@ -51,6 +56,7 @@ export const applyLevelUp = async (req: Request, res: Response) => {
         });
       }
 
+      // resolve next level validation context for character's class progression
       const resolverContext = await resolveNextLevelValidationContext({
         scope: {
           campaignId: character.campaignId,
@@ -58,9 +64,12 @@ export const applyLevelUp = async (req: Request, res: Response) => {
         },
         classId: targetClassId,
         currentClassLevel: targetClassLevel - 1,
-        requestedSubclassId: payload.subclassId,
+        ...(payload.subclassId !== undefined
+          ? { requestedSubclassId: payload.subclassId }
+          : {}),
       });
 
+      // validate the payload structure against resolver context
       validateLevelUpPayloadFromResolver({
         payload,
         context: resolverContext,
@@ -93,23 +102,24 @@ export const applyLevelUp = async (req: Request, res: Response) => {
 
       // 5 - materialize granted traits
       // class progression traits are DB-backed; multiclass dip level-1 remains engine-rule specific
-      const grantedTraits = isMulticlassDip && targetClassLevel === 1
-        ? ProgressionEngine.getGrantedTraitsForLevel(
-            targetClassId,
-            targetClassLevel,
-            true,
-          )
-        : (
-            await tx
-              .select({ traitId: classProgressions.traitId })
-              .from(classProgressions)
-              .where(
-                and(
-                  eq(classProgressions.classId, targetClassId),
-                  eq(classProgressions.level, targetClassLevel),
-                ),
-              )
-          ).map((row) => row.traitId);
+      const grantedTraits =
+        isMulticlassDip && targetClassLevel === 1
+          ? ProgressionEngine.getGrantedTraitsForLevel(
+              targetClassId,
+              targetClassLevel,
+              true,
+            )
+          : (
+              await tx
+                .select({ traitId: classProgressions.traitId })
+                .from(classProgressions)
+                .where(
+                  and(
+                    eq(classProgressions.classId, targetClassId),
+                    eq(classProgressions.level, targetClassLevel),
+                  ),
+                )
+            ).map((row) => row.traitId);
 
       const traitsToInsert = grantedTraits.map((traitId) => ({
         characterId,

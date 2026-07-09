@@ -1,6 +1,8 @@
 import { z } from "zod";
 import { TraitEffectSchema } from "./effects.js";
 
+// #region Homebrew Schemas
+
 const HomebrewIdSchema = z
   .string()
   .min(3)
@@ -12,12 +14,18 @@ const HomebrewLoreSchema = z.object({
   fullText: z.string().max(8000).optional(),
 });
 
+/**
+ * Schema for the context of a homebrew entity, including campaign and character information.
+ */
 export const HomebrewContextSchema = z.object({
   campaignId: z.uuid(),
-  ownerCharacterId: z.uuid().optional(),
-  supersedesId: z.string().min(1).max(100).optional(),
+  ownerCharacterId: z.uuid().optional(), // The ID of the character that owns this homebrew entity, if applicable.
+  supersedesId: z.string().min(1).max(100).optional(), // The ID of the homebrew entity that this one supersedes, if applicable.
 });
 
+/**
+ * Schema for creating a new homebrew trait, including its ID, name, lore, effects, and optional starting proficiency flag.
+ */
 export const CreateHomebrewTraitSchema = HomebrewContextSchema.extend({
   id: HomebrewIdSchema,
   name: z.string().min(1).max(255),
@@ -26,6 +34,9 @@ export const CreateHomebrewTraitSchema = HomebrewContextSchema.extend({
   isStartingProficiency: z.boolean().optional(),
 });
 
+/**
+ * Schema for updating an existing homebrew trait, allowing optional updates to its name, lore, effects, and starting proficiency flag.
+ */
 export const UpdateHomebrewTraitSchema = HomebrewContextSchema.extend({
   name: z.string().min(1).max(255).optional(),
   lore: HomebrewLoreSchema.optional(),
@@ -33,6 +44,9 @@ export const UpdateHomebrewTraitSchema = HomebrewContextSchema.extend({
   isStartingProficiency: z.boolean().optional(),
 });
 
+/**
+ * Schema for creating a new homebrew item, including its ID, name, weight, description, and optional bundle flag.
+ */
 export const CreateHomebrewItemSchema = HomebrewContextSchema.extend({
   id: HomebrewIdSchema,
   name: z.string().min(1).max(255),
@@ -41,6 +55,9 @@ export const CreateHomebrewItemSchema = HomebrewContextSchema.extend({
   isBundle: z.boolean().optional(),
 });
 
+/**
+ * Schema for updating an existing homebrew item, allowing optional updates to its name, weight, description, and bundle flag.
+ */
 export const UpdateHomebrewItemSchema = HomebrewContextSchema.extend({
   name: z.string().min(1).max(255).optional(),
   weight: z.number().int().min(0).max(100_000).optional(),
@@ -48,9 +65,16 @@ export const UpdateHomebrewItemSchema = HomebrewContextSchema.extend({
   isBundle: z.boolean().optional(),
 });
 
+/**
+ * Schema for actions related to the lifecycle of homebrew entities, such as publishing or archiving, requiring a valid campaign ID.
+ */
 export const HomebrewLifecycleActionSchema = z.object({
   campaignId: z.uuid(),
 });
+
+// #endregion
+
+// #region Type Exports
 
 export type CreateHomebrewTraitPayload = z.infer<
   typeof CreateHomebrewTraitSchema
@@ -64,3 +88,5 @@ export type CreateHomebrewItemPayload = z.infer<
 export type UpdateHomebrewItemPayload = z.infer<
   typeof UpdateHomebrewItemSchema
 >;
+
+// #endregion
