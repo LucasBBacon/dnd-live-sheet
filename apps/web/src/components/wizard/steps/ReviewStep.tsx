@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import { useAbilities } from "../../../hooks/useCharacterStats";
 import { useCharacterSheetStore } from "../../../store/characterSheetStore";
-import { TRAIT_DICTIONARY } from "@project/engine";
+import { TRAIT_DICTIONARY, type Ability } from "@project/engine";
 import { useLevelUpStore } from "../../../store/levelUpStore";
 
 export const ReviewStep = () => {
@@ -54,10 +54,11 @@ export const ReviewStep = () => {
     // ABILITY SCORES
     if (draftPayload.asiChoices && draftPayload.asiChoices.length > 0) {
       draftPayload.asiChoices.forEach((asi) => {
-        const currentScore = finalAbilities[asi.stat].score;
+        const stat = asi.stat as Ability;
+        const currentScore = finalAbilities[stat].score;
         changes.push({
           category: "Ability Scores",
-          label: asi.stat.toUpperCase(),
+          label: stat.toUpperCase(),
           current: currentScore,
           next: currentScore + asi.value,
           delta: `+${asi.value}`,

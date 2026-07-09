@@ -5,7 +5,7 @@ import {
   characters,
 } from "@project/database/src/schema/operational.js";
 import { traits } from "@project/database/src/schema/reference.js";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import {
   getEffectiveReferenceSnapshot,
   listEffectiveFeats,

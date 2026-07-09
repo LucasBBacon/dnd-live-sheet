@@ -5,10 +5,11 @@
   "main": "index.js",
   "scripts": {
     "dev": "turbo run dev",
-    "build": "turbo run build",
+    "build": "pnpm check:hygiene && turbo run build",
+    "check:hygiene": "node ./scripts/check-source-hygiene.mjs",
     "test": "turbo run test",
     "test:shared": "pnpm --filter @project/shared test",
-    "test:all": "pnpm --filter @project/shared test --run && pnpm --filter @project/database test --run && pnpm --filter @project/server test --run && pnpm --filter @project/web test --run",
+    "test:all": "pnpm check:hygiene && pnpm --filter @project/shared test --run && pnpm --filter @project/database test --run && pnpm --filter @project/server test --run && pnpm --filter @project/web test --run",
     "test:coverage": "pnpm --filter @project/shared test:coverage && pnpm --filter @project/database test:coverage && pnpm --filter @project/server test:coverage && pnpm --filter @project/web test:coverage"
   },
   "keywords": [],
