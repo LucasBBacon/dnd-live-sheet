@@ -11,7 +11,10 @@ import {
   listEffectiveFeats,
   searchEffectiveItems,
 } from "../services/effectiveReferenceResolver.js";
-import { resolveNextLevelValidationContextFromSnapshot } from "../services/levelUpValidation.js";
+import {
+  assessMulticlassPrerequisitesFromSnapshot,
+  resolveNextLevelValidationContextFromSnapshot,
+} from "../services/levelUpValidation.js";
 import {
   getReferenceCacheVersion,
   getReferenceCache,
@@ -341,6 +344,47 @@ const loadCharacterClassLevels = async ({
   );
 };
 
+const loadCharacterBaseScores = async ({
+  characterId,
+  campaignId,
+}: {
+  characterId: string | undefined;
+  campaignId: string | undefined;
+}): Promise<
+  | {
+      str: number;
+      dex: number;
+      con: number;
+      int: number;
+      wis: number;
+      cha: number;
+    }
+  | null
+> => {
+  if (!characterId) {
+    return null;
+  }
+
+  const characterScopeFilter = campaignId
+    ? and(eq(characters.id, characterId), eq(characters.campaignId, campaignId))
+    : eq(characters.id, characterId);
+
+  const [character] = await db
+    .select({
+      str: characters.str,
+      dex: characters.dex,
+      con: characters.con,
+      int: characters.int,
+      wis: characters.wis,
+      cha: characters.cha,
+    })
+    .from(characters)
+    .where(characterScopeFilter)
+    .limit(1);
+
+  return character ?? null;
+};
+
 // #endregion
 
 // #region GET /api/reference/races
@@ -483,6 +527,10 @@ router.get("/level-up/options", async (req, res, next) => {
       characterId: scoped.scope.characterId,
       campaignId: scoped.scope.campaignId,
     });
+    const currentBaseScores = await loadCharacterBaseScores({
+      characterId: scoped.scope.characterId,
+      campaignId: scoped.scope.campaignId,
+    });
 
     // determine valid subclasses for classId
     const subclasses = classId
@@ -512,6 +560,7 @@ router.get("/level-up/options", async (req, res, next) => {
     const supportByClass = Object.fromEntries(
       cache.classes.map((cls) => {
         const clsCurrentLevel = classLevelsByClassId[cls.id] ?? 0;
+        const isMulticlassDip = clsCurrentLevel === 0 && Object.keys(classLevelsByClassId).length > 0;
         const support = buildNextLevelContext({
           cache,
           classId: cls.id,
@@ -519,7 +568,23 @@ router.get("/level-up/options", async (req, res, next) => {
           requestedSubclassId: undefined,
         });
 
-        return [cls.id, support] as const;
+        const multiclassPreview =
+          isMulticlassDip && currentBaseScores
+            ? assessMulticlassPrerequisitesFromSnapshot({
+                cache,
+                classId: cls.id,
+                currentBaseScores,
+              })
+            : null;
+
+        return [
+          cls.id,
+          {
+            ...support,
+            multiclassPrerequisitesMet: multiclassPreview?.meetsPrerequisites ?? null,
+            multiclassPrerequisiteReason: multiclassPreview?.reason ?? null,
+          },
+        ] as const;
       }),
     );
 

@@ -3,6 +3,11 @@
     "id": "class_barbarian",
     "name": "Barbarian",
     "hitDie": 12,
+    "multiclassPrerequisites": {
+      "abilityMinimums": {
+        "str": 13
+      }
+    },
     "multiclassTraits": [
       "trait_barbarian_mult_prof_armor",
       "trait_barbarian_mult_prof_weapons"
@@ -248,6 +253,11 @@
     "id": "class_bard",
     "name": "Bard",
     "hitDie": 8,
+    "multiclassPrerequisites": {
+      "abilityMinimums": {
+        "cha": 13
+      }
+    },
     "multiclassTraits": [
       "trait_bard_prof_mult_armor",
       "trait_bard_prof_mult_tools",
@@ -516,6 +526,11 @@
     "id": "class_cleric",
     "name": "Cleric",
     "hitDie": 8,
+    "multiclassPrerequisites": {
+      "abilityMinimums": {
+        "wis": 13
+      }
+    },
     "multiclassTraits": [
       "trait_cleric_mult_prof_armor",
       "trait_cleric_mult_prof_weapons"
@@ -523,6 +538,11 @@
     "startingEquipment": {
       "given": [
         {
+      "multiclassPrerequisites": {
+        "abilityMinimums": {
+          "wis": 13
+        }
+      },
           "kind": "category",
           "refId": "category_armor_shield",
           "quantity": 1
@@ -1012,6 +1032,16 @@
     "id": "class_fighter",
     "name": "Fighter",
     "hitDie": 10,
+    "multiclassPrerequisites": {
+      "anyOf": [
+        {
+          "str": 13
+        },
+        {
+          "dex": 13
+        }
+      ]
+    },
     "multiclassTraits": [
       "trait_fighter_mult_prof_armor",
       "trait_fighter_mult_prof_weapons"
@@ -1297,6 +1327,12 @@
     "id": "class_monk",
     "name": "Monk",
     "hitDie": 8,
+    "multiclassPrerequisites": {
+      "abilityMinimums": {
+        "dex": 13,
+        "wis": 13
+      }
+    },
     "multiclassTraits": [
       "trait_monk_mult_prof_weapons"
     ],
@@ -1603,6 +1639,12 @@
     "id": "class_paladin",
     "name": "Paladin",
     "hitDie": 10,
+    "multiclassPrerequisites": {
+      "abilityMinimums": {
+        "str": 13,
+        "cha": 13
+      }
+    },
     "multiclassTraits": [
       "trait_paladin_mult_prof_armor",
       "trait_paladin_mult_prof_weapons"
@@ -1835,6 +1877,12 @@
     "id": "class_ranger",
     "name": "Ranger",
     "hitDie": 10,
+    "multiclassPrerequisites": {
+      "abilityMinimums": {
+        "dex": 13,
+        "wis": 13
+      }
+    },
     "multiclassTraits": [
       "trait_ranger_mult_prof_armor",
       "trait_ranger_mult_prof_weapons"
@@ -2069,6 +2117,11 @@
     "id": "class_rogue",
     "name": "Rogue",
     "hitDie": 8,
+    "multiclassPrerequisites": {
+      "abilityMinimums": {
+        "dex": 13
+      }
+    },
     "multiclassTraits": [
       "trait_rogue_mult_prof_armor",
       "trait_rogue_mult_prof_skills",
@@ -2077,6 +2130,11 @@
     "startingEquipment": {
       "given": [
         {
+      "multiclassPrerequisites": {
+        "abilityMinimums": {
+          "cha": 13
+        }
+      },
           "kind": "item",
           "refId": "item_armor_leather",
           "quantity": 1
@@ -2655,6 +2713,11 @@
     "id": "class_warlock",
     "name": "Warlock",
     "hitDie": 8,
+    "multiclassPrerequisites": {
+      "abilityMinimums": {
+        "cha": 13
+      }
+    },
     "multiclassTraits": [
       "trait_warlock_mult_prof_armor",
       "trait_warlock_mult_prof_weapons"
@@ -2662,6 +2725,11 @@
     "startingEquipment": {
       "given": [
         {
+      "multiclassPrerequisites": {
+        "abilityMinimums": {
+          "int": 13
+        }
+      },
           "kind": "item",
           "refId": "item_armor_leather",
           "quantity": 1

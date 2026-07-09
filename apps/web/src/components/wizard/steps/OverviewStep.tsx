@@ -21,6 +21,8 @@ type LevelUpOptionsResponse = {
       targetLevel: number;
       isConfigured: boolean;
       reason: string | null;
+      multiclassPrerequisitesMet: boolean | null;
+      multiclassPrerequisiteReason: string | null;
     }
   >;
   nextLevel: {
@@ -57,6 +59,15 @@ export const OverviewStep = () => {
 
   const availableClasses = useMemo(() => optionsData?.classes ?? [], [optionsData]);
   const supportByClassId = optionsData?.supportByClass ?? {};
+  const selectedClassSupport = draftPayload.targetClassId
+    ? supportByClassId[draftPayload.targetClassId]
+    : undefined;
+  const selectedClassLevel = draftPayload.targetClassId
+    ? (classLevels[draftPayload.targetClassId] ?? 0)
+    : 0;
+  const selectedClassIsDip = Boolean(
+    draftPayload.targetClassId && selectedClassLevel === 0,
+  );
 
   // fetch human-readable names for traits automatically received
   const automaticFeatures = useMemo(() => {
@@ -133,7 +144,9 @@ export const OverviewStep = () => {
                 {cls.name}{" "}
                 {!isSupported
                   ? `(Unavailable - ${support.reason || `Level ${nextClassLevel} not configured`})`
-                  : isDip
+                  : isDip && support.multiclassPrerequisitesMet === false
+                    ? "(Multiclass - preview: prerequisites unmet)"
+                    : isDip
                     ? "(Multiclass - Level 1)"
                     : `Progress to Level ${lvl + 1}`}
               </option>
@@ -145,9 +158,22 @@ export const OverviewStep = () => {
             ? "Loading class options..."
             : classesError
               ? "Failed to load class options for this campaign scope."
-              : "Only classes with configured progression data can be selected here."}
+              : "Only classes with configured progression data can be selected here. Multiclass prerequisite warnings are preview-only until submission."}
         </p>
       </div>
+
+      {selectedClassIsDip &&
+      selectedClassSupport?.multiclassPrerequisitesMet === false ? (
+        <div className="mb-6 rounded border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+          <div className="font-bold uppercase tracking-wide">
+            Multiclass Prerequisite Warning
+          </div>
+          <div className="mt-1">
+            {selectedClassSupport.multiclassPrerequisiteReason ||
+              "This class preview indicates unmet multiclass prerequisites. The server will enforce the rule on submission."}
+          </div>
+        </div>
+      ) : null}
 
       {errorMessage ? (
         <div className="mb-6 rounded border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-700">

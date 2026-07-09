@@ -3,6 +3,7 @@ import type { LevelUpPayload } from "@project/shared";
 import {
   resolveNextLevelValidationContextFromSnapshot,
   type ResolverNextLevelContext,
+  validateMulticlassPrerequisitesFromSnapshot,
   validateLevelUpPayloadFromResolver,
 } from "../levelUpValidation.js";
 
@@ -252,5 +253,94 @@ describe("resolveNextLevelValidationContextFromSnapshot", () => {
     });
 
     expect(context.grantedTraitIds).toEqual(["trait_multiclass_level_one"]);
+  });
+});
+
+describe("validateMulticlassPrerequisitesFromSnapshot", () => {
+  const makeSnapshot = (multiclassPrerequisites?: unknown) =>
+    ({
+      classes: [
+        {
+          id: "class_fighter",
+          multiclassPrerequisites,
+        },
+      ],
+    }) as any;
+
+  it("accepts all-of ability minimum rules", () => {
+    expect(() =>
+      validateMulticlassPrerequisitesFromSnapshot({
+        cache: makeSnapshot({
+          abilityMinimums: {
+            dex: 13,
+            wis: 13,
+          },
+        }),
+        classId: "class_fighter",
+        currentBaseScores: {
+          str: 10,
+          dex: 14,
+          con: 10,
+          int: 10,
+          wis: 13,
+          cha: 10,
+        },
+      }),
+    ).not.toThrow();
+  });
+
+  it("accepts any-of ability minimum rules", () => {
+    expect(() =>
+      validateMulticlassPrerequisitesFromSnapshot({
+        cache: makeSnapshot({
+          anyOf: [{ str: 13 }, { dex: 13 }],
+        }),
+        classId: "class_fighter",
+        currentBaseScores: {
+          str: 10,
+          dex: 13,
+          con: 10,
+          int: 10,
+          wis: 10,
+          cha: 10,
+        },
+      }),
+    ).not.toThrow();
+  });
+
+  it("rejects scores that do not satisfy multiclass prerequisites", () => {
+    expect(() =>
+      validateMulticlassPrerequisitesFromSnapshot({
+        cache: makeSnapshot({
+          anyOf: [{ str: 13 }, { dex: 13 }],
+        }),
+        classId: "class_fighter",
+        currentBaseScores: {
+          str: 12,
+          dex: 12,
+          con: 10,
+          int: 10,
+          wis: 10,
+          cha: 10,
+        },
+      }),
+    ).toThrow("You do not meet the ability score prerequisites");
+  });
+
+  it("rejects missing multiclass prerequisite definitions", () => {
+    expect(() =>
+      validateMulticlassPrerequisitesFromSnapshot({
+        cache: makeSnapshot(undefined),
+        classId: "class_fighter",
+        currentBaseScores: {
+          str: 14,
+          dex: 14,
+          con: 10,
+          int: 10,
+          wis: 10,
+          cha: 10,
+        },
+      }),
+    ).toThrow("Multiclass definitions not found");
   });
 });

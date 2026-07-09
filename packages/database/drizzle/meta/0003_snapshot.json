@@ -1,0 +1,2332 @@
+{
+  "id": "589ad9de-b347-41ab-9264-801366497720",
+  "prevId": "430d246c-a9d6-4feb-b1d4-30247e935aaf",
+  "version": "7",
+  "dialect": "postgresql",
+  "tables": {
+    "public.campaign_members": {
+      "name": "campaign_members",
+      "schema": "",
+      "columns": {
+        "campaign_id": {
+          "name": "campaign_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "role": {
+          "name": "role",
+          "type": "campaign_role",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'player'"
+        },
+        "joined_at": {
+          "name": "joined_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "campaign_members_campaign_id_campaigns_id_fk": {
+          "name": "campaign_members_campaign_id_campaigns_id_fk",
+          "tableFrom": "campaign_members",
+          "tableTo": "campaigns",
+          "columnsFrom": [
+            "campaign_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "campaign_members_campaign_id_user_id_pk": {
+          "name": "campaign_members_campaign_id_user_id_pk",
+          "columns": [
+            "campaign_id",
+            "user_id"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.campaigns": {
+      "name": "campaigns",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "name": {
+          "name": "name",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_by_user_id": {
+          "name": "created_by_user_id",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.character_classes": {
+      "name": "character_classes",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "character_id": {
+          "name": "character_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "class_id": {
+          "name": "class_id",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "class_level": {
+          "name": "class_level",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 1
+        },
+        "subclass_id": {
+          "name": "subclass_id",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {
+        "character_classes_id_idx": {
+          "name": "character_classes_id_idx",
+          "columns": [
+            {
+              "expression": "id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "character_classes_character_id_characters_id_fk": {
+          "name": "character_classes_character_id_characters_id_fk",
+          "tableFrom": "character_classes",
+          "tableTo": "characters",
+          "columnsFrom": [
+            "character_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "character_classes_class_id_classes_id_fk": {
+          "name": "character_classes_class_id_classes_id_fk",
+          "tableFrom": "character_classes",
+          "tableTo": "classes",
+          "columnsFrom": [
+            "class_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "character_classes_subclass_id_subclasses_id_fk": {
+          "name": "character_classes_subclass_id_subclasses_id_fk",
+          "tableFrom": "character_classes",
+          "tableTo": "subclasses",
+          "columnsFrom": [
+            "subclass_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "character_classes_character_id_class_id_pk": {
+          "name": "character_classes_character_id_class_id_pk",
+          "columns": [
+            "character_id",
+            "class_id"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.character_custom_traits": {
+      "name": "character_custom_traits",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "character_id": {
+          "name": "character_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "trait_id": {
+          "name": "trait_id",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "source_origin": {
+          "name": "source_origin",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "character_custom_traits_character_id_characters_id_fk": {
+          "name": "character_custom_traits_character_id_characters_id_fk",
+          "tableFrom": "character_custom_traits",
+          "tableTo": "characters",
+          "columnsFrom": [
+            "character_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "character_custom_traits_trait_id_traits_id_fk": {
+          "name": "character_custom_traits_trait_id_traits_id_fk",
+          "tableFrom": "character_custom_traits",
+          "tableTo": "traits",
+          "columnsFrom": [
+            "trait_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.character_inventory": {
+      "name": "character_inventory",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "character_id": {
+          "name": "character_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "item_id": {
+          "name": "item_id",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "quantity": {
+          "name": "quantity",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 1
+        },
+        "slot": {
+          "name": "slot",
+          "type": "varchar(50)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'backpack'"
+        },
+        "is_attuned": {
+          "name": "is_attuned",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        }
+      },
+      "indexes": {
+        "character_inventory_id_idx": {
+          "name": "character_inventory_id_idx",
+          "columns": [
+            {
+              "expression": "id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "character_inventory_character_id_characters_id_fk": {
+          "name": "character_inventory_character_id_characters_id_fk",
+          "tableFrom": "character_inventory",
+          "tableTo": "characters",
+          "columnsFrom": [
+            "character_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "character_inventory_item_id_items_id_fk": {
+          "name": "character_inventory_item_id_items_id_fk",
+          "tableFrom": "character_inventory",
+          "tableTo": "items",
+          "columnsFrom": [
+            "item_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "character_inventory_character_id_item_id_pk": {
+          "name": "character_inventory_character_id_item_id_pk",
+          "columns": [
+            "character_id",
+            "item_id"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.character_resources": {
+      "name": "character_resources",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "character_id": {
+          "name": "character_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "name": {
+          "name": "name",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "current": {
+          "name": "current",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "max": {
+          "name": "max",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "reset_condition": {
+          "name": "reset_condition",
+          "type": "rest_condition",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'never'"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "character_resources_character_id_characters_id_fk": {
+          "name": "character_resources_character_id_characters_id_fk",
+          "tableFrom": "character_resources",
+          "tableTo": "characters",
+          "columnsFrom": [
+            "character_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "character_resources_character_id_id_pk": {
+          "name": "character_resources_character_id_id_pk",
+          "columns": [
+            "character_id",
+            "id"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.character_traits": {
+      "name": "character_traits",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "character_id": {
+          "name": "character_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "trait_id": {
+          "name": "trait_id",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "source": {
+          "name": "source",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "character_traits_character_id_characters_id_fk": {
+          "name": "character_traits_character_id_characters_id_fk",
+          "tableFrom": "character_traits",
+          "tableTo": "characters",
+          "columnsFrom": [
+            "character_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.characters": {
+      "name": "characters",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "campaign_id": {
+          "name": "campaign_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "name": {
+          "name": "name",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "level": {
+          "name": "level",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "race_id": {
+          "name": "race_id",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "subrace_id": {
+          "name": "subrace_id",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "str": {
+          "name": "str",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "dex": {
+          "name": "dex",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "con": {
+          "name": "con",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "int": {
+          "name": "int",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "wis": {
+          "name": "wis",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "cha": {
+          "name": "cha",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "alignment": {
+          "name": "alignment",
+          "type": "varchar(50)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "background_id": {
+          "name": "background_id",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "custom_background_data": {
+          "name": "custom_background_data",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "personality_traits": {
+          "name": "personality_traits",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "ideals": {
+          "name": "ideals",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "bonds": {
+          "name": "bonds",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "flaws": {
+          "name": "flaws",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "current_hp": {
+          "name": "current_hp",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "max_hp": {
+          "name": "max_hp",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "temporary_inventory": {
+          "name": "temporary_inventory",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "'[]'::jsonb"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "characters_campaign_id_campaigns_id_fk": {
+          "name": "characters_campaign_id_campaigns_id_fk",
+          "tableFrom": "characters",
+          "tableTo": "campaigns",
+          "columnsFrom": [
+            "campaign_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "characters_race_id_races_id_fk": {
+          "name": "characters_race_id_races_id_fk",
+          "tableFrom": "characters",
+          "tableTo": "races",
+          "columnsFrom": [
+            "race_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "characters_subrace_id_subraces_id_fk": {
+          "name": "characters_subrace_id_subraces_id_fk",
+          "tableFrom": "characters",
+          "tableTo": "subraces",
+          "columnsFrom": [
+            "subrace_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "characters_background_id_backgrounds_id_fk": {
+          "name": "characters_background_id_backgrounds_id_fk",
+          "tableFrom": "characters",
+          "tableTo": "backgrounds",
+          "columnsFrom": [
+            "background_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.background_traits": {
+      "name": "background_traits",
+      "schema": "",
+      "columns": {
+        "background_id": {
+          "name": "background_id",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "trait_id": {
+          "name": "trait_id",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "background_traits_background_id_backgrounds_id_fk": {
+          "name": "background_traits_background_id_backgrounds_id_fk",
+          "tableFrom": "background_traits",
+          "tableTo": "backgrounds",
+          "columnsFrom": [
+            "background_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "background_traits_trait_id_traits_id_fk": {
+          "name": "background_traits_trait_id_traits_id_fk",
+          "tableFrom": "background_traits",
+          "tableTo": "traits",
+          "columnsFrom": [
+            "trait_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "background_traits_background_id_trait_id_pk": {
+          "name": "background_traits_background_id_trait_id_pk",
+          "columns": [
+            "background_id",
+            "trait_id"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.backgrounds": {
+      "name": "backgrounds",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "varchar(100)",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "name": {
+          "name": "name",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "feature_name": {
+          "name": "feature_name",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "feature_description": {
+          "name": "feature_description",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "ideals": {
+          "name": "ideals",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "bonds": {
+          "name": "bonds",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "flaws": {
+          "name": "flaws",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "personality_traits": {
+          "name": "personality_traits",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "starting_equipment": {
+          "name": "starting_equipment",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "lore": {
+          "name": "lore",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "source_type": {
+          "name": "source_type",
+          "type": "reference_source_type",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'core'"
+        },
+        "owner_campaign_id": {
+          "name": "owner_campaign_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "owner_character_id": {
+          "name": "owner_character_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_by_user_id": {
+          "name": "created_by_user_id",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "is_published": {
+          "name": "is_published",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": true
+        },
+        "supersedes_id": {
+          "name": "supersedes_id",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "backgrounds_core_scope_check": {
+          "name": "backgrounds_core_scope_check",
+          "value": "(\n      (\"backgrounds\".\"source_type\" = 'core' AND \"backgrounds\".\"owner_campaign_id\" IS NULL AND \"backgrounds\".\"owner_character_id\" IS NULL AND \"backgrounds\".\"created_by_user_id\" IS NULL AND \"backgrounds\".\"is_published\" = true)\n      OR\n      (\"backgrounds\".\"source_type\" = 'homebrew' AND \"backgrounds\".\"created_by_user_id\" IS NOT NULL AND \"backgrounds\".\"owner_campaign_id\" IS NOT NULL)\n    )"
+        },
+        "backgrounds_character_scope_check": {
+          "name": "backgrounds_character_scope_check",
+          "value": "\"backgrounds\".\"owner_character_id\" IS NULL OR \"backgrounds\".\"owner_campaign_id\" IS NOT NULL"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.bundle_contents": {
+      "name": "bundle_contents",
+      "schema": "",
+      "columns": {
+        "bundle_id": {
+          "name": "bundle_id",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "item_id": {
+          "name": "item_id",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "quantity": {
+          "name": "quantity",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 1
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "bundle_contents_bundle_id_items_id_fk": {
+          "name": "bundle_contents_bundle_id_items_id_fk",
+          "tableFrom": "bundle_contents",
+          "tableTo": "items",
+          "columnsFrom": [
+            "bundle_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "bundle_contents_item_id_items_id_fk": {
+          "name": "bundle_contents_item_id_items_id_fk",
+          "tableFrom": "bundle_contents",
+          "tableTo": "items",
+          "columnsFrom": [
+            "item_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "bundle_contents_bundle_id_item_id_pk": {
+          "name": "bundle_contents_bundle_id_item_id_pk",
+          "columns": [
+            "bundle_id",
+            "item_id"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.class_levels": {
+      "name": "class_levels",
+      "schema": "",
+      "columns": {
+        "class_id": {
+          "name": "class_id",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "level": {
+          "name": "level",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "class_specific_scaling": {
+          "name": "class_specific_scaling",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "spellcasting_progression": {
+          "name": "spellcasting_progression",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "class_levels_class_id_classes_id_fk": {
+          "name": "class_levels_class_id_classes_id_fk",
+          "tableFrom": "class_levels",
+          "tableTo": "classes",
+          "columnsFrom": [
+            "class_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "class_levels_class_id_level_pk": {
+          "name": "class_levels_class_id_level_pk",
+          "columns": [
+            "class_id",
+            "level"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.class_multiclass_traits": {
+      "name": "class_multiclass_traits",
+      "schema": "",
+      "columns": {
+        "class_id": {
+          "name": "class_id",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "trait_id": {
+          "name": "trait_id",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "class_multiclass_traits_class_id_classes_id_fk": {
+          "name": "class_multiclass_traits_class_id_classes_id_fk",
+          "tableFrom": "class_multiclass_traits",
+          "tableTo": "classes",
+          "columnsFrom": [
+            "class_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "class_multiclass_traits_trait_id_traits_id_fk": {
+          "name": "class_multiclass_traits_trait_id_traits_id_fk",
+          "tableFrom": "class_multiclass_traits",
+          "tableTo": "traits",
+          "columnsFrom": [
+            "trait_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "class_multiclass_traits_class_id_trait_id_pk": {
+          "name": "class_multiclass_traits_class_id_trait_id_pk",
+          "columns": [
+            "class_id",
+            "trait_id"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.class_progressions": {
+      "name": "class_progressions",
+      "schema": "",
+      "columns": {
+        "class_id": {
+          "name": "class_id",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "level": {
+          "name": "level",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "trait_id": {
+          "name": "trait_id",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "source_type": {
+          "name": "source_type",
+          "type": "reference_source_type",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'core'"
+        },
+        "owner_campaign_id": {
+          "name": "owner_campaign_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "owner_character_id": {
+          "name": "owner_character_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_by_user_id": {
+          "name": "created_by_user_id",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "is_published": {
+          "name": "is_published",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "class_progressions_class_id_classes_id_fk": {
+          "name": "class_progressions_class_id_classes_id_fk",
+          "tableFrom": "class_progressions",
+          "tableTo": "classes",
+          "columnsFrom": [
+            "class_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "class_progressions_trait_id_traits_id_fk": {
+          "name": "class_progressions_trait_id_traits_id_fk",
+          "tableFrom": "class_progressions",
+          "tableTo": "traits",
+          "columnsFrom": [
+            "trait_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "class_progressions_class_id_level_trait_id_pk": {
+          "name": "class_progressions_class_id_level_trait_id_pk",
+          "columns": [
+            "class_id",
+            "level",
+            "trait_id"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "class_progressions_core_scope_check": {
+          "name": "class_progressions_core_scope_check",
+          "value": "(\n      (\"class_progressions\".\"source_type\" = 'core' AND \"class_progressions\".\"owner_campaign_id\" IS NULL AND \"class_progressions\".\"owner_character_id\" IS NULL AND \"class_progressions\".\"created_by_user_id\" IS NULL AND \"class_progressions\".\"is_published\" = true)\n      OR\n      (\"class_progressions\".\"source_type\" = 'homebrew' AND \"class_progressions\".\"created_by_user_id\" IS NOT NULL AND \"class_progressions\".\"owner_campaign_id\" IS NOT NULL)\n    )"
+        },
+        "class_progressions_character_scope_check": {
+          "name": "class_progressions_character_scope_check",
+          "value": "\"class_progressions\".\"owner_character_id\" IS NULL OR \"class_progressions\".\"owner_campaign_id\" IS NOT NULL"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.classes": {
+      "name": "classes",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "varchar(100)",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "name": {
+          "name": "name",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "hit_die": {
+          "name": "hit_die",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "subclass_req_level": {
+          "name": "subclass_req_level",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "lore": {
+          "name": "lore",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "starting_equipment": {
+          "name": "starting_equipment",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "multiclass_prerequisites": {
+          "name": "multiclass_prerequisites",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "source_type": {
+          "name": "source_type",
+          "type": "reference_source_type",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'core'"
+        },
+        "owner_campaign_id": {
+          "name": "owner_campaign_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "owner_character_id": {
+          "name": "owner_character_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_by_user_id": {
+          "name": "created_by_user_id",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "is_published": {
+          "name": "is_published",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": true
+        },
+        "supersedes_id": {
+          "name": "supersedes_id",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "classes_core_scope_check": {
+          "name": "classes_core_scope_check",
+          "value": "(\n      (\"classes\".\"source_type\" = 'core' AND \"classes\".\"owner_campaign_id\" IS NULL AND \"classes\".\"owner_character_id\" IS NULL AND \"classes\".\"created_by_user_id\" IS NULL AND \"classes\".\"is_published\" = true)\n      OR\n      (\"classes\".\"source_type\" = 'homebrew' AND \"classes\".\"created_by_user_id\" IS NOT NULL AND \"classes\".\"owner_campaign_id\" IS NOT NULL)\n    )"
+        },
+        "classes_character_scope_check": {
+          "name": "classes_character_scope_check",
+          "value": "\"classes\".\"owner_character_id\" IS NULL OR \"classes\".\"owner_campaign_id\" IS NOT NULL"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.feat_prerequisites": {
+      "name": "feat_prerequisites",
+      "schema": "",
+      "columns": {
+        "feat_id": {
+          "name": "feat_id",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "required_feat_id": {
+          "name": "required_feat_id",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "feat_prerequisites_feat_id_feats_id_fk": {
+          "name": "feat_prerequisites_feat_id_feats_id_fk",
+          "tableFrom": "feat_prerequisites",
+          "tableTo": "feats",
+          "columnsFrom": [
+            "feat_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "feat_prerequisites_required_feat_id_feats_id_fk": {
+          "name": "feat_prerequisites_required_feat_id_feats_id_fk",
+          "tableFrom": "feat_prerequisites",
+          "tableTo": "feats",
+          "columnsFrom": [
+            "required_feat_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "feat_prerequisites_feat_id_required_feat_id_pk": {
+          "name": "feat_prerequisites_feat_id_required_feat_id_pk",
+          "columns": [
+            "feat_id",
+            "required_feat_id"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.feat_traits": {
+      "name": "feat_traits",
+      "schema": "",
+      "columns": {
+        "feat_id": {
+          "name": "feat_id",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "trait_id": {
+          "name": "trait_id",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "feat_traits_feat_id_feats_id_fk": {
+          "name": "feat_traits_feat_id_feats_id_fk",
+          "tableFrom": "feat_traits",
+          "tableTo": "feats",
+          "columnsFrom": [
+            "feat_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "feat_traits_trait_id_traits_id_fk": {
+          "name": "feat_traits_trait_id_traits_id_fk",
+          "tableFrom": "feat_traits",
+          "tableTo": "traits",
+          "columnsFrom": [
+            "trait_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "feat_traits_feat_id_trait_id_pk": {
+          "name": "feat_traits_feat_id_trait_id_pk",
+          "columns": [
+            "feat_id",
+            "trait_id"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.feats": {
+      "name": "feats",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "varchar(100)",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "name": {
+          "name": "name",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "category": {
+          "name": "category",
+          "type": "varchar(50)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "source": {
+          "name": "source",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "repeatable": {
+          "name": "repeatable",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "lore": {
+          "name": "lore",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "prerequisites": {
+          "name": "prerequisites",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "source_type": {
+          "name": "source_type",
+          "type": "reference_source_type",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'core'"
+        },
+        "owner_campaign_id": {
+          "name": "owner_campaign_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "owner_character_id": {
+          "name": "owner_character_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_by_user_id": {
+          "name": "created_by_user_id",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "is_published": {
+          "name": "is_published",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": true
+        },
+        "supersedes_id": {
+          "name": "supersedes_id",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "feats_core_scope_check": {
+          "name": "feats_core_scope_check",
+          "value": "(\n      (\"feats\".\"source_type\" = 'core' AND \"feats\".\"owner_campaign_id\" IS NULL AND \"feats\".\"owner_character_id\" IS NULL AND \"feats\".\"created_by_user_id\" IS NULL AND \"feats\".\"is_published\" = true)\n      OR\n      (\"feats\".\"source_type\" = 'homebrew' AND \"feats\".\"created_by_user_id\" IS NOT NULL AND \"feats\".\"owner_campaign_id\" IS NOT NULL)\n    )"
+        },
+        "feats_character_scope_check": {
+          "name": "feats_character_scope_check",
+          "value": "\"feats\".\"owner_character_id\" IS NULL OR \"feats\".\"owner_campaign_id\" IS NOT NULL"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.items": {
+      "name": "items",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "varchar(100)",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "name": {
+          "name": "name",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "weight": {
+          "name": "weight",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "description": {
+          "name": "description",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "is_bundle": {
+          "name": "is_bundle",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "source_type": {
+          "name": "source_type",
+          "type": "reference_source_type",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'core'"
+        },
+        "owner_campaign_id": {
+          "name": "owner_campaign_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "owner_character_id": {
+          "name": "owner_character_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_by_user_id": {
+          "name": "created_by_user_id",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "is_published": {
+          "name": "is_published",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": true
+        },
+        "supersedes_id": {
+          "name": "supersedes_id",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "items_core_scope_check": {
+          "name": "items_core_scope_check",
+          "value": "(\n      (\"items\".\"source_type\" = 'core' AND \"items\".\"owner_campaign_id\" IS NULL AND \"items\".\"owner_character_id\" IS NULL AND \"items\".\"created_by_user_id\" IS NULL AND \"items\".\"is_published\" = true)\n      OR\n      (\"items\".\"source_type\" = 'homebrew' AND \"items\".\"created_by_user_id\" IS NOT NULL AND \"items\".\"owner_campaign_id\" IS NOT NULL)\n    )"
+        },
+        "items_character_scope_check": {
+          "name": "items_character_scope_check",
+          "value": "\"items\".\"owner_character_id\" IS NULL OR \"items\".\"owner_campaign_id\" IS NOT NULL"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.race_traits": {
+      "name": "race_traits",
+      "schema": "",
+      "columns": {
+        "race_id": {
+          "name": "race_id",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "trait_id": {
+          "name": "trait_id",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "race_traits_race_id_races_id_fk": {
+          "name": "race_traits_race_id_races_id_fk",
+          "tableFrom": "race_traits",
+          "tableTo": "races",
+          "columnsFrom": [
+            "race_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "race_traits_trait_id_traits_id_fk": {
+          "name": "race_traits_trait_id_traits_id_fk",
+          "tableFrom": "race_traits",
+          "tableTo": "traits",
+          "columnsFrom": [
+            "trait_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "race_traits_race_id_trait_id_pk": {
+          "name": "race_traits_race_id_trait_id_pk",
+          "columns": [
+            "race_id",
+            "trait_id"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.races": {
+      "name": "races",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "varchar(100)",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "name": {
+          "name": "name",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "speed": {
+          "name": "speed",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "requires_subrace": {
+          "name": "requires_subrace",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "display_label": {
+          "name": "display_label",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "lore": {
+          "name": "lore",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "source_type": {
+          "name": "source_type",
+          "type": "reference_source_type",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'core'"
+        },
+        "owner_campaign_id": {
+          "name": "owner_campaign_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "owner_character_id": {
+          "name": "owner_character_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_by_user_id": {
+          "name": "created_by_user_id",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "is_published": {
+          "name": "is_published",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": true
+        },
+        "supersedes_id": {
+          "name": "supersedes_id",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "races_core_scope_check": {
+          "name": "races_core_scope_check",
+          "value": "(\n      (\"races\".\"source_type\" = 'core' AND \"races\".\"owner_campaign_id\" IS NULL AND \"races\".\"owner_character_id\" IS NULL AND \"races\".\"created_by_user_id\" IS NULL AND \"races\".\"is_published\" = true)\n      OR\n      (\"races\".\"source_type\" = 'homebrew' AND \"races\".\"created_by_user_id\" IS NOT NULL AND \"races\".\"owner_campaign_id\" IS NOT NULL)\n    )"
+        },
+        "races_character_scope_check": {
+          "name": "races_character_scope_check",
+          "value": "\"races\".\"owner_character_id\" IS NULL OR \"races\".\"owner_campaign_id\" IS NOT NULL"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.subclass_levels": {
+      "name": "subclass_levels",
+      "schema": "",
+      "columns": {
+        "subclass_id": {
+          "name": "subclass_id",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "level": {
+          "name": "level",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "subclass_specific_scaling": {
+          "name": "subclass_specific_scaling",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "bonus_spells": {
+          "name": "bonus_spells",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "spells_added_to_list": {
+          "name": "spells_added_to_list",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "subclass_levels_subclass_id_subclasses_id_fk": {
+          "name": "subclass_levels_subclass_id_subclasses_id_fk",
+          "tableFrom": "subclass_levels",
+          "tableTo": "subclasses",
+          "columnsFrom": [
+            "subclass_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "subclass_levels_subclass_id_level_pk": {
+          "name": "subclass_levels_subclass_id_level_pk",
+          "columns": [
+            "subclass_id",
+            "level"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.subclass_progressions": {
+      "name": "subclass_progressions",
+      "schema": "",
+      "columns": {
+        "subclass_id": {
+          "name": "subclass_id",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "level": {
+          "name": "level",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "trait_id": {
+          "name": "trait_id",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "source_type": {
+          "name": "source_type",
+          "type": "reference_source_type",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'core'"
+        },
+        "owner_campaign_id": {
+          "name": "owner_campaign_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "owner_character_id": {
+          "name": "owner_character_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_by_user_id": {
+          "name": "created_by_user_id",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "is_published": {
+          "name": "is_published",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "subclass_progressions_subclass_id_subclasses_id_fk": {
+          "name": "subclass_progressions_subclass_id_subclasses_id_fk",
+          "tableFrom": "subclass_progressions",
+          "tableTo": "subclasses",
+          "columnsFrom": [
+            "subclass_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "subclass_progressions_trait_id_traits_id_fk": {
+          "name": "subclass_progressions_trait_id_traits_id_fk",
+          "tableFrom": "subclass_progressions",
+          "tableTo": "traits",
+          "columnsFrom": [
+            "trait_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "subclass_progressions_subclass_id_level_trait_id_pk": {
+          "name": "subclass_progressions_subclass_id_level_trait_id_pk",
+          "columns": [
+            "subclass_id",
+            "level",
+            "trait_id"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "subclass_progressions_core_scope_check": {
+          "name": "subclass_progressions_core_scope_check",
+          "value": "(\n      (\"subclass_progressions\".\"source_type\" = 'core' AND \"subclass_progressions\".\"owner_campaign_id\" IS NULL AND \"subclass_progressions\".\"owner_character_id\" IS NULL AND \"subclass_progressions\".\"created_by_user_id\" IS NULL AND \"subclass_progressions\".\"is_published\" = true)\n      OR\n      (\"subclass_progressions\".\"source_type\" = 'homebrew' AND \"subclass_progressions\".\"created_by_user_id\" IS NOT NULL AND \"subclass_progressions\".\"owner_campaign_id\" IS NOT NULL)\n    )"
+        },
+        "subclass_progressions_character_scope_check": {
+          "name": "subclass_progressions_character_scope_check",
+          "value": "\"subclass_progressions\".\"owner_character_id\" IS NULL OR \"subclass_progressions\".\"owner_campaign_id\" IS NOT NULL"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.subclasses": {
+      "name": "subclasses",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "varchar(100)",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "parent_class_id": {
+          "name": "parent_class_id",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "name": {
+          "name": "name",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "lore": {
+          "name": "lore",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "source_type": {
+          "name": "source_type",
+          "type": "reference_source_type",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'core'"
+        },
+        "owner_campaign_id": {
+          "name": "owner_campaign_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "owner_character_id": {
+          "name": "owner_character_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_by_user_id": {
+          "name": "created_by_user_id",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "is_published": {
+          "name": "is_published",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": true
+        },
+        "supersedes_id": {
+          "name": "supersedes_id",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "subclasses_parent_class_id_classes_id_fk": {
+          "name": "subclasses_parent_class_id_classes_id_fk",
+          "tableFrom": "subclasses",
+          "tableTo": "classes",
+          "columnsFrom": [
+            "parent_class_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "subclasses_core_scope_check": {
+          "name": "subclasses_core_scope_check",
+          "value": "(\n      (\"subclasses\".\"source_type\" = 'core' AND \"subclasses\".\"owner_campaign_id\" IS NULL AND \"subclasses\".\"owner_character_id\" IS NULL AND \"subclasses\".\"created_by_user_id\" IS NULL AND \"subclasses\".\"is_published\" = true)\n      OR\n      (\"subclasses\".\"source_type\" = 'homebrew' AND \"subclasses\".\"created_by_user_id\" IS NOT NULL AND \"subclasses\".\"owner_campaign_id\" IS NOT NULL)\n    )"
+        },
+        "subclasses_character_scope_check": {
+          "name": "subclasses_character_scope_check",
+          "value": "\"subclasses\".\"owner_character_id\" IS NULL OR \"subclasses\".\"owner_campaign_id\" IS NOT NULL"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.subrace_traits": {
+      "name": "subrace_traits",
+      "schema": "",
+      "columns": {
+        "subrace_id": {
+          "name": "subrace_id",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "trait_id": {
+          "name": "trait_id",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "subrace_traits_subrace_id_subraces_id_fk": {
+          "name": "subrace_traits_subrace_id_subraces_id_fk",
+          "tableFrom": "subrace_traits",
+          "tableTo": "subraces",
+          "columnsFrom": [
+            "subrace_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "subrace_traits_trait_id_traits_id_fk": {
+          "name": "subrace_traits_trait_id_traits_id_fk",
+          "tableFrom": "subrace_traits",
+          "tableTo": "traits",
+          "columnsFrom": [
+            "trait_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "subrace_traits_subrace_id_trait_id_pk": {
+          "name": "subrace_traits_subrace_id_trait_id_pk",
+          "columns": [
+            "subrace_id",
+            "trait_id"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.subraces": {
+      "name": "subraces",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "varchar(100)",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "parent_race_id": {
+          "name": "parent_race_id",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "name": {
+          "name": "name",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "lore": {
+          "name": "lore",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "source_type": {
+          "name": "source_type",
+          "type": "reference_source_type",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'core'"
+        },
+        "owner_campaign_id": {
+          "name": "owner_campaign_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "owner_character_id": {
+          "name": "owner_character_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_by_user_id": {
+          "name": "created_by_user_id",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "is_published": {
+          "name": "is_published",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": true
+        },
+        "supersedes_id": {
+          "name": "supersedes_id",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "subraces_parent_race_id_races_id_fk": {
+          "name": "subraces_parent_race_id_races_id_fk",
+          "tableFrom": "subraces",
+          "tableTo": "races",
+          "columnsFrom": [
+            "parent_race_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "subraces_core_scope_check": {
+          "name": "subraces_core_scope_check",
+          "value": "(\n      (\"subraces\".\"source_type\" = 'core' AND \"subraces\".\"owner_campaign_id\" IS NULL AND \"subraces\".\"owner_character_id\" IS NULL AND \"subraces\".\"created_by_user_id\" IS NULL AND \"subraces\".\"is_published\" = true)\n      OR\n      (\"subraces\".\"source_type\" = 'homebrew' AND \"subraces\".\"created_by_user_id\" IS NOT NULL AND \"subraces\".\"owner_campaign_id\" IS NOT NULL)\n    )"
+        },
+        "subraces_character_scope_check": {
+          "name": "subraces_character_scope_check",
+          "value": "\"subraces\".\"owner_character_id\" IS NULL OR \"subraces\".\"owner_campaign_id\" IS NOT NULL"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.traits": {
+      "name": "traits",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "varchar(100)",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "name": {
+          "name": "name",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "lore": {
+          "name": "lore",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "effects": {
+          "name": "effects",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "is_starting_proficiency": {
+          "name": "is_starting_proficiency",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "source_type": {
+          "name": "source_type",
+          "type": "reference_source_type",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'core'"
+        },
+        "owner_campaign_id": {
+          "name": "owner_campaign_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "owner_character_id": {
+          "name": "owner_character_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_by_user_id": {
+          "name": "created_by_user_id",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "is_published": {
+          "name": "is_published",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": true
+        },
+        "supersedes_id": {
+          "name": "supersedes_id",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "traits_core_scope_check": {
+          "name": "traits_core_scope_check",
+          "value": "(\n      (\"traits\".\"source_type\" = 'core' AND \"traits\".\"owner_campaign_id\" IS NULL AND \"traits\".\"owner_character_id\" IS NULL AND \"traits\".\"created_by_user_id\" IS NULL AND \"traits\".\"is_published\" = true)\n      OR\n      (\"traits\".\"source_type\" = 'homebrew' AND \"traits\".\"created_by_user_id\" IS NOT NULL AND \"traits\".\"owner_campaign_id\" IS NOT NULL)\n    )"
+        },
+        "traits_character_scope_check": {
+          "name": "traits_character_scope_check",
+          "value": "\"traits\".\"owner_character_id\" IS NULL OR \"traits\".\"owner_campaign_id\" IS NOT NULL"
+        }
+      },
+      "isRLSEnabled": false
+    }
+  },
+  "enums": {
+    "public.campaign_role": {
+      "name": "campaign_role",
+      "schema": "public",
+      "values": [
+        "owner",
+        "dm",
+        "player"
+      ]
+    },
+    "public.rest_condition": {
+      "name": "rest_condition",
+      "schema": "public",
+      "values": [
+        "short_rest",
+        "long_rest",
+        "long_rest_half",
+        "dawn",
+        "never"
+      ]
+    },
+    "public.reference_source_type": {
+      "name": "reference_source_type",
+      "schema": "public",
+      "values": [
+        "core",
+        "homebrew"
+      ]
+    }
+  },
+  "schemas": {},
+  "sequences": {},
+  "roles": {},
+  "policies": {},
+  "views": {},
+  "_meta": {
+    "columns": {},
+    "schemas": {},
+    "tables": {}
+  }
+}

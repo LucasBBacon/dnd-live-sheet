@@ -41,7 +41,29 @@ describe("Character Routes", () => {
       },
     }) as Request;
 
-  const setupLevelUpHarness = async (resolverErrorMessage: string) => {
+  const setupLevelUpHarness = async ({
+    resolverErrorMessage,
+    existingClasses = [
+      {
+        id: "ledger-1",
+        characterId: "char-1",
+        classId: "class_fighter",
+        classLevel: 2,
+        subclassId: null,
+      },
+    ],
+    multiclassValidationErrorMessage,
+  }: {
+    resolverErrorMessage?: string;
+    existingClasses?: Array<{
+      id: string;
+      characterId: string;
+      classId: string;
+      classLevel: number;
+      subclassId: string | null;
+    }>;
+    multiclassValidationErrorMessage?: string;
+  }) => {
     vi.resetModules();
 
     const tx = {
@@ -61,15 +83,7 @@ describe("Character Routes", () => {
             cha: 8,
           },
         ])
-        .mockResolvedValueOnce([
-          {
-            id: "ledger-1",
-            characterId: "char-1",
-            classId: "class_fighter",
-            classLevel: 2,
-            subclassId: null,
-          },
-        ]),
+        .mockResolvedValueOnce(existingClasses),
       update: vi.fn().mockReturnThis(),
       set: vi.fn().mockReturnThis(),
       insert: vi.fn().mockReturnThis(),
@@ -80,7 +94,11 @@ describe("Character Routes", () => {
       async (callback: (trx: unknown) => Promise<unknown>) => callback(tx),
     );
 
-    const resolveContextMock = vi.fn().mockResolvedValue({
+    const effectiveReferenceMock = vi.fn().mockResolvedValue({
+      classes: [],
+    });
+
+    const resolveContextMock = vi.fn().mockReturnValue({
       targetLevel: 3,
       isConfigured: true,
       reason: null,
@@ -90,7 +108,15 @@ describe("Character Routes", () => {
     });
 
     const validatePayloadMock = vi.fn().mockImplementation(() => {
-      throw new Error(resolverErrorMessage);
+      if (resolverErrorMessage) {
+        throw new Error(resolverErrorMessage);
+      }
+    });
+
+    const validateMulticlassPrerequisitesMock = vi.fn().mockImplementation(() => {
+      if (multiclassValidationErrorMessage) {
+        throw new Error(multiclassValidationErrorMessage);
+      }
     });
 
     vi.doMock("@project/database", () => ({
@@ -100,15 +126,23 @@ describe("Character Routes", () => {
     }));
 
     vi.doMock("../../services/levelUpValidation.js", () => ({
-      resolveNextLevelValidationContext: resolveContextMock,
+      resolveNextLevelValidationContextFromSnapshot: resolveContextMock,
+      validateMulticlassPrerequisitesFromSnapshot:
+        validateMulticlassPrerequisitesMock,
       validateLevelUpPayloadFromResolver: validatePayloadMock,
+    }));
+
+    vi.doMock("../../services/effectiveReferenceResolver.js", () => ({
+      getEffectiveReferenceSnapshot: effectiveReferenceMock,
     }));
 
     const { applyLevelUp } = await import("../../controllers/characterController.js");
 
     return {
       applyLevelUp,
+      effectiveReferenceMock,
       resolveContextMock,
+      validateMulticlassPrerequisitesMock,
       validatePayloadMock,
     };
   };
@@ -558,9 +592,9 @@ describe("Character Routes", () => {
 
   describe("POST /api/character/:characterId/level-up", () => {
     it("returns 400 with resolver subclass validation error", async () => {
-      const { applyLevelUp } = await setupLevelUpHarness(
-        "A subclass selection is required at this level",
-      );
+      const { applyLevelUp } = await setupLevelUpHarness({
+        resolverErrorMessage: "A subclass selection is required at this level",
+      });
 
       const req = createLevelUpRequest();
       const { res, status, json } = createMockResponse();
@@ -575,9 +609,10 @@ describe("Character Routes", () => {
     });
 
     it("returns 400 with resolver trait-selection quantity validation error", async () => {
-      const { applyLevelUp } = await setupLevelUpHarness(
-        "You must select exactly 2 option(s) for Choose two skills.",
-      );
+      const { applyLevelUp } = await setupLevelUpHarness({
+        resolverErrorMessage:
+          "You must select exactly 2 option(s) for Choose two skills.",
+      });
 
       const req = createLevelUpRequest({
         selectedTraits: {
@@ -592,6 +627,43 @@ describe("Character Routes", () => {
       expect(json).toHaveBeenCalledWith({
         success: false,
         error: "You must select exactly 2 option(s) for Choose two skills.",
+      });
+    });
+
+    it("returns 400 when multiclass prerequisite validation denies a dip", async () => {
+      const {
+        applyLevelUp,
+        validateMulticlassPrerequisitesMock,
+        validatePayloadMock,
+      } = await setupLevelUpHarness({
+        existingClasses: [
+          {
+            id: "ledger-1",
+            characterId: "char-1",
+            classId: "class_rogue",
+            classLevel: 2,
+            subclassId: null,
+          },
+        ],
+        multiclassValidationErrorMessage:
+          "You do not meet the ability score prerequisites to multiclass into this class.",
+      });
+
+      const req = createLevelUpRequest({
+        targetClassId: "class_fighter",
+        newTotalLevel: 3,
+      });
+      const { res, status, json } = createMockResponse();
+
+      await applyLevelUp(req, res);
+
+      expect(validateMulticlassPrerequisitesMock).toHaveBeenCalled();
+      expect(validatePayloadMock).not.toHaveBeenCalled();
+      expect(status).toHaveBeenCalledWith(400);
+      expect(json).toHaveBeenCalledWith({
+        success: false,
+        error:
+          "You do not meet the ability score prerequisites to multiclass into this class.",
       });
     });
   });

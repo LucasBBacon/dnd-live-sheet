@@ -114,6 +114,8 @@ describe("Reference Routes", () => {
             targetLevel: 2,
             isConfigured: true,
             reason: null,
+            multiclassPrerequisitesMet: true,
+            multiclassPrerequisiteReason: null,
             decisions: [
               {
                 id: "dec_class_fighter_subclass_3",
@@ -147,6 +149,12 @@ describe("Reference Routes", () => {
       expect(payload).toHaveProperty("supportByClass");
       expect(payload).toHaveProperty("nextLevel");
       expect(payload).toHaveProperty("selected");
+      expect(payload.supportByClass.class_fighter).toHaveProperty(
+        "multiclassPrerequisitesMet",
+      );
+      expect(payload.supportByClass.class_fighter).toHaveProperty(
+        "multiclassPrerequisiteReason",
+      );
     });
 
     it("includes class-scoped subclasses and timeline when classId is provided", () => {

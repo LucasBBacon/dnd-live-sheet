@@ -25,6 +25,7 @@ import {
   items,
   bundleContents,
 } from "./schema/reference.js";
+import { ClassMulticlassPrerequisitesSchema } from "@project/shared";
 import {
   campaignMembers,
   campaigns,
@@ -344,10 +345,25 @@ const runMigration = async () => {
             hitDie: c.hitDie,
             subclassRequirementLevel: c.subclassInfo?.choiceLevel || 3, // Strict gatekeeper
             startingEquipment: c.startingEquipment || {},
+            multiclassPrerequisites: c.multiclassPrerequisites
+              ? ClassMulticlassPrerequisitesSchema.parse(
+                  c.multiclassPrerequisites,
+                )
+              : null,
             lore: normalizeLore(c.lore, c.name ?? c.id ?? "Class"),
           })),
         )
-        .onConflictDoNothing();
+        .onConflictDoUpdate({
+          target: classes.id,
+          set: {
+            name: sql`excluded.name`,
+            hitDie: sql`excluded.hit_die`,
+            subclassRequirementLevel: sql`excluded.subclass_req_level`,
+            startingEquipment: sql`excluded.starting_equipment`,
+            multiclassPrerequisites: sql`excluded.multiclass_prerequisites`,
+            lore: sql`excluded.lore`,
+          },
+        });
 
       // Explode Class Progression Arrays
       const classLevelsData: any[] = [];
@@ -396,7 +412,14 @@ const runMigration = async () => {
             lore: normalizeLore(sc.lore, sc.name ?? sc.id ?? "Subclass"),
           })),
         )
-        .onConflictDoNothing();
+        .onConflictDoUpdate({
+          target: subclasses.id,
+          set: {
+            parentClassId: sql`excluded.parent_class_id`,
+            name: sql`excluded.name`,
+            lore: sql`excluded.lore`,
+          },
+        });
 
       // explode subclass progression arrays
       const subclassLevelsData: any[] = [];
@@ -455,7 +478,20 @@ const runMigration = async () => {
             lore: normalizeLore(b.lore, b.name ?? b.id ?? "Background"),
           })),
         )
-        .onConflictDoNothing();
+        .onConflictDoUpdate({
+          target: backgrounds.id,
+          set: {
+            name: sql`excluded.name`,
+            featureName: sql`excluded.feature_name`,
+            featureDescription: sql`excluded.feature_description`,
+            ideals: sql`excluded.ideals`,
+            bonds: sql`excluded.bonds`,
+            flaws: sql`excluded.flaws`,
+            personalityTraits: sql`excluded.personality_traits`,
+            startingEquipment: sql`excluded.starting_equipment`,
+            lore: sql`excluded.lore`,
+          },
+        });
 
       const backgroundTraitsData = rawBackgrounds.flatMap((b: any) =>
         (b.backgroundTraits || []).map((traitId: string) => ({

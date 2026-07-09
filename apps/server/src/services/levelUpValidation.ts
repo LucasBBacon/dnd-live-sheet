@@ -1,4 +1,7 @@
-import type { LevelUpPayload } from "@project/shared";
+import type {
+  ClassMulticlassPrerequisites,
+  LevelUpPayload,
+} from "@project/shared";
 import {
   getEffectiveReferenceSnapshot,
   type EffectiveReferenceSnapshot,
@@ -54,6 +57,12 @@ type TraitEffectLike = {
   type?: string;
   choice?: ChoiceLike;
 };
+
+type AbilityScoreKey = keyof NonNullable<
+  ClassMulticlassPrerequisites["abilityMinimums"]
+>;
+
+type AbilityScoreRecord = Record<AbilityScoreKey, number>;
 
 // #endregion
 
@@ -219,6 +228,80 @@ const getSelectedTraitsForDecision = (
   }
 
   return [];
+};
+
+const meetsAbilityMinimums = (
+  minimums: NonNullable<ClassMulticlassPrerequisites["abilityMinimums"]>,
+  currentBaseScores: AbilityScoreRecord,
+): boolean =>
+  Object.entries(minimums).every(([ability, minimum]) => {
+    if (minimum === undefined) {
+      return true;
+    }
+
+    return currentBaseScores[ability as AbilityScoreKey] >= minimum;
+  });
+
+export const validateMulticlassPrerequisitesFromSnapshot = ({
+  cache,
+  classId,
+  currentBaseScores,
+}: {
+  cache: EffectiveReferenceSnapshot;
+  classId: string;
+  currentBaseScores: AbilityScoreRecord;
+}): void => {
+  const assessment = assessMulticlassPrerequisitesFromSnapshot({
+    cache,
+    classId,
+    currentBaseScores,
+  });
+
+  if (!assessment.meetsPrerequisites) {
+    throw new Error(
+      assessment.reason ||
+        "You do not meet the ability score prerequisites to multiclass into this class.",
+    );
+  }
+};
+
+export const assessMulticlassPrerequisitesFromSnapshot = ({
+  cache,
+  classId,
+  currentBaseScores,
+}: {
+  cache: EffectiveReferenceSnapshot;
+  classId: string;
+  currentBaseScores: AbilityScoreRecord;
+}): { meetsPrerequisites: boolean; reason: string | null } => {
+  const classDefinition = cache.classes.find((row) => row.id === classId);
+  if (!classDefinition?.multiclassPrerequisites) {
+    return {
+      meetsPrerequisites: false,
+      reason: `Multiclass definitions not found for ${classId}`,
+    };
+  }
+
+  const { abilityMinimums, anyOf } = classDefinition.multiclassPrerequisites;
+  const meetsAllOf = abilityMinimums
+    ? meetsAbilityMinimums(abilityMinimums, currentBaseScores)
+    : true;
+  const meetsAnyOf = anyOf
+    ? anyOf.some((minimums) => meetsAbilityMinimums(minimums, currentBaseScores))
+    : true;
+
+  if (!meetsAllOf || !meetsAnyOf) {
+    return {
+      meetsPrerequisites: false,
+      reason:
+        "You do not meet the ability score prerequisites to multiclass into this class.",
+    };
+  }
+
+  return {
+    meetsPrerequisites: true,
+    reason: null,
+  };
 };
 
 // #endregion
