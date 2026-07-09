@@ -143,6 +143,7 @@ const buildCoreOnlySnapshot = (
   raceTraitsByRaceId: copyMap(core.raceTraitsByRaceId),
   subraceTraitsBySubraceId: copyMap(core.subraceTraitsBySubraceId),
   classTraitsByClassLevel: copyMap(core.classTraitsByClassLevel),
+  multiclassTraitsByClassId: copyMap(core.multiclassTraitsByClassId),
   subclassTraitsBySubclassLevel: copyMap(core.subclassTraitsBySubclassLevel),
   backgroundTraitsByBackgroundId: copyMap(core.backgroundTraitsByBackgroundId),
 });
@@ -246,6 +247,10 @@ export const getEffectiveReferenceSnapshot = async (
     ),
     classTraitsByClassLevel: remapTraitLinks(
       core.classTraitsByClassLevel,
+      traitsById,
+    ),
+    multiclassTraitsByClassId: remapTraitLinks(
+      core.multiclassTraitsByClassId,
       traitsById,
     ),
     subclassTraitsBySubclassLevel: remapTraitLinks(

@@ -4,10 +4,9 @@ import {
   characters,
   characterTraits,
 } from "@project/database/src/schema/operational.js";
-import { classProgressions } from "@project/database/src/schema/reference.js";
 import type { LevelUpPayload } from "@project/shared";
 import type { Request, Response } from "express";
-import { and, eq, sql } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { ProgressionEngine } from "@project/engine";
 import {
   resolveNextLevelValidationContext,
@@ -64,6 +63,7 @@ export const applyLevelUp = async (req: Request, res: Response) => {
         },
         classId: targetClassId,
         currentClassLevel: targetClassLevel - 1,
+        isMulticlassDip,
         ...(payload.subclassId !== undefined
           ? { requestedSubclassId: payload.subclassId }
           : {}),
@@ -74,13 +74,6 @@ export const applyLevelUp = async (req: Request, res: Response) => {
         payload,
         context: resolverContext,
       });
-
-      // validate the payload structure against dict
-      ProgressionEngine.validateLevelUp(
-        targetClassId,
-        targetClassLevel,
-        payload,
-      );
 
       // 4 - update class ledger
       if (targetClassRecord) {
@@ -100,26 +93,8 @@ export const applyLevelUp = async (req: Request, res: Response) => {
         });
       }
 
-      // 5 - materialize granted traits
-      // class progression traits are DB-backed; multiclass dip level-1 remains engine-rule specific
-      const grantedTraits =
-        isMulticlassDip && targetClassLevel === 1
-          ? ProgressionEngine.getGrantedTraitsForLevel(
-              targetClassId,
-              targetClassLevel,
-              true,
-            )
-          : (
-              await tx
-                .select({ traitId: classProgressions.traitId })
-                .from(classProgressions)
-                .where(
-                  and(
-                    eq(classProgressions.classId, targetClassId),
-                    eq(classProgressions.level, targetClassLevel),
-                  ),
-                )
-            ).map((row) => row.traitId);
+      // 5 - materialize granted traits from resolver context
+      const grantedTraits = resolverContext.grantedTraitIds;
 
       const traitsToInsert = grantedTraits.map((traitId) => ({
         characterId,

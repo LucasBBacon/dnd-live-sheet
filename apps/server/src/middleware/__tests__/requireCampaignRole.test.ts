@@ -1,23 +1,15 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { Request, Response } from "express";
 
-const selectMock = vi.fn();
-const fromMock = vi.fn();
-const whereMock = vi.fn();
-const limitMock = vi.fn();
+const getCampaignMembershipRoleMock = vi.fn();
 
-vi.mock("@project/database", () => ({
-  db: {
-    select: selectMock,
-  },
+vi.mock("../../services/campaignAccess.js", () => ({
+  getCampaignMembershipRole: getCampaignMembershipRoleMock,
 }));
 
 describe("createCampaignRoleGuard", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    fromMock.mockReturnValue({ where: whereMock });
-    whereMock.mockReturnValue({ limit: limitMock });
-    selectMock.mockReturnValue({ from: fromMock });
   });
 
   const createRes = (): Response =>
@@ -43,7 +35,7 @@ describe("createCampaignRoleGuard", () => {
   });
 
   it("returns 403 when user is not a campaign member", async () => {
-    limitMock.mockResolvedValue([]);
+    getCampaignMembershipRoleMock.mockResolvedValue(null);
     const { createCampaignRoleGuard } = await import("../requireCampaignRole.js");
     const guard = createCampaignRoleGuard({
       resolveCampaignId: () => "7a0c5bb8-0dc5-4c39-a58f-8f7baae6f27f",
@@ -60,7 +52,7 @@ describe("createCampaignRoleGuard", () => {
   });
 
   it("returns 403 when role is not allowed", async () => {
-    limitMock.mockResolvedValue([{ role: "player" }]);
+    getCampaignMembershipRoleMock.mockResolvedValue("player");
     const { createCampaignRoleGuard } = await import("../requireCampaignRole.js");
     const guard = createCampaignRoleGuard({
       resolveCampaignId: () => "7a0c5bb8-0dc5-4c39-a58f-8f7baae6f27f",
@@ -78,7 +70,7 @@ describe("createCampaignRoleGuard", () => {
   });
 
   it("calls next when membership role is allowed", async () => {
-    limitMock.mockResolvedValue([{ role: "dm" }]);
+    getCampaignMembershipRoleMock.mockResolvedValue("dm");
     const { createCampaignRoleGuard } = await import("../requireCampaignRole.js");
     const guard = createCampaignRoleGuard({
       resolveCampaignId: () => "7a0c5bb8-0dc5-4c39-a58f-8f7baae6f27f",

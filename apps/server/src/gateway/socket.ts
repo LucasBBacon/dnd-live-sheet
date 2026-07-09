@@ -1,6 +1,5 @@
 import { db } from "@project/database";
 import {
-  campaignMembers,
   characterInventory,
   characterResources,
   characters,
@@ -16,6 +15,10 @@ import {
 import { Server, Socket } from "socket.io";
 import { and, eq, not, sql } from "drizzle-orm";
 import { RestEngine } from "@project/engine";
+import {
+  getCampaignMembershipRole,
+  getUserIdFromSocket,
+} from "../services/campaignAccess.js";
 
 type SocketDataContext = {
   campaignId?: string;
@@ -30,17 +33,6 @@ const setSocketContext = (
   context: Partial<SocketDataContext>,
 ): void => {
   socket.data = { ...(socket.data as SocketDataContext), ...context };
-};
-
-const getUserIdFromSocket = (socket: Socket): string | undefined => {
-  const authUserId =
-    typeof socket.handshake.auth?.userId === "string"
-      ? socket.handshake.auth.userId
-      : undefined;
-  if (authUserId) return authUserId;
-
-  const headerUserId = socket.handshake.headers["x-tester-id"];
-  return typeof headerUserId === "string" ? headerUserId : undefined;
 };
 
 const ensureCharacterInSocketCampaign = async (
@@ -91,18 +83,12 @@ export function initializeWebSocketGateway(httpServer: any) {
           return;
         }
 
-        const [membership] = await db
-          .select()
-          .from(campaignMembers)
-          .where(
-            and(
-              eq(campaignMembers.userId, userId),
-              eq(campaignMembers.campaignId, campaignId),
-            ),
-          )
-          .limit(1);
+        const membershipRole = await getCampaignMembershipRole(
+          userId,
+          campaignId,
+        );
 
-        if (!membership) {
+        if (!membershipRole) {
           socket.emit("action_error", {
             event: SOCKET_EVENTS.ROOM_JOIN,
             error: "Not authorized for campaign room.",

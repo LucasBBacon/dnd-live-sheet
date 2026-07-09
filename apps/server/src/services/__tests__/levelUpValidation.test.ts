@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { LevelUpPayload } from "@project/shared";
 import {
+  resolveNextLevelValidationContextFromSnapshot,
   type ResolverNextLevelContext,
   validateLevelUpPayloadFromResolver,
 } from "../levelUpValidation.js";
@@ -179,5 +180,77 @@ describe("validateLevelUpPayloadFromResolver", () => {
         ]),
       }),
     ).not.toThrow();
+  });
+});
+
+describe("resolveNextLevelValidationContextFromSnapshot", () => {
+  const makeSnapshot = () =>
+    ({
+      classes: [
+        {
+          id: "class_fighter",
+          subclassRequirementLevel: 3,
+        },
+      ],
+      classLevelsByClassId: new Map([
+        [
+          "class_fighter",
+          [
+            {
+              classId: "class_fighter",
+              level: 1,
+            },
+          ],
+        ],
+      ]),
+      classTraitsByClassLevel: new Map([
+        [
+          "class_fighter::1",
+          [
+            {
+              id: "trait_full_level_one",
+              name: "Full Level One",
+              effects: [],
+            },
+          ],
+        ],
+      ]),
+      multiclassTraitsByClassId: new Map([
+        [
+          "class_fighter",
+          [
+            {
+              id: "trait_multiclass_level_one",
+              name: "Multiclass Level One",
+              effects: [],
+            },
+          ],
+        ],
+      ]),
+      subclassesByClassId: new Map(),
+      subclassById: new Map(),
+      subclassTraitsBySubclassLevel: new Map(),
+    }) as any;
+
+  it("returns standard level trait grants when not multiclass", () => {
+    const context = resolveNextLevelValidationContextFromSnapshot({
+      cache: makeSnapshot(),
+      classId: "class_fighter",
+      currentClassLevel: 0,
+      isMulticlassDip: false,
+    });
+
+    expect(context.grantedTraitIds).toEqual(["trait_full_level_one"]);
+  });
+
+  it("returns multiclass trait grants for level-1 dip", () => {
+    const context = resolveNextLevelValidationContextFromSnapshot({
+      cache: makeSnapshot(),
+      classId: "class_fighter",
+      currentClassLevel: 0,
+      isMulticlassDip: true,
+    });
+
+    expect(context.grantedTraitIds).toEqual(["trait_multiclass_level_one"]);
   });
 });

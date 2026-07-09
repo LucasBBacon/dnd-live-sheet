@@ -47,13 +47,11 @@ Create `.env` in repository root:
 DATABASE_URL=******localhost:5432/dnd_live_sheet
 PORT=3000
 CLIENT_URL=http://localhost:5173
-USE_GATEWAY_SOCKETS=false
 ```
 
 Notes:
 
 - `DATABASE_URL` is required.
-- `USE_GATEWAY_SOCKETS` controls which server socket pipeline is initialised.
 - Web socket client expects `VITE_API_URL` in `apps/web/.env` when needed.
 
 ## Quick start
@@ -149,12 +147,9 @@ All homebrew writes require campaign role `owner` or `dm`.
 
 ## Sockets
 
-Two socket implementations currently exist server-side. Runtime selection is controlled via `USE_GATEWAY_SOCKETS`:
+The server now uses a single gateway socket pipeline.
 
-- `false` (default): controller pipeline
-- `true`: gateway pipeline
-
-The modern room-join contract is `RoomJoinPayload` (`campaignId`, optional `characterId`) and campaign membership is enforced before scoped mutations.
+The room-join contract is `RoomJoinPayload` (`campaignId`, optional `characterId`) and campaign membership is enforced before scoped mutations.
 
 ## Testing and quality checks
 

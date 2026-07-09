@@ -8,8 +8,6 @@ import homebrewRoutes from "./routes/homebrew.js";
 import { createAuthMiddleware } from "./middleware/requireAuth.js";
 import { MockAuthProvider } from "./core/auth/MockAuthProvider.js";
 import { globalErrorHandler } from "./middleware/errorHandler.js";
-import { Server } from "socket.io";
-import { initializeWebSockets } from "./socket/controller.js";
 import { initializeWebSocketGateway } from "./gateway/socket.js";
 
 const app = express();
@@ -31,20 +29,7 @@ app.use("/api/homebrew", authMiddleware, homebrewRoutes);
 // global error catcher (REGISTER LAST)
 app.use(globalErrorHandler);
 
-const useGatewaySockets = process.env.USE_GATEWAY_SOCKETS === "true";
-
-if (useGatewaySockets) {
-  initializeWebSocketGateway(server);
-} else {
-  const io = new Server(server, {
-    cors: {
-      origin: process.env.CLIENT_URL || "http://localhost:5173",
-      methods: ["GET", "POST"],
-    },
-  });
-
-  initializeWebSockets(io);
-}
+initializeWebSocketGateway(server);
 
 const PORT = process.env.PORT || 3000;
 

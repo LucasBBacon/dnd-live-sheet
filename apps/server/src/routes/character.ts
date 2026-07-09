@@ -8,10 +8,11 @@ import {
   characters,
 } from "@project/database/src/schema/operational.js";
 import { CreateCharacterPayloadSchema } from "@project/shared";
-import { and, eq } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { v4 as uuidv4 } from "uuid";
 import { processStartingEquipment } from "../utils/inventory.js";
 import { applyLevelUp } from "../controllers/characterController.js";
+import { isUserCampaignMember } from "../services/campaignAccess.js";
 
 const router: ExpressRouter = Router();
 /**
@@ -20,30 +21,6 @@ const router: ExpressRouter = Router();
 type CampaignWriteDb = Pick<typeof db, "select" | "insert">;
 
 // #region Helper Functions
-
-/**
- * Checks if a user is a member of a specific campaign.
- * @param userId - The ID of the user.
- * @param campaignId - The ID of the campaign.
- * @returns A promise that resolves to true if the user is a member of the campaign, false otherwise.
- */
-const isUserCampaignMember = async (
-  userId: string,
-  campaignId: string,
-): Promise<boolean> => {
-  const [membership] = await db
-    .select()
-    .from(campaignMembers)
-    .where(
-      and(
-        eq(campaignMembers.userId, userId),
-        eq(campaignMembers.campaignId, campaignId),
-      ),
-    )
-    .limit(1);
-
-  return !!membership;
-};
 
 /**
  * Resolves the default campaign for a user. If the user has no existing campaigns, a new one is created.

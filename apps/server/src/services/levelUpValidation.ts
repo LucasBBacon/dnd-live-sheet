@@ -85,12 +85,18 @@ const getGrantedFeaturesForLevel = ({
   classId,
   targetLevel,
   requestedSubclassId,
+  isMulticlassDip,
 }: {
   cache: EffectiveReferenceSnapshot;
   classId: string;
   targetLevel: number;
   requestedSubclassId: string | undefined;
+  isMulticlassDip: boolean;
 }) => {
+  if (isMulticlassDip && targetLevel === 1) {
+    return cache.multiclassTraitsByClassId.get(classId) ?? [];
+  }
+
   // retrieve class features for class + level from cache
   const classFeatures =
     cache.classTraitsByClassLevel.get(`${classId}::${targetLevel}`) ?? [];
@@ -229,17 +235,20 @@ export const resolveNextLevelValidationContext = async ({
   classId,
   currentClassLevel,
   requestedSubclassId,
+  isMulticlassDip = false,
 }: {
   scope: ReferenceScope;
   classId: string;
   currentClassLevel: number;
   requestedSubclassId?: string;
+  isMulticlassDip?: boolean;
 }): Promise<ResolverNextLevelContext> => {
   const cache = await getEffectiveReferenceSnapshot(scope);
   return resolveNextLevelValidationContextFromSnapshot({
     cache,
     classId,
     currentClassLevel,
+    isMulticlassDip,
     ...(requestedSubclassId !== undefined ? { requestedSubclassId } : {}),
   });
 };
@@ -254,11 +263,13 @@ export const resolveNextLevelValidationContextFromSnapshot = ({
   classId,
   currentClassLevel,
   requestedSubclassId,
+  isMulticlassDip = false,
 }: {
   cache: EffectiveReferenceSnapshot;
   classId: string;
   currentClassLevel: number;
   requestedSubclassId?: string;
+  isMulticlassDip?: boolean;
 }): ResolverNextLevelContext => {
   // determine target level, class definition, and level metadata for next class progression step
   const targetLevel = currentClassLevel + 1;
@@ -273,6 +284,7 @@ export const resolveNextLevelValidationContextFromSnapshot = ({
     classId,
     targetLevel,
     requestedSubclassId,
+    isMulticlassDip,
   });
 
   // extract granted trait IDs and build decision types and decisions based on granted features

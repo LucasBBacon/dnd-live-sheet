@@ -74,7 +74,7 @@ Checks:
 2. Confirm socket auth includes `userId`.
 3. Confirm user has campaign membership.
 4. Confirm event payload `characterId` belongs to joined campaign.
-5. Confirm expected socket pipeline is active (`USE_GATEWAY_SOCKETS`).
+5. Confirm the gateway socket runtime is running and that clients emit `SOCKET_EVENTS.ROOM_JOIN` before scoped mutations.
 
 ## 6) Wizard shows incorrect reference data after changing campaign
 

@@ -1,12 +1,11 @@
 import { db } from "@project/database";
 import { Router, type Router as ExpressRouter } from "express";
 import {
-  campaignMembers,
   characterClasses,
   characters,
 } from "@project/database/src/schema/operational.js";
 import { traits } from "@project/database/src/schema/reference.js";
-import { and, eq } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import {
   getEffectiveReferenceSnapshot,
   listEffectiveFeats,
@@ -17,6 +16,10 @@ import {
   getReferenceCacheVersion,
   getReferenceCache,
 } from "../services/referenceCache.js";
+import {
+  getHeaderOrAuthUserId,
+  isUserCampaignMember,
+} from "../services/campaignAccess.js";
 
 const router: ExpressRouter = Router();
 
@@ -26,23 +29,6 @@ type ScopedContext = {
 };
 
 // #region Helper Functions
-
-/**
- * Extracts the user ID from the request headers or user object.
- * @param req The incoming request object containing headers and user information.
- * @returns The user ID if present, otherwise undefined.
- */
-const getHeaderUserId = (req: {
-  user?: { id?: string };
-  headers: Record<string, unknown>;
-}): string | undefined => {
-  // If the user object has an ID, return it directly
-  if (typeof req.user?.id === "string") return req.user.id;
-  // Otherwise, check the "x-tester-id" header for a user ID
-  // if the header is a string, return it; otherwise, return undefined
-  const testerHeader = req.headers["x-tester-id"];
-  return typeof testerHeader === "string" ? testerHeader : undefined;
-};
 
 /**
  * Requires scoped access for the request if a campaignId is present.
@@ -81,26 +67,14 @@ const requireScopedAccessIfPresent = async (
 
   // If campaignId is provided, check for user authentication
   // If the user is not authenticated, return a 401 error
-  const userId = getHeaderUserId(req);
+  const userId = getHeaderOrAuthUserId(req);
   if (!userId) {
     res.status(401).json({ error: "campaignId scoped reads require auth." });
     return { ok: false };
   }
 
-  // Query the database to check if the user is a member of the specified campaign
-  const [membership] = await db
-    .select({ userId: campaignMembers.userId })
-    .from(campaignMembers)
-    .where(
-      and(
-        eq(campaignMembers.campaignId, campaignId),
-        eq(campaignMembers.userId, userId),
-      ),
-    )
-    .limit(1);
-
-  // If the user is not a member of the campaign, return a 403 error
-  if (!membership) {
+  const hasAccess = await isUserCampaignMember(userId, campaignId);
+  if (!hasAccess) {
     res.status(403).json({ error: "Forbidden campaign access." });
     return { ok: false };
   }

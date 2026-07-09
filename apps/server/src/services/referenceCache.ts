@@ -4,6 +4,7 @@ import {
   backgroundTraits,
   classes,
   classLevels,
+  classMulticlassTraits,
   classProgressions,
   races,
   raceTraits,
@@ -41,6 +42,7 @@ export type ReferenceCacheSnapshot = {
   subclassesByClassId: Map<string, SubclassRow[]>;
   subclassById: Map<string, SubclassRow>;
   classLevelsByClassId: Map<string, ClassLevelRow[]>;
+  multiclassTraitsByClassId: Map<string, TraitRow[]>;
   classTraitsByClassLevel: Map<string, TraitRow[]>;
   subclassTraitsBySubclassLevel: Map<string, TraitRow[]>;
   backgroundTraitsByBackgroundId: Map<string, TraitRow[]>;
@@ -131,6 +133,7 @@ const buildReferenceCache = async (): Promise<ReferenceCacheSnapshot> => {
     subraceTraitLinks,
     backgroundTraitLinks,
     classTraitLinks,
+    multiclassTraitLinks,
     subclassTraitLinks,
   ] = await Promise.all([
     db
@@ -206,6 +209,17 @@ const buildReferenceCache = async (): Promise<ReferenceCacheSnapshot> => {
         ),
       ),
     db
+      .select({ classId: classMulticlassTraits.classId, trait: traits })
+      .from(classMulticlassTraits)
+      .innerJoin(
+        traits,
+        and(
+          eq(classMulticlassTraits.traitId, traits.id),
+          eq(traits.sourceType, "core"),
+          eq(traits.isPublished, true),
+        ),
+      ),
+    db
       .select({
         subclassId: subclassProgressions.subclassId,
         level: subclassProgressions.level,
@@ -275,6 +289,11 @@ const buildReferenceCache = async (): Promise<ReferenceCacheSnapshot> => {
     );
   }
 
+  const multiclassTraitsByClassId = new Map<string, TraitRow[]>();
+  for (const row of multiclassTraitLinks) {
+    pushMapArray(multiclassTraitsByClassId, row.classId, row.trait);
+  }
+
   const subclassTraitsBySubclassLevel = new Map<string, TraitRow[]>();
   for (const row of subclassTraitLinks) {
     pushMapArray(
@@ -310,6 +329,7 @@ const buildReferenceCache = async (): Promise<ReferenceCacheSnapshot> => {
     subclassesByClassId,
     subclassById,
     classLevelsByClassId,
+    multiclassTraitsByClassId,
     classTraitsByClassLevel,
     subclassTraitsBySubclassLevel,
     backgroundTraitsByBackgroundId,

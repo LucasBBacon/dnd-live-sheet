@@ -1,10 +1,12 @@
 import {
+  type MaybeServerBroadcastPayload,
   type RoomJoinPayload,
   SOCKET_EVENTS,
   type HpModifiedPayload,
   type ItemConsumedPayload,
   type ItemEquippedPayload,
   type ResourceConsumedPayload,
+  unwrapServerBroadcastPayload,
 } from "@project/shared";
 import { io, type Socket } from "socket.io-client";
 
@@ -36,7 +38,12 @@ class SocketManager {
   }
 
   public subscribeToHpUpdates(callback: (payload: HpModifiedPayload) => void) {
-    this.socket?.on(SOCKET_EVENTS.HP_MODIFIED, callback);
+    this.socket?.on(
+      SOCKET_EVENTS.HP_MODIFIED,
+      (payload: MaybeServerBroadcastPayload<HpModifiedPayload>) => {
+        callback(unwrapServerBroadcastPayload(payload));
+      },
+    );
   }
 
   public emitInventoryUpdate(payload: ItemEquippedPayload) {
@@ -46,7 +53,12 @@ class SocketManager {
   public subscribeToInventoryUpdates(
     callback: (payload: ItemEquippedPayload) => void,
   ) {
-    this.socket?.on(SOCKET_EVENTS.ITEM_EQUIPPED, callback);
+    this.socket?.on(
+      SOCKET_EVENTS.ITEM_EQUIPPED,
+      (payload: MaybeServerBroadcastPayload<ItemEquippedPayload>) => {
+        callback(unwrapServerBroadcastPayload(payload));
+      },
+    );
   }
 
   public emitInventoryConsumed(payload: ItemConsumedPayload) {
@@ -56,7 +68,12 @@ class SocketManager {
   public subscribeToItemConsumed(
     callback: (payload: ItemConsumedPayload) => void,
   ) {
-    this.socket?.on(SOCKET_EVENTS.ITEM_CONSUMED, callback);
+    this.socket?.on(
+      SOCKET_EVENTS.ITEM_CONSUMED,
+      (payload: MaybeServerBroadcastPayload<ItemConsumedPayload>) => {
+        callback(unwrapServerBroadcastPayload(payload));
+      },
+    );
   }
 
   public emitResourceConsumed(payload: ResourceConsumedPayload) {
@@ -66,7 +83,12 @@ class SocketManager {
   public subscribeToResourceConsumed(
     callback: (payload: ResourceConsumedPayload) => void,
   ) {
-    this.socket?.on(SOCKET_EVENTS.RESOURCE_CONSUMED, callback);
+    this.socket?.on(
+      SOCKET_EVENTS.RESOURCE_CONSUMED,
+      (payload: MaybeServerBroadcastPayload<ResourceConsumedPayload>) => {
+        callback(unwrapServerBroadcastPayload(payload));
+      },
+    );
   }
 
   public emitRestCompleted(payload: {
