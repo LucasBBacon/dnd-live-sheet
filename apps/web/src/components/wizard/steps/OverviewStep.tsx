@@ -1,7 +1,6 @@
 import React, { useMemo } from "react";
 import { useCharacterSheetStore } from "../../../store/characterSheetStore";
 import { useLevelUpStore } from "../../../store/levelUpStore";
-import { TRAIT_DICTIONARY } from "@project/engine";
 import { useQuery } from "@tanstack/react-query";
 import {
   apiClient,
@@ -33,8 +32,13 @@ type LevelUpOptionsResponse = {
 };
 
 export const OverviewStep = () => {
-  const { draftPayload, progressionContext, beginLevelUp, errorMessage } =
-    useLevelUpStore();
+  const {
+    draftPayload,
+    progressionContext,
+    grantedTraitDetails,
+    beginLevelUp,
+    errorMessage,
+  } = useLevelUpStore();
   const characterId = useCharacterSheetStore((state) => state.id);
   const campaignId = useCharacterSheetStore((state) => state.campaignId);
   const totalLevel = useCharacterSheetStore((state) => state.level);
@@ -72,13 +76,20 @@ export const OverviewStep = () => {
   // fetch human-readable names for traits automatically received
   const automaticFeatures = useMemo(() => {
     if (!progressionContext) return [];
-    return progressionContext.grantedTraits.map((traitId) => {
-      return (
-        TRAIT_DICTIONARY[traitId]?.name ||
-        traitId.replace(/_/g, " ").toUpperCase()
-      );
-    });
-  }, [progressionContext]);
+    return grantedTraitDetails;
+  }, [progressionContext, grantedTraitDetails]);
+
+  const getGrantSourceLabel = (grantSourceType: string) => {
+    if (grantSourceType === "multiclass_grant") {
+      return "Multiclass Grant";
+    }
+
+    if (grantSourceType === "subclass_progression") {
+      return "Subclass Progression";
+    }
+
+    return "Class Progression";
+  };
 
   // handle multiclassing / class swapping on the fly
   const handleClassChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -188,10 +199,13 @@ export const OverviewStep = () => {
         </h4>
         {automaticFeatures.length > 0 ? (
           <ul className="">
-            {automaticFeatures.map((featureName, idx) => (
+            {automaticFeatures.map((feature, idx) => (
               <li key={idx}>
                 <span>✦</span>
-                <span>{featureName}</span>
+                <span>{feature.name}</span>
+                <span className="ml-2 text-xs text-gray-500">
+                  [{getGrantSourceLabel(feature.grantSourceType)}]
+                </span>
               </li>
             ))}
           </ul>

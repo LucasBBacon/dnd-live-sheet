@@ -29,6 +29,11 @@ export interface CharacterSheetState {
   proficiencies: Record<string, ProficiencyLevel>;
 
   traits: TraitDefinition[];
+  traitGrants: Array<{
+    id: string;
+    traitId: string;
+    source: string;
+  }>;
 
   // operational inventory
   inventory: OperationalInventoryItem[];
@@ -72,6 +77,7 @@ export const useCharacterSheetStore = create<CharacterSheetState>(
     baseScores: { str: 10, dex: 10, con: 10, int: 10, wis: 10, cha: 10 },
     proficiencies: {},
     traits: [],
+    traitGrants: [],
     inventory: [],
     activeModifiers: [],
     resources: [],

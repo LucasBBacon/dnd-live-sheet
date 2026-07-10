@@ -5,7 +5,7 @@ import { TRAIT_DICTIONARY, type Ability } from "@project/engine";
 import { useLevelUpStore } from "../../../store/levelUpStore";
 
 export const ReviewStep = () => {
-  const { draftPayload, progressionContext } = useLevelUpStore();
+  const { draftPayload, progressionContext, grantedTraitDetails } = useLevelUpStore();
   const currentTotalLevel = useCharacterSheetStore((state) => state.level);
   const currentMaxHp = useCharacterSheetStore((state) => state.maxHp);
   const classLevels = useCharacterSheetStore((state) => state.classLevels);
@@ -79,18 +79,53 @@ export const ReviewStep = () => {
   const gainedFeatures = useMemo(() => {
     if (!progressionContext) return [];
 
-    // combine base granted traits and user-selected traits (feats, subclass, etc.)
+    const grantedById = new Map(
+      grantedTraitDetails.map((trait) => [trait.id, trait]),
+    );
     const traitIds = new Set<string>([...progressionContext.grantedTraits]);
 
     if (draftPayload.featId) traitIds.add(draftPayload.featId);
     if (draftPayload.subclassId) traitIds.add(draftPayload.subclassId);
-    // TODO expand to handle fighting styles, invocations, etc.
 
     return Array.from(traitIds).map((id) => {
-      // TODO: Fallback to a generic name if dictionary lookup fails
-      return TRAIT_DICTIONARY[id]?.name || id.replace(/_/g, " ").toUpperCase();
+      const grant = grantedById.get(id);
+
+      if (grant) {
+        return {
+          id,
+          name: grant.name,
+          sourceLabel:
+            grant.grantSourceType === "multiclass_grant"
+              ? "Multiclass Grant"
+              : grant.grantSourceType === "subclass_progression"
+                ? "Subclass Progression"
+                : "Class Progression",
+        };
+      }
+
+      if (id === draftPayload.featId) {
+        return {
+          id,
+          name: TRAIT_DICTIONARY[id]?.name || id.replace(/_/g, " ").toUpperCase(),
+          sourceLabel: "Feat Selection",
+        };
+      }
+
+      if (id === draftPayload.subclassId) {
+        return {
+          id,
+          name: id.replace(/_/g, " ").toUpperCase(),
+          sourceLabel: "Subclass Selection",
+        };
+      }
+
+      return {
+        id,
+        name: TRAIT_DICTIONARY[id]?.name || id.replace(/_/g, " ").toUpperCase(),
+        sourceLabel: "Granted",
+      };
     });
-  }, [progressionContext, draftPayload]);
+  }, [progressionContext, grantedTraitDetails, draftPayload]);
 
   return (
     <div className="flex flex-col h-full">
@@ -151,7 +186,8 @@ export const ReviewStep = () => {
                   className="flex items-center gap-2 text-sm text-indigo-800 font-bold"
                 >
                   <span className="text-indigo-400">✦</span>
-                  {feature}
+                  <span>{feature.name}</span>
+                  <span className="text-xs text-indigo-500">[{feature.sourceLabel}]</span>
                 </li>
               ))}
             </ul>

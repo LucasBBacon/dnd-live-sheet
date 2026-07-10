@@ -14,8 +14,25 @@ type LevelUpOptionsResponse = {
     isConfigured: boolean;
     reason: string | null;
     grantedTraitIds: string[];
+    grantedTraits?: Array<{
+      id: string;
+      name: string;
+      grantSourceType:
+        | "multiclass_grant"
+        | "class_progression"
+        | "subclass_progression";
+    }>;
     decisionTypes: Array<"subclass" | "asi_or_feat">;
   } | null;
+};
+
+export type GrantedTraitDetail = {
+  id: string;
+  name: string;
+  grantSourceType:
+    | "multiclass_grant"
+    | "class_progression"
+    | "subclass_progression";
 };
 
 export type PreResolvedNextLevelSupport = {
@@ -52,6 +69,7 @@ const mapServerDecisions = (
 interface LevelUpState {
   isActive: boolean;
   progressionContext: ClassProgression | null;
+  grantedTraitDetails: GrantedTraitDetail[];
   draftPayload: Partial<LevelUpPayload>;
   errorMessage: string | null;
 
@@ -71,6 +89,7 @@ interface LevelUpState {
 export const useLevelUpStore = create<LevelUpState>((set, get) => ({
   isActive: false,
   progressionContext: null,
+  grantedTraitDetails: [],
   draftPayload: {},
   errorMessage: null,
 
@@ -130,6 +149,13 @@ export const useLevelUpStore = create<LevelUpState>((set, get) => ({
           grantedTraits: nextLevel.grantedTraitIds,
           decisions: mapServerDecisions(nextLevel.decisionTypes, subclasses),
         },
+        grantedTraitDetails:
+          nextLevel.grantedTraits ??
+          nextLevel.grantedTraitIds.map((traitId) => ({
+            id: traitId,
+            name: traitId.replace(/_/g, " ").toUpperCase(),
+            grantSourceType: "class_progression" as const,
+          })),
         draftPayload: {
           characterId,
           targetClassId: classId,
@@ -211,6 +237,7 @@ export const useLevelUpStore = create<LevelUpState>((set, get) => ({
     set({
       isActive: false,
       progressionContext: null,
+      grantedTraitDetails: [],
       draftPayload: {},
       errorMessage: null,
     });

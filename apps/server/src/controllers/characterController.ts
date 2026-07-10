@@ -102,11 +102,15 @@ export const applyLevelUp = async (req: Request, res: Response) => {
 
       // 5 - materialize granted traits from resolver context
       const grantedTraits = resolverContext.grantedTraitIds;
+      const grantedTraitSource =
+        isMulticlassDip && targetClassLevel === 1
+          ? `multiclass_grant:${targetClassId}:level_${targetClassLevel}`
+          : `${targetClassId}_level_${targetClassLevel}`;
 
       const traitsToInsert = grantedTraits.map((traitId) => ({
         characterId,
         traitId,
-        source: `${targetClassId}_level_${targetClassLevel}`,
+        source: grantedTraitSource,
       }));
 
       // append manually selected traits

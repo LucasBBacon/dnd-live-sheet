@@ -24,6 +24,11 @@ export type CharacterSheetPayload = {
   currentHp: number;
   maxHp: number;
   resources?: OperationalResource[];
+  traitGrants?: Array<{
+    id: string;
+    traitId: string;
+    source: string;
+  }>;
 };
 
 export type CharacterSheetResponse = {
@@ -57,5 +62,6 @@ export const hydrateCharacterSheet = (
     currentHp: character.currentHp,
     maxHp: character.maxHp,
     resources: character.resources || [],
+    traitGrants: character.traitGrants || [],
   });
 };

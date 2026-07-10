@@ -94,6 +94,11 @@ type TraitEffectLike = {
   category?: string;
 };
 
+type GrantSourceType =
+  | "multiclass_grant"
+  | "class_progression"
+  | "subclass_progression";
+
 const hasEffectCategory = (effects: unknown, categories: string[]): boolean => {
   if (!Array.isArray(effects)) return false;
 
@@ -259,17 +264,20 @@ const buildNextLevelContext = ({
   classId,
   currentClassLevel,
   requestedSubclassId,
+  isMulticlassDip,
 }: {
   cache: Awaited<ReturnType<typeof getEffectiveReferenceSnapshot>>;
   classId: string;
   currentClassLevel: number;
   requestedSubclassId: string | undefined;
+  isMulticlassDip: boolean;
 }) => {
   // resolve the next level context from the effective reference snapshot
   const nextLevelContext = resolveNextLevelValidationContextFromSnapshot({
     cache,
     classId,
     currentClassLevel,
+    isMulticlassDip,
     ...(requestedSubclassId !== undefined ? { requestedSubclassId } : {}),
   });
 
@@ -278,26 +286,53 @@ const buildNextLevelContext = ({
     return nextLevelContext;
   }
 
-  // build class timeline for class and optional subclass
-  const timeline = buildClassTimeline({
-    cache,
-    classId,
-    requestedSubclassId,
-  });
+  const grantedTraitIds = nextLevelContext.grantedTraitIds;
+  const validSubclass = requestedSubclassId
+    ? cache.subclassById.get(requestedSubclassId)
+    : undefined;
+  const isValidSubclass = validSubclass?.parentClassId === classId;
+  const targetLevel = nextLevelContext.targetLevel;
 
-  // find the target tier in the timeline based on target level from next level context
-  const targetTier = timeline.find(
-    (tier) => tier.level === nextLevelContext.targetLevel,
+  const classTraitIdsAtTargetLevel = new Set(
+    (
+      cache.classTraitsByClassLevel.get(`${classId}::${targetLevel}`) ?? []
+    ).map((trait) => trait.id),
   );
-  // extract granted trait IDs from the features at the target tier,
-  // defaulting to empty array if no features are found
-  const grantedTraitIds = (targetTier?.features ?? []).map(
-    (feature) => feature.id,
+
+  const subclassTraitIdsAtTargetLevel = new Set(
+    isValidSubclass
+      ? (
+          cache.subclassTraitsBySubclassLevel.get(
+            `${requestedSubclassId}::${targetLevel}`,
+          ) ?? []
+        ).map((trait) => trait.id)
+      : [],
   );
+
+  const grantedTraits = grantedTraitIds.map((traitId) => {
+    let grantSourceType: GrantSourceType = "class_progression";
+
+    if (isMulticlassDip && targetLevel === 1) {
+      grantSourceType = "multiclass_grant";
+    } else if (subclassTraitIdsAtTargetLevel.has(traitId)) {
+      grantSourceType = "subclass_progression";
+    } else if (classTraitIdsAtTargetLevel.has(traitId)) {
+      grantSourceType = "class_progression";
+    }
+
+    return {
+      id: traitId,
+      name:
+        cache.traitsById.get(traitId)?.name ??
+        traitId.replace(/_/g, " ").toUpperCase(),
+      grantSourceType,
+    };
+  });
 
   return {
     ...nextLevelContext,
     grantedTraitIds,
+    grantedTraits,
   };
 };
 
@@ -547,12 +582,21 @@ router.get("/level-up/options", async (req, res, next) => {
       : [];
 
     // build next level context
+    const selectedClassCurrentLevel = classId
+      ? (classLevelsByClassId[classId] ?? currentClassLevel)
+      : currentClassLevel;
+    const selectedClassIsDip = classId
+      ? (classLevelsByClassId[classId] ?? 0) === 0 &&
+        Object.keys(classLevelsByClassId).length > 0
+      : false;
+
     const nextLevel = classId
       ? buildNextLevelContext({
           cache,
           classId,
-          currentClassLevel,
+          currentClassLevel: selectedClassCurrentLevel,
           requestedSubclassId: subclassId,
+          isMulticlassDip: selectedClassIsDip,
         })
       : null;
 
@@ -566,6 +610,7 @@ router.get("/level-up/options", async (req, res, next) => {
           classId: cls.id,
           currentClassLevel: clsCurrentLevel,
           requestedSubclassId: undefined,
+          isMulticlassDip,
         });
 
         const multiclassPreview =

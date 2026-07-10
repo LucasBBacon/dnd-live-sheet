@@ -254,6 +254,20 @@ describe("resolveNextLevelValidationContextFromSnapshot", () => {
 
     expect(context.grantedTraitIds).toEqual(["trait_multiclass_level_one"]);
   });
+
+  it("returns no grants when multiclass trait list is explicitly empty", () => {
+    const snapshot = makeSnapshot();
+    snapshot.multiclassTraitsByClassId.set("class_fighter", []);
+
+    const context = resolveNextLevelValidationContextFromSnapshot({
+      cache: snapshot,
+      classId: "class_fighter",
+      currentClassLevel: 0,
+      isMulticlassDip: true,
+    });
+
+    expect(context.grantedTraitIds).toEqual([]);
+  });
 });
 
 describe("validateMulticlassPrerequisitesFromSnapshot", () => {
