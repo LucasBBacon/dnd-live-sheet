@@ -3,6 +3,7 @@ export * from "./schemas/homebrew.js";
 export * from "./schemas/effects.js";
 export * from "./schemas/items.js";
 export * from "./schemas/modifiers.js";
+export * from "./schemas/rules.js";
 export * from "./schemas/prerequisites.js";
 export * from "./events/socket.js";
 export * from "./events/levelUp.js";

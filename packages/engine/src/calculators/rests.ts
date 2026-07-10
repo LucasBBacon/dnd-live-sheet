@@ -1,5 +1,6 @@
 import { RESOURCE_DICTIONARY } from "../rules/resourceDictionary.js";
 import type { OperationalResource } from "../types/resources.js";
+import { getResourceMaxUses } from "../utils/resourceRules.js";
 
 export class RestEngine {
   public static applyRest(
@@ -14,7 +15,7 @@ export class RestEngine {
       // failsafe: not in dictionary, return untouched
       if (!def) return resource;
 
-      const maxUses = def.getMax(totalLevel, classLevels);
+      const maxUses = getResourceMaxUses(def, totalLevel, classLevels);
 
       // 1 - short rest recovery
       if (restType === "short" && def.resetCondition === "short_rest") {

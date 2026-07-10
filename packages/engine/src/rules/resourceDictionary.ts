@@ -1,24 +1,27 @@
-import type { ResourceDefinition } from "../types/resources.js";
+import type { ResourceRule } from "@project/shared";
 
-export const RESOURCE_DICTIONARY: Record<string, ResourceDefinition> = {
+export const RESOURCE_DICTIONARY: Record<string, ResourceRule> = {
   trait_action_surge: {
     id: "trait_action_surge",
     name: "Action Surge",
     resetCondition: "short_rest",
-    getMax: (_, classLevels) => {
-      const fighterLevel = classLevels["class_fighter"] || 0;
-      if (fighterLevel >= 17) return 2;
-      if (fighterLevel >= 2) return 1;
-      return 0; // ensure the ui drops resource if criteria aren't met
+    maxRule: {
+      kind: "class_level_thresholds",
+      classId: "class_fighter",
+      thresholds: [
+        { minimumLevel: 2, value: 1 },
+        { minimumLevel: 17, value: 2 },
+      ],
     },
   },
   trait_second_wind: {
     id: "trait_second_wind",
     name: "Second Wind",
     resetCondition: "short_rest",
-    getMax: (_, classLevels) => {
-      const fighterLevel = classLevels["class_fighter"] || 0;
-      return fighterLevel >= 1 ? 1 : 0;
+    maxRule: {
+      kind: "class_level_thresholds",
+      classId: "class_fighter",
+      thresholds: [{ minimumLevel: 1, value: 1 }],
     },
   },
 };

@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useMemo } from "react";
 import { useCharacterSheetStore } from "../store/characterSheetStore";
-import { RESOURCE_DICTIONARY } from "@project/engine";
+import { getResourceMaxUses, RESOURCE_DICTIONARY } from "@project/engine";
 
 export const useFeatures = () => {
   const operationalResources = useCharacterSheetStore(
@@ -23,7 +23,11 @@ export const useFeatures = () => {
         // failsafe: if the dictionary lacks the feature, ignore it
         if (!definition) return null;
 
-        const maxUses = definition.getMax(totalLevel, classLevels);
+        const maxUses = getResourceMaxUses(
+          definition,
+          totalLevel,
+          classLevels,
+        );
 
         // failsafe: if character lost levels or doesn't meet requirements, hide it
         if (maxUses <= 0) return null;
