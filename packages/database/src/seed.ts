@@ -34,6 +34,7 @@ import {
   characters,
   characterTraits,
 } from "./schema/operational.js";
+import { extractItemsForMigration } from "./itemsExtraction.js";
 
 dotenv.config({ path: "../../.env" });
 
@@ -568,49 +569,40 @@ const runMigration = async () => {
     const rawItems = await loadJsonData<any>("items.json");
 
     if (rawItems.length > 0) {
-      console.log(`Processing ${rawItems.length} Items...`);
+      const extractedItems = extractItemsForMigration(rawItems);
+      console.log(
+        `Processing ${extractedItems.seedItems.length} Items (from ${rawItems.length} source rows)...`,
+      );
 
-      // Extract and load base items
-      const mappedItems = rawItems.map((i: any) => ({
-        id: i.id,
-        name: i.name,
-        weight: i.weight || 0,
-        description:
-          i.description ||
-          i.lore?.shortDescription ||
-          "No description available.",
-        isBundle: i.isBundle || false,
-      }));
+      if (extractedItems.diagnostics.duplicateIds.length > 0) {
+        console.warn(
+          `Detected ${extractedItems.diagnostics.duplicateIds.length} duplicate item IDs in items.json. Keeping first occurrence for each duplicate.`,
+        );
+      }
+
+      if (extractedItems.diagnostics.missingAmmoItemRefs.length > 0) {
+        console.warn(
+          `Detected ${extractedItems.diagnostics.missingAmmoItemRefs.length} weapons with missing ammo references.`,
+        );
+      }
+
+      if (extractedItems.diagnostics.unsupportedWeaponProperties.length > 0) {
+        console.warn(
+          `Detected ${extractedItems.diagnostics.unsupportedWeaponProperties.length} unsupported weapon property mappings.`,
+        );
+      }
 
       await db
         .insert(items)
-        .values(mappedItems)
+        .values(extractedItems.seedItems)
         .onConflictDoNothing({ target: items.id });
 
       // Extract and load bundle relations (BOM)
       console.log(`Resolving Bundle Contents (BOM)...`);
-      const bomRelations: {
-        bundleId: string;
-        itemId: string;
-        quantity: number;
-      }[] = [];
-
-      for (const item of rawItems) {
-        if (item.isBundle && Array.isArray(item.bundleContents)) {
-          for (const content of item.bundleContents) {
-            bomRelations.push({
-              bundleId: item.id,
-              itemId: content.itemId,
-              quantity: content.quantity || 1,
-            });
-          }
-        }
-      }
-
-      if (bomRelations.length > 0) {
+      if (extractedItems.bundleContents.length > 0) {
         await db
           .insert(bundleContents)
-          .values(bomRelations)
+          .values(extractedItems.bundleContents)
           .onConflictDoNothing();
       }
     }

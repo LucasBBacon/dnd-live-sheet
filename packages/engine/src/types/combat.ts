@@ -11,7 +11,9 @@ export type WeaponProperty =
   | "two_handed"
   | "versatile"
   | "reach"
-  | "ammunition";
+  | "ammunition"
+  | "loading"
+  | "special";
 
 export interface WeaponDefinition {
   id: string;

@@ -1,13 +1,13 @@
 import { describe, expect, it } from "vitest";
 import { RestEngine } from "../rests.js";
-import { RESOURCE_DICTIONARY } from "../../rules/resourceDictionary.js";
+import { resolveResourceRule } from "../../rules/ruleLookup.js";
 import { getResourceMaxUses } from "../../utils/resourceRules.js";
 
 describe("resource rules", () => {
   it("evaluates fighter resource thresholds declaratively", () => {
     expect(
       getResourceMaxUses(
-        RESOURCE_DICTIONARY.trait_action_surge,
+        resolveResourceRule("trait_action_surge")!,
         2,
         { class_fighter: 1 },
       ),
@@ -15,7 +15,7 @@ describe("resource rules", () => {
 
     expect(
       getResourceMaxUses(
-        RESOURCE_DICTIONARY.trait_action_surge,
+        resolveResourceRule("trait_action_surge")!,
         2,
         { class_fighter: 2 },
       ),
@@ -23,7 +23,7 @@ describe("resource rules", () => {
 
     expect(
       getResourceMaxUses(
-        RESOURCE_DICTIONARY.trait_action_surge,
+        resolveResourceRule("trait_action_surge")!,
         17,
         { class_fighter: 17 },
       ),

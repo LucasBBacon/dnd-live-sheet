@@ -7,7 +7,7 @@ import { LiveSheetProvider } from "../components/sheet/LiveSheetProvider";
 import { DashboardLayout } from "../components/sheet/DashboardLayout";
 import {
   fetchCharacterSheet,
-  hydrateCharacterSheet,
+  hydrateCharacterSheetWithRules,
 } from "./characterSheetRouteData";
 
 export const LiveSheetRoute = () => {
@@ -22,7 +22,7 @@ export const LiveSheetRoute = () => {
 
   useEffect(() => {
     if (data?.character) {
-      hydrateCharacterSheet(initializeStore, data.character);
+      hydrateCharacterSheetWithRules(initializeStore, data);
     }
   }, [data, initializeStore]);
 

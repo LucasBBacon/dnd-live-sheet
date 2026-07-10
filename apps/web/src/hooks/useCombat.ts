@@ -2,7 +2,7 @@
 import { useMemo } from "react";
 import { useCharacterSheetStore } from "../store/characterSheetStore";
 import { useAbilities, useDerivedStats } from "./useCharacterStats";
-import { CombatEngine, WEAPON_DICTIONARY } from "@project/engine";
+import { CombatEngine, resolveWeaponDefinition } from "@project/engine";
 
 /**
  * A custom React hook that calculates the combat matrices for all equipped weapons in a character's inventory.
@@ -11,6 +11,7 @@ import { CombatEngine, WEAPON_DICTIONARY } from "@project/engine";
 export const useCombat = () => {
   const inventory = useCharacterSheetStore((state) => state.inventory);
   const proficiencies = useCharacterSheetStore((state) => state.proficiencies);
+  const ruleSnapshot = useCharacterSheetStore((state) => state.ruleSnapshot);
 
   // compose the prerequisite math engines
   const { finalAbilities, totalMods } = useAbilities();
@@ -24,7 +25,7 @@ export const useCombat = () => {
 
     // 2 - map equipped items to their combat matrices
     const attacks = equippedHands.reduce((acc, item) => {
-      const weaponDef = WEAPON_DICTIONARY[item.itemId];
+      const weaponDef = resolveWeaponDefinition(item.itemId, ruleSnapshot ?? undefined);
 
       // if equipped item is not a weapon, skip it
       if (!weaponDef) return acc;
@@ -75,10 +76,10 @@ export const useCombat = () => {
         currentAmmo,
         ammoInventoryId,
       });
-      
+
       return acc;
     }, [] as any[]);
 
     return { attacks };
-  }, [inventory, proficiencies, finalAbilities, profBonus, totalMods]);
+  }, [inventory, proficiencies, finalAbilities, profBonus, totalMods, ruleSnapshot]);
 };

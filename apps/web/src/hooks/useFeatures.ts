@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useMemo } from "react";
 import { useCharacterSheetStore } from "../store/characterSheetStore";
-import { getResourceMaxUses, RESOURCE_DICTIONARY } from "@project/engine";
+import { getResourceMaxUses, resolveResourceRule } from "@project/engine";
 
 export const useFeatures = () => {
   const operationalResources = useCharacterSheetStore(
@@ -14,11 +14,15 @@ export const useFeatures = () => {
   const classLevels = useCharacterSheetStore(
     (state) => state.classLevels || { class_fighter: totalLevel },
   );
+  const ruleSnapshot = useCharacterSheetStore((state) => state.ruleSnapshot);
 
   return useMemo(() => {
     return operationalResources
       .map((opResource) => {
-        const definition = RESOURCE_DICTIONARY[opResource.id];
+        const definition = resolveResourceRule(
+          opResource.id,
+          ruleSnapshot ?? undefined,
+        );
 
         // failsafe: if the dictionary lacks the feature, ignore it
         if (!definition) return null;
@@ -42,5 +46,5 @@ export const useFeatures = () => {
         };
       })
       .filter(Boolean) as any[]; // strip nulls
-  }, [operationalResources, totalLevel, classLevels]);
+  }, [operationalResources, totalLevel, classLevels, ruleSnapshot]);
 };

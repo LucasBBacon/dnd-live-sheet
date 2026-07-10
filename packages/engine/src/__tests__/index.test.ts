@@ -6,7 +6,10 @@ describe("engine package entrypoint", () => {
     expect(engine.DerivedStatEngine).toBeDefined();
     expect(engine.AbilityEngine).toBeDefined();
     expect(engine.InventoryBridge).toBeDefined();
-    expect(engine.ITEM_DICTIONARY).toBeDefined();
+    expect(engine.resolveItemDefinition).toBeDefined();
+    expect(engine.resolveResourceRule).toBeDefined();
+    expect(engine.resolveResourceRules).toBeDefined();
+    expect(engine.resolveWeaponDefinition).toBeDefined();
   });
 
   it("calculates proficiency bonus using 5e level breakpoints", () => {

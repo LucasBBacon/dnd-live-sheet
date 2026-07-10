@@ -18,6 +18,8 @@ export const WeaponPropertySchema = z.enum([
   "versatile",
   "reach",
   "ammunition",
+  "loading",
+  "special",
 ]);
 
 export const WeaponDefinitionSchema = z.object({

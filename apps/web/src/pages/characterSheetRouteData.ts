@@ -3,7 +3,8 @@ import type {
   OperationalResource,
   ProficiencyLevel,
 } from "@project/engine";
-import { apiClient } from "../api/client";
+import type { RuleSnapshot } from "@project/shared";
+import { apiClient, fetchRulesSnapshot } from "../api/client";
 import type { CharacterSheetState } from "../store/characterSheetStore";
 
 export type CharacterSheetPayload = {
@@ -33,10 +34,31 @@ export type CharacterSheetPayload = {
 
 export type CharacterSheetResponse = {
   character: CharacterSheetPayload;
+  ruleSnapshot: Pick<
+    RuleSnapshot,
+    "itemsById" | "weaponsById" | "resourcesById"
+  > | null;
 };
 
-export const fetchCharacterSheet = (characterId: string) =>
-  apiClient(`/character/${characterId}`) as Promise<CharacterSheetResponse>;
+export const fetchCharacterSheet = async (
+  characterId: string,
+): Promise<CharacterSheetResponse> => {
+  const characterResponse = (await apiClient(
+    `/character/${characterId}`,
+  )) as { character: CharacterSheetPayload };
+
+  const scope = {
+    campaignId: characterResponse.character.campaignId,
+    characterId: characterResponse.character.id,
+  };
+
+  const ruleSnapshotResponse = await fetchRulesSnapshot(scope).catch(() => null);
+
+  return {
+    character: characterResponse.character,
+    ruleSnapshot: ruleSnapshotResponse?.snapshot ?? null,
+  };
+};
 
 export const hydrateCharacterSheet = (
   initializeStore: CharacterSheetState["initialize"],
@@ -63,5 +85,18 @@ export const hydrateCharacterSheet = (
     maxHp: character.maxHp,
     resources: character.resources || [],
     traitGrants: character.traitGrants || [],
+    ruleSnapshot: null,
+  });
+};
+
+export const hydrateCharacterSheetWithRules = (
+  initializeStore: CharacterSheetState["initialize"],
+  payload: CharacterSheetResponse,
+) => {
+  hydrateCharacterSheet(initializeStore, payload.character);
+  if (!payload.ruleSnapshot) return;
+
+  initializeStore({
+    ruleSnapshot: payload.ruleSnapshot,
   });
 };

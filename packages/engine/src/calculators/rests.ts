@@ -1,6 +1,7 @@
-import { RESOURCE_DICTIONARY } from "../rules/resourceDictionary.js";
 import type { OperationalResource } from "../types/resources.js";
 import { getResourceMaxUses } from "../utils/resourceRules.js";
+import type { ResourceRule } from "@project/shared";
+import { resolveResourceRule } from "../rules/ruleLookup.js";
 
 export class RestEngine {
   public static applyRest(
@@ -8,9 +9,10 @@ export class RestEngine {
     restType: "short" | "long",
     totalLevel: number,
     classLevels: Record<string, number>,
+    snapshot?: { resourcesById?: Record<string, ResourceRule> },
   ): OperationalResource[] {
     return resources.map((resource) => {
-      const def = RESOURCE_DICTIONARY[resource.id];
+      const def = resolveResourceRule(resource.id, snapshot);
 
       // failsafe: not in dictionary, return untouched
       if (!def) return resource;

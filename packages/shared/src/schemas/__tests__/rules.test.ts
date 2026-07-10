@@ -18,6 +18,19 @@ describe("Weapon Definition Schema", () => {
 
     expect(WeaponDefinitionSchema.parse(weapon)).toEqual(weapon);
   });
+
+  it("accepts loading and special properties", () => {
+    const weapon = {
+      id: "item_crossbow_heavy",
+      name: "Heavy Crossbow",
+      category: "martial_ranged",
+      damageDice: "1d10",
+      damageType: "piercing",
+      properties: ["ammunition", "heavy", "loading", "two_handed", "special"],
+    };
+
+    expect(WeaponDefinitionSchema.parse(weapon)).toEqual(weapon);
+  });
 });
 
 describe("Resource Rule Schema", () => {

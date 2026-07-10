@@ -1,5 +1,6 @@
 import {
   RestEngine,
+  type RuleSnapshot,
   type Ability,
   type OperationalInventoryItem,
   type OperationalResource,
@@ -42,6 +43,7 @@ export interface CharacterSheetState {
   activeModifiers: RuntimeModifier[];
 
   resources: OperationalResource[];
+  ruleSnapshot: Pick<RuleSnapshot, "itemsById" | "weaponsById" | "resourcesById"> | null;
 
   // actions
   initialize: (payload: Partial<CharacterSheetState>) => void;
@@ -81,6 +83,7 @@ export const useCharacterSheetStore = create<CharacterSheetState>(
     inventory: [],
     activeModifiers: [],
     resources: [],
+    ruleSnapshot: null,
 
     initialize: (payload) => set((state) => ({ ...state, ...payload })),
 
@@ -235,6 +238,7 @@ export const useCharacterSheetStore = create<CharacterSheetState>(
         restType,
         state.level,
         state.classLevels,
+        state.ruleSnapshot ?? undefined,
       );
       // calc new HP
       const updatedHp = restType === "long" ? state.maxHp : state.currentHp;

@@ -19,6 +19,7 @@ import {
   getReferenceCacheVersion,
   getReferenceCache,
 } from "../services/referenceCache.js";
+import { getCachedRuleSnapshot } from "../services/ruleSnapshotCache.js";
 import {
   getHeaderOrAuthUserId,
   isUserCampaignMember,
@@ -887,6 +888,32 @@ router.get("/items", async (req, res, next) => {
         limit,
         offset,
       },
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// #endregion
+
+// #region GET /api/reference/rules/snapshot
+
+/**
+ * GET /api/reference/rules/snapshot
+ *
+ * Returns a transport-safe rules snapshot for engine and web consumers.
+ */
+router.get("/rules/snapshot", async (req, res, next) => {
+  try {
+    const scoped = await requireScopedAccessIfPresent(req, res);
+    if (!scoped.ok) return;
+
+    const cachedSnapshot = await getCachedRuleSnapshot();
+
+    return res.status(200).json({
+      version: cachedSnapshot.cacheVersion,
+      loadedAt: cachedSnapshot.loadedAt,
+      snapshot: cachedSnapshot.snapshot,
     });
   } catch (error) {
     next(error);

@@ -1,7 +1,7 @@
 // apps/web/src/components/sheet/modals/RestModal.tsx
 import { useState, useMemo } from "react";
 import { useCharacterSheetStore } from "../../../store/characterSheetStore";
-import { RESOURCE_DICTIONARY, RestEngine } from "@project/engine";
+import { getResourceMaxUses, resolveResourceRule, RestEngine } from "@project/engine";
 import { useRollStore } from "../../../store/rollStore";
 import { useAbilities } from "../../../hooks/useCharacterStats";
 
@@ -18,6 +18,7 @@ export const RestModal = ({ onClose }: RestModalProps) => {
   const currentHp = useCharacterSheetStore((state) => state.currentHp);
   const maxHp = useCharacterSheetStore((state) => state.maxHp);
   const triggerRest = useCharacterSheetStore((state) => state.triggerRest);
+  const ruleSnapshot = useCharacterSheetStore((state) => state.ruleSnapshot);
 
   const requestRoll = useRollStore((state) => state.requestRoll);
   const applyHealthDelta = useCharacterSheetStore(
@@ -56,6 +57,7 @@ export const RestModal = ({ onClose }: RestModalProps) => {
       restType,
       level,
       classLevels,
+      ruleSnapshot ?? undefined,
     );
 
     // Compare future state to current state to find what actually changes
@@ -66,8 +68,10 @@ export const RestModal = ({ onClose }: RestModalProps) => {
           return null;
         }
 
-        const definition = RESOURCE_DICTIONARY[future.id];
-        const maxUses = definition?.getMax(level, classLevels) ?? future.current;
+        const definition = resolveResourceRule(future.id, ruleSnapshot ?? undefined);
+        const maxUses = definition
+          ? getResourceMaxUses(definition, level, classLevels)
+          : future.current;
 
         return {
           id: future.id,
@@ -80,7 +84,7 @@ export const RestModal = ({ onClose }: RestModalProps) => {
       .filter((item) => item !== null);
 
     return recoveredItems;
-  }, [resources, restType, level, classLevels]);
+  }, [resources, restType, level, classLevels, ruleSnapshot]);
 
   // 2. Handle the Commit
   const handleConfirm = () => {
@@ -127,9 +131,10 @@ export const RestModal = ({ onClose }: RestModalProps) => {
                 // parse dice size from id (e.g, 'hd_d10' -> 10)
                 const sides = parseInt(hd.id.split("_d")[1], 10);
                 const isEmpty = hd.current <= 0;
-                const maxUses =
-                  RESOURCE_DICTIONARY[hd.id]?.getMax(level, classLevels) ??
-                  hd.current;
+                const definition = resolveResourceRule(hd.id, ruleSnapshot ?? undefined);
+                const maxUses = definition
+                  ? getResourceMaxUses(definition, level, classLevels)
+                  : hd.current;
 
                 return (
                   <div

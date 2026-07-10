@@ -19,10 +19,14 @@ export const useAbilities = () => {
     (state) => state.activeModifiers,
   );
   const inventory = useCharacterSheetStore((state) => state.inventory);
+  const ruleSnapshot = useCharacterSheetStore((state) => state.ruleSnapshot);
 
   return useMemo(() => {
     // 1 - compile modifiers from equipped items
-    const equipmentMods = InventoryBridge.compileEquipmentModifiers(inventory);
+    const equipmentMods = InventoryBridge.compileEquipmentModifiers(
+      inventory,
+      ruleSnapshot ?? undefined,
+    );
     const totalMods = [...activeModifiers, ...equipmentMods];
 
     const finalAbilities = {} as Record<
@@ -44,7 +48,7 @@ export const useAbilities = () => {
     });
 
     return { finalAbilities, totalMods };
-  }, [baseScores, activeModifiers, inventory]);
+  }, [baseScores, activeModifiers, inventory, ruleSnapshot]);
 };
 
 export const useDerivedStats = () => {

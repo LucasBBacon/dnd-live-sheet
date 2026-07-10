@@ -14,6 +14,16 @@ export type LevelUpOptionsParams = {
   currentClassLevel?: number | null;
 };
 
+export type RulesSnapshotResponse = {
+  version: number;
+  loadedAt: number;
+  snapshot: {
+    itemsById: Record<string, unknown>;
+    weaponsById: Record<string, unknown>;
+    resourcesById: Record<string, unknown>;
+  };
+};
+
 type QueryValue = string | number | boolean | null | undefined;
 
 const withQuery = (
@@ -85,3 +95,8 @@ export const apiClient = async (
 
   return response.json();
 };
+
+export const fetchRulesSnapshot = (scope: ReferenceScope = {}) =>
+  apiClient(
+    buildScopedReferenceEndpoint("/reference/rules/snapshot", scope),
+  ) as Promise<RulesSnapshotResponse>;

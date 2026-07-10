@@ -1,5 +1,6 @@
-import { ITEM_DICTIONARY } from "../rules/itemDictionary.js";
+import type { ItemDefinition } from "@project/shared";
 import type { RuntimeModifier } from "@project/shared";
+import { resolveItemDefinition } from "../rules/ruleLookup.js";
 
 export interface OperationalInventoryItem {
   id: string; // database instance UUID
@@ -13,6 +14,7 @@ export interface OperationalInventoryItem {
 export class InventoryBridge {
   public static compileEquipmentModifiers(
     equippedItems: OperationalInventoryItem[],
+    snapshot?: { itemsById?: Record<string, ItemDefinition> },
   ): RuntimeModifier[] {
     const compiledModifiers: RuntimeModifier[] = [];
 
@@ -21,7 +23,7 @@ export class InventoryBridge {
       if (item.slot === "backpack") continue;
 
       // 2 - check if a rule definition exists for this item type
-      const itemDefinition = ITEM_DICTIONARY[item.itemId];
+      const itemDefinition = resolveItemDefinition(item.itemId, snapshot);
       if (!itemDefinition?.modifiers?.length) continue;
 
       // 3 - materialize runtime modifiers for this item instance

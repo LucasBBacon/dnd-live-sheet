@@ -9,6 +9,9 @@ let mockStoreState: {
     isAttuned: boolean;
   }>;
   proficiencies: Record<string, string>;
+  ruleSnapshot: {
+    weaponsById: Record<string, unknown>;
+  } | null;
 };
 
 vi.mock("react", async () => {
@@ -46,6 +49,7 @@ describe("useCombat", () => {
     mockStoreState = {
       inventory: [],
       proficiencies: {},
+      ruleSnapshot: null,
     };
   });
 

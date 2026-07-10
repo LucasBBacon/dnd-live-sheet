@@ -5,7 +5,7 @@ import { useQuery } from "@tanstack/react-query";
 import {
   type CharacterSheetResponse,
   fetchCharacterSheet,
-  hydrateCharacterSheet,
+  hydrateCharacterSheetWithRules,
 } from "./characterSheetRouteData";
 
 const DEV_FIXTURE_CHARACTER_ID = "00000000-0000-0000-0000-000000000101";
@@ -25,7 +25,7 @@ export const DevSheetRoute = () => {
       return;
     }
 
-    hydrateCharacterSheet(initializeStore, data.character);
+    hydrateCharacterSheetWithRules(initializeStore, data);
   }, [data, initializeStore]);
 
   if (isLoading) return <div>Booting dev fixture...</div>;
