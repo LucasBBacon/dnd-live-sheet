@@ -1,35 +1,95 @@
 import React, { useMemo } from "react";
 import { useCharacterSheetStore } from "../../../store/characterSheetStore";
 import { useLevelUpStore } from "../../../store/levelUpStore";
-import { ProgressionEngine, TRAIT_DICTIONARY } from "@project/engine";
+import { useQuery } from "@tanstack/react-query";
+import {
+  apiClient,
+  buildLevelUpOptionsEndpoint,
+} from "../../../api/client";
 
-// Mocked for the snippet; TODO: GET THIS FROM OUR DB
-const AVAILABLE_CLASSES = [
-  { id: "class_fighter", name: "Fighter" },
-  { id: "class_rogue", name: "Rogue" },
-  { id: "class_wizard", name: "Wizard" },
-];
+type ReferenceClass = {
+  id: string;
+  name: string;
+};
+
+type LevelUpOptionsResponse = {
+  classes: ReferenceClass[];
+  supportByClass: Record<
+    string,
+    {
+      targetLevel: number;
+      isConfigured: boolean;
+      reason: string | null;
+      multiclassPrerequisitesMet: boolean | null;
+      multiclassPrerequisiteReason: string | null;
+    }
+  >;
+  nextLevel: {
+    targetLevel: number;
+    isConfigured: boolean;
+    reason: string | null;
+  } | null;
+};
 
 export const OverviewStep = () => {
-  const { draftPayload, progressionContext, beginLevelUp, errorMessage } =
-    useLevelUpStore();
+  const {
+    draftPayload,
+    progressionContext,
+    grantedTraitDetails,
+    beginLevelUp,
+    errorMessage,
+  } = useLevelUpStore();
   const characterId = useCharacterSheetStore((state) => state.id);
+  const campaignId = useCharacterSheetStore((state) => state.campaignId);
   const totalLevel = useCharacterSheetStore((state) => state.level);
   const classLevels = useCharacterSheetStore((state) => state.classLevels);
 
+  const {
+    data: optionsData,
+    isLoading: classesLoading,
+    isError: classesError,
+  } = useQuery<LevelUpOptionsResponse>({
+    queryKey: ["reference", "level-up", "options", campaignId, characterId],
+    queryFn: () =>
+      apiClient(
+        buildLevelUpOptionsEndpoint({
+          campaignId,
+          characterId,
+        }),
+      ),
+    staleTime: 1000 * 60 * 30,
+    enabled: Boolean(characterId),
+  });
+
+  const availableClasses = useMemo(() => optionsData?.classes ?? [], [optionsData]);
+  const supportByClassId = optionsData?.supportByClass ?? {};
+  const selectedClassSupport = draftPayload.targetClassId
+    ? supportByClassId[draftPayload.targetClassId]
+    : undefined;
+  const selectedClassLevel = draftPayload.targetClassId
+    ? (classLevels[draftPayload.targetClassId] ?? 0)
+    : 0;
+  const selectedClassIsDip = Boolean(
+    draftPayload.targetClassId && selectedClassLevel === 0,
+  );
+
   // fetch human-readable names for traits automatically received
   const automaticFeatures = useMemo(() => {
-    console.log("Progression context")
-    console.log(progressionContext)
     if (!progressionContext) return [];
-    return progressionContext.grantedTraits.map((traitId) => {
-      console.log(traitId);
-      return (
-        TRAIT_DICTIONARY[traitId]?.name ||
-        traitId.replace(/_/g, " ").toUpperCase()
-      );
-    });
-  }, [progressionContext]);
+    return grantedTraitDetails;
+  }, [progressionContext, grantedTraitDetails]);
+
+  const getGrantSourceLabel = (grantSourceType: string) => {
+    if (grantSourceType === "multiclass_grant") {
+      return "Multiclass Grant";
+    }
+
+    if (grantSourceType === "subclass_progression") {
+      return "Subclass Progression";
+    }
+
+    return "Class Progression";
+  };
 
   // handle multiclassing / class swapping on the fly
   const handleClassChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -39,13 +99,16 @@ export const OverviewStep = () => {
 
     const newClassId = e.target.value;
     const currentLevelInNewClass = classLevels[newClassId] || 0;
+    const preResolvedSupport = supportByClassId[newClassId];
 
     // this instantly recalculates progressionContext and parent wizard steps
-    beginLevelUp(
+    void beginLevelUp(
       characterId,
       newClassId,
       currentLevelInNewClass,
       totalLevel + 1,
+      { campaignId },
+      preResolvedSupport,
     );
   };
 
@@ -69,35 +132,59 @@ export const OverviewStep = () => {
           Target Class Progression
         </label>
         <select
-          value={draftPayload.targetClassId}
+          value={draftPayload.targetClassId ?? ""}
           onChange={handleClassChange}
+          disabled={
+            classesLoading || classesError || availableClasses.length === 0
+          }
           className="border border-gray-300 p-2 rounded font-bold text-lg text-indigo-900 bg-white shadow-sm"
         >
-          {AVAILABLE_CLASSES.map((cls) => {
+          {availableClasses.map((cls) => {
             const lvl = classLevels[cls.id] || 0;
             const isDip = lvl === 0;
-            const nextClassLevel = lvl + 1;
-            const isSupported = !!ProgressionEngine.getLevelDefinition(
-              cls.id,
-              nextClassLevel,
-            );
+            const support = supportByClassId[cls.id] ?? {
+              isConfigured: false,
+              reason: null,
+              targetLevel: lvl + 1,
+            };
+            const nextClassLevel = support.targetLevel ?? lvl + 1;
+            const isSupported = support.isConfigured;
 
             return (
               <option key={cls.id} value={cls.id} disabled={!isSupported}>
                 {cls.name}{" "}
                 {!isSupported
-                  ? `(Unavailable - Level ${nextClassLevel} not configured)`
-                  : isDip
-                  ? "(Multiclass - Level 1)"
-                  : `Progress to Level ${lvl + 1}`}
+                  ? `(Unavailable - ${support.reason || `Level ${nextClassLevel} not configured`})`
+                  : isDip && support.multiclassPrerequisitesMet === false
+                    ? "(Multiclass - preview: prerequisites unmet)"
+                    : isDip
+                    ? "(Multiclass - Level 1)"
+                    : `Progress to Level ${lvl + 1}`}
               </option>
             );
           })}
         </select>
         <p className="text-xs text-gray-500">
-          Only classes with configured progression data can be selected here.
+          {classesLoading
+            ? "Loading class options..."
+            : classesError
+              ? "Failed to load class options for this campaign scope."
+              : "Only classes with configured progression data can be selected here. Multiclass prerequisite warnings are preview-only until submission."}
         </p>
       </div>
+
+      {selectedClassIsDip &&
+      selectedClassSupport?.multiclassPrerequisitesMet === false ? (
+        <div className="mb-6 rounded border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+          <div className="font-bold uppercase tracking-wide">
+            Multiclass Prerequisite Warning
+          </div>
+          <div className="mt-1">
+            {selectedClassSupport.multiclassPrerequisiteReason ||
+              "This class preview indicates unmet multiclass prerequisites. The server will enforce the rule on submission."}
+          </div>
+        </div>
+      ) : null}
 
       {errorMessage ? (
         <div className="mb-6 rounded border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-700">
@@ -112,10 +199,13 @@ export const OverviewStep = () => {
         </h4>
         {automaticFeatures.length > 0 ? (
           <ul className="">
-            {automaticFeatures.map((featureName, idx) => (
+            {automaticFeatures.map((feature, idx) => (
               <li key={idx}>
                 <span>✦</span>
-                <span>{featureName}</span>
+                <span>{feature.name}</span>
+                <span className="ml-2 text-xs text-gray-500">
+                  [{getGrantSourceLabel(feature.grantSourceType)}]
+                </span>
               </li>
             ))}
           </ul>

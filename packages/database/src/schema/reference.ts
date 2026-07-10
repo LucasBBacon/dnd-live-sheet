@@ -1,4 +1,5 @@
 import type {
+  ClassMulticlassPrerequisites,
   FeatPrerequisites,
   TraitEffect,
 } from "@project/shared";
@@ -222,6 +223,8 @@ export const classes = pgTable("classes", {
 
   // starting equipment/wealth options can be stored as jsonb as they're only used once
   startingEquipment: jsonb("starting_equipment").notNull(),
+  multiclassPrerequisites:
+    jsonb("multiclass_prerequisites").$type<ClassMulticlassPrerequisites>(),
   sourceType: referenceSourceTypeEnum("source_type").default("core").notNull(),
   ownerCampaignId: uuid("owner_campaign_id"),
   ownerCharacterId: uuid("owner_character_id"),

@@ -9,6 +9,46 @@ export const AbilityMinimumsSchema = z.object({
   cha: z.number().int().min(1).max(30).optional(),
 });
 
+const hasAnyAbilityMinimum = (minimums: z.infer<typeof AbilityMinimumsSchema>) =>
+  Object.keys(minimums).length > 0;
+
+export const ClassMulticlassPrerequisitesSchema = z
+  .object({
+    abilityMinimums: AbilityMinimumsSchema.optional(),
+    anyOf: z.array(AbilityMinimumsSchema).min(1).optional(),
+  })
+  .strict()
+  .superRefine((data, ctx) => {
+    const hasAllOf =
+      data.abilityMinimums !== undefined &&
+      hasAnyAbilityMinimum(data.abilityMinimums);
+    const hasAnyOf =
+      data.anyOf !== undefined &&
+      data.anyOf.some((minimums) => hasAnyAbilityMinimum(minimums));
+
+    if (!hasAllOf && !hasAnyOf) {
+      ctx.addIssue({
+        code: "custom",
+        message:
+          "Class multiclass prerequisites must define abilityMinimums or anyOf.",
+      });
+    }
+
+    data.anyOf?.forEach((minimums, index) => {
+      if (!hasAnyAbilityMinimum(minimums)) {
+        ctx.addIssue({
+          code: "custom",
+          message: "Each anyOf prerequisite entry must define at least one ability minimum.",
+          path: ["anyOf", index],
+        });
+      }
+    });
+  });
+
+export type ClassMulticlassPrerequisites = z.infer<
+  typeof ClassMulticlassPrerequisitesSchema
+>;
+
 export const FeatPrerequisitesSchema = z
   .object({
     minimumLevel: z.number().int().min(1).max(20).optional(),

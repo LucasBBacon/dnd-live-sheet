@@ -4,12 +4,21 @@ import {
   characters,
   characterTraits,
 } from "@project/database/src/schema/operational.js";
-import { classProgressions } from "@project/database/src/schema/reference.js";
 import type { LevelUpPayload } from "@project/shared";
 import type { Request, Response } from "express";
-import { and, eq, sql } from "drizzle-orm";
-import { ProgressionEngine } from "@project/engine";
+import { eq, sql } from "drizzle-orm";
+import {
+  resolveNextLevelValidationContextFromSnapshot,
+  validateMulticlassPrerequisitesFromSnapshot,
+  validateLevelUpPayloadFromResolver,
+} from "../services/levelUpValidation.js";
+import { getEffectiveReferenceSnapshot } from "../services/effectiveReferenceResolver.js";
 
+/**
+ * Applies a level-up to a character.
+ * @param req The incoming request object containing the level-up payload.
+ * @param res The response object used to send HTTP responses.
+ */
 export const applyLevelUp = async (req: Request, res: Response) => {
   const payload: LevelUpPayload = req.body;
   const { characterId, targetClassId, newTotalLevel } = payload;
@@ -35,24 +44,43 @@ export const applyLevelUp = async (req: Request, res: Response) => {
       const isMulticlassDip = !targetClassRecord && existingClasses.length > 0;
       const targetClassLevel = (targetClassRecord?.classLevel || 0) + 1;
 
+      const effectiveReference = await getEffectiveReferenceSnapshot({
+        campaignId: character.campaignId,
+        characterId,
+      });
+
       // 3 - SERVER VALIDATION
       if (isMulticlassDip) {
-        ProgressionEngine.validateMulticlassPrerequisites(targetClassId, {
-          str: character.str,
-          dex: character.dex,
-          con: character.con,
-          int: character.int,
-          wis: character.wis,
-          cha: character.cha,
+        validateMulticlassPrerequisitesFromSnapshot({
+          cache: effectiveReference,
+          classId: targetClassId,
+          currentBaseScores: {
+            str: character.str,
+            dex: character.dex,
+            con: character.con,
+            int: character.int,
+            wis: character.wis,
+            cha: character.cha,
+          },
         });
       }
 
-      // validate the payload structure against dict
-      ProgressionEngine.validateLevelUp(
-        targetClassId,
-        targetClassLevel,
+      // resolve next level validation context for character's class progression
+      const resolverContext = resolveNextLevelValidationContextFromSnapshot({
+        cache: effectiveReference,
+        classId: targetClassId,
+        currentClassLevel: targetClassLevel - 1,
+        isMulticlassDip,
+        ...(payload.subclassId !== undefined
+          ? { requestedSubclassId: payload.subclassId }
+          : {}),
+      });
+
+      // validate the payload structure against resolver context
+      validateLevelUpPayloadFromResolver({
         payload,
-      );
+        context: resolverContext,
+      });
 
       // 4 - update class ledger
       if (targetClassRecord) {
@@ -72,30 +100,17 @@ export const applyLevelUp = async (req: Request, res: Response) => {
         });
       }
 
-      // 5 - materialize granted traits
-      // class progression traits are DB-backed; multiclass dip level-1 remains engine-rule specific
-      const grantedTraits = isMulticlassDip && targetClassLevel === 1
-        ? ProgressionEngine.getGrantedTraitsForLevel(
-            targetClassId,
-            targetClassLevel,
-            true,
-          )
-        : (
-            await tx
-              .select({ traitId: classProgressions.traitId })
-              .from(classProgressions)
-              .where(
-                and(
-                  eq(classProgressions.classId, targetClassId),
-                  eq(classProgressions.level, targetClassLevel),
-                ),
-              )
-          ).map((row) => row.traitId);
+      // 5 - materialize granted traits from resolver context
+      const grantedTraits = resolverContext.grantedTraitIds;
+      const grantedTraitSource =
+        isMulticlassDip && targetClassLevel === 1
+          ? `multiclass_grant:${targetClassId}:level_${targetClassLevel}`
+          : `${targetClassId}_level_${targetClassLevel}`;
 
       const traitsToInsert = grantedTraits.map((traitId) => ({
         characterId,
         traitId,
-        source: `${targetClassId}_level_${targetClassLevel}`,
+        source: grantedTraitSource,
       }));
 
       // append manually selected traits

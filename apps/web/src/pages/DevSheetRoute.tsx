@@ -1,92 +1,43 @@
 import { useEffect } from "react";
 import { useCharacterSheetStore } from "../store/characterSheetStore";
 import { DashboardLayout } from "../components/sheet/DashboardLayout";
+import { useQuery } from "@tanstack/react-query";
+import {
+  type CharacterSheetResponse,
+  fetchCharacterSheet,
+  hydrateCharacterSheet,
+} from "./characterSheetRouteData";
+
+const DEV_FIXTURE_CHARACTER_ID = "00000000-0000-0000-0000-000000000101";
 
 export const DevSheetRoute = () => {
   const initializeStore = useCharacterSheetStore((state) => state.initialize);
 
+  const { data, isLoading, isError } = useQuery<CharacterSheetResponse>({
+    queryKey: ["character", "dev-fixture", DEV_FIXTURE_CHARACTER_ID],
+    queryFn: () => fetchCharacterSheet(DEV_FIXTURE_CHARACTER_ID),
+    staleTime: 1000 * 60 * 5,
+    retry: false,
+  });
+
   useEffect(() => {
-    // inject comprehensive test payload into store
-    initializeStore({
-      id: "dev-tester-001",
-      level: 3,
-      classLevels: { class_fighter: 3 },
-      currentHp: 28,
-      maxHp: 28,
-      baseScores: {
-        str: 16, // +3
-        dex: 12, // +1
-        con: 14, // +2
-        int: 10, // +0
-        wis: 13, // +1
-        cha: 8, // -1
-      },
-      proficiencies: {
-        athletics: "proficient",
-        perception: "proficient",
-        martial_melee: "proficient",
-        simple_melee: "proficient",
-      },
-      inventory: [
-        {
-          id: "inv_1",
-          itemId: "item_chain_mail",
-          quantity: 1,
-          slot: "armor",
-          isAttuned: false,
-        },
-        {
-          id: "inv_2",
-          itemId: "item_longsword",
-          quantity: 1,
-          slot: "backpack",
-          isAttuned: false,
-        },
-        {
-          id: "inv_3",
-          itemId: "item_longbow",
-          quantity: 1,
-          slot: "main_hand",
-          isAttuned: false,
-        },
-        {
-          id: "inv_4",
-          itemId: "item_shield",
-          quantity: 1,
-          slot: "off_hand",
-          isAttuned: false,
-        },
-        {
-          id: "inv_5",
-          itemId: "item_potion_of_healing",
-          quantity: 2,
-          slot: "backpack",
-          isAttuned: false,
-        },
-        {
-          id: "inv_6",
-          itemId: "item_arrow",
-          quantity: 5,
-          slot: "backpack",
-          isAttuned: false,
-        },
-      ],
-      resources: [
-        {
-          id: "hd_d6",
-          current: 1,
-        },
-        {
-          id: "trait_action_surge",
-          current: 1,
-        },
-        {
-          id: "trait_second_wind",
-          current: 1,
-        },
-      ],
-    });
-  }, [initializeStore]);
+    if (!data?.character) {
+      return;
+    }
+
+    hydrateCharacterSheet(initializeStore, data.character);
+  }, [data, initializeStore]);
+
+  if (isLoading) return <div>Booting dev fixture...</div>;
+
+  if (isError || !data?.character) {
+    return (
+      <div className="p-4 text-sm text-red-700">
+        Failed to load dev fixture character. Ensure the server is running and
+        seed data has been applied with <code>pnpm --filter @project/database db:seed</code>.
+      </div>
+    );
+  }
 
   return (
     // We do NOT wrap this in LiveSheetProvider because we don't want

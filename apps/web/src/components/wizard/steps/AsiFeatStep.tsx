@@ -5,14 +5,10 @@ import { AsiDistribution } from "./subcomponents/AsiDistribution";
 import { FeatSelection } from "./subcomponents/FeatSelection";
 
 export const AsiFeatStep = ({ context }: { context: LevelDecision }) => {
-  const { draftPayload, updateDraft } = useLevelUpStore();
+  const { draftPayload } = useLevelUpStore();
   const [mode, setMode] = useState<"asi" | "feat" | null>(
     draftPayload.featId ? "feat" : draftPayload.asiChoices ? "asi" : null,
   );
-
-  const handleSelectFeat = (featId: string) => {
-    updateDraft({ featId, asiChoices: undefined }); // clear ASI if selecting feat
-  };
 
   return (
     <div className="flex flex-col h-full">

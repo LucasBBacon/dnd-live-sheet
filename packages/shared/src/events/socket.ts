@@ -45,3 +45,26 @@ export interface ServerBroadcastPayload<T> {
   actorId: string; // use who triggered event
   data: T;
 }
+
+export type MaybeServerBroadcastPayload<T> = T | ServerBroadcastPayload<T>;
+
+export const isServerBroadcastPayload = <T>(
+  payload: MaybeServerBroadcastPayload<T>,
+): payload is ServerBroadcastPayload<T> => {
+  if (!payload || typeof payload !== "object") {
+    return false;
+  }
+
+  const candidate = payload as Record<string, unknown>;
+  return typeof candidate.actorId === "string" && "data" in candidate;
+};
+
+export const unwrapServerBroadcastPayload = <T>(
+  payload: MaybeServerBroadcastPayload<T>,
+): T => {
+  if (isServerBroadcastPayload(payload)) {
+    return payload.data;
+  }
+
+  return payload;
+};

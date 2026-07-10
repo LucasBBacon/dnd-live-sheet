@@ -2,6 +2,12 @@ import { db } from "@project/database";
 import { characters } from "@project/database/src/schema/operational.js";
 import { eq } from "drizzle-orm";
 
+/**
+ * Modifies the current HP of a character by a specified amount, ensuring that the resulting HP does not exceed the character's maximum HP or drop below zero.
+ * @param characterId The unique identifier of the character whose HP is to be modified.
+ * @param amount The amount by which to modify the character's current HP. Positive values will increase HP, while negative values will decrease it.
+ * @returns An object containing the updated current HP, temporary HP (always 0 in this implementation), and maximum HP of the character after the modification.
+ */
 export const modifyCharacterHp = async (
   characterId: string,
   amount: number,

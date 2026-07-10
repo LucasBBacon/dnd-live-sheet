@@ -8,6 +8,12 @@ export type ReferenceScope = {
   characterId?: string | null;
 };
 
+export type LevelUpOptionsParams = {
+  classId?: string | null;
+  subclassId?: string | null;
+  currentClassLevel?: number | null;
+};
+
 type QueryValue = string | number | boolean | null | undefined;
 
 const withQuery = (
@@ -31,10 +37,30 @@ export const buildScopedReferenceEndpoint = (
   scope: ReferenceScope = {},
   params: Record<string, QueryValue> = {},
 ): string =>
-  withQuery(endpoint, {
-    ...params,
-    campaignId: scope.campaignId ?? undefined,
-    characterId: scope.characterId ?? undefined,
+  // Character scope is only valid when campaign scope is present.
+  // This avoids `/reference/*` requests that the server rejects.
+  // See: `characterId scoped reads require campaignId context`.
+  (() => {
+    const hasCampaignScope = Boolean(scope.campaignId);
+    const effectiveCharacterId = hasCampaignScope
+      ? (scope.characterId ?? undefined)
+      : undefined;
+
+    return withQuery(endpoint, {
+      ...params,
+      campaignId: scope.campaignId ?? undefined,
+      characterId: effectiveCharacterId,
+    });
+  })();
+
+export const buildLevelUpOptionsEndpoint = (
+  scope: ReferenceScope = {},
+  params: LevelUpOptionsParams = {},
+): string =>
+  buildScopedReferenceEndpoint("/reference/level-up/options", scope, {
+    classId: params.classId ?? undefined,
+    subclassId: params.subclassId ?? undefined,
+    currentClassLevel: params.currentClassLevel ?? undefined,
   });
 
 export const apiClient = async (

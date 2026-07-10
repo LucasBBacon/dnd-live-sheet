@@ -22,6 +22,13 @@
       "when": 1783453742142,
       "tag": "0002_careful_stingray",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1783637490035,
+      "tag": "0003_curly_spitfire",
+      "breakpoints": true
     }
   ]
 }

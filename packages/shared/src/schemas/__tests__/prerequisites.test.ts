@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { AbilityMinimumsSchema, FeatPrerequisitesSchema } from "../prerequisites.js";
+import {
+  AbilityMinimumsSchema,
+  ClassMulticlassPrerequisitesSchema,
+  FeatPrerequisitesSchema,
+} from "../prerequisites.js";
 
 describe("Ability Minimums Schema", () => {
   it("accepts empty object (all optional)", () => {
@@ -223,5 +227,49 @@ describe("Feat Prerequisites Schema", () => {
       minimumLevel: 6,
     };
     expect(FeatPrerequisitesSchema.parse(withFeatDeps)).toBeDefined();
+  });
+});
+
+describe("Class Multiclass Prerequisites Schema", () => {
+  it("accepts all-of ability minimum rules", () => {
+    expect(
+      ClassMulticlassPrerequisitesSchema.parse({
+        abilityMinimums: {
+          dex: 13,
+          wis: 13,
+        },
+      }),
+    ).toEqual({
+      abilityMinimums: {
+        dex: 13,
+        wis: 13,
+      },
+    });
+  });
+
+  it("accepts any-of ability minimum rules", () => {
+    expect(
+      ClassMulticlassPrerequisitesSchema.parse({
+        anyOf: [{ str: 13 }, { dex: 13 }],
+      }),
+    ).toEqual({
+      anyOf: [{ str: 13 }, { dex: 13 }],
+    });
+  });
+
+  it("rejects empty prerequisite objects", () => {
+    expect(() => ClassMulticlassPrerequisitesSchema.parse({})).toThrow(
+      "Class multiclass prerequisites must define abilityMinimums or anyOf.",
+    );
+  });
+
+  it("rejects empty anyOf entries", () => {
+    expect(() =>
+      ClassMulticlassPrerequisitesSchema.parse({
+        anyOf: [{}],
+      }),
+    ).toThrow(
+      "Each anyOf prerequisite entry must define at least one ability minimum.",
+    );
   });
 });

@@ -12,8 +12,11 @@ import { socketService } from "../services/socketService";
 
 export interface CharacterSheetState {
   id: string;
+  campaignId: string | null;
   level: number;
   classLevels: Record<string, number>;
+  raceId: string | null;
+  subraceId: string | null;
 
   currentHp: number;
   maxHp: number;
@@ -26,6 +29,11 @@ export interface CharacterSheetState {
   proficiencies: Record<string, ProficiencyLevel>;
 
   traits: TraitDefinition[];
+  traitGrants: Array<{
+    id: string;
+    traitId: string;
+    source: string;
+  }>;
 
   // operational inventory
   inventory: OperationalInventoryItem[];
@@ -57,8 +65,11 @@ export interface CharacterSheetState {
 export const useCharacterSheetStore = create<CharacterSheetState>(
   (set, get) => ({
     id: "",
+    campaignId: null,
     level: 1,
     classLevels: {},
+    raceId: null,
+    subraceId: null,
     currentHp: 10,
     maxHp: 10,
     baseHpRolled: 1,
@@ -66,6 +77,7 @@ export const useCharacterSheetStore = create<CharacterSheetState>(
     baseScores: { str: 10, dex: 10, con: 10, int: 10, wis: 10, cha: 10 },
     proficiencies: {},
     traits: [],
+    traitGrants: [],
     inventory: [],
     activeModifiers: [],
     resources: [],

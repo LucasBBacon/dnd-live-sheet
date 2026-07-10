@@ -42,6 +42,39 @@ const normalizeLore = (
   };
 };
 
+const normalizeMulticlassTraitIds = ({
+  classId,
+  multiclassTraits,
+}: {
+  classId: string;
+  multiclassTraits: unknown;
+}): string[] => {
+  if (multiclassTraits === undefined) {
+    throw new Error(
+      `Core class ${classId} is missing required multiclassTraits field.`
+    );
+  }
+
+  if (!Array.isArray(multiclassTraits)) {
+    throw new Error(
+      `Core class ${classId} is missing required multiclassTraits array.`
+    );
+  }
+
+  if (
+    multiclassTraits.some(
+      (traitId) => typeof traitId !== "string" || traitId.trim().length === 0
+    )
+  ) {
+    throw new Error(
+      `Core class ${classId} has invalid multiclassTraits entries.`
+    );
+  }
+
+  const traitIds = multiclassTraits.map((traitId) => traitId.trim());
+  return [...new Set(traitIds)];
+};
+
 describe("Seed Helper Functions", () => {
   describe("normalizeSpeed", () => {
     it("should return speed if it's a number", () => {
@@ -285,6 +318,49 @@ describe("Seed Helper Functions", () => {
       expect(missingTraits[0].lore.shortDescription).toContain(
         "Auto-generated"
       );
+    });
+
+    it("fails when multiclassTraits field is missing", () => {
+      expect(() =>
+        normalizeMulticlassTraitIds({
+          classId: "class_fighter",
+          multiclassTraits: undefined,
+        })
+      ).toThrow("missing required multiclassTraits field");
+    });
+
+    it("fails when multiclassTraits contains invalid entries", () => {
+      expect(() =>
+        normalizeMulticlassTraitIds({
+          classId: "class_fighter",
+          multiclassTraits: ["trait_ok", "   ", null],
+        })
+      ).toThrow("invalid multiclassTraits entries");
+    });
+
+    it("allows explicit empty multiclassTraits arrays", () => {
+      expect(
+        normalizeMulticlassTraitIds({
+          classId: "class_sorcerer",
+          multiclassTraits: [],
+        })
+      ).toEqual([]);
+    });
+
+    it("normalizes and de-duplicates multiclass trait ids", () => {
+      expect(
+        normalizeMulticlassTraitIds({
+          classId: "class_fighter",
+          multiclassTraits: [
+            " trait_fighter_mult_prof_armor ",
+            "trait_fighter_mult_prof_armor",
+            "trait_fighter_mult_prof_weapons",
+          ],
+        })
+      ).toEqual([
+        "trait_fighter_mult_prof_armor",
+        "trait_fighter_mult_prof_weapons",
+      ]);
     });
   });
 });

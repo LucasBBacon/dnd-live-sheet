@@ -2,25 +2,17 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { Request, Response } from "express";
 import { createCampaignRoleGuard } from "../requireCampaignRole";
 
-const { selectMock, fromMock, whereMock, limitMock } = vi.hoisted(() => ({
-  selectMock: vi.fn(),
-  fromMock: vi.fn(),
-  whereMock: vi.fn(),
-  limitMock: vi.fn(),
+const { getCampaignMembershipRoleMock } = vi.hoisted(() => ({
+  getCampaignMembershipRoleMock: vi.fn(),
 }));
 
-vi.mock("@project/database", () => ({
-  db: {
-    select: selectMock,
-  },
+vi.mock("../../services/campaignAccess.js", () => ({
+  getCampaignMembershipRole: getCampaignMembershipRoleMock,
 }));
 
 describe("createCampaignRoleGuard", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    fromMock.mockReturnValue({ where: whereMock });
-    whereMock.mockReturnValue({ limit: limitMock });
-    selectMock.mockReturnValue({ from: fromMock });
   });
 
   const createRes = (): Response =>
@@ -45,7 +37,7 @@ describe("createCampaignRoleGuard", () => {
   });
 
   it("returns 403 when user is not a campaign member", async () => {
-    limitMock.mockResolvedValue([]);
+    getCampaignMembershipRoleMock.mockResolvedValue(null);
     const guard = createCampaignRoleGuard({
       resolveCampaignId: () => "7a0c5bb8-0dc5-4c39-a58f-8f7baae6f27f",
     });
@@ -61,7 +53,7 @@ describe("createCampaignRoleGuard", () => {
   });
 
   it("returns 403 when role is not allowed", async () => {
-    limitMock.mockResolvedValue([{ role: "player" }]);
+    getCampaignMembershipRoleMock.mockResolvedValue("player");
     const guard = createCampaignRoleGuard({
       resolveCampaignId: () => "7a0c5bb8-0dc5-4c39-a58f-8f7baae6f27f",
       allowedRoles: ["owner", "dm"],
@@ -78,7 +70,7 @@ describe("createCampaignRoleGuard", () => {
   });
 
   it("calls next when membership role is allowed", async () => {
-    limitMock.mockResolvedValue([{ role: "dm" }]);
+    getCampaignMembershipRoleMock.mockResolvedValue("dm");
     const guard = createCampaignRoleGuard({
       resolveCampaignId: () => "7a0c5bb8-0dc5-4c39-a58f-8f7baae6f27f",
     });

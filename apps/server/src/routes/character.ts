@@ -1,4 +1,3 @@
-// apps/server/src/routes/character.ts
 import { Router, type Router as ExpressRouter } from "express";
 import { db } from "@project/database";
 import {
@@ -6,34 +5,31 @@ import {
   campaigns,
   characterClasses,
   characterCustomTraits,
+  characterTraits,
   characters,
 } from "@project/database/src/schema/operational.js";
 import { CreateCharacterPayloadSchema } from "@project/shared";
-import { and, eq } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { v4 as uuidv4 } from "uuid";
 import { processStartingEquipment } from "../utils/inventory.js";
+import { applyLevelUp } from "../controllers/characterController.js";
+import { isUserCampaignMember } from "../services/campaignAccess.js";
 
 const router: ExpressRouter = Router();
+/**
+ * A type that represents a subset of the database operations used for campaign-related writes.
+ */
 type CampaignWriteDb = Pick<typeof db, "select" | "insert">;
 
-const isUserCampaignMember = async (
-  userId: string,
-  campaignId: string,
-): Promise<boolean> => {
-  const [membership] = await db
-    .select()
-    .from(campaignMembers)
-    .where(
-      and(
-        eq(campaignMembers.userId, userId),
-        eq(campaignMembers.campaignId, campaignId),
-      ),
-    )
-    .limit(1);
+// #region Helper Functions
 
-  return !!membership;
-};
-
+/**
+ * Resolves the default campaign for a user. If the user has no existing campaigns, a new one is created.
+ * This ensures that every user has a campaign context for character creation.
+ * @param tx - The database transaction object for campaign-related writes.
+ * @param userId - The ID of the user for whom to resolve the default campaign.
+ * @returns A promise that resolves to the ID of the resolved or newly created campaign.
+ */
 const resolveDefaultCampaignForUser = async (
   tx: CampaignWriteDb,
   userId: string,
@@ -64,6 +60,12 @@ const resolveDefaultCampaignForUser = async (
   return campaignId;
 };
 
+/**
+ * Fetches a character payload for a given user and character ID, ensuring the user has access to the character's campaign.
+ * @param userId - The ID of the user requesting the character payload.
+ * @param characterId - The ID of the character to fetch.
+ * @returns A promise that resolves to the character payload if accessible, or null otherwise.
+ */
 const fetchCharacterPayload = async (userId: string, characterId: string) => {
   const [character] = await db
     .select()
@@ -80,17 +82,32 @@ const fetchCharacterPayload = async (userId: string, characterId: string) => {
     .from(characterClasses)
     .where(eq(characterClasses.characterId, characterId));
 
+  const traitGrants = await db
+    .select({
+      id: characterTraits.id,
+      traitId: characterTraits.traitId,
+      source: characterTraits.source,
+    })
+    .from(characterTraits)
+    .where(eq(characterTraits.characterId, characterId));
+
   return {
     ...character,
     classLevels: Object.fromEntries(
       classLedger.map((entry) => [entry.classId, entry.classLevel]),
     ),
+    traitGrants,
   };
 };
 
+// #endregion
+
+// #region POST /api/character
+
 /**
  * POST /api/character
- * Fetches the active user's single character sheet for initial hydration.
+ * Creates a new character for the authenticated user, optionally associating it with a campaign.
+ * If no campaign is specified, the system will either use the user's default campaign or create a new one.
  */
 router.post("/", async (req, res, next) => {
   try {
@@ -209,6 +226,10 @@ router.post("/", async (req, res, next) => {
   }
 });
 
+// #endregion
+
+// #region GET /api/character
+
 /**
  * GET /api/character
  * Fetches the active user's single character sheet for initial hydration.
@@ -221,7 +242,9 @@ router.get("/", async (req, res, next) => {
     }
 
     const requestedCharacterId =
-      typeof req.query.characterId === "string" ? req.query.characterId : undefined;
+      typeof req.query.characterId === "string"
+        ? req.query.characterId
+        : undefined;
     const characterId = requestedCharacterId;
 
     if (!characterId) {
@@ -241,9 +264,14 @@ router.get("/", async (req, res, next) => {
   }
 });
 
+// #endregion
+
+// #region GET /api/character/:characterId
+
 /**
  * GET /api/character/:characterId
  * Fetches a character by explicit character id.
+ * @param characterId - The ID of the character to fetch.
  */
 router.get("/:characterId", async (req, res, next) => {
   try {
@@ -261,5 +289,56 @@ router.get("/:characterId", async (req, res, next) => {
     next(error);
   }
 });
+
+// #endregion
+
+// #region POST /api/character/:characterId/level-up
+
+/**
+ * POST /api/character/:characterId/level-up
+ * Applies a validated level-up payload for the requested character.
+ * @param characterId - The ID of the character to level up.
+ */
+router.post("/:characterId/level-up", async (req, res, next) => {
+  try {
+    const userId = req.user?.id;
+    if (!userId) {
+      return res.status(401).json({ error: "Unauthorized request" });
+    }
+
+    const characterId = req.params.characterId;
+    const [character] = await db
+      .select({ id: characters.id, campaignId: characters.campaignId })
+      .from(characters)
+      .where(eq(characters.id, characterId))
+      .limit(1);
+
+    if (!character) {
+      return res.status(404).json({ error: "Character not found." });
+    }
+
+    const canAccess = await isUserCampaignMember(userId, character.campaignId);
+    if (!canAccess) {
+      return res.status(403).json({ error: "Forbidden campaign access." });
+    }
+
+    if (req.body?.characterId && req.body.characterId !== characterId) {
+      return res
+        .status(400)
+        .json({ error: "Character id mismatch in payload." });
+    }
+
+    req.body = {
+      ...req.body,
+      characterId,
+    };
+
+    return applyLevelUp(req, res);
+  } catch (error) {
+    next(error);
+  }
+});
+
+// #endregion
 
 export default router;

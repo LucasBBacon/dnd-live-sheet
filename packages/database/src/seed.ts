@@ -1,5 +1,5 @@
 import * as dotenv from "dotenv";
-import { sql } from "drizzle-orm";
+import { inArray, sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
 import path from "node:path";
@@ -19,12 +19,14 @@ import {
   classes,
   classLevels,
   classProgressions,
+  classMulticlassTraits,
   subclasses,
   subclassLevels,
   subclassProgressions,
   items,
   bundleContents,
 } from "./schema/reference.js";
+import { ClassMulticlassPrerequisitesSchema } from "@project/shared";
 import {
   campaignMembers,
   campaigns,
@@ -97,6 +99,40 @@ const normalizeLore = (
   };
 };
 
+const normalizeMulticlassTraitIds = ({
+  classId,
+  multiclassTraits,
+}: {
+  classId: string;
+  multiclassTraits: unknown;
+}): string[] => {
+  if (multiclassTraits === undefined) {
+    throw new Error(
+      `Core class ${classId} is missing required multiclassTraits field.`,
+    );
+  }
+
+  if (!Array.isArray(multiclassTraits)) {
+    throw new Error(
+      `Core class ${classId} is missing required multiclassTraits array.`,
+    );
+  }
+
+  if (
+    multiclassTraits.some(
+      (traitId) => typeof traitId !== "string" || traitId.trim().length === 0,
+    )
+  ) {
+    throw new Error(
+      `Core class ${classId} has invalid multiclassTraits entries.`,
+    );
+  }
+
+  const traitIds = multiclassTraits.map((traitId) => traitId.trim());
+
+  return [...new Set(traitIds)];
+};
+
 const runMigration = async () => {
   console.log("Initiating Reference Data ETL Pipeline...");
 
@@ -141,6 +177,10 @@ const runMigration = async () => {
         for (const traitId of progression.features || []) {
           if (typeof traitId === "string") referencedTraitIds.add(traitId);
         }
+      }
+
+      for (const traitId of cls.multiclassTraits || []) {
+        if (typeof traitId === "string") referencedTraitIds.add(traitId);
       }
     }
 
@@ -335,18 +375,51 @@ const runMigration = async () => {
 
     if (rawClasses.length > 0) {
       console.log(`Processing ${rawClasses.length} Classes...`);
+      const classRows = rawClasses.map((c: any) => ({
+        id: c.id,
+        name: c.name,
+        hitDie: c.hitDie,
+        subclassRequirementLevel: c.subclassInfo?.choiceLevel || 3, // Strict gatekeeper
+        startingEquipment: c.startingEquipment || {},
+        multiclassPrerequisites: c.multiclassPrerequisites
+          ? ClassMulticlassPrerequisitesSchema.parse(c.multiclassPrerequisites)
+          : null,
+        lore: normalizeLore(c.lore, c.name ?? c.id ?? "Class"),
+      }));
+
+      const multiclassTraitRows = rawClasses.flatMap((c: any) =>
+        normalizeMulticlassTraitIds({
+          classId: c.id,
+          multiclassTraits: c.multiclassTraits,
+        }).map((traitId) => ({
+          classId: c.id,
+          traitId,
+        })),
+      );
+
       await db
         .insert(classes)
-        .values(
-          rawClasses.map((c: any) => ({
-            id: c.id,
-            name: c.name,
-            hitDie: c.hitDie,
-            subclassRequirementLevel: c.subclassInfo?.choiceLevel || 3, // Strict gatekeeper
-            startingEquipment: c.startingEquipment || {},
-            lore: normalizeLore(c.lore, c.name ?? c.id ?? "Class"),
-          })),
-        )
+        .values(classRows)
+        .onConflictDoUpdate({
+          target: classes.id,
+          set: {
+            name: sql`excluded.name`,
+            hitDie: sql`excluded.hit_die`,
+            subclassRequirementLevel: sql`excluded.subclass_req_level`,
+            startingEquipment: sql`excluded.starting_equipment`,
+            multiclassPrerequisites: sql`excluded.multiclass_prerequisites`,
+            lore: sql`excluded.lore`,
+          },
+        });
+
+      // class_multiclass_traits must match classes.json exactly for core classes.
+      await db
+        .delete(classMulticlassTraits)
+        .where(inArray(classMulticlassTraits.classId, classRows.map((c) => c.id)));
+
+      await db
+        .insert(classMulticlassTraits)
+        .values(multiclassTraitRows)
         .onConflictDoNothing();
 
       // Explode Class Progression Arrays
@@ -396,7 +469,14 @@ const runMigration = async () => {
             lore: normalizeLore(sc.lore, sc.name ?? sc.id ?? "Subclass"),
           })),
         )
-        .onConflictDoNothing();
+        .onConflictDoUpdate({
+          target: subclasses.id,
+          set: {
+            parentClassId: sql`excluded.parent_class_id`,
+            name: sql`excluded.name`,
+            lore: sql`excluded.lore`,
+          },
+        });
 
       // explode subclass progression arrays
       const subclassLevelsData: any[] = [];
@@ -455,7 +535,20 @@ const runMigration = async () => {
             lore: normalizeLore(b.lore, b.name ?? b.id ?? "Background"),
           })),
         )
-        .onConflictDoNothing();
+        .onConflictDoUpdate({
+          target: backgrounds.id,
+          set: {
+            name: sql`excluded.name`,
+            featureName: sql`excluded.feature_name`,
+            featureDescription: sql`excluded.feature_description`,
+            ideals: sql`excluded.ideals`,
+            bonds: sql`excluded.bonds`,
+            flaws: sql`excluded.flaws`,
+            personalityTraits: sql`excluded.personality_traits`,
+            startingEquipment: sql`excluded.starting_equipment`,
+            lore: sql`excluded.lore`,
+          },
+        });
 
       const backgroundTraitsData = rawBackgrounds.flatMap((b: any) =>
         (b.backgroundTraits || []).map((traitId: string) => ({

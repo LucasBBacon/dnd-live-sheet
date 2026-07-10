@@ -1,5 +1,9 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { apiClient, buildScopedReferenceEndpoint } from "../client";
+import {
+  apiClient,
+  buildLevelUpOptionsEndpoint,
+  buildScopedReferenceEndpoint,
+} from "../client";
 
 describe("API Client", () => {
   const mockFetch = vi.fn();
@@ -223,6 +227,65 @@ describe("API Client", () => {
       expect(endpoint).toBe(
         "/reference/traits?category=skills&campaignId=11111111-1111-1111-1111-111111111111&characterId=22222222-2222-2222-2222-222222222222"
       );
+    });
+
+    it("should omit characterId when campaign context is missing", () => {
+      const endpoint = buildScopedReferenceEndpoint(
+        "/reference/traits",
+        {
+          characterId: "22222222-2222-2222-2222-222222222222",
+        },
+        { category: "skills" }
+      );
+
+      expect(endpoint).toBe("/reference/traits?category=skills");
+    });
+
+      it("should build level-up options endpoint with class context", () => {
+        const endpoint = buildLevelUpOptionsEndpoint(
+          {
+            campaignId: "11111111-1111-1111-1111-111111111111",
+            characterId: "22222222-2222-2222-2222-222222222222",
+          },
+          {
+            classId: "class_fighter",
+            currentClassLevel: 4,
+          }
+        );
+
+        expect(endpoint).toBe(
+          "/reference/level-up/options?classId=class_fighter&currentClassLevel=4&campaignId=11111111-1111-1111-1111-111111111111&characterId=22222222-2222-2222-2222-222222222222"
+        );
+      });
+
+    it("should build consolidated level-up options endpoint", () => {
+      const endpoint = buildLevelUpOptionsEndpoint(
+        {
+          campaignId: "11111111-1111-1111-1111-111111111111",
+          characterId: "22222222-2222-2222-2222-222222222222",
+        },
+        {
+          classId: "class_fighter",
+          subclassId: "subclass_champion",
+        },
+      );
+
+      expect(endpoint).toBe(
+        "/reference/level-up/options?classId=class_fighter&subclassId=subclass_champion&campaignId=11111111-1111-1111-1111-111111111111&characterId=22222222-2222-2222-2222-222222222222",
+      );
+    });
+
+    it("should omit scoped character id in level-up endpoint when campaign is missing", () => {
+      const endpoint = buildLevelUpOptionsEndpoint(
+        {
+          characterId: "22222222-2222-2222-2222-222222222222",
+        },
+        {
+          classId: "class_fighter",
+        },
+      );
+
+      expect(endpoint).toBe("/reference/level-up/options?classId=class_fighter");
     });
   });
 
