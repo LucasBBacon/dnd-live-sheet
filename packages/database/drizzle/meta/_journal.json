@@ -29,6 +29,13 @@
       "when": 1783637490035,
       "tag": "0003_curly_spitfire",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1783707300000,
+      "tag": "0004_quick_lightspeed",
+      "breakpoints": true
     }
   ]
 }

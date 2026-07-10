@@ -595,7 +595,17 @@ const runMigration = async () => {
       await db
         .insert(items)
         .values(extractedItems.seedItems)
-        .onConflictDoNothing({ target: items.id });
+        .onConflictDoUpdate({
+          target: items.id,
+          set: {
+            name: sql`excluded.name`,
+            weight: sql`excluded.weight`,
+            description: sql`excluded.description`,
+            itemRule: sql`excluded.item_rule`,
+            weaponRule: sql`excluded.weapon_rule`,
+            isBundle: sql`excluded.is_bundle`,
+          },
+        });
 
       // Extract and load bundle relations (BOM)
       console.log(`Resolving Bundle Contents (BOM)...`);

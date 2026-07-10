@@ -124,7 +124,8 @@ Future multi-node strategy:
 1. Database is source of truth for all reference and operational entities.
 2. In-memory structures are caches or derivations only.
 3. Homebrew resolution logic must remain centralised in resolver services.
-4. Any new scoped endpoint must include:
+4. Runtime rule snapshots must be built from database-backed reference rows, not static files.
+5. Any new scoped endpoint must include:
    - campaign membership guard
    - deterministic precedence resolution
    - scope-aware cache keying

@@ -1,7 +1,9 @@
 import type {
   ClassMulticlassPrerequisites,
   FeatPrerequisites,
+  ItemDefinition,
   TraitEffect,
+  WeaponDefinition,
 } from "@project/shared";
 import { sql } from "drizzle-orm";
 import { index } from "drizzle-orm/gel-core";
@@ -408,6 +410,10 @@ export const items = pgTable(
     weight: integer("weight").notNull().default(0),
 
     description: text("description").notNull(),
+
+    // canonical rule payload used by runtime rule snapshots
+    itemRule: jsonb("item_rule").$type<ItemDefinition>(),
+    weaponRule: jsonb("weapon_rule").$type<WeaponDefinition>(),
 
     // flag to tell API that this item contains other items
     isBundle: boolean("is_bundle").default(false).notNull(),

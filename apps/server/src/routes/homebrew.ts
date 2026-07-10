@@ -12,6 +12,7 @@ import { and, eq } from "drizzle-orm";
 import { Router, type Router as ExpressRouter } from "express";
 import { createCampaignRoleGuard } from "../middleware/requireCampaignRole.js";
 import { invalidateReferenceCache } from "../services/referenceCache.js";
+import { invalidateRuleSnapshotCache } from "../services/ruleSnapshotCache.js";
 
 const router: ExpressRouter = Router();
 
@@ -38,6 +39,11 @@ const requireCampaignAuthorRole = createCampaignRoleGuard({
   resolveCampaignId: (req) => resolveCampaignIdFromBody(req),
   allowedRoles: ["owner", "dm"],
 });
+
+const invalidateReferenceDerivedCaches = (): void => {
+  invalidateReferenceCache();
+  invalidateRuleSnapshotCache();
+};
 
 /**
  * Ensures that the provided ownerCharacterId belongs to the specified campaignId.
@@ -225,7 +231,7 @@ router.post("/traits", requireCampaignAuthorRole, async (req, res, next) => {
     await db.insert(traits).values(traitInsert);
 
     // invalidate the reference cache so that the new trait is included in future queries
-    invalidateReferenceCache();
+    invalidateReferenceDerivedCaches();
     return res.status(201).json({
       success: true,
       traitId: payload.id,
@@ -309,7 +315,7 @@ router.patch(
       }
 
       // invalidate the reference cache so that the updated trait is reflected in future queries
-      invalidateReferenceCache();
+      invalidateReferenceDerivedCaches();
       return res.status(200).json({ success: true, traitId });
     } catch (error) {
       next(error);
@@ -356,7 +362,7 @@ router.post(
       }
 
       // invalidate the reference cache so that the published trait is reflected in future queries
-      invalidateReferenceCache();
+      invalidateReferenceDerivedCaches();
       return res.status(200).json({ success: true, traitId });
     } catch (error) {
       next(error);
@@ -403,7 +409,7 @@ router.post(
       }
 
       // invalidate the reference cache so that the archived trait is reflected in future queries
-      invalidateReferenceCache();
+      invalidateReferenceDerivedCaches();
       return res.status(200).json({ success: true, traitId });
     } catch (error) {
       next(error);
@@ -469,7 +475,7 @@ router.post("/items", requireCampaignAuthorRole, async (req, res, next) => {
     await db.insert(items).values(itemInsert);
 
     // invalidate the reference cache so that the new item is included in future queries
-    invalidateReferenceCache();
+    invalidateReferenceDerivedCaches();
     return res.status(201).json({
       success: true,
       itemId: payload.id,
@@ -547,7 +553,7 @@ router.patch(
       }
 
       // invalidate the reference cache so that the updated item is reflected in future queries
-      invalidateReferenceCache();
+      invalidateReferenceDerivedCaches();
       return res.status(200).json({ success: true, itemId });
     } catch (error) {
       next(error);
@@ -591,7 +597,7 @@ router.post(
       }
 
       // invalidate the reference cache so that the published item is reflected in future queries
-      invalidateReferenceCache();
+      invalidateReferenceDerivedCaches();
       return res.status(200).json({ success: true, itemId });
     } catch (error) {
       next(error);
@@ -636,7 +642,7 @@ router.post(
       }
       
       // invalidate the reference cache so that the archived item is reflected in future queries
-      invalidateReferenceCache();
+      invalidateReferenceDerivedCaches();
       return res.status(200).json({ success: true, itemId });
     } catch (error) {
       next(error);

@@ -34,6 +34,8 @@ export type ExtractedSeedItem = {
   name: string;
   weight: number;
   description: string;
+  itemRule: ItemDefinition;
+  weaponRule?: WeaponDefinition;
   isBundle: boolean;
 };
 
@@ -268,25 +270,15 @@ export const extractItemsForMigration = (
     const isBundle = item.isBundle === true;
     const type = normaliseItemType(item);
 
-    itemIds.add(id);
-    seedItems.push({
-      id,
-      name,
-      weight,
-      description,
-      isBundle,
-    });
-
-    const itemDefinitionResult = ItemDefinitionSchema.safeParse({
+    const itemDefinition = ItemDefinitionSchema.parse({
       id,
       name,
       type,
       modifiers: deriveItemModifiers(item),
     });
+    itemRulesById[id] = itemDefinition;
 
-    if (itemDefinitionResult.success) {
-      itemRulesById[id] = itemDefinitionResult.data;
-    }
+    let weaponRule: WeaponDefinition | undefined;
 
     if (isBundle && Array.isArray(item.bundleContents)) {
       for (const bundleItem of item.bundleContents) {
@@ -300,37 +292,45 @@ export const extractItemsForMigration = (
       }
     }
 
-    if (type !== "weapon" || !item.weaponProperties) {
-      continue;
+    if (type === "weapon" && item.weaponProperties) {
+      const category = canonicaliseWeaponCategory(item.weaponProperties.category);
+      const damageDice = toStringOrUndefined(item.weaponProperties.damageDice);
+      const damageType = toStringOrUndefined(item.weaponProperties.damageType);
+      const ammoItemId = toStringOrUndefined(item.weaponProperties.ammoItemId);
+
+      if (category && damageDice && damageType) {
+        const parsedWeapon = WeaponDefinitionSchema.safeParse({
+          id,
+          name,
+          category,
+          damageDice,
+          damageType,
+          properties: deriveWeaponProperties(
+            id,
+            item.weaponProperties.propertyIds,
+            item.weaponProperties.rules,
+            diagnostics,
+          ),
+          ammoItemId,
+        });
+
+        if (parsedWeapon.success) {
+          weaponRule = parsedWeapon.data;
+          weaponRulesById[id] = parsedWeapon.data;
+        }
+      }
     }
 
-    const category = canonicaliseWeaponCategory(item.weaponProperties.category);
-    const damageDice = toStringOrUndefined(item.weaponProperties.damageDice);
-    const damageType = toStringOrUndefined(item.weaponProperties.damageType);
-    const ammoItemId = toStringOrUndefined(item.weaponProperties.ammoItemId);
-
-    if (!category || !damageDice || !damageType) {
-      continue;
-    }
-
-    const weaponDefinitionResult = WeaponDefinitionSchema.safeParse({
+    itemIds.add(id);
+    seedItems.push({
       id,
       name,
-      category,
-      damageDice,
-      damageType,
-      properties: deriveWeaponProperties(
-        id,
-        item.weaponProperties.propertyIds,
-        item.weaponProperties.rules,
-        diagnostics,
-      ),
-      ammoItemId,
+      weight,
+      description,
+      isBundle,
+      itemRule: itemDefinition,
+      weaponRule,
     });
-
-    if (weaponDefinitionResult.success) {
-      weaponRulesById[id] = weaponDefinitionResult.data;
-    }
 
   }
 
@@ -343,7 +343,7 @@ export const extractItemsForMigration = (
     }
   }
 
-  itemRulesById.item_ring_of_protection = ItemDefinitionSchema.parse({
+  const ringOfProtectionRule = ItemDefinitionSchema.parse({
     id: "item_ring_of_protection",
     name: "Ring of Protection",
     type: "armor",
@@ -362,6 +362,7 @@ export const extractItemsForMigration = (
       },
     ],
   });
+  itemRulesById.item_ring_of_protection = ringOfProtectionRule;
 
   return {
     seedItems,

@@ -1,8 +1,13 @@
-import { readFile } from "node:fs/promises";
-import path from "node:path";
-import { extractItemsForMigration } from "@project/database/src/itemsExtraction.js";
+import { db } from "@project/database";
+import { items } from "@project/database/src/schema/reference.js";
 import { resolveResourceRules } from "@project/engine";
-import { RuleSnapshotSchema, type RuleSnapshot } from "@project/shared";
+import {
+  ItemDefinitionSchema,
+  RuleSnapshotSchema,
+  type ItemDefinition,
+  type RuleSnapshot,
+} from "@project/shared";
+import { and, eq } from "drizzle-orm";
 import { getReferenceCacheVersion } from "./referenceCache.js";
 
 type CachedRuleSnapshot = {
@@ -13,20 +18,41 @@ type CachedRuleSnapshot = {
 
 let cached: CachedRuleSnapshot | null = null;
 
-const readItemsJson = async (): Promise<unknown[]> => {
-  const filePath = path.resolve(process.cwd(), "packages/database/data/items.json");
-  const rawJson = await readFile(filePath, "utf-8");
-  return JSON.parse(rawJson) as unknown[];
-};
+const buildFallbackItemRule = (row: {
+  id: string;
+  name: string;
+}): ItemDefinition =>
+  ItemDefinitionSchema.parse({
+    id: row.id,
+    name: row.name,
+    type: "gear",
+  });
 
 const buildRuleSnapshot = async (): Promise<CachedRuleSnapshot> => {
-  const rawItems = await readItemsJson();
-  const extracted = extractItemsForMigration(rawItems);
+  const ruleRows = await db
+    .select({
+      id: items.id,
+      name: items.name,
+      itemRule: items.itemRule,
+      weaponRule: items.weaponRule,
+    })
+    .from(items)
+    .where(and(eq(items.sourceType, "core"), eq(items.isPublished, true)));
+
+  const itemsById = Object.fromEntries(
+    ruleRows.map((row) => [row.id, row.itemRule ?? buildFallbackItemRule(row)]),
+  );
+  const weaponsById = Object.fromEntries(
+    ruleRows
+      .filter((row) => !!row.weaponRule)
+      .map((row) => [row.id, row.weaponRule]),
+  );
+
   const cacheVersion = getReferenceCacheVersion();
 
   const parsedSnapshot = RuleSnapshotSchema.parse({
-    itemsById: extracted.itemRulesById,
-    weaponsById: extracted.weaponRulesById,
+    itemsById,
+    weaponsById,
     resourcesById: resolveResourceRules(),
     traitsById: {},
   });
