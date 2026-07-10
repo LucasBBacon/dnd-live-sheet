@@ -17,6 +17,12 @@ type TraitRow = typeof traits.$inferSelect;
 type FeatRow = typeof feats.$inferSelect;
 type ItemRow = typeof items.$inferSelect;
 
+type LineageRow = {
+  id: string;
+  packVersion: number | null;
+  publishedAt: Date | null;
+};
+
 /**
  * Defines the scope for resolving effective reference data, including optional campaign and character context.
  */
@@ -93,6 +99,29 @@ const traitPrecedence = (
  * @returns A string representing the canonical key for the trait, either the superseded trait's ID or the trait's own ID.
  */
 const canonicalTraitKey = (row: TraitRow): string => row.supersedesId ?? row.id;
+
+const lineageRank = (row: LineageRow) => ({
+  version: row.packVersion ?? 0,
+  publishedAt: row.publishedAt ? row.publishedAt.getTime() : 0,
+});
+
+const shouldReplaceOnLineage = <T extends LineageRow>(
+  candidate: T,
+  existing: T,
+): boolean => {
+  const candidateRank = lineageRank(candidate);
+  const existingRank = lineageRank(existing);
+
+  if (candidateRank.version !== existingRank.version) {
+    return candidateRank.version > existingRank.version;
+  }
+
+  if (candidateRank.publishedAt !== existingRank.publishedAt) {
+    return candidateRank.publishedAt > existingRank.publishedAt;
+  }
+
+  return candidate.id.localeCompare(existing.id) < 0;
+};
 
 /**
  * Creates a shallow copy of a map where each value is an array, ensuring that the arrays themselves are also copied.
@@ -220,9 +249,25 @@ export const getEffectiveReferenceSnapshot = async (
     }
 
     // if there is an existing trait, compare precedence and replace if the homebrew trait has higher precedence
+    const candidatePrecedence = traitPrecedence(
+      row,
+      scope.campaignId,
+      scope.characterId,
+    );
+    const existingPrecedence = traitPrecedence(
+      existing,
+      scope.campaignId,
+      scope.characterId,
+    );
+
+    if (candidatePrecedence > existingPrecedence) {
+      effectiveByCanonicalId.set(canonicalId, row);
+      continue;
+    }
+
     if (
-      traitPrecedence(row, scope.campaignId, scope.characterId) >
-      traitPrecedence(existing, scope.campaignId, scope.characterId)
+      candidatePrecedence === existingPrecedence &&
+      shouldReplaceOnLineage(row, existing)
     ) {
       effectiveByCanonicalId.set(canonicalId, row);
     }
@@ -362,7 +407,18 @@ export const listEffectiveFeats = async (
       dedupedByCanonical.set(key, row);
       continue;
     }
-    if (featPrecedence(row, scope) > featPrecedence(existing, scope)) {
+    const candidatePrecedence = featPrecedence(row, scope);
+    const existingPrecedence = featPrecedence(existing, scope);
+
+    if (candidatePrecedence > existingPrecedence) {
+      dedupedByCanonical.set(key, row);
+      continue;
+    }
+
+    if (
+      candidatePrecedence === existingPrecedence &&
+      shouldReplaceOnLineage(row, existing)
+    ) {
       dedupedByCanonical.set(key, row);
     }
   }
@@ -443,7 +499,18 @@ export const searchEffectiveItems = async ({
       dedupedByCanonical.set(key, row);
       continue;
     }
-    if (itemPrecedence(row, scope) > itemPrecedence(existing, scope)) {
+    const candidatePrecedence = itemPrecedence(row, scope);
+    const existingPrecedence = itemPrecedence(existing, scope);
+
+    if (candidatePrecedence > existingPrecedence) {
+      dedupedByCanonical.set(key, row);
+      continue;
+    }
+
+    if (
+      candidatePrecedence === existingPrecedence &&
+      shouldReplaceOnLineage(row, existing)
+    ) {
       dedupedByCanonical.set(key, row);
     }
   }

@@ -91,6 +91,28 @@ Reasoning:
 
 ## Rollback plan
 
+## Import rollback workflow
+
+Use import rollback when an applied import run introduced incorrect reference state and you need deterministic reversal from ledgered rows.
+
+1. Plan rollback for the source import run.
+2. Inspect planned row and issue counts before apply.
+3. Apply rollback only when planning reports no blocking issues.
+4. Verify post-apply row statuses and issue counts.
+
+Operational checks:
+
+1. Confirm rollback run status transitions from planned to applied.
+2. Confirm row counts include only expected applied or skipped states.
+3. Confirm issue list is empty for successful apply.
+4. Re-run reference and rule snapshot smoke checks.
+
+Failure handling:
+
+1. If planning fails, resolve missing references first and re-plan.
+2. If apply fails, inspect rollback issues and failed rows, then rerun apply only after remediation.
+3. Do not publish additional imports for the same domain until rollback status is stable.
+
 ## Fast rollback (application only)
 
 Use when schema is backwards compatible:

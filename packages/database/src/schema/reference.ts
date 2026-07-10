@@ -16,6 +16,7 @@ import {
   pgTable,
   primaryKey,
   text,
+  timestamp,
   uuid,
   varchar,
 } from "drizzle-orm/pg-core";
@@ -23,6 +24,48 @@ import {
 export const referenceSourceTypeEnum = pgEnum("reference_source_type", [
   "core",
   "homebrew",
+]);
+
+export const importRunStatusEnum = pgEnum("import_run_status", [
+  "staged",
+  "validated",
+  "planned",
+  "applied",
+  "failed",
+]);
+
+export const importRowStatusEnum = pgEnum("import_row_status", [
+  "pending",
+  "validated",
+  "applied",
+  "failed",
+  "skipped",
+]);
+
+export const importIssueSeverityEnum = pgEnum("import_issue_severity", [
+  "info",
+  "warning",
+  "error",
+]);
+
+export const rollbackRunStatusEnum = pgEnum("rollback_run_status", [
+  "planned",
+  "applied",
+  "failed",
+]);
+
+export const rollbackRowStatusEnum = pgEnum("rollback_row_status", [
+  "pending",
+  "planned",
+  "applied",
+  "failed",
+  "skipped",
+]);
+
+export const rollbackIssueSeverityEnum = pgEnum("rollback_issue_severity", [
+  "info",
+  "warning",
+  "error",
 ]);
 
 const buildReferenceScopeChecks = (
@@ -73,6 +116,9 @@ export const traits = pgTable("traits", {
   createdByUserId: varchar("created_by_user_id", { length: 255 }),
   isPublished: boolean("is_published").default(true).notNull(),
   supersedesId: varchar("supersedes_id", { length: 100 }),
+  packId: varchar("pack_id", { length: 100 }),
+  packVersion: integer("pack_version"),
+  publishedAt: timestamp("published_at", { withTimezone: true }),
 }, (table) => ({
   ...buildReferenceScopeChecks("traits", table),
 }));
@@ -96,6 +142,9 @@ export const feats = pgTable("feats", {
   createdByUserId: varchar("created_by_user_id", { length: 255 }),
   isPublished: boolean("is_published").default(true).notNull(),
   supersedesId: varchar("supersedes_id", { length: 100 }),
+  packId: varchar("pack_id", { length: 100 }),
+  packVersion: integer("pack_version"),
+  publishedAt: timestamp("published_at", { withTimezone: true }),
 }, (table) => ({
   ...buildReferenceScopeChecks("feats", table),
 }));
@@ -156,6 +205,9 @@ export const races = pgTable("races", {
   createdByUserId: varchar("created_by_user_id", { length: 255 }),
   isPublished: boolean("is_published").default(true).notNull(),
   supersedesId: varchar("supersedes_id", { length: 100 }),
+  packId: varchar("pack_id", { length: 100 }),
+  packVersion: integer("pack_version"),
+  publishedAt: timestamp("published_at", { withTimezone: true }),
 }, (table) => ({
   ...buildReferenceScopeChecks("races", table),
 }));
@@ -175,6 +227,9 @@ export const subraces = pgTable("subraces", {
   createdByUserId: varchar("created_by_user_id", { length: 255 }),
   isPublished: boolean("is_published").default(true).notNull(),
   supersedesId: varchar("supersedes_id", { length: 100 }),
+  packId: varchar("pack_id", { length: 100 }),
+  packVersion: integer("pack_version"),
+  publishedAt: timestamp("published_at", { withTimezone: true }),
 }, (table) => ({
   ...buildReferenceScopeChecks("subraces", table),
 }));
@@ -233,6 +288,9 @@ export const classes = pgTable("classes", {
   createdByUserId: varchar("created_by_user_id", { length: 255 }),
   isPublished: boolean("is_published").default(true).notNull(),
   supersedesId: varchar("supersedes_id", { length: 100 }),
+  packId: varchar("pack_id", { length: 100 }),
+  packVersion: integer("pack_version"),
+  publishedAt: timestamp("published_at", { withTimezone: true }),
 }, (table) => ({
   ...buildReferenceScopeChecks("classes", table),
 }));
@@ -252,6 +310,9 @@ export const subclasses = pgTable("subclasses", {
   createdByUserId: varchar("created_by_user_id", { length: 255 }),
   isPublished: boolean("is_published").default(true).notNull(),
   supersedesId: varchar("supersedes_id", { length: 100 }),
+  packId: varchar("pack_id", { length: 100 }),
+  packVersion: integer("pack_version"),
+  publishedAt: timestamp("published_at", { withTimezone: true }),
 }, (table) => ({
   ...buildReferenceScopeChecks("subclasses", table),
 }));
@@ -316,6 +377,9 @@ export const classProgressions = pgTable(
     ownerCharacterId: uuid("owner_character_id"),
     createdByUserId: varchar("created_by_user_id", { length: 255 }),
     isPublished: boolean("is_published").default(true).notNull(),
+    packId: varchar("pack_id", { length: 100 }),
+    packVersion: integer("pack_version"),
+    publishedAt: timestamp("published_at", { withTimezone: true }),
   },
   (table) => ({
     pk: primaryKey({ columns: [table.classId, table.level, table.traitId] }),
@@ -338,6 +402,9 @@ export const subclassProgressions = pgTable(
     ownerCharacterId: uuid("owner_character_id"),
     createdByUserId: varchar("created_by_user_id", { length: 255 }),
     isPublished: boolean("is_published").default(true).notNull(),
+    packId: varchar("pack_id", { length: 100 }),
+    packVersion: integer("pack_version"),
+    publishedAt: timestamp("published_at", { withTimezone: true }),
   },
   (table) => ({
     pk: primaryKey({ columns: [table.subclassId, table.level, table.traitId] }),
@@ -375,6 +442,9 @@ export const backgrounds = pgTable("backgrounds", {
   createdByUserId: varchar("created_by_user_id", { length: 255 }),
   isPublished: boolean("is_published").default(true).notNull(),
   supersedesId: varchar("supersedes_id", { length: 100 }),
+  packId: varchar("pack_id", { length: 100 }),
+  packVersion: integer("pack_version"),
+  publishedAt: timestamp("published_at", { withTimezone: true }),
 }, (table) => ({
   ...buildReferenceScopeChecks("backgrounds", table),
 }));
@@ -423,6 +493,9 @@ export const items = pgTable(
     createdByUserId: varchar("created_by_user_id", { length: 255 }),
     isPublished: boolean("is_published").default(true).notNull(),
     supersedesId: varchar("supersedes_id", { length: 100 }),
+    packId: varchar("pack_id", { length: 100 }),
+    packVersion: integer("pack_version"),
+    publishedAt: timestamp("published_at", { withTimezone: true }),
   },
   (table) => ({
     // GIN index for high-performance ILIKE text search across compendium
@@ -450,3 +523,118 @@ export const bundleContents = pgTable(
     pk: primaryKey({ columns: [table.bundleId, table.itemId] }),
   }),
 );
+
+// --------------------------------------------------------------
+// IMPORT RUN LEDGER
+// --------------------------------------------------------------
+
+export const importRuns = pgTable("import_runs", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  packId: varchar("pack_id", { length: 100 }).notNull(),
+  packVersion: integer("pack_version").notNull().default(1),
+  schemaVersion: varchar("schema_version", { length: 32 }).notNull(),
+  sourceType: referenceSourceTypeEnum("source_type").notNull(),
+  ownerCampaignId: uuid("owner_campaign_id"),
+  ownerCharacterId: uuid("owner_character_id"),
+  createdByUserId: varchar("created_by_user_id", { length: 255 }),
+  publishMode: varchar("publish_mode", { length: 32 }).notNull(),
+  conflictPolicy: varchar("conflict_policy", { length: 32 }).notNull(),
+  idPolicy: varchar("id_policy", { length: 32 }).notNull(),
+  checksum: varchar("checksum", { length: 128 }),
+  status: importRunStatusEnum("status").notNull().default("staged"),
+  stagedAt: timestamp("staged_at", { withTimezone: true }).notNull().defaultNow(),
+  completedAt: timestamp("completed_at", { withTimezone: true }),
+  totalEntityRows: integer("total_entity_rows").notNull().default(0),
+  totalRelationRows: integer("total_relation_rows").notNull().default(0),
+  totalIssues: integer("total_issues").notNull().default(0),
+  validateDurationMs: integer("validate_duration_ms"),
+  planDurationMs: integer("plan_duration_ms"),
+  applyDurationMs: integer("apply_duration_ms"),
+  publishDurationMs: integer("publish_duration_ms"),
+  totalDurationMs: integer("total_duration_ms"),
+  appliedRowCountsByKind: jsonb("applied_row_counts_by_kind").notNull().default(sql`'{}'::jsonb`),
+});
+
+export const importRows = pgTable(
+  "import_rows",
+  {
+    runId: uuid("run_id")
+      .references(() => importRuns.id, { onDelete: "cascade" })
+      .notNull(),
+    rowIndex: integer("row_index").notNull(),
+    rowType: varchar("row_type", { length: 16 }).notNull(),
+    kind: varchar("kind", { length: 64 }).notNull(),
+    op: varchar("op", { length: 32 }).notNull(),
+    entityId: varchar("entity_id", { length: 100 }),
+    payload: jsonb("payload").notNull(),
+    status: importRowStatusEnum("status").notNull().default("pending"),
+    errorMessage: text("error_message"),
+  },
+  (table) => ({
+    pk: primaryKey({ columns: [table.runId, table.rowIndex] }),
+  }),
+);
+
+export const importIssues = pgTable("import_issues", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  runId: uuid("run_id")
+    .references(() => importRuns.id, { onDelete: "cascade" })
+    .notNull(),
+  rowIndex: integer("row_index"),
+  severity: importIssueSeverityEnum("severity").notNull(),
+  code: varchar("code", { length: 100 }).notNull(),
+  message: text("message").notNull(),
+  details: jsonb("details"),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+export const rollbackRuns = pgTable("rollback_runs", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  sourceRunId: uuid("source_run_id")
+    .references(() => importRuns.id, { onDelete: "cascade" })
+    .notNull(),
+  status: rollbackRunStatusEnum("status").notNull().default("planned"),
+  initiatedByUserId: varchar("initiated_by_user_id", { length: 255 }),
+  plannedAt: timestamp("planned_at", { withTimezone: true }).notNull().defaultNow(),
+  completedAt: timestamp("completed_at", { withTimezone: true }),
+  totalRows: integer("total_rows").notNull().default(0),
+  totalIssues: integer("total_issues").notNull().default(0),
+  planDurationMs: integer("plan_duration_ms"),
+  applyDurationMs: integer("apply_duration_ms"),
+  totalDurationMs: integer("total_duration_ms"),
+  appliedRowCountsByKind: jsonb("applied_row_counts_by_kind").notNull().default(sql`'{}'::jsonb`),
+});
+
+export const rollbackRows = pgTable(
+  "rollback_rows",
+  {
+    runId: uuid("run_id")
+      .references(() => rollbackRuns.id, { onDelete: "cascade" })
+      .notNull(),
+    rowIndex: integer("row_index").notNull(),
+    sourceRowIndex: integer("source_row_index"),
+    rowType: varchar("row_type", { length: 16 }).notNull(),
+    kind: varchar("kind", { length: 64 }).notNull(),
+    op: varchar("op", { length: 32 }).notNull(),
+    entityId: varchar("entity_id", { length: 100 }),
+    payload: jsonb("payload").notNull(),
+    status: rollbackRowStatusEnum("status").notNull().default("pending"),
+    errorMessage: text("error_message"),
+  },
+  (table) => ({
+    pk: primaryKey({ columns: [table.runId, table.rowIndex] }),
+  }),
+);
+
+export const rollbackIssues = pgTable("rollback_issues", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  runId: uuid("run_id")
+    .references(() => rollbackRuns.id, { onDelete: "cascade" })
+    .notNull(),
+  rowIndex: integer("row_index"),
+  severity: rollbackIssueSeverityEnum("severity").notNull(),
+  code: varchar("code", { length: 100 }).notNull(),
+  message: text("message").notNull(),
+  details: jsonb("details"),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+});

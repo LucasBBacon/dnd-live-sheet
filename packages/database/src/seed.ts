@@ -1,5 +1,5 @@
 import * as dotenv from "dotenv";
-import { inArray, sql } from "drizzle-orm";
+import { eq, inArray, sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
 import path from "node:path";
@@ -43,6 +43,10 @@ if (!connectionString) throw new Error("DATABASE_URL is missing");
 
 const client = postgres(connectionString);
 const db = drizzle(client);
+
+const CORE_PACK_ID = "core_seed_2014";
+const CORE_PACK_VERSION = 1;
+const CORE_PUBLISHED_AT = new Date();
 
 const loadJsonData = async <T>(filename: string): Promise<T[]> => {
   try {
@@ -230,6 +234,9 @@ const runMigration = async () => {
         lore: normalizeLore(t.lore, t.name ?? t.id ?? "Trait"),
         effects: t.effects || [],
         isStartingProficiency: t.isStartingProficiency ?? false,
+        packId: CORE_PACK_ID,
+        packVersion: CORE_PACK_VERSION,
+        publishedAt: CORE_PUBLISHED_AT,
       }));
 
       await db
@@ -260,6 +267,9 @@ const runMigration = async () => {
         repeatable: f.repeatable ?? false,
         lore: normalizeLore(f.lore, f.name ?? f.id ?? "Feat"),
         prerequisites: f.prerequisites || null,
+        packId: CORE_PACK_ID,
+        packVersion: CORE_PACK_VERSION,
+        publishedAt: CORE_PUBLISHED_AT,
       }));
 
       await db
@@ -319,6 +329,9 @@ const runMigration = async () => {
         requiresSubrace: !!r.subraceInfo,
         displayLabel: r.subraceInfo?.displayLabel ?? "",
         lore: normalizeLore(r.lore, r.name ?? r.id ?? "Race"),
+        packId: CORE_PACK_ID,
+        packVersion: CORE_PACK_VERSION,
+        publishedAt: CORE_PUBLISHED_AT,
       }));
 
       await db
@@ -332,6 +345,9 @@ const runMigration = async () => {
             requiresSubrace: sql`excluded.requires_subrace`,
             displayLabel: sql`excluded.display_label`,
             lore: sql`excluded.lore`,
+            packId: sql`excluded.pack_id`,
+            packVersion: sql`excluded.pack_version`,
+            publishedAt: sql`excluded.published_at`,
           },
         });
 
@@ -355,9 +371,22 @@ const runMigration = async () => {
             parentRaceId: sr.parentRaceId,
             name: sr.name,
             lore: normalizeLore(sr.lore, sr.name ?? sr.id ?? "Subrace"),
+            packId: CORE_PACK_ID,
+            packVersion: CORE_PACK_VERSION,
+            publishedAt: CORE_PUBLISHED_AT,
           })),
         )
-        .onConflictDoNothing();
+        .onConflictDoUpdate({
+          target: subraces.id,
+          set: {
+            parentRaceId: sql`excluded.parent_race_id`,
+            name: sql`excluded.name`,
+            lore: sql`excluded.lore`,
+            packId: sql`excluded.pack_id`,
+            packVersion: sql`excluded.pack_version`,
+            publishedAt: sql`excluded.published_at`,
+          },
+        });
 
       const subraceTraitsData = rawSubraces.flatMap((sr: any) =>
         (sr.traitsAdded || []).map((traitId: string) => ({
@@ -386,6 +415,9 @@ const runMigration = async () => {
           ? ClassMulticlassPrerequisitesSchema.parse(c.multiclassPrerequisites)
           : null,
         lore: normalizeLore(c.lore, c.name ?? c.id ?? "Class"),
+        packId: CORE_PACK_ID,
+        packVersion: CORE_PACK_VERSION,
+        publishedAt: CORE_PUBLISHED_AT,
       }));
 
       const multiclassTraitRows = rawClasses.flatMap((c: any) =>
@@ -410,6 +442,9 @@ const runMigration = async () => {
             startingEquipment: sql`excluded.starting_equipment`,
             multiclassPrerequisites: sql`excluded.multiclass_prerequisites`,
             lore: sql`excluded.lore`,
+            packId: sql`excluded.pack_id`,
+            packVersion: sql`excluded.pack_version`,
+            publishedAt: sql`excluded.published_at`,
           },
         });
 
@@ -468,6 +503,9 @@ const runMigration = async () => {
             parentClassId: sc.parentClassId,
             name: sc.name,
             lore: normalizeLore(sc.lore, sc.name ?? sc.id ?? "Subclass"),
+            packId: CORE_PACK_ID,
+            packVersion: CORE_PACK_VERSION,
+            publishedAt: CORE_PUBLISHED_AT,
           })),
         )
         .onConflictDoUpdate({
@@ -476,6 +514,9 @@ const runMigration = async () => {
             parentClassId: sql`excluded.parent_class_id`,
             name: sql`excluded.name`,
             lore: sql`excluded.lore`,
+            packId: sql`excluded.pack_id`,
+            packVersion: sql`excluded.pack_version`,
+            publishedAt: sql`excluded.published_at`,
           },
         });
 
@@ -534,6 +575,9 @@ const runMigration = async () => {
             personalityTraits: b.personalityTraits || [],
             startingEquipment: b.startingEquipment || {},
             lore: normalizeLore(b.lore, b.name ?? b.id ?? "Background"),
+            packId: CORE_PACK_ID,
+            packVersion: CORE_PACK_VERSION,
+            publishedAt: CORE_PUBLISHED_AT,
           })),
         )
         .onConflictDoUpdate({
@@ -548,6 +592,9 @@ const runMigration = async () => {
             personalityTraits: sql`excluded.personality_traits`,
             startingEquipment: sql`excluded.starting_equipment`,
             lore: sql`excluded.lore`,
+            packId: sql`excluded.pack_id`,
+            packVersion: sql`excluded.pack_version`,
+            publishedAt: sql`excluded.published_at`,
           },
         });
 
@@ -594,7 +641,14 @@ const runMigration = async () => {
 
       await db
         .insert(items)
-        .values(extractedItems.seedItems)
+        .values(
+          extractedItems.seedItems.map((item) => ({
+            ...item,
+            packId: CORE_PACK_ID,
+            packVersion: CORE_PACK_VERSION,
+            publishedAt: CORE_PUBLISHED_AT,
+          })),
+        )
         .onConflictDoUpdate({
           target: items.id,
           set: {
@@ -604,8 +658,119 @@ const runMigration = async () => {
             itemRule: sql`excluded.item_rule`,
             weaponRule: sql`excluded.weapon_rule`,
             isBundle: sql`excluded.is_bundle`,
+            packId: sql`excluded.pack_id`,
+            packVersion: sql`excluded.pack_version`,
+            publishedAt: sql`excluded.published_at`,
           },
         });
+
+      await db
+        .update(classProgressions)
+        .set({
+          packId: CORE_PACK_ID,
+          packVersion: CORE_PACK_VERSION,
+          publishedAt: CORE_PUBLISHED_AT,
+        })
+        .where(eq(classProgressions.sourceType, "core"));
+
+
+    await db
+      .update(traits)
+      .set({
+        packId: CORE_PACK_ID,
+        packVersion: CORE_PACK_VERSION,
+        publishedAt: CORE_PUBLISHED_AT,
+      })
+      .where(eq(traits.sourceType, "core"));
+
+    await db
+      .update(feats)
+      .set({
+        packId: CORE_PACK_ID,
+        packVersion: CORE_PACK_VERSION,
+        publishedAt: CORE_PUBLISHED_AT,
+      })
+      .where(eq(feats.sourceType, "core"));
+
+    await db
+      .update(races)
+      .set({
+        packId: CORE_PACK_ID,
+        packVersion: CORE_PACK_VERSION,
+        publishedAt: CORE_PUBLISHED_AT,
+      })
+      .where(eq(races.sourceType, "core"));
+
+    await db
+      .update(subraces)
+      .set({
+        packId: CORE_PACK_ID,
+        packVersion: CORE_PACK_VERSION,
+        publishedAt: CORE_PUBLISHED_AT,
+      })
+      .where(eq(subraces.sourceType, "core"));
+
+    await db
+      .update(classes)
+      .set({
+        packId: CORE_PACK_ID,
+        packVersion: CORE_PACK_VERSION,
+        publishedAt: CORE_PUBLISHED_AT,
+      })
+      .where(eq(classes.sourceType, "core"));
+
+    await db
+      .update(subclasses)
+      .set({
+        packId: CORE_PACK_ID,
+        packVersion: CORE_PACK_VERSION,
+        publishedAt: CORE_PUBLISHED_AT,
+      })
+      .where(eq(subclasses.sourceType, "core"));
+
+    await db
+      .update(backgrounds)
+      .set({
+        packId: CORE_PACK_ID,
+        packVersion: CORE_PACK_VERSION,
+        publishedAt: CORE_PUBLISHED_AT,
+      })
+      .where(eq(backgrounds.sourceType, "core"));
+
+    await db
+      .update(items)
+      .set({
+        packId: CORE_PACK_ID,
+        packVersion: CORE_PACK_VERSION,
+        publishedAt: CORE_PUBLISHED_AT,
+      })
+      .where(eq(items.sourceType, "core"));
+
+    await db
+      .update(classProgressions)
+      .set({
+        packId: CORE_PACK_ID,
+        packVersion: CORE_PACK_VERSION,
+        publishedAt: CORE_PUBLISHED_AT,
+      })
+      .where(eq(classProgressions.sourceType, "core"));
+
+    await db
+      .update(subclassProgressions)
+      .set({
+        packId: CORE_PACK_ID,
+        packVersion: CORE_PACK_VERSION,
+        publishedAt: CORE_PUBLISHED_AT,
+      })
+      .where(eq(subclassProgressions.sourceType, "core"));
+      await db
+        .update(subclassProgressions)
+        .set({
+          packId: CORE_PACK_ID,
+          packVersion: CORE_PACK_VERSION,
+          publishedAt: CORE_PUBLISHED_AT,
+        })
+        .where(eq(subclassProgressions.sourceType, "core"));
 
       // Extract and load bundle relations (BOM)
       console.log(`Resolving Bundle Contents (BOM)...`);

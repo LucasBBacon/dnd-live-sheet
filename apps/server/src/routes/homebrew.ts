@@ -8,7 +8,7 @@ import {
   UpdateHomebrewItemSchema,
   UpdateHomebrewTraitSchema,
 } from "@project/shared";
-import { and, eq } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
 import { Router, type Router as ExpressRouter } from "express";
 import { createCampaignRoleGuard } from "../middleware/requireCampaignRole.js";
 import { invalidateReferenceCache } from "../services/referenceCache.js";
@@ -346,7 +346,7 @@ router.post(
       const traitId = getRequiredParam(req.params.id, "traitId");
       const updated = await db
         .update(traits)
-        .set({ isPublished: true })
+        .set({ isPublished: true, publishedAt: sql`now()` })
         .where(
           and(
             eq(traits.id, traitId),
@@ -393,7 +393,7 @@ router.post(
       const traitId = getRequiredParam(req.params.id, "traitId");
       const updated = await db
         .update(traits)
-        .set({ isPublished: false })
+        .set({ isPublished: false, publishedAt: null })
         .where(
           and(
             eq(traits.id, traitId),
@@ -582,7 +582,7 @@ router.post(
       const itemId = getRequiredParam(req.params.id, "itemId");
       const updated = await db
         .update(items)
-        .set({ isPublished: true })
+        .set({ isPublished: true, publishedAt: sql`now()` })
         .where(
           and(
             eq(items.id, itemId),
@@ -627,7 +627,7 @@ router.post(
       const itemId = getRequiredParam(req.params.id, "itemId");
       const updated = await db
         .update(items)
-        .set({ isPublished: false })
+        .set({ isPublished: false, publishedAt: null })
         .where(
           and(
             eq(items.id, itemId),

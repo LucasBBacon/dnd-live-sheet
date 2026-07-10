@@ -36,6 +36,27 @@
       "when": 1783707300000,
       "tag": "0004_quick_lightspeed",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1783710000000,
+      "tag": "0005_steady_lifeline",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1783796400000,
+      "tag": "0006_bright_rollback_telemetry",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1783800000000,
+      "tag": "0007_durable_rollback_ledger",
+      "breakpoints": true
     }
   ]
 }

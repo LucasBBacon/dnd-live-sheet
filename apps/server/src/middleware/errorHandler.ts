@@ -1,6 +1,8 @@
 import type { Request, Response, NextFunction } from "express";
 import { ZodError } from "zod";
 
+type StatusCodeError = Error & { statusCode?: number };
+
 export const globalErrorHandler = (
   err: Error,
   req: Request,
@@ -22,6 +24,18 @@ export const globalErrorHandler = (
     return res.status(400).json({
       error: "Validation Failed",
       details: err.flatten(),
+    });
+  }
+
+  if (
+    err &&
+    typeof err === "object" &&
+    "statusCode" in err &&
+    typeof (err as StatusCodeError).statusCode === "number"
+  ) {
+    return res.status((err as StatusCodeError).statusCode!).json({
+      error: err.name,
+      message: err.message,
     });
   }
 
