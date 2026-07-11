@@ -1,4 +1,5 @@
 import {
+  type InventorySyncPayload,
   type MaybeServerBroadcastPayload,
   type RoomJoinPayload,
   SOCKET_EVENTS,
@@ -9,6 +10,12 @@ import {
   unwrapServerBroadcastPayload,
 } from "@project/shared";
 import { io, type Socket } from "socket.io-client";
+
+export type SocketActionErrorPayload = {
+  event?: string;
+  error: string;
+  payload?: unknown;
+};
 
 class SocketManager {
   private socket: Socket | null = null;
@@ -61,6 +68,17 @@ class SocketManager {
     );
   }
 
+  public subscribeToInventorySnapshot(
+    callback: (payload: InventorySyncPayload) => void,
+  ) {
+    this.socket?.on(
+      SOCKET_EVENTS.INVENTORY_SYNC,
+      (payload: MaybeServerBroadcastPayload<InventorySyncPayload>) => {
+        callback(unwrapServerBroadcastPayload(payload));
+      },
+    );
+  }
+
   public emitInventoryConsumed(payload: ItemConsumedPayload) {
     this.socket?.emit(SOCKET_EVENTS.ITEM_CONSUMED, payload);
   }
@@ -89,6 +107,14 @@ class SocketManager {
         callback(unwrapServerBroadcastPayload(payload));
       },
     );
+  }
+
+  public subscribeToActionErrors(
+    callback: (payload: SocketActionErrorPayload) => void,
+  ) {
+    this.socket?.on("action_error", (payload: SocketActionErrorPayload) => {
+      callback(payload);
+    });
   }
 
   public emitRestCompleted(payload: {

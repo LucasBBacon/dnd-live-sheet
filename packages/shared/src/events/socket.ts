@@ -2,6 +2,7 @@
 
 export const SOCKET_EVENTS = {
   ROOM_JOIN: "room:join",
+  INVENTORY_SYNC: "character:inventory_sync",
   HP_MODIFIED: "character:hp_modified",
   ITEM_EQUIPPED: "character:item_equipped",
   ITEM_CONSUMED: "character:item_consumed",
@@ -24,6 +25,20 @@ export interface HpModifiedPayload {
   delta: number; // e.g., -5 dmg, +8 healing
   source: string; // e.g., 'Fireball', 'Potion of Healing'
   timestamp: number;
+}
+
+export interface InventorySyncItem {
+  id: string;
+  itemId: string;
+  quantity: number;
+  slot: string;
+  isAttuned: boolean;
+  requiresAttunement?: boolean;
+}
+
+export interface InventorySyncPayload {
+  characterId: string;
+  inventory: InventorySyncItem[];
 }
 
 export interface ItemEquippedPayload {

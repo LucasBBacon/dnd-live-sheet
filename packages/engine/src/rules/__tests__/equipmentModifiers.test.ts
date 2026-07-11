@@ -7,9 +7,9 @@ describe("ITEM_DICTIONARY", () => {
       "item_armor_leather",
       "item_armor_padded",
       "item_armor_plate",
+      "item_armor_shield",
       "item_armor_studded_leather",
       "item_ring_of_protection",
-      "item_shield",
     ]);
   });
 
@@ -44,7 +44,7 @@ describe("ITEM_DICTIONARY", () => {
   });
 
   it("defines shield AC bonus rule", () => {
-    const mods = ITEM_DICTIONARY.item_shield.modifiers;
+    const mods = ITEM_DICTIONARY.item_armor_shield.modifiers;
     expect(mods).toEqual([
       {
         target: "ARMOR_CLASS",

@@ -20,7 +20,7 @@ export type CharacterSheetPayload = {
   int: number;
   wis: number;
   cha: number;
-  inventory?: OperationalInventoryItem[];
+  inventory: OperationalInventoryItem[];
   proficiencies?: Record<string, ProficiencyLevel>;
   currentHp: number;
   maxHp: number;
@@ -79,7 +79,7 @@ export const hydrateCharacterSheet = (
       wis: character.wis,
       cha: character.cha,
     },
-    inventory: character.inventory || [],
+    inventory: character.inventory,
     proficiencies: character.proficiencies || {},
     currentHp: character.currentHp,
     maxHp: character.maxHp,

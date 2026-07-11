@@ -1,10 +1,13 @@
 import { db } from "@project/database";
 import {
+  EQUIPMENT_SLOTS,
   characterInventory,
   characterResources,
   characters,
 } from "@project/database/src/schema/operational.js";
+import { items } from "@project/database/src/schema/reference.js";
 import {
+  type InventorySyncPayload,
   type RoomJoinPayload,
   SOCKET_EVENTS,
   type HpModifiedPayload,
@@ -19,6 +22,37 @@ import {
   getCampaignMembershipRole,
   getUserIdFromSocket,
 } from "../services/campaignAccess.js";
+
+const EQUIPMENT_SLOT_SET = new Set(EQUIPMENT_SLOTS);
+
+const inferItemTypeFromId = (
+  itemId: string,
+): "armor" | "weapon" | "consumable" | "gear" => {
+  if (itemId.startsWith("item_weapon_")) return "weapon";
+  if (itemId.startsWith("item_armor_")) return "armor";
+  return "gear";
+};
+
+const isValidTargetSlotForItem = (
+  itemId: string,
+  itemType: "armor" | "weapon" | "consumable" | "gear",
+  targetSlot: string,
+): boolean => {
+  if (targetSlot === "backpack") return true;
+
+  if (itemType === "weapon") {
+    return targetSlot === "main_hand" || targetSlot === "off_hand";
+  }
+
+  if (itemType === "armor") {
+    if (itemId === "item_armor_shield") {
+      return targetSlot === "off_hand";
+    }
+    return targetSlot === "armor";
+  }
+
+  return false;
+};
 
 type SocketDataContext = {
   campaignId?: string;
@@ -70,8 +104,11 @@ export function initializeWebSocketGateway(httpServer: any) {
     socket.on(
       SOCKET_EVENTS.ROOM_JOIN,
       async (payload: string | RoomJoinPayload) => {
-        const campaignId =
-          typeof payload === "string" ? payload : payload.campaignId;
+        const roomJoinPayload: RoomJoinPayload =
+          typeof payload === "string"
+            ? { campaignId: payload }
+            : payload;
+        const { campaignId, characterId } = roomJoinPayload;
 
         const userId = getUserIdFromSocket(socket);
         if (!userId) {
@@ -100,6 +137,35 @@ export function initializeWebSocketGateway(httpServer: any) {
         socket.join(`campaign_${campaignId}`);
         setSocketContext(socket, { campaignId, userId });
         console.log(`Socket ${socket.id} joined campaign_${campaignId}`);
+
+        // Emit an authoritative inventory snapshot to the joining client.
+        // Runtime inventory source-of-truth is operational character_inventory.
+        if (characterId) {
+          const scopedCampaignId = await ensureCharacterInSocketCampaign(
+            socket,
+            characterId,
+          );
+          const inventory = await db
+            .select({
+              id: characterInventory.id,
+              itemId: characterInventory.itemId,
+              quantity: characterInventory.quantity,
+              slot: characterInventory.slot,
+              isAttuned: characterInventory.isAttuned,
+            })
+            .from(characterInventory)
+            .where(eq(characterInventory.characterId, characterId));
+
+          const inventorySyncPayload: InventorySyncPayload = {
+            characterId,
+            inventory,
+          };
+
+          socket.emit(SOCKET_EVENTS.INVENTORY_SYNC, inventorySyncPayload);
+          console.log(
+            `Socket ${socket.id} synced inventory for ${characterId} in campaign_${scopedCampaignId}`,
+          );
+        }
       },
     );
 
@@ -151,6 +217,45 @@ export function initializeWebSocketGateway(httpServer: any) {
           );
 
           await db.transaction(async (tx) => {
+            if (!EQUIPMENT_SLOT_SET.has(payload.targetSlot as any)) {
+              throw new Error("Invalid equipment slot target.");
+            }
+
+            const [inventoryItem] = await tx
+              .select({
+                itemId: characterInventory.itemId,
+                itemRule: items.itemRule,
+              })
+              .from(characterInventory)
+              .innerJoin(items, eq(characterInventory.itemId, items.id))
+              .where(
+                and(
+                  eq(characterInventory.id, payload.inventoryId),
+                  eq(characterInventory.characterId, payload.characterId),
+                ),
+              )
+              .limit(1);
+
+            if (!inventoryItem) {
+              throw new Error("Inventory item not found for character.");
+            }
+
+            const itemType =
+              (inventoryItem.itemRule as { type?: string } | null)?.type ??
+              inferItemTypeFromId(inventoryItem.itemId);
+
+            if (
+              !isValidTargetSlotForItem(
+                inventoryItem.itemId,
+                itemType as "armor" | "weapon" | "consumable" | "gear",
+                payload.targetSlot,
+              )
+            ) {
+              throw new Error(
+                `Invalid slot '${payload.targetSlot}' for item '${inventoryItem.itemId}'.`,
+              );
+            }
+
             // 1 - resolve contention
             // if equipping to an active body slot (not just unequip from backpack)
             // automatically sweep any existing item in that slot back to the backpack

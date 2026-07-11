@@ -96,8 +96,15 @@ Package-specific examples:
 
 - `pnpm --filter @project/server build`
 - `pnpm --filter @project/server test`
+- `pnpm --filter @project/server seed:dev-inventory -- --characterId=<uuid>`
 - `pnpm --filter @project/web test`
 - `pnpm --filter @project/database db:studio`
+
+Dev inventory fixture notes:
+
+- The dev inventory fixture seeds one equipped armour item, one melee weapon, one ranged weapon, and one non-equippable gear item.
+- Runtime inventory source of truth is `character_inventory` (operational layer).
+- Cached database rule snapshots provide item metadata only and do not own inventory quantities or slot state.
 
 ## API summary (current)
 

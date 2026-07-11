@@ -12,6 +12,11 @@ export const DashboardLayout = () => {
     (state) => state.applyHealthDelta,
   );
   const equipItem = useCharacterSheetStore((state) => state.equipItem);
+  const consumeItem = useCharacterSheetStore((state) => state.consumeItem);
+  const inventoryError = useCharacterSheetStore((state) => state.inventoryError);
+  const setInventoryError = useCharacterSheetStore(
+    (state) => state.setInventoryError,
+  );
   const beginLevelUp = useLevelUpStore((state) => state.beginLevelUp);
 
   const { armorClass, skills, initiative } = useDerivedStats();
@@ -33,6 +38,70 @@ export const DashboardLayout = () => {
 
   const [hpInput, setHpInput] = useState(1);
   const [isRestModalOpen, setIsRestModalOpen] = useState(false);
+
+  const inferItemTypeFromId = (
+    itemId: string,
+  ): "armor" | "weapon" | "consumable" | "gear" => {
+    if (itemId.startsWith("item_weapon_")) return "weapon";
+    if (itemId.startsWith("item_armor_")) return "armor";
+    return "gear";
+  };
+
+  const getAllowedSlots = (itemId: string, itemType: string): string[] => {
+    if (itemType === "weapon") {
+      return ["backpack", "main_hand", "off_hand"];
+    }
+
+    if (itemType === "armor") {
+      if (itemId === "item_armor_shield") {
+        return ["backpack", "off_hand"];
+      }
+      return ["backpack", "armor"];
+    }
+
+    return ["backpack"];
+  };
+
+  const getSlotLabel = (slot: string): string => {
+    switch (slot) {
+      case "main_hand":
+        return "Main Hand";
+      case "off_hand":
+        return "Off Hand";
+      case "armor":
+        return "Armor";
+      case "backpack":
+        return "Backpack";
+      default:
+        return slot;
+    }
+  };
+
+  const inventoryRows = useMemo(() => {
+    const itemsById = character.ruleSnapshot?.itemsById ?? {};
+
+    return character.inventory.map((item) => {
+      const itemMeta = itemsById[item.itemId];
+      const type = itemMeta?.type ?? inferItemTypeFromId(item.itemId);
+      const allowedSlots = getAllowedSlots(item.itemId, type);
+      return {
+        ...item,
+        itemName: itemMeta?.name ?? item.itemId,
+        itemType: type,
+        allowedSlots,
+      };
+    });
+  }, [character.inventory, character.ruleSnapshot]);
+
+  const equippedItems = useMemo(
+    () => inventoryRows.filter((item) => item.slot !== "backpack"),
+    [inventoryRows],
+  );
+
+  const backpackItems = useMemo(
+    () => inventoryRows.filter((item) => item.slot === "backpack"),
+    [inventoryRows],
+  );
 
   return (
     <div className="h-screen w-full bg-gray-100 p-4 font-mono text-sm overflow-hidden flex flex-col">
@@ -193,34 +262,117 @@ export const DashboardLayout = () => {
       </div>
 
       {/* CARGO HOLD */}
-      <section className="mt-4 bg-white border-2 border-gray-300 p-4 rounded h-48 overflow-y-auto">
+      <section className="mt-4 bg-white border-2 border-gray-300 p-4 rounded h-56 overflow-y-auto">
         <h2 className="font-bold border-b-2 border-gray-800 pb-1 mb-4 uppercase">
           Inventory Manager (DEV MODE)
         </h2>
-        <div className="grid grid-cols-3 gap-4">
-          {character.inventory.map((item) => (
-            <div
-              key={item.id}
-              className="border p-2 rounded flex justify-between items-center bg-gray-50"
+
+        {inventoryError && (
+          <div className="mb-3 bg-red-50 border border-red-200 rounded p-2 flex items-center justify-between gap-3">
+            <span className="text-xs text-red-700">{inventoryError}</span>
+            <button
+              onClick={() => setInventoryError(null)}
+              className="text-xs px-2 py-1 rounded border bg-white hover:bg-gray-100"
             >
-              <div>
-                <div className="font-bold text-sm">{item.itemId}</div>
-                <div className="text-xs text-gray-500">
-                  Qty: {item.quantity} | Slot: {item.slot}
+              Dismiss
+            </button>
+          </div>
+        )}
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <div>
+            <h3 className="text-xs font-bold uppercase text-gray-600 mb-2">
+              Equipped
+            </h3>
+            <div className="space-y-2">
+              {equippedItems.length === 0 && (
+                <div className="text-xs text-gray-500 border border-dashed border-gray-300 rounded p-2">
+                  No equipped items.
                 </div>
-              </div>
-              <select
-                value={item.slot}
-                onChange={(e) => equipItem(item.id, e.target.value)}
-                className="border text-xs p-1 rounded cursor-pointer"
-              >
-                <option value="backpack">Backpack</option>
-                <option value="main_hand">Main Hand</option>
-                <option value="off_hand">Off Hand</option>
-                <option value="armor">Armor</option>
-              </select>
+              )}
+              {equippedItems.map((item) => (
+                <div
+                  key={item.id}
+                  className="border p-2 rounded flex justify-between items-center bg-gray-50 gap-3"
+                >
+                  <div className="min-w-0">
+                    <div className="font-bold text-sm truncate">{item.itemName}</div>
+                    <div className="text-xs text-gray-500">
+                      {item.itemType.toUpperCase()} | Qty: {item.quantity} | Slot: {getSlotLabel(item.slot)}
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <select
+                      value={item.slot}
+                      onChange={(e) => equipItem(item.id, e.target.value)}
+                      className="border text-xs p-1 rounded cursor-pointer"
+                    >
+                      {item.allowedSlots.map((slot) => (
+                        <option key={slot} value={slot}>
+                          {getSlotLabel(slot)}
+                        </option>
+                      ))}
+                    </select>
+                    <button
+                      onClick={() => equipItem(item.id, "backpack")}
+                      className="text-xs px-2 py-1 rounded border bg-white hover:bg-gray-100"
+                    >
+                      Stow
+                    </button>
+                  </div>
+                </div>
+              ))}
             </div>
-          ))}
+          </div>
+
+          <div>
+            <h3 className="text-xs font-bold uppercase text-gray-600 mb-2">
+              Backpack
+            </h3>
+            <div className="space-y-2">
+              {backpackItems.length === 0 && (
+                <div className="text-xs text-gray-500 border border-dashed border-gray-300 rounded p-2">
+                  Backpack is empty.
+                </div>
+              )}
+              {backpackItems.map((item) => (
+                <div
+                  key={item.id}
+                  className="border p-2 rounded flex justify-between items-center bg-gray-50 gap-3"
+                >
+                  <div className="min-w-0">
+                    <div className="font-bold text-sm truncate">{item.itemName}</div>
+                    <div className="text-xs text-gray-500">
+                      {item.itemType.toUpperCase()} | Qty: {item.quantity}
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <select
+                      value={item.slot}
+                      onChange={(e) => equipItem(item.id, e.target.value)}
+                      className="border text-xs p-1 rounded cursor-pointer"
+                    >
+                      {item.allowedSlots.map((slot) => (
+                        <option key={slot} value={slot}>
+                          {getSlotLabel(slot)}
+                        </option>
+                      ))}
+                    </select>
+                    {item.itemType === "consumable" && (
+                      <button
+                        onClick={() => consumeItem(item.id, 1)}
+                        className="text-xs px-2 py-1 rounded border bg-white hover:bg-gray-100"
+                      >
+                        Use 1
+                      </button>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       </section>
 

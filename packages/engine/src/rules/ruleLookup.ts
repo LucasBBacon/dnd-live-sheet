@@ -10,32 +10,13 @@ type RuleSnapshotLookup = {
   resourcesById?: Record<string, ResourceRule>;
 };
 
-const LEGACY_ITEM_ALIASES: Record<string, string> = {
-  item_shield: "item_armor_shield",
-  item_chain_mail: "item_armor_chain_mail",
-  item_arrow: "item_ammo_arrow",
-};
-
-const LEGACY_WEAPON_ALIASES: Record<string, string> = {
-  item_longsword: "item_weapon_longsword",
-  item_longbow: "item_weapon_longbow",
-  item_dagger: "item_weapon_dagger",
-};
-
-const resolveWithAlias = <T>(
+const resolveFromMap = <T>(
   id: string,
   byId: Record<string, T> | undefined,
-  aliases: Record<string, string>,
 ): T | undefined => {
   if (!byId) return undefined;
 
-  const direct = byId[id];
-  if (direct) return direct;
-
-  const canonicalId = aliases[id];
-  if (!canonicalId) return undefined;
-
-  return byId[canonicalId];
+  return byId[id];
 };
 
 export const resolveItemDefinition = (
@@ -43,8 +24,8 @@ export const resolveItemDefinition = (
   snapshot?: RuleSnapshotLookup,
 ): ItemDefinition | undefined => {
   return (
-    resolveWithAlias(itemId, snapshot?.itemsById, LEGACY_ITEM_ALIASES) ??
-    resolveWithAlias(itemId, ITEM_DICTIONARY, LEGACY_ITEM_ALIASES)
+    resolveFromMap(itemId, snapshot?.itemsById) ??
+    resolveFromMap(itemId, ITEM_DICTIONARY)
   );
 };
 
@@ -53,8 +34,8 @@ export const resolveWeaponDefinition = (
   snapshot?: RuleSnapshotLookup,
 ): WeaponDefinition | undefined => {
   return (
-    resolveWithAlias(weaponId, snapshot?.weaponsById, LEGACY_WEAPON_ALIASES) ??
-    resolveWithAlias(weaponId, WEAPON_DICTIONARY, LEGACY_WEAPON_ALIASES)
+    resolveFromMap(weaponId, snapshot?.weaponsById) ??
+    resolveFromMap(weaponId, WEAPON_DICTIONARY)
   );
 };
 

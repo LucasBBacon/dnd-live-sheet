@@ -54,20 +54,12 @@ describe("extractItemsForMigration", () => {
     ]);
   });
 
-  it("includes expected compatibility aliases", () => {
+  it("returns extraction payload without legacy alias tables", () => {
     const result = extractItemsForMigration([]);
 
-    expect(result.legacyItemAliases).toMatchObject({
-      item_shield: "item_armor_shield",
-      item_chain_mail: "item_armor_chain_mail",
-      item_arrow: "item_ammo_arrow",
-    });
-
-    expect(result.legacyWeaponAliases).toMatchObject({
-      item_longsword: "item_weapon_longsword",
-      item_longbow: "item_weapon_longbow",
-      item_dagger: "item_weapon_dagger",
-    });
+    expect(result.seedItems).toEqual([]);
+    expect(result.bundleContents).toEqual([]);
+    expect(result.diagnostics.duplicateIds).toEqual([]);
   });
 
   it("adds manual ring of protection rule override", () => {

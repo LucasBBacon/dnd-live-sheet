@@ -557,7 +557,7 @@ export const backgroundTraits = pgTable(
 export const items = pgTable(
   "items",
   {
-    id: varchar("id", { length: 100 }).primaryKey(), // e.g., 'item_longbow', 'item_pack_explorers'
+    id: varchar("id", { length: 100 }).primaryKey(), // e.g., 'item_weapon_longbow', 'item_pack_explorers'
     name: varchar("name", { length: 255 }).notNull(),
 
     // weight stored in ounces or fractions to avoid floating point math errors

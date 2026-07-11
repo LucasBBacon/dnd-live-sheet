@@ -20,8 +20,14 @@ export const LiveSheetProvider = ({
   const syncRemoteEquipment = useCharacterSheetStore(
     (state) => state.syncRemoteEquipment,
   );
+  const syncInventorySnapshot = useCharacterSheetStore(
+    (state) => state.syncInventorySnapshot,
+  );
   const syncRemoteConsumption = useCharacterSheetStore(
     (state) => state.syncRemoteConsumption,
+  );
+  const setInventoryError = useCharacterSheetStore(
+    (state) => state.setInventoryError,
   );
 
   useEffect(() => {
@@ -38,8 +44,21 @@ export const LiveSheetProvider = ({
       syncRemoteEquipment(broadcast.inventoryId, broadcast.targetSlot);
     });
 
+    socketService.subscribeToInventorySnapshot((payload) => {
+      syncInventorySnapshot(payload.inventory);
+    });
+
     socketService.subscribeToItemConsumed((broadcast) => {
       syncRemoteConsumption(broadcast.inventoryId, broadcast.amount);
+    });
+
+    socketService.subscribeToActionErrors((payload) => {
+      if (
+        payload.event === "character:item_equipped" ||
+        payload.event === "character:item_consumed"
+      ) {
+        setInventoryError(payload.error);
+      }
     });
 
     // cleanup on dismount
@@ -52,7 +71,9 @@ export const LiveSheetProvider = ({
     characterId,
     syncRemoteHealthDelta,
     syncRemoteEquipment,
+    syncInventorySnapshot,
     syncRemoteConsumption,
+    setInventoryError,
   ]);
 
   return <>{children}</>;

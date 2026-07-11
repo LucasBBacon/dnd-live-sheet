@@ -10,7 +10,7 @@ describe("InventoryBridge.compileEquipmentModifiers", () => {
     const result = InventoryBridge.compileEquipmentModifiers([
       {
         id: "inst_1",
-        itemId: "item_shield",
+        itemId: "item_armor_shield",
         slot: "backpack",
         isAttuned: false,
       },
@@ -29,7 +29,7 @@ describe("InventoryBridge.compileEquipmentModifiers", () => {
     const result = InventoryBridge.compileEquipmentModifiers([
       {
         id: "shield_1",
-        itemId: "item_shield",
+        itemId: "item_armor_shield",
         slot: "off_hand",
         isAttuned: false,
       },
@@ -44,12 +44,12 @@ describe("InventoryBridge.compileEquipmentModifiers", () => {
     expect(result).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          id: "shield_1_item_shield_0",
+          id: "shield_1_item_armor_shield_0",
           target: "ARMOR_CLASS",
           type: "add",
           value: 2,
           sourceName: "Shield",
-          sourceOrigin: "item:item_shield",
+          sourceOrigin: "item:item_armor_shield",
           scalingFactor: "none",
           isActive: true,
         }),

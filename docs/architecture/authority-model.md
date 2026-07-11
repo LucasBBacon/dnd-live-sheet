@@ -93,6 +93,17 @@ Why:
 
 Entries are versioned against `referenceCache` version. Any homebrew write lifecycle action (create/update/publish/archive) invalidates reference cache, which invalidates dependent scoped snapshots via version mismatch.
 
+## Inventory authority boundary
+
+Runtime inventory state is authoritative in operational table `character_inventory`.
+
+Source-of-truth rules:
+
+- slot placement, stack quantity, and attunement state must be read/written from `character_inventory`;
+- socket inventory sync payloads are materialised from `character_inventory` rows;
+- cached rule snapshots (`referenceCache` and effective scoped snapshots) are metadata-only for item and weapon rules;
+- cached snapshots do not own runtime inventory quantities or equipment slot state.
+
 ## Invalidation strategy
 
 Current:

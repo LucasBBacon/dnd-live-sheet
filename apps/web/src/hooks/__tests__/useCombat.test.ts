@@ -57,7 +57,7 @@ describe("useCombat", () => {
     mockStoreState.inventory = [
       {
         id: "inv_2",
-        itemId: "item_longsword",
+        itemId: "item_weapon_longsword",
         quantity: 1,
         slot: "main_hand",
         isAttuned: false,
@@ -71,7 +71,7 @@ describe("useCombat", () => {
 
     expect(attacks).toHaveLength(1);
     expect(attacks[0]).toMatchObject({
-      weaponId: "item_longsword",
+      weaponId: "item_weapon_longsword",
       name: "Longsword",
       slot: "main_hand",
       requiresAmmo: false,
@@ -85,7 +85,7 @@ describe("useCombat", () => {
     mockStoreState.inventory = [
       {
         id: "inv_1",
-        itemId: "item_chain_mail",
+        itemId: "item_armor_chain_mail",
         quantity: 1,
         slot: "main_hand",
         isAttuned: false,

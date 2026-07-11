@@ -8,7 +8,7 @@ import {
 describe("Weapon Definition Schema", () => {
   it("accepts a valid weapon definition", () => {
     const weapon = {
-      id: "item_longsword",
+      id: "item_weapon_longsword",
       name: "Longsword",
       category: "martial_melee",
       damageDice: "1d8",
@@ -21,7 +21,7 @@ describe("Weapon Definition Schema", () => {
 
   it("accepts loading and special properties", () => {
     const weapon = {
-      id: "item_crossbow_heavy",
+      id: "item_weapon_crossbow_heavy",
       name: "Heavy Crossbow",
       category: "martial_ranged",
       damageDice: "1d10",
@@ -68,8 +68,8 @@ describe("Rule Snapshot Schema", () => {
   it("accepts a transport-safe snapshot", () => {
     const snapshot = {
       itemsById: {
-        item_shield: {
-          id: "item_shield",
+        item_armor_shield: {
+          id: "item_armor_shield",
           name: "Shield",
           type: "armor",
           modifiers: [
@@ -109,8 +109,8 @@ describe("Rule Snapshot Schema", () => {
         },
       },
       weaponsById: {
-        item_dagger: {
-          id: "item_dagger",
+        item_weapon_dagger: {
+          id: "item_weapon_dagger",
           name: "Dagger",
           category: "simple_melee",
           damageDice: "1d4",

@@ -5,6 +5,7 @@ import {
   campaigns,
   characterClasses,
   characterCustomTraits,
+  characterInventory,
   characterTraits,
   characters,
 } from "@project/database/src/schema/operational.js";
@@ -91,12 +92,24 @@ const fetchCharacterPayload = async (userId: string, characterId: string) => {
     .from(characterTraits)
     .where(eq(characterTraits.characterId, characterId));
 
+  const inventory = await db
+    .select({
+      id: characterInventory.id,
+      itemId: characterInventory.itemId,
+      quantity: characterInventory.quantity,
+      slot: characterInventory.slot,
+      isAttuned: characterInventory.isAttuned,
+    })
+    .from(characterInventory)
+    .where(eq(characterInventory.characterId, characterId));
+
   return {
     ...character,
     classLevels: Object.fromEntries(
       classLedger.map((entry) => [entry.classId, entry.classLevel]),
     ),
     traitGrants,
+    inventory,
   };
 };
 

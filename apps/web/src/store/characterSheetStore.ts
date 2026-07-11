@@ -1,15 +1,58 @@
 import {
   RestEngine,
-  type RuleSnapshot,
   type Ability,
   type OperationalInventoryItem,
   type OperationalResource,
   type ProficiencyLevel,
   type TraitDefinition,
 } from "@project/engine";
-import type { RuntimeModifier } from "@project/shared";
+import type { RuleSnapshot, RuntimeModifier } from "@project/shared";
 import { create } from "zustand";
 import { socketService } from "../services/socketService";
+
+const EQUIPMENT_SLOT_SET = new Set([
+  "backpack",
+  "main_hand",
+  "off_hand",
+  "armor",
+  "head",
+  "cloak",
+  "ring_1",
+  "ring_2",
+  "amulet",
+  "boots",
+  "gloves",
+]);
+
+const inferItemTypeFromId = (
+  itemId: string,
+): "armor" | "weapon" | "consumable" | "gear" => {
+  if (itemId.startsWith("item_weapon_")) return "weapon";
+  if (itemId.startsWith("item_armor_")) return "armor";
+  return "gear";
+};
+
+const isValidTargetSlotForItem = (
+  itemId: string,
+  itemType: "armor" | "weapon" | "consumable" | "gear",
+  targetSlot: string,
+): boolean => {
+  if (!EQUIPMENT_SLOT_SET.has(targetSlot)) return false;
+  if (targetSlot === "backpack") return true;
+
+  if (itemType === "weapon") {
+    return targetSlot === "main_hand" || targetSlot === "off_hand";
+  }
+
+  if (itemType === "armor") {
+    if (itemId === "item_armor_shield") {
+      return targetSlot === "off_hand";
+    }
+    return targetSlot === "armor";
+  }
+
+  return false;
+};
 
 export interface CharacterSheetState {
   id: string;
@@ -38,6 +81,7 @@ export interface CharacterSheetState {
 
   // operational inventory
   inventory: OperationalInventoryItem[];
+  inventoryError: string | null;
 
   // transient or spell based mods
   activeModifiers: RuntimeModifier[];
@@ -52,9 +96,11 @@ export interface CharacterSheetState {
   syncRemoteHealthDelta: (delta: number) => void;
 
   equipItem: (inventoryId: string, targetSlot: string) => void;
+  syncInventorySnapshot: (inventory: OperationalInventoryItem[]) => void;
   syncRemoteEquipment: (inventoryId: string, targetSlot: string) => void;
   consumeItem: (inventoryId: string, amount: number) => void;
   syncRemoteConsumption: (inventoryId: string, amount: number) => void;
+  setInventoryError: (message: string | null) => void;
 
   consumeResource: (resourceId: string, amount?: number) => void;
   syncRemoteResource: (resourceId: string, amount: number) => void;
@@ -81,6 +127,7 @@ export const useCharacterSheetStore = create<CharacterSheetState>(
     traits: [],
     traitGrants: [],
     inventory: [],
+    inventoryError: null,
     activeModifiers: [],
     resources: [],
     ruleSnapshot: null,
@@ -113,6 +160,19 @@ export const useCharacterSheetStore = create<CharacterSheetState>(
 
     equipItem: (inventoryId, targetSlot) => {
       const state = get();
+      const inventoryItem = state.inventory.find((item) => item.id === inventoryId);
+
+      if (!inventoryItem) {
+        return;
+      }
+
+      const itemType =
+        state.ruleSnapshot?.itemsById?.[inventoryItem.itemId]?.type ??
+        inferItemTypeFromId(inventoryItem.itemId);
+
+      if (!isValidTargetSlotForItem(inventoryItem.itemId, itemType, targetSlot)) {
+        return;
+      }
 
       // optimistically resolve slot contention locally
       const updatedInventory = state.inventory.map((item) => {
@@ -128,7 +188,7 @@ export const useCharacterSheetStore = create<CharacterSheetState>(
       });
 
       // update local state instantly 0-latency
-      set({ inventory: updatedInventory });
+      set({ inventory: updatedInventory, inventoryError: null });
 
       // dispatch to backend for persistence and broadcasting
       socketService.emitInventoryUpdate({
@@ -137,6 +197,10 @@ export const useCharacterSheetStore = create<CharacterSheetState>(
         targetSlot,
         timestamp: Date.now(),
       });
+    },
+
+    syncInventorySnapshot: (inventory) => {
+      set({ inventory });
     },
 
     syncRemoteEquipment: (inventoryId, targetSlot) => {
@@ -170,7 +234,7 @@ export const useCharacterSheetStore = create<CharacterSheetState>(
         })
         .filter((item) => item.quantity > 0); // strip it out if it hits 0
 
-      set({ inventory: updatedInventory });
+      set({ inventory: updatedInventory, inventoryError: null });
 
       socketService.emitInventoryConsumed({
         characterId: state.id,
@@ -191,6 +255,10 @@ export const useCharacterSheetStore = create<CharacterSheetState>(
         .filter((item) => item.quantity > 0);
 
       set({ inventory: updatedInventory });
+    },
+
+    setInventoryError: (message) => {
+      set({ inventoryError: message });
     },
 
     consumeResource: (resourceId, amount = 1) => {

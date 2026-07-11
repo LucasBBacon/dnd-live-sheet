@@ -7,13 +7,13 @@ import {
 } from "../ruleLookup.js";
 
 describe("ruleLookup", () => {
-  it("resolves legacy item ids via static aliases", () => {
-    const shield = resolveItemDefinition("item_shield");
+  it("resolves canonical item ids via static dictionary", () => {
+    const shield = resolveItemDefinition("item_armor_shield");
     expect(shield?.name).toBe("Shield");
   });
 
   it("prefers snapshot item definitions over static dictionary entries", () => {
-    const item = resolveItemDefinition("item_shield", {
+    const item = resolveItemDefinition("item_armor_shield", {
       itemsById: {
         item_armor_shield: {
           id: "item_armor_shield",
@@ -35,8 +35,8 @@ describe("ruleLookup", () => {
     expect(item?.modifiers?.[0]?.value).toBe(3);
   });
 
-  it("resolves legacy weapon ids via snapshot aliases", () => {
-    const weapon = resolveWeaponDefinition("item_longsword", {
+  it("resolves canonical weapon ids via snapshot", () => {
+    const weapon = resolveWeaponDefinition("item_weapon_longsword", {
       weaponsById: {
         item_weapon_longsword: {
           id: "item_weapon_longsword",

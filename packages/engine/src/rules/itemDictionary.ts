@@ -73,8 +73,8 @@ export const ITEM_DICTIONARY: Record<string, ItemDefinition> = {
     ],
   },
 
-  item_shield: {
-    id: "item_shield",
+  item_armor_shield: {
+    id: "item_armor_shield",
     name: "Shield",
     type: "armor",
     modifiers: [

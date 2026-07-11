@@ -68,8 +68,6 @@ export type ItemsExtractionResult = {
   bundleContents: ExtractedBundleContent[];
   itemRulesById: Record<string, ItemDefinition>;
   weaponRulesById: Record<string, WeaponDefinition>;
-  legacyItemAliases: Record<string, string>;
-  legacyWeaponAliases: Record<string, string>;
   diagnostics: ItemsExtractionDiagnostics;
 };
 
@@ -89,18 +87,6 @@ const SUPPORTED_WEAPON_PROPERTIES = new Set([
   "loading",
   "special",
 ]);
-
-const LEGACY_ITEM_ALIASES: Record<string, string> = {
-  item_shield: "item_armor_shield",
-  item_chain_mail: "item_armor_chain_mail",
-  item_arrow: "item_ammo_arrow",
-};
-
-const LEGACY_WEAPON_ALIASES: Record<string, string> = {
-  item_longsword: "item_weapon_longsword",
-  item_longbow: "item_weapon_longbow",
-  item_dagger: "item_weapon_dagger",
-};
 
 const toStringOrUndefined = (value: unknown): string | undefined =>
   typeof value === "string" && value.trim().length > 0
@@ -381,8 +367,6 @@ export const extractItemsForMigration = (
     bundleContents,
     itemRulesById,
     weaponRulesById,
-    legacyItemAliases: LEGACY_ITEM_ALIASES,
-    legacyWeaponAliases: LEGACY_WEAPON_ALIASES,
     diagnostics,
   };
 };
