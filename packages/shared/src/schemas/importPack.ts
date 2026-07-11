@@ -1,8 +1,13 @@
 import { z } from "zod";
 import { TraitEffectSchema } from "./effects.js";
-import { ClassMulticlassPrerequisitesSchema, FeatPrerequisitesSchema } from "./prerequisites.js";
+import {
+  ClassMulticlassPrerequisitesSchema,
+  FeatPrerequisitesSchema,
+} from "./prerequisites.js";
 import { ItemDefinitionSchema } from "./items.js";
 import { WeaponDefinitionSchema } from "./rules.js";
+
+// #region Import Pack Schemas
 
 const ImportIdSchema = z
   .string()
@@ -30,7 +35,9 @@ export const ImportPackMetadataSchema = z
     packId: ImportIdSchema,
     name: z.string().min(1).max(255),
     description: z.string().max(2000).optional(),
-    schemaVersion: z.string().regex(/^\d+\.\d+\.\d+$/, "Use semver format x.y.z."),
+    schemaVersion: z
+      .string()
+      .regex(/^\d+\.\d+\.\d+$/, "Use semver format x.y.z."),
     sourceType: ImportSourceTypeSchema,
     ownerCampaignId: z.uuid().optional(),
     ownerCharacterId: z.uuid().optional(),
@@ -53,7 +60,8 @@ export const ImportPackMetadataSchema = z
         ctx.addIssue({
           code: "custom",
           path: ["sourceType"],
-          message: "Core imports cannot declare campaign or character ownership.",
+          message:
+            "Core imports cannot declare campaign or character ownership.",
         });
       }
 
@@ -61,7 +69,8 @@ export const ImportPackMetadataSchema = z
         ctx.addIssue({
           code: "custom",
           path: ["publishMode"],
-          message: "Core imports must be published to satisfy reference scope constraints.",
+          message:
+            "Core imports must be published to satisfy reference scope constraints.",
         });
       }
     }
@@ -85,6 +94,10 @@ export const ImportPackMetadataSchema = z
     }
   });
 
+// #endregion
+
+// #region Import Entity Schemas
+
 export const ImportEntityOperationSchema = z.enum([
   "insert",
   "upsert",
@@ -93,6 +106,10 @@ export const ImportEntityOperationSchema = z.enum([
 ]);
 
 export const ImportRelationOperationSchema = z.enum(["add", "remove"]);
+
+// #endregion
+
+// #region Import Data Schemas
 
 const TraitImportDataSchema = z.object({
   name: z.string().min(1).max(255),
@@ -164,16 +181,26 @@ const ClassLevelImportDataSchema = z.object({
   classId: ImportIdSchema,
   level: z.number().int().min(1).max(20),
   classSpecificScaling: z.record(z.string(), z.unknown()).nullable().optional(),
-  spellcastingProgression: z.record(z.string(), z.unknown()).nullable().optional(),
+  spellcastingProgression: z
+    .record(z.string(), z.unknown())
+    .nullable()
+    .optional(),
 });
 
 const SubclassLevelImportDataSchema = z.object({
   subclassId: ImportIdSchema,
   level: z.number().int().min(1).max(20),
-  subclassSpecificScaling: z.record(z.string(), z.unknown()).nullable().optional(),
+  subclassSpecificScaling: z
+    .record(z.string(), z.unknown())
+    .nullable()
+    .optional(),
   bonusSpells: z.array(z.string()).nullable().optional(),
   spellsAddedToList: z.array(z.string()).nullable().optional(),
 });
+
+// #endregion
+
+// #region Import Entity Schemas
 
 const ImportEntityBaseSchema = z.object({
   id: ImportIdSchema,
@@ -182,17 +209,51 @@ const ImportEntityBaseSchema = z.object({
 });
 
 export const ImportEntityEntrySchema = z.discriminatedUnion("kind", [
-  ImportEntityBaseSchema.extend({ kind: z.literal("trait"), data: TraitImportDataSchema }),
-  ImportEntityBaseSchema.extend({ kind: z.literal("feat"), data: FeatImportDataSchema }),
-  ImportEntityBaseSchema.extend({ kind: z.literal("race"), data: RaceImportDataSchema }),
-  ImportEntityBaseSchema.extend({ kind: z.literal("subrace"), data: SubraceImportDataSchema }),
-  ImportEntityBaseSchema.extend({ kind: z.literal("class"), data: ClassImportDataSchema }),
-  ImportEntityBaseSchema.extend({ kind: z.literal("subclass"), data: SubclassImportDataSchema }),
-  ImportEntityBaseSchema.extend({ kind: z.literal("background"), data: BackgroundImportDataSchema }),
-  ImportEntityBaseSchema.extend({ kind: z.literal("item"), data: ItemImportDataSchema }),
-  ImportEntityBaseSchema.extend({ kind: z.literal("class_level"), data: ClassLevelImportDataSchema }),
-  ImportEntityBaseSchema.extend({ kind: z.literal("subclass_level"), data: SubclassLevelImportDataSchema }),
+  ImportEntityBaseSchema.extend({
+    kind: z.literal("trait"),
+    data: TraitImportDataSchema,
+  }),
+  ImportEntityBaseSchema.extend({
+    kind: z.literal("feat"),
+    data: FeatImportDataSchema,
+  }),
+  ImportEntityBaseSchema.extend({
+    kind: z.literal("race"),
+    data: RaceImportDataSchema,
+  }),
+  ImportEntityBaseSchema.extend({
+    kind: z.literal("subrace"),
+    data: SubraceImportDataSchema,
+  }),
+  ImportEntityBaseSchema.extend({
+    kind: z.literal("class"),
+    data: ClassImportDataSchema,
+  }),
+  ImportEntityBaseSchema.extend({
+    kind: z.literal("subclass"),
+    data: SubclassImportDataSchema,
+  }),
+  ImportEntityBaseSchema.extend({
+    kind: z.literal("background"),
+    data: BackgroundImportDataSchema,
+  }),
+  ImportEntityBaseSchema.extend({
+    kind: z.literal("item"),
+    data: ItemImportDataSchema,
+  }),
+  ImportEntityBaseSchema.extend({
+    kind: z.literal("class_level"),
+    data: ClassLevelImportDataSchema,
+  }),
+  ImportEntityBaseSchema.extend({
+    kind: z.literal("subclass_level"),
+    data: SubclassLevelImportDataSchema,
+  }),
 ]);
+
+// #endregion
+
+// #region Import Relation Schemas Cont
 
 export const ImportRelationEntrySchema = z.discriminatedUnion("kind", [
   z.object({
@@ -254,19 +315,31 @@ export const ImportRelationEntrySchema = z.discriminatedUnion("kind", [
   }),
 ]);
 
+// #endregion
+
+// #region Import Pack Schema Cont
+
 export const ImportPackSchema = z.object({
   pack: ImportPackMetadataSchema,
   entries: z.array(ImportEntityEntrySchema).default([]),
   relations: z.array(ImportRelationEntrySchema).default([]),
 });
 
+// #endregion
+
+// #region Type Exports
+
 export type ImportSourceType = z.infer<typeof ImportSourceTypeSchema>;
 export type ImportPublishMode = z.infer<typeof ImportPublishModeSchema>;
 export type ImportConflictPolicy = z.infer<typeof ImportConflictPolicySchema>;
 export type ImportIdPolicy = z.infer<typeof ImportIdPolicySchema>;
 export type ImportEntityOperation = z.infer<typeof ImportEntityOperationSchema>;
-export type ImportRelationOperation = z.infer<typeof ImportRelationOperationSchema>;
+export type ImportRelationOperation = z.infer<
+  typeof ImportRelationOperationSchema
+>;
 export type ImportPackMetadata = z.infer<typeof ImportPackMetadataSchema>;
 export type ImportEntityEntry = z.infer<typeof ImportEntityEntrySchema>;
 export type ImportRelationEntry = z.infer<typeof ImportRelationEntrySchema>;
 export type ImportPack = z.infer<typeof ImportPackSchema>;
+
+// #endregion

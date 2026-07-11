@@ -26,7 +26,7 @@ type SocketDataContext = {
 };
 
 const getSocketContext = (socket: Socket): SocketDataContext =>
-  (socket.data as SocketDataContext);
+  socket.data as SocketDataContext;
 
 const setSocketContext = (
   socket: Socket,
@@ -123,12 +123,10 @@ export function initializeWebSocketGateway(httpServer: any) {
 
         // 2 - broadcast to everyone in the room EXCEPT sender
         // sender already updated UI optimistically
-        socket
-          .to(`campaign_${campaignId}`)
-          .emit(SOCKET_EVENTS.HP_MODIFIED, {
-            actorId: socket.id,
-            data: payload,
-          });
+        socket.to(`campaign_${campaignId}`).emit(SOCKET_EVENTS.HP_MODIFIED, {
+          actorId: socket.id,
+          data: payload,
+        });
       } catch (error) {
         console.error("Failed to process HP modification:", error);
         // dispatch an error rollback event back to sender if DB transaction fails

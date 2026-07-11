@@ -3,6 +3,8 @@ import type {
   RestCondition as SharedRestCondition,
 } from "@project/shared";
 
+// #region Resource Types
+
 export type RestCondition = SharedRestCondition;
 
 export interface OperationalResource {
@@ -18,3 +20,5 @@ export interface HydratedResource extends OperationalResource {
   resetCondition: string;
   isDepleted: boolean;
 }
+
+// #endregion

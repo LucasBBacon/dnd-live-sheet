@@ -48,6 +48,13 @@ const CORE_PACK_ID = "core_seed_2014";
 const CORE_PACK_VERSION = 1;
 const CORE_PUBLISHED_AT = new Date();
 
+// #region Helper Functions
+
+/**
+ * Loads a JSON file from the data directory and parses it into an array of objects.
+ * @param filename The name of the JSON file to load (e.g., "traits.json").
+ * @returns A promise that resolves to an array of objects parsed from the JSON file. If the file cannot be loaded, it returns an empty array and logs a warning.
+ */
 const loadJsonData = async <T>(filename: string): Promise<T[]> => {
   try {
     const currentFilePath = fileURLToPath(import.meta.url);
@@ -63,6 +70,13 @@ const loadJsonData = async <T>(filename: string): Promise<T[]> => {
   }
 };
 
+/**
+ * Normalizes the speed value from the input data. If the speed is a number, it returns that number.
+ * If the speed is an object with a "walk" property, it returns the value of "walk".
+ * If neither condition is met, it defaults to returning 30.
+ * @param speed The speed value to normalize, which can be a number, an object with a "walk" property, or any other type.
+ * @returns The normalized speed as a number.
+ */
 const normalizeSpeed = (speed: unknown): number => {
   if (typeof speed === "number") return speed;
   if (
@@ -76,6 +90,11 @@ const normalizeSpeed = (speed: unknown): number => {
   return 30;
 };
 
+/**
+ * Converts a trait ID string into a human-readable name by removing the "trait_" prefix, splitting the string by underscores, capitalizing each part, and joining them with spaces.
+ * @param traitId The trait ID string to convert.
+ * @returns The human-readable name derived from the trait ID.
+ */
 const traitIdToName = (traitId: string): string =>
   traitId
     .replace(/^trait_/, "")
@@ -84,6 +103,12 @@ const traitIdToName = (traitId: string): string =>
     .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
     .join(" ");
 
+/**
+ * Normalizes the lore object from the input data. If the lore is an object with a "shortDescription" property, it returns that object.
+ * @param lore The lore value to normalize, which can be an object or any other type.
+ * @param fallbackName The fallback name to use in the short description if the lore is not an object with a "shortDescription".
+ * @returns An object containing the normalized lore with a "shortDescription" and an optional "fullText".
+ */
 const normalizeLore = (
   lore: unknown,
   fallbackName: string,
@@ -104,6 +129,14 @@ const normalizeLore = (
   };
 };
 
+/**
+ * Normalizes the multiclass trait IDs for a given class. It checks if the multiclassTraits field is defined and is an array of strings.
+ * If any of these conditions are not met, it throws an error. It also trims whitespace from each trait ID and removes duplicates.
+ * @param param0 An object containing the classId and multiclassTraits to normalize.
+ * @param param0.classId The ID of the class for which to normalize multiclass traits.
+ * @param param0.multiclassTraits The multiclassTraits field to normalize, which should be an array of strings.
+ * @returns An array of normalized multiclass trait IDs.
+ */
 const normalizeMulticlassTraitIds = ({
   classId,
   multiclassTraits,
@@ -138,6 +171,14 @@ const normalizeMulticlassTraitIds = ({
   return [...new Set(traitIds)];
 };
 
+// #endregion
+
+// #region Run Migration
+
+/**
+ * Executes the ETL (Extract, Transform, Load) pipeline for reference data. It loads raw JSON payloads for traits, feats, races, subraces, classes, subclasses, and backgrounds,
+ * normalizes the data, resolves relational integrity, and inserts the processed data into the database. It also handles missing referenced traits by creating placeholder entries.
+ */
 const runMigration = async () => {
   console.log("Initiating Reference Data ETL Pipeline...");
 
@@ -449,9 +490,12 @@ const runMigration = async () => {
         });
 
       // class_multiclass_traits must match classes.json exactly for core classes.
-      await db
-        .delete(classMulticlassTraits)
-        .where(inArray(classMulticlassTraits.classId, classRows.map((c) => c.id)));
+      await db.delete(classMulticlassTraits).where(
+        inArray(
+          classMulticlassTraits.classId,
+          classRows.map((c) => c.id),
+        ),
+      );
 
       await db
         .insert(classMulticlassTraits)
@@ -673,96 +717,95 @@ const runMigration = async () => {
         })
         .where(eq(classProgressions.sourceType, "core"));
 
+      await db
+        .update(traits)
+        .set({
+          packId: CORE_PACK_ID,
+          packVersion: CORE_PACK_VERSION,
+          publishedAt: CORE_PUBLISHED_AT,
+        })
+        .where(eq(traits.sourceType, "core"));
 
-    await db
-      .update(traits)
-      .set({
-        packId: CORE_PACK_ID,
-        packVersion: CORE_PACK_VERSION,
-        publishedAt: CORE_PUBLISHED_AT,
-      })
-      .where(eq(traits.sourceType, "core"));
+      await db
+        .update(feats)
+        .set({
+          packId: CORE_PACK_ID,
+          packVersion: CORE_PACK_VERSION,
+          publishedAt: CORE_PUBLISHED_AT,
+        })
+        .where(eq(feats.sourceType, "core"));
 
-    await db
-      .update(feats)
-      .set({
-        packId: CORE_PACK_ID,
-        packVersion: CORE_PACK_VERSION,
-        publishedAt: CORE_PUBLISHED_AT,
-      })
-      .where(eq(feats.sourceType, "core"));
+      await db
+        .update(races)
+        .set({
+          packId: CORE_PACK_ID,
+          packVersion: CORE_PACK_VERSION,
+          publishedAt: CORE_PUBLISHED_AT,
+        })
+        .where(eq(races.sourceType, "core"));
 
-    await db
-      .update(races)
-      .set({
-        packId: CORE_PACK_ID,
-        packVersion: CORE_PACK_VERSION,
-        publishedAt: CORE_PUBLISHED_AT,
-      })
-      .where(eq(races.sourceType, "core"));
+      await db
+        .update(subraces)
+        .set({
+          packId: CORE_PACK_ID,
+          packVersion: CORE_PACK_VERSION,
+          publishedAt: CORE_PUBLISHED_AT,
+        })
+        .where(eq(subraces.sourceType, "core"));
 
-    await db
-      .update(subraces)
-      .set({
-        packId: CORE_PACK_ID,
-        packVersion: CORE_PACK_VERSION,
-        publishedAt: CORE_PUBLISHED_AT,
-      })
-      .where(eq(subraces.sourceType, "core"));
+      await db
+        .update(classes)
+        .set({
+          packId: CORE_PACK_ID,
+          packVersion: CORE_PACK_VERSION,
+          publishedAt: CORE_PUBLISHED_AT,
+        })
+        .where(eq(classes.sourceType, "core"));
 
-    await db
-      .update(classes)
-      .set({
-        packId: CORE_PACK_ID,
-        packVersion: CORE_PACK_VERSION,
-        publishedAt: CORE_PUBLISHED_AT,
-      })
-      .where(eq(classes.sourceType, "core"));
+      await db
+        .update(subclasses)
+        .set({
+          packId: CORE_PACK_ID,
+          packVersion: CORE_PACK_VERSION,
+          publishedAt: CORE_PUBLISHED_AT,
+        })
+        .where(eq(subclasses.sourceType, "core"));
 
-    await db
-      .update(subclasses)
-      .set({
-        packId: CORE_PACK_ID,
-        packVersion: CORE_PACK_VERSION,
-        publishedAt: CORE_PUBLISHED_AT,
-      })
-      .where(eq(subclasses.sourceType, "core"));
+      await db
+        .update(backgrounds)
+        .set({
+          packId: CORE_PACK_ID,
+          packVersion: CORE_PACK_VERSION,
+          publishedAt: CORE_PUBLISHED_AT,
+        })
+        .where(eq(backgrounds.sourceType, "core"));
 
-    await db
-      .update(backgrounds)
-      .set({
-        packId: CORE_PACK_ID,
-        packVersion: CORE_PACK_VERSION,
-        publishedAt: CORE_PUBLISHED_AT,
-      })
-      .where(eq(backgrounds.sourceType, "core"));
+      await db
+        .update(items)
+        .set({
+          packId: CORE_PACK_ID,
+          packVersion: CORE_PACK_VERSION,
+          publishedAt: CORE_PUBLISHED_AT,
+        })
+        .where(eq(items.sourceType, "core"));
 
-    await db
-      .update(items)
-      .set({
-        packId: CORE_PACK_ID,
-        packVersion: CORE_PACK_VERSION,
-        publishedAt: CORE_PUBLISHED_AT,
-      })
-      .where(eq(items.sourceType, "core"));
+      await db
+        .update(classProgressions)
+        .set({
+          packId: CORE_PACK_ID,
+          packVersion: CORE_PACK_VERSION,
+          publishedAt: CORE_PUBLISHED_AT,
+        })
+        .where(eq(classProgressions.sourceType, "core"));
 
-    await db
-      .update(classProgressions)
-      .set({
-        packId: CORE_PACK_ID,
-        packVersion: CORE_PACK_VERSION,
-        publishedAt: CORE_PUBLISHED_AT,
-      })
-      .where(eq(classProgressions.sourceType, "core"));
-
-    await db
-      .update(subclassProgressions)
-      .set({
-        packId: CORE_PACK_ID,
-        packVersion: CORE_PACK_VERSION,
-        publishedAt: CORE_PUBLISHED_AT,
-      })
-      .where(eq(subclassProgressions.sourceType, "core"));
+      await db
+        .update(subclassProgressions)
+        .set({
+          packId: CORE_PACK_ID,
+          packVersion: CORE_PACK_VERSION,
+          publishedAt: CORE_PUBLISHED_AT,
+        })
+        .where(eq(subclassProgressions.sourceType, "core"));
       await db
         .update(subclassProgressions)
         .set({
@@ -789,6 +832,14 @@ const runMigration = async () => {
   }
 };
 
+// #endregion
+
+// #region Seed
+
+/**
+ * Seeds the database with initial operational data for development purposes. It creates a default campaign, adds a campaign member,
+ * and inserts a character with associated class and trait data. The function handles conflicts gracefully by ignoring duplicate entries.
+ */
 const seed = async () => {
   console.log("Seeding database...");
 
@@ -860,6 +911,8 @@ const seed = async () => {
     console.error("Seeding failed:", err);
   }
 };
+
+// #endregion
 
 const main = async () => {
   try {

@@ -7,6 +7,7 @@ export interface SkillDefinition {
   ability: Ability;
 }
 
+// TODO: Maybe move this to a shared package, since it's used in both the engine and the client
 // 2014 PHB standard
 export const SKILL_MAP: Record<string, SkillDefinition> = {
   athletics: { id: "athletics", name: "Athletics", ability: "str" },

@@ -1,16 +1,15 @@
 import z from "zod";
 
-// --------------------------------------------------------------
-// SHARED BASE
-// --------------------------------------------------------------
+// #region Shared Effect Schemas
+
 const BaseEffectSchema = z.object({
   levelAvailable: z.number().int().min(1).max(20).optional(),
   // TODO: wire predicates here (like armor restrictions)
 });
 
-// --------------------------------------------------------------
-// EXPLICIT EFFECT IMPLEMENTATIONS
-// --------------------------------------------------------------
+// #endregion
+
+// #region Explicit Effect Implementations
 
 export const SenseEffectSchema = BaseEffectSchema.extend({
   type: z.literal("sense"),
@@ -51,9 +50,9 @@ export const OtherEffectSchema = BaseEffectSchema.extend({
   value: z.string().optional(), // optional metadata flag
 });
 
-// --------------------------------------------------------------
-// DISCRIMINATED UNION
-// --------------------------------------------------------------
+// #endregion
+
+// #region Discriminated Union
 
 export const TraitEffectSchema = z.discriminatedUnion("type", [
   SenseEffectSchema,
@@ -63,4 +62,10 @@ export const TraitEffectSchema = z.discriminatedUnion("type", [
   OtherEffectSchema,
 ]);
 
+// #endregion
+
+// #region Type Exports
+
 export type TraitEffect = z.infer<typeof TraitEffectSchema>;
+
+// #endregion

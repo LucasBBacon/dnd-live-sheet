@@ -295,9 +295,9 @@ const buildNextLevelContext = ({
   const targetLevel = nextLevelContext.targetLevel;
 
   const classTraitIdsAtTargetLevel = new Set(
-    (
-      cache.classTraitsByClassLevel.get(`${classId}::${targetLevel}`) ?? []
-    ).map((trait) => trait.id),
+    (cache.classTraitsByClassLevel.get(`${classId}::${targetLevel}`) ?? []).map(
+      (trait) => trait.id,
+    ),
   );
 
   const subclassTraitIdsAtTargetLevel = new Set(
@@ -386,17 +386,14 @@ const loadCharacterBaseScores = async ({
 }: {
   characterId: string | undefined;
   campaignId: string | undefined;
-}): Promise<
-  | {
-      str: number;
-      dex: number;
-      con: number;
-      int: number;
-      wis: number;
-      cha: number;
-    }
-  | null
-> => {
+}): Promise<{
+  str: number;
+  dex: number;
+  con: number;
+  int: number;
+  wis: number;
+  cha: number;
+} | null> => {
   if (!characterId) {
     return null;
   }
@@ -605,7 +602,8 @@ router.get("/level-up/options", async (req, res, next) => {
     const supportByClass = Object.fromEntries(
       cache.classes.map((cls) => {
         const clsCurrentLevel = classLevelsByClassId[cls.id] ?? 0;
-        const isMulticlassDip = clsCurrentLevel === 0 && Object.keys(classLevelsByClassId).length > 0;
+        const isMulticlassDip =
+          clsCurrentLevel === 0 && Object.keys(classLevelsByClassId).length > 0;
         const support = buildNextLevelContext({
           cache,
           classId: cls.id,
@@ -627,7 +625,8 @@ router.get("/level-up/options", async (req, res, next) => {
           cls.id,
           {
             ...support,
-            multiclassPrerequisitesMet: multiclassPreview?.meetsPrerequisites ?? null,
+            multiclassPrerequisitesMet:
+              multiclassPreview?.meetsPrerequisites ?? null,
             multiclassPrerequisiteReason: multiclassPreview?.reason ?? null,
           },
         ] as const;

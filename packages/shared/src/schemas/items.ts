@@ -1,6 +1,8 @@
 import z from "zod";
 import { BaseModifierSchema } from "./modifiers.js";
 
+// #region Item Schemas
+
 export const ItemTypeSchema = z.enum(["armor", "weapon", "consumable", "gear"]);
 
 export const ItemDefinitionSchema = z.object({
@@ -10,5 +12,11 @@ export const ItemDefinitionSchema = z.object({
   modifiers: z.array(BaseModifierSchema).optional(),
 });
 
+// #endregion
+
+// #region Type Exports
+
 export type ItemType = z.infer<typeof ItemTypeSchema>;
 export type ItemDefinition = z.infer<typeof ItemDefinitionSchema>;
+
+// #endregion

@@ -1,3 +1,5 @@
+// #region Socket Events
+
 export const SOCKET_EVENTS = {
   ROOM_JOIN: "room:join",
   HP_MODIFIED: "character:hp_modified",
@@ -7,6 +9,10 @@ export const SOCKET_EVENTS = {
   CONDITION_ADDED: "character:condition_added",
   REST_COMPLETED: "character:rest_completed",
 } as const;
+
+// #endregion
+
+// #region Socket Event Payloads
 
 export interface RoomJoinPayload {
   campaignId: string;
@@ -46,7 +52,15 @@ export interface ServerBroadcastPayload<T> {
   data: T;
 }
 
+// #endregion
+
+// #region Type Exports
+
 export type MaybeServerBroadcastPayload<T> = T | ServerBroadcastPayload<T>;
+
+// #endregion
+
+// #region Type Guards
 
 export const isServerBroadcastPayload = <T>(
   payload: MaybeServerBroadcastPayload<T>,
@@ -68,3 +82,5 @@ export const unwrapServerBroadcastPayload = <T>(
 
   return payload;
 };
+
+// #endregion

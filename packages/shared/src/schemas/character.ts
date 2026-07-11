@@ -1,11 +1,7 @@
 import { z } from "zod";
-import {
-  RuntimeModifiersListSchema,
-} from "./modifiers.js";
+import { RuntimeModifiersListSchema } from "./modifiers.js";
 
-// ----------------------------------------------------------------------------------
-// CORE PRIMITIVES AND MODIFIERS
-// ----------------------------------------------------------------------------------
+// #region Core Primitives Schemas
 
 // Flavor data: updates here do not trigger engine recalculations
 export const CharacterFlavorSchema = z.object({
@@ -17,9 +13,9 @@ export const CharacterFlavorSchema = z.object({
 
 export type CharacterFlavorData = z.infer<typeof CharacterFlavorSchema>;
 
-// ----------------------------------------------------------------------------------
-// PROGRESSION AND OPTIONS (subrace / subclass enforcements)
-// ----------------------------------------------------------------------------------
+// #endregion
+
+// #region Progression and Options Schemas
 
 export const RaceConfigurationSchema = z
   .object({
@@ -56,9 +52,9 @@ export const ClassProgressionSchema = z
     }
   });
 
-// ----------------------------------------------------------------------------------
-// UNIFIED CHARACTER ENGINE SCHEMA
-// ----------------------------------------------------------------------------------
+// #endregion
+
+// #region Unified Character Engine Schema
 
 export const CharacterEngineSchema = z.object({
   // base attributes
@@ -97,9 +93,9 @@ export const BaseCharacterSchema = z.object({
 
 export type Character = z.infer<typeof BaseCharacterSchema>;
 
-// ----------------------------------------------------------------------------------
-// CHARACTER CREATION PAYLOAD
-// ----------------------------------------------------------------------------------
+// #endregion
+
+// #region Character Creation Payload
 
 export const CreateCharacterPayloadSchema = z.object({
   campaignId: z.uuid().optional(),
@@ -156,6 +152,12 @@ export const CreateCharacterPayloadSchema = z.object({
     .default([]),
 });
 
+// #endregion
+
+// #region Type Exports
+
 export type CreateCharacterPayload = z.infer<
   typeof CreateCharacterPayloadSchema
 >;
+
+// #endregion

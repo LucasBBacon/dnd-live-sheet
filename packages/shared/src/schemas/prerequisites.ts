@@ -1,5 +1,7 @@
 import z from "zod";
 
+// #region Ability Minimums
+
 export const AbilityMinimumsSchema = z.object({
   str: z.number().int().min(1).max(30).optional(),
   dex: z.number().int().min(1).max(30).optional(),
@@ -9,8 +11,13 @@ export const AbilityMinimumsSchema = z.object({
   cha: z.number().int().min(1).max(30).optional(),
 });
 
-const hasAnyAbilityMinimum = (minimums: z.infer<typeof AbilityMinimumsSchema>) =>
-  Object.keys(minimums).length > 0;
+const hasAnyAbilityMinimum = (
+  minimums: z.infer<typeof AbilityMinimumsSchema>,
+) => Object.keys(minimums).length > 0;
+
+// #endregion
+
+// #region Multiclass Prerequisites
 
 export const ClassMulticlassPrerequisitesSchema = z
   .object({
@@ -38,16 +45,17 @@ export const ClassMulticlassPrerequisitesSchema = z
       if (!hasAnyAbilityMinimum(minimums)) {
         ctx.addIssue({
           code: "custom",
-          message: "Each anyOf prerequisite entry must define at least one ability minimum.",
+          message:
+            "Each anyOf prerequisite entry must define at least one ability minimum.",
           path: ["anyOf", index],
         });
       }
     });
   });
 
-export type ClassMulticlassPrerequisites = z.infer<
-  typeof ClassMulticlassPrerequisitesSchema
->;
+// #endregion
+
+// #region Feat Prerequisites
 
 export const FeatPrerequisitesSchema = z
   .object({
@@ -68,4 +76,9 @@ export const FeatPrerequisitesSchema = z
   })
   .strict();
 
+// #endregion
+
 export type FeatPrerequisites = z.infer<typeof FeatPrerequisitesSchema>;
+export type ClassMulticlassPrerequisites = z.infer<
+  typeof ClassMulticlassPrerequisitesSchema
+>;

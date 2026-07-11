@@ -8,7 +8,10 @@ import {
   stageImportRun,
   validateImportRun,
 } from "../services/importPipeline.js";
-import { applyRollbackRun, planRollbackRun } from "../services/rollbackPipeline.js";
+import {
+  applyRollbackRun,
+  planRollbackRun,
+} from "../services/rollbackPipeline.js";
 import {
   assertRollbackRunBelongsToImportRun,
   getRollbackRunSummary,
@@ -32,6 +35,8 @@ const getRequiredUserId = (req: { user?: { id?: string } }): string => {
   return userId;
 };
 
+// #region POST /import/stage
+
 router.post("/stage", async (req, res, next) => {
   try {
     const actorUserId = getRequiredUserId(req);
@@ -41,6 +46,10 @@ router.post("/stage", async (req, res, next) => {
     return next(error);
   }
 });
+
+// #endregion
+
+// #region POST /import/:runId/validate
 
 router.post("/:runId/validate", async (req, res, next) => {
   try {
@@ -53,6 +62,10 @@ router.post("/:runId/validate", async (req, res, next) => {
   }
 });
 
+// #endregion
+
+// #region POST /import/:runId/plan
+
 router.post("/:runId/plan", async (req, res, next) => {
   try {
     getRequiredUserId(req);
@@ -63,6 +76,10 @@ router.post("/:runId/plan", async (req, res, next) => {
     return next(error);
   }
 });
+
+// #endregion
+
+// #region POST /import/:runId/apply
 
 router.post("/:runId/apply", async (req, res, next) => {
   try {
@@ -75,6 +92,10 @@ router.post("/:runId/apply", async (req, res, next) => {
   }
 });
 
+// #endregion
+
+// #region POST /import/:runId/publish
+
 router.post("/:runId/publish", async (req, res, next) => {
   try {
     getRequiredUserId(req);
@@ -85,6 +106,10 @@ router.post("/:runId/publish", async (req, res, next) => {
     return next(error);
   }
 });
+
+// #endregion
+
+// #region GET /import/:runId
 
 router.get("/:runId", async (req, res, next) => {
   try {
@@ -97,22 +122,36 @@ router.get("/:runId", async (req, res, next) => {
   }
 });
 
+// #endregion
+
+// #region POST /import/:runId/rollback/plan
+
 router.post("/:runId/rollback/plan", async (req, res, next) => {
   try {
     const userId = getRequiredUserId(req);
     const runId = getRequiredParam(req.params.runId, "runId");
-    const planned = await planRollbackRun({ sourceRunId: runId, initiatedByUserId: userId });
+    const planned = await planRollbackRun({
+      sourceRunId: runId,
+      initiatedByUserId: userId,
+    });
     return res.status(200).json(planned);
   } catch (error) {
     return next(error);
   }
 });
 
+// #endregion
+
+// #region POST /import/:runId/rollback/:rollbackRunId/apply
+
 router.post("/:runId/rollback/:rollbackRunId/apply", async (req, res, next) => {
   try {
     getRequiredUserId(req);
     const runId = getRequiredParam(req.params.runId, "runId");
-    const rollbackRunId = getRequiredParam(req.params.rollbackRunId, "rollbackRunId");
+    const rollbackRunId = getRequiredParam(
+      req.params.rollbackRunId,
+      "rollbackRunId",
+    );
     await assertRollbackRunBelongsToImportRun(rollbackRunId, runId);
     const applied = await applyRollbackRun(rollbackRunId);
     return res.status(200).json(applied);
@@ -120,6 +159,10 @@ router.post("/:runId/rollback/:rollbackRunId/apply", async (req, res, next) => {
     return next(error);
   }
 });
+
+// #endregion
+
+// #region GET /import/:runId/rollback
 
 router.get("/:runId/rollback", async (req, res, next) => {
   try {
@@ -132,11 +175,18 @@ router.get("/:runId/rollback", async (req, res, next) => {
   }
 });
 
+// #endregion
+
+// #region GET /import/:runId/rollback/:rollbackRunId
+
 router.get("/:runId/rollback/:rollbackRunId", async (req, res, next) => {
   try {
     getRequiredUserId(req);
     const runId = getRequiredParam(req.params.runId, "runId");
-    const rollbackRunId = getRequiredParam(req.params.rollbackRunId, "rollbackRunId");
+    const rollbackRunId = getRequiredParam(
+      req.params.rollbackRunId,
+      "rollbackRunId",
+    );
     await assertRollbackRunBelongsToImportRun(rollbackRunId, runId);
     const summary = await getRollbackRunSummary(rollbackRunId);
     return res.status(200).json(summary);
@@ -144,5 +194,7 @@ router.get("/:runId/rollback/:rollbackRunId", async (req, res, next) => {
     return next(error);
   }
 });
+
+// #endregion
 
 export default router;

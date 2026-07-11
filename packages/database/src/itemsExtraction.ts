@@ -5,6 +5,8 @@ import {
   type WeaponDefinition,
 } from "@project/shared";
 
+// #region Type Definitions
+
 type SourceItem = {
   id?: unknown;
   name?: unknown;
@@ -71,6 +73,10 @@ export type ItemsExtractionResult = {
   diagnostics: ItemsExtractionDiagnostics;
 };
 
+// #endregion
+
+// #region Constants and Helper Functions
+
 const SUPPORTED_WEAPON_PROPERTIES = new Set([
   "finesse",
   "thrown",
@@ -112,6 +118,8 @@ const toStoredWeight = (value: unknown): number => {
   return Math.round(pounds * 100);
 };
 
+// #endregion
+
 const deriveItemModifiers = (item: SourceItem): ItemDefinition["modifiers"] => {
   const modifiers: NonNullable<ItemDefinition["modifiers"]> = [];
   const armorProperties = item.armorProperties;
@@ -151,7 +159,7 @@ const deriveItemModifiers = (item: SourceItem): ItemDefinition["modifiers"] => {
   return modifiers.length > 0 ? modifiers : undefined;
 };
 
-const normaliseItemType = (item: SourceItem): ItemDefinition["type"] => {
+const normalizeItemType = (item: SourceItem): ItemDefinition["type"] => {
   const sourceType = toStringOrUndefined(item.type);
   if (sourceType === "armor") return "armor";
   if (sourceType === "weapon") return "weapon";
@@ -172,21 +180,24 @@ const deriveWeaponProperties = (
       const propertyId = toStringOrUndefined(rawPropertyId);
       if (!propertyId) continue;
 
-      const normalised = propertyId.replace(/^property_/, "");
-      if (!SUPPORTED_WEAPON_PROPERTIES.has(normalised)) {
+      const normalized = propertyId.replace(/^property_/, "");
+      if (!SUPPORTED_WEAPON_PROPERTIES.has(normalized)) {
         diagnostics.unsupportedWeaponProperties.push({
           weaponId,
-          property: normalised,
+          property: normalized,
         });
         continue;
       }
 
-      properties.push(normalised as WeaponDefinition["properties"][number]);
+      properties.push(normalized as WeaponDefinition["properties"][number]);
     }
   }
 
   if (rules && typeof rules === "object") {
-    const flagMap: Array<{ key: string; property: WeaponDefinition["properties"][number] }> = [
+    const flagMap: Array<{
+      key: string;
+      property: WeaponDefinition["properties"][number];
+    }> = [
       { key: "loading", property: "loading" },
       { key: "special", property: "special" },
     ];
@@ -201,7 +212,7 @@ const deriveWeaponProperties = (
   return [...new Set(properties)];
 };
 
-const canonicaliseWeaponCategory = (
+const canonicalizeWeaponCategory = (
   category: unknown,
 ): WeaponDefinition["category"] | undefined => {
   const value = toStringOrUndefined(category);
@@ -268,7 +279,7 @@ export const extractItemsForMigration = (
 
     const weight = toStoredWeight(item.weight);
     const isBundle = item.isBundle === true;
-    const type = normaliseItemType(item);
+    const type = normalizeItemType(item);
 
     const itemDefinition = ItemDefinitionSchema.parse({
       id,
@@ -293,7 +304,9 @@ export const extractItemsForMigration = (
     }
 
     if (type === "weapon" && item.weaponProperties) {
-      const category = canonicaliseWeaponCategory(item.weaponProperties.category);
+      const category = canonicalizeWeaponCategory(
+        item.weaponProperties.category,
+      );
       const damageDice = toStringOrUndefined(item.weaponProperties.damageDice);
       const damageType = toStringOrUndefined(item.weaponProperties.damageType);
       const ammoItemId = toStringOrUndefined(item.weaponProperties.ammoItemId);
@@ -329,9 +342,8 @@ export const extractItemsForMigration = (
       description,
       isBundle,
       itemRule: itemDefinition,
-      weaponRule,
+      ...(weaponRule ? { weaponRule } : {}),
     });
-
   }
 
   for (const [weaponId, weapon] of Object.entries(weaponRulesById)) {

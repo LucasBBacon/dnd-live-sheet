@@ -1,6 +1,22 @@
 import type { CalculationResult, RuntimeModifier } from "@project/shared";
 
+/**
+ * The DerivedStatEngine class provides static methods to calculate derived character statistics such as maximum hit points (HP), armor class (AC), and initiative.
+ * These calculations take into account base values, ability modifiers, and active runtime modifiers from various sources (e.g., items, traits).
+ * The engine generates a detailed breakdown of the calculations for transparency and debugging purposes.
+ */
 export class DerivedStatEngine {
+  // #region Max HP
+
+  /**
+   * Calculates the maximum hit points (HP) for a character based on base HP rolled, constitution modifier, total level, and active runtime modifiers.
+   * @param baseHpRolled The base hit points rolled for the character (e.g., from class hit dice).
+   * @param conModifier The character's constitution ability modifier, which contributes to HP based on total level.
+   * @param totalLevel The character's total level, used to calculate the contribution of the constitution modifier to HP.
+   * @param modifiers An array of RuntimeModifier objects representing active modifiers that can affect the maximum HP calculation (e.g., from items, traits).
+   * @returns A CalculationResult object containing the total calculated maximum HP and a breakdown of the contributing factors for transparency.
+   * @throws An error if any of the input parameters are invalid or if the calculation cannot be completed.
+   */
   public static calculateMaxHp(
     baseHpRolled: number,
     conModifier: number,
@@ -33,6 +49,17 @@ export class DerivedStatEngine {
     return { total, breakdown };
   }
 
+  // #endregion
+
+  // #region AC
+
+  /**
+   * Calculates the armor class (AC) for a character based on base dexterity modifier and active runtime modifiers that affect AC.
+   * @param baseDexMod The character's base Dexterity modifier, which contributes to the AC calculation.
+   * @param modifiers An array of RuntimeModifier objects representing active modifiers that can affect the AC calculation (e.g., from items, traits).
+   * @returns A CalculationResult object containing the total calculated AC and a breakdown of the contributing factors for transparency.
+   * @throws An error if any of the input parameters are invalid or if the calculation cannot be completed.
+   */
   public static calculateAC(
     baseDexMod: number,
     modifiers: RuntimeModifier[],
@@ -132,6 +159,17 @@ export class DerivedStatEngine {
     };
   }
 
+  // #endregion
+
+  // #region Initiative
+
+  /**
+   * Calculates the initiative modifier for a character based on their base Dexterity modifier and any active runtime modifiers that affect initiative rolls.
+   * @param baseDexMod The character's base Dexterity modifier, which contributes to the initiative calculation.
+   * @param modifiers An array of RuntimeModifier objects representing active modifiers that can affect the initiative calculation (e.g., from items, traits).
+   * @returns A CalculationResult object containing the total calculated initiative modifier and a breakdown of the contributing factors for transparency.
+   * @throws An error if any of the input parameters are invalid or if the calculation cannot be completed.
+   */
   public static calculateInitiative(
     baseDexMod: number,
     modifiers: RuntimeModifier[],
@@ -196,4 +234,5 @@ export class DerivedStatEngine {
       breakdown,
     };
   }
+  // #endregion
 }

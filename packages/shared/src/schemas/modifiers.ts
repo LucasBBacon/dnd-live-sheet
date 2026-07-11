@@ -1,5 +1,7 @@
 import z from "zod";
 
+// #region Modifier Schemas
+
 export const ModifierTargetSchema = z.enum([
   "MAX_HP",
   "ARMOR_CLASS",
@@ -41,9 +43,13 @@ export const RuntimeModifierSchema = BaseModifierSchema.extend({
   isActive: z.boolean().default(true),
 });
 
-export const RuntimeModifiersListSchema = z.array(RuntimeModifierSchema).default(
-  [],
-);
+export const RuntimeModifiersListSchema = z
+  .array(RuntimeModifierSchema)
+  .default([]);
+
+// #endregion
+
+// #region Type Exports
 
 export type ModifierTarget = z.infer<typeof ModifierTargetSchema>;
 export type ModifierType = z.infer<typeof ModifierTypeSchema>;
@@ -61,3 +67,5 @@ export interface CalculationResult {
     isIgnored?: boolean;
   }>;
 }
+
+// #endregion

@@ -28,13 +28,13 @@ const resolveCampaignIdFromBody = (req: {
 }): string | undefined =>
   typeof req.body?.campaignId === "string" ? req.body.campaignId : undefined;
 
-  /**
-   * Creates a middleware that requires the user to have a specific role in the campaign.
-   * @param options - The options for the middleware.
-   * @param options.resolveCampaignId - A function that resolves the campaignId from the request.
-   * @param options.allowedRoles - An array of roles that are allowed to access the route.
-   * @returns An Express middleware function that checks if the user has the required role in the campaign.
-   */
+/**
+ * Creates a middleware that requires the user to have a specific role in the campaign.
+ * @param options - The options for the middleware.
+ * @param options.resolveCampaignId - A function that resolves the campaignId from the request.
+ * @param options.allowedRoles - An array of roles that are allowed to access the route.
+ * @returns An Express middleware function that checks if the user has the required role in the campaign.
+ */
 const requireCampaignAuthorRole = createCampaignRoleGuard({
   resolveCampaignId: (req) => resolveCampaignIdFromBody(req),
   allowedRoles: ["owner", "dm"],
@@ -309,7 +309,7 @@ router.patch(
         )
         .returning({ id: traits.id });
 
-        // if no rows were updated, return a 404 error indicating that the trait was not found
+      // if no rows were updated, return a 404 error indicating that the trait was not found
       if (updated.length === 0) {
         return res.status(404).json({ error: "Homebrew trait not found." });
       }
@@ -329,7 +329,7 @@ router.patch(
 
 /**
  * POST /api/homebrew/traits/:id/publish
- * 
+ *
  * Publishes an existing homebrew trait for the specified campaign, making it available for use.
  * Requires the user to have the "owner" or "dm" role in the campaign.
  * Validates that the trait exists and belongs to the specified campaign.
@@ -376,7 +376,7 @@ router.post(
 
 /**
  * POST /api/homebrew/traits/:id/archive
- * 
+ *
  * Archives an existing homebrew trait for the specified campaign, making it unavailable for use.
  * Requires the user to have the "owner" or "dm" role in the campaign.
  * Validates that the trait exists and belongs to the specified campaign.
@@ -423,7 +423,7 @@ router.post(
 
 /**
  * POST /api/homebrew/items
- * 
+ *
  * Creates a new homebrew item for the specified campaign.
  * Requires the user to have the "owner" or "dm" role in the campaign.
  */
@@ -492,7 +492,7 @@ router.post("/items", requireCampaignAuthorRole, async (req, res, next) => {
 
 /**
  * PATCH /api/homebrew/items/:id
- * 
+ *
  * Updates an existing homebrew item for the specified campaign.
  * Requires the user to have the "owner" or "dm" role in the campaign.
  */
@@ -567,7 +567,7 @@ router.patch(
 
 /**
  * POST /api/homebrew/items/:id/publish
- * 
+ *
  * Publishes an existing homebrew item for the specified campaign, making it available for use.
  * Requires the user to have the "owner" or "dm" role in the campaign.
  */
@@ -611,7 +611,7 @@ router.post(
 
 /**
  * POST /api/homebrew/items/:id/archive
- * 
+ *
  * Archives an existing homebrew item for the specified campaign, making it unavailable for use.
  * Requires the user to have the "owner" or "dm" role in the campaign.
  */
@@ -640,7 +640,7 @@ router.post(
       if (updated.length === 0) {
         return res.status(404).json({ error: "Homebrew item not found." });
       }
-      
+
       // invalidate the reference cache so that the archived item is reflected in future queries
       invalidateReferenceDerivedCaches();
       return res.status(200).json({ success: true, itemId });

@@ -107,7 +107,11 @@ const mapRelationRowsForLedger = (
   }));
 
 const getRun = async (runId: string): Promise<ImportRunRow> => {
-  const [run] = await db.select().from(importRuns).where(eq(importRuns.id, runId)).limit(1);
+  const [run] = await db
+    .select()
+    .from(importRuns)
+    .where(eq(importRuns.id, runId))
+    .limit(1);
   if (!run) throw new ImportPipelineError("Import run not found.", 404);
   return run;
 };
@@ -119,7 +123,10 @@ const getRunRows = async (runId: string): Promise<ImportRowRow[]> =>
     .where(eq(importRows.runId, runId))
     .orderBy(importRows.rowIndex);
 
-const ensureImportPermissions = async (pack: ImportPack, actorUserId: string): Promise<void> => {
+const ensureImportPermissions = async (
+  pack: ImportPack,
+  actorUserId: string,
+): Promise<void> => {
   if (pack.pack.sourceType !== "homebrew") return;
 
   const campaignId = pack.pack.ownerCampaignId;
@@ -129,7 +136,10 @@ const ensureImportPermissions = async (pack: ImportPack, actorUserId: string): P
 
   const role = await getCampaignMembershipRole(actorUserId, campaignId);
   if (!role || !["owner", "dm"].includes(role)) {
-    throw new ImportPipelineError("Insufficient campaign role for import action.", 403);
+    throw new ImportPipelineError(
+      "Insufficient campaign role for import action.",
+      403,
+    );
   }
 };
 
@@ -176,50 +186,85 @@ const updateLedgerRowStatus = async (
   await db
     .update(importRows)
     .set({ status, errorMessage: errorMessage ?? null })
-    .where(
-      and(eq(importRows.runId, runId), eq(importRows.rowIndex, rowIndex)),
-    );
+    .where(and(eq(importRows.runId, runId), eq(importRows.rowIndex, rowIndex)));
 };
 
 const entityExists = async (entry: ImportEntityEntry): Promise<boolean> => {
   switch (entry.kind) {
     case "trait": {
-      const [row] = await db.select({ id: traits.id }).from(traits).where(eq(traits.id, entry.id)).limit(1);
+      const [row] = await db
+        .select({ id: traits.id })
+        .from(traits)
+        .where(eq(traits.id, entry.id))
+        .limit(1);
       return !!row;
     }
     case "feat": {
-      const [row] = await db.select({ id: feats.id }).from(feats).where(eq(feats.id, entry.id)).limit(1);
+      const [row] = await db
+        .select({ id: feats.id })
+        .from(feats)
+        .where(eq(feats.id, entry.id))
+        .limit(1);
       return !!row;
     }
     case "race": {
-      const [row] = await db.select({ id: races.id }).from(races).where(eq(races.id, entry.id)).limit(1);
+      const [row] = await db
+        .select({ id: races.id })
+        .from(races)
+        .where(eq(races.id, entry.id))
+        .limit(1);
       return !!row;
     }
     case "subrace": {
-      const [row] = await db.select({ id: subraces.id }).from(subraces).where(eq(subraces.id, entry.id)).limit(1);
+      const [row] = await db
+        .select({ id: subraces.id })
+        .from(subraces)
+        .where(eq(subraces.id, entry.id))
+        .limit(1);
       return !!row;
     }
     case "class": {
-      const [row] = await db.select({ id: classes.id }).from(classes).where(eq(classes.id, entry.id)).limit(1);
+      const [row] = await db
+        .select({ id: classes.id })
+        .from(classes)
+        .where(eq(classes.id, entry.id))
+        .limit(1);
       return !!row;
     }
     case "subclass": {
-      const [row] = await db.select({ id: subclasses.id }).from(subclasses).where(eq(subclasses.id, entry.id)).limit(1);
+      const [row] = await db
+        .select({ id: subclasses.id })
+        .from(subclasses)
+        .where(eq(subclasses.id, entry.id))
+        .limit(1);
       return !!row;
     }
     case "background": {
-      const [row] = await db.select({ id: backgrounds.id }).from(backgrounds).where(eq(backgrounds.id, entry.id)).limit(1);
+      const [row] = await db
+        .select({ id: backgrounds.id })
+        .from(backgrounds)
+        .where(eq(backgrounds.id, entry.id))
+        .limit(1);
       return !!row;
     }
     case "item": {
-      const [row] = await db.select({ id: items.id }).from(items).where(eq(items.id, entry.id)).limit(1);
+      const [row] = await db
+        .select({ id: items.id })
+        .from(items)
+        .where(eq(items.id, entry.id))
+        .limit(1);
       return !!row;
     }
     case "class_level": {
       const [row] = await db
         .select({ classId: classLevels.classId })
         .from(classLevels)
-        .where(and(eq(classLevels.classId, entry.data.classId), eq(classLevels.level, entry.data.level)))
+        .where(
+          and(
+            eq(classLevels.classId, entry.data.classId),
+            eq(classLevels.level, entry.data.level),
+          ),
+        )
         .limit(1);
       return !!row;
     }
@@ -227,7 +272,12 @@ const entityExists = async (entry: ImportEntityEntry): Promise<boolean> => {
       const [row] = await db
         .select({ subclassId: subclassLevels.subclassId })
         .from(subclassLevels)
-        .where(and(eq(subclassLevels.subclassId, entry.data.subclassId), eq(subclassLevels.level, entry.data.level)))
+        .where(
+          and(
+            eq(subclassLevels.subclassId, entry.data.subclassId),
+            eq(subclassLevels.level, entry.data.level),
+          ),
+        )
         .limit(1);
       return !!row;
     }
@@ -438,17 +488,25 @@ const preflightRelationAndDependencyIssues = async (
     }
   }
 
-  const [existingTraits, existingFeats, existingRaces, existingSubraces, existingClasses, existingSubclasses, existingBackgrounds, existingItems] =
-    await Promise.all([
-      fetchExistingIds("trait", referencedIds.trait),
-      fetchExistingIds("feat", referencedIds.feat),
-      fetchExistingIds("race", referencedIds.race),
-      fetchExistingIds("subrace", referencedIds.subrace),
-      fetchExistingIds("class", referencedIds.class),
-      fetchExistingIds("subclass", referencedIds.subclass),
-      fetchExistingIds("background", referencedIds.background),
-      fetchExistingIds("item", referencedIds.item),
-    ]);
+  const [
+    existingTraits,
+    existingFeats,
+    existingRaces,
+    existingSubraces,
+    existingClasses,
+    existingSubclasses,
+    existingBackgrounds,
+    existingItems,
+  ] = await Promise.all([
+    fetchExistingIds("trait", referencedIds.trait),
+    fetchExistingIds("feat", referencedIds.feat),
+    fetchExistingIds("race", referencedIds.race),
+    fetchExistingIds("subrace", referencedIds.subrace),
+    fetchExistingIds("class", referencedIds.class),
+    fetchExistingIds("subclass", referencedIds.subclass),
+    fetchExistingIds("background", referencedIds.background),
+    fetchExistingIds("item", referencedIds.item),
+  ]);
 
   const exists = (kind: keyof typeof stagedEntityIds, id: string): boolean => {
     const staged = stagedEntityIds[kind];
@@ -557,11 +615,26 @@ const preflightRelationAndDependencyIssues = async (
     if (parsed.relation && parsed.relation.op === "add") {
       switch (parsed.relation.kind) {
         case "feat_trait":
-          pushMissing(parsed.row.rowIndex, "feat", parsed.relation.featId, "feat_trait.featId");
-          pushMissing(parsed.row.rowIndex, "trait", parsed.relation.traitId, "feat_trait.traitId");
+          pushMissing(
+            parsed.row.rowIndex,
+            "feat",
+            parsed.relation.featId,
+            "feat_trait.featId",
+          );
+          pushMissing(
+            parsed.row.rowIndex,
+            "trait",
+            parsed.relation.traitId,
+            "feat_trait.traitId",
+          );
           break;
         case "feat_prerequisite":
-          pushMissing(parsed.row.rowIndex, "feat", parsed.relation.featId, "feat_prerequisite.featId");
+          pushMissing(
+            parsed.row.rowIndex,
+            "feat",
+            parsed.relation.featId,
+            "feat_prerequisite.featId",
+          );
           pushMissing(
             parsed.row.rowIndex,
             "feat",
@@ -570,8 +643,18 @@ const preflightRelationAndDependencyIssues = async (
           );
           break;
         case "race_trait":
-          pushMissing(parsed.row.rowIndex, "race", parsed.relation.raceId, "race_trait.raceId");
-          pushMissing(parsed.row.rowIndex, "trait", parsed.relation.traitId, "race_trait.traitId");
+          pushMissing(
+            parsed.row.rowIndex,
+            "race",
+            parsed.relation.raceId,
+            "race_trait.raceId",
+          );
+          pushMissing(
+            parsed.row.rowIndex,
+            "trait",
+            parsed.relation.traitId,
+            "race_trait.traitId",
+          );
           break;
         case "subrace_trait":
           pushMissing(
@@ -580,7 +663,12 @@ const preflightRelationAndDependencyIssues = async (
             parsed.relation.subraceId,
             "subrace_trait.subraceId",
           );
-          pushMissing(parsed.row.rowIndex, "trait", parsed.relation.traitId, "subrace_trait.traitId");
+          pushMissing(
+            parsed.row.rowIndex,
+            "trait",
+            parsed.relation.traitId,
+            "subrace_trait.traitId",
+          );
           break;
         case "class_multiclass_trait":
           pushMissing(
@@ -645,7 +733,12 @@ const preflightRelationAndDependencyIssues = async (
             parsed.relation.bundleId,
             "bundle_content.bundleId",
           );
-          pushMissing(parsed.row.rowIndex, "item", parsed.relation.itemId, "bundle_content.itemId");
+          pushMissing(
+            parsed.row.rowIndex,
+            "item",
+            parsed.relation.itemId,
+            "bundle_content.itemId",
+          );
           break;
         default:
           break;
@@ -714,7 +807,9 @@ const applyEntityEntry = async (
           .where(eq(items.id, entry.id));
         return;
       default:
-        throw new ImportPipelineError(`Archive is not supported for ${entry.kind}.`);
+        throw new ImportPipelineError(
+          `Archive is not supported for ${entry.kind}.`,
+        );
     }
   }
 
@@ -729,24 +824,27 @@ const applyEntityEntry = async (
         supersedesId: entry.supersedesId,
         ...scoped,
       };
-      await tx.insert(traits).values(row).onConflictDoUpdate({
-        target: traits.id,
-        set: {
-          name: sql`excluded.name`,
-          lore: sql`excluded.lore`,
-          effects: sql`excluded.effects`,
-          isStartingProficiency: sql`excluded.is_starting_proficiency`,
-          sourceType: sql`excluded.source_type`,
-          ownerCampaignId: sql`excluded.owner_campaign_id`,
-          ownerCharacterId: sql`excluded.owner_character_id`,
-          createdByUserId: sql`excluded.created_by_user_id`,
-          isPublished: sql`excluded.is_published`,
-          supersedesId: sql`excluded.supersedes_id`,
-          packId: sql`excluded.pack_id`,
-          packVersion: sql`excluded.pack_version`,
-          publishedAt: sql`excluded.published_at`,
-        },
-      });
+      await tx
+        .insert(traits)
+        .values(row)
+        .onConflictDoUpdate({
+          target: traits.id,
+          set: {
+            name: sql`excluded.name`,
+            lore: sql`excluded.lore`,
+            effects: sql`excluded.effects`,
+            isStartingProficiency: sql`excluded.is_starting_proficiency`,
+            sourceType: sql`excluded.source_type`,
+            ownerCampaignId: sql`excluded.owner_campaign_id`,
+            ownerCharacterId: sql`excluded.owner_character_id`,
+            createdByUserId: sql`excluded.created_by_user_id`,
+            isPublished: sql`excluded.is_published`,
+            supersedesId: sql`excluded.supersedes_id`,
+            packId: sql`excluded.pack_id`,
+            packVersion: sql`excluded.pack_version`,
+            publishedAt: sql`excluded.published_at`,
+          },
+        });
       return;
     }
     case "feat": {
@@ -761,26 +859,29 @@ const applyEntityEntry = async (
         supersedesId: entry.supersedesId,
         ...scoped,
       };
-      await tx.insert(feats).values(row).onConflictDoUpdate({
-        target: feats.id,
-        set: {
-          name: sql`excluded.name`,
-          category: sql`excluded.category`,
-          source: sql`excluded.source`,
-          repeatable: sql`excluded.repeatable`,
-          lore: sql`excluded.lore`,
-          prerequisites: sql`excluded.prerequisites`,
-          sourceType: sql`excluded.source_type`,
-          ownerCampaignId: sql`excluded.owner_campaign_id`,
-          ownerCharacterId: sql`excluded.owner_character_id`,
-          createdByUserId: sql`excluded.created_by_user_id`,
-          isPublished: sql`excluded.is_published`,
-          supersedesId: sql`excluded.supersedes_id`,
-          packId: sql`excluded.pack_id`,
-          packVersion: sql`excluded.pack_version`,
-          publishedAt: sql`excluded.published_at`,
-        },
-      });
+      await tx
+        .insert(feats)
+        .values(row)
+        .onConflictDoUpdate({
+          target: feats.id,
+          set: {
+            name: sql`excluded.name`,
+            category: sql`excluded.category`,
+            source: sql`excluded.source`,
+            repeatable: sql`excluded.repeatable`,
+            lore: sql`excluded.lore`,
+            prerequisites: sql`excluded.prerequisites`,
+            sourceType: sql`excluded.source_type`,
+            ownerCampaignId: sql`excluded.owner_campaign_id`,
+            ownerCharacterId: sql`excluded.owner_character_id`,
+            createdByUserId: sql`excluded.created_by_user_id`,
+            isPublished: sql`excluded.is_published`,
+            supersedesId: sql`excluded.supersedes_id`,
+            packId: sql`excluded.pack_id`,
+            packVersion: sql`excluded.pack_version`,
+            publishedAt: sql`excluded.published_at`,
+          },
+        });
       return;
     }
     case "race": {
@@ -794,25 +895,28 @@ const applyEntityEntry = async (
         supersedesId: entry.supersedesId,
         ...scoped,
       };
-      await tx.insert(races).values(row).onConflictDoUpdate({
-        target: races.id,
-        set: {
-          name: sql`excluded.name`,
-          speed: sql`excluded.speed`,
-          requiresSubrace: sql`excluded.requires_subrace`,
-          displayLabel: sql`excluded.display_label`,
-          lore: sql`excluded.lore`,
-          sourceType: sql`excluded.source_type`,
-          ownerCampaignId: sql`excluded.owner_campaign_id`,
-          ownerCharacterId: sql`excluded.owner_character_id`,
-          createdByUserId: sql`excluded.created_by_user_id`,
-          isPublished: sql`excluded.is_published`,
-          supersedesId: sql`excluded.supersedes_id`,
-          packId: sql`excluded.pack_id`,
-          packVersion: sql`excluded.pack_version`,
-          publishedAt: sql`excluded.published_at`,
-        },
-      });
+      await tx
+        .insert(races)
+        .values(row)
+        .onConflictDoUpdate({
+          target: races.id,
+          set: {
+            name: sql`excluded.name`,
+            speed: sql`excluded.speed`,
+            requiresSubrace: sql`excluded.requires_subrace`,
+            displayLabel: sql`excluded.display_label`,
+            lore: sql`excluded.lore`,
+            sourceType: sql`excluded.source_type`,
+            ownerCampaignId: sql`excluded.owner_campaign_id`,
+            ownerCharacterId: sql`excluded.owner_character_id`,
+            createdByUserId: sql`excluded.created_by_user_id`,
+            isPublished: sql`excluded.is_published`,
+            supersedesId: sql`excluded.supersedes_id`,
+            packId: sql`excluded.pack_id`,
+            packVersion: sql`excluded.pack_version`,
+            publishedAt: sql`excluded.published_at`,
+          },
+        });
       return;
     }
     case "subrace": {
@@ -824,23 +928,26 @@ const applyEntityEntry = async (
         supersedesId: entry.supersedesId,
         ...scoped,
       };
-      await tx.insert(subraces).values(row).onConflictDoUpdate({
-        target: subraces.id,
-        set: {
-          parentRaceId: sql`excluded.parent_race_id`,
-          name: sql`excluded.name`,
-          lore: sql`excluded.lore`,
-          sourceType: sql`excluded.source_type`,
-          ownerCampaignId: sql`excluded.owner_campaign_id`,
-          ownerCharacterId: sql`excluded.owner_character_id`,
-          createdByUserId: sql`excluded.created_by_user_id`,
-          isPublished: sql`excluded.is_published`,
-          supersedesId: sql`excluded.supersedes_id`,
-          packId: sql`excluded.pack_id`,
-          packVersion: sql`excluded.pack_version`,
-          publishedAt: sql`excluded.published_at`,
-        },
-      });
+      await tx
+        .insert(subraces)
+        .values(row)
+        .onConflictDoUpdate({
+          target: subraces.id,
+          set: {
+            parentRaceId: sql`excluded.parent_race_id`,
+            name: sql`excluded.name`,
+            lore: sql`excluded.lore`,
+            sourceType: sql`excluded.source_type`,
+            ownerCampaignId: sql`excluded.owner_campaign_id`,
+            ownerCharacterId: sql`excluded.owner_character_id`,
+            createdByUserId: sql`excluded.created_by_user_id`,
+            isPublished: sql`excluded.is_published`,
+            supersedesId: sql`excluded.supersedes_id`,
+            packId: sql`excluded.pack_id`,
+            packVersion: sql`excluded.pack_version`,
+            publishedAt: sql`excluded.published_at`,
+          },
+        });
       return;
     }
     case "class": {
@@ -855,26 +962,29 @@ const applyEntityEntry = async (
         supersedesId: entry.supersedesId,
         ...scoped,
       };
-      await tx.insert(classes).values(row).onConflictDoUpdate({
-        target: classes.id,
-        set: {
-          name: sql`excluded.name`,
-          hitDie: sql`excluded.hit_die`,
-          subclassRequirementLevel: sql`excluded.subclass_req_level`,
-          startingEquipment: sql`excluded.starting_equipment`,
-          multiclassPrerequisites: sql`excluded.multiclass_prerequisites`,
-          lore: sql`excluded.lore`,
-          sourceType: sql`excluded.source_type`,
-          ownerCampaignId: sql`excluded.owner_campaign_id`,
-          ownerCharacterId: sql`excluded.owner_character_id`,
-          createdByUserId: sql`excluded.created_by_user_id`,
-          isPublished: sql`excluded.is_published`,
-          supersedesId: sql`excluded.supersedes_id`,
-          packId: sql`excluded.pack_id`,
-          packVersion: sql`excluded.pack_version`,
-          publishedAt: sql`excluded.published_at`,
-        },
-      });
+      await tx
+        .insert(classes)
+        .values(row)
+        .onConflictDoUpdate({
+          target: classes.id,
+          set: {
+            name: sql`excluded.name`,
+            hitDie: sql`excluded.hit_die`,
+            subclassRequirementLevel: sql`excluded.subclass_req_level`,
+            startingEquipment: sql`excluded.starting_equipment`,
+            multiclassPrerequisites: sql`excluded.multiclass_prerequisites`,
+            lore: sql`excluded.lore`,
+            sourceType: sql`excluded.source_type`,
+            ownerCampaignId: sql`excluded.owner_campaign_id`,
+            ownerCharacterId: sql`excluded.owner_character_id`,
+            createdByUserId: sql`excluded.created_by_user_id`,
+            isPublished: sql`excluded.is_published`,
+            supersedesId: sql`excluded.supersedes_id`,
+            packId: sql`excluded.pack_id`,
+            packVersion: sql`excluded.pack_version`,
+            publishedAt: sql`excluded.published_at`,
+          },
+        });
       return;
     }
     case "subclass": {
@@ -886,23 +996,26 @@ const applyEntityEntry = async (
         supersedesId: entry.supersedesId,
         ...scoped,
       };
-      await tx.insert(subclasses).values(row).onConflictDoUpdate({
-        target: subclasses.id,
-        set: {
-          parentClassId: sql`excluded.parent_class_id`,
-          name: sql`excluded.name`,
-          lore: sql`excluded.lore`,
-          sourceType: sql`excluded.source_type`,
-          ownerCampaignId: sql`excluded.owner_campaign_id`,
-          ownerCharacterId: sql`excluded.owner_character_id`,
-          createdByUserId: sql`excluded.created_by_user_id`,
-          isPublished: sql`excluded.is_published`,
-          supersedesId: sql`excluded.supersedes_id`,
-          packId: sql`excluded.pack_id`,
-          packVersion: sql`excluded.pack_version`,
-          publishedAt: sql`excluded.published_at`,
-        },
-      });
+      await tx
+        .insert(subclasses)
+        .values(row)
+        .onConflictDoUpdate({
+          target: subclasses.id,
+          set: {
+            parentClassId: sql`excluded.parent_class_id`,
+            name: sql`excluded.name`,
+            lore: sql`excluded.lore`,
+            sourceType: sql`excluded.source_type`,
+            ownerCampaignId: sql`excluded.owner_campaign_id`,
+            ownerCharacterId: sql`excluded.owner_character_id`,
+            createdByUserId: sql`excluded.created_by_user_id`,
+            isPublished: sql`excluded.is_published`,
+            supersedesId: sql`excluded.supersedes_id`,
+            packId: sql`excluded.pack_id`,
+            packVersion: sql`excluded.pack_version`,
+            publishedAt: sql`excluded.published_at`,
+          },
+        });
       return;
     }
     case "background": {
@@ -920,29 +1033,32 @@ const applyEntityEntry = async (
         supersedesId: entry.supersedesId,
         ...scoped,
       };
-      await tx.insert(backgrounds).values(row).onConflictDoUpdate({
-        target: backgrounds.id,
-        set: {
-          name: sql`excluded.name`,
-          featureName: sql`excluded.feature_name`,
-          featureDescription: sql`excluded.feature_description`,
-          ideals: sql`excluded.ideals`,
-          bonds: sql`excluded.bonds`,
-          flaws: sql`excluded.flaws`,
-          personalityTraits: sql`excluded.personality_traits`,
-          startingEquipment: sql`excluded.starting_equipment`,
-          lore: sql`excluded.lore`,
-          sourceType: sql`excluded.source_type`,
-          ownerCampaignId: sql`excluded.owner_campaign_id`,
-          ownerCharacterId: sql`excluded.owner_character_id`,
-          createdByUserId: sql`excluded.created_by_user_id`,
-          isPublished: sql`excluded.is_published`,
-          supersedesId: sql`excluded.supersedes_id`,
-          packId: sql`excluded.pack_id`,
-          packVersion: sql`excluded.pack_version`,
-          publishedAt: sql`excluded.published_at`,
-        },
-      });
+      await tx
+        .insert(backgrounds)
+        .values(row)
+        .onConflictDoUpdate({
+          target: backgrounds.id,
+          set: {
+            name: sql`excluded.name`,
+            featureName: sql`excluded.feature_name`,
+            featureDescription: sql`excluded.feature_description`,
+            ideals: sql`excluded.ideals`,
+            bonds: sql`excluded.bonds`,
+            flaws: sql`excluded.flaws`,
+            personalityTraits: sql`excluded.personality_traits`,
+            startingEquipment: sql`excluded.starting_equipment`,
+            lore: sql`excluded.lore`,
+            sourceType: sql`excluded.source_type`,
+            ownerCampaignId: sql`excluded.owner_campaign_id`,
+            ownerCharacterId: sql`excluded.owner_character_id`,
+            createdByUserId: sql`excluded.created_by_user_id`,
+            isPublished: sql`excluded.is_published`,
+            supersedesId: sql`excluded.supersedes_id`,
+            packId: sql`excluded.pack_id`,
+            packVersion: sql`excluded.pack_version`,
+            publishedAt: sql`excluded.published_at`,
+          },
+        });
       return;
     }
     case "item": {
@@ -957,26 +1073,29 @@ const applyEntityEntry = async (
         supersedesId: entry.supersedesId,
         ...scoped,
       };
-      await tx.insert(items).values(row).onConflictDoUpdate({
-        target: items.id,
-        set: {
-          name: sql`excluded.name`,
-          weight: sql`excluded.weight`,
-          description: sql`excluded.description`,
-          isBundle: sql`excluded.is_bundle`,
-          itemRule: sql`excluded.item_rule`,
-          weaponRule: sql`excluded.weapon_rule`,
-          sourceType: sql`excluded.source_type`,
-          ownerCampaignId: sql`excluded.owner_campaign_id`,
-          ownerCharacterId: sql`excluded.owner_character_id`,
-          createdByUserId: sql`excluded.created_by_user_id`,
-          isPublished: sql`excluded.is_published`,
-          supersedesId: sql`excluded.supersedes_id`,
-          packId: sql`excluded.pack_id`,
-          packVersion: sql`excluded.pack_version`,
-          publishedAt: sql`excluded.published_at`,
-        },
-      });
+      await tx
+        .insert(items)
+        .values(row)
+        .onConflictDoUpdate({
+          target: items.id,
+          set: {
+            name: sql`excluded.name`,
+            weight: sql`excluded.weight`,
+            description: sql`excluded.description`,
+            isBundle: sql`excluded.is_bundle`,
+            itemRule: sql`excluded.item_rule`,
+            weaponRule: sql`excluded.weapon_rule`,
+            sourceType: sql`excluded.source_type`,
+            ownerCampaignId: sql`excluded.owner_campaign_id`,
+            ownerCharacterId: sql`excluded.owner_character_id`,
+            createdByUserId: sql`excluded.created_by_user_id`,
+            isPublished: sql`excluded.is_published`,
+            supersedesId: sql`excluded.supersedes_id`,
+            packId: sql`excluded.pack_id`,
+            packVersion: sql`excluded.pack_version`,
+            publishedAt: sql`excluded.published_at`,
+          },
+        });
       return;
     }
     case "class_level": {
@@ -986,13 +1105,16 @@ const applyEntityEntry = async (
         classSpecificScaling: entry.data.classSpecificScaling ?? null,
         spellcastingProgression: entry.data.spellcastingProgression ?? null,
       };
-      await tx.insert(classLevels).values(row).onConflictDoUpdate({
-        target: [classLevels.classId, classLevels.level],
-        set: {
-          classSpecificScaling: sql`excluded.class_specific_scaling`,
-          spellcastingProgression: sql`excluded.spellcasting_progression`,
-        },
-      });
+      await tx
+        .insert(classLevels)
+        .values(row)
+        .onConflictDoUpdate({
+          target: [classLevels.classId, classLevels.level],
+          set: {
+            classSpecificScaling: sql`excluded.class_specific_scaling`,
+            spellcastingProgression: sql`excluded.spellcasting_progression`,
+          },
+        });
       return;
     }
     case "subclass_level": {
@@ -1003,18 +1125,23 @@ const applyEntityEntry = async (
         bonusSpells: entry.data.bonusSpells ?? null,
         spellsAddedToList: entry.data.spellsAddedToList ?? null,
       };
-      await tx.insert(subclassLevels).values(row).onConflictDoUpdate({
-        target: [subclassLevels.subclassId, subclassLevels.level],
-        set: {
-          subclassSpecificScaling: sql`excluded.subclass_specific_scaling`,
-          bonusSpells: sql`excluded.bonus_spells`,
-          spellsAddedToList: sql`excluded.spells_added_to_list`,
-        },
-      });
+      await tx
+        .insert(subclassLevels)
+        .values(row)
+        .onConflictDoUpdate({
+          target: [subclassLevels.subclassId, subclassLevels.level],
+          set: {
+            subclassSpecificScaling: sql`excluded.subclass_specific_scaling`,
+            bonusSpells: sql`excluded.bonus_spells`,
+            spellsAddedToList: sql`excluded.spells_added_to_list`,
+          },
+        });
       return;
     }
     default:
-      throw new ImportPipelineError(`Unsupported import entity kind: ${String((entry as { kind?: unknown }).kind)}`);
+      throw new ImportPipelineError(
+        `Unsupported import entity kind: ${String((entry as { kind?: unknown }).kind)}`,
+      );
   }
 };
 
@@ -1028,25 +1155,54 @@ const applyRelationEntry = async (
   if (relation.op === "remove") {
     switch (relation.kind) {
       case "feat_trait":
-        await tx.delete(featTraits).where(and(eq(featTraits.featId, relation.featId), eq(featTraits.traitId, relation.traitId)));
+        await tx
+          .delete(featTraits)
+          .where(
+            and(
+              eq(featTraits.featId, relation.featId),
+              eq(featTraits.traitId, relation.traitId),
+            ),
+          );
         return;
       case "feat_prerequisite":
         await tx
           .delete(featPrerequisiteFeats)
-          .where(and(eq(featPrerequisiteFeats.featId, relation.featId), eq(featPrerequisiteFeats.requiredFeatId, relation.requiredFeatId)));
+          .where(
+            and(
+              eq(featPrerequisiteFeats.featId, relation.featId),
+              eq(featPrerequisiteFeats.requiredFeatId, relation.requiredFeatId),
+            ),
+          );
         return;
       case "race_trait":
-        await tx.delete(raceTraits).where(and(eq(raceTraits.raceId, relation.raceId), eq(raceTraits.traitId, relation.traitId)));
+        await tx
+          .delete(raceTraits)
+          .where(
+            and(
+              eq(raceTraits.raceId, relation.raceId),
+              eq(raceTraits.traitId, relation.traitId),
+            ),
+          );
         return;
       case "subrace_trait":
         await tx
           .delete(subraceTraits)
-          .where(and(eq(subraceTraits.subraceId, relation.subraceId), eq(subraceTraits.traitId, relation.traitId)));
+          .where(
+            and(
+              eq(subraceTraits.subraceId, relation.subraceId),
+              eq(subraceTraits.traitId, relation.traitId),
+            ),
+          );
         return;
       case "class_multiclass_trait":
         await tx
           .delete(classMulticlassTraits)
-          .where(and(eq(classMulticlassTraits.classId, relation.classId), eq(classMulticlassTraits.traitId, relation.traitId)));
+          .where(
+            and(
+              eq(classMulticlassTraits.classId, relation.classId),
+              eq(classMulticlassTraits.traitId, relation.traitId),
+            ),
+          );
         return;
       case "class_progression":
         await tx
@@ -1073,30 +1229,51 @@ const applyRelationEntry = async (
       case "background_trait":
         await tx
           .delete(backgroundTraits)
-          .where(and(eq(backgroundTraits.backgroundId, relation.backgroundId), eq(backgroundTraits.traitId, relation.traitId)));
+          .where(
+            and(
+              eq(backgroundTraits.backgroundId, relation.backgroundId),
+              eq(backgroundTraits.traitId, relation.traitId),
+            ),
+          );
         return;
       case "bundle_content":
         await tx
           .delete(bundleContents)
-          .where(and(eq(bundleContents.bundleId, relation.bundleId), eq(bundleContents.itemId, relation.itemId)));
+          .where(
+            and(
+              eq(bundleContents.bundleId, relation.bundleId),
+              eq(bundleContents.itemId, relation.itemId),
+            ),
+          );
         return;
       default:
-        throw new ImportPipelineError(`Unsupported relation remove kind: ${String((relation as { kind?: unknown }).kind)}`);
+        throw new ImportPipelineError(
+          `Unsupported relation remove kind: ${String((relation as { kind?: unknown }).kind)}`,
+        );
     }
   }
 
   switch (relation.kind) {
     case "feat_trait":
-      await tx.insert(featTraits).values({ featId: relation.featId, traitId: relation.traitId }).onConflictDoNothing();
+      await tx
+        .insert(featTraits)
+        .values({ featId: relation.featId, traitId: relation.traitId })
+        .onConflictDoNothing();
       return;
     case "feat_prerequisite":
       await tx
         .insert(featPrerequisiteFeats)
-        .values({ featId: relation.featId, requiredFeatId: relation.requiredFeatId })
+        .values({
+          featId: relation.featId,
+          requiredFeatId: relation.requiredFeatId,
+        })
         .onConflictDoNothing();
       return;
     case "race_trait":
-      await tx.insert(raceTraits).values({ raceId: relation.raceId, traitId: relation.traitId }).onConflictDoNothing();
+      await tx
+        .insert(raceTraits)
+        .values({ raceId: relation.raceId, traitId: relation.traitId })
+        .onConflictDoNothing();
       return;
     case "subrace_trait":
       await tx
@@ -1120,7 +1297,11 @@ const applyRelationEntry = async (
           ...scoped,
         })
         .onConflictDoUpdate({
-          target: [classProgressions.classId, classProgressions.level, classProgressions.traitId],
+          target: [
+            classProgressions.classId,
+            classProgressions.level,
+            classProgressions.traitId,
+          ],
           set: {
             sourceType: sql`excluded.source_type`,
             ownerCampaignId: sql`excluded.owner_campaign_id`,
@@ -1163,7 +1344,10 @@ const applyRelationEntry = async (
     case "background_trait":
       await tx
         .insert(backgroundTraits)
-        .values({ backgroundId: relation.backgroundId, traitId: relation.traitId })
+        .values({
+          backgroundId: relation.backgroundId,
+          traitId: relation.traitId,
+        })
         .onConflictDoNothing();
       return;
     case "bundle_content":
@@ -1182,7 +1366,9 @@ const applyRelationEntry = async (
         });
       return;
     default:
-      throw new ImportPipelineError(`Unsupported relation add kind: ${String((relation as { kind?: unknown }).kind)}`);
+      throw new ImportPipelineError(
+        `Unsupported relation add kind: ${String((relation as { kind?: unknown }).kind)}`,
+      );
   }
 };
 
@@ -1192,7 +1378,11 @@ export const stageImportRun = async ({
 }: {
   payload: unknown;
   actorUserId: string;
-}): Promise<{ runId: string; status: string; totals: { entities: number; relations: number } }> => {
+}): Promise<{
+  runId: string;
+  status: string;
+  totals: { entities: number; relations: number };
+}> => {
   const parsedPack = ImportPackSchema.parse(payload);
   await ensureImportPermissions(parsedPack, actorUserId);
 
@@ -1222,7 +1412,11 @@ export const stageImportRun = async ({
 
   const ledgerRows = [
     ...mapEntityRowsForLedger(run.id, parsedPack.entries),
-    ...mapRelationRowsForLedger(run.id, parsedPack.relations, parsedPack.entries.length),
+    ...mapRelationRowsForLedger(
+      run.id,
+      parsedPack.relations,
+      parsedPack.entries.length,
+    ),
   ];
 
   if (ledgerRows.length > 0) {
@@ -1239,7 +1433,9 @@ export const stageImportRun = async ({
   };
 };
 
-export const validateImportRun = async (runId: string): Promise<{
+export const validateImportRun = async (
+  runId: string,
+): Promise<{
   runId: string;
   status: "validated" | "failed";
   totalIssues: number;
@@ -1257,7 +1453,9 @@ export const validateImportRun = async (runId: string): Promise<{
       if (row.rowType === "entity") {
         const entity = ImportEntityEntrySchema.parse(row.payload);
         if (entity.op === "supersede" && !entity.supersedesId) {
-          throw new ImportPipelineError("supersede operation requires supersedesId.");
+          throw new ImportPipelineError(
+            "supersede operation requires supersedesId.",
+          );
         }
         parsedRows.push({ row, entity });
       } else {
@@ -1265,7 +1463,8 @@ export const validateImportRun = async (runId: string): Promise<{
         parsedRows.push({ row, relation });
       }
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Validation failed";
+      const message =
+        error instanceof Error ? error.message : "Validation failed";
       rowFailureByIndex.set(row.rowIndex, message);
       issues.push({
         rowIndex: row.rowIndex,
@@ -1279,7 +1478,10 @@ export const validateImportRun = async (runId: string): Promise<{
   const fkIssues = await preflightRelationAndDependencyIssues(parsedRows);
   for (const issue of fkIssues) {
     issues.push(issue);
-    if (issue.rowIndex !== undefined && !rowFailureByIndex.has(issue.rowIndex)) {
+    if (
+      issue.rowIndex !== undefined &&
+      !rowFailureByIndex.has(issue.rowIndex)
+    ) {
       rowFailureByIndex.set(issue.rowIndex, issue.message);
     }
   }
@@ -1287,7 +1489,12 @@ export const validateImportRun = async (runId: string): Promise<{
   for (const row of rows) {
     const failureMessage = rowFailureByIndex.get(row.rowIndex);
     if (failureMessage) {
-      await updateLedgerRowStatus(runId, row.rowIndex, "failed", failureMessage);
+      await updateLedgerRowStatus(
+        runId,
+        row.rowIndex,
+        "failed",
+        failureMessage,
+      );
       continue;
     }
     await updateLedgerRowStatus(runId, row.rowIndex, "validated");
@@ -1303,7 +1510,8 @@ export const validateImportRun = async (runId: string): Promise<{
       totalIssues: issues.length,
       completedAt: status === "failed" ? new Date() : null,
       validateDurationMs: Math.max(0, Date.now() - operationStartedAt),
-      totalDurationMs: status === "failed" ? totalDurationFromStagedAt(run) : null,
+      totalDurationMs:
+        status === "failed" ? totalDurationFromStagedAt(run) : null,
     })
     .where(eq(importRuns.id, run.id));
 
@@ -1314,7 +1522,9 @@ export const validateImportRun = async (runId: string): Promise<{
   };
 };
 
-export const planImportRun = async (runId: string): Promise<ImportPlanSummary> => {
+export const planImportRun = async (
+  runId: string,
+): Promise<ImportPlanSummary> => {
   const operationStartedAt = Date.now();
   const run = await getRun(runId);
   if (run.status !== "validated" && run.status !== "planned") {
@@ -1413,11 +1623,15 @@ export const planImportRun = async (runId: string): Promise<ImportPlanSummary> =
   return summary;
 };
 
-export const applyImportRun = async (runId: string): Promise<{ runId: string; status: "applied" }> => {
+export const applyImportRun = async (
+  runId: string,
+): Promise<{ runId: string; status: "applied" }> => {
   const operationStartedAt = Date.now();
   const run = await getRun(runId);
   if (run.status !== "validated" && run.status !== "planned") {
-    throw new ImportPipelineError("Run must be validated or planned before apply.");
+    throw new ImportPipelineError(
+      "Run must be validated or planned before apply.",
+    );
   }
 
   const rows = await getRunRows(runId);
@@ -1445,14 +1659,16 @@ export const applyImportRun = async (runId: string): Promise<{ runId: string; st
 
           await applyEntityEntry(tx, entity, run);
           await updateLedgerRowStatus(runId, row.rowIndex, "applied");
-          appliedRowCountsByKind[row.kind] = (appliedRowCountsByKind[row.kind] ?? 0) + 1;
+          appliedRowCountsByKind[row.kind] =
+            (appliedRowCountsByKind[row.kind] ?? 0) + 1;
           continue;
         }
 
         const relation = ImportRelationEntrySchema.parse(row.payload);
         await applyRelationEntry(tx, relation, run);
         await updateLedgerRowStatus(runId, row.rowIndex, "applied");
-        appliedRowCountsByKind[row.kind] = (appliedRowCountsByKind[row.kind] ?? 0) + 1;
+        appliedRowCountsByKind[row.kind] =
+          (appliedRowCountsByKind[row.kind] ?? 0) + 1;
       }
 
       await tx
@@ -1481,7 +1697,8 @@ export const applyImportRun = async (runId: string): Promise<{ runId: string; st
       {
         severity: "error",
         code: "APPLY_FAILED",
-        message: error instanceof Error ? error.message : "Import apply failed.",
+        message:
+          error instanceof Error ? error.message : "Import apply failed.",
       },
     ]);
 
@@ -1494,7 +1711,9 @@ export const applyImportRun = async (runId: string): Promise<{ runId: string; st
   return { runId, status: "applied" };
 };
 
-export const publishImportRun = async (runId: string): Promise<{ runId: string; publishedRows: number }> => {
+export const publishImportRun = async (
+  runId: string,
+): Promise<{ runId: string; publishedRows: number }> => {
   const operationStartedAt = Date.now();
   const run = await getRun(runId);
   if (run.status !== "applied") {
@@ -1505,7 +1724,9 @@ export const publishImportRun = async (runId: string): Promise<{ runId: string; 
   const now = new Date();
 
   const entityRows = rows.filter((row) => row.rowType === "entity");
-  const entities = entityRows.map((row) => ImportEntityEntrySchema.parse(row.payload));
+  const entities = entityRows.map((row) =>
+    ImportEntityEntrySchema.parse(row.payload),
+  );
 
   const idsByKind = new Map<string, string[]>();
   for (const entity of entities) {
@@ -1600,7 +1821,9 @@ export const publishImportRun = async (runId: string): Promise<{ runId: string; 
   };
 };
 
-export const getImportRunSummary = async (runId: string): Promise<{
+export const getImportRunSummary = async (
+  runId: string,
+): Promise<{
   run: ImportRunRow;
   rowCounts: Record<string, number>;
   issues: Array<typeof importIssues.$inferSelect>;

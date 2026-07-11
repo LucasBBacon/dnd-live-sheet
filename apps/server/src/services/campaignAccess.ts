@@ -10,7 +10,9 @@ type UserCarrier = {
   headers: Record<string, unknown>;
 };
 
-export const getHeaderOrAuthUserId = (carrier: UserCarrier): string | undefined => {
+export const getHeaderOrAuthUserId = (
+  carrier: UserCarrier,
+): string | undefined => {
   if (typeof carrier.user?.id === "string") {
     return carrier.user.id;
   }

@@ -11,7 +11,18 @@ export interface OperationalInventoryItem {
   requiresAttunement?: boolean; // from metadata
 }
 
+/**
+ * The InventoryBridge class serves as a utility for processing and compiling mechanical modifiers from a character's equipped items into a list of runtime modifiers. It provides methods to filter out items that are in the backpack, check for rule definitions, materialize runtime modifiers, and validate attunement constraints. This class is designed to facilitate the integration of item-based modifiers into a character's stats and abilities in a role-playing game context.
+ */
 export class InventoryBridge {
+
+  /**
+   * Compiles the mechanical modifiers from a character's equipped items into a list of runtime modifiers that can be applied to the character's stats and abilities. 
+   * This method filters out items that are in the backpack, checks for rule definitions, materializes runtime modifiers, and validates attunement constraints.
+   * @param equippedItems An array of OperationalInventoryItem objects representing the character's currently equipped items.
+   * @param snapshot An optional snapshot object containing item definitions, used to resolve item metadata and modifiers.
+   * @returns An array of RuntimeModifier objects representing the compiled modifiers from the equipped items.
+   */
   public static compileEquipmentModifiers(
     equippedItems: OperationalInventoryItem[],
     snapshot?: { itemsById?: Record<string, ItemDefinition> },

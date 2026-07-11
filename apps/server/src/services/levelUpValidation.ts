@@ -287,7 +287,9 @@ export const assessMulticlassPrerequisitesFromSnapshot = ({
     ? meetsAbilityMinimums(abilityMinimums, currentBaseScores)
     : true;
   const meetsAnyOf = anyOf
-    ? anyOf.some((minimums) => meetsAbilityMinimums(minimums, currentBaseScores))
+    ? anyOf.some((minimums) =>
+        meetsAbilityMinimums(minimums, currentBaseScores),
+      )
     : true;
 
   if (!meetsAllOf || !meetsAnyOf) {

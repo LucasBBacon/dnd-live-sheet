@@ -1,7 +1,12 @@
 import type { ResourceMaxRule, ResourceRule } from "@project/shared";
 
+type ThresholdRule = Extract<
+  ResourceMaxRule,
+  { thresholds: readonly unknown[] }
+>;
+
 const resolveThresholdValue = (
-  thresholds: ResourceMaxRule extends { thresholds: infer T } ? T : never,
+  thresholds: ThresholdRule["thresholds"],
   currentLevel: number,
 ): number => {
   let resolved = 0;
