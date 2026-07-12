@@ -2,6 +2,7 @@ export * from "./types/core.js";
 export * from "./types/combat.js";
 export * from "./types/progression.js";
 export * from "./types/resources.js";
+export * from "./rules/equipmentDictionary.js";
 export * from "./rules/traitDictionary.js";
 export * from "./rules/ruleLookup.js";
 export * from "./calculators/abilities.js";
