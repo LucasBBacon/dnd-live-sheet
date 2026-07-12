@@ -1,4 +1,4 @@
-import type { WeaponDefinition } from "../types/combat.js";
+import type { WeaponDefinition } from "@project/shared";
 import { AbilityEngine } from "./abilities.js";
 
 export interface DerivedAttack {

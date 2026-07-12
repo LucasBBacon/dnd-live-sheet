@@ -36,7 +36,7 @@ export type CharacterSheetResponse = {
   character: CharacterSheetPayload;
   ruleSnapshot: Pick<
     RuleSnapshot,
-    "itemsById" | "weaponsById" | "resourcesById"
+    "equipmentById" | "itemsById" | "weaponsById" | "resourcesById"
   > | null;
 };
 

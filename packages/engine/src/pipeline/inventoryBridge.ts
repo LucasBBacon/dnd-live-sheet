@@ -1,6 +1,6 @@
 import type { ItemDefinition } from "@project/shared";
 import type { RuntimeModifier } from "@project/shared";
-import { resolveItemDefinition } from "../rules/ruleLookup.js";
+import { resolveItemDefinition, type RuleSnapshotLookup } from "../rules/ruleLookup.js";
 
 export interface OperationalInventoryItem {
   id: string; // database instance UUID
@@ -25,7 +25,7 @@ export class InventoryBridge {
    */
   public static compileEquipmentModifiers(
     equippedItems: OperationalInventoryItem[],
-    snapshot?: { itemsById?: Record<string, ItemDefinition> },
+    snapshot?: RuleSnapshotLookup,
   ): RuntimeModifier[] {
     const compiledModifiers: RuntimeModifier[] = [];
 

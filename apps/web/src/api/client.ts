@@ -18,6 +18,7 @@ export type RulesSnapshotResponse = {
   version: number;
   loadedAt: number;
   snapshot: {
+    equipmentById?: Record<string, unknown>;
     itemsById: Record<string, unknown>;
     weaponsById: Record<string, unknown>;
     resourcesById: Record<string, unknown>;

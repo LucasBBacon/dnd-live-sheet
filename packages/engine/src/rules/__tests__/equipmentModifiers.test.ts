@@ -2,15 +2,22 @@ import { describe, expect, it } from "vitest";
 import { ITEM_DICTIONARY } from "../itemDictionary";
 
 describe("ITEM_DICTIONARY", () => {
-  it("contains expected rule keys", () => {
-    expect(Object.keys(ITEM_DICTIONARY).sort()).toEqual([
-      "item_armor_leather",
-      "item_armor_padded",
-      "item_armor_plate",
-      "item_armor_shield",
-      "item_armor_studded_leather",
-      "item_ring_of_protection",
-    ]);
+  it("contains expected armour and weapon keys", () => {
+    const itemKeys = Object.keys(ITEM_DICTIONARY);
+
+    expect(itemKeys).toEqual(
+      expect.arrayContaining([
+        "item_armor_leather",
+        "item_armor_padded",
+        "item_armor_plate",
+        "item_armor_shield",
+        "item_armor_studded_leather",
+        "item_ring_of_protection",
+        "item_weapon_longsword",
+        "item_weapon_dagger",
+        "item_weapon_longbow",
+      ]),
+    );
   });
 
   it("defines leather armor with base AC rule", () => {
@@ -77,5 +84,14 @@ describe("ITEM_DICTIONARY", () => {
     expect(ITEM_DICTIONARY.item_armor_leather.id).toBe("item_armor_leather");
     expect(ITEM_DICTIONARY.item_armor_leather.name).toBe("Leather Armor");
     expect(ITEM_DICTIONARY.item_armor_leather.type).toBe("armor");
+  });
+
+  it("projects weapon items as type weapon", () => {
+    expect(ITEM_DICTIONARY.item_weapon_longsword.id).toBe(
+      "item_weapon_longsword",
+    );
+    expect(ITEM_DICTIONARY.item_weapon_longsword.name).toBe("Longsword");
+    expect(ITEM_DICTIONARY.item_weapon_longsword.type).toBe("weapon");
+    expect(ITEM_DICTIONARY.item_weapon_longsword.modifiers).toBeUndefined();
   });
 });

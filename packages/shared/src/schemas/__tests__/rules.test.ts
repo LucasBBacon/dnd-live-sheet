@@ -122,4 +122,42 @@ describe("Rule Snapshot Schema", () => {
 
     expect(RuleSnapshotSchema.parse(snapshot)).toEqual(snapshot);
   });
+
+  it("accepts snapshot with canonical equipmentById field", () => {
+    const snapshot = {
+      itemsById: {},
+      resourcesById: {},
+      traitsById: {},
+      weaponsById: {},
+      equipmentById: {
+        item_weapon_longsword: {
+          id: "item_weapon_longsword",
+          name: "Longsword",
+          type: "weapon",
+          weapon: {
+            category: "martial_melee",
+            damageDice: "1d8",
+            damageType: "slashing",
+            properties: ["versatile"],
+          },
+        },
+      },
+    };
+
+    const parsed = RuleSnapshotSchema.parse(snapshot);
+    expect(parsed.equipmentById?.item_weapon_longsword?.name).toBe("Longsword");
+    expect(parsed.equipmentById?.item_weapon_longsword?.weapon?.category).toBe("martial_melee");
+  });
+
+  it("accepts snapshot without optional equipmentById (backwards compatibility)", () => {
+    const snapshot = {
+      itemsById: {},
+      resourcesById: {},
+      traitsById: {},
+      weaponsById: {},
+    };
+
+    const parsed = RuleSnapshotSchema.parse(snapshot);
+    expect(parsed.equipmentById).toBeUndefined();
+  });
 });

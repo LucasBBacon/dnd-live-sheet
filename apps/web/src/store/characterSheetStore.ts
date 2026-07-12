@@ -87,7 +87,7 @@ export interface CharacterSheetState {
   activeModifiers: RuntimeModifier[];
 
   resources: OperationalResource[];
-  ruleSnapshot: Pick<RuleSnapshot, "itemsById" | "weaponsById" | "resourcesById"> | null;
+  ruleSnapshot: Pick<RuleSnapshot, "equipmentById" | "itemsById" | "weaponsById" | "resourcesById"> | null;
 
   // actions
   initialize: (payload: Partial<CharacterSheetState>) => void;

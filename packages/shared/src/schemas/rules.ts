@@ -1,40 +1,20 @@
 import z from "zod";
+import { EquipmentDefinitionSchema } from "./equipment.js";
 import { ItemDefinitionSchema } from "./items.js";
 import { BaseModifierSchema } from "./modifiers.js";
+import {
+  WeaponDefinitionSchema,
+  type WeaponCategory,
+  type WeaponDefinition,
+  type WeaponProperty,
+} from "./weapons.js";
 
 // #region Weapon Rules
-
-export const WeaponCategorySchema = z.enum([
-  "simple_melee",
-  "martial_melee",
-  "simple_ranged",
-  "martial_ranged",
-]);
-
-export const WeaponPropertySchema = z.enum([
-  "finesse",
-  "thrown",
-  "heavy",
-  "light",
-  "two_handed",
-  "versatile",
-  "reach",
-  "ammunition",
-  "loading",
-  "special",
-]);
-
-export const WeaponDefinitionSchema = z
-  .object({
-    id: z.string(),
-    name: z.string(),
-    category: WeaponCategorySchema,
-    damageDice: z.string(),
-    damageType: z.string(),
-    properties: z.array(WeaponPropertySchema),
-    ammoItemId: z.string().optional(),
-  })
-  .strict();
+export {
+  WeaponCategorySchema,
+  WeaponPropertySchema,
+  WeaponDefinitionSchema,
+} from "./weapons.js";
 
 // #endregion
 
@@ -96,6 +76,9 @@ export const TraitDefinitionSchema = z
 
 export const RuleSnapshotSchema = z
   .object({
+    // canonical equipment field - single source over time
+    equipmentById: z.record(z.string(), EquipmentDefinitionSchema).optional(),
+    // compatibility fields - kept for phased consumer migration
     itemsById: z.record(z.string(), ItemDefinitionSchema),
     resourcesById: z.record(z.string(), ResourceRuleSchema),
     traitsById: z.record(z.string(), TraitDefinitionSchema),

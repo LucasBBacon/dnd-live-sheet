@@ -5,7 +5,7 @@ import {
   FeatPrerequisitesSchema,
 } from "./prerequisites.js";
 import { ItemDefinitionSchema } from "./items.js";
-import { WeaponDefinitionSchema } from "./rules.js";
+import { WeaponDefinitionSchema } from "./weapons.js";
 
 // #region Import Pack Schemas
 

@@ -10,6 +10,7 @@ let mockStoreState: {
   }>;
   proficiencies: Record<string, string>;
   ruleSnapshot: {
+    equipmentById?: Record<string, unknown>;
     weaponsById: Record<string, unknown>;
   } | null;
 };
