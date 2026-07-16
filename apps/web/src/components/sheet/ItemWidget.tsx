@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { EQUIPMENT_DICTIONARY } from "@project/engine";
 import { useMemo } from "react";
 

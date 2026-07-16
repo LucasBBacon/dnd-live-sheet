@@ -12,6 +12,13 @@ export const ModifierTargetSchema = z.enum([
   "STR_SAVE",
   "ALL_SAVES",
   "STEALTH_CHECK",
+  "STR",
+  "DEX",
+  "CON",
+  "INT",
+  "WIS",
+  "CHA",
+  "POISON_SAVE"
 ]);
 
 export const ModifierTypeSchema = z.enum([

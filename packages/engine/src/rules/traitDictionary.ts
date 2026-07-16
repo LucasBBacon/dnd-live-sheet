@@ -1,10 +1,5 @@
-import type { TraitModifier } from "@project/shared";
-
-export interface TraitDefinition {
-  id: string;
-  name: string;
-  modifiers: TraitModifier[];
-}
+import type { TraitDefinition } from "@project/shared";
+import { DWARF_TRAITS } from "./traits/dwarfDictionary.js";
 
 export const TRAIT_DICTIONARY: Record<string, TraitDefinition> = {
   feat_tough: {
@@ -49,4 +44,5 @@ export const TRAIT_DICTIONARY: Record<string, TraitDefinition> = {
       },
     ],
   },
+  ...DWARF_TRAITS,
 };
