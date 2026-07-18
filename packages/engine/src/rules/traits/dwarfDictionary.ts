@@ -1,64 +1,94 @@
 import type { TraitDefinition } from "@project/shared";
 
 export const DWARF_TRAITS: Record<string, TraitDefinition> = {
-  trait_dwarf_asi: {
-    id: "trait_dwarf_asi",
+  race_dwarf_asi: {
+    id: "race_dwarf_asi",
     name: "(Dwarf) Ability Score Increase",
-    modifiers: [
-      {
-        target: "CON",
-        type: "add",
-        value: 2,
-        scalingFactor: "none",
-      },
-    ],
+    description: "Your Constitution score increases by 2.",
+    modifiers: {
+      fixed: [
+        {
+          target: "CON",
+          type: "add",
+          value: 2,
+          scalingFactor: "none",
+        },
+      ],
+      choices: [],
+    },
   },
-  trait_dwarven_resilience: {
-    id: "trait_dwarven_resilience",
+  race_dwarf_darkvision: {
+    id: "race_dwarf_darkvision",
+    name: "(Dwarf) Darkvision",
+    description:
+      "Accustomed to life underground, you have superior vision in dark and dim conditions. You can see in dim light within 60 feet of you as if it were bright light, and in darkness as if it were dim light. You can't discern color in darkness, only shades of gray.",
+    modifiers: {
+      fixed: [
+        {
+          target: "SENSE_DARKVISION",
+          type: "set_base",
+          value: 60,
+          scalingFactor: "none",
+        },
+      ],
+      choices: [],
+    },
+  },
+  dwarven_resilience: {
+    id: "dwarven_resilience",
     name: "Dwarven Resilience",
-    modifiers: [
-      {
-        target: "POISON_SAVE",
-        type: "advantage",
-        value: 0,
-        scalingFactor: "none",
-      },
-    ],
+    description:
+      "You have advantage on saving throws against poison, and you have resistance against poison damage.",
+    modifiers: {
+      fixed: [
+        {
+          target: "POISON_SAVE",
+          type: "advantage",
+          value: 0,
+          scalingFactor: "none",
+        },
+      ],
+      choices: [],
+    },
   },
-  trait_dwarven_combat_training: {
-    id: "trait_dwarven_combat_training",
+  dwarven_combat_training: {
+    id: "dwarven_combat_training",
     name: "Dwarven Combat Training",
-    modifiers: [],
+    description:
+      "You have proficiency with the battleaxe, handaxe, light hammer, and warhammer.",
+    modifiers: { fixed: [], choices: [] },
     proficiencies: {
       fixed: [
         {
           category: "weapons",
-          proficiencyId: "item_weapon_battleaxe",
+          proficiencyId: "weapon_battleaxe",
           level: "proficient",
         },
         {
           category: "weapons",
-          proficiencyId: "item_weapon_handaxe",
+          proficiencyId: "weapon_handaxe",
           level: "proficient",
         },
         {
           category: "weapons",
-          proficiencyId: "item_weapon_light_hammer",
+          proficiencyId: "weapon_light_hammer",
           level: "proficient",
         },
         {
           category: "weapons",
-          proficiencyId: "item_weapon_warhammer",
+          proficiencyId: "weapon_warhammer",
           level: "proficient",
         },
       ],
       choices: [],
     },
   },
-  trait_tool_proficiency: {
-    id: "trait_tool_proficiency",
+  tool_proficiency: {
+    id: "tool_proficiency",
     name: "Tool Proficiency",
-    modifiers: [],
+    description:
+      "You gain proficiency with the artisan's tools of your choice: smith's tools, brewer's supplies, or mason's tools.",
+    modifiers: { fixed: [], choices: [] },
     proficiencies: {
       fixed: [],
       choices: [
@@ -72,10 +102,12 @@ export const DWARF_TRAITS: Record<string, TraitDefinition> = {
       ],
     },
   },
-  trait_stonecutting: {
-    id: "trait_stonecutting",
+  stonecutting: {
+    id: "stonecutting",
     name: "Stonecutting",
-    modifiers: [],
+    description:
+      "Whenever you make an Intelligence (History) check related to the origin of stonework, you are considered proficient in the History skill and add double your proficiency bonus to the check, instead of your normal proficiency bonus.",
+    modifiers: { fixed: [], choices: [] },
     proficiencies: {
       fixed: [
         {
@@ -87,21 +119,93 @@ export const DWARF_TRAITS: Record<string, TraitDefinition> = {
       choices: [],
     },
   },
-  trait_dwarf_languages: {
-    id: "trait_dwarf_languages",
-    name: "Languages",
-    modifiers: [],
+  race_dwarf_languages: {
+    id: "race_dwarf_languages",
+    name: "(Dwarf) Languages",
+    description:
+      "You can speak, read, and write Common and Dwarvish. Dwarvish is full of hard consonants and guttural sounds, and those characteristics spill over into whatever other language a dwarf might speak.",
+    modifiers: { fixed: [], choices: [] },
     proficiencies: {
       fixed: [
         {
           category: "languages",
-          proficiencyId: "lang_common",
+          proficiencyId: "common",
           level: "proficient",
         },
         {
           category: "languages",
-          proficiencyId: "lang_dwarvish",
+          proficiencyId: "dwarvish",
           level: "proficient",
+        },
+      ],
+      choices: [],
+    },
+  },
+  subrace_dwarf_mountain_asi: {
+    id: "subrace_dwarf_mountain_asi",
+    name: "(Mountain Dwarf) Ability Score Increase",
+    description: "Your Strength score increases by 2.",
+    modifiers: {
+      fixed: [
+        {
+          target: "STR",
+          type: "add",
+          value: 2,
+          scalingFactor: "none",
+        },
+      ],
+      choices: [],
+    },
+  },
+  dwarven_armor_training: {
+    id: "dwarven_armor_training",
+    name: "Dwarven Armor Training",
+    description: "You have proficiency with light and medium armor.",
+    modifiers: { fixed: [], choices: [] },
+    proficiencies: {
+      fixed: [
+        {
+          category: "armor",
+          proficiencyId: "armor_light",
+          level: "proficient",
+        },
+        {
+          category: "weapons",
+          proficiencyId: "armor_medium",
+          level: "proficient",
+        },
+      ],
+      choices: [],
+    },
+  },
+  subrace_dwarf_hill_asi: {
+    id: "subrace_dwarf_hill_asi",
+    name: "(Hill Dwarf) Ability Score Increase",
+    description: "Your Wisdom score increases by 1.",
+    modifiers: {
+      fixed: [
+        {
+          target: "WIS",
+          type: "add",
+          value: 1,
+          scalingFactor: "none",
+        },
+      ],
+      choices: [],
+    },
+  },
+  dwarven_toughness: {
+    id: "dwarven_toughness",
+    name: "Dwarven Toughness",
+    description:
+      "Your hit point maximum increases by 1, and it increases by 1 every time you gain a level.",
+    modifiers: {
+      fixed: [
+        {
+          target: "MAX_HP",
+          type: "add",
+          value: 1,
+          scalingFactor: "total_level",
         },
       ],
       choices: [],

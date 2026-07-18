@@ -18,7 +18,10 @@ export const ModifierTargetSchema = z.enum([
   "INT",
   "WIS",
   "CHA",
-  "POISON_SAVE"
+  "POISON_SAVE",
+  "CHARM_SAVE",
+  "FRIGHTEN_SAVE",
+  "SENSE_DARKVISION",
 ]);
 
 export const ModifierTypeSchema = z.enum([
@@ -41,6 +44,18 @@ export const BaseModifierSchema = z.object({
   value: z.number().default(0),
   scalingFactor: ModifierScalingSchema.default("none"),
   maxDexCap: z.number().optional(),
+});
+
+export const ChoiceModifierGrantSchema = z.object({
+  id: z.string(),
+  chooseAmount: z.number().min(1).default(1),
+  options: z.array(ModifierTargetSchema),
+  modifierTemplate: z.object({
+    type: ModifierTypeSchema,
+    value: z.number(),
+    scalingFactor: ModifierScalingSchema.default("none"),
+  }),
+  allowDuplicates: z.boolean().default(false),
 });
 
 export const RuntimeModifierSchema = BaseModifierSchema.extend({

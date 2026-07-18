@@ -1,5 +1,9 @@
 import z from "zod";
-import { BaseModifierSchema } from "./modifiers.js";
+import { BaseModifierSchema, ChoiceModifierGrantSchema } from "./modifiers.js";
+import {
+  ChoiceAffinityGrantSchema,
+  FixedAffinityGrantSchema,
+} from "./affinities.js";
 
 export const TraitProficiencyCategorySchema = z.enum([
   "armor",
@@ -35,11 +39,26 @@ export const ChoiceProficiencyGrantSchema = z.object({
 export const TraitDefinitionSchema = z.object({
   id: z.string(),
   name: z.string(),
-  modifiers: z.array(BaseModifierSchema).default([]),
+  description: z.string(),
+
+  modifiers: z
+    .object({
+      fixed: z.array(BaseModifierSchema).default([]),
+      choices: z.array(ChoiceModifierGrantSchema).default([]),
+    })
+    .default({ fixed: [], choices: [] }),
+
   proficiencies: z
     .object({
       fixed: z.array(FixedProficiencyGrantSchema).default([]),
       choices: z.array(ChoiceProficiencyGrantSchema).default([]),
+    })
+    .optional(),
+
+  affinities: z
+    .object({
+      fixed: z.array(FixedAffinityGrantSchema).default([]),
+      choices: z.array(ChoiceAffinityGrantSchema).default([]),
     })
     .optional(),
 });
