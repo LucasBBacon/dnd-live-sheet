@@ -3,10 +3,9 @@ import { EquipmentDefinitionSchema } from "./equipment.js";
 import { ItemDefinitionSchema } from "./items.js";
 import { BaseModifierSchema } from "./modifiers.js";
 import {
+  WeaponCategorySchema,
   WeaponDefinitionSchema,
-  type WeaponCategory,
-  type WeaponDefinition,
-  type WeaponProperty,
+  WeaponPropertySchema,
 } from "./weapons.js";
 
 // #region Weapon Rules

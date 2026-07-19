@@ -4,37 +4,14 @@ import {
   ChoiceAffinityGrantSchema,
   FixedAffinityGrantSchema,
 } from "./affinities.js";
-
-export const TraitProficiencyCategorySchema = z.enum([
-  "armor",
-  "weapons",
-  "tools",
-  "saving_throws",
-  "skills",
-  "languages",
-  "ability_check",
-]);
-
-export const ProficiencyLevelSchema = z.enum([
-  "half",
-  "proficient",
-  "expertise",
-]);
-
-export const FixedProficiencyGrantSchema = z.object({
-  category: TraitProficiencyCategorySchema,
-  proficiencyId: z.string(),
-  level: ProficiencyLevelSchema.default("proficient"),
-});
-
-export const ChoiceProficiencyGrantSchema = z.object({
-  id: z.string(), // unique id of this specific choice block
-  category: TraitProficiencyCategorySchema,
-  chooseAmount: z.number().min(1).default(1),
-  // if undefined, implies ANY from the category. If array, restrict choices from these ids
-  options: z.array(z.string()).optional(),
-  level: ProficiencyLevelSchema.default("proficient"),
-});
+import { ResourceGrantSchema } from "./resources.js";
+import { TriggerGrantSchema } from "./triggers.js";
+import {
+  ChoiceProficiencyGrantSchema,
+  FixedProficiencyGrantSchema,
+} from "./proficiencies.js";
+import { CriticalHitModifierSchema, DiceRuleSchema } from "./dice.js";
+import { ActionGrantSchema } from "./actions.js";
 
 export const TraitDefinitionSchema = z.object({
   id: z.string(),
@@ -61,16 +38,17 @@ export const TraitDefinitionSchema = z.object({
       choices: z.array(ChoiceAffinityGrantSchema).default([]),
     })
     .optional(),
+
+  // reactive blocks
+  resources: z.array(ResourceGrantSchema).default([]),
+  triggers: z.array(TriggerGrantSchema).default([]),
+  diceRules: z.array(DiceRuleSchema).default([]),
+  criticalHitModifiers: z.array(CriticalHitModifierSchema).default([]),
+
+  // proactive capabilities
+  actions: z.array(ActionGrantSchema).default([]),
 });
 
-export type TraitProficiencyCategory = z.infer<
-  typeof TraitProficiencyCategorySchema
->;
-export type ProficiencyLevel = z.infer<typeof ProficiencyLevelSchema>;
-export type FixedProficiencyGrant = z.infer<typeof FixedProficiencyGrantSchema>;
-export type ChoiceProficiencyGrant = z.infer<
-  typeof ChoiceProficiencyGrantSchema
->;
 export type TraitDefinition = z.infer<typeof TraitDefinitionSchema>;
 
 export const ResolvedTraitChoiceSchema = z.object({

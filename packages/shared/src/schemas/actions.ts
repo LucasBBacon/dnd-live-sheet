@@ -1,0 +1,99 @@
+import z from "zod";
+import { ModifierScalingSchema, ModifierTargetSchema } from "./modifiers.js";
+import { DamageTypeSchema } from "./affinities.js";
+
+export const ActionActivationSchema = z.enum([
+  "action",
+  "bonus_action",
+  "reaction",
+  "special",
+  "minute",
+  "hour",
+  "eight_hours",
+]);
+
+export const AreaOfEffectSchema = z.object({
+  shape: z.enum([
+    "cone",
+    "line",
+    "sphere",
+    "cube",
+    "cylinder",
+    "single_target",
+  ]),
+  size: z.number(),
+  secondarySize: z.number().optional(),
+});
+
+export const ActionSaveSchema = z.object({
+  targetStat: ModifierTargetSchema,
+  dcCalculation: z.object({
+    base: z.number().default(8),
+    scalingStat: ModifierTargetSchema,
+    includeProficiency: z.boolean().default(true),
+  }),
+  saveEffect: z.enum(["half_damage", "no_damage", "negates_effect"]),
+});
+
+export const DamageSegmentSchema = z.object({
+  sourceName: z.string(),
+  baseDice: z.string(),
+  damageType: DamageTypeSchema,
+  scalingMode: ModifierScalingSchema.default("none"),
+  scalingClassId: z.string().optional(), // must be provided if mode is 'class_level'
+  levelScaling: z
+    .array(z.object({ levelRequired: z.number(), newDice: z.string() }))
+    .default([]),
+});
+
+export const DamageRiderEffectSchema = z.object({
+  type: z.literal("damage_rider"),
+  requiredWeaponProperties: z.array(z.string()).default([]), // e.g., ['finesse', 'ranged']
+  damage: z.array(DamageSegmentSchema),
+});
+
+export const SaveEffectSchema = z.object({
+  type: z.literal("save"),
+  areaOfEffect: AreaOfEffectSchema.optional(),
+  savingThrow: ActionSaveSchema,
+  damage: z.array(DamageSegmentSchema).optional(),
+});
+
+export const AttackEffectSchema = z.object({
+  type: z.literal("attack"),
+  attackStat: ModifierTargetSchema,
+  range: z.number().default(5),
+  damage: z.array(DamageSegmentSchema),
+});
+
+export const SummonEffectSchema = z.object({
+  type: z.literal("summon"),
+  entityTemplateIds: z.array(z.string()),
+  maxActive: z.number().optional(),
+  durationHours: z.number().optional(),
+  materialCostGP: z.number().optional(),
+});
+
+export const MacroEffectSchema = z.object({
+  type: z.literal("macro"),
+  sequence: z.array(
+    z.object({ actionId: z.string(), count: z.number().min(1).default(1) }),
+  ),
+});
+
+export const ActionGrantSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  activation: ActionActivationSchema,
+  consumesResource: z.string().optional(),
+  effect: z.discriminatedUnion("type", [
+    SaveEffectSchema,
+    AttackEffectSchema,
+    MacroEffectSchema,
+    DamageRiderEffectSchema,
+    SummonEffectSchema,
+  ]),
+});
+
+export type ActionGrant = z.infer<typeof ActionGrantSchema>;
+export type DamageSegment = z.infer<typeof DamageSegmentSchema>;

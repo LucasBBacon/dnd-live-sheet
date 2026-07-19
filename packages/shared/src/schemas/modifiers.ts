@@ -10,17 +10,22 @@ export const ModifierTargetSchema = z.enum([
   "ATTACK_BONUS",
   "DAMAGE_BONUS",
   "STR_SAVE",
+  "DEX_SAVE",
+  "CON_SAVE",
+  "INT_SAVE",
+  "WIS_SAVE",
+  "CHA_SAVE",
   "ALL_SAVES",
-  "STEALTH_CHECK",
+  "POISON_SAVE",
+  "CHARM_SAVE",
+  "FRIGHTEN_SAVE",
   "STR",
   "DEX",
   "CON",
   "INT",
   "WIS",
   "CHA",
-  "POISON_SAVE",
-  "CHARM_SAVE",
-  "FRIGHTEN_SAVE",
+  "STEALTH_CHECK",
   "SENSE_DARKVISION",
 ]);
 
@@ -44,6 +49,8 @@ export const BaseModifierSchema = z.object({
   value: z.number().default(0),
   scalingFactor: ModifierScalingSchema.default("none"),
   maxDexCap: z.number().optional(),
+  requiredStates: z.array(z.string()).default([]),
+  forbiddenStates: z.array(z.string()).default([]),
 });
 
 export const ChoiceModifierGrantSchema = z.object({

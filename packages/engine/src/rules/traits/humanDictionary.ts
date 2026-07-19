@@ -1,6 +1,6 @@
 import type { TraitDefinition } from "@project/shared";
 
-export const HALF_ELF_TRAITS: Record<string, TraitDefinition> = {
+export const HUMAN_TRAITS: Record<string, TraitDefinition> = {
   race_human_asi: {
     id: "race_human_asi",
     name: "(Human) Ability Score Increase",
@@ -12,40 +12,57 @@ export const HALF_ELF_TRAITS: Record<string, TraitDefinition> = {
           type: "add",
           value: 1,
           scalingFactor: "none",
+          requiredStates: [],
+          forbiddenStates: [],
         },
         {
           target: "DEX",
           type: "add",
           value: 1,
           scalingFactor: "none",
+          requiredStates: [],
+          forbiddenStates: [],
         },
         {
           target: "CON",
           type: "add",
           value: 1,
           scalingFactor: "none",
+          requiredStates: [],
+          forbiddenStates: [],
         },
         {
           target: "INT",
           type: "add",
           value: 1,
           scalingFactor: "none",
+          requiredStates: [],
+          forbiddenStates: [],
         },
         {
           target: "WIS",
           type: "add",
           value: 1,
           scalingFactor: "none",
+          requiredStates: [],
+          forbiddenStates: [],
         },
         {
           target: "CHA",
           type: "add",
           value: 1,
           scalingFactor: "none",
+          requiredStates: [],
+          forbiddenStates: [],
         },
       ],
       choices: [],
     },
+    resources: [],
+    triggers: [],
+    diceRules: [],
+    criticalHitModifiers: [],
+    actions: [],
   },
   race_half_elf_languages: {
     id: "race_half_elf_languages",
@@ -59,6 +76,7 @@ export const HALF_ELF_TRAITS: Record<string, TraitDefinition> = {
           category: "languages",
           proficiencyId: "common",
           level: "proficient",
+          requiredStates: [],
         },
       ],
       choices: [
@@ -68,8 +86,14 @@ export const HALF_ELF_TRAITS: Record<string, TraitDefinition> = {
           chooseAmount: 1,
           level: "proficient",
           options: [""], // TODO: add lang options!!
+          requiredStates: [],
         },
       ],
     },
+    resources: [],
+    triggers: [],
+    diceRules: [],
+    criticalHitModifiers: [],
+    actions: [],
   },
 };
