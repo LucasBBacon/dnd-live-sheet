@@ -1,4 +1,20 @@
-import type { CalculationResult, RuntimeModifier } from "@project/shared";
+import type {
+  CalculationResult,
+  FixedProficiencyGrant,
+  RuntimeModifier,
+} from "@project/shared";
+
+export interface LevelProfile {
+  total: number;
+  classes: Record<string, number>; // e.g., {rogue: 3, sorcerer: 2}
+}
+
+const PROFICIENCY_MULTIPLIERS: Record<string, number> = {
+  none: 0,
+  half: 0.5,
+  proficient: 1,
+  expertise: 2,
+};
 
 /**
  * The DerivedStatEngine class provides static methods to calculate derived character statistics such as maximum hit points (HP), armor class (AC), and initiative.
@@ -20,29 +36,53 @@ export class DerivedStatEngine {
   public static calculateMaxHp(
     baseHpRolled: number,
     conModifier: number,
-    totalLevel: number,
+    levels: LevelProfile,
     modifiers: RuntimeModifier[],
+    activeStates: string[] = [],
   ): CalculationResult {
     const breakdown: CalculationResult["breakdown"] = [];
 
     // 5e hp rule: base + (con * level)
     // min 1 hp granted per lvl regardless of negative con mod
-    const conContribution = Math.max(1, conModifier) * totalLevel;
+    const conContribution = Math.max(1, conModifier) * levels.total;
     let total = baseHpRolled + conContribution;
 
     breakdown.push({ name: "Base HP Rolled", value: baseHpRolled });
     breakdown.push({
-      name: `CON (${conModifier}) x Level (${totalLevel})`,
+      name: `CON (${conModifier >= 0 ? "+" : ""}${conModifier}) x Level (${levels.total})`,
       value: conContribution,
     });
 
-    const hpMods = modifiers.filter((m) => m.target === "MAX_HP" && m.isActive);
+    const hpMods = modifiers.filter((m) => {
+      if (m.target !== "MAX_HP" || !m.isActive) {
+        return false;
+      }
+      if (m.forbiddenStates?.some((s) => activeStates.includes(s))) {
+        return false;
+      }
+      return m.requiredStates
+        ? m.requiredStates.every((s) => activeStates.includes(s))
+        : true;
+    });
 
     // process trait mods
     for (const mod of hpMods) {
       if (mod.type === "add") {
-        total += mod.value;
-        breakdown.push({ name: mod.sourceName, value: `+${mod.value}` });
+        let addition = mod.value;
+
+        // handle scaling based on ModifierScalingSchema
+        if (mod.scalingFactor === "total_level") {
+          addition *= levels.total;
+        } else if (mod.scalingFactor === "class_level" && mod.scalingClassId) {
+          const classLvl = levels.classes[mod.scalingClassId] || 0;
+          addition *= classLvl;
+        }
+
+        if (addition !== 0) {
+          total += addition;
+          const sign = addition >= 0 ? "+" : "";
+          breakdown.push({ name: mod.sourceName, value: `${sign}${addition}` });
+        }
       }
     }
 
@@ -63,15 +103,25 @@ export class DerivedStatEngine {
   public static calculateAC(
     baseDexMod: number,
     modifiers: RuntimeModifier[],
+    activeStates: string[] = [],
   ): CalculationResult {
     const breakdown: CalculationResult["breakdown"] = [];
-    const activeMods = modifiers.filter(
-      (m) => m.target === "ARMOR_CLASS" && m.isActive,
-    );
+
+    const validMods = modifiers.filter((m) => {
+      if (m.target !== "ARMOR_CLASS" || !m.isActive) {
+        return false;
+      }
+      if (m.forbiddenStates?.some((s) => activeStates.includes(s))) {
+        return false;
+      }
+      return m.requiredStates
+        ? m.requiredStates.every((s) => activeStates.includes(s))
+        : true;
+    });
 
     // 1 - determine base AC (handling mutually exclusive formulas)
     // engine sorts 'set_base' mods to find the highest available formula
-    const baseSetters = activeMods.filter((m) => m.type === "set_base");
+    const baseSetters = validMods.filter((m) => m.type === "set_base");
     let baseAc = 10;
     let dexCap: number | undefined = undefined;
 
@@ -133,10 +183,10 @@ export class DerivedStatEngine {
     }
 
     // 3 - flat additions
-    const adders = activeMods.filter((m) => m.type === "add");
+    const adders = validMods.filter((m) => m.type === "add");
     let addedBonus = 0;
-    const appliedNames = new Set<string>();
 
+    const appliedNames = new Set<string>();
     for (const mod of adders) {
       if (appliedNames.has(mod.sourceName)) {
         breakdown.push({
@@ -172,7 +222,10 @@ export class DerivedStatEngine {
    */
   public static calculateInitiative(
     baseDexMod: number,
+    profBonus: number,
+    proficiencies: FixedProficiencyGrant[],
     modifiers: RuntimeModifier[],
+    activeStates: string[] = [],
   ): CalculationResult {
     const breakdown: CalculationResult["breakdown"] = [];
     let total = baseDexMod;
@@ -184,41 +237,87 @@ export class DerivedStatEngine {
       value: `${dexSign}${baseDexMod}`,
     });
 
-    const activeMods = modifiers.filter(
-      (m) => m.target === "INITIATIVE" && m.isActive,
+    // determine initiative prof
+    // treat initiative as valid proficiencyId in engine
+    const relevantGrants = proficiencies.filter(
+      (p) => p.category === "skills" && p.proficiencyId === "initiative",
     );
 
+    let maxMultiplier = 0;
+    for (const grant of relevantGrants) {
+      const meetsRequirements = grant.requiredStates
+        ? grant.requiredStates.every((state) => activeStates.includes(state))
+        : true;
+
+      if (meetsRequirements) {
+        const multiplier = PROFICIENCY_MULTIPLIERS[grant.level] ?? 0;
+        if (multiplier > maxMultiplier) {
+          maxMultiplier = multiplier;
+        }
+      }
+    }
+
+    if (maxMultiplier > 0) {
+      const appliedProf = Math.floor(profBonus * maxMultiplier);
+      total += appliedProf;
+      breakdown.push({
+        name: `Proficiency (x${maxMultiplier})`,
+        value: `+${appliedProf}`,
+      });
+    }
+
+    const validMods = modifiers.filter((m) => {
+      if (m.target !== "INITIATIVE" || !m.isActive) {
+        return false;
+      }
+      if (m.forbiddenStates?.some((s) => activeStates.includes(s))) {
+        return false;
+      }
+      return m.requiredStates
+        ? m.requiredStates.every((s) => activeStates.includes(s))
+        : true;
+    });
+
     // 2 - flat additions
-    const adders = activeMods.filter((m) => m.type === "add");
-    const appliedNames = new Set<string>();
+    const adders = validMods.filter((m) => m.type === "add");
+    const groupedAdders = new Map<string, RuntimeModifier[]>();
 
     for (const mod of adders) {
-      if (appliedNames.has(mod.sourceName)) {
+      if (!groupedAdders.has(mod.sourceName)) {
+        groupedAdders.set(mod.sourceName, []);
+      }
+      groupedAdders.get(mod.sourceName)!.push(mod);
+    }
+
+    for (const [sourceName, mods] of groupedAdders.entries()) {
+      // sort descending to grab highest value buff of this name
+      mods.sort((a, b) => b.value - a.value);
+      const bestMod = mods[0];
+
+      total += bestMod.value;
+      const modSign = bestMod.value >= 0 ? "+" : "";
+      breakdown.push({ name: sourceName, value: `${modSign}${bestMod.value}` });
+
+      // mark the weaker duplicates as ignored
+      for (let i = 1; i < mods.length; i++) {
         breakdown.push({
-          name: mod.sourceName,
-          value: "Ignored (Duplicate)",
+          name: sourceName,
+          value: "Ignored (Does not stack)",
           isIgnored: true,
         });
-        continue;
       }
-
-      appliedNames.add(mod.sourceName);
-      total += mod.value;
-
-      const modSign = mod.value >= 0 ? "+" : "";
-      breakdown.push({ name: mod.sourceName, value: `${modSign}${mod.value}` });
     }
 
     // 3- roll state flags (advantage / disadvantage)
     // these don't change the numerical total, but are good for UI breakdown
-    const hasAdvantage = activeMods.some((m) => m.type === "advantage");
-    const hasDisadvantage = activeMods.some((m) => m.type === "disadvantage");
+    const hasAdvantage = validMods.some((m) => m.type === "advantage");
+    const hasDisadvantage = validMods.some((m) => m.type === "disadvantage");
 
     if (hasAdvantage && !hasDisadvantage) {
-      const source = activeMods.find((m) => m.type === "advantage")?.sourceName;
+      const source = validMods.find((m) => m.type === "advantage")?.sourceName;
       breakdown.push({ name: "Advantage", value: `Granted by ${source}` });
     } else if (hasDisadvantage && !hasAdvantage) {
-      const source = activeMods.find(
+      const source = validMods.find(
         (m) => m.type === "disadvantage",
       )?.sourceName;
       breakdown.push({ name: "Disadvantage", value: `Imposed by ${source}` });

@@ -25,6 +25,13 @@ export const AreaOfEffectSchema = z.object({
   secondarySize: z.number().optional(),
 });
 
+export const AttackTypeSchema = z.enum([
+  "melee_weapon",
+  "ranged_weapon",
+  "melee_spell",
+  "ranged_spell",
+]);
+
 export const ActionSaveSchema = z.object({
   targetStat: ModifierTargetSchema,
   dcCalculation: z.object({
@@ -61,8 +68,10 @@ export const SaveEffectSchema = z.object({
 
 export const AttackEffectSchema = z.object({
   type: z.literal("attack"),
+  attackType: AttackTypeSchema,
   attackStat: ModifierTargetSchema,
   range: z.number().default(5),
+  longRange: z.number().optional(),
   damage: z.array(DamageSegmentSchema),
 });
 

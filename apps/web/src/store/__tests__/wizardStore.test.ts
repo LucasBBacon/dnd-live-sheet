@@ -114,13 +114,13 @@ describe("Wizard Store State Management", () => {
 
   describe("ability scores", () => {
     it("should set individual ability score", () => {
-      useWizardStore.getState().setBaseAbilityScore("str", 15);
+      useWizardStore.getState().setBaseAbilityScore("STR", 15);
       expect(useWizardStore.getState().baseAbilityScores.str).toBe(15);
     });
 
     it("should preserve other scores when updating one", () => {
-      useWizardStore.getState().setBaseAbilityScore("str", 15);
-      useWizardStore.getState().setBaseAbilityScore("dex", 14);
+      useWizardStore.getState().setBaseAbilityScore("STR", 15);
+      useWizardStore.getState().setBaseAbilityScore("DEX", 14);
       expect(useWizardStore.getState().baseAbilityScores).toEqual({
         str: 15,
         dex: 14,
@@ -138,17 +138,17 @@ describe("Wizard Store State Management", () => {
     });
 
     it("should handle minimum ability scores", () => {
-      useWizardStore.getState().setBaseAbilityScore("str", 3);
+      useWizardStore.getState().setBaseAbilityScore("STR", 3);
       expect(useWizardStore.getState().baseAbilityScores.str).toBe(3);
     });
 
     it("should handle maximum ability scores", () => {
-      useWizardStore.getState().setBaseAbilityScore("str", 18);
+      useWizardStore.getState().setBaseAbilityScore("STR", 18);
       expect(useWizardStore.getState().baseAbilityScores.str).toBe(18);
     });
 
     it("should allow negative ability scores in state", () => {
-      useWizardStore.getState().setBaseAbilityScore("str", -1);
+      useWizardStore.getState().setBaseAbilityScore("STR", -1);
       expect(useWizardStore.getState().baseAbilityScores.str).toBe(-1);
     });
   });
@@ -392,13 +392,13 @@ describe("Wizard Store State Management", () => {
 
     it("should block step 4 with score below 3", () => {
       useWizardStore.getState().setStep(4);
-      useWizardStore.getState().setBaseAbilityScore("str", 2);
+      useWizardStore.getState().setBaseAbilityScore("STR", 2);
       expect(useWizardStore.getState().canProceed()).toBe(false);
     });
 
     it("should block step 4 with score above 18", () => {
       useWizardStore.getState().setStep(4);
-      useWizardStore.getState().setBaseAbilityScore("str", 19);
+      useWizardStore.getState().setBaseAbilityScore("STR", 19);
       expect(useWizardStore.getState().canProceed()).toBe(false);
     });
 

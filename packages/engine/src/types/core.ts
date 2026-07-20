@@ -1,4 +1,4 @@
-export type Ability = "str" | "dex" | "con" | "int" | "wis" | "cha";
+export type Ability = "STR" | "DEX" | "CON" | "INT" | "WIS" | "CHA";
 export type ProficiencyLevel = "none" | "proficient" | "expertise";
 
 export interface SkillDefinition {
@@ -10,38 +10,38 @@ export interface SkillDefinition {
 // TODO: Maybe move this to a shared package, since it's used in both the engine and the client
 // 2014 PHB standard
 export const SKILL_MAP: Record<string, SkillDefinition> = {
-  athletics: { id: "athletics", name: "Athletics", ability: "str" },
-  acrobatics: { id: "acrobatics", name: "Acrobatics", ability: "dex" },
+  athletics: { id: "athletics", name: "Athletics", ability: "STR" },
+  acrobatics: { id: "acrobatics", name: "Acrobatics", ability: "DEX" },
   sleight_of_hand: {
     id: "sleight_of_hand",
     name: "Sleight of Hand",
-    ability: "dex",
+    ability: "DEX",
   },
-  stealth: { id: "stealth", name: "Stealth", ability: "dex" },
-  arcana: { id: "arcana", name: "Arcana", ability: "int" },
-  history: { id: "history", name: "History", ability: "int" },
+  stealth: { id: "stealth", name: "Stealth", ability: "DEX" },
+  arcana: { id: "arcana", name: "Arcana", ability: "INT" },
+  history: { id: "history", name: "History", ability: "INT" },
   investigation: {
     id: "investigation",
     name: "Investigation",
-    ability: "int",
+    ability: "INT",
   },
-  nature: { id: "nature", name: "Nature", ability: "int" },
-  religion: { id: "religion", name: "Religion", ability: "int" },
+  nature: { id: "nature", name: "Nature", ability: "INT" },
+  religion: { id: "religion", name: "Religion", ability: "INT" },
   animal_handling: {
     id: "animal_handling",
     name: "Animal Handling",
-    ability: "wis",
+    ability: "WIS",
   },
-  insight: { id: "insight", name: "Insight", ability: "wis" },
-  medicine: { id: "medicine", name: "Medicine", ability: "wis" },
-  perception: { id: "perception", name: "Perception", ability: "wis" },
-  survival: { id: "survival", name: "Survival", ability: "wis" },
-  deception: { id: "deception", name: "Deception", ability: "cha" },
+  insight: { id: "insight", name: "Insight", ability: "WIS" },
+  medicine: { id: "medicine", name: "Medicine", ability: "WIS" },
+  perception: { id: "perception", name: "Perception", ability: "WIS" },
+  survival: { id: "survival", name: "Survival", ability: "WIS" },
+  deception: { id: "deception", name: "Deception", ability: "CHA" },
   intimidation: {
     id: "intimidation",
     name: "Intimidation",
-    ability: "cha",
+    ability: "CHA",
   },
-  performance: { id: "performance", name: "Performance", ability: "cha" },
-  persuasion: { id: "persuasion", name: "Persuasion", ability: "cha" },
+  performance: { id: "performance", name: "Performance", ability: "CHA" },
+  persuasion: { id: "persuasion", name: "Persuasion", ability: "CHA" },
 };

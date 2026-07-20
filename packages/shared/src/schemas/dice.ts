@@ -1,5 +1,6 @@
 import z from "zod";
 import { DamageTypeSchema } from "./affinities.js";
+import { AttackTypeSchema } from "./actions.js";
 
 export const DiceRuleTargetSchema = z.enum([
   "DAMAGE_ROLL",
@@ -12,13 +13,6 @@ export const RNGMutatorTypeSchema = z.enum([
   "reroll_once",
   "minimum_value",
   "explode",
-]);
-
-export const AttackTypeSchema = z.enum([
-  "melee_weapon",
-  "ranged_weapon",
-  "melee_spell",
-  "ranged_spell",
 ]);
 
 export const RNGMutatorSchema = z.object({

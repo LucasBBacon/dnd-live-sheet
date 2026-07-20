@@ -1,6 +1,5 @@
 import type { OperationalResource } from "../types/resources.js";
 import { getResourceMaxUses } from "../utils/resourceRules.js";
-import type { ResourceRule } from "@project/shared";
 import { resolveResourceRule } from "../rules/ruleLookup.js";
 
 /**

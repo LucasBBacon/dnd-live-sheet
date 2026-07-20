@@ -48,6 +48,7 @@ export const BaseModifierSchema = z.object({
   type: ModifierTypeSchema,
   value: z.number().default(0),
   scalingFactor: ModifierScalingSchema.default("none"),
+  scalingClassId: z.string().optional(),
   maxDexCap: z.number().optional(),
   requiredStates: z.array(z.string()).default([]),
   forbiddenStates: z.array(z.string()).default([]),
@@ -61,6 +62,7 @@ export const ChoiceModifierGrantSchema = z.object({
     type: ModifierTypeSchema,
     value: z.number(),
     scalingFactor: ModifierScalingSchema.default("none"),
+    scalingClassId: z.string().optional(),
   }),
   allowDuplicates: z.boolean().default(false),
 });
