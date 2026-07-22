@@ -5,6 +5,9 @@ export const EngineEventSchema = z.enum([
   "ON_ATTACK_HIT",
   "ON_SAVING_THROW_FAILED",
   "ON_START_OF_TURN",
+  "ON_END_OF_TURN",
+  "ON_SHORT_REST",
+  "ON_LONG_REST",
 ]);
 
 export const TriggerGrantSchema = z.object({

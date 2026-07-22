@@ -1,4 +1,5 @@
 import z from "zod";
+import { DamageTypeSchema } from "./affinities.js";
 
 export const WeaponCategorySchema = z.enum([
   "simple_melee",
@@ -25,8 +26,9 @@ export const WeaponDefinitionSchema = z
     id: z.string(),
     name: z.string(),
     category: WeaponCategorySchema,
-    damageDice: z.string(),
-    damageType: z.string(),
+    damageDice: z.string(), // e.g., "1d8"
+    versatileDamageDice: z.string().optional(),
+    damageType: DamageTypeSchema,
     properties: z.array(WeaponPropertySchema),
     ammoItemId: z.string().optional(),
   })

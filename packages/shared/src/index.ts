@@ -7,6 +7,7 @@ export * from "./schemas/items.js";
 export * from "./schemas/weapons.js";
 export * from "./schemas/modifiers.js";
 export * from "./schemas/traits.js";
+export * from "./schemas/triggers.js";
 export * from "./schemas/proficiencies.js";
 export * from "./schemas/prerequisites.js";
 export * from "./events/socket.js";
