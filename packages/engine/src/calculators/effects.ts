@@ -12,7 +12,7 @@ export interface ActiveEffect {
   instanceId: string; // unique UUId for this specific application of the effect
   sourceName: string; // e.g., "Shield Spell"
   durationType: DurationType;
-  durationRemaining?: number; // used on for 'rounds'
+  durationRemaining?: number | undefined; // used on for 'rounds'
   isSelfConcentration: boolean; // if true, drops on failed CON save
   modifiers: RuntimeModifier[]; // e.g., [{target: "ARMOR_CLASS", type: "add", value: 5}]
   grantedStates: string[]; // e.g., ["shield_spell_active", "immune_to_magic_missile"]

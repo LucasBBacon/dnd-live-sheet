@@ -1,5 +1,9 @@
 import z from "zod";
-import { ModifierScalingSchema, ModifierTargetSchema } from "./modifiers.js";
+import {
+  BaseModifierSchema,
+  ModifierScalingSchema,
+  ModifierTargetSchema,
+} from "./modifiers.js";
 import { DamageTypeSchema } from "./affinities.js";
 
 export const ActionActivationSchema = z.enum([
@@ -83,6 +87,25 @@ export const SummonEffectSchema = z.object({
   materialCostGP: z.number().optional(),
 });
 
+export const ApplyStateEffectSchema = z.object({
+  type: z.literal("apply_effect"),
+  effectName: z.string().optional(), // defaults to the Action's name if omitted
+  durationType: z.enum([
+    "turn_start",
+    "turn_end",
+    "rounds",
+    "rest_short",
+    "rest_long",
+    "manual",
+  ]),
+  durationRounds: z.number().optional(),
+  isSelfConcentration: z.boolean().default(false),
+
+  // math and flags to inject into EffectManager
+  modifiers: z.array(BaseModifierSchema).default([]),
+  states: z.array(z.string()).default([]),
+});
+
 export const MacroEffectSchema = z.object({
   type: z.literal("macro"),
   sequence: z.array(
@@ -101,6 +124,7 @@ export const ActionGrantSchema = z.object({
     MacroEffectSchema,
     DamageRiderEffectSchema,
     SummonEffectSchema,
+    ApplyStateEffectSchema,
   ]),
 });
 
