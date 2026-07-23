@@ -5,6 +5,7 @@ export * from "./schemas/importPack.js";
 export * from "./schemas/effects.js";
 export * from "./schemas/equipment.js";
 export * from "./schemas/items.js";
+export * from "./schemas/resources.js";
 export * from "./schemas/weapons.js";
 export * from "./schemas/modifiers.js";
 export * from "./schemas/traits.js";
