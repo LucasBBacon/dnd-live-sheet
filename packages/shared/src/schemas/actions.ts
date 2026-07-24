@@ -5,6 +5,7 @@ import {
   ModifierTargetSchema,
 } from "./modifiers.js";
 import { DamageTypeSchema } from "./affinities.js";
+import { TargetFilterSchema } from "./creatures.js";
 
 export const ActionActivationSchema = z.enum([
   "action",
@@ -106,11 +107,24 @@ export const ApplyStateEffectSchema = z.object({
   states: z.array(z.string()).default([]),
 });
 
+export const DynamicWeaponAttackSchema = z.object({
+  type: z.literal("dynamic_weapon_attack"),
+  requiredWeaponProperties: z.array(z.string()).default([]),
+  requiredWeaponCategory: z.array(z.string()).default([]),
+});
+
+export const CoreEffectUnion = z.discriminatedUnion("type", [
+  SaveEffectSchema,
+  AttackEffectSchema,
+  DamageRiderEffectSchema,
+  SummonEffectSchema,
+  ApplyStateEffectSchema,
+  DynamicWeaponAttackSchema,
+]);
+
 export const MacroEffectSchema = z.object({
   type: z.literal("macro"),
-  sequence: z.array(
-    z.object({ actionId: z.string(), count: z.number().min(1).default(1) }),
-  ),
+  effects: z.array(CoreEffectUnion),
 });
 
 export const ActionGrantSchema = z.object({
@@ -118,14 +132,8 @@ export const ActionGrantSchema = z.object({
   name: z.string(),
   activation: ActionActivationSchema,
   consumesResource: z.string().optional(),
-  effect: z.discriminatedUnion("type", [
-    SaveEffectSchema,
-    AttackEffectSchema,
-    MacroEffectSchema,
-    DamageRiderEffectSchema,
-    SummonEffectSchema,
-    ApplyStateEffectSchema,
-  ]),
+  targetFilter: TargetFilterSchema.optional(),
+  effect: CoreEffectUnion,
 });
 
 export type ActionGrant = z.infer<typeof ActionGrantSchema>;

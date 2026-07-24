@@ -19,6 +19,7 @@ export const WeaponPropertySchema = z.enum([
   "ammunition",
   "loading",
   "special",
+  "range",
 ]);
 
 export const WeaponDefinitionSchema = z
