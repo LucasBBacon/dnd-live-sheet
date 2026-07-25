@@ -292,6 +292,9 @@ export class DerivedStatEngine {
     for (const [sourceName, mods] of groupedAdders.entries()) {
       // sort descending to grab highest value buff of this name
       mods.sort((a, b) => b.value - a.value);
+
+      if (mods.length === 0) continue;
+
       const bestMod = mods[0];
 
       total += bestMod.value;

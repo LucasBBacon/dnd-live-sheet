@@ -45,7 +45,7 @@ export class SkillEngine {
 
     const breakdown: string[] = [];
     const abilityMod = AbilityEngine.getModifier(abilityScore);
-    const abilitySign = abilityMod >= 0 ? "+" : "-";
+    const abilitySign = abilityMod > 0 ? "+" : "";
     breakdown.push(
       `Base ${def.ability.toUpperCase()} (${abilitySign}${abilityMod})`,
     );
@@ -78,15 +78,20 @@ export class SkillEngine {
 
     // apply flat modifiers targeting this specific skill / all ability checks
     const targetKeys = [skillId.toUpperCase() + "_CHECK", "ALL_CHECKS"]; // e.g., "STEALTH_CHECK"
-    const activeMods = modifiers.filter(
-      (m) => targetKeys.includes(m.target) && m.isActive,
-    );
+    const activeMods = modifiers.filter((m) => {
+      if (!targetKeys.includes(m.target) || !m.isActive) return false;
+      if (m.forbiddenStates?.some((s) => activeStates.includes(s)))
+        return false;
+      return m.requiredStates
+        ? m.requiredStates.every((s) => activeStates.includes(s))
+        : true;
+    });
 
     let addedBonus = 0;
     for (const mod of activeMods) {
       if (mod.type === "add") {
         addedBonus += mod.value;
-        const modSign = mod.value >= 0 ? "+" : "-";
+        const modSign = mod.value >= 0 ? "+" : "";
         breakdown.push(`${mod.sourceName} (${modSign}${mod.value})`);
       }
     }
@@ -98,7 +103,7 @@ export class SkillEngine {
       name: def.name,
       totalModifier,
       multiplier: maxMultiplier,
-      breakdown: `Base ${def?.ability.toUpperCase()} (${abilityMod > 0 ? "+" : ""}${abilityMod}) + Proficiency (${appliedProf})`,
+      breakdown: breakdown.join(" + "),
     };
   }
 }

@@ -92,7 +92,7 @@ export class EffectManager {
     for (const [id, effect] of this.effects.entries()) {
       if (effect.durationType === "rest_short") {
         this.effects.delete(id);
-      } else if (isLongRest && effect.durationType) {
+      } else if (isLongRest && effect.durationType === "rest_long") {
         this.effects.delete(id);
       }
     }
