@@ -124,6 +124,7 @@ export class CombatEngine {
 
     // 4 - calculate damage
     let baseDamageBonus = governingMod;
+    const damageBreakdown: string[] = [];
 
     // 5e rule - offhand attacks don't add positive stat mods to damage unless TWF style
     const isOffhand = activeStates.includes("offhand_attack");
@@ -131,19 +132,18 @@ export class CombatEngine {
 
     if (isOffhand && !hasTWFStyle && baseDamageBonus > 0) {
       baseDamageBonus = 0;
-      attackBreakdown.push(`Offhand Damage (+0)`);
+      damageBreakdown.push(`Offhand Damage (+0)`);
     } else {
-      attackBreakdown.push(
+      damageBreakdown.push(
         `${statName} (${baseDamageBonus >= 0 ? "+" : ""}${baseDamageBonus})`,
       );
     }
 
     let totalDamageBonus = baseDamageBonus;
-    const damageBreakdown = [`${statName} Bonus (${baseDamageBonus})`];
 
     for (const mod of damageMods) {
       totalDamageBonus += mod.value;
-      attackBreakdown.push(
+      damageBreakdown.push(
         `${mod.sourceName} (${mod.value >= 0 ? "+" : ""}${mod.value})`,
       );
     }
@@ -160,7 +160,7 @@ export class CombatEngine {
     const damageExpression =
       totalDamageBonus === 0
         ? `${finalDice} ${weapon.damageType}`
-        : `${finalDice} ${Math.abs(totalDamageBonus)} ${weapon.damageType}`;
+        : `${finalDice} ${totalDamageBonus > 0 ? "+" : ""}${totalDamageBonus} ${weapon.damageType}`;
 
     return {
       weaponId: weapon.id,

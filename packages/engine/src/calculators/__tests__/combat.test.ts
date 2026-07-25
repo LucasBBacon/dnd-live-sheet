@@ -1,0 +1,555 @@
+import { describe, expect, it } from "vitest";
+import { CombatEngine } from "../combat.js";
+import type { Ability } from "../../types/core.js";
+import type {
+  FixedProficiencyGrant,
+  RuntimeModifier,
+  WeaponDefinition,
+} from "@project/shared";
+
+const makeWeapon = (
+  overrides: Partial<WeaponDefinition> = {},
+): WeaponDefinition => ({
+  id: "weapon_shortsword",
+  name: "Shortsword",
+  category: "martial_melee",
+  damageDice: "1d6",
+  damageType: "piercing",
+  properties: [],
+  ...overrides,
+});
+
+const makeScores = (
+  overrides: Partial<Record<Ability, number>> = {},
+): Record<Ability, number> => ({
+  STR: 10,
+  DEX: 10,
+  CON: 10,
+  INT: 10,
+  WIS: 10,
+  CHA: 10,
+  ...overrides,
+});
+
+const makeProf = (
+  overrides: Partial<FixedProficiencyGrant>,
+): FixedProficiencyGrant => ({
+  category: "weapons",
+  proficiencyId: "martial_melee",
+  level: "proficient",
+  requiredStates: [],
+  ...overrides,
+});
+
+const makeMod = (overrides: Partial<RuntimeModifier>): RuntimeModifier => ({
+  id: "mod_1",
+  target: "ATTACK_BONUS",
+  type: "add",
+  value: 0,
+  scalingFactor: "none",
+  requiredStates: [],
+  forbiddenStates: [],
+  sourceName: "Test Source",
+  sourceOrigin: "item",
+  isActive: true,
+  ...overrides,
+});
+
+describe("CombatEngine.calculateWeaponAttack - governing stat", () => {
+  it("uses DEX for a finesse weapon when DEX modifier beats STR", () => {
+    const result = CombatEngine.calculateWeaponAttack(
+      makeWeapon({ properties: ["finesse"] }),
+      makeScores({ STR: 10, DEX: 16 }),
+      2,
+      [],
+      [],
+    );
+
+    expect(result.breakdown.governingStat).toBe("DEX");
+    expect(result.attackBonus).toBe(3);
+  });
+
+  it("uses STR for a finesse weapon when STR modifier beats DEX", () => {
+    const result = CombatEngine.calculateWeaponAttack(
+      makeWeapon({ properties: ["finesse"] }),
+      makeScores({ STR: 16, DEX: 10 }),
+      2,
+      [],
+      [],
+    );
+
+    expect(result.breakdown.governingStat).toBe("STR");
+    expect(result.attackBonus).toBe(3);
+  });
+
+  it("favors STR on a finesse tie", () => {
+    const result = CombatEngine.calculateWeaponAttack(
+      makeWeapon({ properties: ["finesse"] }),
+      makeScores({ STR: 14, DEX: 14 }),
+      2,
+      [],
+      [],
+    );
+
+    expect(result.breakdown.governingStat).toBe("STR");
+    expect(result.attackBonus).toBe(2);
+  });
+
+  it("always uses DEX for a ranged weapon even if STR is higher", () => {
+    const result = CombatEngine.calculateWeaponAttack(
+      makeWeapon({ category: "martial_ranged", properties: [] }),
+      makeScores({ STR: 18, DEX: 14 }),
+      2,
+      [],
+      [],
+    );
+
+    expect(result.breakdown.governingStat).toBe("DEX");
+    expect(result.attackBonus).toBe(2);
+  });
+
+  it("uses STR for a non-finesse melee weapon even if DEX is higher", () => {
+    const result = CombatEngine.calculateWeaponAttack(
+      makeWeapon({ category: "martial_melee", properties: [] }),
+      makeScores({ STR: 16, DEX: 20 }),
+      2,
+      [],
+      [],
+    );
+
+    expect(result.breakdown.governingStat).toBe("STR");
+    expect(result.attackBonus).toBe(3);
+  });
+
+  it("uses STR for a thrown melee weapon that lacks finesse", () => {
+    const result = CombatEngine.calculateWeaponAttack(
+      makeWeapon({
+        category: "simple_melee",
+        properties: ["thrown"],
+      }),
+      makeScores({ STR: 14, DEX: 18 }),
+      2,
+      [],
+      [],
+    );
+
+    expect(result.breakdown.governingStat).toBe("STR");
+    expect(result.attackBonus).toBe(2);
+  });
+});
+
+describe("CombatEngine.calculateWeaponAttack - proficiency", () => {
+  it("grants proficiency bonus when the weapon category matches", () => {
+    const result = CombatEngine.calculateWeaponAttack(
+      makeWeapon({ category: "martial_melee" }),
+      makeScores(),
+      3,
+      [makeProf({ proficiencyId: "martial_melee" })],
+      [],
+    );
+
+    expect(result.isProficient).toBe(true);
+    expect(result.attackBonus).toBe(3);
+    expect(result.breakdown.attack).toContain("Proficiency (+3)");
+  });
+
+  it("grants proficiency bonus when the specific weapon id matches", () => {
+    const result = CombatEngine.calculateWeaponAttack(
+      makeWeapon({ id: "weapon_net", category: "martial_melee" }),
+      makeScores(),
+      3,
+      [makeProf({ proficiencyId: "weapon_net" })],
+      [],
+    );
+
+    expect(result.isProficient).toBe(true);
+    expect(result.attackBonus).toBe(3);
+  });
+
+  it("does not grant proficiency from a non-weapons category, even with a matching id string", () => {
+    const result = CombatEngine.calculateWeaponAttack(
+      makeWeapon({ category: "martial_melee" }),
+      makeScores(),
+      3,
+      [makeProf({ category: "armor", proficiencyId: "martial_melee" })],
+      [],
+    );
+
+    expect(result.isProficient).toBe(false);
+    expect(result.attackBonus).toBe(0);
+    expect(result.breakdown.attack).not.toContain("Proficiency (+3)");
+  });
+
+  it("does not grant proficiency when no proficiency entries match", () => {
+    const result = CombatEngine.calculateWeaponAttack(
+      makeWeapon({ id: "weapon_longsword", category: "martial_melee" }),
+      makeScores(),
+      3,
+      [makeProf({ proficiencyId: "simple_melee" })],
+      [],
+    );
+
+    expect(result.isProficient).toBe(false);
+    expect(result.attackBonus).toBe(0);
+  });
+
+  it("does not grant proficiency bonus with an empty proficiency list", () => {
+    const result = CombatEngine.calculateWeaponAttack(
+      makeWeapon(),
+      makeScores(),
+      3,
+      [],
+      [],
+    );
+
+    expect(result.isProficient).toBe(false);
+    expect(result.attackBonus).toBe(0);
+  });
+});
+
+describe("CombatEngine.calculateWeaponAttack - attack modifiers", () => {
+  it("adds active ATTACK_BONUS modifiers and records them in the breakdown", () => {
+    const result = CombatEngine.calculateWeaponAttack(
+      makeWeapon(),
+      makeScores(),
+      0,
+      [],
+      [makeMod({ sourceName: "Bless", value: 2 })],
+      [],
+    );
+
+    expect(result.attackBonus).toBe(2);
+    expect(result.breakdown.attack).toContain("Bless (+2)");
+  });
+
+  it("ignores inactive modifiers", () => {
+    const result = CombatEngine.calculateWeaponAttack(
+      makeWeapon(),
+      makeScores(),
+      0,
+      [],
+      [makeMod({ sourceName: "Bless", value: 2, isActive: false })],
+      [],
+    );
+
+    expect(result.attackBonus).toBe(0);
+    expect(result.breakdown.attack).not.toContain("Bless (+2)");
+  });
+
+  it("ignores modifiers whose forbiddenStates are active", () => {
+    const result = CombatEngine.calculateWeaponAttack(
+      makeWeapon(),
+      makeScores(),
+      0,
+      [],
+      [
+        makeMod({
+          sourceName: "Steady Aim",
+          value: 2,
+          forbiddenStates: ["prone"],
+        }),
+      ],
+      ["prone"],
+    );
+
+    expect(result.attackBonus).toBe(0);
+  });
+
+  it("applies modifiers whose forbiddenStates are not active", () => {
+    const result = CombatEngine.calculateWeaponAttack(
+      makeWeapon(),
+      makeScores(),
+      0,
+      [],
+      [
+        makeMod({
+          sourceName: "Steady Aim",
+          value: 2,
+          forbiddenStates: ["prone"],
+        }),
+      ],
+      [],
+    );
+
+    expect(result.attackBonus).toBe(2);
+  });
+
+  it("excludes modifiers whose requiredStates are not satisfied", () => {
+    const result = CombatEngine.calculateWeaponAttack(
+      makeWeapon(),
+      makeScores(),
+      0,
+      [],
+      [
+        makeMod({
+          sourceName: "Bardic Inspiration",
+          value: 1,
+          requiredStates: ["inspired"],
+        }),
+      ],
+      [],
+    );
+
+    expect(result.attackBonus).toBe(0);
+  });
+
+  it("includes modifiers whose requiredStates are satisfied", () => {
+    const result = CombatEngine.calculateWeaponAttack(
+      makeWeapon(),
+      makeScores(),
+      0,
+      [],
+      [
+        makeMod({
+          sourceName: "Bardic Inspiration",
+          value: 1,
+          requiredStates: ["inspired"],
+        }),
+      ],
+      ["inspired"],
+    );
+
+    expect(result.attackBonus).toBe(1);
+  });
+
+  it("ignores ATTACK_BONUS modifiers whose type is not 'add'", () => {
+    const result = CombatEngine.calculateWeaponAttack(
+      makeWeapon(),
+      makeScores(),
+      0,
+      [],
+      [makeMod({ sourceName: "Advantage Source", type: "advantage", value: 0 })],
+      [],
+    );
+
+    expect(result.attackBonus).toBe(0);
+  });
+});
+
+describe("CombatEngine.calculateWeaponAttack - damage bonus and offhand rules", () => {
+  it("applies the governing stat bonus to damage by default", () => {
+    const result = CombatEngine.calculateWeaponAttack(
+      makeWeapon(),
+      makeScores({ STR: 16 }),
+      0,
+      [],
+      [],
+      [],
+    );
+
+    expect(result.breakdown.damage).toEqual(["STR (+3)"]);
+    expect(result.breakdown.attack).toEqual(["STR (+3)"]);
+  });
+
+  it("zeroes a positive stat bonus for an offhand attack without two-weapon fighting style", () => {
+    const result = CombatEngine.calculateWeaponAttack(
+      makeWeapon(),
+      makeScores({ STR: 16 }),
+      0,
+      [],
+      [],
+      ["offhand_attack"],
+    );
+
+    expect(result.breakdown.damage).toEqual(["Offhand Damage (+0)"]);
+    expect(result.breakdown.attack).toEqual(["STR (+3)"]);
+  });
+
+  it("preserves the stat bonus for an offhand attack with two-weapon fighting style", () => {
+    const result = CombatEngine.calculateWeaponAttack(
+      makeWeapon(),
+      makeScores({ STR: 16 }),
+      0,
+      [],
+      [],
+      ["offhand_attack", "two_weapon_fighting_style"],
+    );
+
+    expect(result.breakdown.damage).toEqual(["STR (+3)"]);
+    expect(result.breakdown.attack).toEqual(["STR (+3)"]);
+  });
+
+  it("does not zero a non-positive stat bonus on an offhand attack", () => {
+    const result = CombatEngine.calculateWeaponAttack(
+      makeWeapon(),
+      makeScores({ STR: 8 }),
+      0,
+      [],
+      [],
+      ["offhand_attack"],
+    );
+
+    expect(result.breakdown.damage).toEqual(["STR (-1)"]);
+    expect(result.breakdown.attack).toEqual(["STR (-1)"]);
+  });
+
+  it("adds active DAMAGE_BONUS modifiers to the total and records them on the damage breakdown", () => {
+    const result = CombatEngine.calculateWeaponAttack(
+      makeWeapon(),
+      makeScores(),
+      0,
+      [],
+      [makeMod({ target: "DAMAGE_BONUS", sourceName: "Hex", value: 3 })],
+      [],
+    );
+
+    expect(result.breakdown.damage).toEqual(["STR (+0)", "Hex (+3)"]);
+    expect(result.breakdown.attack).toEqual(["STR (0)"]);
+    expect(result.damageExpression).toBe("1d6 +3 piercing");
+  });
+
+  it("ignores DAMAGE_BONUS modifiers whose type is not 'add'", () => {
+    const result = CombatEngine.calculateWeaponAttack(
+      makeWeapon(),
+      makeScores(),
+      0,
+      [],
+      [
+        makeMod({
+          target: "DAMAGE_BONUS",
+          sourceName: "Vulnerable",
+          type: "disadvantage",
+          value: 5,
+        }),
+      ],
+      [],
+    );
+
+    expect(result.damageExpression).toBe("1d6 piercing");
+  });
+});
+
+describe("CombatEngine.calculateWeaponAttack - damage expression formatting", () => {
+  it("omits the bonus number entirely when the total damage bonus is zero", () => {
+    const result = CombatEngine.calculateWeaponAttack(
+      makeWeapon({ damageDice: "1d8", damageType: "slashing" }),
+      makeScores({ STR: 10 }),
+      0,
+      [],
+      [],
+      [],
+    );
+
+    expect(result.damageExpression).toBe("1d8 slashing");
+  });
+
+  it("prefixes a positive damage bonus with a plus sign", () => {
+    const result = CombatEngine.calculateWeaponAttack(
+      makeWeapon({ damageDice: "1d8", damageType: "slashing" }),
+      makeScores({ STR: 16 }),
+      0,
+      [],
+      [],
+      [],
+    );
+
+    expect(result.damageExpression).toBe("1d8 +3 slashing");
+  });
+
+  it("prints a negative damage bonus with its minus sign", () => {
+    const result = CombatEngine.calculateWeaponAttack(
+      makeWeapon({ damageDice: "1d8", damageType: "slashing" }),
+      makeScores({ STR: 6 }),
+      0,
+      [],
+      [],
+      [],
+    );
+
+    expect(result.damageExpression).toBe("1d8 -2 slashing");
+  });
+});
+
+describe("CombatEngine.calculateWeaponAttack - versatile dice selection", () => {
+  it("uses the versatile dice when two-handed grip is active on a versatile weapon", () => {
+    const result = CombatEngine.calculateWeaponAttack(
+      makeWeapon({
+        damageDice: "1d8",
+        versatileDamageDice: "1d10",
+        properties: ["versatile"],
+      }),
+      makeScores(),
+      0,
+      [],
+      [],
+      ["two_handed_grip"],
+    );
+
+    expect(result.damageExpression).toBe("1d10 piercing");
+  });
+
+  it("uses the base dice when two-handed grip is not active on a versatile weapon", () => {
+    const result = CombatEngine.calculateWeaponAttack(
+      makeWeapon({
+        damageDice: "1d8",
+        versatileDamageDice: "1d10",
+        properties: ["versatile"],
+      }),
+      makeScores(),
+      0,
+      [],
+      [],
+      [],
+    );
+
+    expect(result.damageExpression).toBe("1d8 piercing");
+  });
+
+  it("uses the base dice when two-handed grip is active but the weapon is not versatile", () => {
+    const result = CombatEngine.calculateWeaponAttack(
+      makeWeapon({ damageDice: "1d8", properties: [] }),
+      makeScores(),
+      0,
+      [],
+      [],
+      ["two_handed_grip"],
+    );
+
+    expect(result.damageExpression).toBe("1d8 piercing");
+  });
+
+  it("uses the base dice when versatile is set but versatileDamageDice is undefined", () => {
+    const result = CombatEngine.calculateWeaponAttack(
+      makeWeapon({
+        damageDice: "1d8",
+        properties: ["versatile"],
+        versatileDamageDice: undefined,
+      }),
+      makeScores(),
+      0,
+      [],
+      [],
+      ["two_handed_grip"],
+    );
+
+    expect(result.damageExpression).toBe("1d8 piercing");
+  });
+});
+
+describe("CombatEngine.calculateWeaponAttack - return shape", () => {
+  it("passes through weapon id and name", () => {
+    const result = CombatEngine.calculateWeaponAttack(
+      makeWeapon({ id: "weapon_rapier", name: "Rapier" }),
+      makeScores(),
+      2,
+      [],
+      [],
+      [],
+    );
+
+    expect(result.weaponId).toBe("weapon_rapier");
+    expect(result.name).toBe("Rapier");
+  });
+
+  it("defaults activeStates to an empty array when omitted", () => {
+    const result = CombatEngine.calculateWeaponAttack(
+      makeWeapon(),
+      makeScores(),
+      0,
+      [],
+      [],
+    );
+
+    expect(result.breakdown.attack).not.toContain("Offhand Damage (+0)");
+  });
+});
