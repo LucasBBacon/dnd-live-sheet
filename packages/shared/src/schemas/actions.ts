@@ -127,13 +127,18 @@ export const MacroEffectSchema = z.object({
   effects: z.array(CoreEffectUnion),
 });
 
+export const ActionEffectSchema = z.discriminatedUnion("type", [
+  ...CoreEffectUnion.options,
+  MacroEffectSchema,
+]);
+
 export const ActionGrantSchema = z.object({
   id: z.string(),
   name: z.string(),
   activation: ActionActivationSchema,
   consumesResource: z.string().optional(),
   targetFilter: TargetFilterSchema.optional(),
-  effect: CoreEffectUnion,
+  effect: ActionEffectSchema,
 });
 
 export type ActionGrant = z.infer<typeof ActionGrantSchema>;

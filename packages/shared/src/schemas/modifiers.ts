@@ -27,6 +27,7 @@ export const ModifierTargetSchema = z.enum([
   "CHA",
   "STEALTH_CHECK",
   "SENSE_DARKVISION",
+  "SPELLCASTING_MOD"
 ]);
 
 export const ModifierTypeSchema = z.enum([

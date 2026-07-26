@@ -69,11 +69,6 @@ export class ActionResolver {
         break;
       }
 
-      case "macro": {
-        // TODO: multi-action events
-        break;
-      }
-
       case "save": {
         // TODO: save dice rolls
         break;
