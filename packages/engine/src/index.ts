@@ -4,6 +4,7 @@ export * from "./types/progression.js";
 export * from "./types/resources.js";
 export * from "./rules/equipmentDictionary.js";
 export * from "./rules/traitDictionary.js";
+export * from "./rules/spellDictionary.js";
 export * from "./rules/ruleLookup.js";
 export * from "./calculators/abilities.js";
 export * from "./calculators/derivedStats.js";
