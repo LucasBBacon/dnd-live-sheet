@@ -13,6 +13,29 @@ export const CharacterFlavorSchema = z.object({
 
 export type CharacterFlavorData = z.infer<typeof CharacterFlavorSchema>;
 
+export const FixedSpellGrantSchema = z.object({
+  type: z.literal("fixed_spell"),
+  spellId: z.string(), // e.g., "spell_thaumaturgy"
+  castingStat: z.string().optional(), // e.g., "CHA" for Tiefling racial spells
+  usesPerRest: z.number().optional(), // for things like "Cast once per long rest free"
+});
+
+export const SpellChoiceNodeSchema = z.object({
+  type: z.literal("spell_choice"),
+  nodeId: z.string(), // e.g., "wizard_level_2_spells"
+  listSource: z.enum(["arcane", "divine", "wizard", "sorcerer", "cleric"]),
+  maxSpellLevel: z.number().int(),
+  pickCount: z.number().int(),
+});
+
+export const TraitGrantSchema = z.string();
+
+export const FeatureGrantUnion = z.union([
+  FixedSpellGrantSchema,
+  SpellChoiceNodeSchema,
+  TraitGrantSchema,
+]);
+
 // #endregion
 
 // #region Progression and Options Schemas
@@ -34,29 +57,45 @@ export const RaceConfigurationSchema = z
     }
   });
 
-export const ClassProgressionSchema = z
-  .object({
-    classId: z.string().min(1),
-    level: z.number().int().min(1).max(20),
-    subclassRequirementLevel: z.number().int().min(1).max(3),
-    subclassId: z.string().nullable().default(null),
-  })
-  .superRefine((data, ctx) => {
-    // strictly require subclass selection if character level meets threshold guardrail
-    if (data.level >= data.subclassRequirementLevel && !data.subclassId) {
-      ctx.addIssue({
-        code: "custom",
-        message: `A subclass must be selected for this class at level ${data.subclassRequirementLevel} or higher.`,
-        path: ["subclassId"],
-      });
-    }
-  });
+export const ClassLevelFeatureSchema = z.object({
+  level: z.number().int().min(1).max(20),
+  // array of trait ids granted at this level (e.g., ["rogue_sneak_attack"])
+  grants: z.array(FeatureGrantUnion).default([]),
+  // true if this level grants an asi or feat
+  grantsASI: z.boolean().default(false),
+});
+
+export const ClassDefinitionSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  hitDie: z.number(), // e.g., 8 for d8
+  subclassUnlockLevel: z.number().int().min(1).max(3),
+
+  // what the class grants at lvl 1 (e.g., light armor, simple weapons)
+  startingProficiencyTraitIds: z.array(z.string()).default([]),
+
+  // 1-20 progression track
+  progression: z.array(ClassLevelFeatureSchema),
+});
+
+export type ClassLevelFeature = z.infer<typeof ClassLevelFeatureSchema>;
+export type ClassDefinition = z.infer<typeof ClassDefinitionSchema>;
 
 // #endregion
 
 // #region Unified Character Engine Schema
 
-export const CharacterEngineSchema = z.object({
+export const CharacterClassStateSchema = z.object({
+  classId: z.string().min(1),
+  level: z.number().int().min(1).max(20),
+  subclassId: z.string().optional(),
+
+  // maps a choice id to selected option id(s)
+  // e.g., {"fighter_fighting_style": ["archery"], "asi_level_4": ["feat_mobile"]}
+  selections: z.record(z.string(), z.array(z.string())).default({}),
+});
+
+export const CharacterSaveSchema = z.object({
   // base attributes
   attributes: z.object({
     str: z.number().int().min(1).max(30),
@@ -69,29 +108,17 @@ export const CharacterEngineSchema = z.object({
 
   // progressions
   race: RaceConfigurationSchema,
-  classes: z.array(ClassProgressionSchema).min(1), // multiclass
+  classes: z.array(CharacterClassStateSchema).min(1), // multiclass
 
   // live state
   hp: z.object({
-    max: z.number().int().positive(),
     current: z.number().int().min(0),
     temporary: z.number().int().min(0).default(0),
+    hitDiceSpent: z.record(z.string(), z.number()).default({}),
   }),
-
-  // aggregate modifiers
-  globalModifiers: RuntimeModifiersListSchema,
 });
 
-export type CharacterEngineData = z.infer<typeof CharacterEngineSchema>;
-
-export const BaseCharacterSchema = z.object({
-  id: z.uuid(),
-  userId: z.string(),
-  flavor: CharacterFlavorSchema,
-  engine: CharacterEngineSchema,
-});
-
-export type Character = z.infer<typeof BaseCharacterSchema>;
+export type CharacterSave = z.infer<typeof CharacterSaveSchema>;
 
 // #endregion
 

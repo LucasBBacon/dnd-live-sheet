@@ -64,6 +64,11 @@ export class ActionResolver {
         break;
       }
 
+      case "macro": {
+        // TODO: Implement macro actions
+        break;
+      }
+
       case "damage_rider": {
         // TODO: apply damage over time effect
         break;
