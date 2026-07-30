@@ -1,6 +1,10 @@
 import type { CharacterSave } from "@project/shared";
 import { CLASS_DICTIONARY } from "../rules/classDictionary.js";
 
+// these now live with the data they describe
+export type { RaceDefinition } from "../rules/raceDictionary.js";
+export type { SubclassDefinition } from "../rules/subclassDictionary.js";
+
 export class CharacterBootstrapper {
   /**
    * Validates a character save file against the static rulebook before building the sheet.

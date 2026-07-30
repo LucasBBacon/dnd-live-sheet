@@ -64,9 +64,9 @@ export const HUMAN_TRAITS: Record<string, TraitDefinition> = {
     criticalHitModifiers: [],
     actions: [],
   },
-  race_half_elf_languages: {
-    id: "race_half_elf_languages",
-    name: "(Half Elf) Languages",
+  race_human_languages: {
+    id: "race_human_languages",
+    name: "(Human) Languages",
     description:
       "You can speak, read, and write Common and one extra language of your choice. Humans typically learn the languages of other peoples they deal with, including obscure dialects. They are fond of sprinkling their speech with words borrowed from other tongues: Orc curses, Elvish musical expressions, Dwarvish military phrases, and so on.",
     modifiers: { fixed: [], choices: [] },
@@ -81,11 +81,11 @@ export const HUMAN_TRAITS: Record<string, TraitDefinition> = {
       ],
       choices: [
         {
-          id: "half_elf_language_choice",
+          id: "human_language_choice",
           category: "languages",
           chooseAmount: 1,
           level: "proficient",
-          options: [""], // TODO: add lang options!!
+          options: [],
           requiredStates: [],
         },
       ],

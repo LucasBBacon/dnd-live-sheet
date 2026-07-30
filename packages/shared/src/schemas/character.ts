@@ -23,7 +23,21 @@ export const FixedSpellGrantSchema = z.object({
 export const SpellChoiceNodeSchema = z.object({
   type: z.literal("spell_choice"),
   nodeId: z.string(), // e.g., "wizard_level_2_spells"
-  listSource: z.enum(["arcane", "divine", "wizard", "sorcerer", "cleric"]),
+  // "any" covers picks from every list at once (e.g., Bard Magical Secrets);
+  // "arcane"/"divine" stay for grants that are not tied to a single class list
+  listSource: z.enum([
+    "any",
+    "arcane",
+    "divine",
+    "bard",
+    "cleric",
+    "druid",
+    "paladin",
+    "ranger",
+    "sorcerer",
+    "warlock",
+    "wizard",
+  ]),
   maxSpellLevel: z.number().int(),
   pickCount: z.number().int(),
 });
@@ -78,6 +92,7 @@ export const ClassDefinitionSchema = z.object({
   progression: z.array(ClassLevelFeatureSchema),
 });
 
+export type FeatureGrant = z.infer<typeof FeatureGrantUnion>;
 export type ClassLevelFeature = z.infer<typeof ClassLevelFeatureSchema>;
 export type ClassDefinition = z.infer<typeof ClassDefinitionSchema>;
 
