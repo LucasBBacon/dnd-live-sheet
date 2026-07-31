@@ -38,7 +38,117 @@ export const WARLOCK_CLASS: ClassDefinition = {
     {
       level: 2,
       grants: [
-        "trait_eldritch_invocations",
+        {
+          type: "trait_choice",
+          nodeId: "warlock_level_2_invocations",
+          options: [
+            {
+              traitId: "trait_invocation_agonizing_blast",
+              prerequisites: { requiredSpellIds: ["spell_eldritch_blast"] },
+            },
+            "trait_invocation_armor_of_shadows",
+            {
+              traitId: "trait_invocation_ascendant_step",
+              prerequisites: { minimumLevel: 9 },
+            },
+            "trait_invocation_beast_speech",
+            "trait_invocation_beguiling_influence",
+            {
+              traitId: "trait_invocation_bewitching_whispers",
+              prerequisites: { minimumLevel: 7 },
+            },
+            {
+              traitId: "trait_invocation_book_of_ancient_secrets",
+              prerequisites: { requiredTraitIds: ["trait_pact_of_the_tome"] },
+            },
+            {
+              traitId: "trait_invocation_chains_of_carceri",
+              prerequisites: {
+                minimumLevel: 15,
+                requiredTraitIds: ["trait_pact_of_the_chain"],
+              },
+            },
+            "trait_invocation_devils_sight",
+            {
+              traitId: "trait_invocation_dreadful_word",
+              prerequisites: { minimumLevel: 7 },
+            },
+            "trait_invocation_eldritch_sight",
+            {
+              traitId: "trait_invocation_eldritch_spear",
+              prerequisites: { requiredSpellIds: ["spell_eldritch_blast"] },
+            },
+            "trait_invocation_eyes_of_the_rune_keeper",
+            "trait_invocation_fiendish_vigor",
+            "trait_invocation_gaze_of_two_minds",
+            {
+              traitId: "trait_invocation_lifedrinker",
+              prerequisites: {
+                minimumLevel: 12,
+                requiredTraitIds: ["trait_pact_of_the_blade"],
+              },
+            },
+            "trait_invocation_mask_of_many_faces",
+            {
+              traitId: "trait_invocation_master_of_myriad_forms",
+              prerequisites: { minimumLevel: 15 },
+            },
+            {
+              traitId: "trait_invocation_minions_of_chaos",
+              prerequisites: { minimumLevel: 9 },
+            },
+            {
+              traitId: "trait_invocation_mire_the_mind",
+              prerequisites: { minimumLevel: 5 },
+            },
+            "trait_invocation_misty_visions",
+            {
+              traitId: "trait_invocation_one_with_shadows",
+              prerequisites: { minimumLevel: 5 },
+            },
+            {
+              traitId: "trait_invocation_otherworldly_leap",
+              prerequisites: { minimumLevel: 9 },
+            },
+            {
+              traitId: "trait_invocation_repelling_blast",
+              prerequisites: { requiredSpellIds: ["spell_eldritch_blast"] },
+            },
+            {
+              traitId: "trait_invocation_sculptor_of_flesh",
+              prerequisites: { minimumLevel: 7 },
+            },
+            {
+              traitId: "trait_invocation_sign_of_ill_omen",
+              prerequisites: { minimumLevel: 5 },
+            },
+            "trait_invocation_thief_of_five_fates",
+            {
+              traitId: "trait_invocation_thirsting_blade",
+              prerequisites: {
+                minimumLevel: 5,
+                requiredTraitIds: ["trait_pact_of_the_blade"],
+              },
+            },
+            {
+              traitId: "trait_invocation_visions_of_distant_realms",
+              prerequisites: { minimumLevel: 15 },
+            },
+            {
+              traitId: "trait_invocation_voice_of_the_chain_master",
+              prerequisites: { requiredTraitIds: ["trait_pact_of_the_chain"] },
+            },
+            {
+              traitId: "trait_invocation_whispers_of_the_grave",
+              prerequisites: { minimumLevel: 9 },
+            },
+            {
+              traitId: "trait_invocation_witch_sight",
+              prerequisites: { minimumLevel: 15 },
+            },
+          ],
+          pickCount: 2,
+        },
         {
           type: "spell_choice",
           nodeId: "warlock_level_2_spells_known",
@@ -52,7 +162,16 @@ export const WARLOCK_CLASS: ClassDefinition = {
     {
       level: 3,
       grants: [
-        "trait_pact_boon",
+        {
+          type: "trait_choice",
+          nodeId: "warlock_level_3_pact_boon",
+          options: [
+            "trait_pact_of_the_chain",
+            "trait_pact_of_the_blade",
+            "trait_pact_of_the_tome",
+          ],
+          pickCount: 1,
+        },
         {
           type: "spell_choice",
           nodeId: "warlock_level_3_spells_known",
@@ -93,6 +212,117 @@ export const WARLOCK_CLASS: ClassDefinition = {
           maxSpellLevel: 3,
           pickCount: 1,
         },
+        {
+          type: "trait_choice",
+          nodeId: "warlock_level_5_invocations",
+          options: [
+            {
+              traitId: "trait_invocation_agonizing_blast",
+              prerequisites: { requiredSpellIds: ["spell_eldritch_blast"] },
+            },
+            "trait_invocation_armor_of_shadows",
+            {
+              traitId: "trait_invocation_ascendant_step",
+              prerequisites: { minimumLevel: 9 },
+            },
+            "trait_invocation_beast_speech",
+            "trait_invocation_beguiling_influence",
+            {
+              traitId: "trait_invocation_bewitching_whispers",
+              prerequisites: { minimumLevel: 7 },
+            },
+            {
+              traitId: "trait_invocation_book_of_ancient_secrets",
+              prerequisites: { requiredTraitIds: ["trait_pact_of_the_tome"] },
+            },
+            {
+              traitId: "trait_invocation_chains_of_carceri",
+              prerequisites: {
+                minimumLevel: 15,
+                requiredTraitIds: ["trait_pact_of_the_chain"],
+              },
+            },
+            "trait_invocation_devils_sight",
+            {
+              traitId: "trait_invocation_dreadful_word",
+              prerequisites: { minimumLevel: 7 },
+            },
+            "trait_invocation_eldritch_sight",
+            {
+              traitId: "trait_invocation_eldritch_spear",
+              prerequisites: { requiredSpellIds: ["spell_eldritch_blast"] },
+            },
+            "trait_invocation_eyes_of_the_rune_keeper",
+            "trait_invocation_fiendish_vigor",
+            "trait_invocation_gaze_of_two_minds",
+            {
+              traitId: "trait_invocation_lifedrinker",
+              prerequisites: {
+                minimumLevel: 12,
+                requiredTraitIds: ["trait_pact_of_the_blade"],
+              },
+            },
+            "trait_invocation_mask_of_many_faces",
+            {
+              traitId: "trait_invocation_master_of_myriad_forms",
+              prerequisites: { minimumLevel: 15 },
+            },
+            {
+              traitId: "trait_invocation_minions_of_chaos",
+              prerequisites: { minimumLevel: 9 },
+            },
+            {
+              traitId: "trait_invocation_mire_the_mind",
+              prerequisites: { minimumLevel: 5 },
+            },
+            "trait_invocation_misty_visions",
+            {
+              traitId: "trait_invocation_one_with_shadows",
+              prerequisites: { minimumLevel: 5 },
+            },
+            {
+              traitId: "trait_invocation_otherworldly_leap",
+              prerequisites: { minimumLevel: 9 },
+            },
+            {
+              traitId: "trait_invocation_repelling_blast",
+              prerequisites: { requiredSpellIds: ["spell_eldritch_blast"] },
+            },
+            {
+              traitId: "trait_invocation_sculptor_of_flesh",
+              prerequisites: { minimumLevel: 7 },
+            },
+            {
+              traitId: "trait_invocation_sign_of_ill_omen",
+              prerequisites: { minimumLevel: 5 },
+            },
+            "trait_invocation_thief_of_five_fates",
+            {
+              traitId: "trait_invocation_thirsting_blade",
+              prerequisites: {
+                minimumLevel: 5,
+                requiredTraitIds: ["trait_pact_of_the_blade"],
+              },
+            },
+            {
+              traitId: "trait_invocation_visions_of_distant_realms",
+              prerequisites: { minimumLevel: 15 },
+            },
+            {
+              traitId: "trait_invocation_voice_of_the_chain_master",
+              prerequisites: { requiredTraitIds: ["trait_pact_of_the_chain"] },
+            },
+            {
+              traitId: "trait_invocation_whispers_of_the_grave",
+              prerequisites: { minimumLevel: 9 },
+            },
+            {
+              traitId: "trait_invocation_witch_sight",
+              prerequisites: { minimumLevel: 15 },
+            },
+          ],
+          pickCount: 1,
+        },
       ],
       grantsASI: false,
     },
@@ -120,6 +350,117 @@ export const WARLOCK_CLASS: ClassDefinition = {
           maxSpellLevel: 4,
           pickCount: 1,
         },
+        {
+          type: "trait_choice",
+          nodeId: "warlock_level_7_invocations",
+          options: [
+            {
+              traitId: "trait_invocation_agonizing_blast",
+              prerequisites: { requiredSpellIds: ["spell_eldritch_blast"] },
+            },
+            "trait_invocation_armor_of_shadows",
+            {
+              traitId: "trait_invocation_ascendant_step",
+              prerequisites: { minimumLevel: 9 },
+            },
+            "trait_invocation_beast_speech",
+            "trait_invocation_beguiling_influence",
+            {
+              traitId: "trait_invocation_bewitching_whispers",
+              prerequisites: { minimumLevel: 7 },
+            },
+            {
+              traitId: "trait_invocation_book_of_ancient_secrets",
+              prerequisites: { requiredTraitIds: ["trait_pact_of_the_tome"] },
+            },
+            {
+              traitId: "trait_invocation_chains_of_carceri",
+              prerequisites: {
+                minimumLevel: 15,
+                requiredTraitIds: ["trait_pact_of_the_chain"],
+              },
+            },
+            "trait_invocation_devils_sight",
+            {
+              traitId: "trait_invocation_dreadful_word",
+              prerequisites: { minimumLevel: 7 },
+            },
+            "trait_invocation_eldritch_sight",
+            {
+              traitId: "trait_invocation_eldritch_spear",
+              prerequisites: { requiredSpellIds: ["spell_eldritch_blast"] },
+            },
+            "trait_invocation_eyes_of_the_rune_keeper",
+            "trait_invocation_fiendish_vigor",
+            "trait_invocation_gaze_of_two_minds",
+            {
+              traitId: "trait_invocation_lifedrinker",
+              prerequisites: {
+                minimumLevel: 12,
+                requiredTraitIds: ["trait_pact_of_the_blade"],
+              },
+            },
+            "trait_invocation_mask_of_many_faces",
+            {
+              traitId: "trait_invocation_master_of_myriad_forms",
+              prerequisites: { minimumLevel: 15 },
+            },
+            {
+              traitId: "trait_invocation_minions_of_chaos",
+              prerequisites: { minimumLevel: 9 },
+            },
+            {
+              traitId: "trait_invocation_mire_the_mind",
+              prerequisites: { minimumLevel: 5 },
+            },
+            "trait_invocation_misty_visions",
+            {
+              traitId: "trait_invocation_one_with_shadows",
+              prerequisites: { minimumLevel: 5 },
+            },
+            {
+              traitId: "trait_invocation_otherworldly_leap",
+              prerequisites: { minimumLevel: 9 },
+            },
+            {
+              traitId: "trait_invocation_repelling_blast",
+              prerequisites: { requiredSpellIds: ["spell_eldritch_blast"] },
+            },
+            {
+              traitId: "trait_invocation_sculptor_of_flesh",
+              prerequisites: { minimumLevel: 7 },
+            },
+            {
+              traitId: "trait_invocation_sign_of_ill_omen",
+              prerequisites: { minimumLevel: 5 },
+            },
+            "trait_invocation_thief_of_five_fates",
+            {
+              traitId: "trait_invocation_thirsting_blade",
+              prerequisites: {
+                minimumLevel: 5,
+                requiredTraitIds: ["trait_pact_of_the_blade"],
+              },
+            },
+            {
+              traitId: "trait_invocation_visions_of_distant_realms",
+              prerequisites: { minimumLevel: 15 },
+            },
+            {
+              traitId: "trait_invocation_voice_of_the_chain_master",
+              prerequisites: { requiredTraitIds: ["trait_pact_of_the_chain"] },
+            },
+            {
+              traitId: "trait_invocation_whispers_of_the_grave",
+              prerequisites: { minimumLevel: 9 },
+            },
+            {
+              traitId: "trait_invocation_witch_sight",
+              prerequisites: { minimumLevel: 15 },
+            },
+          ],
+          pickCount: 1,
+        },
       ],
       grantsASI: false,
     },
@@ -144,6 +485,117 @@ export const WARLOCK_CLASS: ClassDefinition = {
           nodeId: "warlock_level_9_spells_known",
           listSource: "warlock",
           maxSpellLevel: 5,
+          pickCount: 1,
+        },
+        {
+          type: "trait_choice",
+          nodeId: "warlock_level_9_invocations",
+          options: [
+            {
+              traitId: "trait_invocation_agonizing_blast",
+              prerequisites: { requiredSpellIds: ["spell_eldritch_blast"] },
+            },
+            "trait_invocation_armor_of_shadows",
+            {
+              traitId: "trait_invocation_ascendant_step",
+              prerequisites: { minimumLevel: 9 },
+            },
+            "trait_invocation_beast_speech",
+            "trait_invocation_beguiling_influence",
+            {
+              traitId: "trait_invocation_bewitching_whispers",
+              prerequisites: { minimumLevel: 7 },
+            },
+            {
+              traitId: "trait_invocation_book_of_ancient_secrets",
+              prerequisites: { requiredTraitIds: ["trait_pact_of_the_tome"] },
+            },
+            {
+              traitId: "trait_invocation_chains_of_carceri",
+              prerequisites: {
+                minimumLevel: 15,
+                requiredTraitIds: ["trait_pact_of_the_chain"],
+              },
+            },
+            "trait_invocation_devils_sight",
+            {
+              traitId: "trait_invocation_dreadful_word",
+              prerequisites: { minimumLevel: 7 },
+            },
+            "trait_invocation_eldritch_sight",
+            {
+              traitId: "trait_invocation_eldritch_spear",
+              prerequisites: { requiredSpellIds: ["spell_eldritch_blast"] },
+            },
+            "trait_invocation_eyes_of_the_rune_keeper",
+            "trait_invocation_fiendish_vigor",
+            "trait_invocation_gaze_of_two_minds",
+            {
+              traitId: "trait_invocation_lifedrinker",
+              prerequisites: {
+                minimumLevel: 12,
+                requiredTraitIds: ["trait_pact_of_the_blade"],
+              },
+            },
+            "trait_invocation_mask_of_many_faces",
+            {
+              traitId: "trait_invocation_master_of_myriad_forms",
+              prerequisites: { minimumLevel: 15 },
+            },
+            {
+              traitId: "trait_invocation_minions_of_chaos",
+              prerequisites: { minimumLevel: 9 },
+            },
+            {
+              traitId: "trait_invocation_mire_the_mind",
+              prerequisites: { minimumLevel: 5 },
+            },
+            "trait_invocation_misty_visions",
+            {
+              traitId: "trait_invocation_one_with_shadows",
+              prerequisites: { minimumLevel: 5 },
+            },
+            {
+              traitId: "trait_invocation_otherworldly_leap",
+              prerequisites: { minimumLevel: 9 },
+            },
+            {
+              traitId: "trait_invocation_repelling_blast",
+              prerequisites: { requiredSpellIds: ["spell_eldritch_blast"] },
+            },
+            {
+              traitId: "trait_invocation_sculptor_of_flesh",
+              prerequisites: { minimumLevel: 7 },
+            },
+            {
+              traitId: "trait_invocation_sign_of_ill_omen",
+              prerequisites: { minimumLevel: 5 },
+            },
+            "trait_invocation_thief_of_five_fates",
+            {
+              traitId: "trait_invocation_thirsting_blade",
+              prerequisites: {
+                minimumLevel: 5,
+                requiredTraitIds: ["trait_pact_of_the_blade"],
+              },
+            },
+            {
+              traitId: "trait_invocation_visions_of_distant_realms",
+              prerequisites: { minimumLevel: 15 },
+            },
+            {
+              traitId: "trait_invocation_voice_of_the_chain_master",
+              prerequisites: { requiredTraitIds: ["trait_pact_of_the_chain"] },
+            },
+            {
+              traitId: "trait_invocation_whispers_of_the_grave",
+              prerequisites: { minimumLevel: 9 },
+            },
+            {
+              traitId: "trait_invocation_witch_sight",
+              prerequisites: { minimumLevel: 15 },
+            },
+          ],
           pickCount: 1,
         },
       ],
@@ -184,7 +636,123 @@ export const WARLOCK_CLASS: ClassDefinition = {
       ],
       grantsASI: false,
     },
-    { level: 12, grants: [], grantsASI: true },
+    {
+      level: 12,
+      grants: [
+        {
+          type: "trait_choice",
+          nodeId: "warlock_level_12_invocations",
+          options: [
+            {
+              traitId: "trait_invocation_agonizing_blast",
+              prerequisites: { requiredSpellIds: ["spell_eldritch_blast"] },
+            },
+            "trait_invocation_armor_of_shadows",
+            {
+              traitId: "trait_invocation_ascendant_step",
+              prerequisites: { minimumLevel: 9 },
+            },
+            "trait_invocation_beast_speech",
+            "trait_invocation_beguiling_influence",
+            {
+              traitId: "trait_invocation_bewitching_whispers",
+              prerequisites: { minimumLevel: 7 },
+            },
+            {
+              traitId: "trait_invocation_book_of_ancient_secrets",
+              prerequisites: { requiredTraitIds: ["trait_pact_of_the_tome"] },
+            },
+            {
+              traitId: "trait_invocation_chains_of_carceri",
+              prerequisites: {
+                minimumLevel: 15,
+                requiredTraitIds: ["trait_pact_of_the_chain"],
+              },
+            },
+            "trait_invocation_devils_sight",
+            {
+              traitId: "trait_invocation_dreadful_word",
+              prerequisites: { minimumLevel: 7 },
+            },
+            "trait_invocation_eldritch_sight",
+            {
+              traitId: "trait_invocation_eldritch_spear",
+              prerequisites: { requiredSpellIds: ["spell_eldritch_blast"] },
+            },
+            "trait_invocation_eyes_of_the_rune_keeper",
+            "trait_invocation_fiendish_vigor",
+            "trait_invocation_gaze_of_two_minds",
+            {
+              traitId: "trait_invocation_lifedrinker",
+              prerequisites: {
+                minimumLevel: 12,
+                requiredTraitIds: ["trait_pact_of_the_blade"],
+              },
+            },
+            "trait_invocation_mask_of_many_faces",
+            {
+              traitId: "trait_invocation_master_of_myriad_forms",
+              prerequisites: { minimumLevel: 15 },
+            },
+            {
+              traitId: "trait_invocation_minions_of_chaos",
+              prerequisites: { minimumLevel: 9 },
+            },
+            {
+              traitId: "trait_invocation_mire_the_mind",
+              prerequisites: { minimumLevel: 5 },
+            },
+            "trait_invocation_misty_visions",
+            {
+              traitId: "trait_invocation_one_with_shadows",
+              prerequisites: { minimumLevel: 5 },
+            },
+            {
+              traitId: "trait_invocation_otherworldly_leap",
+              prerequisites: { minimumLevel: 9 },
+            },
+            {
+              traitId: "trait_invocation_repelling_blast",
+              prerequisites: { requiredSpellIds: ["spell_eldritch_blast"] },
+            },
+            {
+              traitId: "trait_invocation_sculptor_of_flesh",
+              prerequisites: { minimumLevel: 7 },
+            },
+            {
+              traitId: "trait_invocation_sign_of_ill_omen",
+              prerequisites: { minimumLevel: 5 },
+            },
+            "trait_invocation_thief_of_five_fates",
+            {
+              traitId: "trait_invocation_thirsting_blade",
+              prerequisites: {
+                minimumLevel: 5,
+                requiredTraitIds: ["trait_pact_of_the_blade"],
+              },
+            },
+            {
+              traitId: "trait_invocation_visions_of_distant_realms",
+              prerequisites: { minimumLevel: 15 },
+            },
+            {
+              traitId: "trait_invocation_voice_of_the_chain_master",
+              prerequisites: { requiredTraitIds: ["trait_pact_of_the_chain"] },
+            },
+            {
+              traitId: "trait_invocation_whispers_of_the_grave",
+              prerequisites: { minimumLevel: 9 },
+            },
+            {
+              traitId: "trait_invocation_witch_sight",
+              prerequisites: { minimumLevel: 15 },
+            },
+          ],
+          pickCount: 1,
+        },
+      ],
+      grantsASI: true,
+    },
     {
       level: 13,
       grants: [
@@ -229,6 +797,117 @@ export const WARLOCK_CLASS: ClassDefinition = {
           maxSpellLevel: 8,
           pickCount: 1,
         },
+        {
+          type: "trait_choice",
+          nodeId: "warlock_level_15_invocations",
+          options: [
+            {
+              traitId: "trait_invocation_agonizing_blast",
+              prerequisites: { requiredSpellIds: ["spell_eldritch_blast"] },
+            },
+            "trait_invocation_armor_of_shadows",
+            {
+              traitId: "trait_invocation_ascendant_step",
+              prerequisites: { minimumLevel: 9 },
+            },
+            "trait_invocation_beast_speech",
+            "trait_invocation_beguiling_influence",
+            {
+              traitId: "trait_invocation_bewitching_whispers",
+              prerequisites: { minimumLevel: 7 },
+            },
+            {
+              traitId: "trait_invocation_book_of_ancient_secrets",
+              prerequisites: { requiredTraitIds: ["trait_pact_of_the_tome"] },
+            },
+            {
+              traitId: "trait_invocation_chains_of_carceri",
+              prerequisites: {
+                minimumLevel: 15,
+                requiredTraitIds: ["trait_pact_of_the_chain"],
+              },
+            },
+            "trait_invocation_devils_sight",
+            {
+              traitId: "trait_invocation_dreadful_word",
+              prerequisites: { minimumLevel: 7 },
+            },
+            "trait_invocation_eldritch_sight",
+            {
+              traitId: "trait_invocation_eldritch_spear",
+              prerequisites: { requiredSpellIds: ["spell_eldritch_blast"] },
+            },
+            "trait_invocation_eyes_of_the_rune_keeper",
+            "trait_invocation_fiendish_vigor",
+            "trait_invocation_gaze_of_two_minds",
+            {
+              traitId: "trait_invocation_lifedrinker",
+              prerequisites: {
+                minimumLevel: 12,
+                requiredTraitIds: ["trait_pact_of_the_blade"],
+              },
+            },
+            "trait_invocation_mask_of_many_faces",
+            {
+              traitId: "trait_invocation_master_of_myriad_forms",
+              prerequisites: { minimumLevel: 15 },
+            },
+            {
+              traitId: "trait_invocation_minions_of_chaos",
+              prerequisites: { minimumLevel: 9 },
+            },
+            {
+              traitId: "trait_invocation_mire_the_mind",
+              prerequisites: { minimumLevel: 5 },
+            },
+            "trait_invocation_misty_visions",
+            {
+              traitId: "trait_invocation_one_with_shadows",
+              prerequisites: { minimumLevel: 5 },
+            },
+            {
+              traitId: "trait_invocation_otherworldly_leap",
+              prerequisites: { minimumLevel: 9 },
+            },
+            {
+              traitId: "trait_invocation_repelling_blast",
+              prerequisites: { requiredSpellIds: ["spell_eldritch_blast"] },
+            },
+            {
+              traitId: "trait_invocation_sculptor_of_flesh",
+              prerequisites: { minimumLevel: 7 },
+            },
+            {
+              traitId: "trait_invocation_sign_of_ill_omen",
+              prerequisites: { minimumLevel: 5 },
+            },
+            "trait_invocation_thief_of_five_fates",
+            {
+              traitId: "trait_invocation_thirsting_blade",
+              prerequisites: {
+                minimumLevel: 5,
+                requiredTraitIds: ["trait_pact_of_the_blade"],
+              },
+            },
+            {
+              traitId: "trait_invocation_visions_of_distant_realms",
+              prerequisites: { minimumLevel: 15 },
+            },
+            {
+              traitId: "trait_invocation_voice_of_the_chain_master",
+              prerequisites: { requiredTraitIds: ["trait_pact_of_the_chain"] },
+            },
+            {
+              traitId: "trait_invocation_whispers_of_the_grave",
+              prerequisites: { minimumLevel: 9 },
+            },
+            {
+              traitId: "trait_invocation_witch_sight",
+              prerequisites: { minimumLevel: 15 },
+            },
+          ],
+          pickCount: 1,
+        },
       ],
       grantsASI: false,
     },
@@ -254,7 +933,123 @@ export const WARLOCK_CLASS: ClassDefinition = {
       ],
       grantsASI: false,
     },
-    { level: 18, grants: [], grantsASI: false },
+    {
+      level: 18,
+      grants: [
+        {
+          type: "trait_choice",
+          nodeId: "warlock_level_18_invocations",
+          options: [
+            {
+              traitId: "trait_invocation_agonizing_blast",
+              prerequisites: { requiredSpellIds: ["spell_eldritch_blast"] },
+            },
+            "trait_invocation_armor_of_shadows",
+            {
+              traitId: "trait_invocation_ascendant_step",
+              prerequisites: { minimumLevel: 9 },
+            },
+            "trait_invocation_beast_speech",
+            "trait_invocation_beguiling_influence",
+            {
+              traitId: "trait_invocation_bewitching_whispers",
+              prerequisites: { minimumLevel: 7 },
+            },
+            {
+              traitId: "trait_invocation_book_of_ancient_secrets",
+              prerequisites: { requiredTraitIds: ["trait_pact_of_the_tome"] },
+            },
+            {
+              traitId: "trait_invocation_chains_of_carceri",
+              prerequisites: {
+                minimumLevel: 15,
+                requiredTraitIds: ["trait_pact_of_the_chain"],
+              },
+            },
+            "trait_invocation_devils_sight",
+            {
+              traitId: "trait_invocation_dreadful_word",
+              prerequisites: { minimumLevel: 7 },
+            },
+            "trait_invocation_eldritch_sight",
+            {
+              traitId: "trait_invocation_eldritch_spear",
+              prerequisites: { requiredSpellIds: ["spell_eldritch_blast"] },
+            },
+            "trait_invocation_eyes_of_the_rune_keeper",
+            "trait_invocation_fiendish_vigor",
+            "trait_invocation_gaze_of_two_minds",
+            {
+              traitId: "trait_invocation_lifedrinker",
+              prerequisites: {
+                minimumLevel: 12,
+                requiredTraitIds: ["trait_pact_of_the_blade"],
+              },
+            },
+            "trait_invocation_mask_of_many_faces",
+            {
+              traitId: "trait_invocation_master_of_myriad_forms",
+              prerequisites: { minimumLevel: 15 },
+            },
+            {
+              traitId: "trait_invocation_minions_of_chaos",
+              prerequisites: { minimumLevel: 9 },
+            },
+            {
+              traitId: "trait_invocation_mire_the_mind",
+              prerequisites: { minimumLevel: 5 },
+            },
+            "trait_invocation_misty_visions",
+            {
+              traitId: "trait_invocation_one_with_shadows",
+              prerequisites: { minimumLevel: 5 },
+            },
+            {
+              traitId: "trait_invocation_otherworldly_leap",
+              prerequisites: { minimumLevel: 9 },
+            },
+            {
+              traitId: "trait_invocation_repelling_blast",
+              prerequisites: { requiredSpellIds: ["spell_eldritch_blast"] },
+            },
+            {
+              traitId: "trait_invocation_sculptor_of_flesh",
+              prerequisites: { minimumLevel: 7 },
+            },
+            {
+              traitId: "trait_invocation_sign_of_ill_omen",
+              prerequisites: { minimumLevel: 5 },
+            },
+            "trait_invocation_thief_of_five_fates",
+            {
+              traitId: "trait_invocation_thirsting_blade",
+              prerequisites: {
+                minimumLevel: 5,
+                requiredTraitIds: ["trait_pact_of_the_blade"],
+              },
+            },
+            {
+              traitId: "trait_invocation_visions_of_distant_realms",
+              prerequisites: { minimumLevel: 15 },
+            },
+            {
+              traitId: "trait_invocation_voice_of_the_chain_master",
+              prerequisites: { requiredTraitIds: ["trait_pact_of_the_chain"] },
+            },
+            {
+              traitId: "trait_invocation_whispers_of_the_grave",
+              prerequisites: { minimumLevel: 9 },
+            },
+            {
+              traitId: "trait_invocation_witch_sight",
+              prerequisites: { minimumLevel: 15 },
+            },
+          ],
+          pickCount: 1,
+        },
+      ],
+      grantsASI: false,
+    },
     {
       level: 19,
       grants: [

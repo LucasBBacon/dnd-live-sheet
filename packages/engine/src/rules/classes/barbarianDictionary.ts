@@ -135,11 +135,34 @@ export const BARBARIAN_SUBCLASSES: Record<string, SubclassDefinition> = {
     progression: [
       {
         level: 3,
-        grants: ["trait_spirit_seeker", "trait_totem_spirit"],
+        grants: [
+          "trait_spirit_seeker",
+          {
+            type: "trait_choice",
+            nodeId: "barbarian_totem_level_3_totem_spirit",
+            options: [
+              "trait_totem_spirit_bear",
+              "trait_totem_spirit_eagle",
+              "trait_totem_spirit_wolf",
+            ],
+            pickCount: 1,
+          },
+        ],
       },
       {
         level: 6,
-        grants: ["trait_aspect_of_the_beast"],
+        grants: [
+          {
+            type: "trait_choice",
+            nodeId: "barbarian_totem_level_6_aspect",
+            options: [
+              "trait_aspect_of_the_beast_bear",
+              "trait_aspect_of_the_beast_eagle",
+              "trait_aspect_of_the_beast_wolf",
+            ],
+            pickCount: 1,
+          },
+        ],
       },
       {
         level: 10,
@@ -147,7 +170,18 @@ export const BARBARIAN_SUBCLASSES: Record<string, SubclassDefinition> = {
       },
       {
         level: 14,
-        grants: ["trait_totemic_attunement"],
+        grants: [
+          {
+            type: "trait_choice",
+            nodeId: "barbarian_totem_level_14_attunement",
+            options: [
+              "trait_totemic_attunement_bear",
+              "trait_totemic_attunement_eagle",
+              "trait_totemic_attunement_wolf",
+            ],
+            pickCount: 1,
+          },
+        ],
       },
     ],
   },

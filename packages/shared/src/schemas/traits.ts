@@ -12,6 +12,7 @@ import {
 } from "./proficiencies.js";
 import { CriticalHitModifierSchema, DiceRuleSchema } from "./dice.js";
 import { ActionGrantSchema } from "./actions.js";
+import { SpellGrantBlockSchema } from "./spells.js";
 
 export const TraitDefinitionSchema = z.object({
   id: z.string(),
@@ -38,6 +39,10 @@ export const TraitDefinitionSchema = z.object({
       choices: z.array(ChoiceAffinityGrantSchema).default([]),
     })
     .optional(),
+
+  // spells this trait knows or lets you pick (e.g., Infernal Legacy, domain
+  // spells). Resource-limited entries point at an id in `resources` below.
+  spells: SpellGrantBlockSchema.optional(),
 
   // reactive blocks
   resources: z.array(ResourceGrantSchema).default([]),

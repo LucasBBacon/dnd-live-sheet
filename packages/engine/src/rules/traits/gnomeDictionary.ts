@@ -145,10 +145,18 @@ export const GNOME_TRAITS: Record<string, TraitDefinition> = {
     name: "Natural Illusionist",
     description:
       "You know the minor illusion cantrip, Intelligence is your spellcasting ability for it.",
-    modifiers: {
-      fixed: [],
+    modifiers: { fixed: [], choices: [] },
+    spells: {
+      fixed: [
+        {
+          type: "fixed_spell",
+          spellId: "spell_minor_illusion",
+          castingStat: "INT",
+          unlockScaling: "total_level",
+          usage: { kind: "at_will" },
+        },
+      ],
       choices: [],
-      // TODO: Add cantrip / spells mechanics!!!!
     },
     resources: [],
     triggers: [],

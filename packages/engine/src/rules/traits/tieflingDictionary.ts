@@ -88,8 +88,51 @@ export const TIEFLING_TRAITS: Record<string, TraitDefinition> = {
     description:
       "You know the thaumaturgy cantrip. When you reach 3rd level, you can cast the hellish rebuke spell as a 2nd-level spell once with this trait and regain the ability to do so when you finish a long rest. When you reach 5th level, you can cast the darkness spell once with this trait and regain the ability to do so when you finish a long rest. Charisma is your spellcasting ability for these spells.",
     modifiers: { fixed: [], choices: [] },
-    // TODO: Improve lexical record to allow for target and resolution roll standards
-    resources: [],
+    spells: {
+      fixed: [
+        {
+          type: "fixed_spell",
+          spellId: "spell_thaumaturgy",
+          castingStat: "CHA",
+          unlockScaling: "total_level",
+          usage: { kind: "at_will" },
+        },
+        {
+          type: "fixed_spell",
+          spellId: "spell_hellish_rebuke",
+          castingStat: "CHA",
+          unlockLevel: 3,
+          unlockScaling: "total_level",
+          usage: {
+            kind: "resource",
+            resourceId: "infernal_legacy_hellish_rebuke",
+          },
+        },
+        {
+          type: "fixed_spell",
+          spellId: "spell_darkness",
+          castingStat: "CHA",
+          unlockLevel: 5,
+          unlockScaling: "total_level",
+          usage: { kind: "resource", resourceId: "infernal_legacy_darkness" },
+        },
+      ],
+      choices: [],
+    },
+    resources: [
+      {
+        id: "infernal_legacy_hellish_rebuke",
+        name: "Hellish Rebuke (Infernal Legacy)",
+        maxCharges: 1,
+        resetOn: "long_rest",
+      },
+      {
+        id: "infernal_legacy_darkness",
+        name: "Darkness (Infernal Legacy)",
+        maxCharges: 1,
+        resetOn: "long_rest",
+      },
+    ],
     triggers: [],
     diceRules: [],
     criticalHitModifiers: [],

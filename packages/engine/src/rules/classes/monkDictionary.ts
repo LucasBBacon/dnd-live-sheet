@@ -111,19 +111,224 @@ export const MONK_SUBCLASSES: Record<string, SubclassDefinition> = {
     progression: [
       {
         level: 3,
-        grants: ["trait_disciple_of_the_elements"],
+        grants: [
+          "trait_elemental_attunement",
+          {
+            type: "trait_choice",
+            nodeId: "monk_elements_level_3_discipline",
+            options: [
+              "trait_discipline_fangs_of_the_fire_snake",
+              "trait_discipline_fist_of_four_thunders",
+              "trait_discipline_fist_of_unbroken_air",
+              "trait_discipline_rush_of_the_gale_spirits",
+              "trait_discipline_shape_the_flowing_river",
+              "trait_discipline_sweeping_cinder_strike",
+              "trait_discipline_water_whip",
+              {
+                traitId: "trait_discipline_clench_of_the_north_wind",
+                prerequisites: { minimumLevel: 6 },
+              },
+              {
+                traitId: "trait_discipline_gong_of_the_summit",
+                prerequisites: { minimumLevel: 6 },
+              },
+              {
+                traitId: "trait_discipline_flames_of_the_phoenix",
+                prerequisites: { minimumLevel: 11 },
+              },
+              {
+                traitId: "trait_discipline_mist_stance",
+                prerequisites: { minimumLevel: 11 },
+              },
+              {
+                traitId: "trait_discipline_ride_the_wind",
+                prerequisites: { minimumLevel: 11 },
+              },
+              {
+                traitId: "trait_discipline_breath_of_winter",
+                prerequisites: { minimumLevel: 17 },
+              },
+              {
+                traitId: "trait_discipline_eternal_mountain_defense",
+                prerequisites: { minimumLevel: 17 },
+              },
+              {
+                traitId: "trait_discipline_river_of_hungry_flame",
+                prerequisites: { minimumLevel: 17 },
+              },
+              {
+                traitId: "trait_discipline_wave_of_rolling_earth",
+                prerequisites: { minimumLevel: 17 },
+              },
+            ],
+            pickCount: 1,
+          },
+        ],
       },
       {
         level: 6,
-        grants: ["trait_elemental_disciplines"],
+        grants: [
+          {
+            type: "trait_choice",
+            nodeId: "monk_elements_level_6_discipline",
+            options: [
+              "trait_discipline_fangs_of_the_fire_snake",
+              "trait_discipline_fist_of_four_thunders",
+              "trait_discipline_fist_of_unbroken_air",
+              "trait_discipline_rush_of_the_gale_spirits",
+              "trait_discipline_shape_the_flowing_river",
+              "trait_discipline_sweeping_cinder_strike",
+              "trait_discipline_water_whip",
+              {
+                traitId: "trait_discipline_clench_of_the_north_wind",
+                prerequisites: { minimumLevel: 6 },
+              },
+              {
+                traitId: "trait_discipline_gong_of_the_summit",
+                prerequisites: { minimumLevel: 6 },
+              },
+              {
+                traitId: "trait_discipline_flames_of_the_phoenix",
+                prerequisites: { minimumLevel: 11 },
+              },
+              {
+                traitId: "trait_discipline_mist_stance",
+                prerequisites: { minimumLevel: 11 },
+              },
+              {
+                traitId: "trait_discipline_ride_the_wind",
+                prerequisites: { minimumLevel: 11 },
+              },
+              {
+                traitId: "trait_discipline_breath_of_winter",
+                prerequisites: { minimumLevel: 17 },
+              },
+              {
+                traitId: "trait_discipline_eternal_mountain_defense",
+                prerequisites: { minimumLevel: 17 },
+              },
+              {
+                traitId: "trait_discipline_river_of_hungry_flame",
+                prerequisites: { minimumLevel: 17 },
+              },
+              {
+                traitId: "trait_discipline_wave_of_rolling_earth",
+                prerequisites: { minimumLevel: 17 },
+              },
+            ],
+            pickCount: 1,
+          },
+        ],
       },
       {
         level: 11,
-        grants: ["trait_elemental_disciplines"],
+        grants: [
+          {
+            type: "trait_choice",
+            nodeId: "monk_elements_level_11_discipline",
+            options: [
+              "trait_discipline_fangs_of_the_fire_snake",
+              "trait_discipline_fist_of_four_thunders",
+              "trait_discipline_fist_of_unbroken_air",
+              "trait_discipline_rush_of_the_gale_spirits",
+              "trait_discipline_shape_the_flowing_river",
+              "trait_discipline_sweeping_cinder_strike",
+              "trait_discipline_water_whip",
+              {
+                traitId: "trait_discipline_clench_of_the_north_wind",
+                prerequisites: { minimumLevel: 6 },
+              },
+              {
+                traitId: "trait_discipline_gong_of_the_summit",
+                prerequisites: { minimumLevel: 6 },
+              },
+              {
+                traitId: "trait_discipline_flames_of_the_phoenix",
+                prerequisites: { minimumLevel: 11 },
+              },
+              {
+                traitId: "trait_discipline_mist_stance",
+                prerequisites: { minimumLevel: 11 },
+              },
+              {
+                traitId: "trait_discipline_ride_the_wind",
+                prerequisites: { minimumLevel: 11 },
+              },
+              {
+                traitId: "trait_discipline_breath_of_winter",
+                prerequisites: { minimumLevel: 17 },
+              },
+              {
+                traitId: "trait_discipline_eternal_mountain_defense",
+                prerequisites: { minimumLevel: 17 },
+              },
+              {
+                traitId: "trait_discipline_river_of_hungry_flame",
+                prerequisites: { minimumLevel: 17 },
+              },
+              {
+                traitId: "trait_discipline_wave_of_rolling_earth",
+                prerequisites: { minimumLevel: 17 },
+              },
+            ],
+            pickCount: 1,
+          },
+        ],
       },
       {
         level: 17,
-        grants: ["trait_elemental_disciplines"],
+        grants: [
+          {
+            type: "trait_choice",
+            nodeId: "monk_elements_level_17_discipline",
+            options: [
+              "trait_discipline_fangs_of_the_fire_snake",
+              "trait_discipline_fist_of_four_thunders",
+              "trait_discipline_fist_of_unbroken_air",
+              "trait_discipline_rush_of_the_gale_spirits",
+              "trait_discipline_shape_the_flowing_river",
+              "trait_discipline_sweeping_cinder_strike",
+              "trait_discipline_water_whip",
+              {
+                traitId: "trait_discipline_clench_of_the_north_wind",
+                prerequisites: { minimumLevel: 6 },
+              },
+              {
+                traitId: "trait_discipline_gong_of_the_summit",
+                prerequisites: { minimumLevel: 6 },
+              },
+              {
+                traitId: "trait_discipline_flames_of_the_phoenix",
+                prerequisites: { minimumLevel: 11 },
+              },
+              {
+                traitId: "trait_discipline_mist_stance",
+                prerequisites: { minimumLevel: 11 },
+              },
+              {
+                traitId: "trait_discipline_ride_the_wind",
+                prerequisites: { minimumLevel: 11 },
+              },
+              {
+                traitId: "trait_discipline_breath_of_winter",
+                prerequisites: { minimumLevel: 17 },
+              },
+              {
+                traitId: "trait_discipline_eternal_mountain_defense",
+                prerequisites: { minimumLevel: 17 },
+              },
+              {
+                traitId: "trait_discipline_river_of_hungry_flame",
+                prerequisites: { minimumLevel: 17 },
+              },
+              {
+                traitId: "trait_discipline_wave_of_rolling_earth",
+                prerequisites: { minimumLevel: 17 },
+              },
+            ],
+            pickCount: 1,
+          },
+        ],
       },
     ],
   },

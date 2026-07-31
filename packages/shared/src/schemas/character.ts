@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { RuntimeModifiersListSchema } from "./modifiers.js";
+import { SpellChoiceNodeSchema } from "./spells.js";
 
 // #region Core Primitives Schemas
 
@@ -13,42 +14,71 @@ export const CharacterFlavorSchema = z.object({
 
 export type CharacterFlavorData = z.infer<typeof CharacterFlavorSchema>;
 
-export const FixedSpellGrantSchema = z.object({
-  type: z.literal("fixed_spell"),
-  spellId: z.string(), // e.g., "spell_thaumaturgy"
-  castingStat: z.string().optional(), // e.g., "CHA" for Tiefling racial spells
-  usesPerRest: z.number().optional(), // for things like "Cast once per long rest free"
-});
-
-export const SpellChoiceNodeSchema = z.object({
-  type: z.literal("spell_choice"),
-  nodeId: z.string(), // e.g., "wizard_level_2_spells"
-  // "any" covers picks from every list at once (e.g., Bard Magical Secrets);
-  // "arcane"/"divine" stay for grants that are not tied to a single class list
-  listSource: z.enum([
-    "any",
-    "arcane",
-    "divine",
-    "bard",
-    "cleric",
-    "druid",
-    "paladin",
-    "ranger",
-    "sorcerer",
-    "warlock",
-    "wizard",
-  ]),
-  maxSpellLevel: z.number().int(),
-  pickCount: z.number().int(),
-});
-
 export const TraitGrantSchema = z.string();
 
+/**
+ * "Choose one of these features." Options are plain trait ids because a trait
+ * already composes everything a feature can be - spells, modifiers,
+ * proficiencies, resources and actions - so one node covers fighting styles,
+ * druid land types, totems, metamagic and pact boons alike.
+ *
+ * nodeId is the key this choice is stored under in
+ * CharacterClassState.selections.
+ */
+/**
+ * Gates on a single option. Deliberately narrower than FeatPrerequisitesSchema:
+ * the things that gate a pick are a level, another feature you took, or a spell
+ * you know - e.g. Thirsting Blade needs Pact of the Blade and warlock 5.
+ * minimumLevel counts against the class that granted the choice.
+ */
+export const TraitChoicePrerequisiteSchema = z
+  .object({
+    minimumLevel: z.number().int().min(1).max(20).optional(),
+    requiredTraitIds: z.array(z.string()).optional(),
+    requiredSpellIds: z.array(z.string()).optional(),
+  })
+  .strict();
+
+// a bare string is an option with no strings attached
+export const TraitChoiceOptionSchema = z.union([
+  z.string(),
+  z
+    .object({
+      traitId: z.string(),
+      prerequisites: TraitChoicePrerequisiteSchema,
+    })
+    .strict(),
+]);
+
+export const TraitChoiceNodeSchema = z.object({
+  type: z.literal("trait_choice"),
+  nodeId: z.string(), // e.g., "fighter_level_1_fighting_style"
+  options: z.array(TraitChoiceOptionSchema).min(1),
+  pickCount: z.number().int().min(1).default(1),
+});
+
+export const traitIdOfOption = (
+  option: z.infer<typeof TraitChoiceOptionSchema>,
+): string => (typeof option === "string" ? option : option.traitId);
+
+/**
+ * What a class or subclass level can hand out.
+ *
+ * Note there is no fixed_spell here: a level track answers "how many spells do
+ * I pick at this level", while a specific always-known spell always comes from
+ * a feature, so it lives on that feature's trait (TraitDefinition.spells).
+ */
 export const FeatureGrantUnion = z.union([
-  FixedSpellGrantSchema,
   SpellChoiceNodeSchema,
+  TraitChoiceNodeSchema,
   TraitGrantSchema,
 ]);
+
+export type TraitChoiceNode = z.infer<typeof TraitChoiceNodeSchema>;
+export type TraitChoiceOption = z.infer<typeof TraitChoiceOptionSchema>;
+export type TraitChoicePrerequisite = z.infer<
+  typeof TraitChoicePrerequisiteSchema
+>;
 
 // #endregion
 

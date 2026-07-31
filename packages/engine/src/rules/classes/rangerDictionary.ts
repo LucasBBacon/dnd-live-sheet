@@ -21,7 +21,17 @@ export const RANGER_CLASS: ClassDefinition = {
     {
       level: 2,
       grants: [
-        "trait_fighting_style",
+        {
+          type: "trait_choice",
+          nodeId: "ranger_level_2_fighting_style",
+          options: [
+            "trait_fs_archery",
+            "trait_fs_defense",
+            "trait_fs_dueling",
+            "trait_fs_two_weapon_fighting",
+          ],
+          pickCount: 1,
+        },
         "trait_spellcasting_ranger",
         {
           type: "spell_choice",
@@ -229,19 +239,62 @@ export const RANGER_SUBCLASSES: Record<string, SubclassDefinition> = {
     progression: [
       {
         level: 3,
-        grants: ["trait_hunters_prey"],
+        grants: [
+          {
+            type: "trait_choice",
+            nodeId: "ranger_hunter_level_3_prey",
+            options: [
+              "trait_hunters_prey_colossus_slayer",
+              "trait_hunters_prey_giant_killer",
+              "trait_hunters_prey_horde_breaker",
+            ],
+            pickCount: 1,
+          },
+        ],
       },
       {
         level: 7,
-        grants: ["trait_defensive_tactics"],
+        grants: [
+          {
+            type: "trait_choice",
+            nodeId: "ranger_hunter_level_7_defensive_tactics",
+            options: [
+              "trait_defensive_tactics_escape_the_horde",
+              "trait_defensive_tactics_multiattack_defense",
+              "trait_defensive_tactics_steel_will",
+            ],
+            pickCount: 1,
+          },
+        ],
       },
       {
         level: 11,
-        grants: ["trait_multiattack"],
+        grants: [
+          {
+            type: "trait_choice",
+            nodeId: "ranger_hunter_level_11_multiattack",
+            options: [
+              "trait_multiattack_volley",
+              "trait_multiattack_whirlwind_attack",
+            ],
+            pickCount: 1,
+          },
+        ],
       },
       {
         level: 15,
-        grants: ["trait_superior_hunters_defense"],
+        grants: [
+          {
+            type: "trait_choice",
+            nodeId: "ranger_hunter_level_15_defense",
+            options: [
+              "trait_superior_hunters_defense_evasion",
+              "trait_superior_hunters_defense_stand_against_the_tide",
+              "trait_superior_hunters_defense_uncanny_dodge",
+            ],
+            pickCount: 1,
+          },
+        ],
       },
     ],
   },

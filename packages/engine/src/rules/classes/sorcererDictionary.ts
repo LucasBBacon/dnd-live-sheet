@@ -51,7 +51,21 @@ export const SORCERER_CLASS: ClassDefinition = {
     {
       level: 3,
       grants: [
-        "trait_metamagic",
+        {
+          type: "trait_choice",
+          nodeId: "sorcerer_level_3_metamagic",
+          options: [
+            "trait_metamagic_careful_spell",
+            "trait_metamagic_distant_spell",
+            "trait_metamagic_empowered_spell",
+            "trait_metamagic_extended_spell",
+            "trait_metamagic_heightened_spell",
+            "trait_metamagic_quickened_spell",
+            "trait_metamagic_subtle_spell",
+            "trait_metamagic_twinned_spell",
+          ],
+          pickCount: 2,
+        },
         {
           type: "spell_choice",
           nodeId: "sorcerer_level_3_spells_known",
@@ -151,7 +165,21 @@ export const SORCERER_CLASS: ClassDefinition = {
     {
       level: 10,
       grants: [
-        "trait_metamagic",
+        {
+          type: "trait_choice",
+          nodeId: "sorcerer_level_10_metamagic",
+          options: [
+            "trait_metamagic_careful_spell",
+            "trait_metamagic_distant_spell",
+            "trait_metamagic_empowered_spell",
+            "trait_metamagic_extended_spell",
+            "trait_metamagic_heightened_spell",
+            "trait_metamagic_quickened_spell",
+            "trait_metamagic_subtle_spell",
+            "trait_metamagic_twinned_spell",
+          ],
+          pickCount: 1,
+        },
         {
           type: "spell_choice",
           nodeId: "sorcerer_level_10_cantrips",
@@ -214,7 +242,23 @@ export const SORCERER_CLASS: ClassDefinition = {
     },
     {
       level: 17,
-      grants: ["trait_metamagic"],
+      grants: [
+        {
+          type: "trait_choice",
+          nodeId: "sorcerer_level_17_metamagic",
+          options: [
+            "trait_metamagic_careful_spell",
+            "trait_metamagic_distant_spell",
+            "trait_metamagic_empowered_spell",
+            "trait_metamagic_extended_spell",
+            "trait_metamagic_heightened_spell",
+            "trait_metamagic_quickened_spell",
+            "trait_metamagic_subtle_spell",
+            "trait_metamagic_twinned_spell",
+          ],
+          pickCount: 1,
+        },
+      ],
       grantsASI: false,
     },
     {
@@ -248,7 +292,26 @@ export const SORCERER_SUBCLASSES: Record<string, SubclassDefinition> = {
     progression: [
       {
         level: 1,
-        grants: ["trait_dragon_ancestor", "trait_draconic_resilience"],
+        grants: [
+          {
+            type: "trait_choice",
+            nodeId: "sorcerer_draconic_level_1_ancestor",
+            options: [
+              "trait_dragon_ancestor_black",
+              "trait_dragon_ancestor_blue",
+              "trait_dragon_ancestor_brass",
+              "trait_dragon_ancestor_bronze",
+              "trait_dragon_ancestor_copper",
+              "trait_dragon_ancestor_gold",
+              "trait_dragon_ancestor_green",
+              "trait_dragon_ancestor_red",
+              "trait_dragon_ancestor_silver",
+              "trait_dragon_ancestor_white",
+            ],
+            pickCount: 1,
+          },
+          "trait_draconic_resilience",
+        ],
       },
       {
         level: 6,

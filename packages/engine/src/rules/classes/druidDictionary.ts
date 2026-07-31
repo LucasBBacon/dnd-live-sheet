@@ -113,7 +113,23 @@ export const DRUID_SUBCLASSES: Record<string, SubclassDefinition> = {
       },
       {
         level: 3,
-        grants: ["trait_land_circle_spells"],
+        grants: [
+          {
+            type: "trait_choice",
+            nodeId: "druid_land_level_3_circle_land",
+            options: [
+              "trait_land_circle_spells_arctic",
+              "trait_land_circle_spells_coast",
+              "trait_land_circle_spells_desert",
+              "trait_land_circle_spells_forest",
+              "trait_land_circle_spells_grassland",
+              "trait_land_circle_spells_mountain",
+              "trait_land_circle_spells_swamp",
+              "trait_land_circle_spells_underdark",
+            ],
+            pickCount: 1,
+          },
+        ],
       },
       {
         level: 6,

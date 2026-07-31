@@ -204,10 +204,19 @@ export const ELF_TRAITS: Record<string, TraitDefinition> = {
     name: "(High Elf) Cantrip",
     description:
       "You know one cantrip of your choice from the wizard spell list. Intelligence is your spellcasting ability for it.",
-    modifiers: {
+    modifiers: { fixed: [], choices: [] },
+    spells: {
       fixed: [],
-      choices: [],
-      // TODO: Add cantrip / spells mechanics!!!!
+      choices: [
+        {
+          type: "spell_choice",
+          nodeId: "high_elf_cantrip",
+          listSource: "wizard",
+          maxSpellLevel: 0,
+          pickCount: 1,
+          castingStat: "INT",
+        },
+      ],
     },
     resources: [],
     triggers: [],
@@ -364,12 +373,50 @@ export const ELF_TRAITS: Record<string, TraitDefinition> = {
     name: "Drow Magic",
     description:
       "You know the dancing lights cantrip. When you reach 3rd level, you can cast the faerie fire spell once per day. When you reach 5th level, you can also cast the darkness spell once per day. Charisma is your spellcasting ability for these spells.",
-    modifiers: {
-      fixed: [],
+    modifiers: { fixed: [], choices: [] },
+    spells: {
+      fixed: [
+        {
+          type: "fixed_spell",
+          spellId: "spell_dancing_lights",
+          castingStat: "CHA",
+          unlockScaling: "total_level",
+          usage: { kind: "at_will" },
+        },
+        {
+          type: "fixed_spell",
+          spellId: "spell_faerie_fire",
+          castingStat: "CHA",
+          unlockLevel: 3,
+          unlockScaling: "total_level",
+          usage: { kind: "resource", resourceId: "drow_magic_faerie_fire" },
+        },
+        {
+          type: "fixed_spell",
+          spellId: "spell_darkness",
+          castingStat: "CHA",
+          unlockLevel: 5,
+          unlockScaling: "total_level",
+          usage: { kind: "resource", resourceId: "drow_magic_darkness" },
+        },
+      ],
       choices: [],
-      // TODO: Add cantrip / spells mechanics!!!!
     },
-    resources: [],
+    // "once per day" rather than per long rest, hence the dawn reset
+    resources: [
+      {
+        id: "drow_magic_faerie_fire",
+        name: "Faerie Fire (Drow Magic)",
+        maxCharges: 1,
+        resetOn: "dawn",
+      },
+      {
+        id: "drow_magic_darkness",
+        name: "Darkness (Drow Magic)",
+        maxCharges: 1,
+        resetOn: "dawn",
+      },
+    ],
     triggers: [],
     diceRules: [],
     criticalHitModifiers: [],

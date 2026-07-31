@@ -24,6 +24,9 @@ import { WIZARD_CLASS } from "./classes/wizardDictionary.js";
  * 2. Spell progression (cantrips known, spells known, the wizard spellbook,
  *    Magical Secrets, Mystic Arcanum) is added as `spell_choice` nodes. The
  *    seed carries no spell data at all.
+ * 3. Features that are really a choice become `trait_choice` nodes over the
+ *    traits you can pick, so `trait_fighting_style` is replaced by a node
+ *    listing the styles that class offers. Same for the druid's circle land.
  *
  * Everything else is verbatim, including trait ids repeated across levels
  * (`trait_rage` at 3/9/12/16/17/20) - those mark levels where a feature scales,

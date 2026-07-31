@@ -21,7 +21,17 @@ export const PALADIN_CLASS: ClassDefinition = {
     {
       level: 2,
       grants: [
-        "trait_fighting_style",
+        {
+          type: "trait_choice",
+          nodeId: "paladin_level_2_fighting_style",
+          options: [
+            "trait_fs_defense",
+            "trait_fs_dueling",
+            "trait_fs_great_weapon_fighting",
+            "trait_fs_protection",
+          ],
+          pickCount: 1,
+        },
         "trait_divine_smite",
         "trait_spellcasting_paladin",
       ],

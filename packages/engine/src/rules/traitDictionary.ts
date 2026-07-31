@@ -8,6 +8,15 @@ import { DRAGONBORN_TRAITS } from "./traits/dragonbornDictionary.js";
 import { HALFLING_TRAITS } from "./traits/halflingDictionary.js";
 import { HUMAN_TRAITS } from "./traits/humanDictionary.js";
 import { TIEFLING_TRAITS } from "./traits/tieflingDictionary.js";
+import { SUBCLASS_SPELL_TRAITS } from "./traits/subclassSpellDictionary.js";
+import { FIGHTING_STYLE_TRAITS } from "./traits/fightingStyleDictionary.js";
+import { METAMAGIC_TRAITS } from "./traits/metamagicDictionary.js";
+import { WARLOCK_OPTION_TRAITS } from "./traits/warlockOptionDictionary.js";
+import { TOTEM_TRAITS } from "./traits/totemDictionary.js";
+import { ELEMENTAL_DISCIPLINE_TRAITS } from "./traits/elementalDisciplineDictionary.js";
+import { HUNTER_OPTION_TRAITS } from "./traits/hunterOptionDictionary.js";
+import { DRACONIC_ANCESTRY_TRAITS } from "./traits/draconicAncestryDictionary.js";
+import { MANEUVER_TRAITS } from "./traits/maneuverDictionary.js";
 
 export const TRAIT_DICTIONARY: Record<string, TraitDefinition> = {
   feat_tough: {
@@ -147,4 +156,13 @@ export const TRAIT_DICTIONARY: Record<string, TraitDefinition> = {
   ...HALFLING_TRAITS,
   ...HUMAN_TRAITS,
   ...TIEFLING_TRAITS,
+  ...SUBCLASS_SPELL_TRAITS,
+  ...FIGHTING_STYLE_TRAITS,
+  ...METAMAGIC_TRAITS,
+  ...WARLOCK_OPTION_TRAITS,
+  ...TOTEM_TRAITS,
+  ...ELEMENTAL_DISCIPLINE_TRAITS,
+  ...HUNTER_OPTION_TRAITS,
+  ...DRACONIC_ANCESTRY_TRAITS,
+  ...MANEUVER_TRAITS,
 };
