@@ -6,6 +6,11 @@ export const PALADIN_CLASS: ClassDefinition = {
   name: "Paladin",
   hitDie: 10,
   subclassUnlockLevel: 3,
+  multiclassTraitIds: [
+    "trait_paladin_mult_prof_armor",
+    "trait_paladin_mult_prof_weapons",
+  ],
+  multiclassPrerequisites: { abilityMinimums: { str: 13, cha: 13 } },
   startingProficiencyTraitIds: [
     "trait_paladin_prof_saving_throw",
     "trait_paladin_prof_armor",

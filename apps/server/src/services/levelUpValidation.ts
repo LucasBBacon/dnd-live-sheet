@@ -1,12 +1,17 @@
 import type {
+  ClassDefinition,
   ClassMulticlassPrerequisites,
+  FeatureGrant,
   LevelUpPayload,
+  TraitDefinition,
 } from "@project/shared";
+import { traitIdOfOption } from "@project/shared";
 import {
-  getEffectiveReferenceSnapshot,
-  type EffectiveReferenceSnapshot,
-  type ReferenceScope,
-} from "./effectiveReferenceResolver.js";
+  CLASS_DICTIONARY,
+  SUBCLASS_DICTIONARY,
+  TRAIT_DICTIONARY,
+  listSubclassesForClass,
+} from "@project/engine";
 
 // #region Type Definitions
 
@@ -15,13 +20,15 @@ import {
  * subclass selection, ability score improvement or feat selection, trait selection, and spell selection.
  */
 export type ResolverDecisionType =
-  | "subclass"
-  | "asi_or_feat"
-  | "trait_selection"
-  | "spell_selection";
+  "subclass" | "asi_or_feat" | "trait_selection" | "spell_selection";
 
 /**
  * Represents a decision that needs to be made during the level-up process, including its type, description, and any associated options or requirements.
+ *
+ * For decisions that come from a progression node, `id` is that node's nodeId,
+ * which is also the key the answer is stored under in
+ * CharacterClassState.selections. The level-up UI and the save therefore agree
+ * on one identifier.
  */
 export type ResolverDecision = {
   id: string;
@@ -32,6 +39,15 @@ export type ResolverDecision = {
   quantity?: number;
 };
 
+export type GrantSourceType =
+  "multiclass_grant" | "class_progression" | "subclass_progression";
+
+export type ResolvedGrantedTrait = {
+  id: string;
+  name: string;
+  grantSourceType: GrantSourceType;
+};
+
 /**
  * Represents the context for resolving the next level of a character's class progression, including the target level, whether the level is configured, any reasons for configuration issues, granted trait IDs, decision types, and specific decisions that need to be made.
  */
@@ -40,22 +56,9 @@ export type ResolverNextLevelContext = {
   isConfigured: boolean;
   reason: string | null;
   grantedTraitIds: string[];
+  grantedTraits: ResolvedGrantedTrait[];
   decisionTypes: Array<"subclass" | "asi_or_feat">;
   decisions: ResolverDecision[];
-};
-
-type ChoiceLike = {
-  count?: number;
-  pool?: unknown;
-};
-
-/**
- * Represents an effect associated with a trait,
- * which may include a type and an optional choice object that defines the number of selections and the pool of options available for that effect.
- */
-type TraitEffectLike = {
-  type?: string;
-  choice?: ChoiceLike;
 };
 
 type AbilityScoreKey = keyof NonNullable<
@@ -64,124 +67,332 @@ type AbilityScoreKey = keyof NonNullable<
 
 type AbilityScoreRecord = Record<AbilityScoreKey, number>;
 
+const MAX_CLASS_LEVEL = 20;
+
 // #endregion
 
 // #region Internal Helper Functions
 
-/**
- * Converts a pool of unknown values into an array of strings, filtering out any non-string entries.
- * @param pool The pool of unknown values to be converted into strings.
- * @returns An array of strings extracted from the pool, or undefined if the pool is not an array or contains no string entries.
- */
-const asStringOptions = (pool: unknown): string[] | undefined => {
-  if (!Array.isArray(pool)) {
-    return undefined;
-  }
+const traitName = (traitId: string): string =>
+  TRAIT_DICTIONARY[traitId]?.name ?? traitId.replace(/_/g, " ").toUpperCase();
 
-  const values = pool.filter(
-    (entry): entry is string => typeof entry === "string",
+/** the grants a class hands out at exactly this level */
+const classGrantsAtLevel = (
+  blueprint: ClassDefinition,
+  targetLevel: number,
+): FeatureGrant[] =>
+  blueprint.progression.find((entry) => entry.level === targetLevel)?.grants ??
+  [];
+
+/** the grants a subclass hands out at exactly this level, if it belongs to the class */
+const subclassGrantsAtLevel = (
+  classId: string,
+  subclassId: string | undefined,
+  targetLevel: number,
+): FeatureGrant[] => {
+  if (!subclassId) return [];
+
+  const subclass = SUBCLASS_DICTIONARY[subclassId];
+  if (subclass?.classId !== classId) return [];
+
+  return (
+    subclass.progression.find((entry) => entry.level === targetLevel)?.grants ??
+    []
   );
-  return values.length > 0 ? values : undefined;
 };
 
 /**
- * Retrieves the granted features (traits) for a specific class and level, including any subclass features if applicable.
- * @param param0 An object containing the effective reference snapshot, class ID, target level, and optional requested subclass ID.
- * @returns An array of granted features (traits) for the specified class and level, including subclass features if applicable.
+ * Decisions carried by the traits granted at this level. These are the choices
+ * that live inside a trait rather than on the level track: a proficiency choice
+ * such as the rogue's Expertise, or a spell choice such as the High Elf cantrip.
  */
-const getGrantedFeaturesForLevel = ({
-  cache,
-  classId,
-  targetLevel,
-  requestedSubclassId,
-  isMulticlassDip,
-}: {
-  cache: EffectiveReferenceSnapshot;
-  classId: string;
-  targetLevel: number;
-  requestedSubclassId: string | undefined;
-  isMulticlassDip: boolean;
-}) => {
-  if (isMulticlassDip && targetLevel === 1) {
-    return cache.multiclassTraitsByClassId.get(classId) ?? [];
-  }
+const traitDrivenDecisions = (traitIds: string[]): ResolverDecision[] => {
+  const decisions: ResolverDecision[] = [];
 
-  // retrieve class features for class + level from cache
-  const classFeatures =
-    cache.classTraitsByClassLevel.get(`${classId}::${targetLevel}`) ?? [];
+  for (const traitId of traitIds) {
+    const trait: TraitDefinition | undefined = TRAIT_DICTIONARY[traitId];
+    if (!trait) continue;
 
-  // retrieve subclass features for subclass + level from cache if a valid subclass is provided
-  let subclassFeatures: typeof classFeatures = [];
+    for (const choice of trait.proficiencies?.choices ?? []) {
+      decisions.push({
+        id: choice.id,
+        type: "trait_selection",
+        description: `Choose proficiencies for ${trait.name}.`,
+        // an absent options list means "any from this category", so leave it
+        // off rather than sending an empty allow-list
+        ...(choice.options ? { options: choice.options } : {}),
+        isRequired: true,
+        quantity: choice.chooseAmount,
+      });
+    }
 
-  if (requestedSubclassId) {
-    const validSubclass = cache.subclassById.get(requestedSubclassId);
-    const isValidSubclass = validSubclass?.parentClassId === classId;
-
-    if (isValidSubclass) {
-      subclassFeatures =
-        cache.subclassTraitsBySubclassLevel.get(
-          `${requestedSubclassId}::${targetLevel}`,
-        ) ?? [];
+    for (const choice of trait.spells?.choices ?? []) {
+      decisions.push({
+        id: choice.nodeId,
+        type: "spell_selection",
+        description: `Choose spells granted by ${trait.name}.`,
+        isRequired: true,
+        quantity: choice.pickCount,
+      });
     }
   }
 
-  return [...classFeatures, ...subclassFeatures];
+  return decisions;
 };
 
-/**
- * Extracts decisions that are driven by granted features (traits) during the level-up process, such as proficiency choices and spell grants.
- * @param grantedFeatures An array of granted features (traits) that may contain effects requiring decisions to be made.
- * @returns An array of decisions that need to be made based on the granted features, including proficiency choices and spell grants.
- */
-const extractTraitDrivenDecisions = (
-  grantedFeatures: Array<{ id: string; name: string; effects: unknown }>,
+/** turns the progression nodes at this level into level-up decisions */
+const grantDrivenDecisions = (
+  grants: FeatureGrant[],
+  sourceName: string,
 ): ResolverDecision[] => {
   const decisions: ResolverDecision[] = [];
 
-  for (const trait of grantedFeatures) {
-    // skip if no effects array
-    if (!Array.isArray(trait.effects)) {
+  for (const grant of grants) {
+    if (typeof grant === "string") continue;
+
+    if (grant.type === "trait_choice") {
+      decisions.push({
+        id: grant.nodeId,
+        type: "trait_selection",
+        description: `Choose ${grant.pickCount} option(s) for ${sourceName}.`,
+        options: grant.options.map(traitIdOfOption),
+        isRequired: true,
+        quantity: grant.pickCount,
+      });
       continue;
     }
 
-    // iterate over effects
-    trait.effects.forEach((effect, effectIndex) => {
-      // skip if effect is not an object
-      if (!effect || typeof effect !== "object") {
-        return;
-      }
-
-      // cast effect to TraitEffectLike for type safety
-      const typedEffect = effect as TraitEffectLike;
-
-      // handle proficiency choice effects by creating a decision for trait selection
-      if (typedEffect.type === "proficiency_choice") {
-        decisions.push({
-          id: `dec_${trait.id}_prof_choice_${effectIndex}`,
-          type: "trait_selection",
-          description: `Choose proficiencies for ${trait.name}.`,
-          options: asStringOptions(typedEffect.choice?.pool) ?? [],
-          isRequired: true,
-          quantity: typedEffect.choice?.count ?? 1,
-        });
-        return;
-      }
-
-      // handle spell grant effects by creating a decision for spell selection
-      if (typedEffect.type === "spell_grant" && typedEffect.choice) {
-        decisions.push({
-          id: `dec_${trait.id}_spell_choice_${effectIndex}`,
-          type: "spell_selection",
-          description: `Choose spells granted by ${trait.name}.`,
-          options: asStringOptions(typedEffect.choice.pool) ?? [],
-          isRequired: true,
-          quantity: typedEffect.choice.count ?? 1,
-        });
-      }
+    // no options: there is no spell list data to enumerate from yet
+    decisions.push({
+      id: grant.nodeId,
+      type: "spell_selection",
+      description: `Choose ${grant.pickCount} spell(s) for ${sourceName}.`,
+      isRequired: true,
+      quantity: grant.pickCount,
     });
   }
 
   return decisions;
+};
+
+const meetsAbilityMinimums = (
+  minimums: NonNullable<ClassMulticlassPrerequisites["abilityMinimums"]>,
+  currentBaseScores: AbilityScoreRecord,
+): boolean =>
+  Object.entries(minimums).every(([ability, minimum]) => {
+    if (minimum === undefined) {
+      return true;
+    }
+
+    return currentBaseScores[ability as AbilityScoreKey] >= minimum;
+  });
+
+// #endregion
+
+// #region Public API
+
+export const assessMulticlassPrerequisites = ({
+  classId,
+  currentBaseScores,
+}: {
+  classId: string;
+  currentBaseScores: AbilityScoreRecord;
+}): { meetsPrerequisites: boolean; reason: string | null } => {
+  const blueprint = CLASS_DICTIONARY[classId];
+  if (!blueprint?.multiclassPrerequisites) {
+    return {
+      meetsPrerequisites: false,
+      reason: `Multiclass definitions not found for ${classId}`,
+    };
+  }
+
+  const { abilityMinimums, anyOf } = blueprint.multiclassPrerequisites;
+  const meetsAllOf = abilityMinimums
+    ? meetsAbilityMinimums(abilityMinimums, currentBaseScores)
+    : true;
+  const meetsAnyOf = anyOf
+    ? anyOf.some((minimums) =>
+        meetsAbilityMinimums(minimums, currentBaseScores),
+      )
+    : true;
+
+  if (!meetsAllOf || !meetsAnyOf) {
+    return {
+      meetsPrerequisites: false,
+      reason:
+        "You do not meet the ability score prerequisites to multiclass into this class.",
+    };
+  }
+
+  return {
+    meetsPrerequisites: true,
+    reason: null,
+  };
+};
+
+export const validateMulticlassPrerequisites = ({
+  classId,
+  currentBaseScores,
+}: {
+  classId: string;
+  currentBaseScores: AbilityScoreRecord;
+}): void => {
+  const assessment = assessMulticlassPrerequisites({
+    classId,
+    currentBaseScores,
+  });
+
+  if (!assessment.meetsPrerequisites) {
+    throw new Error(
+      assessment.reason ||
+        "You do not meet the ability score prerequisites to multiclass into this class.",
+    );
+  }
+};
+
+/**
+ * Builds the next level context for a character's class progression: what the
+ * level grants and what the player still has to choose.
+ *
+ * Everything comes from the static rulebook in @project/engine, so this is
+ * synchronous and needs no reference snapshot.
+ */
+export const resolveNextLevelValidationContext = ({
+  classId,
+  currentClassLevel,
+  requestedSubclassId,
+  isMulticlassDip = false,
+}: {
+  classId: string;
+  currentClassLevel: number;
+  requestedSubclassId?: string;
+  isMulticlassDip?: boolean;
+}): ResolverNextLevelContext => {
+  const targetLevel = currentClassLevel + 1;
+  const blueprint = CLASS_DICTIONARY[classId];
+
+  const notConfigured = (reason: string): ResolverNextLevelContext => ({
+    targetLevel,
+    isConfigured: false,
+    reason,
+    grantedTraitIds: [],
+    grantedTraits: [],
+    decisionTypes: [],
+    decisions: [],
+  });
+
+  if (!blueprint) {
+    return notConfigured(`Unknown class: ${classId}`);
+  }
+  if (targetLevel < 1 || targetLevel > MAX_CLASS_LEVEL) {
+    return notConfigured(
+      `Level ${targetLevel} is not configured in class progression data.`,
+    );
+  }
+
+  const decisionTypes: Array<"subclass" | "asi_or_feat"> = [];
+  const decisions: ResolverDecision[] = [];
+  const grantedTraits: ResolvedGrantedTrait[] = [];
+
+  // a dip grants the reduced multiclass proficiency set instead of the full
+  // level-1 package. Note this also skips the level's own features, which
+  // mirrors how the reference data has always modelled it.
+  if (isMulticlassDip && targetLevel === 1) {
+    for (const traitId of blueprint.multiclassTraitIds) {
+      grantedTraits.push({
+        id: traitId,
+        name: traitName(traitId),
+        grantSourceType: "multiclass_grant",
+      });
+    }
+  } else {
+    for (const grant of classGrantsAtLevel(blueprint, targetLevel)) {
+      if (typeof grant === "string") {
+        grantedTraits.push({
+          id: grant,
+          name: traitName(grant),
+          grantSourceType: "class_progression",
+        });
+      }
+    }
+    for (const grant of subclassGrantsAtLevel(
+      classId,
+      requestedSubclassId,
+      targetLevel,
+    )) {
+      if (typeof grant === "string") {
+        grantedTraits.push({
+          id: grant,
+          name: traitName(grant),
+          grantSourceType: "subclass_progression",
+        });
+      }
+    }
+  }
+
+  // #region decisions
+  if (blueprint.subclassUnlockLevel === targetLevel) {
+    decisionTypes.push("subclass");
+    decisions.push({
+      id: `dec_${classId}_subclass_${targetLevel}`,
+      type: "subclass",
+      description: "Choose a subclass for this class level.",
+      options: listSubclassesForClass(classId).map((subclass) => subclass.id),
+      isRequired: true,
+      quantity: 1,
+    });
+  }
+
+  const levelEntry = blueprint.progression.find(
+    (entry) => entry.level === targetLevel,
+  );
+  if (!isMulticlassDip && levelEntry?.grantsASI) {
+    decisionTypes.push("asi_or_feat");
+    decisions.push({
+      id: `dec_${classId}_asi_or_feat_${targetLevel}`,
+      type: "asi_or_feat",
+      description:
+        "Increase one ability score by 2, or two by 1, or choose a feat.",
+      isRequired: true,
+      quantity: 1,
+    });
+  }
+
+  if (!isMulticlassDip || targetLevel !== 1) {
+    decisions.push(
+      ...grantDrivenDecisions(
+        classGrantsAtLevel(blueprint, targetLevel),
+        blueprint.name,
+      ),
+    );
+
+    const subclass = requestedSubclassId
+      ? SUBCLASS_DICTIONARY[requestedSubclassId]
+      : undefined;
+    if (subclass?.classId === classId) {
+      decisions.push(
+        ...grantDrivenDecisions(
+          subclassGrantsAtLevel(classId, requestedSubclassId, targetLevel),
+          subclass.name,
+        ),
+      );
+    }
+  }
+
+  decisions.push(
+    ...traitDrivenDecisions(grantedTraits.map((trait) => trait.id)),
+  );
+  // #endregion
+
+  return {
+    targetLevel,
+    isConfigured: true,
+    reason: null,
+    grantedTraitIds: grantedTraits.map((trait) => trait.id),
+    grantedTraits,
+    decisionTypes,
+    decisions,
+  };
 };
 
 /**
@@ -210,12 +421,9 @@ const getSelectedTraitsForDecision = (
 
   // handle case where selectedTraits is an object mapping decision IDs to arrays of strings
   if (typeof selectedTraits === "object") {
-    // cast selectedTraits to a record of decision IDs to unknown values for type safety
-    // filter and return only the selected traits for the specified decision ID
     const selectedByDecision = selectedTraits as Record<string, unknown>;
     const exact = selectedByDecision[decisionId];
 
-    // if exact is an array, filter and return only the string entries
     if (Array.isArray(exact)) {
       return exact.filter(
         (entry): entry is string => typeof entry === "string",
@@ -228,209 +436,6 @@ const getSelectedTraitsForDecision = (
   }
 
   return [];
-};
-
-const meetsAbilityMinimums = (
-  minimums: NonNullable<ClassMulticlassPrerequisites["abilityMinimums"]>,
-  currentBaseScores: AbilityScoreRecord,
-): boolean =>
-  Object.entries(minimums).every(([ability, minimum]) => {
-    if (minimum === undefined) {
-      return true;
-    }
-
-    return currentBaseScores[ability as AbilityScoreKey] >= minimum;
-  });
-
-export const validateMulticlassPrerequisitesFromSnapshot = ({
-  cache,
-  classId,
-  currentBaseScores,
-}: {
-  cache: EffectiveReferenceSnapshot;
-  classId: string;
-  currentBaseScores: AbilityScoreRecord;
-}): void => {
-  const assessment = assessMulticlassPrerequisitesFromSnapshot({
-    cache,
-    classId,
-    currentBaseScores,
-  });
-
-  if (!assessment.meetsPrerequisites) {
-    throw new Error(
-      assessment.reason ||
-        "You do not meet the ability score prerequisites to multiclass into this class.",
-    );
-  }
-};
-
-export const assessMulticlassPrerequisitesFromSnapshot = ({
-  cache,
-  classId,
-  currentBaseScores,
-}: {
-  cache: EffectiveReferenceSnapshot;
-  classId: string;
-  currentBaseScores: AbilityScoreRecord;
-}): { meetsPrerequisites: boolean; reason: string | null } => {
-  const classDefinition = cache.classes.find((row) => row.id === classId);
-  if (!classDefinition?.multiclassPrerequisites) {
-    return {
-      meetsPrerequisites: false,
-      reason: `Multiclass definitions not found for ${classId}`,
-    };
-  }
-
-  const { abilityMinimums, anyOf } = classDefinition.multiclassPrerequisites;
-  const meetsAllOf = abilityMinimums
-    ? meetsAbilityMinimums(abilityMinimums, currentBaseScores)
-    : true;
-  const meetsAnyOf = anyOf
-    ? anyOf.some((minimums) =>
-        meetsAbilityMinimums(minimums, currentBaseScores),
-      )
-    : true;
-
-  if (!meetsAllOf || !meetsAnyOf) {
-    return {
-      meetsPrerequisites: false,
-      reason:
-        "You do not meet the ability score prerequisites to multiclass into this class.",
-    };
-  }
-
-  return {
-    meetsPrerequisites: true,
-    reason: null,
-  };
-};
-
-// #endregion
-
-// #region Public API
-
-/**
- * Resolves the next level validation context for a character's class progression based on the provided reference scope, class ID, current class level, and optional requested subclass ID.
- * @param param0 An object containing the reference scope, class ID, current class level, and optional requested subclass ID.
- * @returns A promise that resolves to the next level validation context, including the target level, granted trait IDs, and any decisions that need to be made during the level-up process.
- */
-export const resolveNextLevelValidationContext = async ({
-  scope,
-  classId,
-  currentClassLevel,
-  requestedSubclassId,
-  isMulticlassDip = false,
-}: {
-  scope: ReferenceScope;
-  classId: string;
-  currentClassLevel: number;
-  requestedSubclassId?: string;
-  isMulticlassDip?: boolean;
-}): Promise<ResolverNextLevelContext> => {
-  const cache = await getEffectiveReferenceSnapshot(scope);
-  return resolveNextLevelValidationContextFromSnapshot({
-    cache,
-    classId,
-    currentClassLevel,
-    isMulticlassDip,
-    ...(requestedSubclassId !== undefined ? { requestedSubclassId } : {}),
-  });
-};
-
-/**
- * Builds the next level context for a character's class progression, including the target level and granted traits at that level.
- * @param param0 An object containing the effective reference snapshot, class ID, current class level, and optional requested subclass ID.
- * @returns An object representing the next level context, including the target level and an array of granted trait IDs at that level.
- */
-export const resolveNextLevelValidationContextFromSnapshot = ({
-  cache,
-  classId,
-  currentClassLevel,
-  requestedSubclassId,
-  isMulticlassDip = false,
-}: {
-  cache: EffectiveReferenceSnapshot;
-  classId: string;
-  currentClassLevel: number;
-  requestedSubclassId?: string;
-  isMulticlassDip?: boolean;
-}): ResolverNextLevelContext => {
-  // determine target level, class definition, and level metadata for next class progression step
-  const targetLevel = currentClassLevel + 1;
-  const classDefinition = cache.classes.find((row) => row.id === classId);
-  const levelMeta = (cache.classLevelsByClassId.get(classId) ?? []).find(
-    (row) => row.level === targetLevel,
-  );
-
-  // retrieve granted features for target level (including any subclass features if applicable)
-  const grantedFeatures = getGrantedFeaturesForLevel({
-    cache,
-    classId,
-    targetLevel,
-    requestedSubclassId,
-    isMulticlassDip,
-  });
-
-  // extract granted trait IDs and build decision types and decisions based on granted features
-  const grantedTraitIds = grantedFeatures.map((feature) => feature.id);
-  const decisionTypes: Array<"subclass" | "asi_or_feat"> = [];
-  const decisions: ResolverDecision[] = [];
-
-  // determine if subclass selection is required at this level
-  // add corresponding decision if applicable
-  if (classDefinition?.subclassRequirementLevel === targetLevel) {
-    decisionTypes.push("subclass");
-    decisions.push({
-      id: `dec_${classId}_subclass_${targetLevel}`,
-      type: "subclass",
-      description: "Choose a subclass for this class level.",
-      options: (cache.subclassesByClassId.get(classId) ?? []).map(
-        (subclass) => subclass.id,
-      ),
-      isRequired: true,
-      quantity: 1,
-    });
-  }
-
-  // determine if ability score improvement/feat selection is granted at this level
-  // add corresponding decision if applicable
-  if (grantedTraitIds.includes("trait_ability_score_improvement")) {
-    decisionTypes.push("asi_or_feat");
-    decisions.push({
-      id: `dec_${classId}_asi_or_feat_${targetLevel}`,
-      type: "asi_or_feat",
-      description:
-        "Increase one ability score by 2, or two by 1, or choose a feat.",
-      isRequired: true,
-      quantity: 1,
-    });
-  }
-
-  // extract any additional trait-driven decisions based on granted features and append to decisions array
-  decisions.push(...extractTraitDrivenDecisions(grantedFeatures));
-
-  // if no level metadata, return context indicating that level is not configured
-  if (!levelMeta) {
-    return {
-      targetLevel,
-      isConfigured: false,
-      reason: `Level ${targetLevel} is not configured in class progression data.`,
-      grantedTraitIds: [],
-      decisionTypes: [],
-      decisions: [],
-    };
-  }
-
-  // return context indicating that level is configured, along with granted trait IDs and decisions
-  return {
-    targetLevel,
-    isConfigured: true,
-    reason: null,
-    grantedTraitIds,
-    decisionTypes,
-    decisions,
-  };
 };
 
 /**
@@ -465,6 +470,16 @@ export const validateLevelUpPayloadFromResolver = ({
       throw new Error("A subclass selection is required at this level");
     }
 
+    // strict validation: the selected subclass has to belong to this class
+    if (decision.type === "subclass" && payload.subclassId) {
+      const subclass = SUBCLASS_DICTIONARY[payload.subclassId];
+      if (!subclass || subclass.classId !== payload.targetClassId) {
+        throw new Error(
+          `${payload.subclassId} is not a subclass of ${payload.targetClassId}`,
+        );
+      }
+    }
+
     // strict validation: ability score improvement or feat selection
     if (decision.type === "asi_or_feat") {
       const hasASI = Boolean(
@@ -494,6 +509,19 @@ export const validateLevelUpPayloadFromResolver = ({
         throw new Error(
           `You must select exactly ${expected} option(s) for ${decision.description}.`,
         );
+      }
+
+      // the resolver knows the legal options, so reject anything off the list
+      const allowed = decision.options;
+      if (allowed && allowed.length > 0) {
+        const invalid = selectedTraits.filter(
+          (traitId) => !allowed.includes(traitId),
+        );
+        if (invalid.length > 0) {
+          throw new Error(
+            `${invalid.join(", ")} is not a valid option for ${decision.description}.`,
+          );
+        }
       }
     }
 

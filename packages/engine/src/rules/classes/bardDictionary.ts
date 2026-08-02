@@ -6,6 +6,12 @@ export const BARD_CLASS: ClassDefinition = {
   name: "Bard",
   hitDie: 8,
   subclassUnlockLevel: 3,
+  multiclassTraitIds: [
+    "trait_bard_prof_mult_armor",
+    "trait_bard_prof_mult_tools",
+    "trait_bard_prof_mult_skills",
+  ],
+  multiclassPrerequisites: { abilityMinimums: { cha: 13 } },
   startingProficiencyTraitIds: [
     "trait_bard_prof_saving_throw",
     "trait_bard_prof_armor",

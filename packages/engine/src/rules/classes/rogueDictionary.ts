@@ -6,6 +6,12 @@ export const ROGUE_CLASS: ClassDefinition = {
   name: "Rogue",
   hitDie: 8,
   subclassUnlockLevel: 3,
+  multiclassTraitIds: [
+    "trait_rogue_mult_prof_armor",
+    "trait_rogue_mult_prof_skills",
+    "trait_rogue_mult_prof_tools",
+  ],
+  multiclassPrerequisites: { abilityMinimums: { dex: 13 } },
   startingProficiencyTraitIds: [
     "trait_rogue_prof_saving_throw",
     "trait_rogue_prof_armor",

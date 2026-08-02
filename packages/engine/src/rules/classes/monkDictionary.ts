@@ -6,6 +6,8 @@ export const MONK_CLASS: ClassDefinition = {
   name: "Monk",
   hitDie: 8,
   subclassUnlockLevel: 3,
+  multiclassTraitIds: ["trait_monk_mult_prof_weapons"],
+  multiclassPrerequisites: { abilityMinimums: { dex: 13, wis: 13 } },
   startingProficiencyTraitIds: [
     "trait_monk_prof_saving_throw",
     "trait_monk_prof_weapons",

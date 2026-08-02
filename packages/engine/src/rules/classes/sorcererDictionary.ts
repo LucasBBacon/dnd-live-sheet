@@ -6,6 +6,8 @@ export const SORCERER_CLASS: ClassDefinition = {
   name: "Sorcerer",
   hitDie: 6,
   subclassUnlockLevel: 1,
+  multiclassTraitIds: [],
+  multiclassPrerequisites: { abilityMinimums: { cha: 13 } },
   startingProficiencyTraitIds: [
     "trait_sorcerer_prof_saving_throw",
     "trait_sorcerer_prof_weapons",

@@ -6,6 +6,8 @@ export const DRUID_CLASS: ClassDefinition = {
   name: "Druid",
   hitDie: 8,
   subclassUnlockLevel: 2,
+  multiclassTraitIds: ["trait_druid_mult_prof_armor"],
+  multiclassPrerequisites: { abilityMinimums: { wis: 13 } },
   startingProficiencyTraitIds: [
     "trait_druid_prof_saving_throw",
     "trait_druid_prof_armor",

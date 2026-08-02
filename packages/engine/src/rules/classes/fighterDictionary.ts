@@ -6,6 +6,13 @@ export const FIGHTER_CLASS: ClassDefinition = {
   name: "Fighter",
   hitDie: 10,
   subclassUnlockLevel: 3,
+  multiclassTraitIds: [
+    "trait_fighter_mult_prof_armor",
+    "trait_fighter_mult_prof_weapons",
+  ],
+  multiclassPrerequisites: {
+    anyOf: [{ str: 13 }, { dex: 13 }],
+  },
   startingProficiencyTraitIds: [
     "trait_fighter_prof_saving_throw",
     "trait_fighter_prof_armor",

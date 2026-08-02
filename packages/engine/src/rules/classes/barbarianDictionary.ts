@@ -6,6 +6,11 @@ export const BARBARIAN_CLASS: ClassDefinition = {
   name: "Barbarian",
   hitDie: 12,
   subclassUnlockLevel: 3,
+  multiclassTraitIds: [
+    "trait_barbarian_mult_prof_armor",
+    "trait_barbarian_mult_prof_weapons",
+  ],
+  multiclassPrerequisites: { abilityMinimums: { str: 13 } },
   startingProficiencyTraitIds: [
     "trait_barbarian_prof_armor",
     "trait_barbarian_prof_weapons",

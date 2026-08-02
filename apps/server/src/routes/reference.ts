@@ -12,8 +12,8 @@ import {
   searchEffectiveItems,
 } from "../services/effectiveReferenceResolver.js";
 import {
-  assessMulticlassPrerequisitesFromSnapshot,
-  resolveNextLevelValidationContextFromSnapshot,
+  assessMulticlassPrerequisites,
+  resolveNextLevelValidationContext,
 } from "../services/levelUpValidation.js";
 import {
   getReferenceCacheVersion,
@@ -94,11 +94,6 @@ type TraitEffectLike = {
   type?: string;
   category?: string;
 };
-
-type GrantSourceType =
-  | "multiclass_grant"
-  | "class_progression"
-  | "subclass_progression";
 
 const hasEffectCategory = (effects: unknown, categories: string[]): boolean => {
   if (!Array.isArray(effects)) return false;
@@ -261,81 +256,24 @@ const buildClassTimeline = ({
  * @returns An object representing the next level context, including the target level and an array of granted trait IDs at that level.
  */
 const buildNextLevelContext = ({
-  cache,
   classId,
   currentClassLevel,
   requestedSubclassId,
   isMulticlassDip,
 }: {
-  cache: Awaited<ReturnType<typeof getEffectiveReferenceSnapshot>>;
   classId: string;
   currentClassLevel: number;
   requestedSubclassId: string | undefined;
   isMulticlassDip: boolean;
-}) => {
-  // resolve the next level context from the effective reference snapshot
-  const nextLevelContext = resolveNextLevelValidationContextFromSnapshot({
-    cache,
+}) =>
+  // the resolver already tags each granted trait with its name and source, so
+  // there is nothing left to derive from the reference snapshot here
+  resolveNextLevelValidationContext({
     classId,
     currentClassLevel,
     isMulticlassDip,
     ...(requestedSubclassId !== undefined ? { requestedSubclassId } : {}),
   });
-
-  // if next level context is not configured, return it
-  if (!nextLevelContext.isConfigured) {
-    return nextLevelContext;
-  }
-
-  const grantedTraitIds = nextLevelContext.grantedTraitIds;
-  const validSubclass = requestedSubclassId
-    ? cache.subclassById.get(requestedSubclassId)
-    : undefined;
-  const isValidSubclass = validSubclass?.parentClassId === classId;
-  const targetLevel = nextLevelContext.targetLevel;
-
-  const classTraitIdsAtTargetLevel = new Set(
-    (cache.classTraitsByClassLevel.get(`${classId}::${targetLevel}`) ?? []).map(
-      (trait) => trait.id,
-    ),
-  );
-
-  const subclassTraitIdsAtTargetLevel = new Set(
-    isValidSubclass
-      ? (
-          cache.subclassTraitsBySubclassLevel.get(
-            `${requestedSubclassId}::${targetLevel}`,
-          ) ?? []
-        ).map((trait) => trait.id)
-      : [],
-  );
-
-  const grantedTraits = grantedTraitIds.map((traitId) => {
-    let grantSourceType: GrantSourceType = "class_progression";
-
-    if (isMulticlassDip && targetLevel === 1) {
-      grantSourceType = "multiclass_grant";
-    } else if (subclassTraitIdsAtTargetLevel.has(traitId)) {
-      grantSourceType = "subclass_progression";
-    } else if (classTraitIdsAtTargetLevel.has(traitId)) {
-      grantSourceType = "class_progression";
-    }
-
-    return {
-      id: traitId,
-      name:
-        cache.traitsById.get(traitId)?.name ??
-        traitId.replace(/_/g, " ").toUpperCase(),
-      grantSourceType,
-    };
-  });
-
-  return {
-    ...nextLevelContext,
-    grantedTraitIds,
-    grantedTraits,
-  };
-};
 
 /**
  * Loads the character's class levels based on the provided characterId and campaignId.
@@ -590,7 +528,6 @@ router.get("/level-up/options", async (req, res, next) => {
 
     const nextLevel = classId
       ? buildNextLevelContext({
-          cache,
           classId,
           currentClassLevel: selectedClassCurrentLevel,
           requestedSubclassId: subclassId,
@@ -605,7 +542,6 @@ router.get("/level-up/options", async (req, res, next) => {
         const isMulticlassDip =
           clsCurrentLevel === 0 && Object.keys(classLevelsByClassId).length > 0;
         const support = buildNextLevelContext({
-          cache,
           classId: cls.id,
           currentClassLevel: clsCurrentLevel,
           requestedSubclassId: undefined,
@@ -614,8 +550,7 @@ router.get("/level-up/options", async (req, res, next) => {
 
         const multiclassPreview =
           isMulticlassDip && currentBaseScores
-            ? assessMulticlassPrerequisitesFromSnapshot({
-                cache,
+            ? assessMulticlassPrerequisites({
                 classId: cls.id,
                 currentBaseScores,
               })

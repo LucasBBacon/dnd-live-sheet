@@ -6,6 +6,11 @@ export const WARLOCK_CLASS: ClassDefinition = {
   name: "Warlock",
   hitDie: 8,
   subclassUnlockLevel: 1,
+  multiclassTraitIds: [
+    "trait_warlock_mult_prof_armor",
+    "trait_warlock_mult_prof_weapons",
+  ],
+  multiclassPrerequisites: { abilityMinimums: { cha: 13 } },
   startingProficiencyTraitIds: [
     "trait_warlock_prof_saving_throw",
     "trait_warlock_prof_armor",

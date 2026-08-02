@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { RuntimeModifiersListSchema } from "./modifiers.js";
 import { SpellChoiceNodeSchema } from "./spells.js";
+import { ClassMulticlassPrerequisitesSchema } from "./prerequisites.js";
 
 // #region Core Primitives Schemas
 
@@ -117,6 +118,12 @@ export const ClassDefinitionSchema = z.object({
 
   // what the class grants at lvl 1 (e.g., light armor, simple weapons)
   startingProficiencyTraitIds: z.array(z.string()).default([]),
+
+  // the reduced proficiency set granted when this class is taken as a dip
+  multiclassTraitIds: z.array(z.string()).default([]),
+
+  // ability minimums required to multiclass into this class
+  multiclassPrerequisites: ClassMulticlassPrerequisitesSchema.optional(),
 
   // 1-20 progression track
   progression: z.array(ClassLevelFeatureSchema),

@@ -8,11 +8,10 @@ import type { LevelUpPayload } from "@project/shared";
 import type { Request, Response } from "express";
 import { eq, sql } from "drizzle-orm";
 import {
-  resolveNextLevelValidationContextFromSnapshot,
-  validateMulticlassPrerequisitesFromSnapshot,
+  resolveNextLevelValidationContext,
+  validateMulticlassPrerequisites,
   validateLevelUpPayloadFromResolver,
 } from "../services/levelUpValidation.js";
-import { getEffectiveReferenceSnapshot } from "../services/effectiveReferenceResolver.js";
 
 /**
  * Applies a level-up to a character.
@@ -44,15 +43,9 @@ export const applyLevelUp = async (req: Request, res: Response) => {
       const isMulticlassDip = !targetClassRecord && existingClasses.length > 0;
       const targetClassLevel = (targetClassRecord?.classLevel || 0) + 1;
 
-      const effectiveReference = await getEffectiveReferenceSnapshot({
-        campaignId: character.campaignId,
-        characterId,
-      });
-
       // 3 - SERVER VALIDATION
       if (isMulticlassDip) {
-        validateMulticlassPrerequisitesFromSnapshot({
-          cache: effectiveReference,
+        validateMulticlassPrerequisites({
           classId: targetClassId,
           currentBaseScores: {
             str: character.str,
@@ -66,8 +59,7 @@ export const applyLevelUp = async (req: Request, res: Response) => {
       }
 
       // resolve next level validation context for character's class progression
-      const resolverContext = resolveNextLevelValidationContextFromSnapshot({
-        cache: effectiveReference,
+      const resolverContext = resolveNextLevelValidationContext({
         classId: targetClassId,
         currentClassLevel: targetClassLevel - 1,
         isMulticlassDip,

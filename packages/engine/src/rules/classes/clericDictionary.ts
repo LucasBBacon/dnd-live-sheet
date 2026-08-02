@@ -6,6 +6,11 @@ export const CLERIC_CLASS: ClassDefinition = {
   name: "Cleric",
   hitDie: 8,
   subclassUnlockLevel: 1,
+  multiclassTraitIds: [
+    "trait_cleric_mult_prof_armor",
+    "trait_cleric_mult_prof_weapons",
+  ],
+  multiclassPrerequisites: { abilityMinimums: { wis: 13 } },
   startingProficiencyTraitIds: [
     "trait_cleric_prof_saving_throw",
     "trait_cleric_prof_armor",

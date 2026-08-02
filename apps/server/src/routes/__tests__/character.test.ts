@@ -99,9 +99,11 @@ describe("Character Routes", () => {
       values: vi.fn().mockResolvedValue(undefined),
     };
 
-    const transactionMock = vi.fn().mockImplementation(
-      async (callback: (trx: unknown) => Promise<unknown>) => callback(tx),
-    );
+    const transactionMock = vi
+      .fn()
+      .mockImplementation(
+        async (callback: (trx: unknown) => Promise<unknown>) => callback(tx),
+      );
 
     const effectiveReferenceMock = vi.fn().mockResolvedValue({
       classes: [],
@@ -123,11 +125,13 @@ describe("Character Routes", () => {
       }
     });
 
-    const validateMulticlassPrerequisitesMock = vi.fn().mockImplementation(() => {
-      if (multiclassValidationErrorMessage) {
-        throw new Error(multiclassValidationErrorMessage);
-      }
-    });
+    const validateMulticlassPrerequisitesMock = vi
+      .fn()
+      .mockImplementation(() => {
+        if (multiclassValidationErrorMessage) {
+          throw new Error(multiclassValidationErrorMessage);
+        }
+      });
 
     vi.doMock("@project/database", () => ({
       db: {
@@ -136,9 +140,8 @@ describe("Character Routes", () => {
     }));
 
     vi.doMock("../../services/levelUpValidation.js", () => ({
-      resolveNextLevelValidationContextFromSnapshot: resolveContextMock,
-      validateMulticlassPrerequisitesFromSnapshot:
-        validateMulticlassPrerequisitesMock,
+      resolveNextLevelValidationContext: resolveContextMock,
+      validateMulticlassPrerequisites: validateMulticlassPrerequisitesMock,
       validateLevelUpPayloadFromResolver: validatePayloadMock,
     }));
 
@@ -146,7 +149,8 @@ describe("Character Routes", () => {
       getEffectiveReferenceSnapshot: effectiveReferenceMock,
     }));
 
-    const { applyLevelUp } = await import("../../controllers/characterController.js");
+    const { applyLevelUp } =
+      await import("../../controllers/characterController.js");
 
     return {
       applyLevelUp,
@@ -405,8 +409,12 @@ describe("Character Routes", () => {
       const result = CreateCharacterPayloadSchema.safeParse(payload);
       expect(result.success).toBe(true);
       if (result.success) {
-        expect(result.data.background.customData?.skillTraitIds).toHaveLength(3);
-        expect(result.data.background.customData?.toolLanguageTraitIds).toHaveLength(2);
+        expect(result.data.background.customData?.skillTraitIds).toHaveLength(
+          3,
+        );
+        expect(
+          result.data.background.customData?.toolLanguageTraitIds,
+        ).toHaveLength(2);
       }
     });
 

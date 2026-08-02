@@ -6,6 +6,11 @@ export const RANGER_CLASS: ClassDefinition = {
   name: "Ranger",
   hitDie: 10,
   subclassUnlockLevel: 3,
+  multiclassTraitIds: [
+    "trait_ranger_mult_prof_armor",
+    "trait_ranger_mult_prof_weapons",
+  ],
+  multiclassPrerequisites: { abilityMinimums: { dex: 13, wis: 13 } },
   startingProficiencyTraitIds: [
     "trait_ranger_prof_saving_throw",
     "trait_ranger_prof_armor",

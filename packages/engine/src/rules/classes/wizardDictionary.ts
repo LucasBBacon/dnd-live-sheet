@@ -6,6 +6,8 @@ export const WIZARD_CLASS: ClassDefinition = {
   name: "Wizard",
   hitDie: 6,
   subclassUnlockLevel: 2,
+  multiclassTraitIds: [],
+  multiclassPrerequisites: { abilityMinimums: { int: 13 } },
   startingProficiencyTraitIds: [
     "trait_wizard_prof_saving_throw",
     "trait_wizard_prof_weapons",
