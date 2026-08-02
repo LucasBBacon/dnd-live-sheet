@@ -162,10 +162,22 @@ export const CharacterSaveSchema = z.object({
   race: RaceConfigurationSchema,
   classes: z.array(CharacterClassStateSchema).min(1), // multiclass
 
+  /**
+   * Picks made inside a trait's own choice blocks, keyed by
+   * ChoiceModifierGrant.id / ChoiceProficiencyGrant.id.
+   *
+   * Kept apart from CharacterClassState.selections because those are keyed by
+   * the nodeId of a class progression grant, while a trait choice can just as
+   * easily come from a race or subrace, which has no class to hang off.
+   * e.g., {"half_elf_asi_choice": ["DEX", "CHA"], "skill_versatility_choice": ["stealth", "perception"]}
+   */
+  traitSelections: z.record(z.string(), z.array(z.string())).default({}),
+
   // live state
   hp: z.object({
     current: z.number().int().min(0),
     temporary: z.number().int().min(0).default(0),
+    baseRolledHp: z.number().int().min(0),
     hitDiceSpent: z.record(z.string(), z.number()).default({}),
   }),
 });

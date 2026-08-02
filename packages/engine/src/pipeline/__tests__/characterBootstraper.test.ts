@@ -14,7 +14,12 @@ const baseAttributes = {
   cha: 10,
 };
 
-const baseHp = { current: 10, temporary: 0, hitDiceSpent: {} };
+const baseHp = {
+  current: 10,
+  temporary: 0,
+  baseRolledHp: 10,
+  hitDiceSpent: {},
+};
 
 /** a hill dwarf fighter 1, fully configured */
 const fighter = (
@@ -34,6 +39,7 @@ const fighter = (
       ...overrides,
     },
   ],
+  traitSelections: {},
   hp: baseHp,
 });
 
@@ -52,6 +58,7 @@ const warlock = (
       selections,
     },
   ],
+  traitSelections: {},
   hp: baseHp,
 });
 

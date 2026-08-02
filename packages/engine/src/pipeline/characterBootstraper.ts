@@ -4,6 +4,7 @@ import type {
   SpellChoiceNode,
   TraitChoiceNode,
   TraitChoiceOption,
+  TraitDefinition,
 } from "@project/shared";
 import { traitIdOfOption } from "@project/shared";
 import { CLASS_DICTIONARY } from "../rules/classDictionary.js";
@@ -77,10 +78,19 @@ const unlockedGrants = (classState: ClassState): FeatureGrant[] => {
   return grants;
 };
 
-const classTraitIds = (classState: ClassState): string[] => {
+/**
+ * The first class in the array is the one the character started at level 1, so
+ * it hands out the full starting proficiency set. Every class after it was
+ * multiclassed into and only grants the reduced dip set.
+ */
+const classTraitIds = (classState: ClassState, isPrimary: boolean): string[] => {
   const blueprint = CLASS_DICTIONARY[classState.classId];
   const ids: string[] = blueprint
-    ? [...blueprint.startingProficiencyTraitIds]
+    ? [
+        ...(isPrimary
+          ? blueprint.startingProficiencyTraitIds
+          : blueprint.multiclassTraitIds),
+      ]
     : [];
 
   for (const grant of unlockedGrants(classState)) {
@@ -165,7 +175,9 @@ export class CharacterBootstrapper {
   public static resolveGrantedTraitIds(save: CharacterSave): string[] {
     const ids = [
       ...raceTraitIds(save.race),
-      ...save.classes.flatMap((classState) => classTraitIds(classState)),
+      ...save.classes.flatMap((classState, index) =>
+        classTraitIds(classState, index === 0),
+      ),
     ];
 
     return [...new Set(ids)];
@@ -217,7 +229,7 @@ export class CharacterBootstrapper {
     let totalLevel = 0;
     const seenClassIds = new Set<string>();
 
-    for (const classState of save.classes) {
+    for (const [classIndex, classState] of save.classes.entries()) {
       totalLevel += classState.level;
 
       const blueprint = CLASS_DICTIONARY[classState.classId];
@@ -272,7 +284,7 @@ export class CharacterBootstrapper {
       const grants = unlockedGrants(classState);
       const traitIds = new Set([
         ...raceTraitIds(save.race),
-        ...classTraitIds(classState),
+        ...classTraitIds(classState, classIndex === 0),
       ]);
       const spellIds = knownSpellIds(classState, traitIds);
       const knownNodeIds = new Set<string>();
@@ -384,4 +396,38 @@ export class CharacterBootstrapper {
 
   // TODO: hydrate EffectManager
   // TODO: hydrate ResourceManager
+
+  /**
+   * Turns the ids from resolveGrantedTraitIds into the trait definitions the
+   * extractors and calculators actually consume.
+   *
+   * Ids with no entry in TRAIT_DICTIONARY are skipped rather than thrown on: a
+   * blueprint referencing a trait that has not been authored yet is a rulebook
+   * gap, not a broken save, and validateSave is where saves get judged.
+   */
+  public static compileActiveTraits(save: CharacterSave): TraitDefinition[] {
+    return CharacterBootstrapper.resolveGrantedTraitIds(save)
+      .map((traitId) => TRAIT_DICTIONARY[traitId])
+      .filter((trait): trait is TraitDefinition => trait !== undefined);
+  }
+
+  /**
+   * The picks the extractors need, in one lookup table. Trait choice blocks are
+   * keyed by their own id in save.traitSelections; class progression nodes are
+   * keyed by nodeId per class. They share a flat namespace here because a
+   * compiled trait no longer remembers which class unlocked it.
+   */
+  public static resolveSelections(
+    save: CharacterSave,
+  ): Record<string, string[]> {
+    const selections: Record<string, string[]> = { ...save.traitSelections };
+
+    for (const classState of save.classes) {
+      for (const [nodeId, picks] of Object.entries(classState.selections)) {
+        selections[nodeId] = [...(selections[nodeId] ?? []), ...picks];
+      }
+    }
+
+    return selections;
+  }
 }
