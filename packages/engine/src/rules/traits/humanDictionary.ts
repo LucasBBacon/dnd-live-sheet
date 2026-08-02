@@ -85,7 +85,7 @@ export const HUMAN_TRAITS: Record<string, TraitDefinition> = {
           category: "languages",
           chooseAmount: 1,
           level: "proficient",
-          options: [],
+          // no options: any language the character does not already speak
           requiredStates: [],
         },
       ],

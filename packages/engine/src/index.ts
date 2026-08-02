@@ -7,6 +7,7 @@ export * from "./rules/equipmentDictionary.js";
 export * from "./rules/raceDictionary.js";
 export * from "./rules/subclassDictionary.js";
 export * from "./rules/traitDictionary.js";
+export * from "./rules/proficiencyDictionary.js";
 export * from "./rules/spellDictionary.js";
 export * from "./rules/ruleLookup.js";
 export * from "./calculators/abilities.js";

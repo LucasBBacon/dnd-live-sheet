@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import type { CharacterSave } from "@project/shared";
+import type { CharacterSave, TraitDefinition } from "@project/shared";
+import { TRAIT_DICTIONARY } from "../../rules/traitDictionary.js";
 import { CharacterEngine } from "../characterEngine.js";
 import { CharacterBootstrapper } from "../characterBootstraper.js";
 import { ModifierExtractor } from "../modifierExtractor.js";
@@ -183,11 +184,126 @@ describe("ProficiencyExtractor.extractProficiencies", () => {
 
     expect(pending).toContainEqual(
       expect.objectContaining({
-        id: "skill_versatility_choice",
+        choiceId: "skill_versatility_choice",
         traitId: "skill_versatility",
         remainingPicks: 2,
       }),
     );
+  });
+});
+
+describe("open proficiency choices", () => {
+  const pendingChoice = (save: CharacterSave, choiceId: string) =>
+    ProficiencyExtractor.listPendingChoices(
+      CharacterBootstrapper.compileActiveTraits(save),
+      CharacterBootstrapper.resolveSelections(save),
+    ).find((choice) => choice.choiceId === choiceId);
+
+  const extract = (save: CharacterSave) =>
+    ProficiencyExtractor.extractProficiencies(
+      CharacterBootstrapper.compileActiveTraits(save),
+      CharacterBootstrapper.resolveSelections(save),
+    );
+
+  it("offers the whole language roster minus what the race already grants", () => {
+    const options = pendingChoice(
+      halfElfFighter({ traitSelections: {} }),
+      "half_elf_language_choice",
+    )?.availableOptions;
+
+    // the half-elf gets Common and Elvish for free, so neither is on offer
+    expect(options).not.toContain("common");
+    expect(options).not.toContain("elvish");
+    expect(options).toEqual(expect.arrayContaining(["dwarvish", "draconic"]));
+  });
+
+  it("never offers a language that can only come from a class feature", () => {
+    const options = pendingChoice(
+      halfElfFighter({ traitSelections: {} }),
+      "half_elf_language_choice",
+    )?.availableOptions;
+
+    expect(options).not.toContain("druidic");
+    expect(options).not.toContain("thieves_cant");
+  });
+
+  it("drops a pick the character already has for free", () => {
+    const save = halfElfFighter({
+      traitSelections: { half_elf_language_choice: ["elvish"] },
+    });
+    const languages = extract(save).filter((g) => g.category === "languages");
+
+    // elvish is still known, but from the fixed grant - the pick was not spent
+    expect(languages.map((g) => g.proficiencyId).sort()).toEqual([
+      "common",
+      "elvish",
+    ]);
+    expect(pendingChoice(save, "half_elf_language_choice")?.remainingPicks).toBe(
+      1,
+    );
+  });
+
+  it("refuses a language that is not in the roster at all", () => {
+    const save = halfElfFighter({
+      traitSelections: { half_elf_language_choice: ["klingon"] },
+    });
+
+    expect(
+      extract(save).some((g) => g.proficiencyId === "klingon"),
+    ).toBe(false);
+  });
+
+  it("stops two open blocks landing on the same language", () => {
+    // a half-elf who also took the high-elf extra language block
+    const traits = [
+      ...CharacterBootstrapper.compileActiveTraits(halfElfFighter()),
+      TRAIT_DICTIONARY["subrace_elf_high_extra_language"]!,
+    ];
+    const grants = ProficiencyExtractor.extractProficiencies(traits, {
+      half_elf_language_choice: ["dwarvish"],
+      elf_high_choice_extra_lang: ["dwarvish"],
+    });
+
+    expect(
+      grants.filter((g) => g.proficiencyId === "dwarvish"),
+    ).toHaveLength(1);
+  });
+
+  it("still offers a skill the character is only proficient in to an expertise block", () => {
+    const proficientInStealth: TraitDefinition = {
+      ...TRAIT_DICTIONARY["skill_versatility"]!,
+      id: "test_expertise",
+      name: "Test Expertise",
+      proficiencies: {
+        fixed: [],
+        choices: [
+          {
+            id: "test_expertise_choice",
+            category: "skills",
+            chooseAmount: 1,
+            level: "expertise",
+            requiredStates: [],
+          },
+        ],
+      },
+    };
+
+    const traits = [
+      ...CharacterBootstrapper.compileActiveTraits(halfElfFighter()),
+      proficientInStealth,
+    ];
+    const grants = ProficiencyExtractor.extractProficiencies(traits, {
+      skill_versatility_choice: ["stealth", "perception"],
+      test_expertise_choice: ["stealth"],
+    });
+
+    // expertise beats the proficiency already held, so the pick lands
+    expect(grants).toContainEqual({
+      category: "skills",
+      proficiencyId: "stealth",
+      level: "expertise",
+      requiredStates: [],
+    });
   });
 });
 

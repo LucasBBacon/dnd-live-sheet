@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { CharacterSave } from "@project/shared";
 import { CharacterBootstrapper } from "../characterBootstraper.js";
+import { ProficiencyExtractor } from "../proficiencyExtractor.js";
 
 const codes = (save: CharacterSave) =>
   CharacterBootstrapper.collectSaveIssues(save).map((issue) => issue.code);
@@ -39,7 +40,8 @@ const fighter = (
       ...overrides,
     },
   ],
-  traitSelections: {},
+  // the dwarf's Tool Proficiency block is a trait choice, not a class node
+  traitSelections: { dwarf_artisan_tools: ["smiths_tools"] },
   hp: baseHp,
 });
 
@@ -58,7 +60,8 @@ const warlock = (
       selections,
     },
   ],
-  traitSelections: {},
+  // humans get one extra language of their choice
+  traitSelections: { human_language_choice: ["dwarvish"] },
   hp: baseHp,
 });
 
@@ -306,6 +309,113 @@ describe("CharacterBootstrapper.validateSave", () => {
     expect(() => CharacterBootstrapper.validateSave(save)).toThrow(
       /Invalid character save:[\s\S]*Unknown race[\s\S]*subclass/,
     );
+  });
+});
+
+describe("CharacterBootstrapper.collectSaveIssues - trait choice blocks", () => {
+  /** a half-elf fighter: two ability bumps, two skills, one bonus language */
+  const halfElf = (
+    traitSelections: Record<string, string[]>,
+  ): CharacterSave => ({
+    attributes: baseAttributes,
+    race: { baseRaceId: "race_half_elf", hasSubraces: false, subraceId: null },
+    classes: [
+      {
+        classId: "class_fighter",
+        level: 1,
+        selections: { fighter_level_1_fighting_style: ["trait_fs_defense"] },
+      },
+    ],
+    traitSelections,
+    hp: baseHp,
+  });
+
+  const answered = {
+    half_elf_asi_choice: ["DEX", "CON"],
+    skill_versatility_choice: ["stealth", "perception"],
+    half_elf_language_choice: ["dwarvish"],
+  };
+
+  it("accepts a save with every trait block answered", () => {
+    expect(codes(halfElf(answered))).toEqual([]);
+  });
+
+  it("requires a selection for a block the character has unlocked", () => {
+    const issues = CharacterBootstrapper.collectSaveIssues(halfElf({}));
+
+    expect(issues.map((i) => i.code)).toEqual([
+      "missing_selection",
+      "missing_selection",
+      "missing_selection",
+    ]);
+    expect(issues.map((i) => i.nodeId)).toContain("half_elf_asi_choice");
+  });
+
+  it("rejects a pick the block does not offer", () => {
+    const issues = CharacterBootstrapper.collectSaveIssues(
+      halfElf({ ...answered, half_elf_asi_choice: ["DEX", "CHA"] }),
+    );
+
+    // CHA is off the half-elf block: it already gets the fixed +2
+    expect(issues.map((i) => i.code)).toEqual(["invalid_option"]);
+    expect(issues[0]!.traitId).toBe("race_half_elf_asi");
+  });
+
+  it("rejects a language the character is already given for free", () => {
+    const issues = CharacterBootstrapper.collectSaveIssues(
+      halfElf({ ...answered, half_elf_language_choice: ["elvish"] }),
+    );
+
+    expect(issues.map((i) => i.code)).toEqual(["redundant_selection"]);
+    expect(issues[0]!.message).toMatch(/already has/);
+  });
+
+  it("flags the wrong number of picks", () => {
+    const issues = CharacterBootstrapper.collectSaveIssues(
+      halfElf({ ...answered, half_elf_asi_choice: ["DEX"] }),
+    );
+
+    expect(issues.map((i) => i.code)).toEqual(["wrong_selection_count"]);
+  });
+
+  it("reports a repeated pick once, without also calling it over the limit", () => {
+    const issues = CharacterBootstrapper.collectSaveIssues(
+      halfElf({ ...answered, half_elf_asi_choice: ["DEX", "DEX"] }),
+    );
+
+    expect(issues.map((i) => i.code)).toEqual(["duplicate_selection"]);
+  });
+
+  it("flags picks stored against a block no trait offers", () => {
+    const issues = CharacterBootstrapper.collectSaveIssues(
+      halfElf({ ...answered, dwarf_artisan_tools: ["smiths_tools"] }),
+    );
+
+    expect(issues.map((i) => i.code)).toEqual(["orphan_selection"]);
+    expect(issues[0]!.nodeId).toBe("dwarf_artisan_tools");
+  });
+
+  it("stays quiet about trait blocks when the race itself is broken", () => {
+    const save = halfElf({});
+    save.race = { baseRaceId: "race_nonsense", hasSubraces: false, subraceId: null };
+
+    // the missing race is the real problem; the traits it would have granted
+    // must not each turn into their own issue
+    expect(codes(save)).toEqual(["unknown_race"]);
+  });
+
+  it("agrees with what the extractors actually applied", () => {
+    const save = halfElf({ ...answered, half_elf_language_choice: ["elvish"] });
+    const traits = CharacterBootstrapper.compileActiveTraits(save);
+    const selections = CharacterBootstrapper.resolveSelections(save);
+
+    // validation says the pick is wasted, and the sheet agrees it was ignored
+    expect(codes(save)).toEqual(["redundant_selection"]);
+    expect(
+      ProficiencyExtractor.extractProficiencies(traits, selections).filter(
+        (g) => g.category === "languages",
+      ),
+    ).toHaveLength(2); // common + elvish, both from the fixed grant
   });
 });
 

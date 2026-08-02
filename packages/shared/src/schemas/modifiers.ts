@@ -88,6 +88,7 @@ export type ModifierType = z.infer<typeof ModifierTypeSchema>;
 export type ModifierScaling = z.infer<typeof ModifierScalingSchema>;
 
 export type TraitModifier = z.infer<typeof BaseModifierSchema>;
+export type ChoiceModifierGrant = z.infer<typeof ChoiceModifierGrantSchema>;
 export type RuntimeModifier = z.infer<typeof RuntimeModifierSchema>;
 export type RuntimeModifiersList = z.infer<typeof RuntimeModifiersListSchema>;
 

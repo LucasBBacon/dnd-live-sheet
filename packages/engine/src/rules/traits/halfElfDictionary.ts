@@ -113,7 +113,8 @@ export const HALF_ELF_TRAITS: Record<string, TraitDefinition> = {
           category: "languages",
           chooseAmount: 1,
           level: "proficient",
-          options: [],
+          // no options: any language the character does not already speak.
+          // ProficiencyExtractor resolves that against the finished character
           requiredStates: [],
         },
       ],

@@ -57,7 +57,7 @@ export const ELF_TRAITS: Record<string, TraitDefinition> = {
       fixed: [
         {
           category: "skills",
-          proficiencyId: "skill_perception",
+          proficiencyId: "perception",
           level: "proficient",
           requiredStates: [],
         },

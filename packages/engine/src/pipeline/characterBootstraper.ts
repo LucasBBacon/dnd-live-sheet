@@ -11,6 +11,13 @@ import { CLASS_DICTIONARY } from "../rules/classDictionary.js";
 import { SUBCLASS_DICTIONARY } from "../rules/subclassDictionary.js";
 import { RACE_DICTIONARY } from "../rules/raceDictionary.js";
 import { TRAIT_DICTIONARY } from "../rules/traitDictionary.js";
+import { ModifierExtractor } from "./modifierExtractor.js";
+import { ProficiencyExtractor } from "./proficiencyExtractor.js";
+import type {
+  ChoiceRejection,
+  ChoiceRejectionReason,
+  ChoiceResolution,
+} from "./choiceResolution.js";
 
 // these now live with the data they describe
 export type { RaceDefinition } from "../rules/raceDictionary.js";
@@ -37,14 +44,68 @@ export type SaveValidationCode =
   | "invalid_option"
   | "duplicate_selection"
   | "unmet_prerequisite"
-  | "orphan_selection";
+  | "orphan_selection"
+  | "redundant_selection";
 
 export interface SaveValidationIssue {
   code: SaveValidationCode;
   message: string;
   classId?: string;
+  /** the class progression nodeId, or the trait choice block id */
   nodeId?: string;
+  /** set when the issue came from a trait's own choice block */
+  traitId?: string;
 }
+
+/**
+ * How an extractor's refusal reads as a validation issue. `over_limit` maps to
+ * nothing because the selection count check already covers it, and reporting
+ * both would name the same mistake twice.
+ */
+const REJECTION_CODES: Record<
+  ChoiceRejectionReason,
+  SaveValidationCode | undefined
+> = {
+  not_an_option: "invalid_option",
+  already_held: "redundant_selection",
+  duplicate: "duplicate_selection",
+  over_limit: undefined,
+};
+
+/**
+ * Problems that leave whole branches missing from the compiled trait set, so
+ * that checking trait choices on top would report cascade noise rather than
+ * anything the player can act on.
+ */
+const FOUNDATION_CODES = new Set<SaveValidationCode>([
+  "unknown_race",
+  "subrace_flag_mismatch",
+  "missing_subrace",
+  "unknown_subrace",
+  "unexpected_subrace",
+  "unknown_class",
+  "missing_subclass",
+  "unknown_subclass",
+  "subclass_class_mismatch",
+]);
+
+const rejectionMessage = (
+  resolution: ChoiceResolution,
+  { selectedId, reason }: ChoiceRejection,
+): string => {
+  const where = `${resolution.traitName}: ${resolution.choiceId}`;
+
+  switch (reason) {
+    case "not_an_option":
+      return `${where} does not offer ${selectedId}`;
+    case "already_held":
+      return `${where} picked ${selectedId}, which this character already has - the pick buys nothing`;
+    case "duplicate":
+      return `${where} has ${selectedId} selected twice`;
+    case "over_limit":
+      return `${where} cannot honour ${selectedId}`;
+  }
+};
 
 const isTraitChoice = (grant: FeatureGrant): grant is TraitChoiceNode =>
   typeof grant !== "string" && grant.type === "trait_choice";
@@ -368,10 +429,88 @@ export class CharacterBootstrapper {
       // #endregion
     }
 
+    // trait choice blocks are skipped outright when the character's race,
+    // subrace, class or subclass did not resolve: the trait set is then missing
+    // whole branches, and every pick into one of them would be reported as an
+    // orphan. The real problem is already in the list; this would only bury it
+    if (!issues.some((issue) => FOUNDATION_CODES.has(issue.code))) {
+      issues.push(...CharacterBootstrapper.collectTraitChoiceIssues(save));
+    }
+
     if (totalLevel > MAX_TOTAL_LEVEL) {
       add({
         code: "total_level_exceeded",
         message: `Total character level cannot exceed ${MAX_TOTAL_LEVEL}. Current: ${totalLevel}`,
+      });
+    }
+
+    return issues;
+  }
+
+  /**
+   * Checks the choice blocks that live on traits rather than on a class
+   * progression track - a half-elf's two ability bumps, a dwarf's artisan tool,
+   * a bonus language.
+   *
+   * The rules are not re-implemented here. Both extractors already decide which
+   * picks they will honour, and report the ones they refuse; this only turns
+   * those refusals into issues, so validation and the live sheet can never
+   * disagree about what a pick does.
+   */
+  private static collectTraitChoiceIssues(
+    save: CharacterSave,
+  ): SaveValidationIssue[] {
+    const issues: SaveValidationIssue[] = [];
+
+    const activeTraits = CharacterBootstrapper.compileActiveTraits(save);
+    const selections = CharacterBootstrapper.resolveSelections(save);
+    const resolutions: ChoiceResolution[] = [
+      ...ModifierExtractor.resolveChoices(activeTraits, selections),
+      ...ProficiencyExtractor.resolveChoices(activeTraits, selections),
+    ];
+
+    for (const resolution of resolutions) {
+      const where = { nodeId: resolution.choiceId, traitId: resolution.traitId };
+      const selected = selections[resolution.choiceId] ?? [];
+
+      if (selected.length === 0) {
+        issues.push({
+          ...where,
+          code: "missing_selection",
+          message: `${resolution.traitName}: nothing selected for ${resolution.choiceId}`,
+        });
+        continue;
+      }
+
+      if (selected.length !== resolution.chooseAmount) {
+        issues.push({
+          ...where,
+          code: "wrong_selection_count",
+          message: `${resolution.traitName}: ${resolution.choiceId} takes ${resolution.chooseAmount} selection(s), got ${selected.length}`,
+        });
+      }
+
+      for (const rejection of resolution.rejected) {
+        // over_limit gets no issue of its own - the count check above already
+        // said the block was handed more picks than it hands out
+        const code = REJECTION_CODES[rejection.reason];
+        if (!code) continue;
+
+        issues.push({
+          ...where,
+          code,
+          message: rejectionMessage(resolution, rejection),
+        });
+      }
+    }
+
+    const knownChoiceIds = new Set(resolutions.map((r) => r.choiceId));
+    for (const choiceId of Object.keys(save.traitSelections)) {
+      if (knownChoiceIds.has(choiceId)) continue;
+      issues.push({
+        code: "orphan_selection",
+        nodeId: choiceId,
+        message: `Selection for ${choiceId}, which no trait on this character offers`,
       });
     }
 

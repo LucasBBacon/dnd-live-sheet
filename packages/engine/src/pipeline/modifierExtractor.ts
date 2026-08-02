@@ -1,9 +1,18 @@
 import type {
+  ChoiceModifierGrant,
   ModifierTarget,
   RuntimeModifier,
   TraitDefinition,
   TraitModifier,
 } from "@project/shared";
+import type {
+  ChoiceRejection,
+  ChoiceResolution,
+} from "./choiceResolution.js";
+
+export interface ModifierChoiceResolution extends ChoiceResolution {
+  accepted: ModifierTarget[];
+}
 
 /**
  * Flattens the static math a character's traits carry into RuntimeModifiers the
@@ -28,23 +37,13 @@ export class ModifierExtractor {
 
       // 2 - extract parameterized choice modifiers
       for (const choice of trait.modifiers?.choices ?? []) {
-        // look up the player's saved targets for this specific choice id
-        const selectedTargets = selections[choice.id] ?? [];
-        const applied: ModifierTarget[] = [];
+        const { accepted } = this.resolveChoice(
+          choice,
+          selections[choice.id],
+          trait,
+        );
 
-        for (const target of selectedTargets) {
-          // guardrail: the selection has to be a legal option on the blueprint.
-          // a save can go stale when a rulebook option is renamed or dropped
-          if (!this.isPermittedOption(choice.options, target)) continue;
-
-          // a repeated pick is only spent twice if the block says it stacks
-          // (half-elf's +1/+1 must land on two different abilities)
-          if (!choice.allowDuplicates && applied.includes(target)) continue;
-
-          // the block also caps how many picks it is willing to honour
-          if (applied.length >= choice.chooseAmount) break;
-          applied.push(target);
-
+        for (const target of accepted) {
           // synthesize a concrete base modifier from the template
           const synthesizedMod: TraitModifier = {
             target,
@@ -67,6 +66,69 @@ export class ModifierExtractor {
     }
 
     return runtimeMods;
+  }
+
+  /**
+   * The same resolution extractModifiers performs, reported rather than
+   * applied, so save validation can explain the picks that will be ignored.
+   */
+  public static resolveChoices(
+    traits: TraitDefinition[],
+    selections: Record<string, string[]>,
+  ): ModifierChoiceResolution[] {
+    return traits.flatMap((trait) =>
+      (trait.modifiers?.choices ?? []).map((choice) =>
+        this.resolveChoice(choice, selections[choice.id], trait),
+      ),
+    );
+  }
+
+  /**
+   * Walks the picks in order, keeping the legal ones until the block is full.
+   * Order matters: it is what decides which of four picks a two-pick block
+   * honours, so the player's own ordering wins.
+   */
+  private static resolveChoice(
+    choice: ChoiceModifierGrant,
+    selected: string[] | undefined,
+    trait: TraitDefinition,
+  ): ModifierChoiceResolution {
+    const accepted: ModifierTarget[] = [];
+    const rejected: ChoiceRejection[] = [];
+
+    for (const selectedId of selected ?? []) {
+      // guardrail: the pick has to be a legal option on the blueprint.
+      // a save can go stale when a rulebook option is renamed or dropped
+      if (!this.isPermittedOption(choice.options, selectedId)) {
+        rejected.push({ selectedId, reason: "not_an_option" });
+        continue;
+      }
+
+      // a repeated pick is only spent twice if the block says it stacks
+      // (half-elf's +1/+1 must land on two different abilities)
+      if (!choice.allowDuplicates && accepted.includes(selectedId)) {
+        rejected.push({ selectedId, reason: "duplicate" });
+        continue;
+      }
+
+      // the block also caps how many picks it is willing to honour
+      if (accepted.length >= choice.chooseAmount) {
+        rejected.push({ selectedId, reason: "over_limit" });
+        continue;
+      }
+
+      accepted.push(selectedId);
+    }
+
+    return {
+      traitId: trait.id,
+      traitName: trait.name,
+      choiceId: choice.id,
+      chooseAmount: choice.chooseAmount,
+      accepted,
+      rejected,
+      remainingPicks: choice.chooseAmount - accepted.length,
+    };
   }
 
   private static isPermittedOption(

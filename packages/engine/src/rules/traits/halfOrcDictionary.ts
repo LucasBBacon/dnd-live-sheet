@@ -67,7 +67,7 @@ export const HALF_ORC_TRAITS: Record<string, TraitDefinition> = {
       fixed: [
         {
           category: "skills",
-          proficiencyId: "skill_intimidation",
+          proficiencyId: "intimidation",
           level: "proficient",
           requiredStates: [],
         },
