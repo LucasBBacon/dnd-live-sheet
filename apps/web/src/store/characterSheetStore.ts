@@ -122,7 +122,7 @@ export const useCharacterSheetStore = create<CharacterSheetState>(
     maxHp: 10,
     baseHpRolled: 1,
 
-    baseScores: { str: 10, dex: 10, con: 10, int: 10, wis: 10, cha: 10 },
+    baseScores: { STR: 10, DEX: 10, CON: 10, INT: 10, WIS: 10, CHA: 10 },
     proficiencies: {},
     traits: [],
     traitGrants: [],

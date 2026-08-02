@@ -9,11 +9,7 @@ export const useFeatures = () => {
   );
   const totalLevel = useCharacterSheetStore((state) => state.level);
 
-  // TODO: MAKE COME FROM CLASS LEDGER IN STORE
-  // e.g., {'class_fighter': 3, 'class_wizard': 2}
-  const classLevels = useCharacterSheetStore(
-    (state) => state.classLevels || { class_fighter: totalLevel },
-  );
+  const classLevels = useCharacterSheetStore((state) => state.classLevels);
   const ruleSnapshot = useCharacterSheetStore((state) => state.ruleSnapshot);
 
   return useMemo(() => {

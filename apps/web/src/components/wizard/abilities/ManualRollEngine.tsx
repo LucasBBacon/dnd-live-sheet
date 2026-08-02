@@ -18,12 +18,12 @@ export const ManualRollEngine = () => {
 
   const handleSimulateRolls = () => {
     setAllScores({
-      str: rollStat(),
-      dex: rollStat(),
-      con: rollStat(),
-      int: rollStat(),
-      wis: rollStat(),
-      cha: rollStat(),
+      STR: rollStat(),
+      DEX: rollStat(),
+      CON: rollStat(),
+      INT: rollStat(),
+      WIS: rollStat(),
+      CHA: rollStat(),
     });
   };
 

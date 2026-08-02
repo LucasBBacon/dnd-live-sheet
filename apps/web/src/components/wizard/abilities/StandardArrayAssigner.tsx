@@ -19,12 +19,12 @@ export const StandardArrayAssigner = () => {
 
     if (!isValidArray) {
       setAllScores({
-        str: STANDARD_ARRAY[0],
-        dex: STANDARD_ARRAY[1],
-        con: STANDARD_ARRAY[2],
-        int: STANDARD_ARRAY[3],
-        wis: STANDARD_ARRAY[4],
-        cha: STANDARD_ARRAY[5],
+        STR: STANDARD_ARRAY[0],
+        DEX: STANDARD_ARRAY[1],
+        CON: STANDARD_ARRAY[2],
+        INT: STANDARD_ARRAY[3],
+        WIS: STANDARD_ARRAY[4],
+        CHA: STANDARD_ARRAY[5],
       });
     }
   }, [scores, setAllScores]);

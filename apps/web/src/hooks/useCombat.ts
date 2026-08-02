@@ -2,7 +2,12 @@
 import { useMemo } from "react";
 import { useCharacterSheetStore } from "../store/characterSheetStore";
 import { useAbilities, useDerivedStats } from "./useCharacterStats";
-import { CombatEngine, resolveWeaponDefinition } from "@project/engine";
+import {
+  CombatEngine,
+  resolveWeaponDefinition,
+  type Ability,
+} from "@project/engine";
+import type { FixedProficiencyGrant } from "@project/shared";
 
 /**
  * A custom React hook that calculates the combat matrices for all equipped weapons in a character's inventory.
@@ -23,6 +28,16 @@ export const useCombat = () => {
       (item) => item.slot === "main_hand" || item.slot === "off_hand",
     );
 
+    // flatten derived abilities back to raw scores for the engine
+    const abilityScores = Object.fromEntries(
+      (Object.keys(finalAbilities) as Ability[]).map((stat) => [
+        stat,
+        finalAbilities[stat].score,
+      ]),
+    ) as Record<Ability, number>;
+
+    const inventoryIds = inventory.map((i) => i.id);
+
     // 2 - map equipped items to their combat matrices
     const attacks = equippedHands.reduce((acc, item) => {
       const weaponDef = resolveWeaponDefinition(item.itemId, ruleSnapshot ?? undefined);
@@ -30,27 +45,39 @@ export const useCombat = () => {
       // if equipped item is not a weapon, skip it
       if (!weaponDef) return acc;
 
-      // 3 - evaluate weapon prof
-      // a character is proficient if they have the specific weapon id/broad category
-      const isProficient =
-        proficiencies[weaponDef.category] !== undefined ||
-        proficiencies[weaponDef.id] !== undefined;
+      // 3 - translate the store's flat proficiency record into the grant shape
+      // the engine expects. Only the two ids it tests for are relevant here;
+      // the record carries no category, so nothing else can be classified.
+      const weaponProficiencies: FixedProficiencyGrant[] = [
+        weaponDef.category,
+        weaponDef.id,
+      ]
+        .filter((id) => {
+          const level = proficiencies[id];
+          return level !== undefined && level !== "none";
+        })
+        .map((id) => ({
+          category: "weapons" as const,
+          proficiencyId: id,
+          level: proficiencies[id] as "proficient" | "expertise",
+          requiredStates: [],
+        }));
 
-      // 4 - extract magic weapon bonuses
-      // looks for active modifiers targeting this specific inventory instance id
-      const magicMods = totalMods.filter(
-        (m) => m.id.startsWith(item.id) && m.target === "ATTACK_BONUS",
-      );
-      const magicBonus = magicMods.reduce((sum, mod) => sum + mod.value, 0);
+      // 4 - scope modifiers to this weapon
+      // instance-scoped mods (magic weapons) only apply to their own item;
+      // anything not bound to an inventory row is global and applies to all.
+      const applicableMods = totalMods.filter((m) => {
+        const owner = inventoryIds.find((id) => m.id.startsWith(id));
+        return owner === undefined || owner === item.id;
+      });
 
       // 5 - execute engine pipeline
       const derivedAttack = CombatEngine.calculateWeaponAttack(
         weaponDef,
-        finalAbilities.str.score,
-        finalAbilities.dex.score,
+        abilityScores,
         profBonus,
-        isProficient,
-        magicBonus,
+        weaponProficiencies,
+        applicableMods,
       );
 
       // 6 - ammo logic

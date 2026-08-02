@@ -71,13 +71,15 @@ export const hydrateCharacterSheet = (
     classLevels: character.classLevels || {},
     raceId: character.raceId ?? null,
     subraceId: character.subraceId ?? null,
+    // API payload keeps the flat lowercase column names; the store is keyed by
+    // the engine's uppercase Ability type, so translate at this boundary.
     baseScores: {
-      str: character.str,
-      dex: character.dex,
-      con: character.con,
-      int: character.int,
-      wis: character.wis,
-      cha: character.cha,
+      STR: character.str,
+      DEX: character.dex,
+      CON: character.con,
+      INT: character.int,
+      WIS: character.wis,
+      CHA: character.cha,
     },
     inventory: character.inventory,
     proficiencies: character.proficiencies || {},

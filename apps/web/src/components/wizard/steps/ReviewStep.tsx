@@ -40,7 +40,7 @@ export const ReviewStep = () => {
     // note if CON mod increased this lvl the exact projected HP requires full engine exec
     // for clarity, approximate delta visually based on the raw roll + current CON
     if (draftPayload.hpRoll) {
-      const projectedConMod = finalAbilities.con.modifier; // TODO: get updated value
+      const projectedConMod = finalAbilities.CON.modifier; // TODO: get updated value
       const totalHpGain = draftPayload.hpRoll + projectedConMod;
       changes.push({
         category: "Vitals",

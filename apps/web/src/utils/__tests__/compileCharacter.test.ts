@@ -10,13 +10,14 @@ describe("compileCharacterPayload", () => {
     subraceId: null,
     classId: "fighter",
     subclassId: null,
+    // wizard state is keyed by the engine's uppercase Ability type
     baseAbilityScores: {
-      str: 15,
-      dex: 14,
-      con: 13,
-      int: 12,
-      wis: 10,
-      cha: 8,
+      STR: 15,
+      DEX: 14,
+      CON: 13,
+      INT: 12,
+      WIS: 10,
+      CHA: 8,
     },
     alignment: "Lawful Good",
     backgroundType: "PRESET",
@@ -47,7 +48,8 @@ describe("compileCharacterPayload", () => {
       subraceId: null,
       classId: "fighter",
       subclassId: null,
-      baseAbilityScores: validState.baseAbilityScores,
+      // payload contract is lowercase; compile translates at the boundary
+      baseAbilityScores: { str: 15, dex: 14, con: 13, int: 12, wis: 10, cha: 8 },
       alignment: "Lawful Good",
       background: {
         type: "PRESET",
@@ -109,20 +111,27 @@ describe("compileCharacterPayload", () => {
     expect(result.background.customData).toBeNull();
   });
 
-  it("preserves ability scores exactly", () => {
+  it("preserves ability scores exactly, lowercasing keys for the payload", () => {
     const scores = {
+      STR: 3,
+      DEX: 18,
+      CON: 15,
+      INT: 8,
+      WIS: 16,
+      CHA: 10,
+    };
+
+    const state = { ...validState, baseAbilityScores: scores };
+    const result = compileCharacterPayload(state);
+
+    expect(result.baseAbilityScores).toEqual({
       str: 3,
       dex: 18,
       con: 15,
       int: 8,
       wis: 16,
       cha: 10,
-    };
-
-    const state = { ...validState, baseAbilityScores: scores };
-    const result = compileCharacterPayload(state);
-
-    expect(result.baseAbilityScores).toEqual(scores);
+    });
   });
 
   it("preserves personality traits", () => {

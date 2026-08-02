@@ -148,12 +148,12 @@ export const useWizardStore = create<WizardState>((set, get) => ({
 
   generationMethod: "STANDARD_ARRAY",
   baseAbilityScores: {
-    str: STANDARD_ARRAY[5],
-    dex: STANDARD_ARRAY[5],
-    con: STANDARD_ARRAY[5],
-    int: STANDARD_ARRAY[5],
-    wis: STANDARD_ARRAY[5],
-    cha: STANDARD_ARRAY[5],
+    STR: STANDARD_ARRAY[5],
+    DEX: STANDARD_ARRAY[5],
+    CON: STANDARD_ARRAY[5],
+    INT: STANDARD_ARRAY[5],
+    WIS: STANDARD_ARRAY[5],
+    CHA: STANDARD_ARRAY[5],
   },
 
   setGenerationMethod: (method) =>
@@ -161,12 +161,12 @@ export const useWizardStore = create<WizardState>((set, get) => ({
       generationMethod: method,
       // reset ot baseline when switching methods!!
       baseAbilityScores: {
-        str: STANDARD_ARRAY[5],
-        dex: STANDARD_ARRAY[5],
-        con: STANDARD_ARRAY[5],
-        int: STANDARD_ARRAY[5],
-        wis: STANDARD_ARRAY[5],
-        cha: STANDARD_ARRAY[5],
+        STR: STANDARD_ARRAY[5],
+        DEX: STANDARD_ARRAY[5],
+        CON: STANDARD_ARRAY[5],
+        INT: STANDARD_ARRAY[5],
+        WIS: STANDARD_ARRAY[5],
+        CHA: STANDARD_ARRAY[5],
       },
     }),
 

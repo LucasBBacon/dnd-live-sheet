@@ -13,7 +13,8 @@
     "db:seed": "tsx src/seed.ts",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:coverage": "vitest run --coverage"
+    "test:coverage": "vitest run --coverage",
+    "typecheck": "tsc --noEmit"
   },
   "keywords": [],
   "author": "",

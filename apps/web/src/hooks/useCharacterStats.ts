@@ -60,19 +60,19 @@ export const useDerivedStats = () => {
 
   return useMemo(() => {
     const profBonus = AbilityEngine.getProficiencyBonus(level);
-    const dexMod = finalAbilities.dex.modifier;
+    const dexMod = finalAbilities.DEX.modifier;
 
     // hp calc
     const maxHp = DerivedStatEngine.calculateMaxHp(
       baseHpRolled,
-      finalAbilities.con.modifier,
+      finalAbilities.CON.modifier,
       level,
       totalMods,
     );
 
     // initiative
     const initiative = DerivedStatEngine.calculateInitiative(
-      finalAbilities.dex.modifier,
+      finalAbilities.DEX.modifier,
       totalMods,
     );
 

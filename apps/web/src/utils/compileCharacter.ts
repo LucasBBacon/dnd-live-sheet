@@ -16,7 +16,16 @@ export const compileCharacterPayload = (
     subraceId: state.subraceId,
     classId: state.classId!,
     subclassId: state.subclassId,
-    baseAbilityScores: state.baseAbilityScores,
+    // wizard state is keyed by the engine's uppercase Ability type; the create
+    // payload contract is the flat lowercase column names.
+    baseAbilityScores: {
+      str: state.baseAbilityScores.STR,
+      dex: state.baseAbilityScores.DEX,
+      con: state.baseAbilityScores.CON,
+      int: state.baseAbilityScores.INT,
+      wis: state.baseAbilityScores.WIS,
+      cha: state.baseAbilityScores.CHA,
+    },
     alignment: state.alignment.trim(),
     background: {
       type: state.backgroundType!,

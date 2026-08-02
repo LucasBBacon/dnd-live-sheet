@@ -33,8 +33,8 @@ vi.mock("../../store/characterSheetStore", () => ({
 vi.mock("../useCharacterStats", () => ({
   useAbilities: () => ({
     finalAbilities: {
-      str: { score: 16, modifier: 3 },
-      dex: { score: 12, modifier: 1 },
+      STR: { score: 16, modifier: 3 },
+      DEX: { score: 12, modifier: 1 },
     },
     totalMods: [],
   }),

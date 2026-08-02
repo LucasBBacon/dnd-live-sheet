@@ -31,7 +31,7 @@ export const HpRollStep = () => {
 
   // get live CON modifier
   const { finalAbilities } = useAbilities();
-  const conMod = finalAbilities.con.modifier;
+  const conMod = finalAbilities.CON.modifier;
 
   // determine die size based on the class being leveled up
   const selectedClass = classesData?.classes.find(

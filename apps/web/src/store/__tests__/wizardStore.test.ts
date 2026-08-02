@@ -17,6 +17,16 @@ describe("Wizard Store State Management", () => {
       alignment: "",
       backgroundType: null,
       backgroundId: null,
+      // reset ability state too, or scores leak between tests and mask failures
+      generationMethod: "STANDARD_ARRAY",
+      baseAbilityScores: {
+        STR: 8,
+        DEX: 8,
+        CON: 8,
+        INT: 8,
+        WIS: 8,
+        CHA: 8,
+      },
       customBackground: {
         name: "",
         featureName: "",
@@ -115,41 +125,41 @@ describe("Wizard Store State Management", () => {
   describe("ability scores", () => {
     it("should set individual ability score", () => {
       useWizardStore.getState().setBaseAbilityScore("STR", 15);
-      expect(useWizardStore.getState().baseAbilityScores.str).toBe(15);
+      expect(useWizardStore.getState().baseAbilityScores.STR).toBe(15);
     });
 
     it("should preserve other scores when updating one", () => {
       useWizardStore.getState().setBaseAbilityScore("STR", 15);
       useWizardStore.getState().setBaseAbilityScore("DEX", 14);
       expect(useWizardStore.getState().baseAbilityScores).toEqual({
-        str: 15,
-        dex: 14,
-        con: 8,
-        int: 8,
-        wis: 8,
-        cha: 8,
+        STR: 15,
+        DEX: 14,
+        CON: 8,
+        INT: 8,
+        WIS: 8,
+        CHA: 8,
       });
     });
 
     it("should set all ability scores at once", () => {
-      const scores = { str: 15, dex: 14, con: 13, int: 12, wis: 10, cha: 8 };
+      const scores = { STR: 15, DEX: 14, CON: 13, INT: 12, WIS: 10, CHA: 8 };
       useWizardStore.getState().setAllAbilityScores(scores);
       expect(useWizardStore.getState().baseAbilityScores).toEqual(scores);
     });
 
     it("should handle minimum ability scores", () => {
       useWizardStore.getState().setBaseAbilityScore("STR", 3);
-      expect(useWizardStore.getState().baseAbilityScores.str).toBe(3);
+      expect(useWizardStore.getState().baseAbilityScores.STR).toBe(3);
     });
 
     it("should handle maximum ability scores", () => {
       useWizardStore.getState().setBaseAbilityScore("STR", 18);
-      expect(useWizardStore.getState().baseAbilityScores.str).toBe(18);
+      expect(useWizardStore.getState().baseAbilityScores.STR).toBe(18);
     });
 
     it("should allow negative ability scores in state", () => {
       useWizardStore.getState().setBaseAbilityScore("STR", -1);
-      expect(useWizardStore.getState().baseAbilityScores.str).toBe(-1);
+      expect(useWizardStore.getState().baseAbilityScores.STR).toBe(-1);
     });
   });
 
@@ -161,21 +171,21 @@ describe("Wizard Store State Management", () => {
 
     it("should reset ability scores when changing method", () => {
       useWizardStore.getState().setAllAbilityScores({
-        str: 15,
-        dex: 14,
-        con: 13,
-        int: 12,
-        wis: 10,
-        cha: 8,
+        STR: 15,
+        DEX: 14,
+        CON: 13,
+        INT: 12,
+        WIS: 10,
+        CHA: 8,
       });
       useWizardStore.getState().setGenerationMethod("MANUAL");
       expect(useWizardStore.getState().baseAbilityScores).toEqual({
-        str: 8,
-        dex: 8,
-        con: 8,
-        int: 8,
-        wis: 8,
-        cha: 8,
+        STR: 8,
+        DEX: 8,
+        CON: 8,
+        INT: 8,
+        WIS: 8,
+        CHA: 8,
       });
     });
 
@@ -380,12 +390,12 @@ describe("Wizard Store State Management", () => {
     it("should allow step 4 with valid ability scores", () => {
       useWizardStore.getState().setStep(4);
       useWizardStore.getState().setAllAbilityScores({
-        str: 15,
-        dex: 14,
-        con: 13,
-        int: 12,
-        wis: 10,
-        cha: 8,
+        STR: 15,
+        DEX: 14,
+        CON: 13,
+        INT: 12,
+        WIS: 10,
+        CHA: 8,
       });
       expect(useWizardStore.getState().canProceed()).toBe(true);
     });

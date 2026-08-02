@@ -28,7 +28,7 @@ export const RestModal = ({ onClose }: RestModalProps) => {
     (state) => state.consumeResource,
   );
   const { finalAbilities } = useAbilities();
-  const conMod = finalAbilities.con.modifier;
+  const conMod = finalAbilities.CON.modifier;
 
   const hitDiceResources = resources.filter((r) => r.id.startsWith("hd_"));
 
