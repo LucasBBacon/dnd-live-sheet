@@ -68,19 +68,27 @@ describe("extractItemsForMigration", () => {
     expect(result.itemRulesById.item_ring_of_protection).toEqual({
       id: "item_ring_of_protection",
       name: "Ring of Protection",
-      type: "armor",
+      // worn, but not armor: slot legality comes from equipSlot
+      type: "wondrous",
+      weight: 0,
+      equipSlot: "ring",
+      requiresAttunement: true,
       modifiers: [
         {
           target: "ARMOR_CLASS",
           type: "add",
           value: 1,
           scalingFactor: "none",
+          requiredStates: [],
+          forbiddenStates: [],
         },
         {
           target: "ALL_SAVES",
           type: "add",
           value: 1,
           scalingFactor: "none",
+          requiredStates: [],
+          forbiddenStates: [],
         },
       ],
     });

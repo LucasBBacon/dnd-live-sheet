@@ -3,7 +3,7 @@ import { useCharacterSheetStore } from "../store/characterSheetStore";
 import {
   AbilityEngine,
   DerivedStatEngine,
-  InventoryBridge,
+  InventoryExtractor,
   SKILL_MAP,
   SkillEngine,
   type Ability,
@@ -23,7 +23,7 @@ export const useAbilities = () => {
 
   return useMemo(() => {
     // 1 - compile modifiers from equipped items
-    const equipmentMods = InventoryBridge.compileEquipmentModifiers(
+    const equipmentMods = InventoryExtractor.extractModifiers(
       inventory,
       ruleSnapshot ?? undefined,
     );

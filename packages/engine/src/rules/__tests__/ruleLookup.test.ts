@@ -66,6 +66,8 @@ describe("ruleLookup", () => {
           id: "item_armor_shield",
           name: "Compat Shield",
           type: "armor",
+          weight: 6,
+          requiresAttunement: false,
         },
       },
       equipmentById: {

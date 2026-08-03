@@ -5,7 +5,7 @@ describe("engine package entrypoint", () => {
   it("exports calculator, pipeline, rules, and types surface", () => {
     expect(engine.DerivedStatEngine).toBeDefined();
     expect(engine.AbilityEngine).toBeDefined();
-    expect(engine.InventoryBridge).toBeDefined();
+    expect(engine.InventoryExtractor).toBeDefined();
     expect(engine.resolveItemDefinition).toBeDefined();
     expect(engine.resolveResourceRule).toBeDefined();
     expect(engine.resolveResourceRules).toBeDefined();

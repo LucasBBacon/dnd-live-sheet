@@ -1,57 +1,121 @@
 import {
+  CARRIED_SLOT,
   RestEngine,
+  canEquipTo,
+  resolveEquipmentDefinition,
+  resolveItemDefinition,
+  slotsConsumedBy,
   type Ability,
-  type OperationalInventoryItem,
   type OperationalResource,
   type ProficiencyLevel,
   type TraitDefinition,
 } from "@project/engine";
-import type { RuleSnapshot, RuntimeModifier } from "@project/shared";
+import {
+  CharacterSlotSchema,
+  type CharacterSlot,
+  type InventoryInstance,
+  type RuleSnapshot,
+  type RuntimeModifier,
+} from "@project/shared";
 import { create } from "zustand";
 import { socketService } from "../services/socketService";
 
-const EQUIPMENT_SLOT_SET = new Set([
-  "backpack",
-  "main_hand",
-  "off_hand",
-  "armor",
-  "head",
-  "cloak",
-  "ring_1",
-  "ring_2",
-  "amulet",
-  "boots",
-  "gloves",
-]);
+const isKnownSlot = (slot: string): slot is CharacterSlot =>
+  CharacterSlotSchema.safeParse(slot).success;
 
-const inferItemTypeFromId = (
-  itemId: string,
-): "armor" | "weapon" | "consumable" | "gear" => {
-  if (itemId.startsWith("item_weapon_")) return "weapon";
-  if (itemId.startsWith("item_armor_")) return "armor";
-  return "gear";
+/**
+ * Slot names that existed before the body/ring model. Persisted rows still
+ * carry them, so they are translated on the way in rather than with a
+ * migration that would break any client still on the old build.
+ */
+const LEGACY_SLOT_ALIASES: Record<string, CharacterSlot> = {
+  armor: "body", // collided with the *type* value "armor"
+  ring: "ring_1", // a single ring slot became two
 };
 
-const isValidTargetSlotForItem = (
-  itemId: string,
-  itemType: "armor" | "weapon" | "consumable" | "gear",
+/**
+ * Normalizes an inventory row arriving from the API or a socket broadcast.
+ * The wire types slot as a bare string, so an unrecognised value degrades to
+ * carried rather than corrupting the worn state.
+ */
+export const toInventoryInstance = (item: {
+  id: string;
+  itemId: string;
+  quantity: number;
+  slot: string;
+  isAttuned: boolean;
+  customName?: string;
+}): InventoryInstance => {
+  const aliased = LEGACY_SLOT_ALIASES[item.slot] ?? item.slot;
+
+  return {
+    id: item.id,
+    itemId: item.itemId,
+    quantity: item.quantity,
+    slot: isKnownSlot(aliased) ? aliased : CARRIED_SLOT,
+    isAttuned: item.isAttuned,
+    ...(item.customName !== undefined && { customName: item.customName }),
+  };
+};
+
+type SheetRuleSnapshot = Pick<
+  RuleSnapshot,
+  "equipmentById" | "itemsById" | "weaponsById" | "resourcesById"
+>;
+
+/**
+ * Every character slot an item actually covers where it currently sits.
+ * A two-handed weapon in the main hand also covers the off hand, so a shield
+ * cannot slide in beside it.
+ */
+const occupiedSlots = (
+  item: InventoryInstance,
+  snapshot: SheetRuleSnapshot | null,
+): CharacterSlot[] => {
+  if (item.slot === CARRIED_SLOT) return [];
+
+  const equipment = resolveEquipmentDefinition(item.itemId, snapshot ?? undefined);
+
+  return equipment ? slotsConsumedBy(equipment, item.slot) : [item.slot];
+};
+
+/**
+ * Moves an item into a slot, evicting whatever it collides with.
+ *
+ * Slot legality comes from the item's authored equipSlot via the engine, so
+ * nothing here has to guess an item's kind from its id or special-case a
+ * shield. Returns null when the move is illegal, leaving state untouched.
+ */
+const placeItem = (
+  inventory: InventoryInstance[],
+  inventoryId: string,
   targetSlot: string,
-): boolean => {
-  if (!EQUIPMENT_SLOT_SET.has(targetSlot)) return false;
-  if (targetSlot === "backpack") return true;
+  snapshot: SheetRuleSnapshot | null,
+): InventoryInstance[] | null => {
+  if (!isKnownSlot(targetSlot)) return null;
 
-  if (itemType === "weapon") {
-    return targetSlot === "main_hand" || targetSlot === "off_hand";
-  }
+  const moving = inventory.find((item) => item.id === inventoryId);
+  if (!moving) return null;
 
-  if (itemType === "armor") {
-    if (itemId === "item_armor_shield") {
-      return targetSlot === "off_hand";
-    }
-    return targetSlot === "armor";
-  }
+  const definition = resolveItemDefinition(moving.itemId, snapshot ?? undefined);
+  if (!definition || !canEquipTo(definition, targetSlot)) return null;
 
-  return false;
+  const equipment = resolveEquipmentDefinition(moving.itemId, snapshot ?? undefined);
+  const incoming = new Set(
+    equipment ? slotsConsumedBy(equipment, targetSlot) : [targetSlot],
+  );
+
+  return inventory.map((item) => {
+    if (item.id === inventoryId) return { ...item, slot: targetSlot };
+
+    // evict any item whose own footprint overlaps the incoming one's.
+    // attunement survives: the item is still carried, just not worn
+    const collides = occupiedSlots(item, snapshot).some((slot) =>
+      incoming.has(slot),
+    );
+
+    return collides ? { ...item, slot: CARRIED_SLOT } : item;
+  });
 };
 
 export interface CharacterSheetState {
@@ -80,7 +144,7 @@ export interface CharacterSheetState {
   }>;
 
   // operational inventory
-  inventory: OperationalInventoryItem[];
+  inventory: InventoryInstance[];
   inventoryError: string | null;
 
   // transient or spell based mods
@@ -96,7 +160,10 @@ export interface CharacterSheetState {
   syncRemoteHealthDelta: (delta: number) => void;
 
   equipItem: (inventoryId: string, targetSlot: string) => void;
-  syncInventorySnapshot: (inventory: OperationalInventoryItem[]) => void;
+  // takes the wire shape: slot arrives as an unvalidated string
+  syncInventorySnapshot: (
+    inventory: Array<Parameters<typeof toInventoryInstance>[0]>,
+  ) => void;
   syncRemoteEquipment: (inventoryId: string, targetSlot: string) => void;
   consumeItem: (inventoryId: string, amount: number) => void;
   syncRemoteConsumption: (inventoryId: string, amount: number) => void;
@@ -160,32 +227,18 @@ export const useCharacterSheetStore = create<CharacterSheetState>(
 
     equipItem: (inventoryId, targetSlot) => {
       const state = get();
-      const inventoryItem = state.inventory.find((item) => item.id === inventoryId);
-
-      if (!inventoryItem) {
-        return;
-      }
-
-      const itemType =
-        state.ruleSnapshot?.itemsById?.[inventoryItem.itemId]?.type ??
-        inferItemTypeFromId(inventoryItem.itemId);
-
-      if (!isValidTargetSlotForItem(inventoryItem.itemId, itemType, targetSlot)) {
-        return;
-      }
 
       // optimistically resolve slot contention locally
-      const updatedInventory = state.inventory.map((item) => {
-        // if another item is in the target slot, unequip it
-        if (item.slot === targetSlot && targetSlot !== "backpack") {
-          return { ...item, slot: "backpack" };
-        }
-        // equip target item
-        if (item.id === inventoryId) {
-          return { ...item, slot: targetSlot };
-        }
-        return item;
-      });
+      const updatedInventory = placeItem(
+        state.inventory,
+        inventoryId,
+        targetSlot,
+        state.ruleSnapshot,
+      );
+
+      if (!updatedInventory) {
+        return;
+      }
 
       // update local state instantly 0-latency
       set({ inventory: updatedInventory, inventoryError: null });
@@ -200,20 +253,25 @@ export const useCharacterSheetStore = create<CharacterSheetState>(
     },
 
     syncInventorySnapshot: (inventory) => {
-      set({ inventory });
+      set({ inventory: inventory.map(toInventoryInstance) });
     },
 
     syncRemoteEquipment: (inventoryId, targetSlot) => {
       const state = get();
-      const updatedInventory = state.inventory.map((item) => {
-        if (item.slot === targetSlot && targetSlot !== "backpack") {
-          return { ...item, slot: "backpack" };
-        }
-        if (item.id === inventoryId) {
-          return { ...item, slot: targetSlot };
-        }
-        return item;
-      });
+
+      // a broadcast carries an unvalidated slot string, so it goes through the
+      // same legality check as a local move rather than being trusted
+      const updatedInventory = placeItem(
+        state.inventory,
+        inventoryId,
+        targetSlot,
+        state.ruleSnapshot,
+      );
+
+      if (!updatedInventory) {
+        return;
+      }
+
       set({ inventory: updatedInventory });
     },
 

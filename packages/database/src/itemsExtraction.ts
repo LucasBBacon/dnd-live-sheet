@@ -341,10 +341,15 @@ export const extractItemsForMigration = (
     }
   }
 
+  // keep this in step with EQUIPMENT_DICTIONARY.item_ring_of_protection: a ring
+  // is worn but is not armor, and it only grants its bonuses once attuned
   const ringOfProtectionRule = ItemDefinitionSchema.parse({
     id: "item_ring_of_protection",
     name: "Ring of Protection",
-    type: "armor",
+    type: "wondrous",
+    weight: 0,
+    equipSlot: "ring",
+    requiresAttunement: true,
     modifiers: [
       {
         target: "ARMOR_CLASS",

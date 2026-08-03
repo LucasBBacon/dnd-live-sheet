@@ -57,6 +57,13 @@
       "when": 1783800000000,
       "tag": "0007_durable_rollback_ledger",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1783886400000,
+      "tag": "0008_slot_body_rename",
+      "breakpoints": true
     }
   ]
 }

@@ -1,4 +1,10 @@
 import { useMemo, useState } from "react";
+import {
+  CARRIED_SLOT,
+  SLOT_INSTANCES,
+  resolveItemDefinition,
+} from "@project/engine";
+import type { CharacterSlot } from "@project/shared";
 import { useAbilities, useDerivedStats } from "../../hooks/useCharacterStats";
 import { useCharacterSheetStore } from "../../store/characterSheetStore";
 import { useLevelUpStore } from "../../store/levelUpStore";
@@ -39,55 +45,41 @@ export const DashboardLayout = () => {
   const [hpInput, setHpInput] = useState(1);
   const [isRestModalOpen, setIsRestModalOpen] = useState(false);
 
-  const inferItemTypeFromId = (
-    itemId: string,
-  ): "armor" | "weapon" | "consumable" | "gear" => {
-    if (itemId.startsWith("item_weapon_")) return "weapon";
-    if (itemId.startsWith("item_armor_")) return "armor";
-    return "gear";
+  const SLOT_LABELS: Record<CharacterSlot, string> = {
+    backpack: "Backpack",
+    head: "Head",
+    amulet: "Amulet",
+    cloak: "Cloak",
+    body: "Armor",
+    main_hand: "Main Hand",
+    off_hand: "Off Hand",
+    gloves: "Gloves",
+    ring_1: "Ring 1",
+    ring_2: "Ring 2",
+    boots: "Boots",
   };
 
-  const getAllowedSlots = (itemId: string, itemType: string): string[] => {
-    if (itemType === "weapon") {
-      return ["backpack", "main_hand", "off_hand"];
-    }
-
-    if (itemType === "armor") {
-      if (itemId === "item_armor_shield") {
-        return ["backpack", "off_hand"];
-      }
-      return ["backpack", "armor"];
-    }
-
-    return ["backpack"];
-  };
-
-  const getSlotLabel = (slot: string): string => {
-    switch (slot) {
-      case "main_hand":
-        return "Main Hand";
-      case "off_hand":
-        return "Off Hand";
-      case "armor":
-        return "Armor";
-      case "backpack":
-        return "Backpack";
-      default:
-        return slot;
-    }
-  };
+  const getSlotLabel = (slot: CharacterSlot): string => SLOT_LABELS[slot];
 
   const inventoryRows = useMemo(() => {
-    const itemsById = character.ruleSnapshot?.itemsById ?? {};
-
     return character.inventory.map((item) => {
-      const itemMeta = itemsById[item.itemId];
-      const type = itemMeta?.type ?? inferItemTypeFromId(item.itemId);
-      const allowedSlots = getAllowedSlots(item.itemId, type);
+      const definition = resolveItemDefinition(
+        item.itemId,
+        character.ruleSnapshot ?? undefined,
+      );
+
+      // slot legality comes from the item's authored equipSlot, so the picker
+      // offers exactly what the store will accept — no id sniffing, and a ring
+      // correctly offers both fingers
+      const allowedSlots: CharacterSlot[] = [
+        CARRIED_SLOT,
+        ...(definition?.equipSlot ? SLOT_INSTANCES[definition.equipSlot] : []),
+      ];
+
       return {
         ...item,
-        itemName: itemMeta?.name ?? item.itemId,
-        itemType: type,
+        itemName: item.customName ?? definition?.name ?? item.itemId,
+        itemType: definition?.type ?? "gear",
         allowedSlots,
       };
     });

@@ -1,11 +1,13 @@
 import type {
-  OperationalInventoryItem,
   OperationalResource,
   ProficiencyLevel,
 } from "@project/engine";
 import type { RuleSnapshot } from "@project/shared";
 import { apiClient, fetchRulesSnapshot } from "../api/client";
-import type { CharacterSheetState } from "../store/characterSheetStore";
+import {
+  toInventoryInstance,
+  type CharacterSheetState,
+} from "../store/characterSheetStore";
 
 export type CharacterSheetPayload = {
   id: string;
@@ -20,7 +22,15 @@ export type CharacterSheetPayload = {
   int: number;
   wis: number;
   cha: number;
-  inventory: OperationalInventoryItem[];
+  // straight off the API, so slot is still an unvalidated string here
+  inventory: Array<{
+    id: string;
+    itemId: string;
+    quantity: number;
+    slot: string;
+    isAttuned: boolean;
+    customName?: string;
+  }>;
   proficiencies?: Record<string, ProficiencyLevel>;
   currentHp: number;
   maxHp: number;
@@ -81,7 +91,8 @@ export const hydrateCharacterSheet = (
       WIS: character.wis,
       CHA: character.cha,
     },
-    inventory: character.inventory,
+    // normalize slots at the boundary, translating any legacy names
+    inventory: character.inventory.map(toInventoryInstance),
     proficiencies: character.proficiencies || {},
     currentHp: character.currentHp,
     maxHp: character.maxHp,
