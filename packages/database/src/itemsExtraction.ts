@@ -271,6 +271,11 @@ export const extractItemsForMigration = (
       id,
       name,
       type,
+      // pounds, matching how EQUIPMENT_DICTIONARY authors weight. the `weight`
+      // column beside this stores the same value in hundredths for integer
+      // maths; the rule payload is what the engine reads, and it was being
+      // dropped entirely, so every snapshot-resolved item weighed nothing
+      weight: toNumberOr(item.weight, 0),
       modifiers: deriveItemModifiers(item),
     });
     itemRulesById[id] = itemDefinition;

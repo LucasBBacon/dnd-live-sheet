@@ -118,6 +118,43 @@ describe("extractItemsForMigration", () => {
     );
   });
 
+  it("carries item weight into the rule payload", () => {
+    const result = extractItemsForMigration([
+      {
+        id: "item_armor_plate",
+        name: "Plate Armor",
+        type: "armor",
+        weight: 65,
+      },
+    ]);
+
+    // the rule payload is what the engine reads; it was being dropped, so
+    // every snapshot-resolved item weighed nothing
+    expect(result.itemRulesById.item_armor_plate.weight).toBe(65);
+  });
+
+  it("keeps the rule payload in pounds while the column stores hundredths", () => {
+    const result = extractItemsForMigration([
+      {
+        id: "item_ammo_arrow",
+        name: "Arrow",
+        type: "gear",
+        weight: 0.05,
+      },
+    ]);
+
+    expect(result.itemRulesById.item_ammo_arrow.weight).toBe(0.05);
+    expect(result.seedItems[0].weight).toBe(5);
+  });
+
+  it("defaults a weightless source item to zero", () => {
+    const result = extractItemsForMigration([
+      { id: "item_note", name: "Scrap of Paper", type: "gear" },
+    ]);
+
+    expect(result.itemRulesById.item_note.weight).toBe(0);
+  });
+
   it("parses real items.json and reports known duplicate ammo id", () => {
     const itemsPath = path.resolve(__dirname, "../../data/items.json");
     const rawItems = JSON.parse(readFileSync(itemsPath, "utf-8"));
