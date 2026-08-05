@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { CharacterSave, TraitDefinition } from "@project/shared";
+import type { InventoryInstance } from "@project/shared";
 import { TRAIT_DICTIONARY } from "../../rules/traitDictionary.js";
 import { CharacterEngine } from "../characterEngine.js";
 import { CharacterBootstrapper } from "../characterBootstraper.js";
@@ -34,12 +35,29 @@ const halfElfFighter = (
   ...overrides,
 });
 
-const buildSheet = (save: CharacterSave) =>
+const buildSheet = (
+  save: CharacterSave,
+  inventory: InventoryInstance[] = [],
+  options: Parameters<typeof CharacterEngine.buildLiveSheet>[4] = {},
+) =>
   CharacterEngine.buildLiveSheet(
     save,
+    inventory,
     new EffectManager(),
     new ResourceManager(),
+    options,
   );
+
+const carried = (
+  itemId: string,
+  quantity = 1,
+): InventoryInstance => ({
+  id: `inv_${itemId}_${quantity}`,
+  itemId,
+  quantity,
+  slot: "backpack",
+  isAttuned: false,
+});
 
 describe("CharacterBootstrapper.compileActiveTraits", () => {
   it("resolves race, subrace, class and chosen traits into definitions", () => {
@@ -342,6 +360,7 @@ describe("CharacterEngine.buildLiveSheet", () => {
 
     const sheet = CharacterEngine.buildLiveSheet(
       halfElfFighter(),
+      [],
       armoured,
       new ResourceManager(),
     );
@@ -354,5 +373,105 @@ describe("CharacterEngine.buildLiveSheet", () => {
 
     expect(sheet.currentHp).toBe(12);
     expect(sheet.maxHp.total).toBe(12); // 10 rolled + CON 2 x level 1
+  });
+});
+
+/**
+ * The half-elf fighter fixture has STR 15 and no strength modifiers, so
+ * capacity is 225 lb, with variant thresholds at 75 lb and 150 lb. Plate
+ * armour weighs 65 lb, which makes it a convenient unit of load.
+ */
+describe("CharacterEngine.buildLiveSheet: speed and encumbrance", () => {
+  const variant = { encumbranceRules: { useVariantEncumbrance: true } };
+
+  it("reports the racial walking speed", () => {
+    // race_half_elf is 30ft
+    expect(buildSheet(halfElfFighter()).speed.total).toBe(30);
+  });
+
+  it("weighs the pack and reports capacity", () => {
+    const sheet = buildSheet(halfElfFighter(), [carried("item_armor_plate")]);
+
+    expect(sheet.encumbrance.totalWeight).toBe(65);
+    expect(sheet.encumbrance.maxCapacity).toBe(225);
+  });
+
+  it("leaves a heavy pack alone under the standard rule", () => {
+    const sheet = buildSheet(halfElfFighter(), [carried("item_armor_plate", 3)]);
+
+    expect(sheet.encumbrance.totalWeight).toBe(195);
+    expect(sheet.encumbrance.tier).toBe("none");
+    expect(sheet.speed.total).toBe(30);
+  });
+
+  it("slows a loaded character once the variant rule is on", () => {
+    const sheet = buildSheet(
+      halfElfFighter(),
+      [carried("item_armor_plate", 2)], // 130 lb, past the 75 lb threshold
+      variant,
+    );
+
+    expect(sheet.encumbrance.tier).toBe("encumbered");
+    expect(sheet.speed.total).toBe(20);
+  });
+
+  it("slows it further past STR x 10", () => {
+    const sheet = buildSheet(
+      halfElfFighter(),
+      [carried("item_armor_plate", 3)], // 195 lb, past the 150 lb threshold
+      variant,
+    );
+
+    expect(sheet.encumbrance.tier).toBe("heavily_encumbered");
+    expect(sheet.speed.total).toBe(10);
+  });
+
+  it("caps a character who is over capacity under either rule", () => {
+    const sheet = buildSheet(halfElfFighter(), [carried("item_armor_plate", 4)]);
+
+    expect(sheet.encumbrance.tier).toBe("over_capacity");
+    expect(sheet.speed.total).toBe(5);
+  });
+
+  it("puts the derived tier in activeStates but not in baseStates", () => {
+    const sheet = buildSheet(
+      halfElfFighter(),
+      [carried("item_armor_plate", 2)],
+      variant,
+    );
+
+    expect(sheet.activeStates).toContain("encumbered");
+    expect(sheet.baseStates).not.toContain("encumbered");
+  });
+
+  it("does not let encumbrance feed back into the ability scores", () => {
+    const light = buildSheet(halfElfFighter(), [], variant);
+    const loaded = buildSheet(
+      halfElfFighter(),
+      [carried("item_armor_plate", 3)],
+      variant,
+    );
+
+    // the invariant the two-stage split exists to protect
+    expect(loaded.abilities.STR.score).toBe(light.abilities.STR.score);
+    expect(loaded.maxHp.total).toBe(light.maxHp.total);
+  });
+});
+
+describe("CharacterEngine.buildLiveSheet: inventory modifiers", () => {
+  it("applies the AC of worn armour", () => {
+    const sheet = buildSheet(halfElfFighter(), [
+      { ...carried("item_armor_plate"), slot: "body" },
+    ]);
+
+    // plate sets base AC 18 with no dex, beating the 12 of an unarmoured
+    // half-elf with +2 DEX
+    expect(sheet.armorClass.total).toBe(18);
+  });
+
+  it("leaves armour in the pack out of the maths", () => {
+    const sheet = buildSheet(halfElfFighter(), [carried("item_armor_plate")]);
+
+    expect(sheet.armorClass.total).toBe(12);
   });
 });
