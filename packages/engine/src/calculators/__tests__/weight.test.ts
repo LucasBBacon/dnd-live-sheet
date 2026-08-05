@@ -76,13 +76,14 @@ describe("InventoryWeightCalculator.totalHundredths", () => {
 });
 
 describe("InventoryWeightCalculator.totalPounds", () => {
-  it("gives twenty arrows an exact pound rather than a float artefact", () => {
+  it("gives a fractional stack an exact total rather than a float artefact", () => {
     const pounds = InventoryWeightCalculator.totalPounds([
-      row({ itemId: "item_ammo_arrow", quantity: 20 }),
+      row({ itemId: "item_ammo_arrow", quantity: 19 }),
     ]);
 
-    // the whole reason the sum happens in hundredths: 0.05 x 20 in floats is
-    // 1.0000000000000002
-    expect(pounds).toBe(1);
+    // the whole reason the sum happens in hundredths: 0.05 * 19 in floats is
+    // 0.9500000000000001. the quantity matters - 20 would pass under a float
+    // implementation too, because 0.05 * 20 is exactly 1
+    expect(pounds).toBe(0.95);
   });
 });

@@ -7,7 +7,7 @@ import {
 /**
  * Weight is authored in pounds because that is what a person reads in a
  * rulebook, and summed in hundredths of a pound because floats do not add up:
- * twenty arrows at 0.05 lb each make 1.0000000000000002.
+ * nineteen arrows at 0.05 lb each make 0.9500000000000001.
  *
  * The items table stores hundredths in an integer column for the same reason,
  * so this is the same unit the database already thinks in.
