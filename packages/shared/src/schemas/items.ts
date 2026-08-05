@@ -55,6 +55,9 @@ export const ItemDefinitionSchema = z.object({
   // equipment mechanics
   equipSlot: EquipSlotSchema.optional(),
   requiresAttunement: z.boolean().default(false),
+  // marks this item as ammunition of a kind, e.g. "arrow". A weapon firing the
+  // same tag can consume it, so magical variants need no special casing
+  ammoTag: z.string().optional(),
   modifiers: z.array(BaseModifierSchema).optional(),
 });
 

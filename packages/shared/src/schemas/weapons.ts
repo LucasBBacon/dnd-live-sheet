@@ -31,7 +31,11 @@ export const WeaponDefinitionSchema = z
     versatileDamageDice: z.string().optional(),
     damageType: DamageTypeSchema,
     properties: z.array(WeaponPropertySchema),
+    // the default pick, when the character carries nothing better
     ammoItemId: z.string().optional(),
+    // what the weapon fires, e.g. "arrow". Any item carrying the same tag is
+    // valid ammunition, which is what lets a +1 Arrow feed an ordinary bow
+    ammoTag: z.string().optional(),
   })
   .strict();
 

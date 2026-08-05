@@ -195,7 +195,46 @@ export const EQUIPMENT_DICTIONARY: Record<string, EquipmentDefinition> = {
       damageType: "piercing",
       properties: ["ammunition", "heavy", "two_handed"],
       ammoItemId: "item_ammo_arrow",
+      ammoTag: "arrow",
     },
+  },
+
+  item_ammo_arrow: {
+    id: "item_ammo_arrow",
+    name: "Arrow",
+    type: "consumable",
+    // PHB sells arrows by the score; the per-arrow weight is 1/20 lb
+    weight: 0.05,
+    requiresAttunement: false,
+    ammoTag: "arrow",
+  },
+
+  item_ammo_arrow_plus_one: {
+    id: "item_ammo_arrow_plus_one",
+    name: "+1 Arrow",
+    type: "consumable",
+    weight: 0.05,
+    requiresAttunement: false,
+    // the same tag is what makes it loadable in any bow that fires arrows
+    ammoTag: "arrow",
+    modifiers: [
+      {
+        target: "ATTACK_BONUS",
+        type: "add",
+        value: 1,
+        scalingFactor: "none",
+        requiredStates: [],
+        forbiddenStates: [],
+      },
+      {
+        target: "DAMAGE_BONUS",
+        type: "add",
+        value: 1,
+        scalingFactor: "none",
+        requiredStates: [],
+        forbiddenStates: [],
+      },
+    ],
   },
 };
 
@@ -206,9 +245,10 @@ export const toItemDefinition = (equipment: EquipmentDefinition): ItemDefinition
     type: equipment.type,
     weight: equipment.weight,
     requiresAttunement: equipment.requiresAttunement,
-    // both stay absent rather than undefined so the projection keeps matching
+    // these stay absent rather than undefined so the projection keeps matching
     // the exact-shape assertions the dictionary tests make
     ...(equipment.equipSlot && { equipSlot: equipment.equipSlot }),
+    ...(equipment.ammoTag && { ammoTag: equipment.ammoTag }),
     ...(equipment.modifiers && { modifiers: equipment.modifiers }),
   };
 

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { ItemDefinition } from "@project/shared";
-import { ITEM_DICTIONARY } from "../itemDictionary.js";
+import { ITEM_DICTIONARY, WEAPON_DICTIONARY } from "../equipmentDictionary.js";
 
 /** Asserts the entry exists, so each assertion reads against a real item. */
 const entry = (id: string): ItemDefinition => {
@@ -121,9 +121,34 @@ describe("ITEM_DICTIONARY", () => {
     for (const [id, item] of Object.entries(ITEM_DICTIONARY)) {
       expect(item.weight, `${id} weight`).toBeTypeOf("number");
       expect(item.requiresAttunement, `${id} attunement`).toBeTypeOf("boolean");
-      // every authored entry is wearable or wieldable, so all claim a slot
+    }
+  });
+
+  it("gives every wearable entry a slot, and ammunition a tag instead", () => {
+    for (const [id, item] of Object.entries(ITEM_DICTIONARY)) {
+      if (item.type === "consumable") {
+        // ammunition is spent from the pack, never worn
+        expect(item.equipSlot, `${id} slot`).toBeUndefined();
+        expect(item.ammoTag, `${id} tag`).toBeDefined();
+        continue;
+      }
+
       expect(item.equipSlot, `${id} slot`).toBeDefined();
     }
+  });
+
+  it("tags both arrow kinds so either can feed a longbow", () => {
+    expect(entry("item_ammo_arrow").ammoTag).toBe("arrow");
+    expect(entry("item_ammo_arrow_plus_one").ammoTag).toBe("arrow");
+    expect(WEAPON_DICTIONARY.item_weapon_longbow?.ammoTag).toBe("arrow");
+  });
+
+  it("resolves the longbow's default ammunition to a real entry", () => {
+    const defaultAmmo = WEAPON_DICTIONARY.item_weapon_longbow?.ammoItemId;
+
+    expect(defaultAmmo).toBe("item_ammo_arrow");
+    // the reference used to dangle: no arrow was authored anywhere
+    expect(ITEM_DICTIONARY[defaultAmmo as string]).toBeDefined();
   });
 
   it("marks the ring of protection as the one attunement item", () => {

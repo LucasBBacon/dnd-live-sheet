@@ -42,9 +42,11 @@ export class WeaponSynthesizer {
         (isTwoHandedGrip && weapon.versatileDamageDice ? " (Two-Handed)" : ""),
       activation: "action",
 
-      // if weapon has ammoItemId, map to ResourceManager
-      consumesResource: weapon.properties.includes("ammunition")
-        ? weapon.ammoItemId
+      // ammunition is drawn from the inventory, not from a charge pool, so it
+      // travels on its own field. Routing it through consumesResource made
+      // every shot fail: the ResourceManager has no such pool to spend
+      consumesAmmo: weapon.properties.includes("ammunition")
+        ? (weapon.ammoTag ?? weapon.ammoItemId)
         : undefined,
 
       effect: {

@@ -19,6 +19,7 @@ export const WeaponCapabilitySchema = z
     damageType: DamageTypeSchema,
     properties: z.array(WeaponPropertySchema),
     ammoItemId: z.string().optional(),
+    ammoTag: z.string().optional(),
   })
   .strict();
 
@@ -33,6 +34,7 @@ export const EquipmentDefinitionSchema = z
     weight: z.number().default(0),
     equipSlot: EquipSlotSchema.optional(),
     requiresAttunement: z.boolean().default(false),
+    ammoTag: z.string().optional(),
     modifiers: z.array(BaseModifierSchema).optional(),
     weapon: WeaponCapabilitySchema.optional(),
   })

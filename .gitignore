@@ -41,6 +41,7 @@ lerna-debug.log*
 
 # Local-only overrides
 *.local
+.claude/settings.local.json
 
 # Runtime files
 pids/

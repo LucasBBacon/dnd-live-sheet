@@ -136,7 +136,12 @@ export const ActionGrantSchema = z.object({
   id: z.string(),
   name: z.string(),
   activation: ActionActivationSchema,
+  // a charge pool held by the ResourceManager, e.g. ki points
   consumesResource: z.string().optional(),
+  // an ammo tag drawn from the character's inventory, e.g. "arrow". Kept apart
+  // from consumesResource because ammunition is a physical stack the player
+  // chooses from, not a pool of charges
+  consumesAmmo: z.string().optional(),
   targetFilter: TargetFilterSchema.optional(),
   effect: ActionEffectSchema,
 });
