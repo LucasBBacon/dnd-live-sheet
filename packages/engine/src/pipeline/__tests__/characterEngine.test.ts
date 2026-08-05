@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import type { CharacterSave, TraitDefinition } from "@project/shared";
 import type { InventoryInstance } from "@project/shared";
 import { TRAIT_DICTIONARY } from "../../rules/traitDictionary.js";
@@ -431,6 +431,11 @@ describe("CharacterEngine.buildLiveSheet: speed and encumbrance", () => {
 
     expect(sheet.encumbrance.tier).toBe("over_capacity");
     expect(sheet.speed.total).toBe(5);
+
+    expect(
+      buildSheet(halfElfFighter(), [carried("item_armor_plate", 4)], variant)
+        .encumbrance.tier,
+    ).toBe("over_capacity");
   });
 
   it("puts the derived tier in activeStates but not in baseStates", () => {
@@ -445,16 +450,84 @@ describe("CharacterEngine.buildLiveSheet: speed and encumbrance", () => {
   });
 
   it("does not let encumbrance feed back into the ability scores", () => {
-    const light = buildSheet(halfElfFighter(), [], variant);
-    const loaded = buildSheet(
+    // a STR bonus that only switches on if a stage-one calculator is handed
+    // the derived tier. this is the actual loop: +4 STR raises capacity, which
+    // lowers the tier, which withdraws the +4 - no fixed point.
+    const cursed = new EffectManager();
+    cursed.addEffect({
+      instanceId: "test_cursed_belt",
+      sourceName: "Cursed Belt",
+      durationType: "manual",
+      isSelfConcentration: false,
+      modifiers: [
+        {
+          id: "cursed_belt_str",
+          sourceName: "Cursed Belt",
+          sourceOrigin: "test",
+          target: "STR",
+          type: "add",
+          value: 4,
+          scalingFactor: "none",
+          requiredStates: ["heavily_encumbered"],
+          forbiddenStates: [],
+          isActive: true,
+        },
+      ],
+      grantedStates: [],
+    });
+
+    const sheet = CharacterEngine.buildLiveSheet(
       halfElfFighter(),
-      [carried("item_armor_plate", 3)],
-      variant,
+      [carried("item_armor_plate", 3)], // 195 lb, past the 150 lb threshold
+      cursed,
+      new ResourceManager(),
+      { encumbranceRules: { useVariantEncumbrance: true } },
     );
 
-    // the invariant the two-stage split exists to protect
-    expect(loaded.abilities.STR.score).toBe(light.abilities.STR.score);
-    expect(loaded.maxHp.total).toBe(light.maxHp.total);
+    expect(sheet.encumbrance.tier).toBe("heavily_encumbered");
+    expect(sheet.activeStates).toContain("heavily_encumbered");
+    // the belt's modifier is gated on a state only sheetStates carries, so a
+    // stage one that leaked sheetStates would score STR 19 here
+    expect(sheet.abilities.STR.score).toBe(15);
+  });
+
+  it("doubles carrying capacity for a character with Powerful Build", () => {
+    const powerful = new EffectManager();
+    powerful.addEffect({
+      instanceId: "test_powerful_build",
+      sourceName: "Powerful Build",
+      durationType: "manual",
+      isSelfConcentration: false,
+      modifiers: [],
+      grantedStates: ["powerful_build"],
+    });
+
+    const sheet = CharacterEngine.buildLiveSheet(
+      halfElfFighter(),
+      [],
+      powerful,
+      new ResourceManager(),
+    );
+
+    expect(sheet.encumbrance.maxCapacity).toBe(450); // 15 STR x 15 x 2
+  });
+
+  it("carries a trait-granted state into baseStates", () => {
+    // no race grants a state-bearing trait yet, so the StateExtractor wiring
+    // has nothing real to pick up - stub the compile step to prove the call
+    // is actually made rather than silently dead
+    const spy = vi
+      .spyOn(CharacterBootstrapper, "compileActiveTraits")
+      .mockReturnValue([TRAIT_DICTIONARY["trait_powerful_build"]!]);
+
+    try {
+      const sheet = buildSheet(halfElfFighter());
+
+      expect(sheet.baseStates).toContain("powerful_build");
+      expect(sheet.encumbrance.maxCapacity).toBe(450);
+    } finally {
+      spy.mockRestore();
+    }
   });
 });
 

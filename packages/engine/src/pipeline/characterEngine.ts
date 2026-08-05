@@ -224,7 +224,9 @@ export class CharacterEngine {
       rules: options.encumbranceRules ?? DEFAULT_ENCUMBRANCE_RULES,
     });
 
-    const sheetStates = [...baseStates, ...encumbrance.states];
+    const sheetStates = Array.from(
+      new Set([...baseStates, ...encumbrance.states]),
+    );
 
     const speed = SpeedEngine.calculateSpeed(
       race?.speed ?? DEFAULT_WALKING_SPEED,
