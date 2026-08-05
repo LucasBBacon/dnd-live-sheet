@@ -9,6 +9,14 @@
  * subraceId), and size + speed have no trait representation, so they are stored
  * as flat race data.
  */
+import type { CreatureSize } from "./creatureSize.js";
+
+/**
+ * The walking speed a character falls back to when their race id resolves to
+ * nothing - a save can outlive the pack that authored its race.
+ */
+export const DEFAULT_WALKING_SPEED = 30;
+
 export interface SubraceDefinition {
   id: string;
   name: string;
@@ -18,7 +26,7 @@ export interface SubraceDefinition {
 export interface RaceDefinition {
   id: string;
   name: string;
-  size: "small" | "medium";
+  size: CreatureSize;
   // base walking speed in feet, before traits such as fleet_of_foot override it
   speed: number;
   grantedTraitIds: string[];
