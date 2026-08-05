@@ -73,6 +73,15 @@ describe("EncumbranceEngine.calculate under the variant rule", () => {
     expect(result.states).toEqual(["encumbered"]);
   });
 
+  it("stays merely encumbered at exactly the heavily encumbered threshold", () => {
+    // the same "more than" rule as the lower threshold: 150 lb on the nose is
+    // still only encumbered. without this, a >= regression on the second
+    // comparison passes every other test in this file
+    const result = EncumbranceEngine.calculate(input({ ...variant, ...carrying(150) }));
+
+    expect(result.tier).toBe("encumbered");
+  });
+
   it("becomes heavily encumbered past STR x 10", () => {
     const result = EncumbranceEngine.calculate(input({ ...variant, ...carrying(151) }));
 
