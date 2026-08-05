@@ -105,7 +105,7 @@ export class SpeedEngine {
       });
     }
 
-    // 4 - multipliers (Dash, Haste)
+    // 4 - multipliers (Dash, Haste), applied last so they scale the loaded speed
     for (const mod of validMods.filter((m) => m.type === "multiplier")) {
       total *= mod.value;
       breakdown.push({ name: mod.sourceName, value: `x${mod.value}` });

@@ -96,6 +96,10 @@ describe("SpeedEngine.calculateSpeed", () => {
     expect(
       SpeedEngine.calculateSpeed(30, [gated], ["wearing_heavy_armor"]).total,
     ).toBe(30);
+    // the other direction matters just as much: a filter that dropped every
+    // modifier *carrying* a forbidden state, rather than one whose forbidden
+    // state is active, would pass the assertion above
+    expect(SpeedEngine.calculateSpeed(30, [gated], []).total).toBe(40);
   });
 
   it("takes 10 feet off when encumbered", () => {
@@ -111,7 +115,7 @@ describe("SpeedEngine.calculateSpeed", () => {
     ).toBe(10);
   });
 
-  it("applies the penalty to the boosted speed, not the base", () => {
+  it("applies a bonus and an encumbrance penalty together", () => {
     const result = SpeedEngine.calculateSpeed(
       30,
       [mod({ sourceName: "Longstrider", value: 10 })],
@@ -119,6 +123,9 @@ describe("SpeedEngine.calculateSpeed", () => {
       "encumbered",
     );
 
+    // note this cannot prove the penalty lands *after* the bonus - addition
+    // and subtraction commute. the multiplier test below is what pins the
+    // ordering that actually matters
     expect(result.total).toBe(30); // 30 + 10 - 10
   });
 
