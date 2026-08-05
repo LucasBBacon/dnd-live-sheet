@@ -65,6 +65,22 @@ export const TRAIT_DICTIONARY: Record<string, TraitDefinition> = {
     criticalHitModifiers: [],
     actions: [],
   },
+  trait_powerful_build: {
+    id: "trait_powerful_build",
+    name: "Powerful Build",
+    description:
+      "You count as one size larger when determining your carrying capacity and the weight you can push, drag, or lift.",
+    modifiers: { fixed: [], choices: [] },
+    // the whole trait is this flag: EncumbranceEngine reads the capacity table
+    // one row down when it is set. no race grants it yet - it is here for the
+    // goliath-shaped hole in RACE_DICTIONARY
+    grantedStates: ["powerful_build"],
+    resources: [],
+    triggers: [],
+    diceRules: [],
+    criticalHitModifiers: [],
+    actions: [],
+  },
   trait_draconic_resilience: {
     id: "trait_draconic_resilience",
     name: "Draconic Resilience",

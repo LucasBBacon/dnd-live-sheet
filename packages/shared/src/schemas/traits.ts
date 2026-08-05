@@ -26,6 +26,19 @@ export const TraitDefinitionSchema = z.object({
     })
     .default({ fixed: [], choices: [] }),
 
+  /**
+   * Persistent flags this trait puts on the character, e.g. "powerful_build".
+   *
+   * Distinct from ActiveEffect.grantedStates, which are temporary: these hold
+   * for as long as the character has the trait, so they belong to the
+   * blueprint rather than to the EffectManager.
+   *
+   * Optional rather than defaulted on purpose - a default would make the field
+   * required on the inferred type and every authored trait literal would need
+   * to declare it.
+   */
+  grantedStates: z.array(z.string()).optional(),
+
   proficiencies: z
     .object({
       fixed: z.array(FixedProficiencyGrantSchema).default([]),
