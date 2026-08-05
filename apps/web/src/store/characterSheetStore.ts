@@ -1,4 +1,5 @@
 import {
+  ATTUNEMENT_LIMIT,
   CARRIED_SLOT,
   RestEngine,
   canEquipTo,
@@ -8,7 +9,6 @@ import {
   type Ability,
   type OperationalResource,
   type ProficiencyLevel,
-  type TraitDefinition,
 } from "@project/engine";
 import {
   CharacterSlotSchema,
@@ -16,6 +16,8 @@ import {
   type InventoryInstance,
   type RuleSnapshot,
   type RuntimeModifier,
+  // TraitDefinition moved to the shared schemas when traits were extracted
+  type TraitDefinition,
 } from "@project/shared";
 import { create } from "zustand";
 import { socketService } from "../services/socketService";
@@ -79,8 +81,75 @@ const occupiedSlots = (
   return equipment ? slotsConsumedBy(equipment, item.slot) : [item.slot];
 };
 
+/** A worn row is one item: you wield a single dagger, not a stack of five. */
+const WORN_QUANTITY = 1;
+
 /**
- * Moves an item into a slot, evicting whatever it collides with.
+ * Ids minted locally when a stack splits. Provisional: the row does not exist
+ * server-side until the write is acknowledged.
+ */
+const newRowId = () => `inv_${crypto.randomUUID()}`;
+
+/**
+ * Whether two rows describe interchangeable items that can share one pile.
+ *
+ * Only carried rows pool. A worn row is a specific object in a specific slot,
+ * and attunement binds to one instance, so neither can be folded into a stack
+ * without losing the thing that makes it distinct.
+ */
+const canPoolTogether = (
+  a: InventoryInstance,
+  b: InventoryInstance,
+): boolean =>
+  a.itemId === b.itemId &&
+  a.slot === CARRIED_SLOT &&
+  b.slot === CARRIED_SLOT &&
+  !a.isAttuned &&
+  !b.isAttuned &&
+  // a renamed item is a distinct thing to the player, however identical the
+  // rules consider it
+  a.customName === b.customName;
+
+/**
+ * Folds compatible carried piles together so stowing an item does not leave
+ * the pack full of one-item rows.
+ *
+ * Merges into the earliest matching row and preserves order, so two clients
+ * given the same inventory converge on the same result. Idempotent, which also
+ * means it quietly repairs duplicate piles that arrived from an older client.
+ */
+const consolidateCarried = (
+  inventory: InventoryInstance[],
+): InventoryInstance[] => {
+  const consolidated: InventoryInstance[] = [];
+
+  for (const item of inventory) {
+    const poolIndex =
+      item.slot === CARRIED_SLOT
+        ? consolidated.findIndex((candidate) => canPoolTogether(candidate, item))
+        : -1;
+
+    if (poolIndex === -1) {
+      consolidated.push(item);
+      continue;
+    }
+
+    const pool = consolidated[poolIndex];
+    if (!pool) continue;
+
+    // replace rather than mutate: the row is still referenced by the previous
+    // state, and Zustand subscribers compare by identity
+    consolidated[poolIndex] = {
+      ...pool,
+      quantity: pool.quantity + item.quantity,
+    };
+  }
+
+  return consolidated;
+};
+
+/**
+ * Moves an item into a slot, splitting and merging stacks as needed.
  *
  * Slot legality comes from the item's authored equipSlot via the engine, so
  * nothing here has to guess an item's kind from its id or special-case a
@@ -97,16 +166,43 @@ const placeItem = (
   const moving = inventory.find((item) => item.id === inventoryId);
   if (!moving) return null;
 
+  // nothing to do, and returning null keeps a no-op from emitting a broadcast
+  if (moving.slot === targetSlot) return null;
+
   const definition = resolveItemDefinition(moving.itemId, snapshot ?? undefined);
   if (!definition || !canEquipTo(definition, targetSlot)) return null;
 
   const equipment = resolveEquipmentDefinition(moving.itemId, snapshot ?? undefined);
   const incoming = new Set(
-    equipment ? slotsConsumedBy(equipment, targetSlot) : [targetSlot],
+    targetSlot === CARRIED_SLOT
+      ? []
+      : equipment
+        ? slotsConsumedBy(equipment, targetSlot)
+        : [targetSlot],
   );
 
-  return inventory.map((item) => {
-    if (item.id === inventoryId) return { ...item, slot: targetSlot };
+  const next: InventoryInstance[] = [];
+
+  for (const item of inventory) {
+    if (item.id === inventoryId) {
+      // wearing one arrow out of a quiver of twenty splits the pile: the stack
+      // stays put and a new single-item row goes into the slot
+      if (targetSlot !== CARRIED_SLOT && item.quantity > WORN_QUANTITY) {
+        next.push({ ...item, quantity: item.quantity - WORN_QUANTITY });
+        next.push({
+          ...item,
+          id: newRowId(),
+          quantity: WORN_QUANTITY,
+          slot: targetSlot,
+          // attunement is earned per instance and never inherited from a pile
+          isAttuned: false,
+        });
+        continue;
+      }
+
+      next.push({ ...item, slot: targetSlot });
+      continue;
+    }
 
     // evict any item whose own footprint overlaps the incoming one's.
     // attunement survives: the item is still carried, just not worn
@@ -114,8 +210,11 @@ const placeItem = (
       incoming.has(slot),
     );
 
-    return collides ? { ...item, slot: CARRIED_SLOT } : item;
-  });
+    next.push(collides ? { ...item, slot: CARRIED_SLOT } : item);
+  }
+
+  // stowed and evicted rows both land in the pack, so one pass folds them all
+  return consolidateCarried(next);
 };
 
 export interface CharacterSheetState {
@@ -160,6 +259,8 @@ export interface CharacterSheetState {
   syncRemoteHealthDelta: (delta: number) => void;
 
   equipItem: (inventoryId: string, targetSlot: string) => void;
+  toggleAttunement: (inventoryId: string) => void;
+  syncRemoteAttunement: (inventoryId: string, isAttuned: boolean) => void;
   // takes the wire shape: slot arrives as an unvalidated string
   syncInventorySnapshot: (
     inventory: Array<Parameters<typeof toInventoryInstance>[0]>,
@@ -244,12 +345,111 @@ export const useCharacterSheetStore = create<CharacterSheetState>(
       set({ inventory: updatedInventory, inventoryError: null });
 
       // dispatch to backend for persistence and broadcasting
+      //
+      // TODO: this payload cannot describe a split. When equipping out of a
+      // stack the local state gains a new row, but the server only hears
+      // "move <inventoryId> to <targetSlot>" and will move the whole pile —
+      // so the two diverge until the next snapshot overwrites the split.
+      // ItemEquippedPayload needs to carry the peeled-off quantity and the
+      // new row id for this to survive a round trip.
       socketService.emitInventoryUpdate({
         characterId: state.id,
         inventoryId,
         targetSlot,
         timestamp: Date.now(),
       });
+    },
+
+    toggleAttunement: (inventoryId) => {
+      const state = get();
+      const item = state.inventory.find((row) => row.id === inventoryId);
+      if (!item) return;
+
+      const definition = resolveItemDefinition(
+        item.itemId,
+        state.ruleSnapshot ?? undefined,
+      );
+
+      if (!definition?.requiresAttunement) {
+        return;
+      }
+
+      if (item.isAttuned) {
+        // breaking attunement can free the row to rejoin a carried pile
+        set({
+          inventory: consolidateCarried(
+            state.inventory.map((row) =>
+              row.id === inventoryId ? { ...row, isAttuned: false } : row,
+            ),
+          ),
+          inventoryError: null,
+        });
+
+        socketService.emitAttunementUpdate({
+          characterId: state.id,
+          inventoryId,
+          isAttuned: false,
+          timestamp: Date.now(),
+        });
+        return;
+      }
+
+      // attunement is formed while the item is worn or held, so a stowed item
+      // cannot begin it
+      if (item.slot === CARRIED_SLOT) {
+        set({
+          inventoryError: `${definition.name} must be equipped before you can attune to it.`,
+        });
+        return;
+      }
+
+      const attunedCount = state.inventory.filter(
+        (row) => row.isAttuned,
+      ).length;
+
+      if (attunedCount >= ATTUNEMENT_LIMIT) {
+        set({
+          inventoryError: `Already attuned to ${ATTUNEMENT_LIMIT} items. Break an attunement first.`,
+        });
+        return;
+      }
+
+      set({
+        inventory: state.inventory.map((row) =>
+          row.id === inventoryId ? { ...row, isAttuned: true } : row,
+        ),
+        inventoryError: null,
+      });
+
+      socketService.emitAttunementUpdate({
+        characterId: state.id,
+        inventoryId,
+        isAttuned: true,
+        timestamp: Date.now(),
+      });
+    },
+
+    syncRemoteAttunement: (inventoryId, isAttuned) => {
+      const state = get();
+      const item = state.inventory.find((row) => row.id === inventoryId);
+      if (!item || item.isAttuned === isAttuned) return;
+
+      // the broadcast is authoritative on intent but not on legality: a stale
+      // client could push a fourth attunement, so the cap is re-checked here
+      if (isAttuned) {
+        const attunedCount = state.inventory.filter(
+          (row) => row.isAttuned,
+        ).length;
+
+        if (attunedCount >= ATTUNEMENT_LIMIT) return;
+      }
+
+      const updated = state.inventory.map((row) =>
+        row.id === inventoryId ? { ...row, isAttuned } : row,
+      );
+
+      // breaking attunement can free the row to rejoin a carried pile
+      set({ inventory: isAttuned ? updated : consolidateCarried(updated) });
     },
 
     syncInventorySnapshot: (inventory) => {

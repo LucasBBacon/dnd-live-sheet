@@ -18,6 +18,9 @@ export const DashboardLayout = () => {
     (state) => state.applyHealthDelta,
   );
   const equipItem = useCharacterSheetStore((state) => state.equipItem);
+  const toggleAttunement = useCharacterSheetStore(
+    (state) => state.toggleAttunement,
+  );
   const consumeItem = useCharacterSheetStore((state) => state.consumeItem);
   const inventoryError = useCharacterSheetStore((state) => state.inventoryError);
   const setInventoryError = useCharacterSheetStore(
@@ -80,6 +83,7 @@ export const DashboardLayout = () => {
         ...item,
         itemName: item.customName ?? definition?.name ?? item.itemId,
         itemType: definition?.type ?? "gear",
+        requiresAttunement: definition?.requiresAttunement ?? false,
         allowedSlots,
       };
     });
@@ -288,7 +292,14 @@ export const DashboardLayout = () => {
                   className="border p-2 rounded flex justify-between items-center bg-gray-50 gap-3"
                 >
                   <div className="min-w-0">
-                    <div className="font-bold text-sm truncate">{item.itemName}</div>
+                    <div className="font-bold text-sm truncate">
+                      {item.itemName}
+                      {item.requiresAttunement && !item.isAttuned && (
+                        <span className="ml-2 text-xs font-normal text-amber-700">
+                          (not attuned)
+                        </span>
+                      )}
+                    </div>
                     <div className="text-xs text-gray-500">
                       {item.itemType.toUpperCase()} | Qty: {item.quantity} | Slot: {getSlotLabel(item.slot)}
                     </div>
@@ -306,6 +317,14 @@ export const DashboardLayout = () => {
                         </option>
                       ))}
                     </select>
+                    {item.requiresAttunement && (
+                      <button
+                        onClick={() => toggleAttunement(item.id)}
+                        className={`text-xs px-2 py-1 rounded border ${item.isAttuned ? "bg-amber-600 text-white hover:bg-amber-700" : "bg-white hover:bg-gray-100"}`}
+                      >
+                        {item.isAttuned ? "Attuned" : "Attune"}
+                      </button>
+                    )}
                     <button
                       onClick={() => equipItem(item.id, "backpack")}
                       className="text-xs px-2 py-1 rounded border bg-white hover:bg-gray-100"

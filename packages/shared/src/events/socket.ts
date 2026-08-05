@@ -5,6 +5,7 @@ export const SOCKET_EVENTS = {
   INVENTORY_SYNC: "character:inventory_sync",
   HP_MODIFIED: "character:hp_modified",
   ITEM_EQUIPPED: "character:item_equipped",
+  ITEM_ATTUNED: "character:item_attuned",
   ITEM_CONSUMED: "character:item_consumed",
   RESOURCE_CONSUMED: "character:resource_consumed",
   CONDITION_ADDED: "character:condition_added",
@@ -45,6 +46,15 @@ export interface ItemEquippedPayload {
   characterId: string;
   inventoryId: string; // operational UUID of item instance
   targetSlot: string; // e.g., 'main_hand', 'backpack'
+  timestamp: number;
+}
+
+export interface ItemAttunedPayload {
+  characterId: string;
+  inventoryId: string; // operational UUID of item instance
+  // absolute rather than a toggle: two players hitting the button at once
+  // should converge instead of flipping each other back
+  isAttuned: boolean;
   timestamp: number;
 }
 

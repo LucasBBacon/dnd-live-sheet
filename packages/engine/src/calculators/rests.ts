@@ -1,4 +1,8 @@
+import type { RestCondition } from "@project/shared";
 import type { RuntimeHealthState } from "../types/combat.js";
+import type { OperationalResource } from "../types/resources.js";
+import { resolveResourceRule, type RuleSnapshotLookup } from "../rules/ruleLookup.js";
+import { getResourceMaxUses } from "../utils/resourceRules.js";
 import type { EffectManager } from "./effects.js";
 import type { ResourceManager } from "./resources.js";
 
@@ -91,4 +95,71 @@ export class RestEngine {
 
     console.log("Long rest completed.");
   }
+
+  /**
+   * The resource half of a rest, as a pure projection.
+   *
+   * executeShortRest/executeLongRest drive the live engine and mutate managers
+   * in place. The web store holds a plain persisted array instead and needs to
+   * *preview* a rest before committing it, so this returns a new array and
+   * touches nothing. Both paths read the same reset conditions from the rules.
+   *
+   * @returns The resources as they would stand after the rest.
+   */
+  public static applyRest(
+    resources: OperationalResource[],
+    restType: "short" | "long",
+    totalLevel: number,
+    classLevels: Record<string, number>,
+    snapshot?: RuleSnapshotLookup,
+  ): OperationalResource[] {
+    const isLongRest = restType === "long";
+
+    return resources.map((resource) => {
+      const rule = resolveResourceRule(resource.id, snapshot);
+
+      // a resource with no rule behind it is left exactly as it is
+      if (!rule) return resource;
+
+      const maxUses = getResourceMaxUses(rule, totalLevel, classLevels);
+
+      return {
+        ...resource,
+        current: restedCharges(
+          rule.resetCondition,
+          resource.current,
+          maxUses,
+          isLongRest,
+        ),
+      };
+    });
+  }
 }
+
+/**
+ * How full a single resource is once the rest ends.
+ *
+ * "long_rest_half" is the hit-dice style recovery: you regain half your
+ * maximum rounded down, but never less than one.
+ */
+const restedCharges = (
+  resetCondition: RestCondition,
+  current: number,
+  maxUses: number,
+  isLongRest: boolean,
+): number => {
+  switch (resetCondition) {
+    case "short_rest":
+      // short rest resources also come back on a long one
+      return maxUses;
+    case "long_rest":
+    case "dawn":
+      return isLongRest ? maxUses : current;
+    case "long_rest_half":
+      return isLongRest
+        ? Math.min(maxUses, current + Math.max(1, Math.floor(maxUses / 2)))
+        : current;
+    case "never":
+      return current;
+  }
+};

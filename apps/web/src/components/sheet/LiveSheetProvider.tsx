@@ -26,6 +26,9 @@ export const LiveSheetProvider = ({
   const syncRemoteConsumption = useCharacterSheetStore(
     (state) => state.syncRemoteConsumption,
   );
+  const syncRemoteAttunement = useCharacterSheetStore(
+    (state) => state.syncRemoteAttunement,
+  );
   const setInventoryError = useCharacterSheetStore(
     (state) => state.setInventoryError,
   );
@@ -48,6 +51,10 @@ export const LiveSheetProvider = ({
       syncInventorySnapshot(payload.inventory);
     });
 
+    socketService.subscribeToAttunementUpdates((broadcast) => {
+      syncRemoteAttunement(broadcast.inventoryId, broadcast.isAttuned);
+    });
+
     socketService.subscribeToItemConsumed((broadcast) => {
       syncRemoteConsumption(broadcast.inventoryId, broadcast.amount);
     });
@@ -55,7 +62,8 @@ export const LiveSheetProvider = ({
     socketService.subscribeToActionErrors((payload) => {
       if (
         payload.event === "character:item_equipped" ||
-        payload.event === "character:item_consumed"
+        payload.event === "character:item_consumed" ||
+        payload.event === "character:item_attuned"
       ) {
         setInventoryError(payload.error);
       }
@@ -73,6 +81,7 @@ export const LiveSheetProvider = ({
     syncRemoteEquipment,
     syncInventorySnapshot,
     syncRemoteConsumption,
+    syncRemoteAttunement,
     setInventoryError,
   ]);
 

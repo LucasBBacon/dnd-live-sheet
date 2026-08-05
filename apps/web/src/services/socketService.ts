@@ -4,6 +4,7 @@ import {
   type RoomJoinPayload,
   SOCKET_EVENTS,
   type HpModifiedPayload,
+  type ItemAttunedPayload,
   type ItemConsumedPayload,
   type ItemEquippedPayload,
   type ResourceConsumedPayload,
@@ -63,6 +64,21 @@ class SocketManager {
     this.socket?.on(
       SOCKET_EVENTS.ITEM_EQUIPPED,
       (payload: MaybeServerBroadcastPayload<ItemEquippedPayload>) => {
+        callback(unwrapServerBroadcastPayload(payload));
+      },
+    );
+  }
+
+  public emitAttunementUpdate(payload: ItemAttunedPayload) {
+    this.socket?.emit(SOCKET_EVENTS.ITEM_ATTUNED, payload);
+  }
+
+  public subscribeToAttunementUpdates(
+    callback: (payload: ItemAttunedPayload) => void,
+  ) {
+    this.socket?.on(
+      SOCKET_EVENTS.ITEM_ATTUNED,
+      (payload: MaybeServerBroadcastPayload<ItemAttunedPayload>) => {
         callback(unwrapServerBroadcastPayload(payload));
       },
     );
