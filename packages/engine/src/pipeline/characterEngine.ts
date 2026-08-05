@@ -207,7 +207,7 @@ export class CharacterEngine {
     // change the capacity that changed the state that changed the score.
     //
     // The invariant, stated once because everything here rests on it: nothing
-    // above this line may read sheetStates.
+    // above this line may read activeStates.
 
     const race = RACE_DICTIONARY[save.race.baseRaceId];
 
@@ -224,14 +224,14 @@ export class CharacterEngine {
       rules: options.encumbranceRules ?? DEFAULT_ENCUMBRANCE_RULES,
     });
 
-    const sheetStates = Array.from(
+    const activeStates = Array.from(
       new Set([...baseStates, ...encumbrance.states]),
     );
 
     const speed = SpeedEngine.calculateSpeed(
       race?.speed ?? DEFAULT_WALKING_SPEED,
       allModifiers,
-      sheetStates,
+      activeStates,
       encumbrance.tier,
     );
 
@@ -270,7 +270,7 @@ export class CharacterEngine {
       encumbrance,
       actions,
       baseStates,
-      activeStates: sheetStates,
+      activeStates,
     };
 
     // endregion

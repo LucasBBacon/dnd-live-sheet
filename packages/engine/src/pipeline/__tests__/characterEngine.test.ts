@@ -1,6 +1,9 @@
 import { describe, expect, it, vi } from "vitest";
-import type { CharacterSave, TraitDefinition } from "@project/shared";
-import type { InventoryInstance } from "@project/shared";
+import type {
+  CharacterSave,
+  TraitDefinition,
+  InventoryInstance,
+} from "@project/shared";
 import { TRAIT_DICTIONARY } from "../../rules/traitDictionary.js";
 import { CharacterEngine } from "../characterEngine.js";
 import { CharacterBootstrapper } from "../characterBootstraper.js";
@@ -528,6 +531,44 @@ describe("CharacterEngine.buildLiveSheet: speed and encumbrance", () => {
     } finally {
       spy.mockRestore();
     }
+  });
+
+  it("derives capacity from the final STR score, not the saved attribute", () => {
+    // the whole reason encumbrance runs in stage two: a belt of giant strength
+    // has to raise carrying capacity, which means the tier cannot be computed
+    // until the ability scores are final
+    const belt = new EffectManager();
+    belt.addEffect({
+      instanceId: "test_belt",
+      sourceName: "Belt of Giant Strength",
+      durationType: "manual",
+      isSelfConcentration: false,
+      grantedStates: [],
+      modifiers: [
+        {
+          id: "belt_str",
+          sourceName: "Belt of Giant Strength",
+          sourceOrigin: "test",
+          target: "STR",
+          type: "add",
+          value: 5,
+          scalingFactor: "none",
+          requiredStates: [],
+          forbiddenStates: [],
+          isActive: true,
+        },
+      ],
+    });
+
+    const sheet = CharacterEngine.buildLiveSheet(
+      halfElfFighter(),
+      [],
+      belt,
+      new ResourceManager(),
+    );
+
+    expect(sheet.abilities.STR.score).toBe(20); // 15 base + 5
+    expect(sheet.encumbrance.maxCapacity).toBe(300); // 20 x 15, not 15 x 15
   });
 });
 
