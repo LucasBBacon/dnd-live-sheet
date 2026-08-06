@@ -16,6 +16,10 @@ export const WeaponCapabilitySchema = z
   .object({
     category: WeaponCategorySchema,
     damageDice: z.string(),
+    // the two-handed die for a versatile weapon. WeaponDefinition has always
+    // had this; without it here, EquipmentDefinition cannot carry a versatile
+    // weapon and the projection back out silently downgrades it
+    versatileDamageDice: z.string().optional(),
     damageType: DamageTypeSchema,
     properties: z.array(WeaponPropertySchema),
     ammoItemId: z.string().optional(),
