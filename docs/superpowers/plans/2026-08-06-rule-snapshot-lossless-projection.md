@@ -716,11 +716,19 @@ Expected: still `"static-only"`. Flipping it is a separate decision and explicit
 
 ## What this does and does not unblock
 
-**Does:** the snapshot path now carries `weight`, `equipSlot`, `requiresAttunement`, `ammoTag` and `versatileDamageDice`, so flipping `EQUIPMENT_RESOLUTION_MODE` would produce correct item weights rather than silently zeroing every one of them.
+**Does:** the snapshot path now carries `weight`, `equipSlot`, `requiresAttunement`, `ammoTag` and `versatileDamageDice`. The final review traced the weight path hop by hop — column → `hundredthsToPounds` → strict parse → `toItemDefinition` → `RuleSnapshotSchema.parse` → HTTP → store → `resolveItemDefinition` → `InventoryWeightCalculator` — and confirmed flipping `EQUIPMENT_RESOLUTION_MODE` would now produce correct item weights rather than silently zeroing every one.
 
-**Does not:** make flipping the mode a good idea yet. Two things still stand in the way, and both are data problems rather than code problems:
+**Correction to this plan as originally written.** It claimed `itemsExtraction.ts` could not source `versatileDamageDice` because `SourceItem` has no such field. That was wrong: `items.json` carries `weaponProperties.versatileDamageDice` for six weapons — battleaxe, longsword, quarterstaff, spear, trident and warhammer. The field was missing from `SourceItem` because nobody had added it. Fixed in `dc0fd1f`, which also revealed a live bug: `EQUIPMENT_DICTIONARY.item_weapon_longsword` was flagged `versatile` with no die, so every longsword in the shipping static-only path dealt 1d8 two-handed. The claim holds for `equipSlot` and `requiresAttunement` — both appear zero times in the source data.
 
-1. **`EQUIPMENT_DICTIONARY` holds 11 entries against 65 items in `packages/database/data/items.json`.** Whichever source is authoritative, one of them is missing most of the catalogue. That reconciliation is the actual DB-driven-rules project.
-2. **`itemsExtraction.ts` cannot source `equipSlot`, `requiresAttunement`, `ammoTag` or `versatileDamageDice`** — `SourceItem` has no such fields, so seeded rule payloads carry only what the source JSON provides. This plan makes the pipeline lossless from the database onward; filling those fields means extending the source data format.
+**Does not:** make flipping the mode a good idea yet.
 
-Neither blocks this work. Both should be sized before anyone flips the mode.
+1. **Flipping today would make plate armor stop granting AC.** `resolveEquipmentDefinition` prefers the snapshot and only falls back when an id is *absent*. The snapshot has all 65 items, so flipping shadows the 11 curated `EQUIPMENT_DICTIONARY` entries with snapshot entries that have no `equipSlot` and no modifiers. This is the sharpest reason not to flip, and it is not a weight problem.
+2. **`EQUIPMENT_DICTIONARY` holds 11 entries against 65 items in the catalogue.** Whichever source is authoritative, one is missing most of the content. That reconciliation is the actual DB-driven-rules project.
+3. **`equipSlot` and `requiresAttunement` cannot be seeded at all** — the source format has no such fields. Filling them means extending `items.json`, not changing code.
+
+## Follow-ups named by the final review
+
+1. **Distinguish "a row is bad" from "the contract is broken."** `projectEquipmentRows` skips malformed rows and logs them, so 1-of-65 and 65-of-65 produce the same `console.warn` and the same HTTP 200. A threshold that throws when *every* row fails would catch a schema-contract break, and is testable in the pure module with no database mock.
+2. **Source `id` and `name` from the row, not the payload.** `weight` already is, on the argument that the column is authoritative and payloads go stale — the same argument applies to identity. Today `itemsById[x].id !== x` is reachable if a name is updated without rewriting `item_rule`.
+3. **Split the typecheck baseline.** The server's 37 errors are 12 production + 25 test. An undifferentiated count is exactly what hid this bug: two of the original 39 were *in the rewritten file* and *were this bug* — line 90's `satisfies ItemDefinition` had been failing all along because the object omitted `weight` and `requiresAttunement`. Worth triaging `rollbackPipeline.ts:820` (a `TS2367` unreachable-branch comparison) and `derivedStats.ts:300-302` (`bestMod` possibly undefined) on their own.
+4. **Add one integration test crossing the extractor/database/projection seam.** Every test on this branch stops at a hand-built fixture, which is precisely why the missing `versatileDamageDice` survived three task reviews.
