@@ -155,6 +155,30 @@ describe("extractItemsForMigration", () => {
     expect(result.itemRulesById.item_note.weight).toBe(0);
   });
 
+  it("carries versatile damage dice into the weapon rule", () => {
+    const result = extractItemsForMigration([
+      {
+        id: "item_weapon_longsword",
+        name: "Longsword",
+        type: "weapon",
+        weight: 3,
+        weaponProperties: {
+          category: "martial_melee",
+          damageDice: "1d8",
+          versatileDamageDice: "1d10",
+          damageType: "slashing",
+          propertyIds: ["property_versatile"],
+        },
+      },
+    ]);
+
+    // the source data carries this for six weapons; without it a versatile
+    // weapon silently deals its one-handed die in both hands
+    expect(result.weaponRulesById.item_weapon_longsword?.versatileDamageDice).toBe(
+      "1d10",
+    );
+  });
+
   it("parses real items.json and reports known duplicate ammo id", () => {
     const itemsPath = path.resolve(__dirname, "../../data/items.json");
     const rawItems = JSON.parse(readFileSync(itemsPath, "utf-8"));

@@ -24,6 +24,7 @@ type SourceItem = {
   weaponProperties?: {
     category?: unknown;
     damageDice?: unknown;
+    versatileDamageDice?: unknown;
     damageType?: unknown;
     propertyIds?: unknown;
     ammoItemId?: unknown;
@@ -299,6 +300,9 @@ export const extractItemsForMigration = (
         item.weaponProperties.category,
       );
       const damageDice = toStringOrUndefined(item.weaponProperties.damageDice);
+      const versatileDamageDice = toStringOrUndefined(
+        item.weaponProperties.versatileDamageDice,
+      );
       const damageType = toStringOrUndefined(item.weaponProperties.damageType);
       const ammoItemId = toStringOrUndefined(item.weaponProperties.ammoItemId);
 
@@ -308,6 +312,7 @@ export const extractItemsForMigration = (
           name,
           category,
           damageDice,
+          versatileDamageDice,
           damageType,
           properties: deriveWeaponProperties(
             id,

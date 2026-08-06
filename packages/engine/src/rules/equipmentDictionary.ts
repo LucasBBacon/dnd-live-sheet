@@ -162,6 +162,7 @@ export const EQUIPMENT_DICTIONARY: Record<string, EquipmentDefinition> = {
     weapon: {
       category: "martial_melee",
       damageDice: "1d8",
+      versatileDamageDice: "1d10",
       damageType: "slashing",
       properties: ["versatile"],
     },

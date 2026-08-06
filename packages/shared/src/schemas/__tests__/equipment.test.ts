@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { WeaponCapabilitySchema } from "../equipment.js";
+import { EquipmentDefinitionSchema, WeaponCapabilitySchema } from "../equipment.js";
+import { ItemDefinitionSchema } from "../items.js";
 import { WeaponDefinitionSchema } from "../weapons.js";
 
 /**
@@ -51,5 +52,18 @@ describe("WeaponCapability and WeaponDefinition stay complementary", () => {
     });
 
     expect(parsed.versatileDamageDice).toBe("1d10");
+  });
+});
+
+describe("ItemDefinition and EquipmentDefinition stay complementary", () => {
+  it("covers every ItemDefinition field, plus weapon", () => {
+    // EquipmentDefinition is the authored source ItemDefinition is projected
+    // from, so it must be a strict superset by exactly one field. drift here
+    // means the snapshot projection starts rejecting rows wholesale, because
+    // EquipmentDefinitionSchema is strict
+    const itemKeys = Object.keys(ItemDefinitionSchema.shape).sort();
+    const equipmentKeys = Object.keys(EquipmentDefinitionSchema.shape).sort();
+
+    expect([...itemKeys, "weapon"].sort()).toEqual(equipmentKeys);
   });
 });

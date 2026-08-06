@@ -35,4 +35,13 @@ describe("equipmentDictionary projections", () => {
       expect(weapon.ammoItemId).toBe(equipment.weapon.ammoItemId);
     }
   });
+
+  it("gives the longsword its two-handed damage die", () => {
+    // combat.ts gates the versatile die on this field being present, so a
+    // weapon flagged versatile without it silently deals its one-handed die
+    const longsword = EQUIPMENT_DICTIONARY.item_weapon_longsword;
+
+    expect(longsword?.weapon?.properties).toContain("versatile");
+    expect(longsword?.weapon?.versatileDamageDice).toBe("1d10");
+  });
 });

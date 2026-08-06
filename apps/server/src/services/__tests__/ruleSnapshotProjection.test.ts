@@ -6,10 +6,10 @@ import {
 } from "../ruleSnapshotProjection.js";
 
 /**
- * A rule payload using every field ItemDefinition has. The round-trip test
- * below asserts on this object's own key list rather than a hardcoded one, so
- * adding a field to ItemDefinition makes the test fail until the projection
- * carries it.
+ * A rule payload using every field ItemDefinition has, as a fixture for the
+ * round-trip tests below. This is a hand-written literal, so it does not
+ * grow when ItemDefinition does - see the comment on "carries every
+ * authored field" for why that test cannot catch schema drift either.
  */
 const fullItemRule: ItemDefinition = {
   id: "item_armor_plate",
@@ -52,8 +52,12 @@ describe("projectEquipmentRows", () => {
   });
 
   it("carries every authored field through to the equipment map", () => {
-    // the guard: asserted against the source object's own keys, so a new
-    // ItemDefinition field fails this until the projection carries it
+    // a fixture round-trip, not a drift guard: it asserts the projection
+    // doesn't drop any key already present on fullItemRule, but fullItemRule
+    // is a hand-written literal and the assertion below is a subset check,
+    // so a new ItemDefinition field changes neither side and this stays
+    // green. schema drift is caught by the complementary-schemas test in
+    // packages/shared/src/schemas/__tests__/equipment.test.ts instead
     const equipment = projectEquipmentRows([row()]).equipmentById
       .item_armor_plate;
 
