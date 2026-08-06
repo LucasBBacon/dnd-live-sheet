@@ -1,103 +1,47 @@
 import { db } from "@project/database";
 import { items } from "@project/database/src/schema/reference.js";
 import { resolveResourceRules } from "@project/engine";
-import {
-  ItemDefinitionSchema,
-  RuleSnapshotSchema,
-  type EquipmentDefinition,
-  type ItemDefinition,
-  type RuleSnapshot,
-} from "@project/shared";
+import { RuleSnapshotSchema, type RuleSnapshot } from "@project/shared";
 import { and, eq } from "drizzle-orm";
 import { getReferenceCacheVersion } from "./referenceCache.js";
+import { projectEquipmentRows } from "./ruleSnapshotProjection.js";
 
 type CachedRuleSnapshot = {
   cacheVersion: number;
   loadedAt: number;
-  snapshot: Pick<RuleSnapshot, "equipmentById" | "itemsById" | "weaponsById" | "resourcesById">;
+  snapshot: Pick<
+    RuleSnapshot,
+    "equipmentById" | "itemsById" | "weaponsById" | "resourcesById"
+  >;
 };
 
 let cached: CachedRuleSnapshot | null = null;
-
-const buildFallbackItemRule = (row: {
-  id: string;
-  name: string;
-}): ItemDefinition =>
-  ItemDefinitionSchema.parse({
-    id: row.id,
-    name: row.name,
-    type: "gear",
-  });
 
 const buildRuleSnapshot = async (): Promise<CachedRuleSnapshot> => {
   const ruleRows = await db
     .select({
       id: items.id,
       name: items.name,
+      // the storage-canonical weight, in hundredths of a pound. read from the
+      // column rather than the rule payload because payloads written before
+      // the extractor carried weight hold a stale 0
+      weight: items.weight,
       itemRule: items.itemRule,
       weaponRule: items.weaponRule,
     })
     .from(items)
     .where(and(eq(items.sourceType, "core"), eq(items.isPublished, true)));
 
-  // --- OLD APPROACH (dual-source construction, preserved for reference) ---
-  // const itemsById = Object.fromEntries(
-  //   ruleRows.map((row) => [row.id, row.itemRule ?? buildFallbackItemRule(row)]),
-  // );
-  // const weaponsById = Object.fromEntries(
-  //   ruleRows
-  //     .filter((row) => !!row.weaponRule)
-  //     .map((row) => [row.id, row.weaponRule]),
-  // );
-  // --- END OLD APPROACH ---
+  const { equipmentById, itemsById, weaponsById, malformedItemIds } =
+    projectEquipmentRows(ruleRows);
 
-  // Build canonical equipment map - single authored source for all equipment rules
-  const equipmentById: Record<string, EquipmentDefinition> = Object.fromEntries(
-    ruleRows.map((row) => {
-      const itemRule = row.itemRule ?? buildFallbackItemRule(row);
-      const entry: EquipmentDefinition = {
-        id: itemRule.id,
-        name: itemRule.name,
-        type: itemRule.type ?? "gear",
-        ...(itemRule.modifiers ? { modifiers: itemRule.modifiers } : {}),
-        ...(row.weaponRule
-          ? {
-              weapon: {
-                category: row.weaponRule.category,
-                damageDice: row.weaponRule.damageDice,
-                damageType: row.weaponRule.damageType,
-                properties: row.weaponRule.properties,
-                ...(row.weaponRule.ammoItemId
-                  ? { ammoItemId: row.weaponRule.ammoItemId }
-                  : {}),
-              },
-            }
-          : {}),
-      };
-      return [row.id, entry];
-    }),
-  );
-
-  // Derive compatibility projections from canonical equipment map
-  const itemsById = Object.fromEntries(
-    Object.entries(equipmentById).map(([id, eq]) => [
-      id,
-      {
-        id: eq.id,
-        name: eq.name,
-        type: eq.type,
-        ...(eq.modifiers ? { modifiers: eq.modifiers } : {}),
-      } satisfies ItemDefinition,
-    ]),
-  );
-  const weaponsById = Object.fromEntries(
-    Object.entries(equipmentById)
-      .filter(([, eq]) => !!eq.weapon)
-      .map(([id, eq]) => [
-        id,
-        { id: eq.id, name: eq.name, ...eq.weapon! },
-      ]),
-  );
+  // a row we could not parse is dropped rather than fatal, but it must not be
+  // silent - an item missing from the snapshot resolves to nothing downstream
+  if (malformedItemIds.length > 0) {
+    console.warn(
+      `[ruleSnapshotCache] skipped ${malformedItemIds.length} item(s) with unparseable rules: ${malformedItemIds.join(", ")}`,
+    );
+  }
 
   const cacheVersion = getReferenceCacheVersion();
 
