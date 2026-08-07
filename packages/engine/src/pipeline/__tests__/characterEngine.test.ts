@@ -6,6 +6,7 @@ import type {
   RuntimeModifier,
 } from "@project/shared";
 import { TRAIT_DICTIONARY } from "../../rules/traitDictionary.js";
+import { DEFAULT_WALKING_SPEED } from "../../rules/raceDictionary.js";
 import {
   CharacterEngine,
   type LiveCharacterSheet,
@@ -697,4 +698,38 @@ describe("CharacterEngine.buildLiveSheet: the stage-one seam", () => {
       expect(read(ungated)).toBe(read(control) + 5);
     });
   }
+});
+
+/**
+ * A save can outlive the pack that authored its race - an imported race pack
+ * gets unloaded, or a homebrew id is renamed - so both reads of RACE_DICTIONARY
+ * are optional-chained. Neither fallback had a test, and deleting the speed one
+ * yields NaN with nothing failing.
+ */
+describe("CharacterEngine.buildLiveSheet: an unknown race", () => {
+  const orphaned = () =>
+    halfElfFighter({
+      race: {
+        baseRaceId: "race_no_longer_loaded",
+        hasSubraces: false,
+        subraceId: null,
+      },
+    });
+
+  it("falls back to the default walking speed rather than NaN", () => {
+    const speed = buildSheet(orphaned()).speed.total;
+
+    expect(speed).toBe(DEFAULT_WALKING_SPEED);
+    // stated separately because it is the specific failure the fallback
+    // prevents: an undefined base speed propagates silently through every
+    // arithmetic step in SpeedEngine
+    expect(Number.isNaN(speed)).toBe(false);
+  });
+
+  it("falls back to a medium creature's carrying capacity", () => {
+    // STR 15 x 15 x 1. this cannot tell medium from small - 5e gives both the
+    // same multiplier - but it does separate either from tiny's 112.5 and
+    // large's 450, which is what a broken fallback would produce
+    expect(buildSheet(orphaned()).encumbrance.maxCapacity).toBe(225);
+  });
 });
