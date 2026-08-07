@@ -821,7 +821,14 @@ const runMigration = async () => {
         await db
           .insert(bundleContents)
           .values(extractedItems.bundleContents)
-          .onConflictDoNothing();
+          // a re-seed with an edited pack quantity must overwrite the stored
+          // row, not leave the old quantity in place forever
+          .onConflictDoUpdate({
+            target: [bundleContents.bundleId, bundleContents.itemId],
+            set: {
+              quantity: sql`excluded.quantity`,
+            },
+          });
       }
     }
 
