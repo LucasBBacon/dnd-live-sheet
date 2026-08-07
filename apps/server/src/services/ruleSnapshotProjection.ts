@@ -101,5 +101,16 @@ export const projectEquipmentRows = (
     if (weapon) weaponsById[row.id] = weapon;
   }
 
+  // one unparseable row is bad data, handled above. every row unparseable is a
+  // different thing entirely - a schema change that no stored payload
+  // satisfies - and skipping them all would hand back a snapshot in which
+  // nothing resolves. the empty-catalogue case is excluded because zero of
+  // zero failing is not a break, it is an empty table
+  if (rows.length > 0 && malformedItemIds.length === rows.length) {
+    throw new Error(
+      `[ruleSnapshotProjection] every one of ${rows.length} item rows failed to parse against EquipmentDefinition; the stored rule payloads and the schema have diverged`,
+    );
+  }
+
   return { equipmentById, itemsById, weaponsById, malformedItemIds };
 };

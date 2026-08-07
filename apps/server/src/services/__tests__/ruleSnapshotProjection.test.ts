@@ -168,4 +168,27 @@ describe("projectEquipmentRows", () => {
     // the good row still made it
     expect(result.equipmentById.item_armor_plate).toBeDefined();
   });
+
+  it("throws when every row fails, because that is a contract break", () => {
+    // one bad row is bad data and gets skipped. every row bad is a schema
+    // change no stored payload satisfies, and returning empty maps there
+    // serves a snapshot in which nothing resolves - a 200 that quietly breaks
+    // every character is worse than a failure someone can see
+    const broken = (id: string): EquipmentRuleRow =>
+      row({
+        id,
+        itemRule: { ...fullItemRule, id, type: "nonsense" } as
+          unknown as ItemDefinition,
+      });
+
+    expect(() =>
+      projectEquipmentRows([broken("item_a"), broken("item_b")]),
+    ).toThrow(/every one of 2 item rows failed to parse/);
+  });
+
+  it("still returns empty maps for no rows at all", () => {
+    // the threshold must not fire on an empty catalogue: zero of zero rows
+    // failing is not a contract break, it is an empty table
+    expect(() => projectEquipmentRows([])).not.toThrow();
+  });
 });
