@@ -133,6 +133,12 @@ describe("ITEM_DICTIONARY", () => {
         continue;
       }
 
+      if (item.type === "gear") {
+        // gear items like containers are carried but not worn
+        expect(item.equipSlot, `${id} slot`).toBeUndefined();
+        continue;
+      }
+
       expect(item.equipSlot, `${id} slot`).toBeDefined();
     }
   });
