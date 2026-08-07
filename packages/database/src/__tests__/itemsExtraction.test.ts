@@ -203,4 +203,48 @@ describe("extractItemsForMigration", () => {
     );
     expect(duplicateIds).toContain("item_ammo_bolt");
   });
+
+  it("carries every pack line item in the catalogue at its PHB weight", () => {
+    // the equipment packs cannot become bundles until their contents exist as
+    // items, and a wrong weight here silently changes what a character carries
+    const itemsPath = path.resolve(__dirname, "../../data/items.json");
+    const result = extractItemsForMigration(
+      JSON.parse(readFileSync(itemsPath, "utf-8")),
+    );
+
+    const expected: Record<string, number> = {
+      item_bedroll: 7,
+      item_mess_kit: 1,
+      item_tinderbox: 1,
+      item_rations: 2,
+      item_waterskin: 5,
+      item_rope_hempen: 10,
+      item_chest: 25,
+      item_case_map_or_scroll: 1,
+      item_clothes_fine: 6,
+      item_ink: 0,
+      item_ink_pen: 0,
+      item_lamp: 1,
+      item_oil_flask: 1,
+      item_paper: 0,
+      item_perfume: 0,
+      item_sealing_wax: 0,
+      item_soap: 0,
+      item_blanket: 3,
+      item_candle: 0,
+      item_alms_box: 1,
+      item_incense: 0,
+      item_censer: 1,
+      item_vestments: 4,
+      item_clothes_costume: 4,
+      item_disguise_kit: 3,
+      item_sack: 0.5,
+      item_pouch: 1,
+      item_basket: 2,
+    };
+
+    for (const [id, weight] of Object.entries(expected)) {
+      expect(result.itemRulesById[id]?.weight, id).toBe(weight);
+    }
+  });
 });

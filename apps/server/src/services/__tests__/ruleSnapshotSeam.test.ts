@@ -54,9 +54,9 @@ describe("the extractor and the rule snapshot projection agree", () => {
     expect(Object.keys(projection.equipmentById)).toHaveLength(
       extracted.seedItems.length,
     );
-    // 64 unique ids across 65 entries: items.json has a known duplicate
+    // 92 unique ids across 93 entries: items.json has a known duplicate
     // item_ammo_bolt, which the extractor drops and reports
-    expect(extracted.seedItems).toHaveLength(64);
+    expect(extracted.seedItems).toHaveLength(92);
   });
 
   it("keeps armour weight and its AC modifier across the whole path", () => {

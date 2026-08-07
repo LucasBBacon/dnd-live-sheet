@@ -2556,5 +2556,341 @@
       }
     },
     "cpCost": 200
+  },
+  {
+    "id": "item_bedroll",
+    "name": "Bedroll",
+    "type": "gear",
+    "weight": 7,
+    "stacking": { "mode": "instance" },
+    "lore": {
+      "shortDescription": "A padded roll of bedding for sleeping rough.",
+      "fullText": "A padded roll of bedding for sleeping rough. Carried strapped to a pack and unrolled at camp."
+    },
+    "cpCost": 100
+  },
+  {
+    "id": "item_mess_kit",
+    "name": "Mess Kit",
+    "type": "gear",
+    "weight": 1,
+    "stacking": { "mode": "instance" },
+    "lore": {
+      "shortDescription": "A tin box holding a cup and cutlery that doubles as cookware.",
+      "fullText": "A tin box holding a cup and cutlery that doubles as cookware. Compact enough to strap to a pack for travel."
+    },
+    "cpCost": 20
+  },
+  {
+    "id": "item_tinderbox",
+    "name": "Tinderbox",
+    "type": "gear",
+    "weight": 1,
+    "stacking": { "mode": "instance" },
+    "lore": {
+      "shortDescription": "A small container of flint, fire steel and tinder for lighting fires.",
+      "fullText": "A small container of flint, fire steel and tinder for lighting fires. Using it to light a torch or campfire takes an action."
+    },
+    "cpCost": 50
+  },
+  {
+    "id": "item_rations",
+    "name": "Rations (1 day)",
+    "type": "gear",
+    "weight": 2,
+    "stacking": { "mode": "stack", "bundleSize": 1 },
+    "lore": {
+      "shortDescription": "A day of dry foodstuffs suitable for travel.",
+      "fullText": "A day of dry foodstuffs suitable for travel. Includes jerky, hardtack, dried fruit and nuts."
+    },
+    "cpCost": 50
+  },
+  {
+    "id": "item_waterskin",
+    "name": "Waterskin",
+    "type": "gear",
+    "weight": 5,
+    "stacking": { "mode": "instance" },
+    "lore": {
+      "shortDescription": "A leather skin holding four pints of liquid.",
+      "fullText": "A leather skin holding four pints of liquid. Worn on a strap or tucked into a pack."
+    },
+    "cpCost": 20
+  },
+  {
+    "id": "item_rope_hempen",
+    "name": "Rope, Hempen (50 feet)",
+    "type": "gear",
+    "weight": 10,
+    "stacking": { "mode": "instance" },
+    "lore": {
+      "shortDescription": "Fifty feet of hempen rope with 2 hit points, burst DC 17.",
+      "fullText": "Fifty feet of hempen rope with 2 hit points, burst DC 17. Useful for climbing, binding and rigging."
+    },
+    "cpCost": 100
+  },
+  {
+    "id": "item_chest",
+    "name": "Chest",
+    "type": "gear",
+    "weight": 25,
+    "stacking": { "mode": "instance" },
+    "lore": {
+      "shortDescription": "A sturdy wooden chest holding 300 pounds of gear.",
+      "fullText": "A sturdy wooden chest holding 300 pounds of gear. Too bulky to carry easily; usually left at a base of operations."
+    },
+    "cpCost": 500
+  },
+  {
+    "id": "item_case_map_or_scroll",
+    "name": "Case, Map or Scroll",
+    "type": "gear",
+    "weight": 1,
+    "stacking": { "mode": "instance" },
+    "lore": {
+      "shortDescription": "A cylindrical leather case holding ten rolled sheets.",
+      "fullText": "A cylindrical leather case holding ten rolled sheets. Protects maps and scrolls from moisture and wear."
+    },
+    "cpCost": 100
+  },
+  {
+    "id": "item_clothes_fine",
+    "name": "Clothes, Fine",
+    "type": "gear",
+    "weight": 6,
+    "stacking": { "mode": "instance" },
+    "lore": {
+      "shortDescription": "Well-cut garments suited to courts and formal occasions.",
+      "fullText": "Well-cut garments suited to courts and formal occasions. Marks the wearer as a person of means."
+    },
+    "cpCost": 1500
+  },
+  {
+    "id": "item_ink",
+    "name": "Ink (1 ounce bottle)",
+    "type": "gear",
+    "weight": 0,
+    "stacking": { "mode": "instance" },
+    "lore": {
+      "shortDescription": "A one-ounce bottle of black ink.",
+      "fullText": "A one-ounce bottle of black ink. Used with a pen for writing and record-keeping."
+    },
+    "cpCost": 1000
+  },
+  {
+    "id": "item_ink_pen",
+    "name": "Ink Pen",
+    "type": "gear",
+    "weight": 0,
+    "stacking": { "mode": "instance" },
+    "lore": {
+      "shortDescription": "A cut quill for writing.",
+      "fullText": "A cut quill for writing. Paired with a bottle of ink."
+    },
+    "cpCost": 2
+  },
+  {
+    "id": "item_lamp",
+    "name": "Lamp",
+    "type": "gear",
+    "weight": 1,
+    "stacking": { "mode": "instance" },
+    "lore": {
+      "shortDescription": "A lamp casting bright light in a 15-foot radius, burning oil.",
+      "fullText": "A lamp casting bright light in a 15-foot radius, burning oil. A flask of oil lasts 6 hours in a lamp."
+    },
+    "cpCost": 50
+  },
+  {
+    "id": "item_oil_flask",
+    "name": "Oil (flask)",
+    "type": "gear",
+    "weight": 1,
+    "stacking": { "mode": "stack", "bundleSize": 1 },
+    "lore": {
+      "shortDescription": "A flask of oil for a lamp, or thrown as an improvised weapon.",
+      "fullText": "A flask of oil for a lamp, or thrown as an improvised weapon. Burns for 6 hours when used to fuel a lamp."
+    },
+    "cpCost": 10
+  },
+  {
+    "id": "item_paper",
+    "name": "Paper (one sheet)",
+    "type": "gear",
+    "weight": 0,
+    "stacking": { "mode": "stack", "bundleSize": 1 },
+    "lore": {
+      "shortDescription": "A single sheet of paper.",
+      "fullText": "A single sheet of paper. Used for letters, maps and other writing."
+    },
+    "cpCost": 20
+  },
+  {
+    "id": "item_perfume",
+    "name": "Perfume (vial)",
+    "type": "gear",
+    "weight": 0,
+    "stacking": { "mode": "instance" },
+    "lore": {
+      "shortDescription": "A vial of scented oil.",
+      "fullText": "A vial of scented oil. Favored by nobles and merchants alike."
+    },
+    "cpCost": 500
+  },
+  {
+    "id": "item_sealing_wax",
+    "name": "Sealing Wax",
+    "type": "gear",
+    "weight": 0,
+    "stacking": { "mode": "instance" },
+    "lore": {
+      "shortDescription": "A stick of wax for sealing letters.",
+      "fullText": "A stick of wax for sealing letters. Melted and pressed with a signet to mark a document as authentic."
+    },
+    "cpCost": 50
+  },
+  {
+    "id": "item_soap",
+    "name": "Soap",
+    "type": "gear",
+    "weight": 0,
+    "stacking": { "mode": "instance" },
+    "lore": {
+      "shortDescription": "A bar of soap.",
+      "fullText": "A bar of soap. Used for washing up after a long day on the road."
+    },
+    "cpCost": 2
+  },
+  {
+    "id": "item_blanket",
+    "name": "Blanket",
+    "type": "gear",
+    "weight": 3,
+    "stacking": { "mode": "instance" },
+    "lore": {
+      "shortDescription": "A heavy woollen blanket.",
+      "fullText": "A heavy woollen blanket. Keeps off the worst of a cold night."
+    },
+    "cpCost": 50
+  },
+  {
+    "id": "item_candle",
+    "name": "Candle",
+    "type": "gear",
+    "weight": 0,
+    "stacking": { "mode": "stack", "bundleSize": 1 },
+    "lore": {
+      "shortDescription": "A candle burning for one hour, shedding bright light in a 5-foot radius.",
+      "fullText": "A candle burning for one hour, shedding bright light in a 5-foot radius. Cheap and easily replaced."
+    },
+    "cpCost": 1
+  },
+  {
+    "id": "item_alms_box",
+    "name": "Alms Box",
+    "type": "gear",
+    "weight": 1,
+    "stacking": { "mode": "instance" },
+    "lore": {
+      "shortDescription": "A small box for collecting donations.",
+      "fullText": "A small box for collecting donations. Carried by priests and mendicants during their travels."
+    },
+    "cpCost": 0
+  },
+  {
+    "id": "item_incense",
+    "name": "Incense (block)",
+    "type": "gear",
+    "weight": 0,
+    "stacking": { "mode": "stack", "bundleSize": 1 },
+    "lore": {
+      "shortDescription": "A block of incense burned during rites.",
+      "fullText": "A block of incense burned during rites. Fills the air with fragrant smoke."
+    },
+    "cpCost": 0
+  },
+  {
+    "id": "item_censer",
+    "name": "Censer",
+    "type": "gear",
+    "weight": 1,
+    "stacking": { "mode": "instance" },
+    "lore": {
+      "shortDescription": "A pierced metal vessel for burning incense.",
+      "fullText": "A pierced metal vessel for burning incense. Swung or set upon an altar during ceremonies."
+    },
+    "cpCost": 0
+  },
+  {
+    "id": "item_vestments",
+    "name": "Vestments",
+    "type": "gear",
+    "weight": 4,
+    "stacking": { "mode": "instance" },
+    "lore": {
+      "shortDescription": "Ceremonial garments worn during religious rites.",
+      "fullText": "Ceremonial garments worn during religious rites. Marks the wearer as a cleric or acolyte of their faith."
+    },
+    "cpCost": 0
+  },
+  {
+    "id": "item_clothes_costume",
+    "name": "Clothes, Costume",
+    "type": "gear",
+    "weight": 4,
+    "stacking": { "mode": "instance" },
+    "lore": {
+      "shortDescription": "Garments cut for performance and disguise.",
+      "fullText": "Garments cut for performance and disguise. Suited to the stage as much as to subterfuge."
+    },
+    "cpCost": 500
+  },
+  {
+    "id": "item_disguise_kit",
+    "name": "Disguise Kit",
+    "type": "gear",
+    "weight": 3,
+    "stacking": { "mode": "instance" },
+    "lore": {
+      "shortDescription": "Cosmetics, hair dye and props for altering appearance.",
+      "fullText": "Cosmetics, hair dye and props for altering appearance. Grants proficiency-based checks to change an identity convincingly."
+    },
+    "cpCost": 2500
+  },
+  {
+    "id": "item_sack",
+    "name": "Sack",
+    "type": "gear",
+    "weight": 0.5,
+    "stacking": { "mode": "instance" },
+    "lore": {
+      "shortDescription": "A cloth sack holding 30 pounds of gear.",
+      "fullText": "A cloth sack holding 30 pounds of gear. A cheap alternative to a proper pack."
+    },
+    "cpCost": 1
+  },
+  {
+    "id": "item_pouch",
+    "name": "Pouch",
+    "type": "gear",
+    "weight": 1,
+    "stacking": { "mode": "instance" },
+    "lore": {
+      "shortDescription": "A belt pouch holding 6 pounds of gear.",
+      "fullText": "A belt pouch holding 6 pounds of gear. Keeps coins and small items close at hand."
+    },
+    "cpCost": 50
+  },
+  {
+    "id": "item_basket",
+    "name": "Basket",
+    "type": "gear",
+    "weight": 2,
+    "stacking": { "mode": "instance" },
+    "lore": {
+      "shortDescription": "A woven basket holding 40 pounds of gear.",
+      "fullText": "A woven basket holding 40 pounds of gear. Bulky but inexpensive storage."
+    },
+    "cpCost": 40
   }
 ]
