@@ -237,6 +237,56 @@ export const EQUIPMENT_DICTIONARY: Record<string, EquipmentDefinition> = {
       },
     ],
   },
+
+  // PHB containers. capacity is pounds of gear only: the book also gives each
+  // a volume, and gives quivers and cases an item count instead, but neither
+  // is a weight limit and neither has a rule here yet
+  item_backpack: {
+    id: "item_backpack",
+    name: "Backpack",
+    type: "gear",
+    weight: 5,
+    requiresAttunement: false,
+    container: { capacityPounds: 30 },
+  },
+
+  item_sack: {
+    id: "item_sack",
+    name: "Sack",
+    type: "gear",
+    // the PHB prints 1/2 lb. authored as the decimal because weight is summed
+    // in hundredths, so this is exactly 50 and never a rounding argument
+    weight: 0.5,
+    requiresAttunement: false,
+    container: { capacityPounds: 30 },
+  },
+
+  item_pouch: {
+    id: "item_pouch",
+    name: "Pouch",
+    type: "gear",
+    weight: 1,
+    requiresAttunement: false,
+    container: { capacityPounds: 6 },
+  },
+
+  item_basket: {
+    id: "item_basket",
+    name: "Basket",
+    type: "gear",
+    weight: 2,
+    requiresAttunement: false,
+    container: { capacityPounds: 40 },
+  },
+
+  item_chest: {
+    id: "item_chest",
+    name: "Chest",
+    type: "gear",
+    weight: 25,
+    requiresAttunement: false,
+    container: { capacityPounds: 300 },
+  },
 };
 
 export const toItemDefinition = (equipment: EquipmentDefinition): ItemDefinition => {
