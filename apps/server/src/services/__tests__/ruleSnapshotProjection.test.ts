@@ -191,4 +191,27 @@ describe("projectEquipmentRows", () => {
     // failing is not a contract break, it is an empty table
     expect(() => projectEquipmentRows([])).not.toThrow();
   });
+
+  it("keys identity off the row when the payload has gone stale", () => {
+    // the same argument that already governs weight: the columns are what the
+    // rest of the system keys on, and item_rule is a copy that an edit to the
+    // name column does not rewrite
+    const result = projectEquipmentRows([
+      row({
+        id: "item_armor_plate",
+        name: "Plate Armor",
+        itemRule: {
+          ...fullItemRule,
+          id: "item_armour_plate_old_id",
+          name: "Platemail",
+        },
+      }),
+    ]);
+
+    const equipment = result.equipmentById.item_armor_plate!;
+    expect(equipment.id).toBe("item_armor_plate");
+    expect(equipment.name).toBe("Plate Armor");
+    expect(result.itemsById.item_armor_plate!.id).toBe("item_armor_plate");
+    expect(result.equipmentById.item_armour_plate_old_id).toBeUndefined();
+  });
 });

@@ -75,6 +75,11 @@ export const projectEquipmentRows = (
 
     const parsed = EquipmentDefinitionSchema.safeParse({
       ...itemRule,
+      // the row is authoritative for identity for the same reason it is for
+      // weight below: the columns are what everything else keys on, and a
+      // payload written before a rename still carries the old name
+      id: row.id,
+      name: row.name,
       // the column is the canonical weight. payloads written before the
       // extractor carried weight hold a stale 0, so reading the column heals
       // them without a re-seed
