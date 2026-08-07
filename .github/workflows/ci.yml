@@ -6,9 +6,27 @@ on:
       - main
   pull_request:
 
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
-  validate:
+  quality-gates:
+    name: ${{ matrix.gate.name }}
     runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        gate:
+          - name: Hygiene
+            command: pnpm check:hygiene
+          - name: Lint
+            command: pnpm lint
+          - name: Typecheck
+            command: pnpm -r typecheck
+          - name: Tests
+            command: pnpm test:all
 
     steps:
       - name: Check out repository
@@ -28,11 +46,5 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Run hygiene checks
-        run: pnpm check:hygiene
-
-      - name: Build workspace
-        run: pnpm build
-
-      - name: Run workspace tests
-        run: pnpm test:all
+      - name: Run ${{ matrix.gate.name }}
+        run: ${{ matrix.gate.command }}

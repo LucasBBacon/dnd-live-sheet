@@ -7,11 +7,23 @@ import * as referenceSchema from "./schema/reference.js";
 dotenv.config({ path: "../../.env" });
 
 const connectionString = process.env.DATABASE_URL;
-if (!connectionString) throw new Error("DATABASE_URL is missing");
-
-const client = postgres(connectionString);
 const schema = {
   ...operationalSchema,
   ...referenceSchema,
 };
-export const db = drizzle(client, { schema });
+
+const createMissingDatabaseProxy = <T extends object>(message: string): T =>
+  new Proxy({} as T, {
+    get() {
+      throw new Error(message);
+    },
+  });
+
+const initializedDb = connectionString
+  ? drizzle(postgres(connectionString), { schema })
+  : null;
+
+export const db = (initializedDb ??
+  createMissingDatabaseProxy<NonNullable<typeof initializedDb>>(
+    "DATABASE_URL is missing",
+  )) as NonNullable<typeof initializedDb>;

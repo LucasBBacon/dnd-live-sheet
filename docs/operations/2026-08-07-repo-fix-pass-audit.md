@@ -14,6 +14,11 @@ As of 2026-08-07 (post-remediation), the Phase 1 functional-slate baseline has b
 - Lint coverage has been expanded beyond web:
   - lint scripts now exist in server/shared/engine/database/web.
   - `pnpm -r lint` passes.
+- CI quality gates are now explicit and parallel in `.github/workflows/ci.yml`:
+  - Hygiene (`pnpm check:hygiene`)
+  - Lint (`pnpm lint`)
+  - Typecheck (`pnpm -r typecheck`)
+  - Tests (`pnpm test:all`)
 
 Remaining strategic work is now primarily Phase 3 drift reduction and CI policy hardening, rather than baseline break-fix.
 

@@ -23,8 +23,12 @@ describe("database client", () => {
     delete process.env.DATABASE_URL;
   });
 
-  it("throws when DATABASE_URL is missing", async () => {
-    await expect(import("../client.js")).rejects.toThrow("DATABASE_URL is missing");
+  it("throws on first db access when DATABASE_URL is missing", async () => {
+    const mod = await import("../client.js");
+
+    expect(() => (mod.db as unknown as Record<string, unknown>).select).toThrow(
+      "DATABASE_URL is missing",
+    );
     expect(mockConfig).toHaveBeenCalledWith({ path: "../../.env" });
     expect(mockPostgres).not.toHaveBeenCalled();
     expect(mockDrizzle).not.toHaveBeenCalled();
