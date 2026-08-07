@@ -25,7 +25,11 @@ export interface RuleSnapshotProjection {
   equipmentById: Record<string, EquipmentDefinition>;
   itemsById: Record<string, ItemDefinition>;
   weaponsById: Record<string, WeaponDefinition>;
-  /** ids whose stored rule payload no longer parses; skipped, not fatal */
+  /**
+   * ids whose stored rule payload no longer parses. skipped, not fatal - unless
+   * every row failed, in which case projectEquipmentRows throws instead of
+   * returning this list
+   */
   malformedItemIds: string[];
 }
 
@@ -61,6 +65,12 @@ const toWeaponCapability = ({
  * strict, so a field it does *not* know about fails loudly instead of being
  * silently dropped - which is exactly how weight, equipSlot, requiresAttunement
  * and ammoTag went missing for as long as they did.
+ *
+ * A single unparseable row is reported via malformedItemIds and otherwise
+ * ignored. If every row in a non-empty set fails, that is treated as a
+ * schema/data divergence rather than bad data, and this throws instead of
+ * returning an empty snapshot; ruleSnapshotCache does not catch it, so it
+ * surfaces to the caller as a request failure.
  */
 export const projectEquipmentRows = (
   rows: EquipmentRuleRow[],

@@ -804,5 +804,6 @@ describe("CharacterEngine.buildLiveSheet: containers", () => {
 
     expect(packed.encumbrance.totalWeight).toBe(loose.encumbrance.totalWeight);
     expect(packed.encumbrance.totalWeight).toBe(6); // backpack 5 + dagger 1
+    expect(packed.containers.containers[0]!.carriedHundredths).toBe(100);
   });
 });

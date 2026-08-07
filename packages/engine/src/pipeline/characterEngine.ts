@@ -223,7 +223,10 @@ export class CharacterEngine {
       // baseStates, not activeStates: the tier already arrives below as a
       // typed argument, so letting it in through the state list too would make
       // a SPEED modifier gated on "encumbered" stack on top of TIER_PENALTY -
-      // the same ten feet counted twice
+      // the same ten feet counted twice. accepted trade-off: this also means a
+      // SPEED modifier authored with forbiddenStates: ["encumbered"] stays
+      // active while encumbered, since encumbrance never reaches this list.
+      // nothing authors that today, so it is latent rather than a live bug
       baseStates,
       encumbrance.tier,
     );

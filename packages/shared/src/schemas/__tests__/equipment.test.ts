@@ -70,9 +70,11 @@ describe("ItemDefinition and EquipmentDefinition stay complementary", () => {
 
 describe("a container carries its capacity through both shapes", () => {
   it("round-trips a pounds-of-gear capacity", () => {
-    // both schemas are strict, so an unrecognised `container` key throws here
-    // rather than being quietly dropped - which is the failure mode this
-    // whole complementary-schema pairing exists to prevent
+    // if `container` were ever dropped from one of these schemas, the two
+    // parses below would not fail the same way. EquipmentDefinitionSchema is
+    // strict, so it would throw on the now-unrecognised key. ItemDefinitionSchema
+    // is not strict, so it would silently strip the key instead - only the
+    // toEqual assertions below would catch that, by finding container missing
     const equipment = EquipmentDefinitionSchema.parse({
       id: "item_backpack",
       name: "Backpack",

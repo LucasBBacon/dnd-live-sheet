@@ -38,7 +38,7 @@ export class SpeedEngine {
   public static calculateSpeed(
     baseSpeed: number,
     modifiers: RuntimeModifier[],
-    activeStates: string[] = [],
+    gatingStates: string[] = [],
     encumbranceTier: EncumbranceTier = "none",
   ): CalculationResult {
     const breakdown: CalculationResult["breakdown"] = [];
@@ -47,11 +47,11 @@ export class SpeedEngine {
       if (m.target !== "SPEED" || !m.isActive) {
         return false;
       }
-      if (m.forbiddenStates?.some((s) => activeStates.includes(s))) {
+      if (m.forbiddenStates?.some((s) => gatingStates.includes(s))) {
         return false;
       }
       return m.requiredStates
-        ? m.requiredStates.every((s) => activeStates.includes(s))
+        ? m.requiredStates.every((s) => gatingStates.includes(s))
         : true;
     });
 

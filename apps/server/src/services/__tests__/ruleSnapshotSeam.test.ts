@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { readFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { extractItemsForMigration } from "@project/database/src/itemsExtraction.js";
+import { EQUIPMENT_DICTIONARY } from "@project/engine";
 import {
   projectEquipmentRows,
   type EquipmentRuleRow,
@@ -86,5 +87,28 @@ describe("the extractor and the rule snapshot projection agree", () => {
     expect(project().projection.equipmentById.item_ammo_arrow!.weight).toBe(
       0.05,
     );
+  });
+
+  // item_backpack, item_sack, item_pouch, item_basket, item_chest are
+  // authored twice: once in items.json (what the database seeds) and once in
+  // EQUIPMENT_DICTIONARY (what the engine reads under static-only
+  // resolution). nothing but this test keeps their weights in agreement - the
+  // database suite only ever reads items.json, and the engine suite only ever
+  // reads the dictionary
+  it("agrees with EQUIPMENT_DICTIONARY on the weight of every duplicated container", () => {
+    const { projection } = project();
+    const duplicatedContainerIds = [
+      "item_backpack",
+      "item_sack",
+      "item_pouch",
+      "item_basket",
+      "item_chest",
+    ];
+
+    for (const id of duplicatedContainerIds) {
+      expect(projection.equipmentById[id]!.weight, id).toBe(
+        EQUIPMENT_DICTIONARY[id]!.weight,
+      );
+    }
   });
 });
