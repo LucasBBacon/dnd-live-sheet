@@ -260,7 +260,12 @@ describe("Seed Helper Functions", () => {
     });
 
     it("should handle race without subraceInfo", () => {
-      const rawRace = {
+      const rawRace: {
+        id: string;
+        name: string;
+        speed: number;
+        subraceInfo?: { displayLabel?: string };
+      } = {
         id: "race_human",
         name: "Human",
         speed: 30,
@@ -314,8 +319,8 @@ describe("Seed Helper Functions", () => {
         }));
 
       expect(missingTraits).toHaveLength(2);
-      expect(missingTraits[0].name).toBe("Missing");
-      expect(missingTraits[0].lore.shortDescription).toContain(
+      expect(missingTraits[0]?.name).toBe("Missing");
+      expect(missingTraits[0]?.lore.shortDescription).toContain(
         "Auto-generated"
       );
     });

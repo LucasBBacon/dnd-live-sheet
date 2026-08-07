@@ -11,9 +11,9 @@ describe("equipmentDictionary projections", () => {
     for (const [id, equipment] of Object.entries(EQUIPMENT_DICTIONARY)) {
       const item = ITEM_DICTIONARY[id];
       expect(item).toBeDefined();
-      expect(item.id).toBe(equipment.id);
-      expect(item.name).toBe(equipment.name);
-      expect(item.type).toBe(equipment.type);
+      expect(item?.id).toBe(equipment.id);
+      expect(item?.name).toBe(equipment.name);
+      expect(item?.type).toBe(equipment.type);
     }
   });
 
@@ -27,13 +27,13 @@ describe("equipmentDictionary projections", () => {
       }
 
       expect(weapon).toBeDefined();
-      expect(weapon.id).toBe(equipment.id);
-      expect(weapon.name).toBe(equipment.name);
-      expect(weapon.category).toBe(equipment.weapon.category);
-      expect(weapon.damageDice).toBe(equipment.weapon.damageDice);
-      expect(weapon.damageType).toBe(equipment.weapon.damageType);
-      expect(weapon.properties).toEqual(equipment.weapon.properties);
-      expect(weapon.ammoItemId).toBe(equipment.weapon.ammoItemId);
+      expect(weapon?.id).toBe(equipment.id);
+      expect(weapon?.name).toBe(equipment.name);
+      expect(weapon?.category).toBe(equipment.weapon.category);
+      expect(weapon?.damageDice).toBe(equipment.weapon.damageDice);
+      expect(weapon?.damageType).toBe(equipment.weapon.damageType);
+      expect(weapon?.properties).toEqual(equipment.weapon.properties);
+      expect(weapon?.ammoItemId).toBe(equipment.weapon.ammoItemId);
     }
   });
 

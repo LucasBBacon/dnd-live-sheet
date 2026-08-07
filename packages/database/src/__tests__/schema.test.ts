@@ -13,7 +13,7 @@ import {
   subclassLevels,
   subclassProgressions,
   traits,
-} from "../schema/reference";
+} from "../schema/reference.js";
 
 describe("database schema", () => {
   it("defines traits and feats with expected core fields", () => {

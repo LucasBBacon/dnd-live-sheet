@@ -1,11 +1,11 @@
 import {
   TRAIT_DICTIONARY,
-  TraitBridge,
 } from "@project/engine";
 import type {
   ChoiceProficiencyGrant,
   FixedProficiencyGrant,
   RuntimeModifier,
+  TraitDefinition,
 } from "@project/shared";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -129,7 +129,7 @@ export const TraitWidget = () => {
           id: trait.id,
           uuid: toDebugUuid(trait.id),
           name: trait.name,
-          modifiers: trait.modifiers,
+          modifiers: trait.modifiers.fixed,
           fixedProficiencyGrants: trait.proficiencies?.fixed ?? [],
           proficiencyChoices: trait.proficiencies?.choices ?? [],
         }))
@@ -137,26 +137,50 @@ export const TraitWidget = () => {
     [],
   );
 
-  const selectedTraitBenefits = useMemo(
-    () => TraitBridge.compileTraitBenefits(selectedTraitIds),
+  const selectedTraits = useMemo<TraitDefinition[]>(
+    () =>
+      selectedTraitIds
+        .map((id) => TRAIT_DICTIONARY[id])
+        .filter((trait): trait is TraitDefinition => Boolean(trait)),
     [selectedTraitIds],
   );
 
   const selectedTraitModifiers = useMemo<RuntimeModifier[]>(() => {
-    return selectedTraitBenefits.modifiers.map((modifier) => ({
+    const fixedModifiers = selectedTraits.flatMap((trait) =>
+      (trait.modifiers?.fixed ?? []).map((modifier) => ({
+        traitId: trait.id,
+        traitName: trait.name,
+        modifier,
+      })),
+    );
+
+    return fixedModifiers.map(({ traitId, traitName, modifier }, index) => ({
       ...modifier,
-      id: `trait-debug:${modifier.id}`,
+      id: `trait-debug:${traitId}:${index}`,
+      sourceName: traitName,
+      sourceOrigin: "trait",
+      isActive: true,
+      requiredStates: modifier.requiredStates ?? [],
+      forbiddenStates: modifier.forbiddenStates ?? [],
     }));
-  }, [selectedTraitBenefits.modifiers]);
+  }, [selectedTraits]);
 
   const selectedTraitProficiencyGrants = useMemo(
-    () => selectedTraitBenefits.proficiencyGrants,
-    [selectedTraitBenefits.proficiencyGrants],
+    () => selectedTraits.flatMap((trait) => trait.proficiencies?.fixed ?? []),
+    [selectedTraits],
   );
 
+  type TraitChoiceWithSource = ChoiceProficiencyGrant & { traitId: string };
+
   const selectedTraitProficiencyChoices = useMemo(
-    () => selectedTraitBenefits.proficiencyChoices,
-    [selectedTraitBenefits.proficiencyChoices],
+    () =>
+      selectedTraits.flatMap((trait) =>
+        (trait.proficiencies?.choices ?? []).map((choice) => ({
+          ...choice,
+          traitId: trait.id,
+        })),
+      ) as TraitChoiceWithSource[],
+    [selectedTraits],
   );
 
   const projectedProficiencyCount = useMemo(() => {

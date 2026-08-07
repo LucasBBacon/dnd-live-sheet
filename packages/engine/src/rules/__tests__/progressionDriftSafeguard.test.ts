@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { CLASS_PROGRESSION_DICTIONARY } from "../progressionDictionary";
+import { CLASS_PROGRESSION_DICTIONARY } from "../progressionDictionary.js";
 
 type ClassSeedRecord = {
   id: string;
@@ -72,8 +72,8 @@ describe("progression dictionary drift safeguards", () => {
     const level4Decisions = CLASS_PROGRESSION_DICTIONARY.class_fighter?.[4]
       ?.decisions;
 
-    expect(level3Decisions?.some((d) => d.type === "subclass")).toBe(true);
-    expect(level4Decisions?.some((d) => d.type === "asi_or_feat")).toBe(true);
+    expect(level3Decisions?.some((d: { type: string }) => d.type === "subclass")).toBe(true);
+    expect(level4Decisions?.some((d: { type: string }) => d.type === "asi_or_feat")).toBe(true);
   });
 });
 

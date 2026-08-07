@@ -8,15 +8,27 @@ importers:
 
   .:
     devDependencies:
+      '@eslint/js':
+        specifier: ^10.0.1
+        version: 10.0.1(eslint@10.5.0(jiti@2.7.0))
       '@types/node':
         specifier: ^26.0.0
         version: 26.0.0
+      eslint:
+        specifier: ^10.3.0
+        version: 10.5.0(jiti@2.7.0)
+      globals:
+        specifier: ^17.6.0
+        version: 17.6.0
       turbo:
         specifier: ^2.9.18
         version: 2.9.18
       typescript:
         specifier: ^6.0.3
         version: 6.0.3
+      typescript-eslint:
+        specifier: ^8.59.2
+        version: 8.61.1(eslint@10.5.0(jiti@2.7.0))(typescript@6.0.3)
 
   apps/server:
     dependencies:

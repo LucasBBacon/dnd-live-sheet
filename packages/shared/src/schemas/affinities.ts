@@ -14,7 +14,7 @@ export const DamageTypeSchema = z.enum([
   "radiant",
   "slashing",
   "thunder",
-  "same_as_weapon"
+  "same_as_weapon",
 ]);
 
 export const AffinityLevelSchema = z.enum([

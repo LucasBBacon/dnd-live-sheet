@@ -1,5 +1,5 @@
 import { describe, expect, it, beforeEach, vi } from "vitest";
-import { globalErrorHandler } from "../errorHandler";
+import { globalErrorHandler } from "../errorHandler.js";
 import { ZodError } from "zod";
 
 describe("Error Handler Middleware", () => {

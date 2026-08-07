@@ -49,8 +49,9 @@ describe("Reference Routes", () => {
       };
 
       expect(mockRace.subraces).toHaveLength(2);
-      expect(mockRace.subraces[0]).toHaveProperty("traits");
-      expect(mockRace.subraces[0].traits[0].sourceOrigin).toContain("Subrace");
+      expect(mockRace.subraces[0]).toBeDefined();
+      expect(mockRace.subraces[0]?.traits).toBeDefined();
+      expect(mockRace.subraces[0]?.traits[0]?.sourceOrigin).toContain("Subrace");
     });
 
     it("includes source origin metadata on traits", () => {
@@ -226,8 +227,8 @@ describe("Reference Routes", () => {
       }));
 
       expect(timeline).toHaveLength(20);
-      expect(timeline[0].level).toBe(1);
-      expect(timeline[19].level).toBe(20);
+      expect(timeline[0]?.level).toBe(1);
+      expect(timeline[19]?.level).toBe(20);
     });
 
     it("includes class-granted features at appropriate levels", () => {
@@ -254,9 +255,9 @@ describe("Reference Routes", () => {
         },
       ];
 
-      expect(timeline[0].features).toHaveLength(1);
-      expect(timeline[1].features).toHaveLength(1);
-      expect(timeline[0].features[0].sourceOrigin).toContain("Class:");
+      expect(timeline[0]?.features).toHaveLength(1);
+      expect(timeline[1]?.features).toHaveLength(1);
+      expect(timeline[0]?.features[0]?.sourceOrigin).toContain("Class:");
     });
 
     it("includes subclass features when subclass specified", () => {
@@ -273,7 +274,7 @@ describe("Reference Routes", () => {
         },
       ];
 
-      expect(timeline[0].features[0].sourceOrigin).toContain("Subclass:");
+      expect(timeline[0]?.features[0]?.sourceOrigin).toContain("Subclass:");
     });
 
     it("returns null spellcasting for non-casters", () => {
@@ -284,7 +285,7 @@ describe("Reference Routes", () => {
         },
       ];
 
-      expect(timeline[0].spellcasting).toBeNull();
+      expect(timeline[0]?.spellcasting).toBeNull();
     });
 
     it("includes spellcasting progression for casters", () => {
@@ -305,8 +306,8 @@ describe("Reference Routes", () => {
         },
       ];
 
-      expect(timeline[0].spellcasting).toHaveProperty("cantrips");
-      expect(timeline[1].spellcasting?.spellSlots[1]).toBe(2);
+      expect(timeline[0]?.spellcasting).toHaveProperty("cantrips");
+      expect(timeline[1]?.spellcasting?.spellSlots[1]).toBe(2);
     });
   });
 
@@ -328,7 +329,7 @@ describe("Reference Routes", () => {
       expect(background).toHaveProperty("id");
       expect(background).toHaveProperty("name");
       expect(background).toHaveProperty("traits");
-      expect(background.traits[0].sourceOrigin).toContain("Background:");
+      expect(background.traits[0]?.sourceOrigin).toContain("Background:");
     });
 
     it("includes multiple traits per background", () => {

@@ -817,35 +817,6 @@ const applyRollbackEntity = async (entry: ImportEntityEntry): Promise<void> => {
     }
   }
 
-  if (entry.op === "delete") {
-    switch (entry.kind) {
-      case "class_level":
-        await db
-          .delete(classLevels)
-          .where(
-            and(
-              eq(classLevels.classId, entry.data.classId),
-              eq(classLevels.level, entry.data.level),
-            ),
-          );
-        return;
-      case "subclass_level":
-        await db
-          .delete(subclassLevels)
-          .where(
-            and(
-              eq(subclassLevels.subclassId, entry.data.subclassId),
-              eq(subclassLevels.level, entry.data.level),
-            ),
-          );
-        return;
-      default:
-        throw new RollbackPipelineError(
-          `Unsupported rollback delete kind: ${entry.kind}.`,
-        );
-    }
-  }
-
   throw new RollbackPipelineError(
     `Unsupported rollback entity op: ${entry.op}.`,
   );
@@ -953,7 +924,7 @@ const applyRollbackRelation = async (
         return;
       default:
         throw new RollbackPipelineError(
-          `Unsupported rollback relation remove kind: ${relation.kind}.`,
+          "Unsupported rollback relation remove kind.",
         );
     }
   }
@@ -1036,7 +1007,7 @@ const applyRollbackRelation = async (
         return;
       default:
         throw new RollbackPipelineError(
-          `Unsupported rollback relation add kind: ${relation.kind}.`,
+          "Unsupported rollback relation add kind.",
         );
     }
   }

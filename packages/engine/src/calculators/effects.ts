@@ -1,4 +1,4 @@
-import type { EngineEvent, RuntimeModifier } from "@project/shared";
+import type { RuntimeModifier } from "@project/shared";
 
 export type DurationType =
   | "turn_start"

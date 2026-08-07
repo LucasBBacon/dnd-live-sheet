@@ -24,7 +24,7 @@ describe("database client", () => {
   });
 
   it("throws when DATABASE_URL is missing", async () => {
-    await expect(import("../client")).rejects.toThrow("DATABASE_URL is missing");
+    await expect(import("../client.js")).rejects.toThrow("DATABASE_URL is missing");
     expect(mockConfig).toHaveBeenCalledWith({ path: "../../.env" });
     expect(mockPostgres).not.toHaveBeenCalled();
     expect(mockDrizzle).not.toHaveBeenCalled();
@@ -38,7 +38,7 @@ describe("database client", () => {
     mockPostgres.mockReturnValue(postgresClient);
     mockDrizzle.mockReturnValue(drizzleDb);
 
-    const mod = await import("../client");
+    const mod = await import("../client.js");
 
     expect(mockConfig).toHaveBeenCalledWith({ path: "../../.env" });
     expect(mockPostgres).toHaveBeenCalledWith(

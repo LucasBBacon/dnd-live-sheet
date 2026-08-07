@@ -9,7 +9,6 @@ const ignoredDirectories = new Set(["dist", "build", "coverage", "node_modules"]
 const retiredPaths = [
   "apps/server/src/socket/controller.ts",
   "apps/web/src/hooks/useDerivedStats.ts",
-  "packages/shared/src/schemas/actions.ts",
 ];
 
 const findSourceDirectories = async (directory) => {

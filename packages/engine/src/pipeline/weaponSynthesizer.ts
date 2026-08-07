@@ -21,13 +21,12 @@ export class WeaponSynthesizer {
     const isRanged =
       weapon.category === "martial_ranged" ||
       weapon.category === "simple_ranged";
-    const isThrown = weapon.properties.includes("thrown");
     const hasReach = weapon.properties.includes("reach");
 
     // TODO: define ranges!!!
     // fallbacks if range is not explicitly defined in WeaponDefinition schema
-    let baseRange = isRanged ? 80 : hasReach ? 10 : 5;
-    let maxRange = isRanged ? 320 : undefined;
+    const baseRange = isRanged ? 80 : hasReach ? 10 : 5;
+    const maxRange = isRanged ? 320 : undefined;
 
     const damageDice =
       isTwoHandedGrip && weapon.versatileDamageDice

@@ -39,6 +39,7 @@ import { invalidateRuleSnapshotCache } from "./ruleSnapshotCache.js";
 
 type ImportRunRow = typeof importRuns.$inferSelect;
 type ImportRowRow = typeof importRows.$inferSelect;
+type ImportTx = Parameters<Parameters<typeof db.transaction>[0]>[0];
 
 type ImportIssue = {
   rowIndex?: number;
@@ -153,6 +154,13 @@ const commonReferenceScopeForRun = (run: ImportRunRow) => ({
   packVersion: run.packVersion,
   publishedAt: run.publishMode === "published" ? new Date() : null,
 });
+
+const normaliseLore = <T extends { shortDescription: string; fullText?: string | undefined }>(
+  lore: T,
+): { shortDescription: string; fullText?: string } =>
+  lore.fullText === undefined
+    ? { shortDescription: lore.shortDescription }
+    : { shortDescription: lore.shortDescription, fullText: lore.fullText };
 
 const totalDurationFromStagedAt = (run: ImportRunRow): number =>
   Math.max(0, Date.now() - run.stagedAt.getTime());
@@ -750,7 +758,7 @@ const preflightRelationAndDependencyIssues = async (
 };
 
 const applyEntityEntry = async (
-  tx: typeof db,
+  tx: ImportTx,
   entry: ImportEntityEntry,
   run: ImportRunRow,
 ): Promise<void> => {
@@ -818,7 +826,7 @@ const applyEntityEntry = async (
       const row: typeof traits.$inferInsert = {
         id: entry.id,
         name: entry.data.name,
-        lore: entry.data.lore,
+        lore: normaliseLore(entry.data.lore),
         effects: entry.data.effects,
         isStartingProficiency: entry.data.isStartingProficiency,
         supersedesId: entry.supersedesId,
@@ -854,7 +862,7 @@ const applyEntityEntry = async (
         category: entry.data.category,
         source: entry.data.source,
         repeatable: entry.data.repeatable,
-        lore: entry.data.lore,
+        lore: normaliseLore(entry.data.lore),
         prerequisites: entry.data.prerequisites,
         supersedesId: entry.supersedesId,
         ...scoped,
@@ -891,7 +899,7 @@ const applyEntityEntry = async (
         speed: entry.data.speed,
         requiresSubrace: entry.data.requiresSubrace,
         displayLabel: entry.data.displayLabel,
-        lore: entry.data.lore,
+        lore: normaliseLore(entry.data.lore),
         supersedesId: entry.supersedesId,
         ...scoped,
       };
@@ -924,7 +932,7 @@ const applyEntityEntry = async (
         id: entry.id,
         parentRaceId: entry.data.parentRaceId,
         name: entry.data.name,
-        lore: entry.data.lore,
+        lore: normaliseLore(entry.data.lore),
         supersedesId: entry.supersedesId,
         ...scoped,
       };
@@ -958,7 +966,7 @@ const applyEntityEntry = async (
         subclassRequirementLevel: entry.data.subclassRequirementLevel,
         startingEquipment: entry.data.startingEquipment,
         multiclassPrerequisites: entry.data.multiclassPrerequisites,
-        lore: entry.data.lore,
+        lore: normaliseLore(entry.data.lore),
         supersedesId: entry.supersedesId,
         ...scoped,
       };
@@ -992,7 +1000,7 @@ const applyEntityEntry = async (
         id: entry.id,
         parentClassId: entry.data.parentClassId,
         name: entry.data.name,
-        lore: entry.data.lore,
+        lore: normaliseLore(entry.data.lore),
         supersedesId: entry.supersedesId,
         ...scoped,
       };
@@ -1029,7 +1037,7 @@ const applyEntityEntry = async (
         flaws: entry.data.flaws,
         personalityTraits: entry.data.personalityTraits,
         startingEquipment: entry.data.startingEquipment,
-        lore: entry.data.lore,
+        lore: normaliseLore(entry.data.lore),
         supersedesId: entry.supersedesId,
         ...scoped,
       };
@@ -1146,7 +1154,7 @@ const applyEntityEntry = async (
 };
 
 const applyRelationEntry = async (
-  tx: typeof db,
+  tx: ImportTx,
   relation: ImportRelationEntry,
   run: ImportRunRow,
 ): Promise<void> => {

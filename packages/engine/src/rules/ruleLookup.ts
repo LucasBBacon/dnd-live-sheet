@@ -1,5 +1,5 @@
 import type { EquipmentDefinition, ItemDefinition, WeaponDefinition } from "@project/shared";
-import { EQUIPMENT_DICTIONARY, ITEM_DICTIONARY, toItemDefinition, toWeaponDefinition } from "./equipmentDictionary.js";
+import { EQUIPMENT_DICTIONARY, toItemDefinition, toWeaponDefinition } from "./equipmentDictionary.js";
 import { RESOURCE_DICTIONARY } from "./resourceDictionary.js";
 import type { ResourceRule } from "@project/shared";
 

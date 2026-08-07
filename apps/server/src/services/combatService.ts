@@ -27,14 +27,11 @@ export const modifyCharacterHp = async (
 
     const currentHp = character.currentHp ?? 0;
     const maxHp = character.maxHp ?? currentHp;
-    let nextCurrentHp = currentHp;
-
     // 5E 2014 hp mechanics
-    if (amount < 0) {
-      nextCurrentHp = Math.max(0, currentHp + amount);
-    } else {
-      nextCurrentHp = Math.min(maxHp, currentHp + amount);
-    }
+    const nextCurrentHp =
+      amount < 0
+        ? Math.max(0, currentHp + amount)
+        : Math.min(maxHp, currentHp + amount);
 
     await tx
       .update(characters)

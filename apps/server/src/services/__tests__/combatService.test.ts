@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { modifyCharacterHp } from "../combatService";
+import { modifyCharacterHp } from "../combatService.js";
 
 vi.mock("@project/database", () => ({
   db: {

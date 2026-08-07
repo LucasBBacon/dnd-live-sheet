@@ -123,7 +123,7 @@ export const applyLevelUp = async (req: Request, res: Response) => {
       }
 
       // 6 - apply ASI or Feats
-      let asiUpdates: Record<string, unknown> = {};
+      const asiUpdates: Record<string, unknown> = {};
       if (payload.asiChoices) {
         for (const choice of payload.asiChoices) {
           // dynamically build SQL update for specific stat col

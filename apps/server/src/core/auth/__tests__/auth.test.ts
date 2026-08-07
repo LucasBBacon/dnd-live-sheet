@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { MockAuthProvider } from "../MockAuthProvider";
+import { MockAuthProvider } from "../MockAuthProvider.js";
 import type { Request } from "express";
 
 describe("MockAuthProvider", () => {

@@ -8,6 +8,7 @@ import {
   SkillEngine,
   type Ability,
 } from "@project/engine";
+import type { FixedProficiencyGrant } from "@project/shared";
 
 /**
  * A custom React hook that calculates the character's final ability scores, modifiers, and total active modifiers based on base scores, active modifiers, and equipped inventory items.
@@ -36,14 +37,14 @@ export const useAbilities = () => {
 
     // 2 - run raw scores through engine
     (Object.keys(baseScores) as Ability[]).forEach((stat) => {
-      const score = AbilityEngine.calculateScore(
+      const derived = AbilityEngine.calculateScore(
         baseScores[stat],
         stat,
         totalMods,
       );
       finalAbilities[stat] = {
-        score,
-        modifier: AbilityEngine.getModifier(score),
+        score: derived.score,
+        modifier: derived.modifier,
       };
     });
 
@@ -53,6 +54,7 @@ export const useAbilities = () => {
 
 export const useDerivedStats = () => {
   const level = useCharacterSheetStore((state) => state.level);
+  const classLevels = useCharacterSheetStore((state) => state.classLevels);
   const proficiencies = useCharacterSheetStore((state) => state.proficiencies);
   const baseHpRolled = useCharacterSheetStore((state) => state.baseHpRolled);
 
@@ -62,17 +64,32 @@ export const useDerivedStats = () => {
     const profBonus = AbilityEngine.getProficiencyBonus(level);
     const dexMod = finalAbilities.DEX.modifier;
 
+    const skillAndInitiativeProficiencies: FixedProficiencyGrant[] =
+      Object.entries(proficiencies)
+        .filter(([, value]) => value !== "none")
+        .map(([proficiencyId, value]) => ({
+          category: "skills",
+          proficiencyId,
+          level: value as FixedProficiencyGrant["level"],
+          requiredStates: [],
+        }));
+
     // hp calc
     const maxHp = DerivedStatEngine.calculateMaxHp(
       baseHpRolled,
       finalAbilities.CON.modifier,
-      level,
+      {
+        total: level,
+        classes: classLevels,
+      },
       totalMods,
     );
 
     // initiative
     const initiative = DerivedStatEngine.calculateInitiative(
       finalAbilities.DEX.modifier,
+      profBonus,
+      skillAndInitiativeProficiencies,
       totalMods,
     );
 
@@ -81,14 +98,12 @@ export const useDerivedStats = () => {
 
     // skills calc
     const skills = Object.values(SKILL_MAP).map((skillDef) => {
-      const governingScore = finalAbilities[skillDef.ability].score;
-      const profLevel = proficiencies[skillDef.id] || "none";
-
       return SkillEngine.calculateSkill(
         skillDef.id,
-        governingScore,
-        profLevel,
+        finalAbilities[skillDef.ability].score,
         profBonus,
+        skillAndInitiativeProficiencies,
+        totalMods,
       );
     });
 
@@ -97,6 +112,7 @@ export const useDerivedStats = () => {
     level,
     baseHpRolled,
     proficiencies,
+    classLevels,
     finalAbilities,
     totalMods,
   ]);

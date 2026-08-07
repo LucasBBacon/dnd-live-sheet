@@ -241,7 +241,7 @@ export const DashboardLayout = () => {
                 >
                   <span
                     className={
-                      skill.isProficient ? "font-bold" : "text-gray-600"
+                      skill.multiplier > 0 ? "font-bold" : "text-gray-600"
                     }
                   >
                     {skill.name}

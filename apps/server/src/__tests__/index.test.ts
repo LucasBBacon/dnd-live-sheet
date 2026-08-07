@@ -77,7 +77,7 @@ describe("server bootstrap", () => {
 
   it("wires middleware, routes, gateway sockets, and starts server", async () => {
     process.env.CLIENT_URL = "http://localhost:5173";
-    await import("../index");
+    await import("../index.js");
 
     expect(mockCreateServer).toHaveBeenCalled();
     expect(mockCreateAuthMiddleware).toHaveBeenCalled();

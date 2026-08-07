@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { processStartingEquipment, resolveItemPayload } from "../inventory";
+import { processStartingEquipment, resolveItemPayload } from "../inventory.js";
 
 const {
   mockEq,

@@ -1,4 +1,5 @@
 // Centralized fetch wrapper to ensure mock auth header is always present
+import type { RuleSnapshot } from "@project/shared";
 
 const BASE_URL = "http://localhost:3000/api";
 export const MOCK_USER_ID = "dev-user-1";
@@ -17,12 +18,10 @@ export type LevelUpOptionsParams = {
 export type RulesSnapshotResponse = {
   version: number;
   loadedAt: number;
-  snapshot: {
-    equipmentById?: Record<string, unknown>;
-    itemsById: Record<string, unknown>;
-    weaponsById: Record<string, unknown>;
-    resourcesById: Record<string, unknown>;
-  };
+  snapshot: Pick<
+    RuleSnapshot,
+    "equipmentById" | "itemsById" | "weaponsById" | "resourcesById"
+  >;
 };
 
 type QueryValue = string | number | boolean | null | undefined;

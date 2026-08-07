@@ -1,5 +1,4 @@
 import { z } from "zod";
-import { RuntimeModifiersListSchema } from "./modifiers.js";
 import { SpellChoiceNodeSchema } from "./spells.js";
 import { ClassMulticlassPrerequisitesSchema } from "./prerequisites.js";
 

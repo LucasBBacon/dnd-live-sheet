@@ -19,7 +19,7 @@ describe("extractItemsForMigration", () => {
     ]);
 
     expect(result.seedItems).toHaveLength(1);
-    expect(result.seedItems[0].name).toBe("Crossbow Bolt");
+    expect(result.seedItems[0]?.name).toBe("Crossbow Bolt");
     expect(result.diagnostics.duplicateIds).toEqual([
       {
         id: "item_ammo_bolt",
@@ -130,7 +130,7 @@ describe("extractItemsForMigration", () => {
 
     // the rule payload is what the engine reads; it was being dropped, so
     // every snapshot-resolved item weighed nothing
-    expect(result.itemRulesById.item_armor_plate.weight).toBe(65);
+    expect(result.itemRulesById.item_armor_plate?.weight).toBe(65);
   });
 
   it("keeps the rule payload in pounds while the column stores hundredths", () => {
@@ -143,8 +143,8 @@ describe("extractItemsForMigration", () => {
       },
     ]);
 
-    expect(result.itemRulesById.item_ammo_arrow.weight).toBe(0.05);
-    expect(result.seedItems[0].weight).toBe(5);
+    expect(result.itemRulesById.item_ammo_arrow?.weight).toBe(0.05);
+    expect(result.seedItems[0]?.weight).toBe(5);
   });
 
   it("defaults a weightless source item to zero", () => {
@@ -152,7 +152,7 @@ describe("extractItemsForMigration", () => {
       { id: "item_note", name: "Scrap of Paper", type: "gear" },
     ]);
 
-    expect(result.itemRulesById.item_note.weight).toBe(0);
+    expect(result.itemRulesById.item_note?.weight).toBe(0);
   });
 
   it("floors a negative source weight in the payload, not just the column", () => {

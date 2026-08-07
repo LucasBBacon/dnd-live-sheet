@@ -120,7 +120,21 @@ describe("Rule Snapshot Schema", () => {
       },
     };
 
-    expect(RuleSnapshotSchema.parse(snapshot)).toEqual(snapshot);
+    const parsed = RuleSnapshotSchema.parse(snapshot);
+
+    expect(parsed).toMatchObject(snapshot);
+    expect(parsed.itemsById.item_armor_shield).toMatchObject({
+      weight: 0,
+      requiresAttunement: false,
+    });
+    expect(parsed.itemsById.item_armor_shield?.modifiers?.[0]).toMatchObject({
+      requiredStates: [],
+      forbiddenStates: [],
+    });
+    expect(parsed.traitsById.feat_tough?.modifiers?.[0]).toMatchObject({
+      requiredStates: [],
+      forbiddenStates: [],
+    });
   });
 
   it("accepts snapshot with canonical equipmentById field", () => {

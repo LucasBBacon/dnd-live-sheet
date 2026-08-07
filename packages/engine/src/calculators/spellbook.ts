@@ -18,17 +18,11 @@ export class SpellbookEngine {
 
     for (const source of sources) {
       // determine which spell ids from this source are currently castable
-      let activeIds: string[] = [];
-
-      if (
+      const activeIds =
         source.preparationMode === "known" ||
         source.preparationMode === "innate"
-      ) {
-        activeIds = source.knownSpellIds;
-      } else {
-        // prepared or full_list
-        activeIds = source.preparedSpellIds;
-      }
+          ? source.knownSpellIds
+          : source.preparedSpellIds;
 
       for (const spellId of activeIds) {
         const spellDef = spellDictionary[spellId];

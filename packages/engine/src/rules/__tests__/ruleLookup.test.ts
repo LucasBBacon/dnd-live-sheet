@@ -7,6 +7,15 @@ import {
   resolveWeaponDefinition,
 } from "../ruleLookup.js";
 
+const acBonusModifier = {
+  target: "ARMOR_CLASS" as const,
+  type: "add" as const,
+  value: 3,
+  scalingFactor: "none" as const,
+  requiredStates: [],
+  forbiddenStates: [],
+};
+
 describe("ruleLookup", () => {
   it("resolves canonical item ids via static dictionary", () => {
     const shield = resolveItemDefinition("item_armor_shield");
@@ -20,13 +29,10 @@ describe("ruleLookup", () => {
           id: "item_armor_shield",
           name: "Snapshot Shield",
           type: "armor",
+          weight: 6,
+          requiresAttunement: false,
           modifiers: [
-            {
-              target: "ARMOR_CLASS",
-              type: "add",
-              value: 3,
-              scalingFactor: "none",
-            },
+            acBonusModifier,
           ],
         },
       },
@@ -43,13 +49,10 @@ describe("ruleLookup", () => {
           id: "item_armor_shield",
           name: "Canonical Shield",
           type: "armor",
+          weight: 6,
+          requiresAttunement: false,
           modifiers: [
-            {
-              target: "ARMOR_CLASS",
-              type: "add",
-              value: 3,
-              scalingFactor: "none",
-            },
+            acBonusModifier,
           ],
         },
       },
@@ -75,6 +78,9 @@ describe("ruleLookup", () => {
           id: "item_armor_shield",
           name: "Canonical Shield",
           type: "armor",
+          weight: 6,
+          requiresAttunement: false,
+          modifiers: [acBonusModifier],
         },
       },
     });
@@ -113,6 +119,8 @@ describe("ruleLookup", () => {
           id: "item_weapon_longsword",
           name: "Canonical Longsword",
           type: "weapon",
+          weight: 3,
+          requiresAttunement: false,
           weapon: {
             category: "martial_melee",
             damageDice: "1d10",
@@ -134,9 +142,9 @@ describe("ruleLookup", () => {
           id: "item_armor_shield",
           name: "Shield",
           type: "armor",
-          modifiers: [
-            { target: "ARMOR_CLASS", type: "add", value: 2, scalingFactor: "none" },
-          ],
+          weight: 6,
+          requiresAttunement: false,
+          modifiers: [{ ...acBonusModifier, value: 2 }],
         },
       },
     });
@@ -157,6 +165,8 @@ describe("ruleLookup", () => {
           id: "item_weapon_longsword",
           name: "Snapshot Longsword",
           type: "weapon",
+          weight: 3,
+          requiresAttunement: false,
           weapon: {
             category: "martial_melee",
             damageDice: "1d12",

@@ -296,6 +296,7 @@ export class DerivedStatEngine {
       if (mods.length === 0) continue;
 
       const bestMod = mods[0];
+      if (!bestMod) continue;
 
       total += bestMod.value;
       const modSign = bestMod.value >= 0 ? "+" : "";

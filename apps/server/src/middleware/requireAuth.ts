@@ -3,6 +3,7 @@ import type { AuthProvider } from "../core/auth/AuthInterface.js";
 
 // extend express request
 declare global {
+  // eslint-disable-next-line @typescript-eslint/no-namespace
   namespace Express {
     interface Request {
       user?: { id: string };

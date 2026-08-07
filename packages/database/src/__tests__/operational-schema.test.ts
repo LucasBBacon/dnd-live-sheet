@@ -7,7 +7,7 @@ import {
   characterCustomTraits,
   characterInventory,
   characters,
-} from "../schema/operational";
+} from "../schema/operational.js";
 
 describe("operational schema", () => {
   it("defines core character fields and required constraints", () => {

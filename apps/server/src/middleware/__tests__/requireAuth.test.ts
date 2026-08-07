@@ -1,6 +1,6 @@
 import { describe, expect, it, vi, beforeEach } from "vitest";
-import { createAuthMiddleware } from "../requireAuth";
-import type { AuthProvider, AuthenticatedUser } from "../core/auth/AuthInterface";
+import { createAuthMiddleware } from "../requireAuth.js";
+import type { AuthProvider, AuthenticatedUser } from "../../core/auth/AuthInterface.js";
 import type { Request, Response, NextFunction } from "express";
 
 describe("createAuthMiddleware", () => {

@@ -51,7 +51,6 @@ export interface RollContextPayload {
 
 export class RollContextBuilder {
   public static buildWeaponToggles(
-    action: ActionGrant,
     weapon: WeaponDefinition,
     hasSneakAttackTrait: boolean,
   ): StateToggle[] {
