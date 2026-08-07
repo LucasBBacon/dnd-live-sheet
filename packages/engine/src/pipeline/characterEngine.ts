@@ -2,7 +2,9 @@ import type {
   ActionGrant,
   CalculationResult,
   CharacterSave,
+  FixedProficiencyGrant,
   InventoryInstance,
+  RuntimeModifier,
 } from "@project/shared";
 import {
   AbilityEngine,
@@ -32,6 +34,34 @@ import {
   RACE_DICTIONARY,
 } from "../rules/raceDictionary.js";
 import type { RuleSnapshotLookup } from "../rules/ruleLookup.js";
+
+/**
+ * Everything stage one is allowed to see.
+ *
+ * Narrow on purpose. The field that matters is baseStates: naming it that,
+ * rather than activeStates, is what makes the pipeline's one invariant a
+ * signature rather than a comment. A calculator below this line cannot read a
+ * state that encumbrance derived, because it is not in scope.
+ */
+interface StageOneInput {
+  attributes: CharacterSave["attributes"];
+  classes: CharacterSave["classes"];
+  baseRolledHp: number;
+  totalLevel: number;
+  profBonus: number;
+  proficiencies: FixedProficiencyGrant[];
+  modifiers: RuntimeModifier[];
+  baseStates: string[];
+}
+
+/** The five outputs that must be final before encumbrance can be computed. */
+interface StageOneResult {
+  abilities: Record<Ability, DerivedAbility>;
+  maxHp: CalculationResult;
+  armorClass: CalculationResult;
+  initiative: CalculationResult;
+  skills: Record<string, DerivedSkill>;
+}
 
 export interface LiveSheetOptions {
   /** Homebrew and imported rules, when the host app has a snapshot loaded. */
@@ -125,77 +155,23 @@ export class CharacterEngine {
 
     // region Calculations (stage one)
     //
-    // Everything below reads baseStates. Nothing here may read the states
-    // encumbrance derives further down - see the note on that region.
+    // Everything here reads baseStates. The derived states are not built until
+    // the load region below, and computeStageOne cannot see them.
 
-    // 1 - base level & proficiency
     const totalLevel = save.classes.reduce((sum, cls) => sum + cls.level, 0);
     const profBonus = AbilityEngine.getProficiencyBonus(totalLevel);
 
-    // 2 - ability scores
-    const abilities = {} as Record<Ability, DerivedAbility>;
-    const abilityKeys: Ability[] = ["STR", "DEX", "CON", "INT", "WIS", "CHA"];
-
-    for (const key of abilityKeys) {
-      abilities[key] = AbilityEngine.calculateScore(
-        save.attributes[key.toLowerCase() as keyof typeof save.attributes],
-        key,
-        allModifiers,
-        baseStates,
-      );
-    }
-
-    // 3 - derived stats
-    const levelProfile = {
-      total: totalLevel,
-      classes: save.classes.reduce(
-        (acc, cls) => {
-          acc[cls.classId] = cls.level;
-          return acc;
-        },
-        {} as Record<string, number>,
-      ),
-    };
-
-    const maxHp = DerivedStatEngine.calculateMaxHp(
-      // the UI/Bootstrapper calculates the flat base rolled HP during level up
-      save.hp.baseRolledHp,
-      abilities.CON.modifier,
-      levelProfile,
-      allModifiers,
-      baseStates,
-    );
-
-    const armorClass = DerivedStatEngine.calculateAC(
-      abilities.DEX.modifier,
-      allModifiers,
-      baseStates,
-    );
-
-    const initiative = DerivedStatEngine.calculateInitiative(
-      abilities.DEX.modifier,
-      profBonus,
-      proficiencies,
-      allModifiers,
-      baseStates,
-    );
-
-    // 4  - skills
-
-    const skills = {} as Record<string, DerivedSkill>;
-    const skillList = Object.keys(SKILL_MAP);
-
-    for (const skillId of skillList) {
-      const governingStat = SKILL_MAP[skillId]?.ability as Ability;
-      skills[skillId] = SkillEngine.calculateSkill(
-        skillId,
-        abilities[governingStat].score,
+    const { abilities, maxHp, armorClass, initiative, skills } =
+      this.computeStageOne({
+        attributes: save.attributes,
+        classes: save.classes,
+        baseRolledHp: save.hp.baseRolledHp,
+        totalLevel,
         profBonus,
         proficiencies,
-        allModifiers,
+        modifiers: allModifiers,
         baseStates,
-      );
-    }
+      });
 
     // endregion
 
@@ -278,5 +254,89 @@ export class CharacterEngine {
     };
 
     // endregion
+  }
+
+  /**
+   * Abilities, HP, AC, initiative and skills, from base states only.
+   *
+   * Split out of buildLiveSheet so the seam is structural: encumbrance runs on
+   * the final STR score this produces, and if its verdict could flow back in
+   * here, a belt of giant strength would change the capacity that changed the
+   * state that changed the score - no fixed point.
+   */
+  private static computeStageOne({
+    attributes,
+    classes,
+    baseRolledHp,
+    totalLevel,
+    profBonus,
+    proficiencies,
+    modifiers,
+    baseStates,
+  }: StageOneInput): StageOneResult {
+    // 1 - ability scores
+    const abilities = {} as Record<Ability, DerivedAbility>;
+    const abilityKeys: Ability[] = ["STR", "DEX", "CON", "INT", "WIS", "CHA"];
+
+    for (const key of abilityKeys) {
+      abilities[key] = AbilityEngine.calculateScore(
+        attributes[key.toLowerCase() as keyof typeof attributes],
+        key,
+        modifiers,
+        baseStates,
+      );
+    }
+
+    // 2 - derived stats
+    const levelProfile = {
+      total: totalLevel,
+      classes: classes.reduce(
+        (acc, cls) => {
+          acc[cls.classId] = cls.level;
+          return acc;
+        },
+        {} as Record<string, number>,
+      ),
+    };
+
+    const maxHp = DerivedStatEngine.calculateMaxHp(
+      // the UI/Bootstrapper calculates the flat base rolled HP during level up
+      baseRolledHp,
+      abilities.CON.modifier,
+      levelProfile,
+      modifiers,
+      baseStates,
+    );
+
+    const armorClass = DerivedStatEngine.calculateAC(
+      abilities.DEX.modifier,
+      modifiers,
+      baseStates,
+    );
+
+    const initiative = DerivedStatEngine.calculateInitiative(
+      abilities.DEX.modifier,
+      profBonus,
+      proficiencies,
+      modifiers,
+      baseStates,
+    );
+
+    // 3 - skills
+    const skills = {} as Record<string, DerivedSkill>;
+
+    for (const skillId of Object.keys(SKILL_MAP)) {
+      const governingStat = SKILL_MAP[skillId]?.ability as Ability;
+      skills[skillId] = SkillEngine.calculateSkill(
+        skillId,
+        abilities[governingStat].score,
+        profBonus,
+        proficiencies,
+        modifiers,
+        baseStates,
+      );
+    }
+
+    return { abilities, maxHp, armorClass, initiative, skills };
   }
 }
