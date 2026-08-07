@@ -247,4 +247,52 @@ describe("extractItemsForMigration", () => {
       expect(result.itemRulesById[id]?.weight, id).toBe(weight);
     }
   });
+
+  it("gives each equipment pack contents that weigh what the pack weighs", () => {
+    // the guard that actually catches a mistyped id or a wrong quantity: a
+    // pack is a bundle, so its aggregate weight has to be exactly what its
+    // contents come to, or expanding it at acquisition changes the load
+    const itemsPath = path.resolve(__dirname, "../../data/items.json");
+    const result = extractItemsForMigration(
+      JSON.parse(readFileSync(itemsPath, "utf-8")),
+    );
+
+    const packs = [
+      "item_pack_explorers",
+      "item_pack_diplomats",
+      "item_pack_priests",
+      "item_pack_entertainers",
+    ];
+
+    for (const packId of packs) {
+      const contents = result.bundleContents.filter((c) => c.bundleId === packId);
+
+      expect(contents.length, packId).toBeGreaterThan(0);
+
+      // summed in hundredths for the same reason weight always is: 0.05 lb
+      // line items make a float sum disagree with itself
+      const contentsHundredths = contents.reduce((total, entry) => {
+        const rule = result.itemRulesById[entry.itemId];
+        expect(rule, `${packId} -> ${entry.itemId}`).toBeDefined();
+        return total + Math.round(rule!.weight * 100) * entry.quantity;
+      }, 0);
+
+      expect(contentsHundredths, packId).toBe(
+        result.itemRulesById[packId]!.weight * 100,
+      );
+    }
+  });
+
+  it("marks the equipment packs as bundles", () => {
+    const itemsPath = path.resolve(__dirname, "../../data/items.json");
+    const result = extractItemsForMigration(
+      JSON.parse(readFileSync(itemsPath, "utf-8")),
+    );
+
+    const explorers = result.seedItems.find(
+      (item) => item.id === "item_pack_explorers",
+    );
+
+    expect(explorers?.isBundle).toBe(true);
+  });
 });
