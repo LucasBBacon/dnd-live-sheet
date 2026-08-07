@@ -770,3 +770,39 @@ describe("CharacterEngine.buildLiveSheet: a trait-authored SPEED modifier", () =
     ]);
   });
 });
+
+describe("CharacterEngine.buildLiveSheet: containers", () => {
+  it("reports no containers for a character carrying none", () => {
+    const sheet = buildSheet(halfElfFighter(), [carried("item_armor_plate")]);
+
+    expect(sheet.containers.containers).toEqual([]);
+    expect(sheet.containers.unplacedInstanceIds).toEqual([]);
+  });
+
+  it("reports a backpack and what is inside it", () => {
+    const sheet = buildSheet(halfElfFighter(), [
+      { ...carried("item_backpack"), id: "inv_pack" },
+      { ...carried("item_weapon_dagger"), containerId: "inv_pack" },
+    ]);
+
+    expect(sheet.containers.containers).toHaveLength(1);
+    expect(sheet.containers.containers[0]!.carriedHundredths).toBe(100);
+    expect(sheet.containers.containers[0]!.isOverloaded).toBe(false);
+  });
+
+  it("leaves the carried total alone when items are inside a container", () => {
+    // the container report partitions weight, it never changes it: a dagger
+    // in a backpack weighs exactly what a dagger in a fist weighs
+    const loose = buildSheet(halfElfFighter(), [
+      { ...carried("item_backpack"), id: "inv_pack" },
+      carried("item_weapon_dagger"),
+    ]);
+    const packed = buildSheet(halfElfFighter(), [
+      { ...carried("item_backpack"), id: "inv_pack" },
+      { ...carried("item_weapon_dagger"), containerId: "inv_pack" },
+    ]);
+
+    expect(packed.encumbrance.totalWeight).toBe(loose.encumbrance.totalWeight);
+    expect(packed.encumbrance.totalWeight).toBe(6); // backpack 5 + dagger 1
+  });
+});

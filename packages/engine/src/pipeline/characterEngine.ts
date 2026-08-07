@@ -30,6 +30,10 @@ import {
   type EncumbranceRules,
 } from "../calculators/encumbrance.js";
 import {
+  ContainerEngine,
+  type ContainerReport,
+} from "../calculators/containers.js";
+import {
   DEFAULT_WALKING_SPEED,
   RACE_DICTIONARY,
 } from "../rules/raceDictionary.js";
@@ -88,6 +92,11 @@ export interface LiveCharacterSheet {
 
   // load
   encumbrance: EncumbranceResult;
+  /**
+   * What sits in each container the character carries, and whether it fits.
+   * Partitions the same weight `encumbrance` totals; it never changes it.
+   */
+  containers: ContainerReport;
 
   // executable actions (traits, spells, weapons)
   actions: ActionGrant[];
@@ -200,6 +209,10 @@ export class CharacterEngine {
       rules: options.encumbranceRules ?? DEFAULT_ENCUMBRANCE_RULES,
     });
 
+    // reads inventory and nothing else, so it has no stake in the two-stage
+    // seam - it sits here because this is where carrying is reasoned about
+    const containers = ContainerEngine.report(inventory, options.snapshot);
+
     const activeStates = Array.from(
       new Set([...baseStates, ...encumbrance.states]),
     );
@@ -248,6 +261,7 @@ export class CharacterEngine {
 
       skills,
       encumbrance,
+      containers,
       actions,
       baseStates,
       activeStates,
