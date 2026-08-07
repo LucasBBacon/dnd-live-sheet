@@ -126,6 +126,8 @@ const deriveItemModifiers = (item: SourceItem): ItemDefinition["modifiers"] => {
         type: "set_base",
         value: baseAc,
         scalingFactor: "none",
+        requiredStates: [],
+        forbiddenStates: [],
       });
     }
 
@@ -135,6 +137,8 @@ const deriveItemModifiers = (item: SourceItem): ItemDefinition["modifiers"] => {
         type: "add",
         value: baseAc,
         scalingFactor: "none",
+        requiredStates: [],
+        forbiddenStates: [],
       });
     }
 
@@ -144,6 +148,8 @@ const deriveItemModifiers = (item: SourceItem): ItemDefinition["modifiers"] => {
         type: "disadvantage",
         value: 0,
         scalingFactor: "none",
+        requiredStates: [],
+        forbiddenStates: [],
       });
     }
   }
