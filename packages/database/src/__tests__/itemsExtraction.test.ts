@@ -155,6 +155,17 @@ describe("extractItemsForMigration", () => {
     expect(result.itemRulesById.item_note.weight).toBe(0);
   });
 
+  it("floors a negative source weight in the payload, not just the column", () => {
+    const result = extractItemsForMigration([
+      { id: "item_bad_data", name: "Impossible Feather", type: "gear", weight: -5 },
+    ]);
+
+    // the column has always clamped. the payload is what the engine reads, and
+    // it did not - so a bad row could make a character's pack weigh less
+    expect(result.itemRulesById.item_bad_data?.weight).toBe(0);
+    expect(result.seedItems[0]?.weight).toBe(0);
+  });
+
   it("carries versatile damage dice into the weapon rule", () => {
     const result = extractItemsForMigration([
       {

@@ -97,13 +97,18 @@ const toStringOrUndefined = (value: unknown): string | undefined =>
 const toNumberOr = (value: unknown, fallback: number): number =>
   typeof value === "number" && Number.isFinite(value) ? value : fallback;
 
-const toStoredWeight = (value: unknown): number => {
-  const pounds = toNumberOr(value, 0);
-  if (pounds <= 0) return 0;
+/**
+ * Authored weight in pounds, floored at zero.
+ *
+ * A negative weight is bad data, not a discount - and the rule payload is what
+ * the engine sums, so clamping only the column let one bad row reduce a
+ * character's carried total.
+ */
+const toPounds = (value: unknown): number => Math.max(0, toNumberOr(value, 0));
 
-  // Persist as hundredths of a pound in an integer column.
-  return Math.round(pounds * 100);
-};
+// persist as hundredths of a pound in an integer column, matching how the
+// engine accumulates weight
+const toStoredWeight = (pounds: number): number => Math.round(pounds * 100);
 
 // #endregion
 
@@ -264,7 +269,8 @@ export const extractItemsForMigration = (
       toStringOrUndefined(item.lore?.shortDescription) ??
       "No description available.";
 
-    const weight = toStoredWeight(item.weight);
+    const pounds = toPounds(item.weight);
+    const weight = toStoredWeight(pounds);
     const isBundle = item.isBundle === true;
     const type = normalizeItemType(item);
 
@@ -274,9 +280,8 @@ export const extractItemsForMigration = (
       type,
       // pounds, matching how EQUIPMENT_DICTIONARY authors weight. the `weight`
       // column beside this stores the same value in hundredths for integer
-      // maths; the rule payload is what the engine reads, and it was being
-      // dropped entirely, so every snapshot-resolved item weighed nothing
-      weight: toNumberOr(item.weight, 0),
+      // maths, and both now come from one clamped reading
+      weight: pounds,
       modifiers: deriveItemModifiers(item),
     });
     itemRulesById[id] = itemDefinition;
