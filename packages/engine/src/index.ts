@@ -20,6 +20,7 @@ export * from "./calculators/resources.js";
 export * from "./calculators/speed.js";
 export * from "./calculators/weight.js";
 export * from "./calculators/combat.js";
+export * from "./calculators/containers.js";
 export * from "./calculators/rests.js";
 export * from "./calculators/skills.js";
 export * from "./pipeline/index.js";
