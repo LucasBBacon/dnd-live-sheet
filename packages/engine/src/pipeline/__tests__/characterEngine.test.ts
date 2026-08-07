@@ -733,3 +733,40 @@ describe("CharacterEngine.buildLiveSheet: an unknown race", () => {
     expect(buildSheet(orphaned()).encumbrance.maxCapacity).toBe(225);
   });
 });
+
+/**
+ * The wood elf is the only content in the repo that authors a SPEED modifier:
+ * fleet_of_foot emits set_base 35 against a racial base of 30. Nothing tested
+ * that it survives compileActiveTraits -> ModifierExtractor -> SpeedEngine.
+ */
+const woodElfFighter = (): CharacterSave => ({
+  attributes: { str: 15, dex: 14, con: 13, int: 12, wis: 10, cha: 8 },
+  race: {
+    baseRaceId: "race_elf",
+    hasSubraces: true,
+    subraceId: "subrace_elf_wood",
+  },
+  classes: [
+    {
+      classId: "class_fighter",
+      level: 1,
+      selections: { fighter_level_1_fighting_style: ["trait_fs_defense"] },
+    },
+  ],
+  traitSelections: {},
+  hp: { current: 12, temporary: 0, baseRolledHp: 10, hitDiceSpent: {} },
+});
+
+describe("CharacterEngine.buildLiveSheet: a trait-authored SPEED modifier", () => {
+  it("raises a wood elf's speed to 35 through the whole pipeline", () => {
+    const speed = buildSheet(woodElfFighter()).speed;
+
+    expect(speed.total).toBe(35);
+    // asserted on the breakdown too, because a bug that ignored the modifier
+    // and a bug that read 35 off the race would both satisfy the total alone
+    expect(speed.breakdown).toEqual([
+      { name: "Base Speed", value: 30 },
+      { name: "Fleet of Foot", value: 35 },
+    ]);
+  });
+});
