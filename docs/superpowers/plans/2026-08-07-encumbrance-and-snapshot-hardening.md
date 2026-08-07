@@ -2,9 +2,9 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Close the non-web follow-ups left by `2026-08-05-encumbrance-and-speed.md` and `2026-08-06-rule-snapshot-lossless-projection.md` — three real bugs, one structural invariant, and the test coverage that would have caught all four.
+**Goal:** Close the non-web follow-ups left by `2026-08-05-encumbrance-and-speed.md` and `2026-08-06-rule-snapshot-lossless-projection.md` — three real bugs, one structural invariant, and the test coverage that would have caught all four — then give the bundle and container rules real PHB data and an engine that can reason about them.
 
-**Architecture:** Nine changes across three packages, ordered *guard before change*. Task 1 pins all five stage-one calculators against the two-stage seam so Task 3 can restructure `buildLiveSheet` safely. Task 2 fixes the encumbrance tier reaching `SpeedEngine` through two channels, which is also what makes Task 3 a clean lift — once `SpeedEngine` takes `baseStates`, the derived state list has exactly one remaining use. Tasks 4–5 cover paths that a mutation would silently survive today. Tasks 6–9 are independent of the engine work and of each other.
+**Architecture:** Two phases. **Phase 1 (Tasks 1–9)** is nine changes across three packages, ordered *guard before change*: Task 1 pins all five stage-one calculators against the two-stage seam so Task 3 can restructure `buildLiveSheet` safely; Task 2 fixes the encumbrance tier reaching `SpeedEngine` through two channels, which is also what makes Task 3 a clean lift. Tasks 4–5 cover paths a mutation would silently survive; Tasks 6–9 are independent of the engine work and of each other. **Phase 2 (Tasks 10–15)** adds a container capacity to the item contract, authors the PHB containers and equipment packs, builds a pure `ContainerEngine`, and turns the four existing packs into real bundles so the acquisition path that already unpacks them finally has something to unpack.
 
 **Tech Stack:** TypeScript (ESM, `.js` import specifiers), Zod schemas in `@project/shared`, Vitest, pnpm workspaces + Turborepo, Drizzle ORM.
 
@@ -14,7 +14,10 @@
 - **Import specifiers end in `.js`** even when the source file is `.ts`. Every intra-package import in this repo follows this; a bare specifier will not resolve.
 - **Comment style:** lowercase inline comments explaining *why*, matching the surrounding files. Do not add JSDoc to every member; match the density of the file being edited.
 - **Do not modify `apps/web`.** Explicitly out of scope for this plan.
-- **Do not touch `EQUIPMENT_DICTIONARY`, `items.json`, or `EQUIPMENT_RESOLUTION_MODE`.** The catalogue reconciliation is a separate spec that follows this one. If a task tempts you to add a catalogue entry, you have misread the task.
+- **Phase 1 does not touch `EQUIPMENT_DICTIONARY`, `items.json`, or `EQUIPMENT_RESOLUTION_MODE`.** If a Task 1–9 step tempts you to add a catalogue entry, you have misread the task. Phase 2 does add catalogue entries, but only the ones its own tasks name.
+- **`EQUIPMENT_RESOLUTION_MODE` stays `"static-only"` throughout.** Flipping it is the catalogue reconciliation spec's job and is not safe yet.
+- **Weight is authored in pounds and summed in integer hundredths.** `EQUIPMENT_DICTIONARY` and `items.json` both keep readable pounds (`65`, `0.05`); every accumulation goes through `poundsToHundredths` first. This holds for container capacity too.
+- **PHB fidelity is a requirement, not a preference.** Every item Phase 2 authors is from the Player's Handbook equipment tables, at its printed weight. Where the PHB states no weight for a pack line item, the plan says so explicitly and gives the table ruling being used — do not invent others.
 - **`@project/shared` has 11 pre-existing failing tests. Fixing them is not your job.** They are stale assertions in `character.test.ts` and `rules.test.ts` against schemas that have since grown Zod defaults. Do not "fix" them, and do not report BLOCKED because of them.
 
 ### Baseline — measured immediately before this plan, at commit `eec8a91`
@@ -40,10 +43,10 @@ pnpm --filter @project/engine typecheck 2>&1 | grep -c "error TS"
 
 ## File Structure
 
-**Create:**
+**Phase 1 — create:**
 - `apps/server/src/services/__tests__/ruleSnapshotSeam.test.ts` — the one test that crosses extractor → row → projection with real catalogue data.
 
-**Modify:**
+**Phase 1 — modify:**
 - `packages/engine/src/pipeline/characterEngine.ts` — the `SpeedEngine` call site (Task 2), then the stage-one extraction (Task 3).
 - `packages/engine/src/pipeline/__tests__/characterEngine.test.ts` — the seam guard (Task 1), the double-count tests (Task 2), the fallback and `SPEED` integration tests (Tasks 4–5).
 - `packages/database/src/itemsExtraction.ts` — negative weight clamp (Task 6).
@@ -51,9 +54,28 @@ pnpm --filter @project/engine typecheck 2>&1 | grep -c "error TS"
 - `apps/server/src/services/ruleSnapshotProjection.ts` — all-rows-fail threshold (Task 7), identity from the row (Task 8).
 - `apps/server/src/services/__tests__/ruleSnapshotProjection.test.ts` — cover both.
 
-Nothing is deleted, and no file crosses 350 lines as a result.
+**Phase 2 — create:**
+- `packages/engine/src/calculators/containers.ts` — `ContainerEngine`, one responsibility: what is inside each container and whether it fits.
+- `packages/engine/src/calculators/__tests__/containers.test.ts`
+- `packages/engine/src/rules/__tests__/containerDictionary.test.ts` — the authored PHB containers.
+- `apps/server/src/utils/__tests__/bundleExpansion.test.ts` — the real catalogue driving the acquisition path.
+
+**Phase 2 — modify:**
+- `packages/shared/src/schemas/items.ts` — `ContainerCapacitySchema`, `ItemDefinition.container`, `InventoryInstance.containerId`.
+- `packages/shared/src/schemas/equipment.ts` — `EquipmentDefinition.container`.
+- `packages/shared/src/schemas/__tests__/equipment.test.ts` — cover the round trip.
+- `packages/engine/src/rules/equipmentDictionary.ts` — `toItemDefinition` carries `container`; five authored PHB containers.
+- `packages/engine/src/pipeline/characterEngine.ts` — the container report on the live sheet.
+- `packages/engine/src/pipeline/__tests__/characterEngine.test.ts` — cover it.
+- `packages/engine/src/index.ts` — export `ContainerEngine`.
+- `packages/database/data/items.json` — 28 new PHB gear entries, four packs become bundles.
+- `packages/database/src/__tests__/itemsExtraction.test.ts` — the pack weight self-check.
+
+Nothing is deleted. `containers.ts` is a new file rather than an addition to `weight.ts` because the two answer different questions — `weight.ts` totals what a character carries, `containers.ts` partitions it — and `weight.ts` is already the unit `encumbrance.ts` depends on.
 
 ---
+
+## Phase 1 — Hardening (Tasks 1–9)
 
 ### Task 1: Pin every stage-one calculator against the seam
 
@@ -1184,6 +1206,1354 @@ git commit -m "test: cross the extractor and projection seam with the real catal
 
 ---
 
+## Phase 2 — Bundles and containers (Tasks 10–15)
+
+### What is already built, and what is actually missing
+
+Read this before starting Task 10. The previous plan's follow-up #4 said "the acquisition path must expand packs into individual rows," which reads as missing logic. It is not.
+
+**The bundle logic exists and is correct.** [`resolveItemPayload`](apps/server/src/utils/inventory.ts:15) recursively resolves an item or bundle into flat rows, handles bundles containing bundles, and `processStartingEquipment` aggregates duplicates before one batch insert. The `bundle_contents` table exists, `extractItemsForMigration` already emits `ExtractedBundleContent[]`, the seed already inserts them, and `apps/server/src/utils/__tests__/inventory.test.ts` already covers nested expansion against a mocked database.
+
+**What is missing is data.** No item in `items.json` sets `isBundle`, so `bundle_contents` is empty and that machinery never runs on real content. The four equipment packs are opaque single rows carrying an aggregate weight. Phase 2 authors the contents.
+
+**Containers have no containment model, and that is deliberate.** `characterInventory` declares `primaryKey({ columns: [characterId, itemId] })` — one row per item per character — so a character cannot hold two stacks of the same item in two places, and nothing can be *inside* anything at the persistence layer. Phase 2 therefore adds `containerId` to the shared `InventoryInstance` contract and builds a fully tested pure `ContainerEngine` against it, **without a database migration**. The engine becomes correct and provable; wiring it to storage lands with the web migration, which is where the socket payloads change anyway. This is a deliberate authored-ahead-of-consumer channel, listed as such in "What this does not close".
+
+**Only pound capacities are modelled.** The PHB states a pounds-of-gear capacity for the backpack, basket, chest, pouch and sack. Barrels and buckets state gallons; quivers and cases state item counts. Volume and count are different axes needing different data and different rules, and neither is a weight limit — they are named as out of scope rather than approximated.
+
+---
+
+### Task 10: A container capacity on the item contract
+
+`EquipmentDefinition` is the authored source `ItemDefinition` is projected from, and `packages/shared/src/schemas/__tests__/equipment.test.ts` already asserts they stay exact complements — `[...itemKeys, "weapon"].sort()` must equal `equipmentKeys`. That test is why this task adds `container` to *both* schemas in one commit: adding it to one fails that assertion loudly, which is exactly the guard the previous plan's `versatileDamageDice` bug went missing for want of.
+
+**Files:**
+- Modify: `packages/shared/src/schemas/items.ts` — `ContainerCapacitySchema`, `ItemDefinitionSchema.container`, `InventoryInstanceSchema.containerId`
+- Modify: `packages/shared/src/schemas/equipment.ts` — `EquipmentDefinitionSchema.container`
+- Modify: `packages/shared/src/schemas/__tests__/equipment.test.ts` — one round-trip test
+- Modify: `packages/engine/src/rules/equipmentDictionary.ts` — `toItemDefinition` carries `container`
+- Modify: `packages/engine/src/rules/__tests__/equipmentDictionary.test.ts` — cover the projection
+
+**Interfaces:**
+- Consumes: nothing new.
+- Produces: `ContainerCapacitySchema` and `type ContainerCapacity = { capacityPounds: number }`, both exported from `@project/shared`; `ItemDefinition.container?: ContainerCapacity`; `EquipmentDefinition.container?: ContainerCapacity`; `InventoryInstance.containerId?: string`. Tasks 11–13 depend on all four names exactly as written.
+
+- [ ] **Step 1: Write the failing test**
+
+In `packages/shared/src/schemas/__tests__/equipment.test.ts`, append this describe block to the end of the file:
+
+```ts
+describe("a container carries its capacity through both shapes", () => {
+  it("round-trips a pounds-of-gear capacity", () => {
+    // both schemas are strict, so an unrecognised `container` key throws here
+    // rather than being quietly dropped - which is the failure mode this
+    // whole complementary-schema pairing exists to prevent
+    const equipment = EquipmentDefinitionSchema.parse({
+      id: "item_backpack",
+      name: "Backpack",
+      type: "gear",
+      weight: 5,
+      container: { capacityPounds: 30 },
+    });
+
+    expect(equipment.container).toEqual({ capacityPounds: 30 });
+
+    const item = ItemDefinitionSchema.parse({
+      id: "item_backpack",
+      name: "Backpack",
+      type: "gear",
+      weight: 5,
+      container: { capacityPounds: 30 },
+    });
+
+    expect(item.container).toEqual({ capacityPounds: 30 });
+  });
+
+  it("leaves container absent on an item that is not one", () => {
+    const item = ItemDefinitionSchema.parse({
+      id: "item_weapon_dagger",
+      name: "Dagger",
+      type: "weapon",
+      weight: 1,
+    });
+
+    expect(item.container).toBeUndefined();
+  });
+});
+```
+
+- [ ] **Step 2: Run the test to verify it fails**
+
+```bash
+pnpm --filter @project/shared exec vitest run src/schemas/__tests__/equipment.test.ts
+```
+
+Expected: FAIL — `Unrecognized key: "container"` from both strict schemas.
+
+Note that `pnpm --filter @project/shared exec vitest` exits non-zero because of the 11 pre-existing failures elsewhere in the package. Read the reported results, not the exit code.
+
+- [ ] **Step 3: Add the schema to `items.ts`**
+
+In `packages/shared/src/schemas/items.ts`, insert before `export const ItemDefinitionSchema`:
+
+```ts
+/**
+ * How much a container holds.
+ *
+ * Pounds only. The PHB gives a backpack "1 cubic foot / 30 pounds of gear",
+ * a barrel "40 gallons", and a quiver "20 arrows" - three different axes, of
+ * which only the first is a weight limit. Volume and item count need their own
+ * data and their own rules, so they are absent rather than approximated.
+ */
+export const ContainerCapacitySchema = z
+  .object({
+    capacityPounds: z.number(),
+  })
+  .strict();
+```
+
+Then add the field to `ItemDefinitionSchema`, after `ammoTag`:
+
+```ts
+  // present only on items that hold other items
+  container: ContainerCapacitySchema.optional(),
+```
+
+And add `containerId` to `InventoryInstanceSchema`, after `slot`:
+
+```ts
+  /**
+   * The inventory row id of the container this stack is inside, when it is.
+   *
+   * Optional because most rows are loose in the pack, and because nothing
+   * persists it yet: character_inventory keys on (characterId, itemId), so two
+   * stacks of the same item cannot exist and real containment needs a
+   * migration. ContainerEngine is built and tested against this field so the
+   * rule is settled before the storage change lands.
+   */
+  containerId: z.string().optional(),
+```
+
+Finally add the type export beside the others at the bottom of the file:
+
+```ts
+export type ContainerCapacity = z.infer<typeof ContainerCapacitySchema>;
+```
+
+- [ ] **Step 4: Add the field to `equipment.ts`**
+
+In `packages/shared/src/schemas/equipment.ts`, add the import to the existing `./items.js` import line:
+
+```ts
+import { ContainerCapacitySchema, EquipSlotSchema } from "./items.js";
+```
+
+Then add the field to `EquipmentDefinitionSchema`, after `ammoTag`:
+
+```ts
+    container: ContainerCapacitySchema.optional(),
+```
+
+- [ ] **Step 5: Run the shared suite**
+
+```bash
+pnpm --filter @project/shared exec vitest run 2>&1 | tail -5
+```
+
+Expected: `Tests 149 passed | 11 failed (160)` — the two new tests pass, the pre-existing 11 failures are unchanged, and `"ItemDefinition and EquipmentDefinition stay complementary"` still passes because the field was added to both. If that complementary test is the one failing, you added `container` to only one schema.
+
+- [ ] **Step 6: Write the failing projection test**
+
+In `packages/engine/src/rules/__tests__/equipmentDictionary.test.ts`, append to the end of the file:
+
+```ts
+describe("toItemDefinition and container capacity", () => {
+  it("carries a container's capacity into the item projection", () => {
+    // toItemDefinition enumerates fields rather than spreading, so a new one
+    // on EquipmentDefinition does not arrive here on its own
+    const item = toItemDefinition({
+      id: "item_backpack",
+      name: "Backpack",
+      type: "gear",
+      weight: 5,
+      requiresAttunement: false,
+      container: { capacityPounds: 30 },
+    });
+
+    expect(item.container).toEqual({ capacityPounds: 30 });
+  });
+
+  it("leaves container off an item that has none", () => {
+    // absent rather than undefined, matching how equipSlot and ammoTag are
+    // handled - the dictionary tests assert exact object shapes
+    const item = toItemDefinition({
+      id: "item_weapon_dagger",
+      name: "Dagger",
+      type: "weapon",
+      weight: 1,
+      requiresAttunement: false,
+    });
+
+    expect("container" in item).toBe(false);
+  });
+});
+```
+
+If `toItemDefinition` is not already imported at the top of that file, add it:
+
+```ts
+import { toItemDefinition } from "../equipmentDictionary.js";
+```
+
+- [ ] **Step 7: Run it to verify it fails**
+
+```bash
+pnpm --filter @project/engine exec vitest run src/rules/__tests__/equipmentDictionary.test.ts -t "container's capacity"
+```
+
+Expected: FAIL — `expected undefined to deeply equal { capacityPounds: 30 }`.
+
+- [ ] **Step 8: Carry `container` through the projection**
+
+In `packages/engine/src/rules/equipmentDictionary.ts`, add one line to `toItemDefinition`'s `base` literal, after the `ammoTag` spread:
+
+```ts
+    ...(equipment.container && { container: equipment.container }),
+```
+
+- [ ] **Step 9: Run the engine suite**
+
+```bash
+pnpm --filter @project/engine exec vitest run 2>&1 | tail -5
+```
+
+Expected: `Test Files 27 passed (27)`, `Tests 439 passed (439)` — 437 after Phase 1, plus two.
+
+- [ ] **Step 10: Confirm typechecks did not regress**
+
+```bash
+pnpm --filter @project/shared typecheck 2>&1 | grep -c "error TS"
+pnpm --filter @project/engine typecheck 2>&1 | grep -c "error TS"
+```
+
+Expected: `4` and `25` or fewer.
+
+- [ ] **Step 11: Commit**
+
+```bash
+git add packages/shared/src/schemas/items.ts packages/shared/src/schemas/equipment.ts packages/shared/src/schemas/__tests__/equipment.test.ts packages/engine/src/rules/equipmentDictionary.ts packages/engine/src/rules/__tests__/equipmentDictionary.test.ts
+git commit -m "feat: give items a container capacity and inventory rows a container id"
+```
+
+---
+
+### Task 11: Author the PHB containers
+
+Five containers, chosen because the PHB Adventuring Gear table states a **pounds-of-gear capacity** for exactly these. They go in `EQUIPMENT_DICTIONARY` because `EQUIPMENT_RESOLUTION_MODE` is `"static-only"`, so that dictionary is the only thing `resolveItemDefinition` reads — a container authored solely in `items.json` would be invisible to `ContainerEngine`.
+
+| id | Name | Weight (lb) | Capacity (lb) | PHB capacity text |
+| --- | --- | --- | --- | --- |
+| `item_backpack` | Backpack | 5 | 30 | 1 cubic foot/30 pounds of gear |
+| `item_sack` | Sack | 0.5 | 30 | 1 cubic foot/30 pounds of gear |
+| `item_pouch` | Pouch | 1 | 6 | 1/5 cubic foot/6 pounds of gear |
+| `item_basket` | Basket | 2 | 40 | 2 cubic feet/40 pounds of gear |
+| `item_chest` | Chest | 25 | 300 | 12 cubic feet/300 pounds of gear |
+
+`item_backpack` already exists in `items.json` at 5 lb; the other four do not exist anywhere yet and are added to `items.json` in Task 14. Authoring them here first is deliberate — `ContainerEngine` in Task 12 needs something to resolve.
+
+**Files:**
+- Modify: `packages/engine/src/rules/equipmentDictionary.ts` — five entries
+- Create: `packages/engine/src/rules/__tests__/containerDictionary.test.ts`
+
+**Interfaces:**
+- Consumes: `EquipmentDefinition.container` from Task 10.
+- Produces: the ids `item_backpack`, `item_sack`, `item_pouch`, `item_basket`, `item_chest` in `EQUIPMENT_DICTIONARY`, each with `container.capacityPounds`. Tasks 12–13 use `item_backpack` and `item_pouch` by name in their tests.
+
+- [ ] **Step 1: Write the failing test**
+
+Create `packages/engine/src/rules/__tests__/containerDictionary.test.ts`:
+
+```ts
+import { describe, expect, it } from "vitest";
+import { EQUIPMENT_DICTIONARY } from "../equipmentDictionary.js";
+import { resolveItemDefinition } from "../ruleLookup.js";
+
+/**
+ * The PHB states a pounds-of-gear capacity for exactly these five. Barrels and
+ * buckets are measured in gallons and quivers in arrows, which are different
+ * axes, not weight limits - they are deliberately absent.
+ */
+const PHB_CONTAINERS: Array<{
+  id: string;
+  name: string;
+  weight: number;
+  capacityPounds: number;
+}> = [
+  { id: "item_backpack", name: "Backpack", weight: 5, capacityPounds: 30 },
+  { id: "item_sack", name: "Sack", weight: 0.5, capacityPounds: 30 },
+  { id: "item_pouch", name: "Pouch", weight: 1, capacityPounds: 6 },
+  { id: "item_basket", name: "Basket", weight: 2, capacityPounds: 40 },
+  { id: "item_chest", name: "Chest", weight: 25, capacityPounds: 300 },
+];
+
+describe("the authored PHB containers", () => {
+  for (const { id, name, weight, capacityPounds } of PHB_CONTAINERS) {
+    it(`authors ${name} at its printed weight and capacity`, () => {
+      const equipment = EQUIPMENT_DICTIONARY[id];
+
+      expect(equipment).toBeDefined();
+      expect(equipment!.name).toBe(name);
+      expect(equipment!.weight).toBe(weight);
+      expect(equipment!.container).toEqual({ capacityPounds });
+    });
+
+    it(`resolves ${name}'s capacity through the lookup the engine uses`, () => {
+      // EQUIPMENT_RESOLUTION_MODE is "static-only", so this is the only path
+      // ContainerEngine has to a capacity. asserting the dictionary alone
+      // would not prove the projection carries it
+      expect(resolveItemDefinition(id)?.container).toEqual({ capacityPounds });
+    });
+  }
+
+  it("gives a non-container no capacity at all", () => {
+    expect(resolveItemDefinition("item_weapon_dagger")?.container).toBeUndefined();
+  });
+});
+```
+
+- [ ] **Step 2: Run it to verify it fails**
+
+```bash
+pnpm --filter @project/engine exec vitest run src/rules/__tests__/containerDictionary.test.ts
+```
+
+Expected: FAIL — ten failures on `expected undefined to be defined`, one pass on the non-container case.
+
+- [ ] **Step 3: Author the five entries**
+
+In `packages/engine/src/rules/equipmentDictionary.ts`, insert these into the `EQUIPMENT_DICTIONARY` literal immediately after the `item_ammo_arrow_plus_one` entry, which is the last one in the object:
+
+```ts
+  // PHB containers. capacity is pounds of gear only: the book also gives each
+  // a volume, and gives quivers and cases an item count instead, but neither
+  // is a weight limit and neither has a rule here yet
+  item_backpack: {
+    id: "item_backpack",
+    name: "Backpack",
+    type: "gear",
+    weight: 5,
+    requiresAttunement: false,
+    container: { capacityPounds: 30 },
+  },
+
+  item_sack: {
+    id: "item_sack",
+    name: "Sack",
+    type: "gear",
+    // the PHB prints 1/2 lb. authored as the decimal because weight is summed
+    // in hundredths, so this is exactly 50 and never a rounding argument
+    weight: 0.5,
+    requiresAttunement: false,
+    container: { capacityPounds: 30 },
+  },
+
+  item_pouch: {
+    id: "item_pouch",
+    name: "Pouch",
+    type: "gear",
+    weight: 1,
+    requiresAttunement: false,
+    container: { capacityPounds: 6 },
+  },
+
+  item_basket: {
+    id: "item_basket",
+    name: "Basket",
+    type: "gear",
+    weight: 2,
+    requiresAttunement: false,
+    container: { capacityPounds: 40 },
+  },
+
+  item_chest: {
+    id: "item_chest",
+    name: "Chest",
+    type: "gear",
+    weight: 25,
+    requiresAttunement: false,
+    container: { capacityPounds: 300 },
+  },
+```
+
+- [ ] **Step 4: Run the test to verify it passes**
+
+```bash
+pnpm --filter @project/engine exec vitest run src/rules/__tests__/containerDictionary.test.ts
+```
+
+Expected: PASS, 11 tests.
+
+- [ ] **Step 5: Run the engine suite**
+
+```bash
+pnpm --filter @project/engine exec vitest run 2>&1 | tail -5
+```
+
+Expected: `Test Files 28 passed (28)`, `Tests 450 passed (450)` — 439 plus 11.
+
+Watch for a failure in `src/rules/__tests__/equipmentDictionary.test.ts`: if it asserts the dictionary's exact key count or a snapshot of its ids, five new entries will break it. Update that expectation to match rather than removing the entries.
+
+- [ ] **Step 6: Commit**
+
+```bash
+git add packages/engine/src/rules/equipmentDictionary.ts packages/engine/src/rules/__tests__/containerDictionary.test.ts
+git commit -m "feat: author the five PHB containers that state a pound capacity"
+```
+
+---
+
+### Task 12: ContainerEngine
+
+What is inside each container, and does it fit. Pure, like every other calculator: inventory in, report out, no store and no mutation.
+
+Three rules worth stating before the code, because each is a decision rather than an obvious consequence:
+
+1. **A container does not carry itself.** A backpack's 5 lb is part of what the *character* carries, never part of the 30 lb the backpack holds.
+2. **Direct children only.** A pouch inside a backpack contributes its own 1 lb to the backpack, not the 6 lb of coins inside the pouch. Summing the subtree is more correct and needs cycle detection; the one-level rule is a deliberate YAGNI call, named in "What this does not close".
+3. **Nothing is enforced.** The report says a container is overloaded. It does not stop it, because 5e has no rule that does — the DM does.
+
+**Files:**
+- Create: `packages/engine/src/calculators/containers.ts`
+- Create: `packages/engine/src/calculators/__tests__/containers.test.ts`
+- Modify: `packages/engine/src/index.ts` — export it
+
+**Interfaces:**
+- Consumes: `resolveItemDefinition`, `RuleSnapshotLookup` from `../rules/ruleLookup.js`; `poundsToHundredths` from `./weight.js`; `InventoryInstance` from `@project/shared`.
+- Produces: `interface ContainerLoad { instanceId: string; itemId: string; name: string; capacityHundredths: number; carriedHundredths: number; isOverloaded: boolean }`; `interface ContainerReport { containers: ContainerLoad[]; unplacedInstanceIds: string[] }`; `ContainerEngine.report(items: InventoryInstance[], snapshot?: RuleSnapshotLookup): ContainerReport`. Task 13 consumes `ContainerReport` by that exact name.
+
+- [ ] **Step 1: Write the failing test**
+
+Create `packages/engine/src/calculators/__tests__/containers.test.ts`:
+
+```ts
+import { describe, expect, it } from "vitest";
+import type { InventoryInstance } from "@project/shared";
+import { ContainerEngine } from "../containers.js";
+import { poundsToHundredths } from "../weight.js";
+
+const row = (
+  overrides: Partial<InventoryInstance> & Pick<InventoryInstance, "id" | "itemId">,
+): InventoryInstance => ({
+  quantity: 1,
+  slot: "backpack",
+  isAttuned: false,
+  ...overrides,
+});
+
+/** A backpack holds 30 lb; plate armour weighs 65; a dagger weighs 1. */
+const backpack = () => row({ id: "inv_pack", itemId: "item_backpack" });
+
+describe("ContainerEngine.report", () => {
+  it("reports nothing for an empty inventory", () => {
+    expect(ContainerEngine.report([])).toEqual({
+      containers: [],
+      unplacedInstanceIds: [],
+    });
+  });
+
+  it("reports an empty container at its authored capacity", () => {
+    const report = ContainerEngine.report([backpack()]);
+
+    expect(report.containers).toHaveLength(1);
+    expect(report.containers[0]).toEqual({
+      instanceId: "inv_pack",
+      itemId: "item_backpack",
+      name: "Backpack",
+      capacityHundredths: poundsToHundredths(30),
+      carriedHundredths: 0,
+      isOverloaded: false,
+    });
+  });
+
+  it("does not count a container's own weight against itself", () => {
+    // the backpack's 5 lb is what the character carries, not what the backpack
+    // holds. counting it would make every container start 5 lb down
+    const report = ContainerEngine.report([backpack()]);
+
+    expect(report.containers[0]!.carriedHundredths).toBe(0);
+  });
+
+  it("counts what is inside it", () => {
+    const report = ContainerEngine.report([
+      backpack(),
+      row({ id: "inv_dagger", itemId: "item_weapon_dagger", containerId: "inv_pack" }),
+    ]);
+
+    expect(report.containers[0]!.carriedHundredths).toBe(poundsToHundredths(1));
+    expect(report.containers[0]!.isOverloaded).toBe(false);
+  });
+
+  it("scales by the quantity in the stack", () => {
+    const report = ContainerEngine.report([
+      backpack(),
+      row({
+        id: "inv_arrows",
+        itemId: "item_ammo_arrow",
+        quantity: 20,
+        containerId: "inv_pack",
+      }),
+    ]);
+
+    // 20 arrows at 0.05 lb, asserted in hundredths so a float implementation
+    // cannot launder its own error away
+    expect(report.containers[0]!.carriedHundredths).toBe(100);
+  });
+
+  it("flags a container carrying more than it holds", () => {
+    const report = ContainerEngine.report([
+      backpack(),
+      row({ id: "inv_plate", itemId: "item_armor_plate", containerId: "inv_pack" }),
+    ]);
+
+    expect(report.containers[0]!.carriedHundredths).toBe(poundsToHundredths(65));
+    expect(report.containers[0]!.isOverloaded).toBe(true);
+  });
+
+  it("treats exactly full as not overloaded", () => {
+    // the rule is "holds 30 pounds of gear", so 30 lb on the nose fits. without
+    // this a >= regression passes every other test in this file
+    const report = ContainerEngine.report([
+      backpack(),
+      row({
+        id: "inv_daggers",
+        itemId: "item_weapon_dagger",
+        quantity: 30,
+        containerId: "inv_pack",
+      }),
+    ]);
+
+    expect(report.containers[0]!.carriedHundredths).toBe(poundsToHundredths(30));
+    expect(report.containers[0]!.isOverloaded).toBe(false);
+  });
+
+  it("counts a nested container's own weight but not its contents", () => {
+    // a deliberate one-level rule: summing the subtree is more correct and
+    // needs cycle detection, and no 5e rule turns on the difference
+    const report = ContainerEngine.report([
+      backpack(),
+      row({ id: "inv_pouch", itemId: "item_pouch", containerId: "inv_pack" }),
+      row({
+        id: "inv_dagger",
+        itemId: "item_weapon_dagger",
+        containerId: "inv_pouch",
+      }),
+    ]);
+
+    const outer = report.containers.find((c) => c.instanceId === "inv_pack")!;
+    const inner = report.containers.find((c) => c.instanceId === "inv_pouch")!;
+
+    expect(outer.carriedHundredths).toBe(poundsToHundredths(1)); // the pouch
+    expect(inner.carriedHundredths).toBe(poundsToHundredths(1)); // the dagger
+  });
+
+  it("reports a row pointing at a container that is not carried", () => {
+    const report = ContainerEngine.report([
+      row({ id: "inv_dagger", itemId: "item_weapon_dagger", containerId: "inv_gone" }),
+    ]);
+
+    expect(report.containers).toEqual([]);
+    expect(report.unplacedInstanceIds).toEqual(["inv_dagger"]);
+  });
+
+  it("reports a row pointing at something that is not a container", () => {
+    const report = ContainerEngine.report([
+      row({ id: "inv_sword", itemId: "item_weapon_longsword" }),
+      row({ id: "inv_dagger", itemId: "item_weapon_dagger", containerId: "inv_sword" }),
+    ]);
+
+    expect(report.unplacedInstanceIds).toEqual(["inv_dagger"]);
+  });
+
+  it("reports a row that claims to be inside itself", () => {
+    const report = ContainerEngine.report([
+      row({ id: "inv_pack", itemId: "item_backpack", containerId: "inv_pack" }),
+    ]);
+
+    // the container is still reported, it just holds nothing - a self-reference
+    // is bad data, not a reason to drop the row
+    expect(report.containers[0]!.carriedHundredths).toBe(0);
+    expect(report.unplacedInstanceIds).toEqual(["inv_pack"]);
+  });
+
+  it("ignores an item with no rule behind it", () => {
+    // a save outlives the homebrew pack that authored its contents
+    const report = ContainerEngine.report([
+      backpack(),
+      row({ id: "inv_ghost", itemId: "item_homebrew_gone", containerId: "inv_pack" }),
+    ]);
+
+    expect(report.containers[0]!.carriedHundredths).toBe(0);
+    expect(report.unplacedInstanceIds).toEqual([]);
+  });
+});
+```
+
+- [ ] **Step 2: Run it to verify it fails**
+
+```bash
+pnpm --filter @project/engine exec vitest run src/calculators/__tests__/containers.test.ts
+```
+
+Expected: FAIL — `Failed to resolve import "../containers.js"`.
+
+- [ ] **Step 3: Write the calculator**
+
+Create `packages/engine/src/calculators/containers.ts`:
+
+```ts
+import type { InventoryInstance } from "@project/shared";
+import {
+  resolveItemDefinition,
+  type RuleSnapshotLookup,
+} from "../rules/ruleLookup.js";
+import { poundsToHundredths } from "./weight.js";
+
+/** One container the character is carrying, and how full it is. */
+export interface ContainerLoad {
+  /** The inventory row id of the container itself. */
+  instanceId: string;
+  itemId: string;
+  name: string;
+  /** From the item's authored container.capacityPounds. */
+  capacityHundredths: number;
+  carriedHundredths: number;
+  isOverloaded: boolean;
+}
+
+export interface ContainerReport {
+  containers: ContainerLoad[];
+  /**
+   * Rows naming a containerId that resolves to nothing usable - a container
+   * the character no longer carries, an item that is not a container, or the
+   * row itself. Reported rather than dropped: the weight still counts against
+   * the character, it is only the placement that is wrong.
+   */
+  unplacedInstanceIds: string[];
+}
+
+/**
+ * Partitions a character's inventory across the containers they carry.
+ *
+ * Deliberately separate from InventoryWeightCalculator, which answers a
+ * different question: that one totals everything regardless of where it sits,
+ * because 5e counts a worn breastplate and a packed one identically. This one
+ * only cares where things sit, and never changes the total.
+ *
+ * Nothing here is enforced. A container over capacity is reported so a UI can
+ * say so; no 5e rule stops a player overfilling a sack, so neither does this.
+ */
+export class ContainerEngine {
+  public static report(
+    items: InventoryInstance[],
+    snapshot?: RuleSnapshotLookup,
+  ): ContainerReport {
+    const loads = new Map<string, ContainerLoad>();
+
+    // pass one: every row that is itself a container. done first so pass two
+    // can tell an unknown parent from one that appears later in the list
+    for (const instance of items) {
+      const definition = resolveItemDefinition(instance.itemId, snapshot);
+      if (!definition?.container) continue;
+
+      loads.set(instance.id, {
+        instanceId: instance.id,
+        itemId: instance.itemId,
+        name: definition.name,
+        capacityHundredths: poundsToHundredths(
+          definition.container.capacityPounds,
+        ),
+        carriedHundredths: 0,
+        isOverloaded: false,
+      });
+    }
+
+    // pass two: place everything that claims a parent
+    const unplacedInstanceIds: string[] = [];
+
+    for (const instance of items) {
+      if (!instance.containerId) continue;
+
+      // a row cannot be inside itself. bad data rather than a cycle worth
+      // detecting, because containment is one level deep by decision
+      const parent =
+        instance.containerId === instance.id
+          ? undefined
+          : loads.get(instance.containerId);
+
+      if (!parent) {
+        unplacedInstanceIds.push(instance.id);
+        continue;
+      }
+
+      const definition = resolveItemDefinition(instance.itemId, snapshot);
+      // an item with no rule behind it contributes nothing rather than
+      // throwing - InventoryExtractor already owns reporting unknown ids
+      if (!definition) continue;
+
+      // a nested container contributes its own weight, not its contents':
+      // one level deep, so no cycle can form and no recursion is needed
+      parent.carriedHundredths +=
+        poundsToHundredths(definition.weight) * instance.quantity;
+    }
+
+    for (const load of loads.values()) {
+      load.isOverloaded = load.carriedHundredths > load.capacityHundredths;
+    }
+
+    return { containers: Array.from(loads.values()), unplacedInstanceIds };
+  }
+}
+```
+
+- [ ] **Step 4: Run the test to verify it passes**
+
+```bash
+pnpm --filter @project/engine exec vitest run src/calculators/__tests__/containers.test.ts
+```
+
+Expected: PASS, 12 tests.
+
+- [ ] **Step 5: Export it**
+
+In `packages/engine/src/index.ts`, add alongside the other calculator exports:
+
+```ts
+export * from "./calculators/containers.js";
+```
+
+If that file re-exports calculators through an intermediate barrel rather than directly, follow whichever pattern `speed.js` and `weight.js` already use in it.
+
+- [ ] **Step 6: Run the engine suite**
+
+```bash
+pnpm --filter @project/engine exec vitest run 2>&1 | tail -5
+```
+
+Expected: `Test Files 29 passed (29)`, `Tests 462 passed (462)` — 450 plus 12.
+
+- [ ] **Step 7: Commit**
+
+```bash
+git add packages/engine/src/calculators/containers.ts packages/engine/src/calculators/__tests__/containers.test.ts packages/engine/src/index.ts
+git commit -m "feat: add ContainerEngine reporting per-container load against capacity"
+```
+
+---
+
+### Task 13: Put the container report on the live sheet
+
+`ContainerEngine` reads inventory and nothing else — no ability score, no state. It could sit in stage one, but it belongs beside encumbrance in the load region because that is where every other question about what a character is carrying is answered, and grouping them keeps the two-stage seam legible.
+
+**Files:**
+- Modify: `packages/engine/src/pipeline/characterEngine.ts` — one import, one field on `LiveCharacterSheet`, one call, one line in the returned object
+- Modify: `packages/engine/src/pipeline/__tests__/characterEngine.test.ts` — one describe block
+
+**Interfaces:**
+- Consumes: `ContainerEngine.report` and `ContainerReport` from Task 12.
+- Produces: `LiveCharacterSheet.containers: ContainerReport`.
+
+- [ ] **Step 1: Write the failing test**
+
+In `packages/engine/src/pipeline/__tests__/characterEngine.test.ts`, append to the end of the file:
+
+```ts
+describe("CharacterEngine.buildLiveSheet: containers", () => {
+  it("reports no containers for a character carrying none", () => {
+    const sheet = buildSheet(halfElfFighter(), [carried("item_armor_plate")]);
+
+    expect(sheet.containers.containers).toEqual([]);
+    expect(sheet.containers.unplacedInstanceIds).toEqual([]);
+  });
+
+  it("reports a backpack and what is inside it", () => {
+    const sheet = buildSheet(halfElfFighter(), [
+      { ...carried("item_backpack"), id: "inv_pack" },
+      { ...carried("item_weapon_dagger"), containerId: "inv_pack" },
+    ]);
+
+    expect(sheet.containers.containers).toHaveLength(1);
+    expect(sheet.containers.containers[0]!.carriedHundredths).toBe(100);
+    expect(sheet.containers.containers[0]!.isOverloaded).toBe(false);
+  });
+
+  it("leaves the carried total alone when items are inside a container", () => {
+    // the container report partitions weight, it never changes it: a dagger
+    // in a backpack weighs exactly what a dagger in a fist weighs
+    const loose = buildSheet(halfElfFighter(), [
+      { ...carried("item_backpack"), id: "inv_pack" },
+      carried("item_weapon_dagger"),
+    ]);
+    const packed = buildSheet(halfElfFighter(), [
+      { ...carried("item_backpack"), id: "inv_pack" },
+      { ...carried("item_weapon_dagger"), containerId: "inv_pack" },
+    ]);
+
+    expect(packed.encumbrance.totalWeight).toBe(loose.encumbrance.totalWeight);
+    expect(packed.encumbrance.totalWeight).toBe(6); // backpack 5 + dagger 1
+  });
+});
+```
+
+- [ ] **Step 2: Run it to verify it fails**
+
+```bash
+pnpm --filter @project/engine exec vitest run src/pipeline/__tests__/characterEngine.test.ts -t "containers"
+```
+
+Expected: FAIL — `Cannot read properties of undefined (reading 'containers')`, because `LiveCharacterSheet` has no such field yet.
+
+- [ ] **Step 3: Wire it in**
+
+In `packages/engine/src/pipeline/characterEngine.ts`, add the import beside the other calculator imports:
+
+```ts
+import {
+  ContainerEngine,
+  type ContainerReport,
+} from "../calculators/containers.js";
+```
+
+Add the field to `LiveCharacterSheet`, immediately after `encumbrance`:
+
+```ts
+  /**
+   * What sits in each container the character carries, and whether it fits.
+   * Partitions the same weight `encumbrance` totals; it never changes it.
+   */
+  containers: ContainerReport;
+```
+
+In the `region Load (stage two)` block, add this immediately after the `EncumbranceEngine.calculate` call:
+
+```ts
+    // reads inventory and nothing else, so it has no stake in the two-stage
+    // seam - it sits here because this is where carrying is reasoned about
+    const containers = ContainerEngine.report(inventory, options.snapshot);
+```
+
+And add `containers,` to the returned object, immediately after `encumbrance,`.
+
+- [ ] **Step 4: Run the test to verify it passes**
+
+```bash
+pnpm --filter @project/engine exec vitest run src/pipeline/__tests__/characterEngine.test.ts
+```
+
+Expected: PASS, 51 tests in the file.
+
+- [ ] **Step 5: Run the engine suite and typecheck**
+
+```bash
+pnpm --filter @project/engine exec vitest run 2>&1 | tail -5
+```
+
+Expected: `Test Files 29 passed (29)`, `Tests 465 passed (465)`.
+
+```bash
+pnpm --filter @project/engine typecheck 2>&1 | grep -c "error TS"
+```
+
+Expected: `25` or fewer.
+
+- [ ] **Step 6: Commit**
+
+```bash
+git add packages/engine/src/pipeline/characterEngine.ts packages/engine/src/pipeline/__tests__/characterEngine.test.ts
+git commit -m "feat: report container load on the live sheet"
+```
+
+---
+
+### Task 14: Author the PHB gear the equipment packs contain
+
+The four packs in `items.json` are opaque rows carrying an aggregate weight. Turning them into bundles (Task 15) needs their contents to exist as items first, and most do not: of the ~30 line items across the four packs, only `item_backpack` and `item_torch` are in the catalogue.
+
+This task adds 28 entries to `items.json`. All weights are the PHB Adventuring Gear, Tools and Clothing table values.
+
+**Files:**
+- Modify: `packages/database/data/items.json`
+- Modify: `packages/database/src/__tests__/itemsExtraction.test.ts` — one test
+
+**Interfaces:**
+- Consumes: nothing. `items.json` is data, and `extractItemsForMigration` already handles every field used here.
+- Produces: the 28 ids below, available to Task 15's `bundleContents`.
+
+- [ ] **Step 1: Write the failing test**
+
+In `packages/database/src/__tests__/itemsExtraction.test.ts`, append inside the existing `describe("extractItemsForMigration", ...)` block, before its closing `});`:
+
+```ts
+  it("carries every pack line item in the catalogue at its PHB weight", () => {
+    // the equipment packs cannot become bundles until their contents exist as
+    // items, and a wrong weight here silently changes what a character carries
+    const itemsPath = path.resolve(__dirname, "../../data/items.json");
+    const result = extractItemsForMigration(
+      JSON.parse(readFileSync(itemsPath, "utf-8")),
+    );
+
+    const expected: Record<string, number> = {
+      item_bedroll: 7,
+      item_mess_kit: 1,
+      item_tinderbox: 1,
+      item_rations: 2,
+      item_waterskin: 5,
+      item_rope_hempen: 10,
+      item_chest: 25,
+      item_case_map_or_scroll: 1,
+      item_clothes_fine: 6,
+      item_ink: 0,
+      item_ink_pen: 0,
+      item_lamp: 1,
+      item_oil_flask: 1,
+      item_paper: 0,
+      item_perfume: 0,
+      item_sealing_wax: 0,
+      item_soap: 0,
+      item_blanket: 3,
+      item_candle: 0,
+      item_alms_box: 1,
+      item_incense: 0,
+      item_censer: 1,
+      item_vestments: 4,
+      item_clothes_costume: 4,
+      item_disguise_kit: 3,
+      item_sack: 0.5,
+      item_pouch: 1,
+      item_basket: 2,
+    };
+
+    for (const [id, weight] of Object.entries(expected)) {
+      expect(result.itemRulesById[id]?.weight, id).toBe(weight);
+    }
+  });
+```
+
+- [ ] **Step 2: Run it to verify it fails**
+
+```bash
+pnpm --filter @project/database exec vitest run src/__tests__/itemsExtraction.test.ts -t "pack line item"
+```
+
+Expected: FAIL — `expected undefined to be 7` on `item_bedroll`, the first missing id.
+
+- [ ] **Step 3: Add the 28 entries**
+
+Every entry follows this exact shape. This is the template for `item_bedroll`, written in full:
+
+```json
+  {
+    "id": "item_bedroll",
+    "name": "Bedroll",
+    "type": "gear",
+    "weight": 7,
+    "stacking": { "mode": "instance" },
+    "lore": {
+      "shortDescription": "A padded roll of bedding for sleeping rough.",
+      "fullText": "A padded roll of bedding for sleeping rough. Carried strapped to a pack and unrolled at camp."
+    },
+    "cpCost": 100
+  },
+```
+
+Add all 28 to the array in `packages/database/data/items.json`, each following that template exactly, substituting the values from this table. Every one of the 28 uses `"type": "gear"` — `normalizeItemType` maps anything that is not armour, a weapon or a consumable to gear anyway, so a "tool" type would change nothing but would disagree with the projection. `cpCost` is in copper pieces, matching how the existing entries store price. Where the table says `stack`, use `{ "mode": "stack", "bundleSize": <n> }`; where it says `instance`, use `{ "mode": "instance" }`. `fullText` may repeat `shortDescription` with a sentence of elaboration, as the template shows.
+
+Five of these — `item_chest`, `item_sack`, `item_pouch`, `item_basket`, and the already-present `item_backpack` — are also authored in `EQUIPMENT_DICTIONARY` by Task 11, deliberately and at identical weights. Under `EQUIPMENT_RESOLUTION_MODE: "static-only"` the dictionary is what the engine reads and `items.json` is what the database seeds, so both need the entry until the catalogue reconciliation spec collapses them. **If you change a weight here, change it there too.**
+
+| id | name | weight | cpCost | stacking | shortDescription |
+| --- | --- | --- | --- | --- | --- |
+| `item_bedroll` | Bedroll | 7 | 100 | instance | A padded roll of bedding for sleeping rough. |
+| `item_mess_kit` | Mess Kit | 1 | 20 | instance | A tin box holding a cup and cutlery that doubles as cookware. |
+| `item_tinderbox` | Tinderbox | 1 | 50 | instance | A small container of flint, fire steel and tinder for lighting fires. |
+| `item_rations` | Rations (1 day) | 2 | 50 | stack, bundleSize 1 | A day of dry foodstuffs suitable for travel. |
+| `item_waterskin` | Waterskin | 5 | 20 | instance | A leather skin holding four pints of liquid. |
+| `item_rope_hempen` | Rope, Hempen (50 feet) | 10 | 100 | instance | Fifty feet of hempen rope with 2 hit points, burst DC 17. |
+| `item_chest` | Chest | 25 | 500 | instance | A sturdy wooden chest holding 300 pounds of gear. |
+| `item_case_map_or_scroll` | Case, Map or Scroll | 1 | 100 | instance | A cylindrical leather case holding ten rolled sheets. |
+| `item_clothes_fine` | Clothes, Fine | 6 | 1500 | instance | Well-cut garments suited to courts and formal occasions. |
+| `item_ink` | Ink (1 ounce bottle) | 0 | 1000 | instance | A one-ounce bottle of black ink. |
+| `item_ink_pen` | Ink Pen | 0 | 2 | instance | A cut quill for writing. |
+| `item_lamp` | Lamp | 1 | 50 | instance | A lamp casting bright light in a 15-foot radius, burning oil. |
+| `item_oil_flask` | Oil (flask) | 1 | 10 | stack, bundleSize 1 | A flask of oil for a lamp, or thrown as an improvised weapon. |
+| `item_paper` | Paper (one sheet) | 0 | 20 | stack, bundleSize 1 | A single sheet of paper. |
+| `item_perfume` | Perfume (vial) | 0 | 500 | instance | A vial of scented oil. |
+| `item_sealing_wax` | Sealing Wax | 0 | 50 | instance | A stick of wax for sealing letters. |
+| `item_soap` | Soap | 0 | 2 | instance | A bar of soap. |
+| `item_blanket` | Blanket | 3 | 50 | instance | A heavy woollen blanket. |
+| `item_candle` | Candle | 0 | 1 | stack, bundleSize 1 | A candle burning for one hour, shedding bright light in a 5-foot radius. |
+| `item_alms_box` | Alms Box | 1 | 0 | instance | A small box for collecting donations. |
+| `item_incense` | Incense (block) | 0 | 0 | stack, bundleSize 1 | A block of incense burned during rites. |
+| `item_censer` | Censer | 1 | 0 | instance | A pierced metal vessel for burning incense. |
+| `item_vestments` | Vestments | 4 | 0 | instance | Ceremonial garments worn during religious rites. |
+| `item_clothes_costume` | Clothes, Costume | 4 | 500 | instance | Garments cut for performance and disguise. |
+| `item_disguise_kit` | Disguise Kit | 3 | 2500 | instance | Cosmetics, hair dye and props for altering appearance. |
+| `item_sack` | Sack | 0.5 | 1 | instance | A cloth sack holding 30 pounds of gear. |
+| `item_pouch` | Pouch | 1 | 50 | instance | A belt pouch holding 6 pounds of gear. |
+| `item_basket` | Basket | 2 | 40 | instance | A woven basket holding 40 pounds of gear. |
+
+Four of these weights are table rulings rather than printed PHB values, because the PHB lists them only as pack contents and never in an equipment table with a weight: **alms box (1), censer (1), incense (0), vestments (4)**. They are chosen so the Priest's Pack contents sum to the 24 lb the catalogue already authors for it — see Task 15, which asserts exactly that. Do not change them without changing that pack's weight too.
+
+- [ ] **Step 4: Run the test to verify it passes**
+
+```bash
+pnpm --filter @project/database exec vitest run src/__tests__/itemsExtraction.test.ts
+```
+
+Expected: PASS, 12 tests in the file.
+
+If the suite reports a JSON parse error, the array is malformed — check for a missing or trailing comma at the insertion point.
+
+- [ ] **Step 5: Confirm the catalogue still projects cleanly**
+
+```bash
+pnpm --filter @project/server exec vitest run src/services/__tests__/ruleSnapshotSeam.test.ts
+```
+
+Expected: FAIL on the first test, and this is the correct failure — Task 9's `expect(extracted.seedItems).toHaveLength(64)` now sees 92. Change that `64` to `92` and update the comment above it to read "92 unique ids across 93 entries: items.json has a known duplicate item_ammo_bolt, which the extractor drops and reports", then re-run.
+
+Expected: PASS, 4 tests. Nothing else in that file hardcodes a count — the `equipmentById` length assertion compares against `extracted.seedItems.length` and needs no change. If a *different* assertion in it fails, one of the 28 new entries is malformed rather than merely new; read the reported id.
+
+- [ ] **Step 6: Run the database and server suites**
+
+```bash
+pnpm --filter @project/database exec vitest run 2>&1 | tail -5
+pnpm --filter @project/server exec vitest run 2>&1 | tail -5
+```
+
+Expected: `Tests 56 passed (56)` for database, `Tests 193 passed (193)` for server — the server count is unchanged, because this task corrected an existing assertion rather than adding a test.
+
+- [ ] **Step 7: Commit**
+
+```bash
+git add packages/database/data/items.json packages/database/src/__tests__/itemsExtraction.test.ts apps/server/src/services/__tests__/ruleSnapshotSeam.test.ts
+git commit -m "feat: author the PHB gear the equipment packs contain"
+```
+
+---
+
+### Task 15: Turn the four equipment packs into bundles
+
+The last piece of data. Setting `isBundle` and `bundleContents` on the four packs makes `extractItemsForMigration` emit `bundle_contents` rows, which the seed already inserts, which `resolveItemPayload` already reads — so a character who picks Explorer's Pack at creation gets eight rows instead of one opaque 59 lb blob.
+
+The strongest guard available is a sum check: a pack's authored weight must equal the sum of its contents. That is what catches a wrong quantity or a mistyped id, and it is how the Entertainer's Pack error below was found.
+
+**PHB pack contents, with each line's weight:**
+
+| Pack | Contents | Sum |
+| --- | --- | --- |
+| Explorer's (`item_pack_explorers`) | backpack 5, bedroll 7, mess kit 1, tinderbox 1, torch ×10 = 10, rations ×10 = 20, waterskin 5, hempen rope 10 | **59** |
+| Diplomat's (`item_pack_diplomats`) | chest 25, map/scroll case ×2 = 2, fine clothes 6, ink 0, ink pen 0, lamp 1, oil flask ×2 = 2, paper ×5 = 0, perfume 0, sealing wax 0, soap 0 | **36** |
+| Priest's (`item_pack_priests`) | backpack 5, blanket 3, candle ×10 = 0, tinderbox 1, alms box 1, incense ×2 = 0, censer 1, vestments 4, rations ×2 = 4, waterskin 5 | **24** |
+| Entertainer's (`item_pack_entertainers`) | backpack 5, bedroll 7, costume ×2 = 8, candle ×5 = 0, rations ×5 = 10, waterskin 5, disguise kit 3 | **38** |
+
+Explorer's, Diplomat's and Priest's sums match the weights `items.json` already authors exactly. **Entertainer's does not**: the catalogue says 33, and the PHB contents sum to 38. The authored aggregate is wrong and this task corrects it to 38.
+
+**Files:**
+- Modify: `packages/database/data/items.json` — four packs
+- Modify: `packages/database/src/__tests__/itemsExtraction.test.ts` — the sum check
+- Create: `apps/server/src/utils/__tests__/bundleExpansion.test.ts`
+
+**Interfaces:**
+- Consumes: the 28 ids from Task 14; `extractItemsForMigration` and its `bundleContents` output; `resolveItemPayload` from `apps/server/src/utils/inventory.ts`.
+- Produces: nothing new in code. Four `items.json` entries gain `isBundle: true` and `bundleContents`.
+
+- [ ] **Step 1: Write the failing sum check**
+
+In `packages/database/src/__tests__/itemsExtraction.test.ts`, append inside `describe("extractItemsForMigration", ...)`:
+
+```ts
+  it("gives each equipment pack contents that weigh what the pack weighs", () => {
+    // the guard that actually catches a mistyped id or a wrong quantity: a
+    // pack is a bundle, so its aggregate weight has to be exactly what its
+    // contents come to, or expanding it at acquisition changes the load
+    const itemsPath = path.resolve(__dirname, "../../data/items.json");
+    const result = extractItemsForMigration(
+      JSON.parse(readFileSync(itemsPath, "utf-8")),
+    );
+
+    const packs = [
+      "item_pack_explorers",
+      "item_pack_diplomats",
+      "item_pack_priests",
+      "item_pack_entertainers",
+    ];
+
+    for (const packId of packs) {
+      const contents = result.bundleContents.filter((c) => c.bundleId === packId);
+
+      expect(contents.length, packId).toBeGreaterThan(0);
+
+      // summed in hundredths for the same reason weight always is: 0.05 lb
+      // line items make a float sum disagree with itself
+      const contentsHundredths = contents.reduce((total, entry) => {
+        const rule = result.itemRulesById[entry.itemId];
+        expect(rule, `${packId} -> ${entry.itemId}`).toBeDefined();
+        return total + Math.round(rule!.weight * 100) * entry.quantity;
+      }, 0);
+
+      expect(contentsHundredths, packId).toBe(
+        result.itemRulesById[packId]!.weight * 100,
+      );
+    }
+  });
+
+  it("marks the equipment packs as bundles", () => {
+    const itemsPath = path.resolve(__dirname, "../../data/items.json");
+    const result = extractItemsForMigration(
+      JSON.parse(readFileSync(itemsPath, "utf-8")),
+    );
+
+    const explorers = result.seedItems.find(
+      (item) => item.id === "item_pack_explorers",
+    );
+
+    expect(explorers?.isBundle).toBe(true);
+  });
+```
+
+- [ ] **Step 2: Run it to verify it fails**
+
+```bash
+pnpm --filter @project/database exec vitest run src/__tests__/itemsExtraction.test.ts -t "equipment pack"
+```
+
+Expected: FAIL — `expected 0 to be greater than 0` for `item_pack_explorers`, because no bundle contents exist yet.
+
+- [ ] **Step 3: Make the four packs bundles**
+
+In `packages/database/data/items.json`, add `"isBundle": true` and a `"bundleContents"` array to each of the four pack entries, keeping every field they already have. Change **only** `item_pack_entertainers`'s `"weight"`, from `33` to `38`.
+
+```json
+      "isBundle": true,
+      "bundleContents": [
+        { "itemId": "item_backpack", "quantity": 1 },
+        { "itemId": "item_bedroll", "quantity": 1 },
+        { "itemId": "item_mess_kit", "quantity": 1 },
+        { "itemId": "item_tinderbox", "quantity": 1 },
+        { "itemId": "item_torch", "quantity": 10 },
+        { "itemId": "item_rations", "quantity": 10 },
+        { "itemId": "item_waterskin", "quantity": 1 },
+        { "itemId": "item_rope_hempen", "quantity": 1 }
+      ],
+```
+
+for `item_pack_explorers`;
+
+```json
+      "isBundle": true,
+      "bundleContents": [
+        { "itemId": "item_chest", "quantity": 1 },
+        { "itemId": "item_case_map_or_scroll", "quantity": 2 },
+        { "itemId": "item_clothes_fine", "quantity": 1 },
+        { "itemId": "item_ink", "quantity": 1 },
+        { "itemId": "item_ink_pen", "quantity": 1 },
+        { "itemId": "item_lamp", "quantity": 1 },
+        { "itemId": "item_oil_flask", "quantity": 2 },
+        { "itemId": "item_paper", "quantity": 5 },
+        { "itemId": "item_perfume", "quantity": 1 },
+        { "itemId": "item_sealing_wax", "quantity": 1 },
+        { "itemId": "item_soap", "quantity": 1 }
+      ],
+```
+
+for `item_pack_diplomats`;
+
+```json
+      "isBundle": true,
+      "bundleContents": [
+        { "itemId": "item_backpack", "quantity": 1 },
+        { "itemId": "item_blanket", "quantity": 1 },
+        { "itemId": "item_candle", "quantity": 10 },
+        { "itemId": "item_tinderbox", "quantity": 1 },
+        { "itemId": "item_alms_box", "quantity": 1 },
+        { "itemId": "item_incense", "quantity": 2 },
+        { "itemId": "item_censer", "quantity": 1 },
+        { "itemId": "item_vestments", "quantity": 1 },
+        { "itemId": "item_rations", "quantity": 2 },
+        { "itemId": "item_waterskin", "quantity": 1 }
+      ],
+```
+
+for `item_pack_priests`; and
+
+```json
+      "isBundle": true,
+      "bundleContents": [
+        { "itemId": "item_backpack", "quantity": 1 },
+        { "itemId": "item_bedroll", "quantity": 1 },
+        { "itemId": "item_clothes_costume", "quantity": 2 },
+        { "itemId": "item_candle", "quantity": 5 },
+        { "itemId": "item_rations", "quantity": 5 },
+        { "itemId": "item_waterskin", "quantity": 1 },
+        { "itemId": "item_disguise_kit", "quantity": 1 }
+      ],
+```
+
+for `item_pack_entertainers`.
+
+- [ ] **Step 4: Run the sum check to verify it passes**
+
+```bash
+pnpm --filter @project/database exec vitest run src/__tests__/itemsExtraction.test.ts
+```
+
+Expected: PASS, 14 tests in the file.
+
+A failure here names the offending pack in its assertion message. Fix the contents or the aggregate weight — do not relax the assertion, because it is the only thing standing between a typo and a character silently gaining or losing pounds at creation.
+
+- [ ] **Step 5: Prove the acquisition path expands a real pack**
+
+Create `apps/server/src/utils/__tests__/bundleExpansion.test.ts`:
+
+```ts
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import { readFileSync } from "node:fs";
+import { createRequire } from "node:module";
+import { extractItemsForMigration } from "@project/database/src/itemsExtraction.js";
+import { resolveItemPayload } from "../inventory";
+
+/**
+ * The same mocked-database harness inventory.test.ts uses, driven by the real
+ * catalogue instead of hand-built rows.
+ *
+ * inventory.test.ts already proves resolveItemPayload unpacks nested bundles;
+ * what it cannot prove is that the shipped data reaches it in a shape it can
+ * unpack. Until this file, no test connected the two.
+ */
+const { mockEq, mockItemsTable, mockBundleContentsTable } = vi.hoisted(() => ({
+  mockEq: vi.fn((column: unknown, value: unknown) => ({ column, value })),
+  mockItemsTable: { id: "items.id", isBundle: "items.isBundle" },
+  mockBundleContentsTable: { bundleId: "bundle_contents.bundle_id" },
+}));
+
+let itemRowsById = new Map<string, { id: string; isBundle: boolean }>();
+let bundleRowsById = new Map<string, Array<{ itemId: string; quantity: number }>>();
+
+vi.mock("drizzle-orm", () => ({ eq: mockEq }));
+
+vi.mock("@project/database/src/schema/reference.js", () => ({
+  items: mockItemsTable,
+  bundleContents: mockBundleContentsTable,
+}));
+
+vi.mock("@project/database/src/schema/operational.js", () => ({
+  characterInventory: { table: "character_inventory" },
+}));
+
+vi.mock("@project/database", () => ({
+  db: {
+    select: vi.fn(() => ({
+      from: vi.fn((table: unknown) => ({
+        where: vi.fn((condition: { value: string }) => {
+          if (table === mockItemsTable) {
+            const item = itemRowsById.get(condition.value);
+            return Promise.resolve(item ? [item] : []);
+          }
+          if (table === mockBundleContentsTable) {
+            return Promise.resolve(bundleRowsById.get(condition.value) ?? []);
+          }
+          return Promise.resolve([]);
+        }),
+      })),
+    })),
+  },
+}));
+
+const resolve = createRequire(import.meta.url).resolve;
+
+const rawItems = JSON.parse(
+  readFileSync(resolve("@project/database/data/items.json"), "utf-8"),
+) as unknown[];
+
+beforeEach(() => {
+  const extracted = extractItemsForMigration(rawItems);
+
+  itemRowsById = new Map(
+    extracted.seedItems.map((item) => [
+      item.id,
+      { id: item.id, isBundle: item.isBundle },
+    ]),
+  );
+
+  bundleRowsById = new Map();
+  for (const entry of extracted.bundleContents) {
+    const existing = bundleRowsById.get(entry.bundleId) ?? [];
+    existing.push({ itemId: entry.itemId, quantity: entry.quantity });
+    bundleRowsById.set(entry.bundleId, existing);
+  }
+});
+
+describe("the shipped catalogue expands through the acquisition path", () => {
+  it("unpacks an Explorer's Pack into its eight line items", async () => {
+    const resolved = await resolveItemPayload(null, "item_pack_explorers", 1);
+
+    expect(resolved).toEqual(
+      expect.arrayContaining([
+        { id: "item_backpack", quantity: 1 },
+        { id: "item_bedroll", quantity: 1 },
+        { id: "item_mess_kit", quantity: 1 },
+        { id: "item_tinderbox", quantity: 1 },
+        { id: "item_torch", quantity: 10 },
+        { id: "item_rations", quantity: 10 },
+        { id: "item_waterskin", quantity: 1 },
+        { id: "item_rope_hempen", quantity: 1 },
+      ]),
+    );
+    expect(resolved).toHaveLength(8);
+    // the pack itself must not survive expansion, or its 59 lb is counted
+    // twice - once as the pack and once as everything in it
+    expect(resolved.map((r) => r.id)).not.toContain("item_pack_explorers");
+  });
+
+  it("multiplies contents when more than one pack is taken", async () => {
+    const resolved = await resolveItemPayload(null, "item_pack_priests", 2);
+    const candles = resolved.find((r) => r.id === "item_candle");
+
+    expect(candles).toEqual({ id: "item_candle", quantity: 20 });
+  });
+
+  it("leaves a non-bundle item alone", async () => {
+    expect(await resolveItemPayload(null, "item_armor_plate", 3)).toEqual([
+      { id: "item_armor_plate", quantity: 3 },
+    ]);
+  });
+});
+```
+
+- [ ] **Step 6: Run it to verify it passes**
+
+```bash
+pnpm --filter @project/server exec vitest run src/utils/__tests__/bundleExpansion.test.ts
+```
+
+Expected: PASS, 3 tests.
+
+- [ ] **Step 7: Run every suite**
+
+```bash
+pnpm --filter @project/database exec vitest run 2>&1 | tail -5
+pnpm --filter @project/server exec vitest run 2>&1 | tail -5
+```
+
+Expected: `Test Files 5 passed (5)`, `Tests 58 passed (58)` for database, and `Test Files 15 passed (15)`, `Tests 196 passed (196)` for server.
+
+- [ ] **Step 8: Commit**
+
+```bash
+git add packages/database/data/items.json packages/database/src/__tests__/itemsExtraction.test.ts apps/server/src/utils/__tests__/bundleExpansion.test.ts
+git commit -m "feat: make the four PHB equipment packs real bundles"
+```
+
+---
+
 ## Final Verification
 
 - [ ] **Run every suite against the baseline**
@@ -1203,14 +2573,14 @@ pnpm --filter @project/shared exec vitest run 2>&1 | tail -5
 
 Expected:
 
-| Package | Before | After |
-| --- | --- | --- |
-| engine | 27 files, 423 tests | 27 files, **437 tests**, all passing |
-| database | 5 files, 54 tests | 5 files, **55 tests**, all passing |
-| server | 13 files, 186 tests | 14 files, **193 tests**, all passing |
-| shared | 11 failed / 158 | **unchanged: 11 failed / 158** |
+| Package | Before | After Phase 1 (Task 9) | After Phase 2 (Task 15) |
+| --- | --- | --- | --- |
+| engine | 27 files, 423 tests | 27 files, 437 tests | 29 files, **465 tests**, all passing |
+| database | 5 files, 54 tests | 5 files, 55 tests | 5 files, **58 tests**, all passing |
+| server | 13 files, 186 tests | 14 files, 193 tests | 15 files, **196 tests**, all passing |
+| shared | 147 passed / 11 failed | unchanged | **149 passed / 11 failed** |
 
-Shared must be *exactly* unchanged. A 12th failure there is yours.
+Shared's **failure count** must be *exactly* unchanged at 11; its passing count rises by the two tests Task 10 adds. A 12th failure there is yours.
 
 ```bash
 pnpm --filter @project/engine typecheck 2>&1 | grep -c "error TS"
@@ -1220,13 +2590,23 @@ pnpm --filter @project/server typecheck 2>&1 | grep -c "error TS"
 
 Expected: `25`, `17`, `37` or fewer for each.
 
-- [ ] **Confirm the git history reads as nine commits on `main`**
+- [ ] **Confirm the seed still runs end to end**
+
+The bundle data only matters if it reaches the database. If a local Postgres is configured, run the seed and confirm it reports bundle contents:
+
+```bash
+pnpm --filter @project/database exec tsx src/seed.ts
+```
+
+Expected: `Resolving Bundle Contents (BOM)...` followed by no error, and **36** rows in `bundle_contents` — Explorer's 8, Diplomat's 11, Priest's 10, Entertainer's 7. If no database is available, skip this step and say so in the completion report rather than claiming it passed.
+
+- [ ] **Confirm the git history reads as fifteen commits on `main`**
 
 ```bash
 git log --oneline eec8a91..HEAD
 ```
 
-Expected: nine commits, one per task, in task order.
+Expected: fifteen commits, one per task, in task order.
 
 ## What this closes
 
@@ -1235,19 +2615,29 @@ From `2026-08-05-encumbrance-and-speed.md`:
 - **#9** — the two-stage seam, now guarded at all five stage-one exits (Task 1) *and* enforced by a function boundary (Task 3). Fully closed, including the extraction the follow-up deferred to the web spec.
 - **#10** — all four named gaps: the tier double-count (Task 2), the unknown-race fallbacks (Task 4), the untested `SPEED` modifier path (Task 5), and `itemsExtraction`'s unclamped rule payload (Task 6). Fully closed.
 
+- **#4 (bundles)** — closed as **data**, not logic. The acquisition path already expanded bundles correctly; Tasks 14–15 give it the four PHB packs to expand, and prove it on the shipped catalogue. The corrected Entertainer's Pack weight (33 → 38) is a real bug the sum check found.
+
 From `2026-08-06-rule-snapshot-lossless-projection.md`:
 
 - **#1** — the all-rows-fail threshold (Task 7). Closed.
 - **#2** — identity from the row (Task 8). Closed.
 - **#4** — one integration test crossing the seam (Task 9). Closed.
 
+New in Phase 2, closing nothing previously named:
+
+- Container capacity exists on the item contract, five PHB containers are authored at their printed weights and capacities, and `ContainerEngine` reports per-container load with a full test suite.
+
 ## What this does not close, and why
 
-1. **`apps/web` still runs its own drifted calculator path.** Out of scope by instruction. Encumbrance and speed will not appear in the UI until that migration happens, and it is its own spec.
+1. **`apps/web` still runs its own drifted calculator path.** Out of scope by instruction. Encumbrance, speed and the new container report will not appear in the UI until that migration happens, and it is its own spec.
 2. **`heavily_encumbered` still imposes no disadvantage.** The state is emitted and nothing consumes it. `rollContextBuilder.ts` treats `has_disadvantage` as a UI toggle id and `ActionResolver` implements only `apply_effect`, so there is no roll layer for the consumer to land in. Blocked on that layer existing, not on this work.
-3. **`EQUIPMENT_DICTIONARY` still holds 11 entries against 65 in the catalogue**, and `EQUIPMENT_RESOLUTION_MODE` stays pinned to `"static-only"`. Flipping it today would shadow the 11 curated entries with snapshot entries that have no `equipSlot` and no modifiers, so plate would stop granting AC — a slot problem, not a weight problem. This is the next spec: **EQUIPMENT_DICTIONARY becomes the authoritative rules source, `items.json` narrows to content (lore, cpCost, stacking), and the seed joins the two by id.** Two live bugs found while scoping it are deliberately left for that spec because they are fixed by deleting the code that holds them: `deriveItemModifiers` matches `acApplication === "add"` while `items.json` authors `"bonus"`, so the shield's +2 AC never reaches a seeded snapshot; and `armorProperties.dexModifier` is dropped entirely, so seeded medium and heavy armour carry no `maxDexCap`.
-4. **`trait_powerful_build` is authored but ungranted.** No race in `RACE_DICTIONARY` is a Goliath. Content, not code.
-5. **`StateExtractor` still has no real-data yield.** ASI levels compile no `trait_choice` node, so no state-bearing trait can be selected into a save. Goes live when ASI/feat selection is built.
-6. **Coin weight is still untracked** — there is no currency field on `CharacterSave`. Excluded by decision.
-7. **Bundles need no handling.** Investigated and closed: `isBundle` and `bundleContents` appear zero times in `items.json`. The packs are single rows carrying their aggregate weight — Explorer's Pack is one 59 lb row — which is already correct for encumbrance. The previous plan's follow-up #4 described a hazard that no data can reach.
-8. **`@project/shared`'s 11 failing tests are untouched.** They are stale assertions against schemas that have since grown Zod defaults, and two reference a schema export that no longer exists. Genuinely easy, entirely unrelated, and worth its own small pass.
+3. **`EQUIPMENT_DICTIONARY` still holds far fewer entries than the catalogue**, and `EQUIPMENT_RESOLUTION_MODE` stays pinned to `"static-only"`. Phase 2 widens the gap rather than closing it: it adds 5 entries to the dictionary and 28 to `items.json`, taking the catalogue to 92 items against 16 authored rules. Flipping the mode today would shadow the curated entries with snapshot entries that have no `equipSlot` and no modifiers, so plate would stop granting AC — a slot problem, not a weight problem. This is the next spec: **EQUIPMENT_DICTIONARY becomes the authoritative rules source, `items.json` narrows to content (lore, cpCost, stacking), and the seed joins the two by id.** Two live bugs found while scoping it are deliberately left for that spec because they are fixed by deleting the code that holds them: `deriveItemModifiers` matches `acApplication === "add"` while `items.json` authors `"bonus"`, so the shield's +2 AC never reaches a seeded snapshot; and `armorProperties.dexModifier` is dropped entirely, so seeded medium and heavy armour carry no `maxDexCap`.
+4. **Container capacity is not persisted, so nothing is ever actually inside anything.** `characterInventory` keys on `(characterId, itemId)`, which makes two stacks of one item impossible and containment unrepresentable. `ContainerEngine` is correct and fully tested against `InventoryInstance.containerId`, but no row in the database can set it until that PK is dropped and a `containerId` column added — a migration plus changes to the socket payloads in `apps/server/src/gateway/socket.ts` and the write paths in `routes/character.ts` and `utils/inventory.ts`. **This is the largest authored-but-inert channel in the repo**, and `docs/TODO_BACKLOG.md` already names that category as its P0 risk. It should be the first task of whichever spec owns inventory persistence.
+5. **Containment is one level deep.** A pouch inside a backpack contributes its own 1 lb, not the 6 lb inside it. Summing the subtree is more correct and needs cycle detection; no 5e rule turns on the difference, and the one-level rule is tested explicitly so the decision is visible rather than accidental.
+6. **Volume and item-count capacities are not modelled.** The PHB measures barrels and buckets in gallons and quivers and cases in item counts. Both are real limits, neither is a weight limit, and each needs its own field and its own rule. `ContainerCapacitySchema` is `.strict()`, so adding either later is a deliberate schema change rather than a silent widening.
+7. **Overloading a container has no mechanical consequence.** `isOverloaded` is reported and nothing reads it. That matches 5e, which gives no rule for an overfull sack — the DM does. Do not invent a penalty.
+8. **`trait_powerful_build` is authored but ungranted.** No race in `RACE_DICTIONARY` is a Goliath. Content, not code.
+9. **`StateExtractor` still has no real-data yield.** ASI levels compile no `trait_choice` node, so no state-bearing trait can be selected into a save. Goes live when ASI/feat selection is built.
+10. **Coin weight is still untracked** — there is no currency field on `CharacterSave`. Excluded by decision.
+11. **Four pack line-item weights are table rulings, not printed values.** The PHB lists alms box, censer, incense and vestments only as pack contents, never in an equipment table with a weight. Task 14 assigns 1, 1, 0 and 4 because those make the Priest's Pack contents sum to the 24 lb the catalogue already authored — a consistency argument, not a citation. If a source is found, change them and the pack weight together.
+12. **`@project/shared`'s 11 failing tests are untouched.** They are stale assertions against schemas that have since grown Zod defaults, and two reference a schema export that no longer exists. Genuinely easy, entirely unrelated, and worth its own small pass.
