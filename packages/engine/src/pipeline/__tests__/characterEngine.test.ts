@@ -3,9 +3,13 @@ import type {
   CharacterSave,
   TraitDefinition,
   InventoryInstance,
+  RuntimeModifier,
 } from "@project/shared";
 import { TRAIT_DICTIONARY } from "../../rules/traitDictionary.js";
-import { CharacterEngine } from "../characterEngine.js";
+import {
+  CharacterEngine,
+  type LiveCharacterSheet,
+} from "../characterEngine.js";
 import { CharacterBootstrapper } from "../characterBootstraper.js";
 import { ModifierExtractor } from "../modifierExtractor.js";
 import { ProficiencyExtractor } from "../proficiencyExtractor.js";
@@ -61,6 +65,47 @@ const carried = (
   slot: "backpack",
   isAttuned: false,
 });
+
+/**
+ * An EffectManager carrying exactly one modifier, so a test can aim a bonus at
+ * one output and gate it on whatever states it likes.
+ *
+ * requiredStates is what makes a test a seam test: a modifier gated on a state
+ * only the *derived* list carries applies if and only if a calculator was
+ * handed the wrong list.
+ */
+const effectWith = (
+  target: RuntimeModifier["target"],
+  value: number,
+  requiredStates: string[] = [],
+  grantedStates: string[] = [],
+): EffectManager => {
+  const manager = new EffectManager();
+
+  manager.addEffect({
+    instanceId: "test_effect",
+    sourceName: "Test Effect",
+    durationType: "manual",
+    isSelfConcentration: false,
+    grantedStates,
+    modifiers: [
+      {
+        id: "test_modifier",
+        sourceName: "Test Effect",
+        sourceOrigin: "test",
+        target,
+        type: "add",
+        value,
+        scalingFactor: "none",
+        requiredStates,
+        forbiddenStates: [],
+        isActive: true,
+      },
+    ],
+  });
+
+  return manager;
+};
 
 describe("CharacterBootstrapper.compileActiveTraits", () => {
   it("resolves race, subrace, class and chosen traits into definitions", () => {
@@ -452,47 +497,6 @@ describe("CharacterEngine.buildLiveSheet: speed and encumbrance", () => {
     expect(sheet.baseStates).not.toContain("encumbered");
   });
 
-  it("does not let encumbrance feed back into the ability scores", () => {
-    // a STR bonus that only switches on if a stage-one calculator is handed
-    // the derived tier. this is the actual loop: +4 STR raises capacity, which
-    // lowers the tier, which withdraws the +4 - no fixed point.
-    const cursed = new EffectManager();
-    cursed.addEffect({
-      instanceId: "test_cursed_belt",
-      sourceName: "Cursed Belt",
-      durationType: "manual",
-      isSelfConcentration: false,
-      modifiers: [
-        {
-          id: "cursed_belt_str",
-          sourceName: "Cursed Belt",
-          sourceOrigin: "test",
-          target: "STR",
-          type: "add",
-          value: 4,
-          scalingFactor: "none",
-          requiredStates: ["heavily_encumbered"],
-          forbiddenStates: [],
-          isActive: true,
-        },
-      ],
-      grantedStates: [],
-    });
-
-    const sheet = CharacterEngine.buildLiveSheet(
-      halfElfFighter(),
-      [carried("item_armor_plate", 3)], // 195 lb, past the 150 lb threshold
-      cursed,
-      new ResourceManager(),
-      { encumbranceRules: { useVariantEncumbrance: true } },
-    );
-
-    expect(sheet.encumbrance.tier).toBe("heavily_encumbered");
-    expect(sheet.activeStates).toContain("heavily_encumbered");
-    // the belt's modifier is gated on a state only sheetStates carries, so a
-    // stage one that leaked sheetStates would score STR 19 here
-    expect(sheet.abilities.STR.score).toBe(15);
-  });
 
   it("doubles carrying capacity for a character with Powerful Build", () => {
     const powerful = new EffectManager();
@@ -588,4 +592,78 @@ describe("CharacterEngine.buildLiveSheet: inventory modifiers", () => {
 
     expect(sheet.armorClass.total).toBe(12);
   });
+});
+
+/**
+ * The invariant the two-stage pipeline rests on, checked at all five of its
+ * exits rather than one.
+ *
+ * The fixture carries 3 plate (195 lb) with the variant rule on. Its STR 15
+ * puts the heavily-encumbered threshold at 150 lb, so the tier is live in
+ * every case below - which is what makes the gate a real gate.
+ */
+describe("CharacterEngine.buildLiveSheet: the stage-one seam", () => {
+  const stageOneOutputs: Array<{
+    name: string;
+    target: RuntimeModifier["target"];
+    read: (sheet: LiveCharacterSheet) => number;
+  }> = [
+    {
+      name: "ability scores",
+      target: "STR",
+      read: (sheet) => sheet.abilities.STR.score,
+    },
+    { name: "max HP", target: "MAX_HP", read: (sheet) => sheet.maxHp.total },
+    {
+      name: "armour class",
+      target: "ARMOR_CLASS",
+      read: (sheet) => sheet.armorClass.total,
+    },
+    {
+      name: "initiative",
+      target: "INITIATIVE",
+      read: (sheet) => sheet.initiative.total,
+    },
+    {
+      name: "skills",
+      target: "STEALTH_CHECK",
+      read: (sheet) => sheet.skills.stealth!.totalModifier,
+    },
+  ];
+
+  const heavyLoad = () => [carried("item_armor_plate", 3)];
+  const variantRules = { encumbranceRules: { useVariantEncumbrance: true } };
+
+  const sheetWith = (effects: EffectManager): LiveCharacterSheet =>
+    CharacterEngine.buildLiveSheet(
+      halfElfFighter(),
+      heavyLoad(),
+      effects,
+      new ResourceManager(),
+      variantRules,
+    );
+
+  for (const { name, target, read } of stageOneOutputs) {
+    it(`does not let a derived state reach ${name}`, () => {
+      const control = sheetWith(new EffectManager());
+      const gated = sheetWith(effectWith(target, 5, ["heavily_encumbered"]));
+
+      // without these two the case is vacuous: if the tier never fires there
+      // is no derived state to leak, and the assertion below proves nothing
+      expect(gated.encumbrance.tier).toBe("heavily_encumbered");
+      expect(gated.activeStates).toContain("heavily_encumbered");
+
+      expect(read(gated)).toBe(read(control));
+    });
+
+    it(`applies the same modifier to ${name} when it is ungated`, () => {
+      // the canary for the case above. a typo in `target` or a `read` aimed at
+      // the wrong field would make every gated case pass while proving
+      // nothing, and this is what catches that
+      const control = sheetWith(new EffectManager());
+      const ungated = sheetWith(effectWith(target, 5));
+
+      expect(read(ungated)).toBe(read(control) + 5);
+    });
+  }
 });
