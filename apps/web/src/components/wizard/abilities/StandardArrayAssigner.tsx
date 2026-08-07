@@ -1,5 +1,6 @@
 import { useEffect } from "react";
-import { useWizardStore, type Attributes } from "../../../store/wizardStore";
+import type { Ability } from "@project/engine";
+import { useWizardStore } from "../../../store/wizardStore";
 import {
   ABILITY_STATS,
   STANDARD_ARRAY,
@@ -29,9 +30,9 @@ export const StandardArrayAssigner = () => {
     }
   }, [scores, setAllScores]);
 
-  const handleAssignment = (targetStat: Attributes, newValue: number) => {
+  const handleAssignment = (targetStat: Ability, newValue: number) => {
     // identify which stat currently holds the number the user just selected
-    const statToSwap = ABILITY_STATS.find((s: Attributes) => scores[s] === newValue);
+    const statToSwap = ABILITY_STATS.find((s: Ability) => scores[s] === newValue);
 
     // perform bidirectional swap to maintain strict array integrity
     if (statToSwap && statToSwap !== targetStat) {
@@ -59,7 +60,7 @@ export const StandardArrayAssigner = () => {
       </div>
 
       <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
-        {ABILITY_STATS.map((stat: Attributes) => (
+        {ABILITY_STATS.map((stat: Ability) => (
           <div
             key={stat}
             style={{

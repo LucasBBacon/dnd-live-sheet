@@ -22,6 +22,56 @@ As of 2026-08-07 (post-remediation), the Phase 1 functional-slate baseline has b
 
 Remaining strategic work is now primarily Phase 3 drift reduction and CI policy hardening, rather than baseline break-fix.
 
+## Status update (phase 3 in progress)
+
+Additional progress completed after baseline restoration:
+
+- First Phase 3 web drift slice landed:
+  - wizard flow now uses the canonical engine `Ability` type directly instead of a local alias.
+  - this reduces local type drift in `apps/web/src/store/wizardStore.ts` and related wizard ability components.
+- Node baseline upgraded and aligned:
+  - project engines now require Node 24+ (`package.json`).
+  - CI uses Node 24 (`.github/workflows/ci.yml`).
+  - local version manager baseline added via `.nvmrc` (`24`).
+  - README prerequisites updated to Node 24+.
+
+Validation after these changes:
+
+- `pnpm -r lint` passes.
+- `pnpm -r typecheck` passes.
+- `pnpm --filter @project/web test --run` passes.
+
+## Closure checklist (final)
+
+The original fix-pass action items are now complete:
+
+- [x] Run repository health checks
+- [x] Inspect web code for stale patterns
+- [x] Rank issues by remediation priority
+- [x] Write markdown fix-pass report
+
+## Post-remediation priority slate (current)
+
+With baseline gates restored, these are the next priority issues:
+
+1. **P1 - Web drift slice 2 (domain coupling in sheet store)**
+  - `apps/web/src/store/characterSheetStore.ts` still owns broad mixed responsibilities (inventory placement, rules projection, socket writes, and state orchestration).
+  - Recommended next move: extract pure derivation helpers and keep the store focused on state transitions + orchestration.
+
+2. **P1 - Web drift slice 3 (trait compilation path hardening)**
+  - `apps/web/src/components/sheet/TraitWidget.tsx` performs local trait-to-runtime projection logic that should remain explicitly aligned with shared schema defaults.
+  - Recommended next move: move projection into a reusable helper with focused tests for required/forbidden state defaults and id generation stability.
+
+3. **P2 - Cross-package contract test seam (web -> shared/engine)**
+  - Add targeted tests around route hydration and derived-stat inputs at:
+    - `apps/web/src/pages/characterSheetRouteData.ts`
+    - `apps/web/src/hooks/useCharacterStats.ts`
+  - Goal: prevent future contract drift when shared/engine schemas evolve.
+
+4. **P2 - Residual architecture debt from redundancy audit**
+  - `REDUNDANCY_AUDIT.md` still flags larger cleanup tracks (for example server socket-path consolidation and generated artefact hygiene policy enforcement).
+  - Treat these as scheduled follow-on workstreams, not blockers for the current functional baseline.
+
 ## Scope and intent
 
 This audit captures the current issues preventing a reliable development baseline across the repository, with priority ranking and remediation guidance.

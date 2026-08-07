@@ -35,7 +35,7 @@ See `docs/architecture/authority-model.md` for details.
 
 ## Prerequisites
 
-- Node.js 20+
+- Node.js 24+
 - pnpm 10+
 - PostgreSQL 15+
 

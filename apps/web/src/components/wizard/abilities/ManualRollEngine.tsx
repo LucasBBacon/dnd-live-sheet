@@ -1,4 +1,5 @@
-import { useWizardStore, type Attributes } from "../../../store/wizardStore";
+import type { Ability } from "@project/engine";
+import { useWizardStore } from "../../../store/wizardStore";
 import { ABILITY_STATS } from "../../../utils/abilityConstants";
 
 export const ManualRollEngine = () => {
@@ -58,7 +59,7 @@ export const ManualRollEngine = () => {
       </div>
 
       <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
-        {ABILITY_STATS.map((stat: Attributes) => (
+        {ABILITY_STATS.map((stat: Ability) => (
           <div
             key={stat}
             style={{

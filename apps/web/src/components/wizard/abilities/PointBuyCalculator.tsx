@@ -1,4 +1,5 @@
-import { useWizardStore, type Attributes } from "../../../store/wizardStore";
+import type { Ability } from "@project/engine";
+import { useWizardStore } from "../../../store/wizardStore";
 import {
   ABILITY_STATS,
   POINT_BUY_COSTS,
@@ -15,7 +16,7 @@ export const PointBuyCalculator = () => {
   );
   const pointsRemaining = 27 - pointsSpent;
 
-  const handleAdjust = (stat: Attributes, delta: number) => {
+  const handleAdjust = (stat: Ability, delta: number) => {
     const current = scores[stat];
     const next = current + delta;
 
@@ -45,7 +46,7 @@ export const PointBuyCalculator = () => {
       </div>
 
       <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
-        {ABILITY_STATS.map((stat: Attributes) => (
+        {ABILITY_STATS.map((stat: Ability) => (
           <div
             key={stat}
             style={{

@@ -3,7 +3,6 @@ import type { Ability } from "@project/engine";
 import { STANDARD_ARRAY } from "../utils/abilityConstants";
 
 export type GenerationMethod = "STANDARD_ARRAY" | "POINT_BUY" | "MANUAL";
-export type Attributes = Ability;
 
 export interface WizardEquipmentChoice {
   itemId: string;
@@ -26,7 +25,7 @@ export interface WizardState {
   classSubclassReqLevel: number | null;
 
   generationMethod: GenerationMethod;
-  baseAbilityScores: Record<Attributes, number>;
+  baseAbilityScores: Record<Ability, number>;
 
   alignment: string;
   backgroundType: "PRESET" | "CUSTOM" | null;
@@ -60,8 +59,8 @@ export interface WizardState {
   setSubclass: (subclassId: string) => void;
 
   setGenerationMethod: (method: GenerationMethod) => void;
-  setBaseAbilityScore: (stat: Attributes, value: number) => void;
-  setAllAbilityScores: (scores: Record<Attributes, number>) => void;
+  setBaseAbilityScore: (stat: Ability, value: number) => void;
+  setAllAbilityScores: (scores: Record<Ability, number>) => void;
 
   setAlignment: (alignment: string) => void;
   setBackgroundMode: (mode: "PRESET" | "CUSTOM") => void;
