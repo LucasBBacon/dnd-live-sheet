@@ -2562,7 +2562,9 @@ git commit -m "feat: make the four PHB equipment packs real bundles"
 pnpm check:hygiene
 ```
 
-Expected: clean. No build artefacts (`.js`, `.d.ts`) committed under any `src/`.
+Expected: **fails**, on `packages/shared/src/schemas/actions.ts` ("Retired duplicate paths reintroduced").
+
+> **Correction, recorded after execution.** This plan originally claimed hygiene was clean at baseline. It was not, and the claim was never measured. The failure is pre-existing and unrelated to this work — `git log bcff1e8..HEAD -- packages/shared/src/schemas/actions.ts` is empty, so none of this plan's commits touched it. Treat it as a known baseline failure, and do not "fix" it here.
 
 ```bash
 pnpm --filter @project/engine exec vitest run 2>&1 | tail -5
@@ -2577,10 +2579,12 @@ Expected:
 | --- | --- | --- | --- |
 | engine | 27 files, 423 tests | 27 files, 437 tests | 29 files, **465 tests**, all passing |
 | database | 5 files, 54 tests | 5 files, 55 tests | 5 files, **58 tests**, all passing |
-| server | 13 files, 186 tests | 14 files, 193 tests | 15 files, **196 tests**, all passing |
+| server | 13 files, 186 tests | 14 files, 193 tests | 15 files, **197 tests**, all passing |
 | shared | 147 passed / 11 failed | unchanged | **149 passed / 11 failed** |
 
 Shared's **failure count** must be *exactly* unchanged at 11; its passing count rises by the two tests Task 10 adds. A 12th failure there is yours.
+
+Server reaches 197 rather than the 196 the tasks alone produce: the post-review fix wave added one cross-source guard test. See the fix-wave note below.
 
 ```bash
 pnpm --filter @project/engine typecheck 2>&1 | grep -c "error TS"
@@ -2600,13 +2604,39 @@ pnpm --filter @project/database exec tsx src/seed.ts
 
 Expected: `Resolving Bundle Contents (BOM)...` followed by no error, and **36** rows in `bundle_contents` — Explorer's 8, Diplomat's 11, Priest's 10, Entertainer's 7. If no database is available, skip this step and say so in the completion report rather than claiming it passed.
 
-- [ ] **Confirm the git history reads as fifteen commits on `main`**
+> **Recorded after execution: this step was NOT run.** No local Postgres was reachable. The 36 rows and the two foreign keys on `bundle_contents` have never been exercised against a real database. The final review assessed the residual risk as low — the four pack sums balance, every content id resolves to a real catalogue id, and the acquisition path is proven against the real catalogue through a mocked-DB test — but the seed remains unverified end to end. **Run it, twice, when a database is available:** once to confirm 36 rows, and again to confirm the idempotency fix below actually holds.
+
+- [ ] **Confirm the git history on `main`**
 
 ```bash
-git log --oneline eec8a91..HEAD
+git log --oneline bcff1e8..HEAD
 ```
 
-Expected: fifteen commits, one per task, in task order.
+Expected: **19** commits. Fifteen tasks produced seventeen commits — Tasks 9 and 11 each needed a second — and the post-review fix wave added two more. An earlier version of this line expected fifteen, one per task, which a healthy history with fix rounds does not produce.
+
+## Execution record
+
+Executed 2026-08-07 on `main`, 19 commits from `bcff1e8` to `48c1d10`. Every task passed a spec-and-quality review; two needed a fix round. A whole-branch review then found no Critical issues and four Important ones, all fixed in a single wave.
+
+**Three bugs the reviews caught that the tasks did not:**
+
+1. **A commit that failed its own suite.** Task 11's implementer relaxed an invariant test in the working tree but never staged it, so the delivered commit failed five assertions on a clean checkout while the report claimed 450 passing. Verified and fixed in round 1. `git status --short` being empty is now an explicit pre-report check in this repo's task dispatches.
+2. **`bundle_contents` seeding was not idempotent.** `seed.ts` inserted with `.onConflictDoNothing()` against a `(bundleId, itemId)` primary key, so an edited content *quantity* would never propagate on a re-seed. Fixed to `.onConflictDoUpdate`. This is the concrete residue of the unrun seed step — it would have surfaced on the second run.
+3. **Dropping `activeStates` from `SpeedEngine` also disabled forbidden-state gating.** Task 2 targeted the `requiredStates` double-count and reasoned only about that direction, but the same list drives `forbiddenStates`. A `SPEED` modifier authored `forbiddenStates: ["encumbered"]` now stays active while encumbered. Behaviour was kept; the parameter was renamed `gatingStates` and the trade documented at the call site. **No content authors such a modifier today — this is latent, not live.**
+
+**Plan defects found during execution, corrected above and worth generalising:**
+
+- Two briefs contained code that did not compile against the repo's own settings: assertions indexing a `Record` without `?.` under `noUncheckedIndexedAccess`, and a bare `../inventory` specifier violating this plan's own `.js` Global Constraint. Plan code blocks are copied verbatim, so a plan error reliably becomes a code error.
+- Task 10's brief asserted `ItemDefinitionSchema` is `.strict()`. It is not — only `EquipmentDefinitionSchema` is. The false claim was copied into a test comment before being corrected.
+- The lesson for the next plan: assert less about code the plan has not actually read.
+
+**Residual follow-ups, none blocking:**
+
+- `ContainerCapacitySchema.capacityPounds` has no `.nonnegative()`. A negative capacity marks a container permanently overloaded — odd next to Task 6, which argued exactly this case for weight.
+- The pack sum-check is blind to a wrong quantity on a **zero-weight** line item (paper, ink, candle, incense, perfume, sealing wax, soap), and to a duplicate `itemId` within one bundle — which the composite PK would silently collapse. Its existence assertion also checks `itemRulesById`, which contains the manually-injected `item_ring_of_protection`; pointing it at `seedItems` would make it a real foreign-key guard.
+- `container` is a third field that breaks a `snapshot-first` flip, alongside `equipSlot` and modifiers: `items.json` has no `container` and `SourceItem` does not read one, so every seeded container projects with no capacity.
+- `ContainerEngine` resolves each row twice (`containers.ts:52` and `:85`); a `Map` built in pass one would remove the double lookup. Irrelevant at inventory scale.
+- Duplicate inventory row ids collapse silently in `ContainerEngine` rather than reporting into `unplacedInstanceIds`. Defensive only — `InventoryInstance.id` is contractually unique.
 
 ## What this closes
 
