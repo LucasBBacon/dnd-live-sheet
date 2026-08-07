@@ -250,6 +250,7 @@ export const toItemDefinition = (equipment: EquipmentDefinition): ItemDefinition
     // the exact-shape assertions the dictionary tests make
     ...(equipment.equipSlot && { equipSlot: equipment.equipSlot }),
     ...(equipment.ammoTag && { ammoTag: equipment.ammoTag }),
+    ...(equipment.container && { container: equipment.container }),
     ...(equipment.modifiers && { modifiers: equipment.modifiers }),
   };
 

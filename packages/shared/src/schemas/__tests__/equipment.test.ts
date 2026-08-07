@@ -67,3 +67,41 @@ describe("ItemDefinition and EquipmentDefinition stay complementary", () => {
     expect([...itemKeys, "weapon"].sort()).toEqual(equipmentKeys);
   });
 });
+
+describe("a container carries its capacity through both shapes", () => {
+  it("round-trips a pounds-of-gear capacity", () => {
+    // both schemas are strict, so an unrecognised `container` key throws here
+    // rather than being quietly dropped - which is the failure mode this
+    // whole complementary-schema pairing exists to prevent
+    const equipment = EquipmentDefinitionSchema.parse({
+      id: "item_backpack",
+      name: "Backpack",
+      type: "gear",
+      weight: 5,
+      container: { capacityPounds: 30 },
+    });
+
+    expect(equipment.container).toEqual({ capacityPounds: 30 });
+
+    const item = ItemDefinitionSchema.parse({
+      id: "item_backpack",
+      name: "Backpack",
+      type: "gear",
+      weight: 5,
+      container: { capacityPounds: 30 },
+    });
+
+    expect(item.container).toEqual({ capacityPounds: 30 });
+  });
+
+  it("leaves container absent on an item that is not one", () => {
+    const item = ItemDefinitionSchema.parse({
+      id: "item_weapon_dagger",
+      name: "Dagger",
+      type: "weapon",
+      weight: 1,
+    });
+
+    expect(item.container).toBeUndefined();
+  });
+});

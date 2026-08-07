@@ -47,6 +47,20 @@ export const CharacterSlotSchema = z.enum([
   "boots",
 ]);
 
+/**
+ * How much a container holds.
+ *
+ * Pounds only. The PHB gives a backpack "1 cubic foot / 30 pounds of gear",
+ * a barrel "40 gallons", and a quiver "20 arrows" - three different axes, of
+ * which only the first is a weight limit. Volume and item count need their own
+ * data and their own rules, so they are absent rather than approximated.
+ */
+export const ContainerCapacitySchema = z
+  .object({
+    capacityPounds: z.number(),
+  })
+  .strict();
+
 export const ItemDefinitionSchema = z.object({
   id: z.string(),
   name: z.string(),
@@ -58,6 +72,8 @@ export const ItemDefinitionSchema = z.object({
   // marks this item as ammunition of a kind, e.g. "arrow". A weapon firing the
   // same tag can consume it, so magical variants need no special casing
   ammoTag: z.string().optional(),
+  // present only on items that hold other items
+  container: ContainerCapacitySchema.optional(),
   modifiers: z.array(BaseModifierSchema).optional(),
 });
 
@@ -77,6 +93,16 @@ export const InventoryInstanceSchema = z.object({
   // where the item is worn. "backpack" means carried, so this single field
   // replaces isEquipped: a boolean cannot say ring_1 vs ring_2
   slot: CharacterSlotSchema.default("backpack"),
+  /**
+   * The inventory row id of the container this stack is inside, when it is.
+   *
+   * Optional because most rows are loose in the pack, and because nothing
+   * persists it yet: character_inventory keys on (characterId, itemId), so two
+   * stacks of the same item cannot exist and real containment needs a
+   * migration. ContainerEngine is built and tested against this field so the
+   * rule is settled before the storage change lands.
+   */
+  containerId: z.string().optional(),
   isAttuned: z.boolean().default(false),
 
   // allows for renamed items
@@ -90,6 +116,7 @@ export const InventoryInstanceSchema = z.object({
 export type ItemType = z.infer<typeof ItemTypeSchema>;
 export type EquipSlot = z.infer<typeof EquipSlotSchema>;
 export type CharacterSlot = z.infer<typeof CharacterSlotSchema>;
+export type ContainerCapacity = z.infer<typeof ContainerCapacitySchema>;
 export type ItemDefinition = z.infer<typeof ItemDefinitionSchema>;
 export type InventoryInstance = z.infer<typeof InventoryInstanceSchema>;
 

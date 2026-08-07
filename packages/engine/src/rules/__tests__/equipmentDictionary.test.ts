@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   EQUIPMENT_DICTIONARY,
   ITEM_DICTIONARY,
+  toItemDefinition,
   WEAPON_DICTIONARY,
 } from "../equipmentDictionary.js";
 
@@ -43,5 +44,36 @@ describe("equipmentDictionary projections", () => {
 
     expect(longsword?.weapon?.properties).toContain("versatile");
     expect(longsword?.weapon?.versatileDamageDice).toBe("1d10");
+  });
+});
+
+describe("toItemDefinition and container capacity", () => {
+  it("carries a container's capacity into the item projection", () => {
+    // toItemDefinition enumerates fields rather than spreading, so a new one
+    // on EquipmentDefinition does not arrive here on its own
+    const item = toItemDefinition({
+      id: "item_backpack",
+      name: "Backpack",
+      type: "gear",
+      weight: 5,
+      requiresAttunement: false,
+      container: { capacityPounds: 30 },
+    });
+
+    expect(item.container).toEqual({ capacityPounds: 30 });
+  });
+
+  it("leaves container off an item that has none", () => {
+    // absent rather than undefined, matching how equipSlot and ammoTag are
+    // handled - the dictionary tests assert exact object shapes
+    const item = toItemDefinition({
+      id: "item_weapon_dagger",
+      name: "Dagger",
+      type: "weapon",
+      weight: 1,
+      requiresAttunement: false,
+    });
+
+    expect("container" in item).toBe(false);
   });
 });

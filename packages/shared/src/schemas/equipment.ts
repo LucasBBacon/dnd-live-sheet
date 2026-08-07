@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { BaseModifierSchema } from "./modifiers.js";
-import { EquipSlotSchema } from "./items.js";
+import { ContainerCapacitySchema, EquipSlotSchema } from "./items.js";
 import { WeaponCategorySchema, WeaponPropertySchema } from "./weapons.js";
 import { DamageTypeSchema } from "./affinities.js";
 
@@ -39,6 +39,7 @@ export const EquipmentDefinitionSchema = z
     equipSlot: EquipSlotSchema.optional(),
     requiresAttunement: z.boolean().default(false),
     ammoTag: z.string().optional(),
+    container: ContainerCapacitySchema.optional(),
     modifiers: z.array(BaseModifierSchema).optional(),
     weapon: WeaponCapabilitySchema.optional(),
   })
