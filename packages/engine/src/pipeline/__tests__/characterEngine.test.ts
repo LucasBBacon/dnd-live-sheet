@@ -574,6 +574,37 @@ describe("CharacterEngine.buildLiveSheet: speed and encumbrance", () => {
     expect(sheet.abilities.STR.score).toBe(20); // 15 base + 5
     expect(sheet.encumbrance.maxCapacity).toBe(300); // 20 x 15, not 15 x 15
   });
+
+  it("does not count an encumbrance tier twice against speed", () => {
+    // a SPEED modifier gated on the derived tier. before the fix the tier
+    // reached SpeedEngine through activeStates *and* as its own argument, so
+    // this -10 landed on top of the -10 TIER_PENALTY already applies
+    const sheet = CharacterEngine.buildLiveSheet(
+      halfElfFighter(),
+      [carried("item_armor_plate", 2)], // 130 lb, past the 75 lb threshold
+      effectWith("SPEED", -10, ["encumbered"]),
+      new ResourceManager(),
+      { encumbranceRules: { useVariantEncumbrance: true } },
+    );
+
+    expect(sheet.encumbrance.tier).toBe("encumbered");
+    // 30 base - 10 tier penalty. not 10
+    expect(sheet.speed.total).toBe(20);
+  });
+
+  it("still gates a speed modifier on a base state", () => {
+    // the other direction: dropping activeStates must not disable state
+    // gating for speed altogether, only for the tiers stage two derives
+    const sheet = CharacterEngine.buildLiveSheet(
+      halfElfFighter(),
+      [],
+      effectWith("SPEED", 10, ["raging"], ["raging"]),
+      new ResourceManager(),
+    );
+
+    expect(sheet.baseStates).toContain("raging");
+    expect(sheet.speed.total).toBe(40);
+  });
 });
 
 describe("CharacterEngine.buildLiveSheet: inventory modifiers", () => {

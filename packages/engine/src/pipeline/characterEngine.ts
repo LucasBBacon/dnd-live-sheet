@@ -231,7 +231,11 @@ export class CharacterEngine {
     const speed = SpeedEngine.calculateSpeed(
       race?.speed ?? DEFAULT_WALKING_SPEED,
       allModifiers,
-      activeStates,
+      // baseStates, not activeStates: the tier already arrives below as a
+      // typed argument, so letting it in through the state list too would make
+      // a SPEED modifier gated on "encumbered" stack on top of TIER_PENALTY -
+      // the same ten feet counted twice
+      baseStates,
       encumbrance.tier,
     );
 
