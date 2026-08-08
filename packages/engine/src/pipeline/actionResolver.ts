@@ -1,9 +1,16 @@
-import type { ActionGrant } from "@project/shared";
+import type { ActionGrant, DamageType, EngineEvent, TriggerGrant } from "@project/shared";
 import type { ActiveEffect, EffectManager } from "../calculators/effects.js";
 import type { ResourceManager } from "../calculators/resources.js";
-import { resolveItemDefinition, type RuleSnapshotLookup } from "../rules/ruleLookup.js";
+import { DiceEngine } from "../utils/diceParser.js";
+import {
+  resolveItemDefinition,
+  type RuleSnapshotLookup,
+} from "../rules/ruleLookup.js";
 import type { InventoryLedger } from "./inventoryLedger.js";
-import type { ConsumedResource, RollContextPayload } from "./rollContextBuilder.js";
+import type {
+  ConsumedResource,
+  RollContextPayload,
+} from "./rollContextBuilder.js";
 
 const generateId = () => Math.random().toString(36).substring(2, 9);
 
@@ -14,13 +21,23 @@ export type ActionFailureReason =
   | "wrong_ammo"
   | "ammo_not_selected"
   | "no_ledger"
-  | "unrequested_cost";
+  | "unrequested_cost"
+  | "summon_limit_reached";
+
+export interface ActionRollResult {
+  total: number;
+  rolls: number[];
+  modifier: number;
+  target: "DAMAGE_ROLL" | "ATTACK_ROLL" | "SAVING_THROW" | "ABILITY_CHECK";
+  damageType?: DamageType;
+}
 
 export interface ActionResult {
   executed: boolean;
   reason?: ActionFailureReason;
   /** Which cost failed, for a message the player can act on. */
   offendingId?: string;
+  rollResults?: ActionRollResult[];
 }
 
 export interface ActionExecutionContext {
@@ -29,6 +46,17 @@ export interface ActionExecutionContext {
   /** Required only for actions that spend ammunition. */
   inventoryLedger?: InventoryLedger;
   snapshot?: RuleSnapshotLookup;
+  activeStates?: string[];
+  diceRules?: Array<{
+    target: "DAMAGE_ROLL" | "ATTACK_ROLL" | "SAVING_THROW" | "ABILITY_CHECK";
+    requiredStates: string[];
+    requiredDamageType?: DamageType;
+    mutator: {
+      type: "reroll_once" | "minimum_value" | "explode";
+      triggerOn?: number[];
+      floorValue?: number;
+    };
+  }>;
 }
 
 const ok: ActionResult = { executed: true };
@@ -72,9 +100,79 @@ export class ActionResolver {
     if (!settlement.executed) return settlement;
 
     // 2 - route the effect to correct handler
-    switch (action.effect.type) {
+    return this.executeEffect(action.effect, action, context, payload.activeStates);
+  }
+
+  public static dispatchEvent(
+    eventName: EngineEvent,
+    triggerGrants: TriggerGrant[],
+    actionLookup: Record<string, ActionGrant>,
+    context: ActionExecutionContext,
+    payload: RollContextPayload = { actionId: "", activeStates: [] },
+  ): ActionResult[] {
+    const results: ActionResult[] = [];
+
+    for (const trigger of triggerGrants) {
+      if (trigger.listenFor !== eventName) continue;
+
+      const actionId = actionLookup[trigger.executeAction]
+        ? trigger.executeAction
+        : trigger.executeAction.toLowerCase();
+      const action = actionLookup[actionId];
+      if (!action) {
+        results.push(ok);
+        continue;
+      }
+
+      if (trigger.consumeResource) {
+        const consumed = context.resourceManager.consume(
+          trigger.consumeResource,
+          1,
+        );
+        if (!consumed) {
+          results.push(fail("insufficient_resource", trigger.consumeResource));
+          continue;
+        }
+      }
+
+      const result = this.execute(action, payload, context);
+      if (!result.executed && trigger.consumeResource) {
+        context.resourceManager.restore(trigger.consumeResource, 1);
+      }
+
+      results.push(result);
+    }
+
+    return results;
+  }
+
+  private static executeEffect(
+    effect: ActionGrant["effect"],
+    action: ActionGrant,
+    context: ActionExecutionContext,
+    activeStates: string[] = [],
+  ): ActionResult {
+    switch (effect.type) {
       case "apply_effect": {
-        const blueprint = action.effect;
+        const blueprint = effect;
+
+        if (
+          blueprint.effectName?.toLowerCase().includes("dismiss") ||
+          action.name.toLowerCase().includes("dismiss")
+        ) {
+          const activeSummons = context.effectManager
+            .getActiveEffects()
+            .filter((entry) => entry.kind === "summon");
+
+          if (activeSummons.length > 0) {
+            const [summon] = activeSummons;
+            if (summon) {
+              context.effectManager.removeEffect(summon.instanceId);
+            }
+          }
+
+          return ok;
+        }
 
         // translate static blueprint into live ActiveEffect
         const newEffect: ActiveEffect = {
@@ -89,35 +187,152 @@ export class ActionResolver {
         };
 
         context.effectManager.addEffect(newEffect);
-        break;
+        return ok;
       }
       case "attack": {
-        // TODO: dice rolling modal for attack
-        break;
+        const damageSegments = effect.damage ?? [];
+        const rollResults: ActionRollResult[] = [];
+
+        for (const segment of damageSegments) {
+          const baseDice = segment.baseDice;
+          const roll = DiceEngine.rollDigital(baseDice);
+          const appliedRolls = DiceEngine.applyDiceRules(
+            roll.rolls,
+            context.diceRules ?? [],
+            "DAMAGE_ROLL",
+            {
+              activeStates: activeStates.length > 0 ? activeStates : context.activeStates ?? [],
+              sides: Number.parseInt(baseDice.split("d")[1] ?? "6", 10),
+              rollFn: (sides) =>
+                DiceEngine.rollDigital(`1d${sides}`).total,
+            },
+          );
+
+          const total = appliedRolls.reduce((sum, value) => sum + value, 0);
+          rollResults.push({
+            total,
+            rolls: appliedRolls,
+            modifier: roll.modifier,
+            target: "DAMAGE_ROLL",
+            damageType: segment.damageType,
+          });
+        }
+
+        return { ...ok, rollResults };
       }
 
       case "summon": {
-        // TODO: pipeline for summons
-        break;
+        const activeSummons = context.effectManager
+          .getActiveEffects()
+          .filter((entry) => entry.kind === "summon");
+
+        if (effect.maxActive !== undefined && activeSummons.length >= effect.maxActive) {
+          return fail("summon_limit_reached");
+        }
+
+        const newEffect: ActiveEffect = {
+          instanceId: `effect_${generateId()}`,
+          sourceName: action.name,
+          durationType: effect.durationHours !== undefined ? "rounds" : "manual",
+          durationRemaining:
+            effect.durationHours !== undefined
+              ? Math.max(1, Math.ceil((effect.durationHours * 60) / 24))
+              : undefined,
+          isSelfConcentration: false,
+          modifiers: [],
+          grantedStates: [...effect.entityTemplateIds],
+          kind: "summon",
+        };
+
+        if (effect.durationHours !== undefined) {
+          newEffect.durationHours = effect.durationHours;
+        }
+
+        context.effectManager.addEffect(newEffect);
+        return ok;
       }
 
       case "macro": {
-        // TODO: Implement macro actions
-        break;
+        for (const nestedEffect of effect.effects) {
+          const nestedResult = this.executeEffect(
+            nestedEffect,
+            action,
+            context,
+            activeStates,
+          );
+          if (!nestedResult.executed) return nestedResult;
+        }
+
+        return ok;
       }
 
       case "damage_rider": {
-        // TODO: apply damage over time effect
-        break;
+        const rollResults: ActionRollResult[] = [];
+
+        for (const segment of effect.damage) {
+          const baseDice = segment.baseDice;
+          const roll = DiceEngine.rollDigital(baseDice);
+          const appliedRolls = DiceEngine.applyDiceRules(
+            roll.rolls,
+            context.diceRules ?? [],
+            "DAMAGE_ROLL",
+            {
+              activeStates:
+                activeStates.length > 0 ? activeStates : context.activeStates ?? [],
+              sides: Number.parseInt(baseDice.split("d")[1] ?? "6", 10),
+              rollFn: (sides) =>
+                DiceEngine.rollDigital(`1d${sides}`).total,
+            },
+          );
+
+          const total = appliedRolls.reduce((sum, value) => sum + value, 0);
+          rollResults.push({
+            total,
+            rolls: appliedRolls,
+            modifier: roll.modifier,
+            target: "DAMAGE_ROLL",
+            damageType: segment.damageType,
+          });
+        }
+
+        return { ...ok, rollResults };
       }
 
       case "save": {
-        // TODO: save dice rolls
-        break;
-      }
-    }
+        const saveRoll = DiceEngine.rollDigital("1d20");
+        const appliedRolls = DiceEngine.applyDiceRules(
+          saveRoll.rolls,
+          context.diceRules ?? [],
+          "SAVING_THROW",
+          {
+            activeStates:
+              activeStates.length > 0 ? activeStates : context.activeStates ?? [],
+            sides: 20,
+            rollFn: (sides) => DiceEngine.rollDigital(`1d${sides}`).total,
+          },
+        );
 
-    return ok;
+        const total = appliedRolls.reduce((sum, value) => sum + value, 0);
+
+        return {
+          ...ok,
+          rollResults: [
+            {
+              total,
+              rolls: appliedRolls,
+              modifier: saveRoll.modifier,
+              target: "SAVING_THROW",
+              ...(effect.damage?.[0]?.damageType !== undefined
+                ? { damageType: effect.damage[0].damageType }
+                : {}),
+            },
+          ],
+        };
+      }
+
+      default:
+        return ok;
+    }
   }
 
   /**

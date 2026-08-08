@@ -1,5 +1,5 @@
 export * from "./actionResolver.js";
-export * from "./characterBootstraper.js";
+export * from "./characterBootstrapper.js";
 export * from "./characterEngine.js";
 export * from "./inventoryExtractor.js";
 export * from "./inventoryLedger.js";

@@ -111,7 +111,7 @@ describe("validateLevelUpPayloadFromResolver", () => {
       validateLevelUpPayloadFromResolver({
         payload: {
           ...basePayload,
-          asiChoices: [{ stat: "str", value: 2 }],
+          asiChoices: [{ stat: "STR", value: 2 }],
           featId: "feat_alert",
         },
         context: asiContext,

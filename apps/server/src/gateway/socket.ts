@@ -7,6 +7,7 @@ import {
 } from "@project/database/src/schema/operational.js";
 import { items } from "@project/database/src/schema/reference.js";
 import {
+  type CombatRollPayload,
   type InventorySyncPayload,
   type RoomJoinPayload,
   SOCKET_EVENTS,
@@ -198,6 +199,35 @@ export function initializeWebSocketGateway(httpServer: any) {
         // dispatch an error rollback event back to sender if DB transaction fails
         socket.emit("error:rollback", {
           event: SOCKET_EVENTS.HP_MODIFIED,
+          payload,
+        });
+      }
+    });
+
+    // #endregion
+
+    // #region COMBAT ROLL
+
+    socket.on(SOCKET_EVENTS.COMBAT_ROLL, async (payload: CombatRollPayload) => {
+      try {
+        const campaignId = await ensureCharacterInSocketCampaign(
+          socket,
+          payload.characterId,
+        );
+
+        const broadcastPayload = {
+          actorId: socket.id,
+          ...payload,
+        };
+
+        socket.to(`campaign_${campaignId}`).emit(SOCKET_EVENTS.COMBAT_ROLL, {
+          actorId: socket.id,
+          data: broadcastPayload,
+        });
+      } catch (error) {
+        console.error("Failed to process combat roll:", error);
+        socket.emit("error:rollback", {
+          event: SOCKET_EVENTS.COMBAT_ROLL,
           payload,
         });
       }

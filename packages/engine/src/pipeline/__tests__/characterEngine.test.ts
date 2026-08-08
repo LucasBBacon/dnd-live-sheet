@@ -11,7 +11,7 @@ import {
   CharacterEngine,
   type LiveCharacterSheet,
 } from "../characterEngine.js";
-import { CharacterBootstrapper } from "../characterBootstraper.js";
+import { CharacterBootstrapper } from "../characterBootstrapper.js";
 import { ModifierExtractor } from "../modifierExtractor.js";
 import { ProficiencyExtractor } from "../proficiencyExtractor.js";
 import { EffectManager } from "../../calculators/effects.js";
@@ -56,10 +56,7 @@ const buildSheet = (
     options,
   );
 
-const carried = (
-  itemId: string,
-  quantity = 1,
-): InventoryInstance => ({
+const carried = (itemId: string, quantity = 1): InventoryInstance => ({
   id: `inv_${itemId}_${quantity}`,
   itemId,
   quantity,
@@ -177,9 +174,9 @@ describe("ModifierExtractor.extractModifiers", () => {
     const chosen = extract(save).filter((m) => m.sourceOrigin.includes("asi"));
 
     expect(chosen.map((m) => m.target)).toEqual(["CHA", "DEX"]);
-    expect(chosen.filter((m) => m.type === "add" && m.value === 1)).toHaveLength(
-      1,
-    );
+    expect(
+      chosen.filter((m) => m.type === "add" && m.value === 1),
+    ).toHaveLength(1);
   });
 
   it("honours chooseAmount and refuses duplicates when the block forbids them", () => {
@@ -305,9 +302,9 @@ describe("open proficiency choices", () => {
       "common",
       "elvish",
     ]);
-    expect(pendingChoice(save, "half_elf_language_choice")?.remainingPicks).toBe(
-      1,
-    );
+    expect(
+      pendingChoice(save, "half_elf_language_choice")?.remainingPicks,
+    ).toBe(1);
   });
 
   it("refuses a language that is not in the roster at all", () => {
@@ -315,9 +312,9 @@ describe("open proficiency choices", () => {
       traitSelections: { half_elf_language_choice: ["klingon"] },
     });
 
-    expect(
-      extract(save).some((g) => g.proficiencyId === "klingon"),
-    ).toBe(false);
+    expect(extract(save).some((g) => g.proficiencyId === "klingon")).toBe(
+      false,
+    );
   });
 
   it("stops two open blocks landing on the same language", () => {
@@ -331,9 +328,9 @@ describe("open proficiency choices", () => {
       elf_high_choice_extra_lang: ["dwarvish"],
     });
 
-    expect(
-      grants.filter((g) => g.proficiencyId === "dwarvish"),
-    ).toHaveLength(1);
+    expect(grants.filter((g) => g.proficiencyId === "dwarvish")).toHaveLength(
+      1,
+    );
   });
 
   it("still offers a skill the character is only proficient in to an expertise block", () => {
@@ -371,6 +368,45 @@ describe("open proficiency choices", () => {
       level: "expertise",
       requiredStates: [],
     });
+  });
+});
+
+describe("CharacterEngine.dispatchTraitEvent", () => {
+  it("fires the authored half-orc trigger action", () => {
+    const save: CharacterSave = {
+      attributes: { str: 15, dex: 10, con: 14, int: 8, wis: 10, cha: 8 },
+      race: {
+        baseRaceId: "race_half_orc",
+        hasSubraces: false,
+        subraceId: null,
+      },
+      classes: [
+        {
+          classId: "class_fighter",
+          level: 1,
+          selections: { fighter_level_1_fighting_style: ["trait_fs_defense"] },
+        },
+      ],
+      traitSelections: {},
+      hp: { current: 10, temporary: 0, baseRolledHp: 10, hitDiceSpent: {} },
+    };
+
+    const effectManager = new EffectManager();
+    const resourceManager = new ResourceManager();
+
+    const results = CharacterEngine.dispatchTraitEvent(
+      "ON_HP_REDUCED_TO_ZERO",
+      save,
+      effectManager,
+      resourceManager,
+    );
+
+    expect(results).toHaveLength(1);
+    expect(results[0]?.executed).toBe(true);
+    expect(effectManager.getActiveStates()).toContain("drop_to_one_hp");
+    expect(resourceManager.consume("resource_relentless_endurance", 1)).toBe(
+      false,
+    );
   });
 });
 
@@ -446,7 +482,9 @@ describe("CharacterEngine.buildLiveSheet: speed and encumbrance", () => {
   });
 
   it("leaves a heavy pack alone under the standard rule", () => {
-    const sheet = buildSheet(halfElfFighter(), [carried("item_armor_plate", 3)]);
+    const sheet = buildSheet(halfElfFighter(), [
+      carried("item_armor_plate", 3),
+    ]);
 
     expect(sheet.encumbrance.totalWeight).toBe(195);
     expect(sheet.encumbrance.tier).toBe("none");
@@ -476,7 +514,9 @@ describe("CharacterEngine.buildLiveSheet: speed and encumbrance", () => {
   });
 
   it("caps a character who is over capacity under either rule", () => {
-    const sheet = buildSheet(halfElfFighter(), [carried("item_armor_plate", 4)]);
+    const sheet = buildSheet(halfElfFighter(), [
+      carried("item_armor_plate", 4),
+    ]);
 
     expect(sheet.encumbrance.tier).toBe("over_capacity");
     expect(sheet.speed.total).toBe(5);
@@ -497,7 +537,6 @@ describe("CharacterEngine.buildLiveSheet: speed and encumbrance", () => {
     expect(sheet.activeStates).toContain("encumbered");
     expect(sheet.baseStates).not.toContain("encumbered");
   });
-
 
   it("doubles carrying capacity for a character with Powerful Build", () => {
     const powerful = new EffectManager();
@@ -533,6 +572,27 @@ describe("CharacterEngine.buildLiveSheet: speed and encumbrance", () => {
 
       expect(sheet.baseStates).toContain("powerful_build");
       expect(sheet.encumbrance.maxCapacity).toBe(450);
+    } finally {
+      spy.mockRestore();
+    }
+  });
+
+  it("hydrates trait-granted persistent states into the effect manager", () => {
+    const effectManager = new EffectManager();
+    const resourceManager = new ResourceManager();
+    const spy = vi
+      .spyOn(CharacterBootstrapper, "compileActiveTraits")
+      .mockReturnValue([TRAIT_DICTIONARY["trait_powerful_build"]!]);
+
+    try {
+      CharacterEngine.buildLiveSheet(
+        halfElfFighter(),
+        [],
+        effectManager,
+        resourceManager,
+      );
+
+      expect(effectManager.getActiveStates()).toContain("powerful_build");
     } finally {
       spy.mockRestore();
     }

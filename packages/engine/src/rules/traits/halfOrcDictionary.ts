@@ -95,17 +95,36 @@ export const HALF_ORC_TRAITS: Record<string, TraitDefinition> = {
         resetOn: "long_rest",
       },
     ],
-    // instructs the engine to listen for an even and fire a macro
+    // instructs the engine to listen for an event and fire a macro
     triggers: [
       {
         listenFor: "ON_HP_REDUCED_TO_ZERO",
-        executeAction: "MACRO_DROP_TO_ONE_HP",
+        executeAction: "macro_drop_to_one_hp",
         consumeResource: "resource_relentless_endurance",
       },
     ],
     diceRules: [],
     criticalHitModifiers: [],
-    actions: [],
+    actions: [
+      {
+        id: "macro_drop_to_one_hp",
+        name: "Drop to One HP",
+        activation: "special",
+        effect: {
+          type: "macro",
+          effects: [
+            {
+              type: "apply_effect",
+              effectName: "Drop to One HP",
+              durationType: "manual",
+              states: ["drop_to_one_hp"],
+              modifiers: [],
+              isSelfConcentration: false,
+            },
+          ],
+        },
+      },
+    ],
   },
   savage_attacks: {
     id: "savage_attacks",

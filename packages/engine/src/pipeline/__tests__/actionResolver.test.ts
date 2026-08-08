@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { ActionGrant } from "@project/shared";
 import { ActionResolver } from "../actionResolver.js";
 import type { InventoryLedger } from "../inventoryLedger.js";
@@ -53,8 +53,9 @@ const payload = (
   ...(consumedResources && { consumedResources }),
 });
 
-const arrow = (id: string, amount = 1) =>
-  [{ type: "inventory_instance" as const, id, amount }];
+const arrow = (id: string, amount = 1) => [
+  { type: "inventory_instance" as const, id, amount },
+];
 
 describe("ActionResolver ammunition", () => {
   let effectManager: EffectManager;
@@ -122,7 +123,9 @@ describe("ActionResolver ammunition", () => {
   });
 
   it("refuses an empty quiver", () => {
-    const ledger = makeLedger([{ id: "inv_plain", itemId: ARROW, quantity: 0 }]);
+    const ledger = makeLedger([
+      { id: "inv_plain", itemId: ARROW, quantity: 0 },
+    ]);
 
     const result = run(bowShot, payload(arrow("inv_plain")), ledger);
 
@@ -172,6 +175,419 @@ describe("ActionResolver ammunition", () => {
 
     expect(result.executed).toBe(false);
     expect(ledger.stacks[0]?.quantity).toBe(20);
+  });
+});
+
+describe("ActionResolver attack resolution", () => {
+  let effectManager: EffectManager;
+  let resourceManager: ResourceManager;
+
+  beforeEach(() => {
+    effectManager = new EffectManager();
+    resourceManager = new ResourceManager();
+  });
+
+  it("applies authored damage dice rules while resolving attack effects", () => {
+    const attackAction: ActionGrant = {
+      ...bowShot,
+      consumesAmmo: undefined,
+      effect: {
+        type: "attack",
+        attackType: "ranged_weapon",
+        attackStat: "DEX",
+        range: 150,
+        damage: [
+          {
+            sourceName: "Longbow",
+            baseDice: "1d6",
+            damageType: "piercing",
+            scalingMode: "none",
+            levelScaling: [],
+          },
+        ],
+      },
+    };
+
+    const randomSpy = vi
+      .spyOn(Math, "random")
+      .mockReturnValueOnce(0)
+      .mockReturnValueOnce(0.9);
+
+    const result = ActionResolver.execute(
+      attackAction,
+      { ...payload(), activeStates: ["status_wielding_two_handed"] },
+      {
+        effectManager,
+        resourceManager,
+        diceRules: [
+          {
+            target: "DAMAGE_ROLL",
+            requiredStates: ["status_wielding_two_handed"],
+            mutator: { type: "reroll_once", triggerOn: [1] },
+          },
+        ],
+      },
+    );
+
+    expect(result.executed).toBe(true);
+    expect(result.rollResults?.[0]?.total).toBe(6);
+
+    randomSpy.mockRestore();
+  });
+});
+
+describe("ActionResolver save resolution", () => {
+  let effectManager: EffectManager;
+  let resourceManager: ResourceManager;
+
+  beforeEach(() => {
+    effectManager = new EffectManager();
+    resourceManager = new ResourceManager();
+  });
+
+  it("rolls a saving throw when the action effect is a save", () => {
+    const saveAction: ActionGrant = {
+      ...bowShot,
+      consumesAmmo: undefined,
+      effect: {
+        type: "save",
+        areaOfEffect: { shape: "single_target", size: 1 },
+        savingThrow: {
+          targetStat: "CON",
+          dcCalculation: { base: 10, scalingStat: "CON", includeProficiency: false },
+          saveEffect: "half_damage",
+        },
+        damage: [
+          {
+            sourceName: "Fireball",
+            baseDice: "1d6",
+            damageType: "fire",
+            scalingMode: "none",
+            levelScaling: [],
+          },
+        ],
+      },
+    };
+
+    const randomSpy = vi.spyOn(Math, "random").mockReturnValue(0.95);
+
+    const result = ActionResolver.execute(saveAction, payload(), {
+      effectManager,
+      resourceManager,
+    });
+
+    expect(result.executed).toBe(true);
+    expect(result.rollResults?.[0]?.target).toBe("SAVING_THROW");
+    expect(result.rollResults?.[0]?.total).toBe(20);
+
+    randomSpy.mockRestore();
+  });
+});
+
+describe("ActionResolver damage rider resolution", () => {
+  let effectManager: EffectManager;
+  let resourceManager: ResourceManager;
+
+  beforeEach(() => {
+    effectManager = new EffectManager();
+    resourceManager = new ResourceManager();
+  });
+
+  it("rolls damage for a damage rider effect", () => {
+    const riderAction: ActionGrant = {
+      ...bowShot,
+      consumesAmmo: undefined,
+      effect: {
+        type: "damage_rider",
+        requiredWeaponProperties: [],
+        damage: [
+          {
+            sourceName: "Fireball",
+            baseDice: "1d6",
+            damageType: "fire",
+            scalingMode: "none",
+            levelScaling: [],
+          },
+        ],
+      },
+    };
+
+    const randomSpy = vi.spyOn(Math, "random").mockReturnValue(0.95);
+
+    const result = ActionResolver.execute(riderAction, payload(), {
+      effectManager,
+      resourceManager,
+    });
+
+    expect(result.executed).toBe(true);
+    expect(result.rollResults?.[0]?.target).toBe("DAMAGE_ROLL");
+    expect(result.rollResults?.[0]?.total).toBe(6);
+
+    randomSpy.mockRestore();
+  });
+});
+
+describe("ActionResolver macro actions", () => {
+  let effectManager: EffectManager;
+  let resourceManager: ResourceManager;
+
+  beforeEach(() => {
+    effectManager = new EffectManager();
+    resourceManager = new ResourceManager();
+  });
+
+  it("executes nested apply_effect handlers inside a macro action", () => {
+    const macroAction: ActionGrant = {
+      ...bowShot,
+      consumesAmmo: undefined,
+      id: "action_macro_drop_to_one_hp",
+      effect: {
+        type: "macro",
+        effects: [
+          {
+            type: "apply_effect",
+            effectName: "Drop to One HP",
+            durationType: "manual",
+            states: ["drop_to_one_hp"],
+            modifiers: [],
+            isSelfConcentration: false,
+          },
+        ],
+      },
+    };
+
+    const result = ActionResolver.execute(macroAction, payload(), {
+      effectManager,
+      resourceManager,
+    });
+
+    expect(result.executed).toBe(true);
+    expect(effectManager.getActiveStates()).toContain("drop_to_one_hp");
+  });
+});
+
+describe("ActionResolver summon resolution", () => {
+  let effectManager: EffectManager;
+  let resourceManager: ResourceManager;
+
+  beforeEach(() => {
+    effectManager = new EffectManager();
+    resourceManager = new ResourceManager();
+  });
+
+  it("creates active summon state from the authored entity templates", () => {
+    const summonAction: ActionGrant = {
+      ...bowShot,
+      consumesAmmo: undefined,
+      id: "action_tinker_construct",
+      name: "Construct Clockwork Device",
+      effect: {
+        type: "summon",
+        entityTemplateIds: ["actor_clockwork_toy", "actor_music_box"],
+        maxActive: 3,
+        durationHours: 24,
+      },
+    };
+
+    const result = ActionResolver.execute(summonAction, payload(), {
+      effectManager,
+      resourceManager,
+    });
+
+    expect(result.executed).toBe(true);
+    expect(effectManager.getActiveStates()).toEqual(
+      expect.arrayContaining(["actor_clockwork_toy", "actor_music_box"]),
+    );
+  });
+
+  it("stops a summon action once the active limit has been reached", () => {
+    const summonAction: ActionGrant = {
+      ...bowShot,
+      consumesAmmo: undefined,
+      id: "action_tinker_construct",
+      name: "Construct Clockwork Device",
+      effect: {
+        type: "summon",
+        entityTemplateIds: ["actor_clockwork_toy"],
+        maxActive: 1,
+      },
+    };
+
+    const first = ActionResolver.execute(summonAction, payload(), {
+      effectManager,
+      resourceManager,
+    });
+    const second = ActionResolver.execute(
+      {
+        ...summonAction,
+        effect: {
+          ...summonAction.effect,
+          entityTemplateIds: ["actor_music_box"],
+        },
+      },
+      payload(),
+      { effectManager, resourceManager },
+    );
+
+    expect(first.executed).toBe(true);
+    expect(second.executed).toBe(false);
+    expect(second.reason).toBe("summon_limit_reached");
+    expect(effectManager.getActiveStates()).toEqual(["actor_clockwork_toy"]);
+  });
+
+  it("removes a summon from the active state when it is dismissed", () => {
+    const summarizeAction: ActionGrant = {
+      ...bowShot,
+      consumesAmmo: undefined,
+      id: "action_tinker_construct",
+      name: "Construct Clockwork Device",
+      effect: {
+        type: "summon",
+        entityTemplateIds: ["actor_clockwork_toy"],
+      },
+    };
+
+    const result = ActionResolver.execute(summarizeAction, payload(), {
+      effectManager,
+      resourceManager,
+    });
+
+    expect(result.executed).toBe(true);
+
+    const activeEffects = effectManager.getActiveEffects();
+    expect(activeEffects).toHaveLength(1);
+
+    effectManager.removeEffect(activeEffects[0]!.instanceId);
+
+    expect(effectManager.getActiveStates()).toEqual([]);
+  });
+
+  it("dismisses an active summon when the action targets an existing summon effect", () => {
+    const summonAction: ActionGrant = {
+      ...bowShot,
+      consumesAmmo: undefined,
+      id: "action_tinker_construct",
+      name: "Construct Clockwork Device",
+      effect: {
+        type: "summon",
+        entityTemplateIds: ["actor_clockwork_toy"],
+      },
+    };
+
+    const dismissAction: ActionGrant = {
+      ...bowShot,
+      consumesAmmo: undefined,
+      id: "action_dismiss_summon",
+      name: "Dismiss Summon",
+      effect: {
+        type: "apply_effect",
+        effectName: "Dismiss Summon",
+        durationType: "manual",
+        states: [],
+        modifiers: [],
+        isSelfConcentration: false,
+      },
+    };
+
+    const summonResult = ActionResolver.execute(summonAction, payload(), {
+      effectManager,
+      resourceManager,
+    });
+    expect(summonResult.executed).toBe(true);
+
+    const dismissResult = ActionResolver.execute(dismissAction, payload(), {
+      effectManager,
+      resourceManager,
+    });
+
+    expect(dismissResult.executed).toBe(true);
+    expect(effectManager.getActiveStates()).toEqual([]);
+  });
+
+  it("removes a summon when its authored duration has elapsed", () => {
+    const summonAction: ActionGrant = {
+      ...bowShot,
+      consumesAmmo: undefined,
+      id: "action_tinker_construct",
+      name: "Construct Clockwork Device",
+      effect: {
+        type: "summon",
+        entityTemplateIds: ["actor_clockwork_toy"],
+        durationHours: 24,
+      },
+    };
+
+    const summonResult = ActionResolver.execute(summonAction, payload(), {
+      effectManager,
+      resourceManager,
+    });
+
+    expect(summonResult.executed).toBe(true);
+
+    for (let index = 0; index < 60; index += 1) {
+      effectManager.tickTurnStart();
+    }
+
+    expect(effectManager.getActiveStates()).toEqual([]);
+  });
+});
+
+describe("ActionResolver trigger dispatch", () => {
+  let effectManager: EffectManager;
+  let resourceManager: ResourceManager;
+
+  beforeEach(() => {
+    effectManager = new EffectManager();
+    resourceManager = new ResourceManager();
+    resourceManager.initializeFromGrants([
+      {
+        id: "resource_relentless_endurance",
+        name: "Relentless Endurance",
+        maxCharges: 1,
+        resetOn: "long_rest",
+      },
+    ]);
+  });
+
+  it("dispatches a trigger to a macro action and spends its resource", () => {
+    const macroAction: ActionGrant = {
+      id: "action_macro_drop_to_one_hp",
+      name: "Drop to One HP",
+      activation: "special",
+      effect: {
+        type: "macro",
+        effects: [
+          {
+            type: "apply_effect",
+            effectName: "Drop to One HP",
+            durationType: "manual",
+            states: ["drop_to_one_hp"],
+            modifiers: [],
+            isSelfConcentration: false,
+          },
+        ],
+      },
+    };
+
+    const results = ActionResolver.dispatchEvent(
+      "ON_HP_REDUCED_TO_ZERO",
+      [
+        {
+          listenFor: "ON_HP_REDUCED_TO_ZERO",
+          executeAction: "action_macro_drop_to_one_hp",
+          consumeResource: "resource_relentless_endurance",
+        },
+      ],
+      { action_macro_drop_to_one_hp: macroAction },
+      { effectManager, resourceManager },
+    );
+
+    expect(results).toHaveLength(1);
+    expect(results[0]?.executed).toBe(true);
+    expect(effectManager.getActiveStates()).toContain("drop_to_one_hp");
+    expect(resourceManager.consume("resource_relentless_endurance", 1)).toBe(
+      false,
+    );
   });
 });
 

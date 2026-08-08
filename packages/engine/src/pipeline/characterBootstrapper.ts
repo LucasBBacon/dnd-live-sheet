@@ -7,6 +7,8 @@ import type {
   TraitDefinition,
 } from "@project/shared";
 import { traitIdOfOption } from "@project/shared";
+import { EffectManager } from "../calculators/effects.js";
+import { ResourceManager } from "../calculators/resources.js";
 import { CLASS_DICTIONARY } from "../rules/classDictionary.js";
 import { SUBCLASS_DICTIONARY } from "../rules/subclassDictionary.js";
 import { RACE_DICTIONARY } from "../rules/raceDictionary.js";
@@ -144,7 +146,10 @@ const unlockedGrants = (classState: ClassState): FeatureGrant[] => {
  * it hands out the full starting proficiency set. Every class after it was
  * multiclassed into and only grants the reduced dip set.
  */
-const classTraitIds = (classState: ClassState, isPrimary: boolean): string[] => {
+const classTraitIds = (
+  classState: ClassState,
+  isPrimary: boolean,
+): string[] => {
   const blueprint = CLASS_DICTIONARY[classState.classId];
   const ids: string[] = blueprint
     ? [
@@ -470,7 +475,10 @@ export class CharacterBootstrapper {
     ];
 
     for (const resolution of resolutions) {
-      const where = { nodeId: resolution.choiceId, traitId: resolution.traitId };
+      const where = {
+        nodeId: resolution.choiceId,
+        traitId: resolution.traitId,
+      };
       const selected = selections[resolution.choiceId] ?? [];
 
       if (selected.length === 0) {
@@ -533,8 +541,38 @@ export class CharacterBootstrapper {
     );
   }
 
-  // TODO: hydrate EffectManager
-  // TODO: hydrate ResourceManager
+  public static hydrateRuntimeManagers(
+    save: CharacterSave,
+    effectManager: EffectManager,
+    resourceManager: ResourceManager,
+  ): TraitDefinition[] {
+    const activeTraits = CharacterBootstrapper.compileActiveTraits(save);
+
+    for (const effect of [...effectManager.getActiveEffects()]) {
+      if (effect.instanceId.startsWith("trait_state_")) {
+        effectManager.removeEffect(effect.instanceId);
+      }
+    }
+
+    for (const trait of activeTraits) {
+      if ((trait.grantedStates ?? []).length === 0) continue;
+
+      effectManager.addEffect({
+        instanceId: `trait_state_${trait.id}`,
+        sourceName: trait.name,
+        durationType: "manual",
+        isSelfConcentration: false,
+        modifiers: [],
+        grantedStates: trait.grantedStates ?? [],
+      });
+    }
+
+    resourceManager.initializeFromGrants(
+      activeTraits.flatMap((trait) => trait.resources ?? []),
+    );
+
+    return activeTraits;
+  }
 
   /**
    * Turns the ids from resolveGrantedTraitIds into the trait definitions the

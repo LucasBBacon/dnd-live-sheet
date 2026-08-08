@@ -1,7 +1,69 @@
+import type { DiceRule, DiceRuleTarget } from "@project/shared";
+
+export interface DiceRuleContext {
+  activeStates: string[];
+  sides: number;
+  rollFn?: (sides: number) => number;
+}
+
 /**
  * DiceEngine class provides functionality to parse standard dice notation and execute digital rolls.
  */
 export class DiceEngine {
+  private static matchesStateRequirements(
+    rule: DiceRule,
+    activeStates: string[],
+  ): boolean {
+    if (!rule.requiredStates || rule.requiredStates.length === 0) {
+      return true;
+    }
+
+    return rule.requiredStates.every((state) => activeStates.includes(state));
+  }
+
+  private static applyMutator(
+    rolls: number[],
+    rule: DiceRule,
+    context: DiceRuleContext,
+  ): number[] {
+    const mutator = rule.mutator;
+
+    if (mutator.type === "reroll_once") {
+      const triggerValues = new Set(mutator.triggerOn ?? []);
+      return rolls.map((roll, index) => {
+        if (!triggerValues.has(roll)) return roll;
+        return context.rollFn ? context.rollFn(context.sides) : roll;
+      });
+    }
+
+    if (mutator.type === "minimum_value") {
+      const floorValue = mutator.floorValue ?? 1;
+      return rolls.map((roll) => Math.max(roll, floorValue));
+    }
+
+    if (mutator.type === "explode") {
+      return rolls.map((roll) => roll);
+    }
+
+    return rolls;
+  }
+
+  public static applyDiceRules(
+    rolls: number[],
+    rules: DiceRule[],
+    target: DiceRuleTarget,
+    context: DiceRuleContext,
+  ): number[] {
+    let currentRolls = [...rolls];
+
+    for (const rule of rules) {
+      if (rule.target !== target) continue;
+      if (!this.matchesStateRequirements(rule, context.activeStates)) continue;
+      currentRolls = this.applyMutator(currentRolls, rule, context);
+    }
+
+    return currentRolls;
+  }
 
   /**
    * Parses standard notation and executes a digital roll.

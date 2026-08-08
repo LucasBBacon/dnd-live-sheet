@@ -9,6 +9,8 @@ export const DiceRuleTargetSchema = z.enum([
   "ABILITY_CHECK",
 ]);
 
+export type DiceRuleTarget = z.infer<typeof DiceRuleTargetSchema>;
+
 export const RNGMutatorTypeSchema = z.enum([
   "reroll_once",
   "minimum_value",
@@ -35,4 +37,5 @@ export const CriticalHitModifierSchema = z.object({
   requiredAttackTypes: z.array(AttackTypeSchema).default([]),
 });
 
+export type CriticalHitModifier = z.infer<typeof CriticalHitModifierSchema>;
 export type DiceRule = z.infer<typeof DiceRuleSchema>;

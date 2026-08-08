@@ -85,6 +85,10 @@ export interface CombatRollPayload {
   timestamp: number;
 }
 
+export interface CombatRollBroadcastPayload extends CombatRollPayload {
+  actorId: string;
+}
+
 export interface ServerBroadcastPayload<T> {
   actorId: string; // use who triggered event
   data: T;

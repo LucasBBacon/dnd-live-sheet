@@ -1,4 +1,5 @@
 import type {
+  CriticalHitModifier,
   FixedProficiencyGrant,
   RuntimeModifier,
   WeaponDefinition,
@@ -55,6 +56,52 @@ export class CombatEngine {
     return { statName: "STR", mod: strMod };
   }
 
+  private static inferAttackType(
+    weapon: WeaponDefinition,
+  ): "melee_weapon" | "ranged_weapon" | "melee_spell" | "ranged_spell" {
+    const isRangedCategory =
+      weapon.category === "simple_ranged" ||
+      weapon.category === "martial_ranged";
+
+    return isRangedCategory ? "ranged_weapon" : "melee_weapon";
+  }
+
+  private static matchesCriticalHitModifier(
+    modifier: CriticalHitModifier,
+    attackType:
+      | "melee_weapon"
+      | "ranged_weapon"
+      | "melee_spell"
+      | "ranged_spell",
+  ): boolean {
+    if (modifier.requiredAttackTypes.length === 0) {
+      return true;
+    }
+
+    return modifier.requiredAttackTypes.includes(attackType);
+  }
+
+  private static applyCriticalHitModifier(
+    baseDice: string,
+    modifier: CriticalHitModifier,
+  ): string {
+    if (modifier.type === "add_base_die") {
+      const match = baseDice.match(/^(\d+)d(\d+)$/i);
+      if (!match || !match[1] || !match[2]) return baseDice;
+      return `${Number.parseInt(match[1], 10) + 1}d${match[2]}`;
+    }
+
+    if (modifier.type === "add_specific_die" && modifier.diceToAdd) {
+      return modifier.diceToAdd;
+    }
+
+    if (modifier.type === "maximize_dice") {
+      return baseDice;
+    }
+
+    return baseDice;
+  }
+
   /**
    * Calculates the final attack matrix for a given equipped weapon.
    * @param weapon The weapon definition object containing properties and categories
@@ -63,6 +110,9 @@ export class CombatEngine {
    * @param proficiencies The character's proficiencies flat array
    * @param modifiers List of runtime modifiers current active in the character
    * @param activeStates Flat array of all active states affecting the character
+   * @param criticalHitModifiers Optional list of critical-hit modifiers granted by traits
+   * @param isCriticalHit Whether the attack being evaluated is a critical hit
+   * @param attackType The attack classification that the modifier rules should match against
    * @returns A DerivedAttack object containing the calculated attack bonus, damage expression, and breakdown of contributing factors
    */
   public static calculateWeaponAttack(
@@ -72,6 +122,13 @@ export class CombatEngine {
     proficiencies: FixedProficiencyGrant[],
     modifiers: RuntimeModifier[],
     activeStates: string[] = [],
+    criticalHitModifiers: CriticalHitModifier[] = [],
+    isCriticalHit = false,
+    attackType?:
+      | "melee_weapon"
+      | "ranged_weapon"
+      | "melee_spell"
+      | "ranged_spell",
   ): DerivedAttack {
     // 1 - resolve governing stat
     // TODO: intercept here for hexblade/shillelagh overrides if activeStates dictate it
@@ -157,10 +214,26 @@ export class CombatEngine {
         ? weapon.versatileDamageDice
         : weapon.damageDice;
 
+    const resolvedAttackType = attackType ?? this.inferAttackType(weapon);
+    let damageDiceExpression = finalDice ?? weapon.damageDice;
+
+    if (isCriticalHit) {
+      for (const modifier of criticalHitModifiers) {
+        if (!this.matchesCriticalHitModifier(modifier, resolvedAttackType)) {
+          continue;
+        }
+
+        damageDiceExpression = this.applyCriticalHitModifier(
+          damageDiceExpression,
+          modifier,
+        );
+      }
+    }
+
     const damageExpression =
       totalDamageBonus === 0
-        ? `${finalDice} ${weapon.damageType}`
-        : `${finalDice} ${totalDamageBonus > 0 ? "+" : ""}${totalDamageBonus} ${weapon.damageType}`;
+        ? `${damageDiceExpression} ${weapon.damageType}`
+        : `${damageDiceExpression} ${totalDamageBonus > 0 ? "+" : ""}${totalDamageBonus} ${weapon.damageType}`;
 
     return {
       weaponId: weapon.id,

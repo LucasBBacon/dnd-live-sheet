@@ -526,6 +526,38 @@ describe("CombatEngine.calculateWeaponAttack - versatile dice selection", () => 
   });
 });
 
+describe("CombatEngine.calculateWeaponAttack - critical hit modifiers", () => {
+  it("adds an extra base die to the damage expression on a critical hit when the modifier matches the attack type", () => {
+    const result = CombatEngine.calculateWeaponAttack(
+      makeWeapon({ damageDice: "1d6", damageType: "piercing" }),
+      makeScores(),
+      0,
+      [],
+      [],
+      [],
+      [{ type: "add_base_die", requiredAttackTypes: ["melee_weapon"] }],
+      true,
+    );
+
+    expect(result.damageExpression).toBe("2d6 piercing");
+  });
+
+  it("ignores critical hit modifiers whose required attack types do not match", () => {
+    const result = CombatEngine.calculateWeaponAttack(
+      makeWeapon({ damageDice: "1d6", damageType: "piercing" }),
+      makeScores(),
+      0,
+      [],
+      [],
+      [],
+      [{ type: "add_base_die", requiredAttackTypes: ["ranged_weapon"] }],
+      true,
+    );
+
+    expect(result.damageExpression).toBe("1d6 piercing");
+  });
+});
+
 describe("CombatEngine.calculateWeaponAttack - return shape", () => {
   it("passes through weapon id and name", () => {
     const result = CombatEngine.calculateWeaponAttack(

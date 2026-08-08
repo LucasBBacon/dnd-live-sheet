@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { CharacterSave } from "@project/shared";
-import { CharacterBootstrapper } from "../characterBootstraper.js";
+import { CharacterBootstrapper } from "../characterBootstrapper.js";
 import { ProficiencyExtractor } from "../proficiencyExtractor.js";
 
 const codes = (save: CharacterSave) =>

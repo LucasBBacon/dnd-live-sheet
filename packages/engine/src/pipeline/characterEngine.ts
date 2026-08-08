@@ -2,6 +2,7 @@ import type {
   ActionGrant,
   CalculationResult,
   CharacterSave,
+  EngineEvent,
   FixedProficiencyGrant,
   InventoryInstance,
   RuntimeModifier,
@@ -14,7 +15,8 @@ import { SKILL_MAP, type Ability } from "../types/core.js";
 import { SkillEngine, type DerivedSkill } from "../calculators/skills.js";
 import type { EffectManager } from "../calculators/effects.js";
 import type { ResourceManager } from "../calculators/resources.js";
-import { CharacterBootstrapper } from "./characterBootstraper.js";
+import { CharacterBootstrapper } from "./characterBootstrapper.js";
+import { ActionResolver } from "./actionResolver.js";
 import { ModifierExtractor } from "./modifierExtractor.js";
 import { ProficiencyExtractor } from "./proficiencyExtractor.js";
 import { StateExtractor } from "./stateExtractor.js";
@@ -115,6 +117,36 @@ export interface LiveCharacterSheet {
 }
 
 export class CharacterEngine {
+  public static dispatchTraitEvent(
+    eventName: EngineEvent,
+    save: CharacterSave,
+    effectManager: EffectManager,
+    resourceManager: ResourceManager,
+  ) {
+    const activeTraits = CharacterBootstrapper.hydrateRuntimeManagers(
+      save,
+      effectManager,
+      resourceManager,
+    );
+    const actionLookup = Object.fromEntries(
+      activeTraits.flatMap((trait) =>
+        (trait.actions ?? []).map((action) => [action.id, action]),
+      ),
+    );
+
+    const triggerGrants = activeTraits.flatMap((trait) => trait.triggers ?? []);
+
+    return ActionResolver.dispatchEvent(
+      eventName,
+      triggerGrants,
+      actionLookup,
+      {
+        effectManager,
+        resourceManager,
+      },
+    );
+  }
+
   public static buildLiveSheet(
     save: CharacterSave,
     inventory: InventoryInstance[],
@@ -125,7 +157,11 @@ export class CharacterEngine {
     // region Aggregation and Extraction
 
     // 1- compile active traits from blueprints
-    const activeTraits = CharacterBootstrapper.compileActiveTraits(save);
+    const activeTraits = CharacterBootstrapper.hydrateRuntimeManagers(
+      save,
+      effectManager,
+      resourceManager,
+    );
 
     // 2 - extract static math and proficiencies
     // both extractors read from the same flattened pick table: trait choice
@@ -235,13 +271,7 @@ export class CharacterEngine {
 
     // region State Synthesis
 
-    // 1 - hydrate resources
-    // engine extracts ResourceGrants from traits and feeds to manager
-    // manager retains current charges, but updates max limits automatically
-    const resourceGrants = activeTraits.flatMap((t) => t.resources || []);
-    resourceManager.initializeFromGrants(resourceGrants);
-
-    // 2 - synthesize actions
+    // 1 - synthesize actions
     // aggregate static actions from traits
     const actions: ActionGrant[] = activeTraits.flatMap((t) => t.actions || []);
 

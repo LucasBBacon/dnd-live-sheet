@@ -16,6 +16,8 @@ export interface ActiveEffect {
   isSelfConcentration: boolean; // if true, drops on failed CON save
   modifiers: RuntimeModifier[]; // e.g., [{target: "ARMOR_CLASS", type: "add", value: 5}]
   grantedStates: string[]; // e.g., ["shield_spell_active", "immune_to_magic_missile"]
+  kind?: "summon" | "effect";
+  durationHours?: number;
 }
 
 // region EFFECT MANAGER
@@ -128,6 +130,10 @@ export class EffectManager {
       effect.grantedStates.forEach((state) => allStates.add(state));
     }
     return Array.from(allStates);
+  }
+
+  public getActiveEffects(): ActiveEffect[] {
+    return Array.from(this.effects.values());
   }
 
   // endregion
