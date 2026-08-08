@@ -14,6 +14,7 @@ describe("Weapon Definition Schema", () => {
       damageDice: "1d8",
       damageType: "slashing",
       properties: ["versatile"],
+      range: 5,
     };
 
     expect(WeaponDefinitionSchema.parse(weapon)).toEqual(weapon);
@@ -27,6 +28,7 @@ describe("Weapon Definition Schema", () => {
       damageDice: "1d10",
       damageType: "piercing",
       properties: ["ammunition", "heavy", "loading", "two_handed", "special"],
+      range: 5,
     };
 
     expect(WeaponDefinitionSchema.parse(weapon)).toEqual(weapon);

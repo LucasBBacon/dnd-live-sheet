@@ -22,6 +22,8 @@ export const WeaponCapabilitySchema = z
     versatileDamageDice: z.string().optional(),
     damageType: DamageTypeSchema,
     properties: z.array(WeaponPropertySchema),
+    range: z.number().default(5),
+    longRange: z.number().optional(),
     ammoItemId: z.string().optional(),
     ammoTag: z.string().optional(),
   })

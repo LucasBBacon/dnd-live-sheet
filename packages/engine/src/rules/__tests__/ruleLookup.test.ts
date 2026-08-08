@@ -31,9 +31,7 @@ describe("ruleLookup", () => {
           type: "armor",
           weight: 6,
           requiresAttunement: false,
-          modifiers: [
-            acBonusModifier,
-          ],
+          modifiers: [acBonusModifier],
         },
       },
     });
@@ -51,9 +49,7 @@ describe("ruleLookup", () => {
           type: "armor",
           weight: 6,
           requiresAttunement: false,
-          modifiers: [
-            acBonusModifier,
-          ],
+          modifiers: [acBonusModifier],
         },
       },
     });
@@ -104,6 +100,7 @@ describe("ruleLookup", () => {
           damageDice: "1d8",
           damageType: "slashing",
           properties: ["versatile"],
+          range: 5,
         },
       },
     });
@@ -126,6 +123,7 @@ describe("ruleLookup", () => {
             damageDice: "1d10",
             damageType: "slashing",
             properties: ["versatile"],
+            range: 5,
           },
         },
       },
@@ -172,6 +170,7 @@ describe("ruleLookup", () => {
             damageDice: "1d12",
             damageType: "slashing",
             properties: ["versatile"],
+            range: 5,
           },
         },
       },

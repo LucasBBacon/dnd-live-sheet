@@ -31,6 +31,8 @@ export const WeaponDefinitionSchema = z
     versatileDamageDice: z.string().optional(),
     damageType: DamageTypeSchema,
     properties: z.array(WeaponPropertySchema),
+    range: z.number().default(5),
+    longRange: z.number().optional(),
     // the default pick, when the character carries nothing better
     ammoItemId: z.string().optional(),
     // what the weapon fires, e.g. "arrow". Any item carrying the same tag is

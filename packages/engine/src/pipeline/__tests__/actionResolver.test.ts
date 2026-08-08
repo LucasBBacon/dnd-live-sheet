@@ -386,7 +386,7 @@ describe("ActionResolver summon resolution", () => {
         entityTemplateIds: ["actor_clockwork_toy", "actor_music_box"],
         maxActive: 3,
         durationHours: 24,
-      },
+      } as ActionGrant["effect"],
     };
 
     const result = ActionResolver.execute(summonAction, payload(), {
@@ -410,7 +410,7 @@ describe("ActionResolver summon resolution", () => {
         type: "summon",
         entityTemplateIds: ["actor_clockwork_toy"],
         maxActive: 1,
-      },
+      } as ActionGrant["effect"],
     };
 
     const first = ActionResolver.execute(summonAction, payload(), {
@@ -421,7 +421,7 @@ describe("ActionResolver summon resolution", () => {
       {
         ...summonAction,
         effect: {
-          ...summonAction.effect,
+          ...(summonAction.effect as Extract<ActionGrant["effect"], { type: "summon" }>),
           entityTemplateIds: ["actor_music_box"],
         },
       },

@@ -165,6 +165,8 @@ export const EQUIPMENT_DICTIONARY: Record<string, EquipmentDefinition> = {
       versatileDamageDice: "1d10",
       damageType: "slashing",
       properties: ["versatile"],
+      range: 5,
+      longRange: undefined,
     },
   },
 
@@ -180,6 +182,8 @@ export const EQUIPMENT_DICTIONARY: Record<string, EquipmentDefinition> = {
       damageDice: "1d4",
       damageType: "piercing",
       properties: ["finesse", "light", "thrown"],
+      range: 20,
+      longRange: 60,
     },
   },
 
@@ -195,6 +199,8 @@ export const EQUIPMENT_DICTIONARY: Record<string, EquipmentDefinition> = {
       damageDice: "1d8",
       damageType: "piercing",
       properties: ["ammunition", "heavy", "two_handed"],
+      range: 150,
+      longRange: 600,
       ammoItemId: "item_ammo_arrow",
       ammoTag: "arrow",
     },

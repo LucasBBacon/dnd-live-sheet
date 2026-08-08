@@ -16,6 +16,7 @@ const makeWeapon = (
   damageDice: "1d6",
   damageType: "piercing",
   properties: [],
+  range: 5,
   ...overrides,
 });
 

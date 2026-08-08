@@ -8,7 +8,7 @@ describe("DiceEngine dice-rule application", () => {
 
     const rerolled = DiceEngine.applyDiceRules(
       [1, 4],
-      trait.diceRules,
+      trait?.diceRules ?? [],
       "DAMAGE_ROLL",
       {
         activeStates: ["action_melee_attack", "status_wielding_two_handed"],
@@ -25,7 +25,7 @@ describe("DiceEngine dice-rule application", () => {
 
     const rerolled = DiceEngine.applyDiceRules(
       [1, 4],
-      trait.diceRules,
+      trait?.diceRules ?? [],
       "DAMAGE_ROLL",
       {
         activeStates: ["action_melee_attack"],

@@ -23,10 +23,12 @@ export class WeaponSynthesizer {
       weapon.category === "simple_ranged";
     const hasReach = weapon.properties.includes("reach");
 
-    // TODO: define ranges!!!
-    // fallbacks if range is not explicitly defined in WeaponDefinition schema
-    const baseRange = isRanged ? 80 : hasReach ? 10 : 5;
-    const maxRange = isRanged ? 320 : undefined;
+    const baseRange = isRanged
+      ? weapon.range
+      : hasReach
+        ? Math.max(weapon.range, 10)
+        : 5;
+    const maxRange = isRanged ? weapon.longRange : undefined;
 
     const damageDice =
       isTwoHandedGrip && weapon.versatileDamageDice
@@ -96,9 +98,8 @@ export class WeaponSynthesizer {
 
       if (thrownAction.effect.type === "attack") {
         thrownAction.effect.attackType = "ranged_weapon"; // shift taxonomy for traits
-        // TODO: PULL THESE FROM WEAPON SCHEMA!!!!!!!!!!
-        thrownAction.effect.range = 20;
-        thrownAction.effect.longRange = 60;
+        thrownAction.effect.range = weapon.range;
+        thrownAction.effect.longRange = weapon.longRange;
       }
 
       actions.push(thrownAction);
