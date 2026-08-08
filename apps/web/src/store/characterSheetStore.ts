@@ -19,11 +19,13 @@ import {
   CharacterSlotSchema,
   type CharacterSave,
   type CharacterSlot,
+  type CombatRollPayload,
+  type DamageType,
+  type EngineEvent,
   type InventoryInstance,
+  type RollResultsBroadcastPayload,
   type RuleSnapshot,
   type RuntimeModifier,
-  type CombatRollPayload,
-  type EngineEvent,
   // TraitDefinition moved to the shared schemas when traits were extracted
   type TraitDefinition,
 } from "@project/shared";
@@ -144,6 +146,21 @@ const createCombatRollResult = (
   target: "ATTACK_ROLL",
   label: payload.attackName,
   summary: payload.damageExpression,
+  damageType: undefined,
+});
+
+const toActionRollResult = (
+  payload: RollResultsBroadcastPayload["rollResults"][number],
+): ActionRollResult => ({
+  total: payload.total,
+  rolls: payload.rolls,
+  modifier: payload.modifier,
+  target: payload.target,
+  ...(payload.damageType !== undefined && {
+    damageType: payload.damageType as DamageType,
+  }),
+  ...(payload.label !== undefined && { label: payload.label }),
+  ...(payload.summary !== undefined && { summary: payload.summary }),
 });
 
 const dispatchAuthoredEvent = (
@@ -169,6 +186,7 @@ const dispatchAuthoredEvent = (
     ),
   );
   const triggerGrants = activeTraits.flatMap((trait) => trait.triggers ?? []);
+  const diceRules = activeTraits.flatMap((trait) => trait.diceRules ?? []);
 
   const results = ActionResolver.dispatchEvent(
     eventName,
@@ -178,8 +196,28 @@ const dispatchAuthoredEvent = (
       effectManager: runtimeEffects,
       resourceManager: runtimeResources,
       activeStates: state.activeStates,
+      diceRules,
     },
   );
+
+  if (state.id && results.some((result) => (result.rollResults?.length ?? 0) > 0)) {
+    const authoredRollResults = results.flatMap((result) => result.rollResults ?? []);
+    if (authoredRollResults.length > 0) {
+      socketService.emitRollResults({
+        characterId: state.id,
+        rollResults: authoredRollResults.map((result) => ({
+          total: result.total,
+          rolls: result.rolls,
+          modifier: result.modifier,
+          target: result.target,
+          ...(result.damageType !== undefined && { damageType: result.damageType }),
+          ...(result.label !== undefined && { label: result.label }),
+          ...(result.summary !== undefined && { summary: result.summary }),
+        })),
+        timestamp: Date.now(),
+      });
+    }
+  }
 
   return {
     results,
@@ -450,6 +488,7 @@ export interface CharacterSheetState {
   triggerRest: (restType: "short" | "long") => void;
   dispatchAuthoredEvent: (eventName: EngineEvent) => void;
   recordCombatRoll: (payload: CombatRollPayload) => void;
+  recordRollResult: (payload: RollResultsBroadcastPayload) => void;
   beginTurn: () => void;
   endTurn: () => void;
   handleSaveOutcome: (succeeded: boolean) => void;
@@ -834,6 +873,15 @@ export const useCharacterSheetStore = create<CharacterSheetState>(
         latestRollResults: [
           ...state.latestRollResults.slice(-4),
           createCombatRollResult(payload),
+        ],
+      }));
+    },
+
+    recordRollResult: (payload) => {
+      set((state) => ({
+        latestRollResults: [
+          ...state.latestRollResults.slice(-4),
+          ...payload.rollResults.map(toActionRollResult),
         ],
       }));
     },

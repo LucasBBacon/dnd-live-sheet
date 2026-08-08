@@ -200,6 +200,95 @@ describe("useCharacterSheetStore hp trigger handling", () => {
     expect(state.latestRollResults[0]?.label).toBe("Longsword");
   });
 
+  it("appends authored roll-result broadcasts to the latest roll log", () => {
+    const store = useCharacterSheetStore.getState();
+
+    store.recordRollResult({
+      characterId: "char_1",
+      rollResults: [
+        {
+          total: 7,
+          rolls: [7],
+          modifier: 0,
+          target: "DAMAGE_ROLL",
+          damageType: "slashing",
+        },
+      ],
+      timestamp: Date.now(),
+    });
+
+    const state = useCharacterSheetStore.getState();
+    expect(state.latestRollResults).toHaveLength(1);
+    expect(state.latestRollResults[0]?.target).toBe("DAMAGE_ROLL");
+    expect(state.latestRollResults[0]?.total).toBe(7);
+    expect(state.latestRollResults[0]?.damageType).toBe("slashing");
+  });
+
+  it("applies authored dice rules from traits while dispatching runtime events", () => {
+    const randomSpy = vi
+      .spyOn(Math, "random")
+      .mockReturnValueOnce(0)
+      .mockReturnValueOnce(0.9);
+
+    const compileSpy = vi
+      .spyOn(CharacterBootstrapper, "compileActiveTraits")
+      .mockReturnValue([
+        {
+          id: "trait_test_dice_rules",
+          name: "Test Dice Rules",
+          description: "Rerolls a natural 1 on attacks",
+          modifiers: { fixed: [], choices: [] },
+          resources: [],
+          diceRules: [
+            {
+              target: "DAMAGE_ROLL",
+              requiredStates: [],
+              mutator: { type: "reroll_once", triggerOn: [1] },
+            },
+          ],
+          criticalHitModifiers: [],
+          triggers: [
+            {
+              listenFor: "ON_ATTACK_HIT",
+              executeAction: "action_attack_dice_rules",
+            },
+          ],
+          actions: [
+            {
+              id: "action_attack_dice_rules",
+              name: "Attack Dice Rules",
+              activation: "special",
+              effect: {
+                type: "attack",
+                attackType: "melee_weapon",
+                attackStat: "STR",
+                range: 5,
+                damage: [
+                  {
+                    sourceName: "Test Attack",
+                    baseDice: "1d6",
+                    damageType: "bludgeoning",
+                    scalingMode: "none",
+                    levelScaling: [],
+                  },
+                ],
+              },
+            },
+          ],
+        },
+      ]);
+
+    const store = useCharacterSheetStore.getState();
+    store.dispatchAuthoredEvent("ON_ATTACK_HIT");
+
+    const state = useCharacterSheetStore.getState();
+    expect(state.latestRollResults).toHaveLength(1);
+    expect(state.latestRollResults[0]?.total).toBe(6);
+
+    randomSpy.mockRestore();
+    compileSpy.mockRestore();
+  });
+
   it("dispatches turn and save-failure authored events through the runtime path", () => {
     const compileSpy = vi
       .spyOn(CharacterBootstrapper, "compileActiveTraits")

@@ -35,6 +35,9 @@ export const LiveSheetProvider = ({
   const recordCombatRoll = useCharacterSheetStore(
     (state) => state.recordCombatRoll,
   );
+  const recordRollResult = useCharacterSheetStore(
+    (state) => state.recordRollResult,
+  );
 
   useEffect(() => {
     // 1 - establish connection and join room
@@ -66,6 +69,10 @@ export const LiveSheetProvider = ({
       recordCombatRoll(broadcast);
     });
 
+    socketService.subscribeToRollResults((broadcast) => {
+      recordRollResult(broadcast);
+    });
+
     socketService.subscribeToActionErrors((payload) => {
       if (
         payload.event === "character:item_equipped" ||
@@ -91,6 +98,7 @@ export const LiveSheetProvider = ({
     syncRemoteAttunement,
     setInventoryError,
     recordCombatRoll,
+    recordRollResult,
   ]);
 
   return <>{children}</>;

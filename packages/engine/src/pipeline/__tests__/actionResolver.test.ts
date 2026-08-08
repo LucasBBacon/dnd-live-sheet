@@ -280,6 +280,64 @@ describe("ActionResolver attack resolution", () => {
 
     randomSpy.mockRestore();
   });
+
+  it("filters damage dice rules by required damage type", () => {
+    const attackAction: ActionGrant = {
+      ...bowShot,
+      consumesAmmo: undefined,
+      effect: {
+        type: "attack",
+        attackType: "ranged_weapon",
+        attackStat: "DEX",
+        range: 150,
+        damage: [
+          {
+            sourceName: "Longbow",
+            baseDice: "1d6",
+            damageType: "piercing",
+            scalingMode: "none",
+            levelScaling: [],
+          },
+        ],
+      },
+    };
+
+    const randomSpy = vi
+      .spyOn(Math, "random")
+      .mockReturnValueOnce(0)
+      .mockReturnValueOnce(0.9);
+
+    const mismatched = ActionResolver.execute(attackAction, payload(), {
+      effectManager,
+      resourceManager,
+      diceRules: [
+        {
+          target: "DAMAGE_ROLL",
+          requiredStates: [],
+          requiredDamageType: "fire",
+          mutator: { type: "reroll_once", triggerOn: [1] },
+        },
+      ],
+    });
+
+    const matched = ActionResolver.execute(attackAction, payload(), {
+      effectManager,
+      resourceManager,
+      diceRules: [
+        {
+          target: "DAMAGE_ROLL",
+          requiredStates: [],
+          requiredDamageType: "piercing",
+          mutator: { type: "reroll_once", triggerOn: [1] },
+        },
+      ],
+    });
+
+    expect(mismatched.rollResults?.[0]?.total).toBe(1);
+    expect(matched.rollResults?.[0]?.total).toBe(6);
+
+    randomSpy.mockRestore();
+  });
 });
 
 describe("ActionResolver save resolution", () => {

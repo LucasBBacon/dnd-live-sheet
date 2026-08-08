@@ -237,6 +237,7 @@ export class ActionResolver {
               sides: Number.parseInt(baseDice.split("d")[1] ?? "6", 10),
               rollFn: (sides) =>
                 DiceEngine.rollDigital(`1d${sides}`).total,
+              requiredDamageType: segment.damageType,
             },
           );
 
@@ -314,6 +315,7 @@ export class ActionResolver {
               sides: Number.parseInt(baseDice.split("d")[1] ?? "6", 10),
               rollFn: (sides) =>
                 DiceEngine.rollDigital(`1d${sides}`).total,
+              requiredDamageType: segment.damageType,
             },
           );
 

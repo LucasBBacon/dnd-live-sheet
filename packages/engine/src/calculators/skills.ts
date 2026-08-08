@@ -1,5 +1,5 @@
 import type { FixedProficiencyGrant, RuntimeModifier } from "@project/shared";
-import { SKILL_MAP } from "../types/core.js";
+import { SKILL_MAP } from "@project/shared";
 import { AbilityEngine } from "./abilities.js";
 
 export interface DerivedSkill {

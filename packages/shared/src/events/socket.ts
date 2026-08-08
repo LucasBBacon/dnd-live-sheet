@@ -11,6 +11,7 @@ export const SOCKET_EVENTS = {
   CONDITION_ADDED: "character:condition_added",
   REST_COMPLETED: "character:rest_completed",
   COMBAT_ROLL: "character:combat_roll",
+  ROLL_RESULTS: "character:roll_results",
 } as const;
 
 // #endregion
@@ -82,6 +83,22 @@ export interface CombatRollPayload {
   damageExpression: string;
   slot: string;
   requiresAmmo: boolean;
+  timestamp: number;
+}
+
+export interface RollResultPayload {
+  total: number;
+  rolls: number[];
+  modifier: number;
+  target: "DAMAGE_ROLL" | "ATTACK_ROLL" | "SAVING_THROW" | "ABILITY_CHECK";
+  damageType?: string;
+  label?: string;
+  summary?: string;
+}
+
+export interface RollResultsBroadcastPayload {
+  characterId: string;
+  rollResults: RollResultPayload[];
   timestamp: number;
 }
 

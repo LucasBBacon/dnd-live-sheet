@@ -11,7 +11,8 @@ import {
   AbilityEngine,
   type DerivedAbility,
 } from "../calculators/abilities.js";
-import { SKILL_MAP, type Ability } from "../types/core.js";
+import { SKILL_MAP } from "@project/shared";
+import type { Ability } from "../types/core.js";
 import { SkillEngine, type DerivedSkill } from "../calculators/skills.js";
 import type { EffectManager } from "../calculators/effects.js";
 import type { ResourceManager } from "../calculators/resources.js";

@@ -32,5 +32,6 @@ export * from "./schemas/spells.js";
 export * from "./schemas/traits.js";
 export * from "./schemas/triggers.js";
 export * from "./schemas/weapons.js";
+export * from "./skills.js";
 export * from "./events/socket.js";
 export * from "./events/levelUp.js";

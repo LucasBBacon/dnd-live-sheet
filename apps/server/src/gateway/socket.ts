@@ -15,6 +15,7 @@ import {
   type ItemConsumedPayload,
   type ItemEquippedPayload,
   type ResourceConsumedPayload,
+  type RollResultsBroadcastPayload,
 } from "@project/shared";
 import { Server, Socket } from "socket.io";
 import { and, eq, not, sql } from "drizzle-orm";
@@ -232,6 +233,33 @@ export function initializeWebSocketGateway(httpServer: any) {
         });
       }
     });
+
+    // #endregion
+
+    // #region ROLL RESULTS
+
+    socket.on(
+      SOCKET_EVENTS.ROLL_RESULTS,
+      async (payload: RollResultsBroadcastPayload) => {
+        try {
+          const campaignId = await ensureCharacterInSocketCampaign(
+            socket,
+            payload.characterId,
+          );
+
+          socket.to(`campaign_${campaignId}`).emit(SOCKET_EVENTS.ROLL_RESULTS, {
+            actorId: socket.id,
+            data: payload,
+          });
+        } catch (error) {
+          console.error("Failed to process roll results broadcast:", error);
+          socket.emit("error:rollback", {
+            event: SOCKET_EVENTS.ROLL_RESULTS,
+            payload,
+          });
+        }
+      },
+    );
 
     // #endregion
 

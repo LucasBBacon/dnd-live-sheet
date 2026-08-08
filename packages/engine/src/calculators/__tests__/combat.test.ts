@@ -165,6 +165,63 @@ describe("CombatEngine.calculateWeaponAttack - governing stat", () => {
     expect(result.breakdown.governingStat).toBe("WIS");
     expect(result.attackBonus).toBe(3);
   });
+
+  it("applies a critical-hit modifier only when its required states are active", () => {
+    const modifier = {
+      type: "add_base_die",
+      requiredStates: ["raging"],
+      requiredAttackTypes: ["melee_weapon"],
+    } as any;
+
+    const inactive = CombatEngine.calculateWeaponAttack(
+      makeWeapon({ category: "martial_melee" }),
+      makeScores(),
+      0,
+      [],
+      [],
+      [],
+      [modifier],
+      true,
+      "melee_weapon",
+    );
+
+    const active = CombatEngine.calculateWeaponAttack(
+      makeWeapon({ category: "martial_melee" }),
+      makeScores(),
+      0,
+      [],
+      [],
+      ["raging"],
+      [modifier],
+      true,
+      "melee_weapon",
+    );
+
+    expect(inactive.criticalDamageExpression).toBe("1d6 piercing");
+    expect(active.criticalDamageExpression).toBe("2d6 piercing");
+  });
+
+  it("ignores a critical-hit modifier while one of its forbidden states is active", () => {
+    const modifier = {
+      type: "add_base_die",
+      forbiddenStates: ["prone"],
+      requiredAttackTypes: ["melee_weapon"],
+    } as any;
+
+    const result = CombatEngine.calculateWeaponAttack(
+      makeWeapon({ category: "martial_melee" }),
+      makeScores(),
+      0,
+      [],
+      [],
+      ["prone"],
+      [modifier],
+      true,
+      "melee_weapon",
+    );
+
+    expect(result.criticalDamageExpression).toBe("1d6 piercing");
+  });
 });
 
 describe("CombatEngine.calculateWeaponAttack - proficiency", () => {
@@ -570,7 +627,14 @@ describe("CombatEngine.calculateWeaponAttack - critical hit modifiers", () => {
       [],
       [],
       [],
-      [{ type: "add_base_die", requiredAttackTypes: ["melee_weapon"] }],
+      [
+        {
+          type: "add_base_die",
+          requiredAttackTypes: ["melee_weapon"],
+          requiredStates: [],
+          forbiddenStates: [],
+        },
+      ],
       true,
     );
 
@@ -585,7 +649,14 @@ describe("CombatEngine.calculateWeaponAttack - critical hit modifiers", () => {
       [],
       [],
       [],
-      [{ type: "add_base_die", requiredAttackTypes: ["ranged_weapon"] }],
+      [
+        {
+          type: "add_base_die",
+          requiredAttackTypes: ["ranged_weapon"],
+          requiredStates: [],
+          forbiddenStates: [],
+        },
+      ],
       true,
     );
 

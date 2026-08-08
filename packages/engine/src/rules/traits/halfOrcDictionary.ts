@@ -115,6 +115,8 @@ export const HALF_ORC_TRAITS: Record<string, TraitDefinition> = {
           effects: [
             {
               type: "apply_effect",
+              requiredStates: [],
+              forbiddenStates: [],
               effectName: "Drop to One HP",
               durationType: "manual",
               states: ["drop_to_one_hp"],
@@ -140,6 +142,8 @@ export const HALF_ORC_TRAITS: Record<string, TraitDefinition> = {
       {
         type: "add_base_die",
         requiredAttackTypes: ["melee_weapon"],
+        requiredStates: [],
+        forbiddenStates: [],
       },
     ],
     actions: [],

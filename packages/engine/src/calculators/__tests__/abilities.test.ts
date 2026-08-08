@@ -121,6 +121,21 @@ describe("AbilityEngine.calculateScore", () => {
     );
   });
 
+  it("raises the cap when an active state requests a higher limit", () => {
+    const result = AbilityEngine.calculateScore(
+      18,
+      "STR",
+      [makeMod({ sourceName: "Heightened Strength", value: 8 })],
+      ["ability_cap_24"],
+    );
+
+    expect(result.score).toBe(24);
+    expect(result.modifier).toBe(7);
+    expect(result.breakdown).toBe(
+      "Base (18) | Heightened Strength (+8) | (Capped at 24)",
+    );
+  });
+
   it("does not note a cap when the natural score is exactly at the cap", () => {
     const result = AbilityEngine.calculateScore(20, "STR", []);
 

@@ -1,5 +1,5 @@
 import type { TraitProficiencyCategory } from "@project/shared";
-import { SKILL_MAP } from "../types/core.js";
+import { SKILL_MAP } from "@project/shared";
 
 /**
  * The rosters behind an open choice block.

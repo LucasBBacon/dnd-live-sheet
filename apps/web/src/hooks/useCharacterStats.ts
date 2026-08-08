@@ -4,11 +4,10 @@ import {
   AbilityEngine,
   DerivedStatEngine,
   InventoryExtractor,
-  SKILL_MAP,
   SkillEngine,
   type Ability,
 } from "@project/engine";
-import type { FixedProficiencyGrant } from "@project/shared";
+import { SKILL_MAP, type FixedProficiencyGrant } from "@project/shared";
 
 /**
  * A custom React hook that calculates the character's final ability scores, modifiers, and total active modifiers based on base scores, active modifiers, and equipped inventory items.

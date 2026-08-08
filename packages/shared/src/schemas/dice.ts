@@ -35,6 +35,8 @@ export const CriticalHitModifierSchema = z.object({
   diceToAdd: z.string().optional(),
   damageType: DamageTypeSchema.optional(),
   requiredAttackTypes: z.array(AttackTypeSchema).default([]),
+  requiredStates: z.array(z.string()).default([]),
+  forbiddenStates: z.array(z.string()).default([]),
 });
 
 export type CriticalHitModifier = z.infer<typeof CriticalHitModifierSchema>;

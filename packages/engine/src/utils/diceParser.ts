@@ -4,6 +4,7 @@ export interface DiceRuleContext {
   activeStates: string[];
   sides: number;
   rollFn?: (sides: number) => number;
+  requiredDamageType?: string;
 }
 
 /**
@@ -13,12 +14,20 @@ export class DiceEngine {
   private static matchesStateRequirements(
     rule: DiceRule,
     activeStates: string[],
+    requiredDamageType?: string,
   ): boolean {
-    if (!rule.requiredStates || rule.requiredStates.length === 0) {
-      return true;
+    if (
+      rule.requiredStates &&
+      !rule.requiredStates.every((state) => activeStates.includes(state))
+    ) {
+      return false;
     }
 
-    return rule.requiredStates.every((state) => activeStates.includes(state));
+    if (requiredDamageType && rule.requiredDamageType && rule.requiredDamageType !== requiredDamageType) {
+      return false;
+    }
+
+    return true;
   }
 
   private static applyMutator(
@@ -30,7 +39,7 @@ export class DiceEngine {
 
     if (mutator.type === "reroll_once") {
       const triggerValues = new Set(mutator.triggerOn ?? []);
-      return rolls.map((roll, index) => {
+      return rolls.map((roll) => {
         if (!triggerValues.has(roll)) return roll;
         return context.rollFn ? context.rollFn(context.sides) : roll;
       });
@@ -58,7 +67,7 @@ export class DiceEngine {
 
     for (const rule of rules) {
       if (rule.target !== target) continue;
-      if (!this.matchesStateRequirements(rule, context.activeStates)) continue;
+      if (!this.matchesStateRequirements(rule, context.activeStates, context.requiredDamageType)) continue;
       currentRolls = this.applyMutator(currentRolls, rule, context);
     }
 

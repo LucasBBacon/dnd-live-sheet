@@ -25,6 +25,26 @@ export interface DerivedAttack {
  * The CombatEngine class provides methods to calculate derived combat statistics for a character based on their ability scores, proficiency, and weapon properties. It encapsulates the logic for determining the governing ability score modifier, calculating attack bonuses, and generating damage expressions.
  */
 export class CombatEngine {
+  private static stateDrivenGoverningStat(
+    activeStates: string[] = [],
+  ): Ability | undefined {
+    const overrides = new Map<string, Ability>([
+      ["hexblade", "CHA"],
+      ["shillelagh", "WIS"],
+      ["governing_stat_cha", "CHA"],
+      ["governing_stat_wis", "WIS"],
+      ["governing_stat_str", "STR"],
+      ["governing_stat_dex", "DEX"],
+    ]);
+
+    for (const state of activeStates) {
+      const override = overrides.get(state);
+      if (override) return override;
+    }
+
+    return undefined;
+  }
+
   /**
    * Determines the governing ability score modifier based on weapon properties.
    * @param weapon The weapon definition object containing properties and categories
@@ -46,12 +66,21 @@ export class CombatEngine {
     const chaMod = AbilityEngine.getModifier(abilityScores.CHA);
     const wisMod = AbilityEngine.getModifier(abilityScores.WIS);
 
-    if (activeStates.includes("hexblade")) {
+    const stateOverride = this.stateDrivenGoverningStat(activeStates);
+    if (stateOverride === "CHA") {
       return { statName: "CHA", mod: chaMod };
     }
 
-    if (activeStates.includes("shillelagh")) {
+    if (stateOverride === "WIS") {
       return { statName: "WIS", mod: wisMod };
+    }
+
+    if (stateOverride === "STR") {
+      return { statName: "STR", mod: strMod };
+    }
+
+    if (stateOverride === "DEX") {
+      return { statName: "DEX", mod: dexMod };
     }
 
     if (hasFinesse) {
@@ -85,7 +114,20 @@ export class CombatEngine {
       | "ranged_weapon"
       | "melee_spell"
       | "ranged_spell",
+    activeStates: string[] = [],
   ): boolean {
+    if (
+      modifier.requiredStates?.some((state) => !activeStates.includes(state))
+    ) {
+      return false;
+    }
+
+    if (
+      modifier.forbiddenStates?.some((state) => activeStates.includes(state))
+    ) {
+      return false;
+    }
+
     if (modifier.requiredAttackTypes.length === 0) {
       return true;
     }
@@ -153,7 +195,6 @@ export class CombatEngine {
       | "ranged_spell",
   ): DerivedAttack {
     // 1 - resolve governing stat
-    // TODO: intercept here for hexblade/shillelagh overrides if activeStates dictate it
     const { statName, mod: governingMod } = this.determineGoverningModifier(
       weapon,
       abilityScores,
@@ -242,7 +283,7 @@ export class CombatEngine {
     let criticalDamageDiceExpression = damageDiceExpression;
 
     for (const modifier of criticalHitModifiers) {
-      if (!this.matchesCriticalHitModifier(modifier, resolvedAttackType)) {
+      if (!this.matchesCriticalHitModifier(modifier, resolvedAttackType, activeStates)) {
         continue;
       }
 

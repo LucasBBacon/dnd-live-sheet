@@ -1,6 +1,20 @@
 import type { Ability } from "../types/core.js";
 import type { RuntimeModifier } from "@project/shared";
 
+const getStateDrivenAbilityCap = (activeStates: string[] = []): number => {
+  const stateCaps = new Map<string, number>([
+    ["barbarian_capstone", 24],
+    ["tome", 24],
+    ["ability_cap_24", 24],
+    ["ability_cap_30", 30],
+  ]);
+
+  return activeStates.reduce((maxCap, state) => {
+    const cap = stateCaps.get(state);
+    return cap !== undefined ? Math.max(maxCap, cap) : maxCap;
+  }, 20);
+};
+
 export interface DerivedAbility {
   score: number;
   modifier: number;
@@ -48,9 +62,7 @@ export class AbilityEngine {
       breakdownTokens.push(`${mod.sourceName} (${sign}${mod.value})`);
     }
 
-    // default 5e natural cap is 20
-    // TODO: INTERCEPT BARBARIAN CAPSTONE / TOMES raise the maxCap var here
-    const maxCap = 20;
+    const maxCap = getStateDrivenAbilityCap(activeStates);
 
     // calculate capped natural score
     let finalScore = Math.min(base + naturalBonus, maxCap);

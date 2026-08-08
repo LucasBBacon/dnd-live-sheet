@@ -9,6 +9,7 @@ import {
   type ItemConsumedPayload,
   type ItemEquippedPayload,
   type ResourceConsumedPayload,
+  type RollResultsBroadcastPayload,
   unwrapServerBroadcastPayload,
 } from "@project/shared";
 import { io, type Socket } from "socket.io-client";
@@ -144,6 +145,21 @@ class SocketManager {
     this.socket?.on(
       SOCKET_EVENTS.COMBAT_ROLL,
       (payload: MaybeServerBroadcastPayload<CombatRollPayload>) => {
+        callback(unwrapServerBroadcastPayload(payload));
+      },
+    );
+  }
+
+  public emitRollResults(payload: RollResultsBroadcastPayload) {
+    this.socket?.emit(SOCKET_EVENTS.ROLL_RESULTS, payload);
+  }
+
+  public subscribeToRollResults(
+    callback: (payload: RollResultsBroadcastPayload) => void,
+  ) {
+    this.socket?.on(
+      SOCKET_EVENTS.ROLL_RESULTS,
+      (payload: MaybeServerBroadcastPayload<RollResultsBroadcastPayload>) => {
         callback(unwrapServerBroadcastPayload(payload));
       },
     );
