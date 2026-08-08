@@ -5,9 +5,10 @@ import { useAbilities, useDerivedStats } from "./useCharacterStats";
 import {
   CombatEngine,
   resolveWeaponDefinition,
+  TRAIT_DICTIONARY,
   type Ability,
 } from "@project/engine";
-import type { FixedProficiencyGrant } from "@project/shared";
+import type { FixedProficiencyGrant, TraitDefinition } from "@project/shared";
 
 /**
  * A custom React hook that calculates the combat matrices for all equipped weapons in a character's inventory.
@@ -16,6 +17,8 @@ import type { FixedProficiencyGrant } from "@project/shared";
 export const useCombat = () => {
   const inventory = useCharacterSheetStore((state) => state.inventory);
   const proficiencies = useCharacterSheetStore((state) => state.proficiencies);
+  const traitGrants = useCharacterSheetStore((state) => state.traitGrants);
+  const availableTraits = useCharacterSheetStore((state) => state.traits);
   const ruleSnapshot = useCharacterSheetStore((state) => state.ruleSnapshot);
 
   // compose the prerequisite math engines
@@ -37,6 +40,19 @@ export const useCombat = () => {
     ) as Record<Ability, number>;
 
     const inventoryIds = inventory.map((i) => i.id);
+
+    const activeTraits = Array.from(
+      new Map<string, TraitDefinition>([
+        ...(availableTraits ?? []).map((trait) => [trait.id, trait] as const),
+        ...traitGrants.flatMap((grant) => {
+          const trait = TRAIT_DICTIONARY[grant.traitId];
+          return trait ? [[trait.id, trait] as const] : [];
+        }),
+      ]).values(),
+    );
+    const criticalHitModifiers = activeTraits.flatMap(
+      (trait) => trait.criticalHitModifiers ?? [],
+    );
 
     // 2 - map equipped items to their combat matrices
     const attacks = equippedHands.reduce((acc, item) => {
@@ -78,6 +94,8 @@ export const useCombat = () => {
         profBonus,
         weaponProficiencies,
         applicableMods,
+        [],
+        criticalHitModifiers,
       );
 
       // 6 - ammo logic
@@ -108,5 +126,5 @@ export const useCombat = () => {
     }, [] as any[]);
 
     return { attacks };
-  }, [inventory, proficiencies, finalAbilities, profBonus, totalMods, ruleSnapshot]);
+  }, [inventory, proficiencies, traitGrants, availableTraits, finalAbilities, profBonus, totalMods, ruleSnapshot]);
 };

@@ -12,6 +12,7 @@ export interface DerivedAttack {
   name: string;
   attackBonus: number;
   damageExpression: string; // e.g., '1d8 + 4'
+  criticalDamageExpression: string; // e.g., '2d8 + 4'
   isProficient: boolean;
   breakdown: {
     governingStat: string;
@@ -100,6 +101,16 @@ export class CombatEngine {
     }
 
     return baseDice;
+  }
+
+  private static formatDamageExpression(
+    damageDiceExpression: string,
+    totalDamageBonus: number,
+    damageType: string,
+  ): string {
+    return totalDamageBonus === 0
+      ? `${damageDiceExpression} ${damageType}`
+      : `${damageDiceExpression} ${totalDamageBonus > 0 ? "+" : ""}${totalDamageBonus} ${damageType}`;
   }
 
   /**
@@ -216,30 +227,40 @@ export class CombatEngine {
 
     const resolvedAttackType = attackType ?? this.inferAttackType(weapon);
     let damageDiceExpression = finalDice ?? weapon.damageDice;
+    let criticalDamageDiceExpression = damageDiceExpression;
 
-    if (isCriticalHit) {
-      for (const modifier of criticalHitModifiers) {
-        if (!this.matchesCriticalHitModifier(modifier, resolvedAttackType)) {
-          continue;
-        }
-
-        damageDiceExpression = this.applyCriticalHitModifier(
-          damageDiceExpression,
-          modifier,
-        );
+    for (const modifier of criticalHitModifiers) {
+      if (!this.matchesCriticalHitModifier(modifier, resolvedAttackType)) {
+        continue;
       }
+
+      criticalDamageDiceExpression = this.applyCriticalHitModifier(
+        criticalDamageDiceExpression,
+        modifier,
+      );
     }
 
-    const damageExpression =
-      totalDamageBonus === 0
-        ? `${damageDiceExpression} ${weapon.damageType}`
-        : `${damageDiceExpression} ${totalDamageBonus > 0 ? "+" : ""}${totalDamageBonus} ${weapon.damageType}`;
+    if (isCriticalHit) {
+      damageDiceExpression = criticalDamageDiceExpression;
+    }
+
+    const damageExpression = this.formatDamageExpression(
+      damageDiceExpression,
+      totalDamageBonus,
+      weapon.damageType,
+    );
+    const criticalDamageExpression = this.formatDamageExpression(
+      criticalDamageDiceExpression,
+      totalDamageBonus,
+      weapon.damageType,
+    );
 
     return {
       weaponId: weapon.id,
       name: weapon.name,
       attackBonus,
       damageExpression,
+      criticalDamageExpression,
       isProficient,
       breakdown: {
         governingStat: statName,

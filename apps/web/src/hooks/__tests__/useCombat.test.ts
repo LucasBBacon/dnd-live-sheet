@@ -9,6 +9,11 @@ let mockStoreState: {
     isAttuned: boolean;
   }>;
   proficiencies: Record<string, string>;
+  traitGrants: Array<{
+    id: string;
+    traitId: string;
+    source: string;
+  }>;
   ruleSnapshot: {
     equipmentById?: Record<string, unknown>;
     weaponsById: Record<string, unknown>;
@@ -50,6 +55,7 @@ describe("useCombat", () => {
     mockStoreState = {
       inventory: [],
       proficiencies: {},
+      traitGrants: [],
       ruleSnapshot: null,
     };
   });
@@ -80,6 +86,34 @@ describe("useCombat", () => {
       ammoInventoryId: null,
     });
     expect(attacks[0].attackBonus).toBe(5);
+  });
+
+  it("surfaces critical damage expressions granted by active traits", () => {
+    mockStoreState.inventory = [
+      {
+        id: "inv_2",
+        itemId: "item_weapon_longsword",
+        quantity: 1,
+        slot: "main_hand",
+        isAttuned: false,
+      },
+    ];
+    mockStoreState.proficiencies = {
+      martial_melee: "proficient",
+    };
+    mockStoreState.traitGrants = [
+      {
+        id: "grant_savage_attacks",
+        traitId: "savage_attacks",
+        source: "test",
+      },
+    ];
+
+    const { attacks } = useCombat();
+
+    expect(attacks).toHaveLength(1);
+    expect(attacks[0].criticalDamageExpression).toContain("2d8");
+    expect(attacks[0].criticalDamageExpression).toContain("slashing");
   });
 
   it("does not derive attacks for non-weapon equipped items", () => {
