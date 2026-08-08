@@ -204,20 +204,20 @@ describe("ActionResolver effect predicates", () => {
       },
     };
 
-    const skipped = ActionResolver.execute(
-      gatedAction,
-      payload(),
-      { effectManager, resourceManager, activeStates: [] },
-    );
+    const skipped = ActionResolver.execute(gatedAction, payload(), {
+      effectManager,
+      resourceManager,
+      activeStates: [],
+    });
 
     expect(skipped.executed).toBe(true);
     expect(effectManager.getActiveEffects()).toHaveLength(0);
 
-    const applied = ActionResolver.execute(
-      gatedAction,
-      payload(),
-      { effectManager, resourceManager, activeStates: ["status_wearing_armor"] },
-    );
+    const applied = ActionResolver.execute(gatedAction, payload(), {
+      effectManager,
+      resourceManager,
+      activeStates: ["status_wearing_armor"],
+    });
 
     expect(applied.executed).toBe(true);
     expect(effectManager.getActiveEffects()).toHaveLength(1);
@@ -300,7 +300,11 @@ describe("ActionResolver save resolution", () => {
         areaOfEffect: { shape: "single_target", size: 1 },
         savingThrow: {
           targetStat: "CON",
-          dcCalculation: { base: 10, scalingStat: "CON", includeProficiency: false },
+          dcCalculation: {
+            base: 10,
+            scalingStat: "CON",
+            includeProficiency: false,
+          },
           saveEffect: "half_damage",
         },
         damage: [
@@ -397,6 +401,8 @@ describe("ActionResolver macro actions", () => {
             states: ["drop_to_one_hp"],
             modifiers: [],
             isSelfConcentration: false,
+            requiredStates: [],
+            forbiddenStates: [],
           },
         ],
       },
@@ -467,7 +473,10 @@ describe("ActionResolver summon resolution", () => {
       {
         ...summonAction,
         effect: {
-          ...(summonAction.effect as Extract<ActionGrant["effect"], { type: "summon" }>),
+          ...(summonAction.effect as Extract<
+            ActionGrant["effect"],
+            { type: "summon" }
+          >),
           entityTemplateIds: ["actor_music_box"],
         },
       },
@@ -532,6 +541,8 @@ describe("ActionResolver summon resolution", () => {
         states: [],
         modifiers: [],
         isSelfConcentration: false,
+        requiredStates: [],
+        forbiddenStates: [],
       },
     };
 
@@ -610,6 +621,8 @@ describe("ActionResolver trigger dispatch", () => {
             states: ["drop_to_one_hp"],
             modifiers: [],
             isSelfConcentration: false,
+            requiredStates: [],
+            forbiddenStates: [],
           },
         ],
       },

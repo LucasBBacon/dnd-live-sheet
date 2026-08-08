@@ -30,6 +30,8 @@ export interface ActionRollResult {
   modifier: number;
   target: "DAMAGE_ROLL" | "ATTACK_ROLL" | "SAVING_THROW" | "ABILITY_CHECK";
   damageType?: DamageType;
+  label?: string;
+  summary?: string;
 }
 
 export interface ActionResult {

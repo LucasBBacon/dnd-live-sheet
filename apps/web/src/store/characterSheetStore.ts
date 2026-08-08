@@ -22,6 +22,7 @@ import {
   type InventoryInstance,
   type RuleSnapshot,
   type RuntimeModifier,
+  type CombatRollPayload,
   type EngineEvent,
   // TraitDefinition moved to the shared schemas when traits were extracted
   type TraitDefinition,
@@ -132,6 +133,17 @@ const toCharacterSave = (state: CharacterSheetState): CharacterSave => ({
     baseRolledHp: state.baseHpRolled,
     hitDiceSpent: {},
   },
+});
+
+const createCombatRollResult = (
+  payload: CombatRollPayload,
+): ActionRollResult => ({
+  total: payload.attackBonus,
+  rolls: [payload.attackBonus],
+  modifier: 0,
+  target: "ATTACK_ROLL",
+  label: payload.attackName,
+  summary: payload.damageExpression,
 });
 
 const dispatchAuthoredEvent = (
@@ -437,6 +449,7 @@ export interface CharacterSheetState {
 
   triggerRest: (restType: "short" | "long") => void;
   dispatchAuthoredEvent: (eventName: EngineEvent) => void;
+  recordCombatRoll: (payload: CombatRollPayload) => void;
   beginTurn: () => void;
   endTurn: () => void;
   handleSaveOutcome: (succeeded: boolean) => void;
@@ -814,6 +827,15 @@ export const useCharacterSheetStore = create<CharacterSheetState>(
         runtimeEffects: dispatched.runtimeEffects,
         runtimeResources: dispatched.runtimeResources,
       });
+    },
+
+    recordCombatRoll: (payload) => {
+      set((state) => ({
+        latestRollResults: [
+          ...state.latestRollResults.slice(-4),
+          createCombatRollResult(payload),
+        ],
+      }));
     },
 
     beginTurn: () => {

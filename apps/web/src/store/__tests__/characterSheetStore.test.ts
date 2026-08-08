@@ -30,6 +30,7 @@ describe("useCharacterSheetStore hp trigger handling", () => {
       resources: [],
       ruleSnapshot: null,
       activeStates: [],
+      latestRollResults: [],
       runtimeEffects: null,
       runtimeResources: null,
     });
@@ -106,6 +107,8 @@ describe("useCharacterSheetStore hp trigger handling", () => {
                 states: ["on_attack_hit"],
                 modifiers: [],
                 isSelfConcentration: false,
+                requiredStates: [],
+                forbiddenStates: [],
               },
             },
           ],
@@ -177,6 +180,26 @@ describe("useCharacterSheetStore hp trigger handling", () => {
     compileSpy.mockRestore();
   });
 
+  it("adds incoming combat roll payloads to the latest roll log", () => {
+    const store = useCharacterSheetStore.getState();
+
+    store.recordCombatRoll({
+      characterId: "char_1",
+      attackName: "Longsword",
+      attackBonus: 5,
+      damageExpression: "1d8 + 3 slashing",
+      slot: "main_hand",
+      requiresAmmo: false,
+      timestamp: Date.now(),
+    });
+
+    const state = useCharacterSheetStore.getState();
+    expect(state.latestRollResults).toHaveLength(1);
+    expect(state.latestRollResults[0]?.target).toBe("ATTACK_ROLL");
+    expect(state.latestRollResults[0]?.total).toBe(5);
+    expect(state.latestRollResults[0]?.label).toBe("Longsword");
+  });
+
   it("dispatches turn and save-failure authored events through the runtime path", () => {
     const compileSpy = vi
       .spyOn(CharacterBootstrapper, "compileActiveTraits")
@@ -215,6 +238,8 @@ describe("useCharacterSheetStore hp trigger handling", () => {
                 states: ["turn_started"],
                 modifiers: [],
                 isSelfConcentration: false,
+                requiredStates: [],
+                forbiddenStates: [],
               },
             },
             {
@@ -228,6 +253,8 @@ describe("useCharacterSheetStore hp trigger handling", () => {
                 states: ["turn_ended"],
                 modifiers: [],
                 isSelfConcentration: false,
+                requiredStates: [],
+                forbiddenStates: [],
               },
             },
             {
@@ -241,6 +268,8 @@ describe("useCharacterSheetStore hp trigger handling", () => {
                 states: ["save_failed"],
                 modifiers: [],
                 isSelfConcentration: false,
+                requiredStates: [],
+                forbiddenStates: [],
               },
             },
           ],

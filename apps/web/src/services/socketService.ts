@@ -138,6 +138,17 @@ class SocketManager {
     this.socket?.emit(SOCKET_EVENTS.COMBAT_ROLL, payload);
   }
 
+  public subscribeToCombatRoll(
+    callback: (payload: CombatRollPayload) => void,
+  ) {
+    this.socket?.on(
+      SOCKET_EVENTS.COMBAT_ROLL,
+      (payload: MaybeServerBroadcastPayload<CombatRollPayload>) => {
+        callback(unwrapServerBroadcastPayload(payload));
+      },
+    );
+  }
+
   public emitRestCompleted(payload: {
     characterId: string;
     restType: "short" | "long";

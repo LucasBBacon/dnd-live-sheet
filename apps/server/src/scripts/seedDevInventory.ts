@@ -53,7 +53,7 @@ const run = async () => {
   }
 
   await db.transaction(async (tx) => {
-    // Normalise existing equipment to backpack before applying deterministic dev loadout.
+    // Normalize existing equipment to backpack before applying deterministic dev loadout.
     await tx
       .update(characterInventory)
       .set({ slot: "backpack" })

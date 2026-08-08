@@ -16,6 +16,9 @@ export const CombatWidget = () => {
   const dispatchAuthoredEvent = useCharacterSheetStore(
     (state) => state.dispatchAuthoredEvent,
   );
+  const recordCombatRoll = useCharacterSheetStore(
+    (state) => state.recordCombatRoll,
+  );
   const [tooltip, setTooltip] = useState<{
     title: string;
     lines: string[];
@@ -58,6 +61,7 @@ export const CombatWidget = () => {
       timestamp: Date.now(),
     };
 
+    recordCombatRoll(payload);
     socketService.emitCombatRoll(payload);
   };
 
@@ -94,9 +98,11 @@ export const CombatWidget = () => {
                         : "Damage roll"}
                   </div>
                   <div className="text-xs text-gray-500">
-                    {result.damageType
-                      ? `${result.damageType}`
-                      : "authored effect"}
+                    {result.target === "ATTACK_ROLL" && result.label
+                      ? `${result.label}${result.summary ? ` • ${result.summary}` : ""}`
+                      : result.damageType
+                        ? `${result.damageType}`
+                        : "authored effect"}
                   </div>
                 </div>
                 <div className="text-sm font-bold text-red-700">
