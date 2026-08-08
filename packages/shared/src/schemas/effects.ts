@@ -4,7 +4,8 @@ import z from "zod";
 
 const BaseEffectSchema = z.object({
   levelAvailable: z.number().int().min(1).max(20).optional(),
-  // TODO: wire predicates here (like armor restrictions)
+  requiredStates: z.array(z.string()).default([]),
+  forbiddenStates: z.array(z.string()).default([]),
 });
 
 // #endregion

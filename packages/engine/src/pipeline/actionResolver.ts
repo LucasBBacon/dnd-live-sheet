@@ -70,6 +70,28 @@ const fail = (
   ...(offendingId !== undefined && { offendingId }),
 });
 
+const hasStatePredicate = (effect: ActionGrant["effect"]): boolean =>
+  "requiredStates" in effect || "forbiddenStates" in effect;
+
+const matchesStatePredicate = (
+  effect: ActionGrant["effect"],
+  activeStates: string[],
+): boolean => {
+  const requiredStates =
+    "requiredStates" in effect && Array.isArray(effect.requiredStates)
+      ? effect.requiredStates
+      : [];
+  const forbiddenStates =
+    "forbiddenStates" in effect && Array.isArray(effect.forbiddenStates)
+      ? effect.forbiddenStates
+      : [];
+
+  const meetsRequired = requiredStates.every((state) => activeStates.includes(state));
+  const hasForbidden = forbiddenStates.some((state) => activeStates.includes(state));
+
+  return meetsRequired && !hasForbidden;
+};
+
 /**
  * ActionResolver handles the execution of proactive abilities, translating
  * static data blueprints into live engine state.
@@ -94,6 +116,14 @@ export class ActionResolver {
     context: ActionExecutionContext,
   ): ActionResult {
     const requested = payload.consumedResources ?? [];
+    const activeStates =
+      payload.activeStates.length > 0
+        ? payload.activeStates
+        : context.activeStates ?? [];
+
+    if (hasStatePredicate(action.effect) && !matchesStatePredicate(action.effect, activeStates)) {
+      return ok;
+    }
 
     // 1 - settle every cost, or none of them
     const settlement = this.settleCosts(action, requested, context);

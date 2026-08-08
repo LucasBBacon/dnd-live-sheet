@@ -178,6 +178,52 @@ describe("ActionResolver ammunition", () => {
   });
 });
 
+describe("ActionResolver effect predicates", () => {
+  let effectManager: EffectManager;
+  let resourceManager: ResourceManager;
+
+  beforeEach(() => {
+    effectManager = new EffectManager();
+    resourceManager = new ResourceManager();
+  });
+
+  it("skips apply_effect actions when required states are not met", () => {
+    const gatedAction: ActionGrant = {
+      id: "action_gated_state",
+      name: "Gated State",
+      activation: "special",
+      effect: {
+        type: "apply_effect",
+        effectName: "Armor Worn",
+        durationType: "manual",
+        requiredStates: ["status_wearing_armor"],
+        forbiddenStates: ["prone"],
+        states: ["armor_worn"],
+        modifiers: [],
+        isSelfConcentration: false,
+      },
+    };
+
+    const skipped = ActionResolver.execute(
+      gatedAction,
+      payload(),
+      { effectManager, resourceManager, activeStates: [] },
+    );
+
+    expect(skipped.executed).toBe(true);
+    expect(effectManager.getActiveEffects()).toHaveLength(0);
+
+    const applied = ActionResolver.execute(
+      gatedAction,
+      payload(),
+      { effectManager, resourceManager, activeStates: ["status_wearing_armor"] },
+    );
+
+    expect(applied.executed).toBe(true);
+    expect(effectManager.getActiveEffects()).toHaveLength(1);
+  });
+});
+
 describe("ActionResolver attack resolution", () => {
   let effectManager: EffectManager;
   let resourceManager: ResourceManager;

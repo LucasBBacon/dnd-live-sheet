@@ -137,6 +137,34 @@ describe("CombatEngine.calculateWeaponAttack - governing stat", () => {
     expect(result.breakdown.governingStat).toBe("STR");
     expect(result.attackBonus).toBe(2);
   });
+
+  it("uses CHA for attacks when the Hexblade state is active", () => {
+    const result = CombatEngine.calculateWeaponAttack(
+      makeWeapon({ category: "martial_melee" }),
+      makeScores({ STR: 10, DEX: 10, CHA: 16 }),
+      0,
+      [],
+      [],
+      ["hexblade"],
+    );
+
+    expect(result.breakdown.governingStat).toBe("CHA");
+    expect(result.attackBonus).toBe(3);
+  });
+
+  it("uses WIS for attacks when the Shillelagh state is active", () => {
+    const result = CombatEngine.calculateWeaponAttack(
+      makeWeapon({ category: "martial_melee" }),
+      makeScores({ STR: 10, DEX: 10, WIS: 16 }),
+      0,
+      [],
+      [],
+      ["shillelagh"],
+    );
+
+    expect(result.breakdown.governingStat).toBe("WIS");
+    expect(result.attackBonus).toBe(3);
+  });
 });
 
 describe("CombatEngine.calculateWeaponAttack - proficiency", () => {
@@ -319,7 +347,13 @@ describe("CombatEngine.calculateWeaponAttack - attack modifiers", () => {
       makeScores(),
       0,
       [],
-      [makeMod({ sourceName: "Advantage Source", type: "advantage", value: 0 })],
+      [
+        makeMod({
+          sourceName: "Advantage Source",
+          type: "advantage",
+          value: 0,
+        }),
+      ],
       [],
     );
 

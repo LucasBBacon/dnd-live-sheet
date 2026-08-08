@@ -1,21 +1,28 @@
 import {
+  ActionResolver,
   ATTUNEMENT_LIMIT,
   CARRIED_SLOT,
+  CharacterBootstrapper,
+  EffectManager,
+  ResourceManager,
   RestEngine,
   canEquipTo,
   resolveEquipmentDefinition,
   resolveItemDefinition,
   slotsConsumedBy,
   type Ability,
+  type ActionRollResult,
   type OperationalResource,
   type ProficiencyLevel,
 } from "@project/engine";
 import {
   CharacterSlotSchema,
+  type CharacterSave,
   type CharacterSlot,
   type InventoryInstance,
   type RuleSnapshot,
   type RuntimeModifier,
+  type EngineEvent,
   // TraitDefinition moved to the shared schemas when traits were extracted
   type TraitDefinition,
 } from "@project/shared";
@@ -37,7 +44,7 @@ const LEGACY_SLOT_ALIASES: Record<string, CharacterSlot> = {
 
 /**
  * Normalizes an inventory row arriving from the API or a socket broadcast.
- * The wire types slot as a bare string, so an unrecognised value degrades to
+ * The wire types slot as a bare string, so an unrecognized value degrades to
  * carried rather than corrupting the worn state.
  */
 export const toInventoryInstance = (item: {
@@ -92,6 +99,146 @@ const WORN_QUANTITY = 1;
  * server-side until the write is acknowledged.
  */
 const newRowId = () => `inv_${crypto.randomUUID()}`;
+
+const clampHealth = (currentHp: number, delta: number, maxHp: number) =>
+  Math.min(Math.max(0, currentHp + delta), maxHp);
+
+const toCharacterSave = (state: CharacterSheetState): CharacterSave => ({
+  attributes: {
+    str: state.baseScores.STR,
+    dex: state.baseScores.DEX,
+    con: state.baseScores.CON,
+    int: state.baseScores.INT,
+    wis: state.baseScores.WIS,
+    cha: state.baseScores.CHA,
+  },
+  race: {
+    baseRaceId: state.raceId ?? "race_human",
+    hasSubraces: state.subraceId !== null,
+    subraceId: state.subraceId,
+  },
+  classes:
+    Object.entries(state.classLevels).length > 0
+      ? Object.entries(state.classLevels).map(([classId, level]) => ({
+          classId,
+          level,
+          selections: {},
+        }))
+      : [{ classId: "class_fighter", level: 1, selections: {} }],
+  traitSelections: {},
+  hp: {
+    current: state.currentHp,
+    temporary: 0,
+    baseRolledHp: state.baseHpRolled,
+    hitDiceSpent: {},
+  },
+});
+
+const dispatchAuthoredEvent = (
+  state: CharacterSheetState,
+  eventName: EngineEvent,
+) => {
+  const nextSave = toCharacterSave(state);
+  const runtimeEffects = state.runtimeEffects ?? new EffectManager();
+  const runtimeResources = state.runtimeResources ?? new ResourceManager();
+
+  if (!state.runtimeEffects || !state.runtimeResources) {
+    CharacterBootstrapper.hydrateRuntimeManagers(
+      nextSave,
+      runtimeEffects,
+      runtimeResources,
+    );
+  }
+
+  const activeTraits = CharacterBootstrapper.compileActiveTraits(nextSave);
+  const actionLookup = Object.fromEntries(
+    activeTraits.flatMap((trait) =>
+      (trait.actions ?? []).map((action) => [action.id, action]),
+    ),
+  );
+  const triggerGrants = activeTraits.flatMap((trait) => trait.triggers ?? []);
+
+  const results = ActionResolver.dispatchEvent(
+    eventName,
+    triggerGrants,
+    actionLookup,
+    {
+      effectManager: runtimeEffects,
+      resourceManager: runtimeResources,
+      activeStates: state.activeStates,
+    },
+  );
+
+  return {
+    results,
+    rollResults: results.flatMap((result) => result.rollResults ?? []),
+    activeStates: Array.from(
+      new Set([...state.activeStates, ...runtimeEffects.getActiveStates()]),
+    ),
+    resources: runtimeResources.getRuntimeResources().map((resource) => ({
+      id: resource.id,
+      current: resource.currentCharges,
+      currentCharges: resource.currentCharges,
+    })),
+    runtimeEffects,
+    runtimeResources,
+  };
+};
+
+const resolveHealthTransition = (
+  state: CharacterSheetState,
+  targetHp: number,
+  previousHp: number,
+  delta: number,
+) => {
+  const shouldDispatchTrigger = delta < 0 && previousHp > 0 && targetHp === 0;
+  const nextSave = toCharacterSave({ ...state, currentHp: targetHp });
+  const runtimeEffects = state.runtimeEffects ?? new EffectManager();
+  const runtimeResources = state.runtimeResources ?? new ResourceManager();
+
+  if (!state.runtimeEffects || !state.runtimeResources) {
+    CharacterBootstrapper.hydrateRuntimeManagers(
+      nextSave,
+      runtimeEffects,
+      runtimeResources,
+    );
+  }
+
+  let appliedHp = targetHp;
+  let rollResults: ActionRollResult[] = [];
+  let activeStates = Array.from(
+    new Set([...state.activeStates, ...runtimeEffects.getActiveStates()]),
+  );
+  let resources = runtimeResources.getRuntimeResources().map((resource) => ({
+    id: resource.id,
+    current: resource.currentCharges,
+    currentCharges: resource.currentCharges,
+  }));
+
+  if (shouldDispatchTrigger) {
+    const dispatched = dispatchAuthoredEvent(
+      { ...state, currentHp: targetHp },
+      "ON_HP_REDUCED_TO_ZERO",
+    );
+    appliedHp = dispatched.results.some((result) => result.executed)
+      ? 1
+      : targetHp;
+    activeStates = dispatched.activeStates;
+    resources = dispatched.resources;
+    rollResults = dispatched.rollResults;
+    Object.assign(runtimeEffects, dispatched.runtimeEffects);
+    Object.assign(runtimeResources, dispatched.runtimeResources);
+  }
+
+  return {
+    appliedHp,
+    rollResults,
+    activeStates,
+    resources,
+    runtimeEffects,
+    runtimeResources,
+  };
+};
 
 /**
  * Whether two rows describe interchangeable items that can share one pile.
@@ -258,6 +405,10 @@ export interface CharacterSheetState {
   activeModifiers: RuntimeModifier[];
 
   resources: OperationalResource[];
+  activeStates: string[];
+  latestRollResults: ActionRollResult[];
+  runtimeEffects: EffectManager | null;
+  runtimeResources: ResourceManager | null;
   ruleSnapshot: Pick<
     RuleSnapshot,
     "equipmentById" | "itemsById" | "weaponsById" | "resourcesById"
@@ -272,7 +423,7 @@ export interface CharacterSheetState {
   equipItem: (inventoryId: string, targetSlot: string) => void;
   toggleAttunement: (inventoryId: string) => void;
   syncRemoteAttunement: (inventoryId: string, isAttuned: boolean) => void;
-  // takes the wire shape: slot arrives as an unvalidated string
+  // takes the wire shape: slot arrives as an invalidated string
   syncInventorySnapshot: (
     inventory: Array<Parameters<typeof toInventoryInstance>[0]>,
   ) => void;
@@ -285,6 +436,10 @@ export interface CharacterSheetState {
   syncRemoteResource: (resourceId: string, amount: number) => void;
 
   triggerRest: (restType: "short" | "long") => void;
+  dispatchAuthoredEvent: (eventName: EngineEvent) => void;
+  beginTurn: () => void;
+  endTurn: () => void;
+  handleSaveOutcome: (succeeded: boolean) => void;
 
   toggleModifier: (modifierId: string, isActive: boolean) => void;
 }
@@ -309,18 +464,36 @@ export const useCharacterSheetStore = create<CharacterSheetState>(
     inventoryError: null,
     activeModifiers: [],
     resources: [],
+    activeStates: [],
+    latestRollResults: [],
+    runtimeEffects: null,
+    runtimeResources: null,
     ruleSnapshot: null,
 
     initialize: (payload) => set((state) => ({ ...state, ...payload })),
 
     applyHealthDelta: (delta, source) => {
       const state = get();
+      const previousHp = state.currentHp;
+      const nextHp = clampHealth(previousHp, delta, state.maxHp);
 
-      // calculate new hp, clamping
-      const newHp = Math.min(Math.max(0, state.currentHp + delta), state.maxHp);
+      const {
+        appliedHp,
+        rollResults,
+        activeStates,
+        resources,
+        runtimeEffects,
+        runtimeResources,
+      } = resolveHealthTransition(state, nextHp, previousHp, delta);
 
-      // update local state instantly
-      set({ currentHp: newHp });
+      set({
+        currentHp: appliedHp,
+        activeStates,
+        latestRollResults: rollResults,
+        resources,
+        runtimeEffects,
+        runtimeResources,
+      });
 
       // fire and forget network req
       socketService.emitHpModification({
@@ -333,8 +506,26 @@ export const useCharacterSheetStore = create<CharacterSheetState>(
 
     syncRemoteHealthDelta: (delta) => {
       const state = get();
-      const newHp = Math.min(Math.max(0, state.currentHp + delta), state.maxHp);
-      set({ currentHp: newHp });
+      const previousHp = state.currentHp;
+      const nextHp = clampHealth(previousHp, delta, state.maxHp);
+
+      const {
+        appliedHp,
+        rollResults,
+        activeStates,
+        resources,
+        runtimeEffects,
+        runtimeResources,
+      } = resolveHealthTransition(state, nextHp, previousHp, delta);
+
+      set({
+        currentHp: appliedHp,
+        activeStates,
+        latestRollResults: rollResults,
+        resources,
+        runtimeEffects,
+        runtimeResources,
+      });
     },
 
     equipItem: (inventoryId, targetSlot) => {
@@ -480,7 +671,7 @@ export const useCharacterSheetStore = create<CharacterSheetState>(
     syncRemoteEquipment: (inventoryId, targetSlot) => {
       const state = get();
 
-      // a broadcast carries an unvalidated slot string, so it goes through the
+      // a broadcast carries an invalidated slot string, so it goes through the
       // same legality check as a local move rather than being trusted
       const updatedInventory = placeItem(
         state.inventory,
@@ -578,25 +769,65 @@ export const useCharacterSheetStore = create<CharacterSheetState>(
 
     triggerRest: (restType: "short" | "long") => {
       const state = get();
+      const restEvent = restType === "short" ? "ON_SHORT_REST" : "ON_LONG_REST";
+      const dispatched = dispatchAuthoredEvent(state, restEvent);
+      const runtimeEffects = dispatched.runtimeEffects;
+      const runtimeResources = dispatched.runtimeResources;
 
-      // sweep resources
       const updatedResources = RestEngine.applyRest(
-        state.resources,
+        runtimeResources.getRuntimeResources().map((resource) => ({
+          id: resource.id,
+          current: resource.currentCharges,
+          currentCharges: resource.currentCharges,
+        })),
         restType,
         state.level,
         state.classLevels,
         state.ruleSnapshot ?? undefined,
       );
-      // calc new HP
       const updatedHp = restType === "long" ? state.maxHp : state.currentHp;
 
-      set({ resources: updatedResources, currentHp: updatedHp });
+      set({
+        resources: updatedResources,
+        currentHp: updatedHp,
+        activeStates: dispatched.activeStates,
+        latestRollResults: dispatched.rollResults,
+        runtimeEffects,
+        runtimeResources,
+      });
 
       socketService.emitRestCompleted({
         characterId: state.id,
         restType,
         timestamp: Date.now(),
       });
+    },
+
+    dispatchAuthoredEvent: (eventName) => {
+      const state = get();
+      const dispatched = dispatchAuthoredEvent(state, eventName);
+
+      set({
+        activeStates: dispatched.activeStates,
+        latestRollResults: dispatched.rollResults,
+        resources: dispatched.resources,
+        runtimeEffects: dispatched.runtimeEffects,
+        runtimeResources: dispatched.runtimeResources,
+      });
+    },
+
+    beginTurn: () => {
+      get().dispatchAuthoredEvent("ON_START_OF_TURN");
+    },
+
+    endTurn: () => {
+      get().dispatchAuthoredEvent("ON_END_OF_TURN");
+    },
+
+    handleSaveOutcome: (succeeded) => {
+      if (!succeeded) {
+        get().dispatchAuthoredEvent("ON_SAVING_THROW_FAILED");
+      }
     },
 
     toggleModifier: (modId, isActive) =>

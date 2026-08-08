@@ -84,6 +84,12 @@ export class ResourceManager {
     }
   }
 
+  public getRuntimeResources(): RuntimeResource[] {
+    return Array.from(this.resources.values()).map((resource) => ({
+      ...resource,
+    }));
+  }
+
   // region LIFECYCLE TRIGGERS
 
   public tickRest(isLongRest: boolean): void {

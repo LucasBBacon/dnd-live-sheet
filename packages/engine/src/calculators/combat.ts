@@ -34,6 +34,7 @@ export class CombatEngine {
   private static determineGoverningModifier(
     weapon: WeaponDefinition,
     abilityScores: Record<Ability, number>,
+    activeStates: string[] = [],
   ): { statName: Ability; mod: number } {
     const isRangedCategory =
       weapon.category === "simple_ranged" ||
@@ -42,6 +43,16 @@ export class CombatEngine {
 
     const strMod = AbilityEngine.getModifier(abilityScores.STR);
     const dexMod = AbilityEngine.getModifier(abilityScores.DEX);
+    const chaMod = AbilityEngine.getModifier(abilityScores.CHA);
+    const wisMod = AbilityEngine.getModifier(abilityScores.WIS);
+
+    if (activeStates.includes("hexblade")) {
+      return { statName: "CHA", mod: chaMod };
+    }
+
+    if (activeStates.includes("shillelagh")) {
+      return { statName: "WIS", mod: wisMod };
+    }
 
     if (hasFinesse) {
       return dexMod > strMod
@@ -146,6 +157,7 @@ export class CombatEngine {
     const { statName, mod: governingMod } = this.determineGoverningModifier(
       weapon,
       abilityScores,
+      activeStates,
     );
 
     // 2 - check proficiencies

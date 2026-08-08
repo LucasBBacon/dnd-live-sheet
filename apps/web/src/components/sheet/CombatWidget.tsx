@@ -10,6 +10,12 @@ export const CombatWidget = () => {
 
   const characterId = useCharacterSheetStore((state) => state.id ?? "");
   const consumeItem = useCharacterSheetStore((state) => state.consumeItem);
+  const latestRollResults = useCharacterSheetStore(
+    (state) => state.latestRollResults,
+  );
+  const dispatchAuthoredEvent = useCharacterSheetStore(
+    (state) => state.dispatchAuthoredEvent,
+  );
   const [tooltip, setTooltip] = useState<{
     title: string;
     lines: string[];
@@ -40,6 +46,8 @@ export const CombatWidget = () => {
       consumeItem(attack.ammoInventoryId, 1);
     }
 
+    dispatchAuthoredEvent("ON_ATTACK_HIT");
+
     const payload: CombatRollPayload = {
       characterId,
       attackName: attack.name,
@@ -66,6 +74,40 @@ export const CombatWidget = () => {
 
   return (
     <div className="flex flex-col gap-3">
+      {latestRollResults.length > 0 && (
+        <div className="rounded-xl border border-gray-300 bg-gray-50 p-3 text-sm text-gray-700">
+          <div className="mb-2 text-[11px] font-semibold uppercase tracking-[0.2em] text-gray-500">
+            Latest rolls
+          </div>
+          <div className="flex flex-col gap-2">
+            {latestRollResults.map((result, index) => (
+              <div
+                key={`${result.target}-${index}`}
+                className="flex items-center justify-between rounded-lg border border-gray-200 bg-white px-3 py-2"
+              >
+                <div>
+                  <div className="font-semibold text-gray-900">
+                    {result.target === "SAVING_THROW"
+                      ? "Saving throw"
+                      : result.target === "ATTACK_ROLL"
+                        ? "Attack roll"
+                        : "Damage roll"}
+                  </div>
+                  <div className="text-xs text-gray-500">
+                    {result.damageType
+                      ? `${result.damageType}`
+                      : "authored effect"}
+                  </div>
+                </div>
+                <div className="text-sm font-bold text-red-700">
+                  {result.total}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {attacks.map((attack, idx) => {
         const outOfAmmo = attack.requiresAmmo && attack.currentAmmo <= 0;
 
