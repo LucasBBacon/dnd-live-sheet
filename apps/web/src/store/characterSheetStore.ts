@@ -76,7 +76,10 @@ const occupiedSlots = (
 ): CharacterSlot[] => {
   if (item.slot === CARRIED_SLOT) return [];
 
-  const equipment = resolveEquipmentDefinition(item.itemId, snapshot ?? undefined);
+  const equipment = resolveEquipmentDefinition(
+    item.itemId,
+    snapshot ?? undefined,
+  );
 
   return equipment ? slotsConsumedBy(equipment, item.slot) : [item.slot];
 };
@@ -97,10 +100,7 @@ const newRowId = () => `inv_${crypto.randomUUID()}`;
  * and attunement binds to one instance, so neither can be folded into a stack
  * without losing the thing that makes it distinct.
  */
-const canPoolTogether = (
-  a: InventoryInstance,
-  b: InventoryInstance,
-): boolean =>
+const canPoolTogether = (a: InventoryInstance, b: InventoryInstance): boolean =>
   a.itemId === b.itemId &&
   a.slot === CARRIED_SLOT &&
   b.slot === CARRIED_SLOT &&
@@ -126,7 +126,9 @@ const consolidateCarried = (
   for (const item of inventory) {
     const poolIndex =
       item.slot === CARRIED_SLOT
-        ? consolidated.findIndex((candidate) => canPoolTogether(candidate, item))
+        ? consolidated.findIndex((candidate) =>
+            canPoolTogether(candidate, item),
+          )
         : -1;
 
     if (poolIndex === -1) {
@@ -169,10 +171,16 @@ const placeItem = (
   // nothing to do, and returning null keeps a no-op from emitting a broadcast
   if (moving.slot === targetSlot) return null;
 
-  const definition = resolveItemDefinition(moving.itemId, snapshot ?? undefined);
+  const definition = resolveItemDefinition(
+    moving.itemId,
+    snapshot ?? undefined,
+  );
   if (!definition || !canEquipTo(definition, targetSlot)) return null;
 
-  const equipment = resolveEquipmentDefinition(moving.itemId, snapshot ?? undefined);
+  const equipment = resolveEquipmentDefinition(
+    moving.itemId,
+    snapshot ?? undefined,
+  );
   const incoming = new Set(
     targetSlot === CARRIED_SLOT
       ? []
@@ -250,7 +258,10 @@ export interface CharacterSheetState {
   activeModifiers: RuntimeModifier[];
 
   resources: OperationalResource[];
-  ruleSnapshot: Pick<RuleSnapshot, "equipmentById" | "itemsById" | "weaponsById" | "resourcesById"> | null;
+  ruleSnapshot: Pick<
+    RuleSnapshot,
+    "equipmentById" | "itemsById" | "weaponsById" | "resourcesById"
+  > | null;
 
   // actions
   initialize: (payload: Partial<CharacterSheetState>) => void;
@@ -345,17 +356,27 @@ export const useCharacterSheetStore = create<CharacterSheetState>(
       set({ inventory: updatedInventory, inventoryError: null });
 
       // dispatch to backend for persistence and broadcasting
-      //
-      // TODO: this payload cannot describe a split. When equipping out of a
-      // stack the local state gains a new row, but the server only hears
-      // "move <inventoryId> to <targetSlot>" and will move the whole pile —
-      // so the two diverge until the next snapshot overwrites the split.
-      // ItemEquippedPayload needs to carry the peeled-off quantity and the
-      // new row id for this to survive a round trip.
+      const movedItem = state.inventory.find((row) => row.id === inventoryId);
+      const splitPayload =
+        movedItem && movedItem.quantity > 1 && targetSlot !== "backpack"
+          ? {
+              movedQuantity: 1,
+              newInventoryId: updatedInventory.find(
+                (row) => row.slot === targetSlot && row.id !== inventoryId,
+              )?.id,
+            }
+          : undefined;
+
       socketService.emitInventoryUpdate({
         characterId: state.id,
         inventoryId,
         targetSlot,
+        ...(splitPayload?.movedQuantity !== undefined && {
+          movedQuantity: splitPayload.movedQuantity,
+        }),
+        ...(splitPayload?.newInventoryId && {
+          newInventoryId: splitPayload.newInventoryId,
+        }),
         timestamp: Date.now(),
       });
     },

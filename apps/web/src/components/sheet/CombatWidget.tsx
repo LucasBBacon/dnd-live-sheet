@@ -1,11 +1,14 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState, type MouseEvent } from "react";
+import type { CombatRollPayload } from "@project/shared";
 import { useCombat } from "../../hooks/useCombat";
+import { socketService } from "../../services/socketService";
 import { useCharacterSheetStore } from "../../store/characterSheetStore";
 
 export const CombatWidget = () => {
   const { attacks } = useCombat();
 
+  const characterId = useCharacterSheetStore((state) => state.id ?? "");
   const consumeItem = useCharacterSheetStore((state) => state.consumeItem);
   const [tooltip, setTooltip] = useState<{
     title: string;
@@ -36,14 +39,27 @@ export const CombatWidget = () => {
       if (attack.currentAmmo <= 0) return; // prevent negative ammo
       consumeItem(attack.ammoInventoryId, 1);
     }
-    // TODO :DISPATCH DICE ROLL EVENT TO VTT LOG
-    console.log(`Rolled attack with ${attack.name}`);
+
+    const payload: CombatRollPayload = {
+      characterId,
+      attackName: attack.name,
+      attackBonus: attack.attackBonus,
+      damageExpression: attack.damageExpression,
+      slot: attack.slot,
+      requiresAmmo: Boolean(attack.requiresAmmo),
+      timestamp: Date.now(),
+    };
+
+    socketService.emitCombatRoll(payload);
   };
 
   if (attacks.length === 0) {
     return (
-      <div className="p-4 border border-dashed border-gray-400 text-center text-gray-500">
-        No weapon equipped in active hand slots.
+      <div className="rounded-xl border border-dashed border-gray-400 bg-gray-50 p-5 text-center text-sm text-gray-600">
+        <p className="font-semibold text-gray-700">No active weapon ready</p>
+        <p className="mt-1">
+          Equip a weapon in your active hand slots to make attacks available.
+        </p>
       </div>
     );
   }
@@ -56,17 +72,27 @@ export const CombatWidget = () => {
         return (
           <div
             key={idx}
-            className={`flex border-2 shadow-sm ${outOfAmmo ? "border-red-300 opacity-75" : "border-gray-800"}`}
+            className={`flex overflow-hidden rounded-xl border shadow-sm ${outOfAmmo ? "border-red-200 bg-red-50/70" : "border-gray-300 bg-white"}`}
           >
-            {/* Core Stats (To Hit / Damage) */}
-            <div className="flex flex-col w-2/3">
-              <div className="bg-gray-100 px-3 py-1 font-bold text-gray-900 border-b border-gray-300">
-                {attack.name}{" "}
-                <span className="text-xs font-normal text-gray-500">
-                  ({attack.slot})
-                </span>
+            <div className="flex flex-1 flex-col">
+              <div
+                className={`flex items-center justify-between border-b px-3 py-2 ${outOfAmmo ? "border-red-200 bg-red-50" : "border-gray-200 bg-gray-50"}`}
+              >
+                <div>
+                  <div className="text-sm font-semibold text-gray-900">
+                    {attack.name}
+                  </div>
+                  <div className="text-[11px] uppercase tracking-[0.2em] text-gray-500">
+                    {attack.slot}
+                  </div>
+                </div>
+                <div
+                  className={`rounded-full px-2 py-1 text-[11px] font-semibold uppercase tracking-wide ${outOfAmmo ? "bg-red-100 text-red-700" : "bg-gray-900 text-white"}`}
+                >
+                  {outOfAmmo ? "Needs ammo" : "Ready"}
+                </div>
               </div>
-              <div className="flex p-2 gap-4">
+              <div className="flex flex-wrap gap-4 p-3">
                 <div
                   className="cursor-help"
                   onMouseEnter={(event) =>
@@ -74,8 +100,12 @@ export const CombatWidget = () => {
                   }
                   onMouseLeave={() => setTooltip(null)}
                 >
-                  <span className="text-xs text-gray-500 block">ATK</span>
-                  <span className="font-bold">+{attack.attackBonus}</span>
+                  <span className="block text-[11px] uppercase tracking-[0.2em] text-gray-500">
+                    ATK
+                  </span>
+                  <span className="font-bold text-gray-900">
+                    +{attack.attackBonus}
+                  </span>
                 </div>
                 <div
                   className="cursor-help"
@@ -84,7 +114,9 @@ export const CombatWidget = () => {
                   }
                   onMouseLeave={() => setTooltip(null)}
                 >
-                  <span className="text-xs text-gray-500 block">DMG</span>
+                  <span className="block text-[11px] uppercase tracking-[0.2em] text-gray-500">
+                    DMG
+                  </span>
                   <span className="font-bold text-red-700">
                     {attack.damageExpression}
                   </span>
@@ -92,11 +124,10 @@ export const CombatWidget = () => {
               </div>
             </div>
 
-            {/* Execution Boundary & Ammo Counter */}
-            <div className="w-1/3 flex flex-col justify-center items-center bg-gray-50 border-l border-gray-300 p-2">
+            <div className="flex min-w-[110px] flex-col items-center justify-center border-l border-gray-200 bg-gray-50 p-3">
               {attack.requiresAmmo && (
                 <div
-                  className={`text-xs mb-2 font-mono ${outOfAmmo ? "text-red-600 font-bold" : "text-gray-600"}`}
+                  className={`mb-2 text-xs font-mono ${outOfAmmo ? "font-bold text-red-600" : "text-gray-600"}`}
                 >
                   AMMO: {attack.currentAmmo}
                 </div>
@@ -105,10 +136,10 @@ export const CombatWidget = () => {
               <button
                 onClick={() => handleAttack(attack)}
                 disabled={outOfAmmo}
-                className={`w-full py-2 font-bold rounded shadow-sm text-sm ${
+                className={`w-full rounded px-3 py-2 text-sm font-bold shadow-sm ${
                   outOfAmmo
-                    ? "bg-gray-200 text-gray-400 cursor-not-allowed"
-                    : "bg-red-700 hover:bg-red-800 text-white cursor-pointer"
+                    ? "cursor-not-allowed bg-gray-200 text-gray-400"
+                    : "cursor-pointer bg-red-700 text-white hover:bg-red-800"
                 }`}
               >
                 {outOfAmmo ? "EMPTY" : "STRIKE"}

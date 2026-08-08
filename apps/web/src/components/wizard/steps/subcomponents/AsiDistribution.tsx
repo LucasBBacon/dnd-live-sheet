@@ -1,3 +1,4 @@
+import type { Ability } from "@project/engine";
 import { useLevelUpStore } from "../../../../store/levelUpStore";
 import { useAbilities } from "../../../../hooks/useCharacterStats";
 import { ABILITY_STATS } from "../../../../utils/abilityConstants";
@@ -15,7 +16,7 @@ export const AsiDistribution = () => {
   const spentPoints = asiChoices.reduce((sum, choice) => sum + choice.value, 0);
   const remainingPoints = TOTAL_POINTS - spentPoints;
 
-  const handleAdjust = (stat: string, delta: number) => {
+  const handleAdjust = (stat: Ability, delta: number) => {
     let currentChoices = [...asiChoices];
     const existingIndex = currentChoices.findIndex((c) => c.stat === stat);
     const currentValue =

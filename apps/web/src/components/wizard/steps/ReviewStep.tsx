@@ -3,9 +3,11 @@ import { useAbilities } from "../../../hooks/useCharacterStats";
 import { useCharacterSheetStore } from "../../../store/characterSheetStore";
 import { TRAIT_DICTIONARY, type Ability } from "@project/engine";
 import { useLevelUpStore } from "../../../store/levelUpStore";
+import { getProjectedConModifier } from "../../../utils/levelUpReview";
 
 export const ReviewStep = () => {
-  const { draftPayload, progressionContext, grantedTraitDetails } = useLevelUpStore();
+  const { draftPayload, progressionContext, grantedTraitDetails } =
+    useLevelUpStore();
   const currentTotalLevel = useCharacterSheetStore((state) => state.level);
   const currentMaxHp = useCharacterSheetStore((state) => state.maxHp);
   const classLevels = useCharacterSheetStore((state) => state.classLevels);
@@ -40,7 +42,10 @@ export const ReviewStep = () => {
     // note if CON mod increased this lvl the exact projected HP requires full engine exec
     // for clarity, approximate delta visually based on the raw roll + current CON
     if (draftPayload.hpRoll) {
-      const projectedConMod = finalAbilities.CON.modifier; // TODO: get updated value
+      const projectedConMod = getProjectedConModifier(
+        finalAbilities,
+        draftPayload.asiChoices,
+      );
       const totalHpGain = draftPayload.hpRoll + projectedConMod;
       changes.push({
         category: "Vitals",
@@ -106,7 +111,8 @@ export const ReviewStep = () => {
       if (id === draftPayload.featId) {
         return {
           id,
-          name: TRAIT_DICTIONARY[id]?.name || id.replace(/_/g, " ").toUpperCase(),
+          name:
+            TRAIT_DICTIONARY[id]?.name || id.replace(/_/g, " ").toUpperCase(),
           sourceLabel: "Feat Selection",
         };
       }
@@ -187,7 +193,9 @@ export const ReviewStep = () => {
                 >
                   <span className="text-indigo-400">✦</span>
                   <span>{feature.name}</span>
-                  <span className="text-xs text-indigo-500">[{feature.sourceLabel}]</span>
+                  <span className="text-xs text-indigo-500">
+                    [{feature.sourceLabel}]
+                  </span>
                 </li>
               ))}
             </ul>

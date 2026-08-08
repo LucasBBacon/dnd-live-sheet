@@ -1,4 +1,5 @@
 import {
+  type CombatRollPayload,
   type InventorySyncPayload,
   type MaybeServerBroadcastPayload,
   type RoomJoinPayload,
@@ -131,6 +132,10 @@ class SocketManager {
     this.socket?.on("action_error", (payload: SocketActionErrorPayload) => {
       callback(payload);
     });
+  }
+
+  public emitCombatRoll(payload: CombatRollPayload) {
+    this.socket?.emit(SOCKET_EVENTS.COMBAT_ROLL, payload);
   }
 
   public emitRestCompleted(payload: {

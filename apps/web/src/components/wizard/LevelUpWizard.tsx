@@ -12,6 +12,10 @@ export const LevelUpWizard = () => {
     validateAndSubmit,
   } = useLevelUpStore();
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
+  const [feedbackMessage, setFeedbackMessage] = useState<string | null>(null);
+  const [feedbackTone, setFeedbackTone] = useState<"success" | "error">(
+    "success",
+  );
 
   // dynamically generate the required steps for this specific level
   const wizardSteps = useMemo(() => {
@@ -45,17 +49,26 @@ export const LevelUpWizard = () => {
   const handleSubmit = async () => {
     try {
       await validateAndSubmit();
-      handleClose();
-      // TODO handle success routing (e.g., close wizard, show toast)
+      setFeedbackTone("success");
+      setFeedbackMessage("Level-up committed successfully.");
+      window.setTimeout(() => {
+        handleClose();
+      }, 1200);
     } catch (error) {
+      const message =
+        error instanceof Error
+          ? error.message
+          : "Level-up could not be completed.";
+      setFeedbackTone("error");
+      setFeedbackMessage(message);
       console.error(error);
-      // TODO: surface error to UI
     }
   };
 
   const handleClose = () => {
     cancelLevelUp();
     setCurrentStepIndex(0);
+    setFeedbackMessage(null);
   };
 
   return (
@@ -74,6 +87,13 @@ export const LevelUpWizard = () => {
 
         {/* DYNAMIC STEP CONTENT */}
         <div className="flex-grow overflow-y-auto p-6 bg-white relative">
+          {feedbackMessage && (
+            <div
+              className={`mb-4 rounded border px-4 py-3 text-sm font-medium ${feedbackTone === "success" ? "border-green-300 bg-green-50 text-green-800" : "border-red-300 bg-red-50 text-red-800"}`}
+            >
+              {feedbackMessage}
+            </div>
+          )}
           <WizardStepRouter
             stepType={activeStepType}
             decisions={progressionContext.decisions}

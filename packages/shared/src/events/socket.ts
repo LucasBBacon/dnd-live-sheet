@@ -10,6 +10,7 @@ export const SOCKET_EVENTS = {
   RESOURCE_CONSUMED: "character:resource_consumed",
   CONDITION_ADDED: "character:condition_added",
   REST_COMPLETED: "character:rest_completed",
+  COMBAT_ROLL: "character:combat_roll",
 } as const;
 
 // #endregion
@@ -44,8 +45,10 @@ export interface InventorySyncPayload {
 
 export interface ItemEquippedPayload {
   characterId: string;
-  inventoryId: string; // operational UUID of item instance
+  inventoryId: string; // operational UUID of item instance being moved
   targetSlot: string; // e.g., 'main_hand', 'backpack'
+  movedQuantity?: number; // quantity peeled from a stack for a split move
+  newInventoryId?: string; // id of the newly created row when a stack is split
   timestamp: number;
 }
 
@@ -69,6 +72,16 @@ export interface ResourceConsumedPayload {
   characterId: string;
   resourceId: string; // e.g., 'trait_action_surge'
   amount: number;
+  timestamp: number;
+}
+
+export interface CombatRollPayload {
+  characterId: string;
+  attackName: string;
+  attackBonus: number;
+  damageExpression: string;
+  slot: string;
+  requiresAmmo: boolean;
   timestamp: number;
 }
 
