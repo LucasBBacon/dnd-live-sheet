@@ -1,4 +1,5 @@
 import type {
+  ActorInstance,
   ActionGrant,
   CalculationResult,
   CharacterSave,
@@ -46,6 +47,7 @@ import {
   resolveWeaponDefinition,
   type RuleSnapshotLookup,
 } from "../rules/ruleLookup.js";
+import { resolveSummonActorBlueprint } from "../rules/summonActorDictionary.js";
 
 /**
  * Everything stage one is allowed to see.
@@ -108,6 +110,7 @@ export interface LiveCharacterSheet {
 
   // executable actions (traits, spells, weapons)
   actions: ActionGrant[];
+  activeActors: ActorInstance[];
   summons: Array<{
     templateId: string;
     label: string;
@@ -127,6 +130,55 @@ export interface LiveCharacterSheet {
    */
   activeStates: string[];
 }
+
+const buildActiveActors = (
+  effectManager: EffectManager,
+): ActorInstance[] =>
+  effectManager.getActiveActors().length > 0
+    ? effectManager.getActiveActors()
+    : effectManager
+        .getActiveEffects()
+        .filter((effect) => effect.kind === "summon")
+        .flatMap((effect) => {
+          const entities = effect.summonEntities ?? [];
+          if (entities.length === 0) {
+            return effect.grantedStates.map((state, index) => {
+              const blueprint = resolveSummonActorBlueprint(state);
+              return {
+                instanceId: `${effect.instanceId}:${state}:${index}`,
+                templateId: state,
+                displayLabel: blueprint?.label ?? state,
+                controller: blueprint?.controllerRules.defaultController ?? "player",
+                lifecycleState: "active",
+                currentStates: [...(blueprint?.baseStates ?? [state])],
+                availableActions: blueprint?.authoredActions ?? [],
+                combatProfile: blueprint?.combatProfile,
+                statusSummary: blueprint
+                  ? `Active ${blueprint.label}`
+                  : `Active summon from ${effect.sourceName}`,
+                sourceEffectInstanceId: effect.instanceId,
+              };
+            });
+          }
+
+          return entities.map((entry, index) => {
+            const blueprint = resolveSummonActorBlueprint(entry.templateId);
+            return {
+              instanceId: `${effect.instanceId}:${entry.templateId}:${index}`,
+              templateId: entry.templateId,
+              displayLabel: blueprint?.label ?? entry.label,
+              controller: blueprint?.controllerRules.defaultController ?? "player",
+              lifecycleState: "active",
+              currentStates: [...(blueprint?.baseStates ?? [entry.templateId])],
+              availableActions: blueprint?.authoredActions ?? [],
+              combatProfile: blueprint?.combatProfile,
+              statusSummary: blueprint
+                ? `Active ${blueprint.label}`
+                : `Active summon from ${effect.sourceName}`,
+              sourceEffectInstanceId: effect.instanceId,
+            };
+          });
+        });
 
 export class CharacterEngine {
   public static dispatchTraitEvent(
@@ -218,6 +270,7 @@ export class CharacterEngine {
           sourceName: effect.sourceName,
         }));
       });
+    const activeActors = buildActiveActors(effectManager);
     const inventoryModifiers = InventoryExtractor.extractModifiers(
       inventory,
       options.snapshot,
@@ -357,6 +410,7 @@ export class CharacterEngine {
       encumbrance,
       containers,
       actions,
+      activeActors,
       summons,
       baseStates,
       activeStates,

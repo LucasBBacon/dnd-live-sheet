@@ -11,6 +11,7 @@ import type {
   ConsumedResource,
   RollContextPayload,
 } from "./rollContextBuilder.js";
+import { createSummonActorInstances } from "../rules/summonActorDictionary.js";
 
 const generateId = () => Math.random().toString(36).substring(2, 9);
 
@@ -317,8 +318,15 @@ export class ActionResolver {
           return fail("summon_limit_reached");
         }
 
+        const effectInstanceId = `effect_${generateId()}`;
+        const summonEntities = createSummonActorInstances(
+          effectInstanceId,
+          undefined,
+          effect.entityTemplateIds,
+        );
+
         const newEffect: ActiveEffect = {
-          instanceId: `effect_${generateId()}`,
+          instanceId: effectInstanceId,
           sourceName: action.name,
           durationType: effect.durationHours !== undefined ? "rounds" : "manual",
           durationRemaining:
@@ -329,9 +337,9 @@ export class ActionResolver {
           modifiers: [],
           grantedStates: [...effect.entityTemplateIds],
           kind: "summon",
-          summonEntities: effect.entityTemplateIds.map((templateId) => ({
+          summonEntities: summonEntities.map(({ templateId, displayLabel }) => ({
             templateId,
-            label: templateId,
+            label: displayLabel,
           })),
         };
 
@@ -340,6 +348,7 @@ export class ActionResolver {
         }
 
         context.effectManager.addEffect(newEffect);
+        context.effectManager.addActors(summonEntities);
         return ok;
       }
 

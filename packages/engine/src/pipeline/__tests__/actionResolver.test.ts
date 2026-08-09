@@ -684,6 +684,30 @@ describe("ActionResolver summon resolution", () => {
     expect(effectManager.getActiveStates()).toEqual(
       expect.arrayContaining(["actor_clockwork_toy", "actor_music_box"]),
     );
+    expect(effectManager.getActiveActors()).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          templateId: "actor_clockwork_toy",
+          displayLabel: "Clockwork Toy",
+          controller: "player",
+          lifecycleState: "active",
+          availableActions: expect.arrayContaining([
+            expect.objectContaining({ id: "action_actor_clockwork_toy_scuttle" }),
+          ]),
+          sourceEffectInstanceId: expect.any(String),
+        }),
+        expect.objectContaining({
+          templateId: "actor_music_box",
+          displayLabel: "Music Box",
+          controller: "player",
+          lifecycleState: "active",
+          availableActions: expect.arrayContaining([
+            expect.objectContaining({ id: "action_actor_music_box_play" }),
+          ]),
+          sourceEffectInstanceId: expect.any(String),
+        }),
+      ]),
+    );
   });
 
   it("stops a summon action once the active limit has been reached", () => {
@@ -749,6 +773,7 @@ describe("ActionResolver summon resolution", () => {
     effectManager.removeEffect(activeEffects[0]!.instanceId);
 
     expect(effectManager.getActiveStates()).toEqual([]);
+    expect(effectManager.getActiveActors()).toEqual([]);
   });
 
   it("dismisses an active summon when the action targets an existing summon effect", () => {
@@ -793,6 +818,7 @@ describe("ActionResolver summon resolution", () => {
 
     expect(dismissResult.executed).toBe(true);
     expect(effectManager.getActiveStates()).toEqual([]);
+    expect(effectManager.getActiveActors()).toEqual([]);
   });
 
   it("removes a summon when its authored duration has elapsed", () => {
@@ -820,6 +846,7 @@ describe("ActionResolver summon resolution", () => {
     }
 
     expect(effectManager.getActiveStates()).toEqual([]);
+    expect(effectManager.getActiveActors()).toEqual([]);
   });
 });
 

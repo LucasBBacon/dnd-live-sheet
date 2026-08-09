@@ -1,4 +1,4 @@
-import type { RuntimeModifier } from "@project/shared";
+import type { ActorInstance, RuntimeModifier } from "@project/shared";
 
 export type DurationType =
   | "turn_start"
@@ -35,6 +35,7 @@ export interface ActiveEffect {
  */
 export class EffectManager {
   private effects: Map<string, ActiveEffect> = new Map();
+  private actors: Map<string, ActorInstance> = new Map();
 
   /**
    * Ingests a new effect. If it requires concentration, it automatically
@@ -51,6 +52,25 @@ export class EffectManager {
 
   public removeEffect(instanceId: string): void {
     this.effects.delete(instanceId);
+    for (const [actorId, actor] of this.actors.entries()) {
+      if (actor.sourceEffectInstanceId === instanceId) {
+        this.actors.delete(actorId);
+      }
+    }
+  }
+
+  public addActor(actor: ActorInstance): void {
+    this.actors.set(actor.instanceId, actor);
+  }
+
+  public addActors(actors: ActorInstance[]): void {
+    for (const actor of actors) {
+      this.addActor(actor);
+    }
+  }
+
+  public getActiveActors(): ActorInstance[] {
+    return Array.from(this.actors.values());
   }
 
   /**
@@ -73,6 +93,11 @@ export class EffectManager {
     for (const [id, effect] of this.effects.entries()) {
       if (effect.durationType === "turn_start") {
         this.effects.delete(id);
+        for (const [actorId, actor] of this.actors.entries()) {
+          if (actor.sourceEffectInstanceId === id) {
+            this.actors.delete(actorId);
+          }
+        }
       } else if (
         effect.durationType === "rounds" &&
         effect.durationRemaining !== undefined
@@ -80,6 +105,11 @@ export class EffectManager {
         effect.durationRemaining -= 1;
         if (effect.durationRemaining <= 0) {
           this.effects.delete(id);
+          for (const [actorId, actor] of this.actors.entries()) {
+            if (actor.sourceEffectInstanceId === id) {
+              this.actors.delete(actorId);
+            }
+          }
         }
       }
     }
@@ -92,6 +122,11 @@ export class EffectManager {
     for (const [id, effect] of this.effects.entries()) {
       if (effect.durationType === "turn_end") {
         this.effects.delete(id);
+        for (const [actorId, actor] of this.actors.entries()) {
+          if (actor.sourceEffectInstanceId === id) {
+            this.actors.delete(actorId);
+          }
+        }
       }
     }
   }
@@ -100,8 +135,18 @@ export class EffectManager {
     for (const [id, effect] of this.effects.entries()) {
       if (effect.durationType === "rest_short") {
         this.effects.delete(id);
+        for (const [actorId, actor] of this.actors.entries()) {
+          if (actor.sourceEffectInstanceId === id) {
+            this.actors.delete(actorId);
+          }
+        }
       } else if (isLongRest && effect.durationType === "rest_long") {
         this.effects.delete(id);
+        for (const [actorId, actor] of this.actors.entries()) {
+          if (actor.sourceEffectInstanceId === id) {
+            this.actors.delete(actorId);
+          }
+        }
       }
     }
   }

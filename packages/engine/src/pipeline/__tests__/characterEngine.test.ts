@@ -547,6 +547,18 @@ describe("CharacterEngine.buildLiveSheet", () => {
     expect(sheet.summons).toEqual([
       expect.objectContaining({ templateId: "actor_clockwork_toy" }),
     ]);
+    expect(sheet.activeActors).toEqual([
+      expect.objectContaining({
+        templateId: "actor_clockwork_toy",
+        displayLabel: "Clockwork Toy",
+        controller: "player",
+        lifecycleState: "active",
+        availableActions: expect.arrayContaining([
+          expect.objectContaining({ id: "action_actor_clockwork_toy_scuttle" }),
+        ]),
+        sourceEffectInstanceId: "summon_clockwork_toy",
+      }),
+    ]);
   });
 });
 

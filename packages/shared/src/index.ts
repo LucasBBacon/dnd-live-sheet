@@ -8,6 +8,7 @@ export * from "./schemas/equipment.js";
 export * from "./schemas/homebrew.js";
 export * from "./schemas/importPack.js";
 export * from "./schemas/items.js";
+export * from "./schemas/actors.js";
 export * from "./schemas/modifiers.js";
 export * from "./schemas/prerequisites.js";
 export * from "./schemas/proficiencies.js";
