@@ -1,4 +1,5 @@
 import {
+  type ActionExecutedPayload,
   type CombatRollPayload,
   type InventorySyncPayload,
   type MaybeServerBroadcastPayload,
@@ -154,12 +155,27 @@ class SocketManager {
     this.socket?.emit(SOCKET_EVENTS.ROLL_RESULTS, payload);
   }
 
+  public emitActionExecuted(payload: ActionExecutedPayload) {
+    this.socket?.emit(SOCKET_EVENTS.ACTION_EXECUTED, payload);
+  }
+
   public subscribeToRollResults(
     callback: (payload: RollResultsBroadcastPayload) => void,
   ) {
     this.socket?.on(
       SOCKET_EVENTS.ROLL_RESULTS,
       (payload: MaybeServerBroadcastPayload<RollResultsBroadcastPayload>) => {
+        callback(unwrapServerBroadcastPayload(payload));
+      },
+    );
+  }
+
+  public subscribeToActionExecuted(
+    callback: (payload: ActionExecutedPayload) => void,
+  ) {
+    this.socket?.on(
+      SOCKET_EVENTS.ACTION_EXECUTED,
+      (payload: MaybeServerBroadcastPayload<ActionExecutedPayload>) => {
         callback(unwrapServerBroadcastPayload(payload));
       },
     );

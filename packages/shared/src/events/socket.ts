@@ -12,6 +12,7 @@ export const SOCKET_EVENTS = {
   REST_COMPLETED: "character:rest_completed",
   COMBAT_ROLL: "character:combat_roll",
   ROLL_RESULTS: "character:roll_results",
+  ACTION_EXECUTED: "character:action_executed",
 } as const;
 
 // #endregion
@@ -99,6 +100,14 @@ export interface RollResultPayload {
 export interface RollResultsBroadcastPayload {
   characterId: string;
   rollResults: RollResultPayload[];
+  timestamp: number;
+}
+
+export interface ActionExecutedPayload {
+  characterId: string;
+  actionId: string;
+  source: "character" | "actor";
+  actorInstanceId?: string;
   timestamp: number;
 }
 

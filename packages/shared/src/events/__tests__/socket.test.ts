@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   isServerBroadcastPayload,
   unwrapServerBroadcastPayload,
+  type ActionExecutedPayload,
   type HpModifiedPayload,
 } from "../socket.js";
 
@@ -37,5 +38,22 @@ describe("socket broadcast payload helpers", () => {
 
   it("returns raw payloads unchanged", () => {
     expect(unwrapServerBroadcastPayload(hpPayload)).toEqual(hpPayload);
+  });
+
+  it("unwraps actor action execution payloads", () => {
+    const actionPayload: ActionExecutedPayload = {
+      characterId: "char_42",
+      actionId: "action_tinker_construct",
+      source: "character",
+      timestamp: 23456,
+    };
+
+    const wrapped = {
+      actorId: "socket_2",
+      data: actionPayload,
+    };
+
+    expect(isServerBroadcastPayload(wrapped)).toBe(true);
+    expect(unwrapServerBroadcastPayload(wrapped)).toEqual(actionPayload);
   });
 });

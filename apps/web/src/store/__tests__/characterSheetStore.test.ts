@@ -4,6 +4,7 @@ import {
   EffectManager,
   ResourceManager,
 } from "@project/engine";
+import type { ActorInstance } from "@project/shared";
 import { socketService } from "../../services/socketService";
 import { useCharacterSheetStore } from "../characterSheetStore";
 
@@ -485,5 +486,153 @@ describe("useCharacterSheetStore hp trigger handling", () => {
     );
 
     compileSpy.mockRestore();
+  });
+
+  it("selects an actor and executes the actor authored action", () => {
+    const runtimeEffects = new EffectManager();
+    const runtimeResources = new ResourceManager();
+
+    const actor: ActorInstance = {
+      instanceId: "effect_actor:actor_clockwork_toy:0",
+      templateId: "actor_clockwork_toy",
+      displayLabel: "Clockwork Toy",
+      controller: "player",
+      lifecycleState: "active",
+      currentStates: ["actor_clockwork_toy"],
+      availableActions: [
+        {
+          id: "action_actor_clockwork_toy_scuttle",
+          name: "Scuttle",
+          activation: "special",
+          effect: {
+            type: "apply_effect",
+            effectName: "Scuttle",
+            durationType: "manual",
+            states: ["actor_clockwork_toy_scuttling"],
+            modifiers: [],
+            isSelfConcentration: false,
+            requiredStates: [],
+            forbiddenStates: [],
+          },
+        },
+      ],
+      statusSummary: "Active Clockwork Toy",
+      sourceEffectInstanceId: "effect_actor",
+    };
+
+    runtimeEffects.addActor(actor);
+
+    useCharacterSheetStore.setState({
+      runtimeEffects,
+      runtimeResources,
+      selectedActorInstanceId: actor.instanceId,
+    });
+
+    const store = useCharacterSheetStore.getState();
+    store.executeActorAction("action_actor_clockwork_toy_scuttle");
+
+    const state = useCharacterSheetStore.getState();
+    expect(state.selectedActorInstanceId).toBe(actor.instanceId);
+    expect(state.activeStates).toContain("actor_clockwork_toy_scuttling");
+  });
+
+  it("executes a character summon action and creates active summon actors", () => {
+    const compileSpy = vi
+      .spyOn(CharacterBootstrapper, "compileActiveTraits")
+      .mockReturnValue([
+        {
+          id: "trait_test_summon",
+          name: "Summon Trait",
+          description: "Creates a summon actor",
+          modifiers: { fixed: [], choices: [] },
+          resources: [],
+          diceRules: [],
+          criticalHitModifiers: [],
+          triggers: [],
+          actions: [
+            {
+              id: "action_tinker_construct",
+              name: "Construct Clockwork Device",
+              activation: "hour",
+              effect: {
+                type: "summon",
+                entityTemplateIds: ["actor_clockwork_toy"],
+                maxActive: 3,
+                durationHours: 24,
+              },
+            },
+          ],
+        },
+      ]);
+
+    const store = useCharacterSheetStore.getState();
+    store.executeCharacterAction("action_tinker_construct");
+
+    const state = useCharacterSheetStore.getState();
+    expect(state.runtimeEffects?.getActiveActors()).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          templateId: "actor_clockwork_toy",
+          displayLabel: "Clockwork Toy",
+        }),
+      ]),
+    );
+    expect(state.activeStates).toContain("actor_clockwork_toy");
+
+    compileSpy.mockRestore();
+  });
+
+  it("applies remote actor action execution to local runtime state", () => {
+    const runtimeEffects = new EffectManager();
+    const runtimeResources = new ResourceManager();
+
+    const actor: ActorInstance = {
+      instanceId: "effect_actor:actor_clockwork_toy:0",
+      templateId: "actor_clockwork_toy",
+      displayLabel: "Clockwork Toy",
+      controller: "player",
+      lifecycleState: "active",
+      currentStates: ["actor_clockwork_toy"],
+      availableActions: [
+        {
+          id: "action_actor_clockwork_toy_scuttle",
+          name: "Scuttle",
+          activation: "special",
+          effect: {
+            type: "apply_effect",
+            effectName: "Scuttle",
+            durationType: "manual",
+            states: ["actor_clockwork_toy_scuttling"],
+            modifiers: [],
+            isSelfConcentration: false,
+            requiredStates: [],
+            forbiddenStates: [],
+          },
+        },
+      ],
+      statusSummary: "Active Clockwork Toy",
+      sourceEffectInstanceId: "effect_actor",
+    };
+
+    runtimeEffects.addActor(actor);
+
+    useCharacterSheetStore.setState({
+      runtimeEffects,
+      runtimeResources,
+      selectedActorInstanceId: null,
+    });
+
+    const store = useCharacterSheetStore.getState();
+    store.syncRemoteActionExecution({
+      characterId: "char_1",
+      actionId: "action_actor_clockwork_toy_scuttle",
+      source: "actor",
+      actorInstanceId: actor.instanceId,
+      timestamp: Date.now(),
+    });
+
+    const state = useCharacterSheetStore.getState();
+    expect(state.selectedActorInstanceId).toBe(actor.instanceId);
+    expect(state.activeStates).toContain("actor_clockwork_toy_scuttling");
   });
 });

@@ -7,6 +7,7 @@ import {
 } from "@project/database/src/schema/operational.js";
 import { items } from "@project/database/src/schema/reference.js";
 import {
+  type ActionExecutedPayload,
   type CombatRollPayload,
   type InventorySyncPayload,
   type RoomJoinPayload,
@@ -107,9 +108,7 @@ export function initializeWebSocketGateway(httpServer: any) {
       SOCKET_EVENTS.ROOM_JOIN,
       async (payload: string | RoomJoinPayload) => {
         const roomJoinPayload: RoomJoinPayload =
-          typeof payload === "string"
-            ? { campaignId: payload }
-            : payload;
+          typeof payload === "string" ? { campaignId: payload } : payload;
         const { campaignId, characterId } = roomJoinPayload;
 
         const userId = getUserIdFromSocket(socket);
@@ -255,6 +254,35 @@ export function initializeWebSocketGateway(httpServer: any) {
           console.error("Failed to process roll results broadcast:", error);
           socket.emit("error:rollback", {
             event: SOCKET_EVENTS.ROLL_RESULTS,
+            payload,
+          });
+        }
+      },
+    );
+
+    // #endregion
+
+    // #region ACTION EXECUTED
+
+    socket.on(
+      SOCKET_EVENTS.ACTION_EXECUTED,
+      async (payload: ActionExecutedPayload) => {
+        try {
+          const campaignId = await ensureCharacterInSocketCampaign(
+            socket,
+            payload.characterId,
+          );
+
+          socket
+            .to(`campaign_${campaignId}`)
+            .emit(SOCKET_EVENTS.ACTION_EXECUTED, {
+              actorId: socket.id,
+              data: payload,
+            });
+        } catch (error) {
+          console.error("Failed to process action execution broadcast:", error);
+          socket.emit("error:rollback", {
+            event: SOCKET_EVENTS.ACTION_EXECUTED,
             payload,
           });
         }
