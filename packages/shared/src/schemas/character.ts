@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { StartingEquipmentDefinitionSchema } from "./items.js";
 import { SpellChoiceNodeSchema } from "./spells.js";
 import { ClassMulticlassPrerequisitesSchema } from "./prerequisites.js";
 
@@ -231,15 +232,12 @@ export const CreateCharacterPayloadSchema = z.object({
     flaws: z.string(),
   }),
 
-  // flat array of finalized equipment choices from wizard
-  startingEquipment: z
-    .array(
-      z.object({
-        itemId: z.string(),
-        quantity: z.number().int().min(1),
-      }),
-    )
-    .default([]),
+  // resolved starting equipment for a character build, expressed in the shared
+  // grant schema rather than the legacy flat item-id array
+  startingEquipment: StartingEquipmentDefinitionSchema.default({
+    given: [],
+    choices: [],
+  }),
 });
 
 // #endregion

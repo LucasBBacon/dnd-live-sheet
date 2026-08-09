@@ -6,11 +6,6 @@ import {
 } from "@project/database/src/schema/reference.js";
 import { eq } from "drizzle-orm";
 
-type LegacyStartingEquipmentSelection = {
-  itemId: string;
-  quantity: number;
-};
-
 type StartingEquipmentGrant = {
   kind: "item" | "category" | "money";
   refId: string;
@@ -19,47 +14,17 @@ type StartingEquipmentGrant = {
 
 type StartingEquipmentDefinitionLike = {
   given?: StartingEquipmentGrant[];
-  choices?: Array<{
-    options?: Array<{ equipmentBundle?: StartingEquipmentGrant[] }>;
-  }>;
 };
 
 function isStartingEquipmentDefinition(
   value: unknown,
 ): value is StartingEquipmentDefinitionLike {
-  return (
-    !!value &&
-    typeof value === "object" &&
-    !Array.isArray(value) &&
-    ("given" in value || "choices" in value)
-  );
+  return !!value && typeof value === "object" && !Array.isArray(value);
 }
 
-function normalizeGrantList(
-  rawSelections: unknown,
-): StartingEquipmentGrant[] {
-  if (isStartingEquipmentDefinition(rawSelections)) {
-    const grants = [...(rawSelections.given ?? [])];
-    for (const choiceGroup of rawSelections.choices ?? []) {
-      for (const option of choiceGroup.options ?? []) {
-        if (option.equipmentBundle) {
-          grants.push(...option.equipmentBundle);
-        }
-      }
-    }
-
-    return grants;
-  }
-
-  if (Array.isArray(rawSelections)) {
-    return rawSelections.map((selection) => ({
-      kind: "item" as const,
-      refId: (selection as LegacyStartingEquipmentSelection).itemId,
-      quantity: (selection as LegacyStartingEquipmentSelection).quantity,
-    }));
-  }
-
-  return [];
+function normalizeGrantList(rawSelections: unknown): StartingEquipmentGrant[] {
+  if (!isStartingEquipmentDefinition(rawSelections)) return [];
+  return rawSelections.given ?? [];
 }
 
 function matchesCategory(item: any, categoryRefId: string): boolean {

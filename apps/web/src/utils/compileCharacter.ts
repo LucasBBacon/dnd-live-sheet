@@ -1,13 +1,14 @@
 import type { WizardState } from "../store/wizardStore";
-import type { CreateCharacterPayload } from "@project/shared";
+import type { CreateCharacterPayload, StartingEquipmentGrant } from "@project/shared";
 
 export const compileCharacterPayload = (
   state: WizardState,
 ): CreateCharacterPayload => {
-  // flatten the class equipment choices from Record<number, Item[]> into a single array
+  // flatten the class equipment choices from their grouped wizard state into a
+  // resolved grant list for the server schema
   const compiledEquipment = Object.values(
     state.selectedClassEquipmentChoices,
-  ).flat();
+  ).flat() as StartingEquipmentGrant[];
 
   return {
     campaignId: state.campaignId ?? undefined,
@@ -34,6 +35,13 @@ export const compileCharacterPayload = (
         state.backgroundType === "CUSTOM" ? state.customBackground : null,
     },
     personality: state.personality,
-    startingEquipment: compiledEquipment,
+    startingEquipment: {
+      given: compiledEquipment.map((grant) => ({
+        kind: grant.kind,
+        refId: grant.refId,
+        quantity: grant.quantity,
+      })),
+      choices: [],
+    },
   };
 };

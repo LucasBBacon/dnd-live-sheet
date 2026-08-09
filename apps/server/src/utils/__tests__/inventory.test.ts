@@ -112,10 +112,12 @@ describe("inventory utils", () => {
         insert: vi.fn(() => ({ values })),
       };
 
-      await processStartingEquipment(tx, "char_1", [
-        { itemId: "item_torch", quantity: 1 },
-        { itemId: "pack_tools", quantity: 2 },
-      ]);
+      await processStartingEquipment(tx, "char_1", {
+        given: [
+          { kind: "item", refId: "item_torch", quantity: 1 },
+          { kind: "item", refId: "pack_tools", quantity: 2 },
+        ],
+      });
 
       expect(tx.insert).toHaveBeenCalledWith(mockCharacterInventoryTable);
       expect(values).toHaveBeenCalledWith(
@@ -134,14 +136,9 @@ describe("inventory utils", () => {
         insert: vi.fn(() => ({ values })),
       };
 
-      await processStartingEquipment(
-        tx,
-        "char_1",
-        {
-          given: [{ kind: "item", refId: "item_torch", quantity: 2 }],
-          choices: [],
-        } as any,
-      );
+      await processStartingEquipment(tx, "char_1", {
+        given: [{ kind: "item", refId: "item_torch", quantity: 2 }],
+      } as any);
 
       expect(tx.insert).toHaveBeenCalledWith(mockCharacterInventoryTable);
       expect(values).toHaveBeenCalledWith([

@@ -82,9 +82,10 @@ export const ClassEquipmentDevSelector = ({
               {group.options.map((option: any, optionIdx: number) => {
                 // map custom data schema structure into unified store model
                 const storePayload: WizardEquipmentChoice[] =
-                  option.equipmentBundle.map((item: any) => ({
-                    itemId: item.refId,
-                    quantity: item.quantity,
+                  option.equipmentBundle.map((grant: any) => ({
+                    kind: grant.kind,
+                    refId: grant.refId,
+                    quantity: grant.quantity,
                   }));
 
                 const isChecked =

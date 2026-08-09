@@ -31,10 +31,10 @@ describe("compileCharacterPayload", () => {
     },
     selectedClassEquipmentChoices: {
       0: [
-        { itemId: "longsword", quantity: 1 },
-        { itemId: "shield", quantity: 1 },
+        { kind: "item", refId: "longsword", quantity: 1 },
+        { kind: "item", refId: "shield", quantity: 1 },
       ],
-      1: [{ itemId: "crossbow_bolt", quantity: 20 }],
+      1: [{ kind: "item", refId: "crossbow_bolt", quantity: 20 }],
     },
   };
 
@@ -57,11 +57,14 @@ describe("compileCharacterPayload", () => {
         customData: null,
       },
       personality: validState.personality,
-      startingEquipment: [
-        { itemId: "longsword", quantity: 1 },
-        { itemId: "shield", quantity: 1 },
-        { itemId: "crossbow_bolt", quantity: 20 },
-      ],
+      startingEquipment: {
+        given: [
+          { kind: "item", refId: "longsword", quantity: 1 },
+          { kind: "item", refId: "shield", quantity: 1 },
+          { kind: "item", refId: "crossbow_bolt", quantity: 20 },
+        ],
+        choices: [],
+      },
     });
   });
 
@@ -193,21 +196,24 @@ describe("compileCharacterPayload", () => {
     const state = {
       ...validState,
       selectedClassEquipmentChoices: {
-        0: [{ itemId: "dagger", quantity: 2 }],
+        0: [{ kind: "item", refId: "dagger", quantity: 2 }],
         2: [
-          { itemId: "rope", quantity: 1 },
-          { itemId: "torch", quantity: 5 },
+          { kind: "item", refId: "rope", quantity: 1 },
+          { kind: "item", refId: "torch", quantity: 5 },
         ],
       },
     };
 
     const result = compileCharacterPayload(state);
 
-    expect(result.startingEquipment).toEqual([
-      { itemId: "dagger", quantity: 2 },
-      { itemId: "rope", quantity: 1 },
-      { itemId: "torch", quantity: 5 },
-    ]);
+    expect(result.startingEquipment).toEqual({
+      given: [
+        { kind: "item", refId: "dagger", quantity: 2 },
+        { kind: "item", refId: "rope", quantity: 1 },
+        { kind: "item", refId: "torch", quantity: 5 },
+      ],
+      choices: [],
+    });
   });
 
   it("omits campaignId when no campaign is selected", () => {

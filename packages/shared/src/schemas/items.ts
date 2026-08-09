@@ -77,25 +77,33 @@ export const ItemDefinitionSchema = z.object({
   modifiers: z.array(BaseModifierSchema).optional(),
 });
 
-export const StartingEquipmentGrantSchema = z.object({
-  kind: z.enum(["item", "category", "money"]),
-  refId: z.string(),
-  quantity: z.number().int().min(1).default(1),
-});
+export const StartingEquipmentGrantSchema = z
+  .object({
+    kind: z.enum(["item", "category", "money"]),
+    refId: z.string(),
+    quantity: z.number().int().min(1).default(1),
+  })
+  .strict();
 
-export const StartingEquipmentChoiceOptionSchema = z.object({
-  equipmentBundle: z.array(StartingEquipmentGrantSchema).default([]),
-});
+export const StartingEquipmentChoiceOptionSchema = z
+  .object({
+    equipmentBundle: z.array(StartingEquipmentGrantSchema).default([]),
+  })
+  .strict();
 
-export const StartingEquipmentChoiceSchema = z.object({
-  choose: z.number().int().min(1).default(1),
-  options: z.array(StartingEquipmentChoiceOptionSchema).default([]),
-});
+export const StartingEquipmentChoiceSchema = z
+  .object({
+    choose: z.number().int().min(1).default(1),
+    options: z.array(StartingEquipmentChoiceOptionSchema).default([]),
+  })
+  .strict();
 
-export const StartingEquipmentDefinitionSchema = z.object({
-  given: z.array(StartingEquipmentGrantSchema).default([]),
-  choices: z.array(StartingEquipmentChoiceSchema).default([]),
-});
+export const StartingEquipmentDefinitionSchema = z
+  .object({
+    given: z.array(StartingEquipmentGrantSchema).default([]),
+    choices: z.array(StartingEquipmentChoiceSchema).default([]),
+  })
+  .strict();
 
 /**
  * One stack of one item in a character's possession.

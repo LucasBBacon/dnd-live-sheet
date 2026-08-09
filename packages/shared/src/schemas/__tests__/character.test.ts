@@ -146,7 +146,7 @@ describe("CreateCharacterPayloadSchema", () => {
 
   it("accepts valid payload", () => {
     const parsed = CreateCharacterPayloadSchema.parse(validPayload);
-    expect(parsed.startingEquipment).toEqual([]);
+    expect(parsed.startingEquipment).toEqual({ given: [], choices: [] });
   });
 
   it("rejects out-of-range base ability scores", () => {

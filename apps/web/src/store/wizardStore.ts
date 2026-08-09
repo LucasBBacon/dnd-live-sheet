@@ -1,13 +1,11 @@
 import { create } from "zustand";
 import type { Ability } from "@project/engine";
+import type { StartingEquipmentGrant } from "@project/shared";
 import { STANDARD_ARRAY } from "../utils/abilityConstants";
 
 export type GenerationMethod = "STANDARD_ARRAY" | "POINT_BUY" | "MANUAL";
 
-export interface WizardEquipmentChoice {
-  itemId: string;
-  quantity: number;
-}
+export type WizardEquipmentChoice = StartingEquipmentGrant;
 
 export interface WizardState {
   currentStep: number;
