@@ -69,7 +69,10 @@ describe("inventory utils", () => {
     });
 
     it("resolves nested bundle contents recursively", async () => {
-      itemRowsById.set("pack_starting", { id: "pack_starting", isBundle: true });
+      itemRowsById.set("pack_starting", {
+        id: "pack_starting",
+        isBundle: true,
+      });
       itemRowsById.set("pack_tools", { id: "pack_tools", isBundle: true });
       itemRowsById.set("item_torch", { id: "item_torch", isBundle: false });
       itemRowsById.set("item_rope", { id: "item_rope", isBundle: false });
@@ -175,6 +178,49 @@ describe("inventory utils", () => {
       expect(tx.insert).toHaveBeenCalledWith(mockCharacterInventoryTable);
       expect(values).toHaveBeenCalledWith([
         { characterId: "char_1", itemId: "item_torch", quantity: 2 },
+        { characterId: "char_1", itemId: "item_rope", quantity: 1 },
+      ]);
+    });
+
+    it("respects the authored choose count for choice-based starting equipment", async () => {
+      itemRowsById.set("item_torch", { id: "item_torch", isBundle: false });
+      itemRowsById.set("item_rope", { id: "item_rope", isBundle: false });
+      itemRowsById.set("item_dagger", { id: "item_dagger", isBundle: false });
+
+      const values = vi.fn().mockResolvedValue(undefined);
+      const tx = {
+        insert: vi.fn(() => ({ values })),
+      };
+
+      await processStartingEquipment(tx, "char_1", {
+        given: [],
+        choices: [
+          {
+            choose: 2,
+            options: [
+              {
+                equipmentBundle: [
+                  { kind: "item", refId: "item_torch", quantity: 1 },
+                ],
+              },
+              {
+                equipmentBundle: [
+                  { kind: "item", refId: "item_rope", quantity: 1 },
+                ],
+              },
+              {
+                equipmentBundle: [
+                  { kind: "item", refId: "item_dagger", quantity: 1 },
+                ],
+              },
+            ],
+          },
+        ],
+      } as any);
+
+      expect(tx.insert).toHaveBeenCalledWith(mockCharacterInventoryTable);
+      expect(values).toHaveBeenCalledWith([
+        { characterId: "char_1", itemId: "item_torch", quantity: 1 },
         { characterId: "char_1", itemId: "item_rope", quantity: 1 },
       ]);
     });

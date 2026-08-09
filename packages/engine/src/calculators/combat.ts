@@ -221,9 +221,16 @@ export class CombatEngine {
     const attackMods = validMods.filter(
       (m) => m.target === "ATTACK_BONUS" && m.type === "add",
     );
-    const damageMods = validMods.filter(
-      (m) => m.target === "DAMAGE_BONUS" && m.type === "add",
-    );
+    const damageMods = validMods.filter((m) => {
+      if (m.target !== "DAMAGE_BONUS" || m.type !== "add") return false;
+
+      if (m.attackContext === undefined) return true;
+
+      const requestIsOffhand = activeStates.includes("offhand_attack");
+      return requestIsOffhand
+        ? m.attackContext === "off_hand"
+        : m.attackContext === "main_hand";
+    });
 
     // 3 - calculate attack bonus
     let attackBonus = governingMod;
@@ -283,7 +290,13 @@ export class CombatEngine {
     let criticalDamageDiceExpression = damageDiceExpression;
 
     for (const modifier of criticalHitModifiers) {
-      if (!this.matchesCriticalHitModifier(modifier, resolvedAttackType, activeStates)) {
+      if (
+        !this.matchesCriticalHitModifier(
+          modifier,
+          resolvedAttackType,
+          activeStates,
+        )
+      ) {
         continue;
       }
 

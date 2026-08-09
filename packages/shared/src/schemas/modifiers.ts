@@ -27,7 +27,7 @@ export const ModifierTargetSchema = z.enum([
   "CHA",
   "STEALTH_CHECK",
   "SENSE_DARKVISION",
-  "SPELLCASTING_MOD"
+  "SPELLCASTING_MOD",
 ]);
 
 export const ModifierTypeSchema = z.enum([
@@ -44,6 +44,8 @@ export const ModifierScalingSchema = z.enum([
   "none",
 ]);
 
+export const ModifierAttackContextSchema = z.enum(["main_hand", "off_hand"]);
+
 export const BaseModifierSchema = z.object({
   target: ModifierTargetSchema,
   type: ModifierTypeSchema,
@@ -51,6 +53,7 @@ export const BaseModifierSchema = z.object({
   scalingFactor: ModifierScalingSchema.default("none"),
   scalingClassId: z.string().optional(),
   maxDexCap: z.number().optional(),
+  attackContext: ModifierAttackContextSchema.optional(),
   requiredStates: z.array(z.string()).default([]),
   forbiddenStates: z.array(z.string()).default([]),
 });
@@ -86,6 +89,7 @@ export const RuntimeModifiersListSchema = z
 export type ModifierTarget = z.infer<typeof ModifierTargetSchema>;
 export type ModifierType = z.infer<typeof ModifierTypeSchema>;
 export type ModifierScaling = z.infer<typeof ModifierScalingSchema>;
+export type ModifierAttackContext = z.infer<typeof ModifierAttackContextSchema>;
 
 export type TraitModifier = z.infer<typeof BaseModifierSchema>;
 export type ChoiceModifierGrant = z.infer<typeof ChoiceModifierGrantSchema>;

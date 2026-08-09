@@ -475,6 +475,43 @@ describe("CombatEngine.calculateWeaponAttack - damage bonus and offhand rules", 
     expect(result.breakdown.attack).toEqual(["STR (-1)"]);
   });
 
+  it("applies hand-specific DAMAGE_BONUS modifiers only to the matching attack context", () => {
+    const offhandResult = CombatEngine.calculateWeaponAttack(
+      makeWeapon(),
+      makeScores({ STR: 10 }),
+      0,
+      [],
+      [
+        makeMod({
+          target: "DAMAGE_BONUS",
+          sourceName: "Offhand Support",
+          value: 2,
+          attackContext: "off_hand",
+        }),
+      ],
+      ["offhand_attack"],
+    );
+
+    const mainhandResult = CombatEngine.calculateWeaponAttack(
+      makeWeapon(),
+      makeScores({ STR: 10 }),
+      0,
+      [],
+      [
+        makeMod({
+          target: "DAMAGE_BONUS",
+          sourceName: "Offhand Support",
+          value: 2,
+          attackContext: "off_hand",
+        }),
+      ],
+      [],
+    );
+
+    expect(offhandResult.damageExpression).toBe("1d6 +2 piercing");
+    expect(mainhandResult.damageExpression).toBe("1d6 piercing");
+  });
+
   it("adds active DAMAGE_BONUS modifiers to the total and records them on the damage breakdown", () => {
     const result = CombatEngine.calculateWeaponAttack(
       makeWeapon(),

@@ -78,15 +78,15 @@ roll/log integration rather than the basic resolver plumbing.
 
 ### 2b. Summons
 
-| # | Item | Location |
+| # | Status | Notes |
 | --- | --- | --- |
-| 15 | `summon` pipeline | [actionResolver.ts:63](packages/engine/src/pipeline/actionResolver.ts:63) |
-| 16 | Tinker toy entity tracking | [gnomeDictionary.ts:230](packages/engine/src/rules/traits/gnomeDictionary.ts:230) |
-| 17 | Dismantle action on the summoned toy's sheet | [gnomeDictionary.ts:261](packages/engine/src/rules/traits/gnomeDictionary.ts:261) |
+| 15 | ✅ Resolved | Summon actions now create live actor instances and resolve them through the engine runtime. |
+| 16 | ✅ Resolved | Tinker summon actors now surface as tracked runtime actors with player-controlled action availability. |
+| 17 | ✅ Resolved | Dismissal and lifecycle handling now flow through the actor runtime and are visible in the live sheet / combat UI. |
 
-Strictly ordered 15 → 16 → 17; the Gnome items are consumers of the pipeline. This
-vertical needs a decision first: do summoned actors get their own sheet documents, or
-are they embedded state on the owner? That choice drives all three.
+The summons vertical is now implemented as an embedded actor model owned by the
+character, which is sufficient for the current product scope and leaves the broader
+feature work focused on inventory shape and modifier-system expressiveness.
 
 ### 2c. Inventory
 
@@ -139,11 +139,10 @@ structural.
 
 ## Recommended sequence
 
-1. **2b summons (#15–#17)** — this is still the biggest open feature vertical and needs the actor-model decision first.
-2. **2c inventory (#19 → #18)** — independent of the above and still worth tackling in parallel.
-3. **P3 remainder (#26, #29)** — the remaining correctness and visual polish items.
-4. **2e (#23, #24)** — a deliberate modifier-system redesign, now that the core runtime is in place.
-5. **Typecheck / API drift cleanup** — keep this in parallel with the feature work, since it is the broadest remaining quality risk.
+1. **2c inventory (#19 → #18)** — the next meaningful feature gap and still worth tackling in parallel with the remaining polish work.
+2. **P3 remainder (#26, #29)** — the remaining correctness and visual polish items.
+3. **2e (#23, #24)** — a deliberate modifier-system redesign, now that the core runtime is in place.
+4. **Typecheck / API drift cleanup** — keep this in parallel with the feature work, since it is the broadest remaining quality risk.
 
 
 ---

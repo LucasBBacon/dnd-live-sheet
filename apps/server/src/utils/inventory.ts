@@ -30,22 +30,32 @@ function normalizeGrantList(rawSelections: unknown): StartingEquipmentGrant[] {
   if (!isStartingEquipmentDefinition(rawSelections)) return [];
 
   const granted = Array.isArray(rawSelections.given) ? rawSelections.given : [];
-  const choices = Array.isArray(rawSelections.choices) ? rawSelections.choices : [];
+  const choices = Array.isArray(rawSelections.choices)
+    ? rawSelections.choices
+    : [];
 
   const selectedChoices = choices.flatMap((choice) => {
-    if (!choice || typeof choice !== "object" || Array.isArray(choice)) return [];
+    if (!choice || typeof choice !== "object" || Array.isArray(choice))
+      return [];
+
+    const chooseCount = Number.isInteger(choice.choose)
+      ? Math.max(1, Number(choice.choose))
+      : 1;
 
     const options = Array.isArray(choice.options) ? choice.options : [];
-    const firstOption = options[0];
-    if (!firstOption || typeof firstOption !== "object" || Array.isArray(firstOption)) {
-      return [];
-    }
+    const selectedOptions = options.slice(0, chooseCount);
 
-    const equipmentBundle = Array.isArray(firstOption.equipmentBundle)
-      ? firstOption.equipmentBundle
-      : [];
+    return selectedOptions.flatMap((option) => {
+      if (!option || typeof option !== "object" || Array.isArray(option)) {
+        return [];
+      }
 
-    return equipmentBundle;
+      const equipmentBundle = Array.isArray(option.equipmentBundle)
+        ? option.equipmentBundle
+        : [];
+
+      return equipmentBundle;
+    });
   });
 
   return [...granted, ...selectedChoices];
