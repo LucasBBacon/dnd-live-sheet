@@ -1,6 +1,9 @@
 import { describe, expect, it, vi, beforeEach } from "vitest";
 import { createAuthMiddleware } from "../requireAuth.js";
-import type { AuthProvider, AuthenticatedUser } from "../../core/auth/AuthInterface.js";
+import type {
+  AuthProvider,
+  AuthenticatedUser,
+} from "../../core/auth/AuthInterface.js";
 import type { Request, Response, NextFunction } from "express";
 
 describe("createAuthMiddleware", () => {
@@ -20,7 +23,7 @@ describe("createAuthMiddleware", () => {
       headers: {},
       user: undefined,
       ...overrides,
-    } as unknown as Request);
+    }) as unknown as Request;
 
   const createMockAuthProvider = (
     behavior: "authenticated" | "unauthenticated" | "error",

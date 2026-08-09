@@ -177,9 +177,10 @@ describe("useCharacterSheetStore hp trigger handling", () => {
     store.dispatchAuthoredEvent("ON_ATTACK_HIT");
 
     const state = useCharacterSheetStore.getState();
-    expect(state.latestRollResults).toHaveLength(1);
-    expect(state.latestRollResults[0]?.target).toBe("DAMAGE_ROLL");
-    expect(state.latestRollResults[0]?.total).toBeGreaterThan(0);
+    expect(state.latestRollResults).toHaveLength(2);
+    expect(state.latestRollResults[0]?.target).toBe("ATTACK_ROLL");
+    expect(state.latestRollResults[1]?.target).toBe("DAMAGE_ROLL");
+    expect(state.latestRollResults[1]?.total).toBeGreaterThan(0);
 
     compileSpy.mockRestore();
   });
@@ -319,8 +320,10 @@ describe("useCharacterSheetStore hp trigger handling", () => {
     store.dispatchAuthoredEvent("ON_ATTACK_HIT");
 
     const state = useCharacterSheetStore.getState();
-    expect(state.latestRollResults).toHaveLength(1);
-    expect(state.latestRollResults[0]?.total).toBe(6);
+    expect(state.latestRollResults).toHaveLength(2);
+    expect(state.latestRollResults[0]?.target).toBe("ATTACK_ROLL");
+    expect(state.latestRollResults[1]?.target).toBe("DAMAGE_ROLL");
+    expect(state.latestRollResults[1]?.total).toBe(6);
 
     randomSpy.mockRestore();
     compileSpy.mockRestore();

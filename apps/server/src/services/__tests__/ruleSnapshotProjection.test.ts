@@ -113,6 +113,7 @@ describe("projectEquipmentRows", () => {
       versatileDamageDice: "1d10",
       damageType: "slashing",
       properties: ["versatile"],
+      range: 5,
     };
 
     const result = projectEquipmentRows([
@@ -141,7 +142,12 @@ describe("projectEquipmentRows", () => {
 
   it("falls back to bare gear when a row has no authored rule", () => {
     const result = projectEquipmentRows([
-      row({ id: "item_mystery", name: "Mystery Box", itemRule: null, weight: 250 }),
+      row({
+        id: "item_mystery",
+        name: "Mystery Box",
+        itemRule: null,
+        weight: 250,
+      }),
     ]);
 
     const equipment = result.equipmentById.item_mystery!;
@@ -158,8 +164,11 @@ describe("projectEquipmentRows", () => {
       row(),
       row({
         id: "item_broken",
-        itemRule: { ...fullItemRule, id: "item_broken", type: "nonsense" } as
-          unknown as ItemDefinition,
+        itemRule: {
+          ...fullItemRule,
+          id: "item_broken",
+          type: "nonsense",
+        } as unknown as ItemDefinition,
       }),
     ]);
 
@@ -177,8 +186,11 @@ describe("projectEquipmentRows", () => {
     const broken = (id: string): EquipmentRuleRow =>
       row({
         id,
-        itemRule: { ...fullItemRule, id, type: "nonsense" } as
-          unknown as ItemDefinition,
+        itemRule: {
+          ...fullItemRule,
+          id,
+          type: "nonsense",
+        } as unknown as ItemDefinition,
       });
 
     expect(() =>

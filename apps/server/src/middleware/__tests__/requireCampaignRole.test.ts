@@ -19,7 +19,8 @@ describe("createCampaignRoleGuard", () => {
     }) as unknown as Response;
 
   it("returns 401 when request user is missing", async () => {
-    const { createCampaignRoleGuard } = await import("../requireCampaignRole.js");
+    const { createCampaignRoleGuard } =
+      await import("../requireCampaignRole.js");
     const guard = createCampaignRoleGuard({
       resolveCampaignId: () => "7a0c5bb8-0dc5-4c39-a58f-8f7baae6f27f",
     });
@@ -36,7 +37,8 @@ describe("createCampaignRoleGuard", () => {
 
   it("returns 403 when user is not a campaign member", async () => {
     getCampaignMembershipRoleMock.mockResolvedValue(null);
-    const { createCampaignRoleGuard } = await import("../requireCampaignRole.js");
+    const { createCampaignRoleGuard } =
+      await import("../requireCampaignRole.js");
     const guard = createCampaignRoleGuard({
       resolveCampaignId: () => "7a0c5bb8-0dc5-4c39-a58f-8f7baae6f27f",
     });
@@ -53,7 +55,8 @@ describe("createCampaignRoleGuard", () => {
 
   it("returns 403 when role is not allowed", async () => {
     getCampaignMembershipRoleMock.mockResolvedValue("player");
-    const { createCampaignRoleGuard } = await import("../requireCampaignRole.js");
+    const { createCampaignRoleGuard } =
+      await import("../requireCampaignRole.js");
     const guard = createCampaignRoleGuard({
       resolveCampaignId: () => "7a0c5bb8-0dc5-4c39-a58f-8f7baae6f27f",
       allowedRoles: ["owner", "dm"],
@@ -71,7 +74,8 @@ describe("createCampaignRoleGuard", () => {
 
   it("calls next when membership role is allowed", async () => {
     getCampaignMembershipRoleMock.mockResolvedValue("dm");
-    const { createCampaignRoleGuard } = await import("../requireCampaignRole.js");
+    const { createCampaignRoleGuard } =
+      await import("../requireCampaignRole.js");
     const guard = createCampaignRoleGuard({
       resolveCampaignId: () => "7a0c5bb8-0dc5-4c39-a58f-8f7baae6f27f",
     });

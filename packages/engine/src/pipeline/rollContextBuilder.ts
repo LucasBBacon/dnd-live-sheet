@@ -3,7 +3,10 @@ import type {
   InventoryInstance,
   WeaponDefinition,
 } from "@project/shared";
-import { resolveItemDefinition, type RuleSnapshotLookup } from "../rules/ruleLookup.js";
+import {
+  resolveItemDefinition,
+  type RuleSnapshotLookup,
+} from "../rules/ruleLookup.js";
 
 export interface StateToggle {
   id: string; // activeState string (e.g., "two_handed_grip")

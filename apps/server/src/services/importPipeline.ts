@@ -155,7 +155,9 @@ const commonReferenceScopeForRun = (run: ImportRunRow) => ({
   publishedAt: run.publishMode === "published" ? new Date() : null,
 });
 
-const normaliseLore = <T extends { shortDescription: string; fullText?: string | undefined }>(
+const normalizeLore = <
+  T extends { shortDescription: string; fullText?: string | undefined },
+>(
   lore: T,
 ): { shortDescription: string; fullText?: string } =>
   lore.fullText === undefined
@@ -826,7 +828,7 @@ const applyEntityEntry = async (
       const row: typeof traits.$inferInsert = {
         id: entry.id,
         name: entry.data.name,
-        lore: normaliseLore(entry.data.lore),
+        lore: normalizeLore(entry.data.lore),
         effects: entry.data.effects,
         isStartingProficiency: entry.data.isStartingProficiency,
         supersedesId: entry.supersedesId,
@@ -862,7 +864,7 @@ const applyEntityEntry = async (
         category: entry.data.category,
         source: entry.data.source,
         repeatable: entry.data.repeatable,
-        lore: normaliseLore(entry.data.lore),
+        lore: normalizeLore(entry.data.lore),
         prerequisites: entry.data.prerequisites,
         supersedesId: entry.supersedesId,
         ...scoped,
@@ -899,7 +901,7 @@ const applyEntityEntry = async (
         speed: entry.data.speed,
         requiresSubrace: entry.data.requiresSubrace,
         displayLabel: entry.data.displayLabel,
-        lore: normaliseLore(entry.data.lore),
+        lore: normalizeLore(entry.data.lore),
         supersedesId: entry.supersedesId,
         ...scoped,
       };
@@ -932,7 +934,7 @@ const applyEntityEntry = async (
         id: entry.id,
         parentRaceId: entry.data.parentRaceId,
         name: entry.data.name,
-        lore: normaliseLore(entry.data.lore),
+        lore: normalizeLore(entry.data.lore),
         supersedesId: entry.supersedesId,
         ...scoped,
       };
@@ -966,7 +968,7 @@ const applyEntityEntry = async (
         subclassRequirementLevel: entry.data.subclassRequirementLevel,
         startingEquipment: entry.data.startingEquipment,
         multiclassPrerequisites: entry.data.multiclassPrerequisites,
-        lore: normaliseLore(entry.data.lore),
+        lore: normalizeLore(entry.data.lore),
         supersedesId: entry.supersedesId,
         ...scoped,
       };
@@ -1000,7 +1002,7 @@ const applyEntityEntry = async (
         id: entry.id,
         parentClassId: entry.data.parentClassId,
         name: entry.data.name,
-        lore: normaliseLore(entry.data.lore),
+        lore: normalizeLore(entry.data.lore),
         supersedesId: entry.supersedesId,
         ...scoped,
       };
@@ -1037,7 +1039,7 @@ const applyEntityEntry = async (
         flaws: entry.data.flaws,
         personalityTraits: entry.data.personalityTraits,
         startingEquipment: entry.data.startingEquipment,
-        lore: normaliseLore(entry.data.lore),
+        lore: normalizeLore(entry.data.lore),
         supersedesId: entry.supersedesId,
         ...scoped,
       };

@@ -13,6 +13,8 @@ describe("Sense Effect Schema", () => {
     type: "sense",
     target: "darkvision",
     value: 60,
+    forbiddenStates: [],
+    requiredStates: [],
   };
 
   it("accepts valid sense effect", () => {
@@ -27,7 +29,9 @@ describe("Sense Effect Schema", () => {
   });
 
   it("accepts positive sense distance values", () => {
-    expect(SenseEffectSchema.parse({ ...validSense, value: 120 })).toBeDefined();
+    expect(
+      SenseEffectSchema.parse({ ...validSense, value: 120 }),
+    ).toBeDefined();
     expect(SenseEffectSchema.parse({ ...validSense, value: 1 })).toBeDefined();
   });
 
@@ -36,37 +40,53 @@ describe("Sense Effect Schema", () => {
   });
 
   it("accepts negative sense distance", () => {
-    expect(SenseEffectSchema.parse({ ...validSense, value: -30 })).toBeDefined();
+    expect(
+      SenseEffectSchema.parse({ ...validSense, value: -30 }),
+    ).toBeDefined();
   });
 
   it("rejects non-integer distance", () => {
-    expect(() => SenseEffectSchema.parse({ ...validSense, value: 60.5 })).toThrow();
+    expect(() =>
+      SenseEffectSchema.parse({ ...validSense, value: 60.5 }),
+    ).toThrow();
   });
 
   it("accepts optional levelAvailable", () => {
     expect(
-      SenseEffectSchema.parse({ ...validSense, levelAvailable: 3 })
+      SenseEffectSchema.parse({ ...validSense, levelAvailable: 3 }),
+    ).toBeDefined();
+  });
+
+  it("accepts state predicate groups", () => {
+    expect(
+      SenseEffectSchema.parse({
+        ...validSense,
+        predicates: {
+          requiredStates: ["status_wearing_armor"],
+          forbiddenStates: ["prone"],
+        },
+      }),
     ).toBeDefined();
   });
 
   it("rejects levelAvailable below 1", () => {
     expect(() =>
-      SenseEffectSchema.parse({ ...validSense, levelAvailable: 0 })
+      SenseEffectSchema.parse({ ...validSense, levelAvailable: 0 }),
     ).toThrow();
   });
 
   it("rejects levelAvailable above 20", () => {
     expect(() =>
-      SenseEffectSchema.parse({ ...validSense, levelAvailable: 21 })
+      SenseEffectSchema.parse({ ...validSense, levelAvailable: 21 }),
     ).toThrow();
   });
 
   it("accepts levelAvailable boundaries (1-20)", () => {
     expect(
-      SenseEffectSchema.parse({ ...validSense, levelAvailable: 1 })
+      SenseEffectSchema.parse({ ...validSense, levelAvailable: 1 }),
     ).toBeDefined();
     expect(
-      SenseEffectSchema.parse({ ...validSense, levelAvailable: 20 })
+      SenseEffectSchema.parse({ ...validSense, levelAvailable: 20 }),
     ).toBeDefined();
   });
 });
@@ -79,9 +99,10 @@ describe("Proficiency Effect Schema", () => {
   };
 
   it("accepts valid proficiency effect", () => {
-    expect(ProficiencyEffectSchema.parse(validProficiency)).toEqual(
-      validProficiency
-    );
+    const parsed = ProficiencyEffectSchema.parse(validProficiency);
+    expect(parsed).toMatchObject(validProficiency);
+    expect(parsed.requiredStates).toEqual([]);
+    expect(parsed.forbiddenStates).toEqual([]);
   });
 
   it("accepts all proficiency categories", () => {
@@ -95,16 +116,21 @@ describe("Proficiency Effect Schema", () => {
     ] as const;
     categories.forEach((category) => {
       expect(
-        ProficiencyEffectSchema.parse({ ...validProficiency, category })
+        ProficiencyEffectSchema.parse({ ...validProficiency, category }),
       ).toBeDefined();
     });
   });
 
   it("accepts various item identifiers", () => {
-    const items = ["skill_stealth", "weapon_martial", "lang_draconic", "tool_thieves_tools"];
+    const items = [
+      "skill_stealth",
+      "weapon_martial",
+      "lang_draconic",
+      "tool_thieves_tools",
+    ];
     items.forEach((item) => {
       expect(
-        ProficiencyEffectSchema.parse({ ...validProficiency, item })
+        ProficiencyEffectSchema.parse({ ...validProficiency, item }),
       ).toBeDefined();
     });
   });
@@ -114,13 +140,13 @@ describe("Proficiency Effect Schema", () => {
       ProficiencyEffectSchema.parse({
         ...validProficiency,
         category: "invalid_category",
-      })
+      }),
     ).toThrow();
   });
 
   it("accepts optional levelAvailable", () => {
     expect(
-      ProficiencyEffectSchema.parse({ ...validProficiency, levelAvailable: 5 })
+      ProficiencyEffectSchema.parse({ ...validProficiency, levelAvailable: 5 }),
     ).toBeDefined();
   });
 });
@@ -133,41 +159,48 @@ describe("Stat Modifier Effect Schema", () => {
   };
 
   it("accepts valid stat modifier effect", () => {
-    expect(StatModifierEffectSchema.parse(validStatMod)).toEqual(
-      validStatMod
-    );
+    const parsed = StatModifierEffectSchema.parse(validStatMod);
+    expect(parsed).toMatchObject(validStatMod);
+    expect(parsed.requiredStates).toEqual([]);
+    expect(parsed.forbiddenStates).toEqual([]);
   });
 
   it("accepts all ability score targets", () => {
     const targets = ["str", "dex", "con", "int", "wis", "cha"] as const;
     targets.forEach((target) => {
       expect(
-        StatModifierEffectSchema.parse({ ...validStatMod, target })
+        StatModifierEffectSchema.parse({ ...validStatMod, target }),
       ).toBeDefined();
     });
   });
 
   it("accepts positive modifier values", () => {
-    expect(StatModifierEffectSchema.parse({ ...validStatMod, value: 5 })).toBeDefined();
+    expect(
+      StatModifierEffectSchema.parse({ ...validStatMod, value: 5 }),
+    ).toBeDefined();
   });
 
   it("accepts negative modifier values", () => {
-    expect(StatModifierEffectSchema.parse({ ...validStatMod, value: -2 })).toBeDefined();
+    expect(
+      StatModifierEffectSchema.parse({ ...validStatMod, value: -2 }),
+    ).toBeDefined();
   });
 
   it("accepts zero modifier value", () => {
-    expect(StatModifierEffectSchema.parse({ ...validStatMod, value: 0 })).toBeDefined();
+    expect(
+      StatModifierEffectSchema.parse({ ...validStatMod, value: 0 }),
+    ).toBeDefined();
   });
 
   it("rejects non-integer modifier value", () => {
     expect(() =>
-      StatModifierEffectSchema.parse({ ...validStatMod, value: 2.5 })
+      StatModifierEffectSchema.parse({ ...validStatMod, value: 2.5 }),
     ).toThrow();
   });
 
   it("rejects invalid target", () => {
     expect(() =>
-      StatModifierEffectSchema.parse({ ...validStatMod, target: "invalid" })
+      StatModifierEffectSchema.parse({ ...validStatMod, target: "invalid" }),
     ).toThrow();
   });
 });
@@ -179,16 +212,17 @@ describe("Spell Grant Effect Schema", () => {
   };
 
   it("accepts valid spell grant effect", () => {
-    expect(SpellGrantEffectSchema.parse(validSpellGrant)).toEqual(
-      validSpellGrant
-    );
+    const parsed = SpellGrantEffectSchema.parse(validSpellGrant);
+    expect(parsed).toMatchObject(validSpellGrant);
+    expect(parsed.requiredStates).toEqual([]);
+    expect(parsed.forbiddenStates).toEqual([]);
   });
 
   it("accepts various spell identifiers", () => {
     const spells = ["spell_fireball", "spell_shield", "spell_magic_missile"];
     spells.forEach((spell) => {
       expect(
-        SpellGrantEffectSchema.parse({ ...validSpellGrant, target: spell })
+        SpellGrantEffectSchema.parse({ ...validSpellGrant, target: spell }),
       ).toBeDefined();
     });
   });
@@ -198,7 +232,7 @@ describe("Spell Grant Effect Schema", () => {
       SpellGrantEffectSchema.parse({
         ...validSpellGrant,
         spellcastingAbility: "int",
-      })
+      }),
     ).toBeDefined();
   });
 
@@ -209,7 +243,7 @@ describe("Spell Grant Effect Schema", () => {
         SpellGrantEffectSchema.parse({
           ...validSpellGrant,
           spellcastingAbility: ability,
-        })
+        }),
       ).toBeDefined();
     });
   });
@@ -219,7 +253,7 @@ describe("Spell Grant Effect Schema", () => {
       SpellGrantEffectSchema.parse({
         ...validSpellGrant,
         spellcastingAbility: "invalid",
-      })
+      }),
     ).toThrow();
   });
 });
@@ -234,7 +268,9 @@ describe("Other Effect Schema", () => {
   });
 
   it("accepts other effect with optional value", () => {
-    expect(OtherEffectSchema.parse({ type: "other", value: "metadata" })).toBeDefined();
+    expect(
+      OtherEffectSchema.parse({ type: "other", value: "metadata" }),
+    ).toBeDefined();
   });
 
   it("accepts various metadata values", () => {
@@ -245,7 +281,9 @@ describe("Other Effect Schema", () => {
   });
 
   it("accepts optional levelAvailable", () => {
-    expect(OtherEffectSchema.parse({ type: "other", levelAvailable: 10 })).toBeDefined();
+    expect(
+      OtherEffectSchema.parse({ type: "other", levelAvailable: 10 }),
+    ).toBeDefined();
   });
 });
 
@@ -256,7 +294,7 @@ describe("Trait Effect Schema (discriminated union)", () => {
         type: "sense",
         target: "darkvision",
         value: 60,
-      })
+      }),
     ).toBeDefined();
   });
 
@@ -266,7 +304,7 @@ describe("Trait Effect Schema (discriminated union)", () => {
         type: "proficiency",
         category: "weapons",
         item: "martial",
-      })
+      }),
     ).toBeDefined();
   });
 
@@ -276,7 +314,7 @@ describe("Trait Effect Schema (discriminated union)", () => {
         type: "stat_modifier",
         target: "dex",
         value: 2,
-      })
+      }),
     ).toBeDefined();
   });
 
@@ -285,7 +323,7 @@ describe("Trait Effect Schema (discriminated union)", () => {
       TraitEffectSchema.parse({
         type: "spell_grant",
         target: "spell_magic_missile",
-      })
+      }),
     ).toBeDefined();
   });
 
@@ -298,7 +336,7 @@ describe("Trait Effect Schema (discriminated union)", () => {
       TraitEffectSchema.parse({
         type: "unknown",
         value: 123,
-      })
+      }),
     ).toThrow();
   });
 
@@ -308,7 +346,7 @@ describe("Trait Effect Schema (discriminated union)", () => {
         type: "sense",
         target: "darkvision",
         value: "not-a-number",
-      })
+      }),
     ).toThrow();
   });
 
@@ -317,7 +355,7 @@ describe("Trait Effect Schema (discriminated union)", () => {
       TraitEffectSchema.parse({
         type: "proficiency",
         // missing category and item
-      })
+      }),
     ).toThrow();
   });
 });

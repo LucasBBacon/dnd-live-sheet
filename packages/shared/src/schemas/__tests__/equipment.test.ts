@@ -1,5 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { EquipmentDefinitionSchema, WeaponCapabilitySchema } from "../equipment.js";
+import {
+  EquipmentDefinitionSchema,
+  WeaponCapabilitySchema,
+} from "../equipment.js";
 import { ItemDefinitionSchema } from "../items.js";
 import { WeaponDefinitionSchema } from "../weapons.js";
 
@@ -27,6 +30,8 @@ describe("WeaponCapability and WeaponDefinition stay complementary", () => {
       versatileDamageDice: "1d10",
       damageType: "slashing",
       properties: ["versatile"],
+      range: 5,
+      longRange: 10,
       ammoItemId: "item_ammo_arrow",
       ammoTag: "arrow",
     });
@@ -49,6 +54,8 @@ describe("WeaponCapability and WeaponDefinition stay complementary", () => {
       versatileDamageDice: "1d10",
       damageType: "slashing",
       properties: ["versatile"],
+      range: 5,
+      longRange: 10,
     });
 
     expect(parsed.versatileDamageDice).toBe("1d10");
@@ -56,6 +63,22 @@ describe("WeaponCapability and WeaponDefinition stay complementary", () => {
 
   it("preserves authored weapon range and long-range values", () => {
     const parsed = WeaponCapabilitySchema.parse({
+      category: "martial_ranged",
+      damageDice: "1d8",
+      damageType: "piercing",
+      properties: ["ammunition"],
+      range: 150,
+      longRange: 600,
+    });
+
+    expect(parsed.range).toBe(150);
+    expect(parsed.longRange).toBe(600);
+  });
+
+  it("keeps the weapon definition shape aligned with the authored capability schema", () => {
+    const parsed = WeaponDefinitionSchema.parse({
+      id: "item_weapon_longbow",
+      name: "Longbow",
       category: "martial_ranged",
       damageDice: "1d8",
       damageType: "piercing",

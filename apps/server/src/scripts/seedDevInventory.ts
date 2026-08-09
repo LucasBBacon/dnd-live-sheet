@@ -1,5 +1,8 @@
 import { db } from "@project/database";
-import { characterInventory, characters } from "@project/database/src/schema/operational.js";
+import {
+  characterInventory,
+  characters,
+} from "@project/database/src/schema/operational.js";
 import { items } from "@project/database/src/schema/reference.js";
 import { eq } from "drizzle-orm";
 
@@ -93,8 +96,7 @@ const run = async () => {
   console.table(seededRows);
 };
 
-run()
-  .catch((error) => {
-    console.error("Failed to seed dev inventory:", error);
-    process.exitCode = 1;
-  });
+run().catch((error) => {
+  console.error("Failed to seed dev inventory:", error);
+  process.exitCode = 1;
+});

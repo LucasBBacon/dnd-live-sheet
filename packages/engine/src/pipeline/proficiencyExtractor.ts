@@ -6,10 +6,7 @@ import type {
   TraitProficiencyCategory,
 } from "@project/shared";
 import { listProficiencyOptions } from "../rules/proficiencyDictionary.js";
-import type {
-  ChoiceRejection,
-  ChoiceResolution,
-} from "./choiceResolution.js";
+import type { ChoiceRejection, ChoiceResolution } from "./choiceResolution.js";
 
 export interface ProficiencyChoiceResolution extends ChoiceResolution {
   category: TraitProficiencyCategory;

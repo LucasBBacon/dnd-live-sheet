@@ -57,8 +57,10 @@ vi.mock("../../services/rollbackPipeline.js", () => ({
 }));
 
 vi.mock("../../services/rollbackReadModel.js", () => ({
-  assertRollbackRunBelongsToImportRun: rollbackReadModelMocks.assertRollbackRunBelongsToImportRun,
-  listRollbackRunsForImportRun: rollbackReadModelMocks.listRollbackRunsForImportRun,
+  assertRollbackRunBelongsToImportRun:
+    rollbackReadModelMocks.assertRollbackRunBelongsToImportRun,
+  listRollbackRunsForImportRun:
+    rollbackReadModelMocks.listRollbackRunsForImportRun,
   getRollbackRunSummary: rollbackReadModelMocks.getRollbackRunSummary,
 }));
 
@@ -100,8 +102,14 @@ describe("Import Routes Integration", () => {
       relationRemoveCount: 0,
       skipCount: 0,
     });
-    importMocks.applyImportRun.mockResolvedValueOnce({ runId: "run-1", status: "applied" });
-    importMocks.publishImportRun.mockResolvedValueOnce({ runId: "run-1", publishedRows: 1 });
+    importMocks.applyImportRun.mockResolvedValueOnce({
+      runId: "run-1",
+      status: "applied",
+    });
+    importMocks.publishImportRun.mockResolvedValueOnce({
+      runId: "run-1",
+      publishedRows: 1,
+    });
     importMocks.getImportRunSummary.mockResolvedValueOnce({
       run: {
         id: "run-1",
@@ -147,7 +155,9 @@ describe("Import Routes Integration", () => {
       actorUserId: "test-user",
     });
 
-    const validateResponse = await request(app).post("/api/import/run-1/validate");
+    const validateResponse = await request(app).post(
+      "/api/import/run-1/validate",
+    );
     expect(validateResponse.status).toBe(200);
     expect(validateResponse.body.status).toBe("validated");
     expect(importMocks.validateImportRun).toHaveBeenCalledWith("run-1");
@@ -162,7 +172,9 @@ describe("Import Routes Integration", () => {
     expect(applyResponse.body.status).toBe("applied");
     expect(importMocks.applyImportRun).toHaveBeenCalledWith("run-1");
 
-    const publishResponse = await request(app).post("/api/import/run-1/publish");
+    const publishResponse = await request(app).post(
+      "/api/import/run-1/publish",
+    );
     expect(publishResponse.status).toBe(200);
     expect(publishResponse.body.publishedRows).toBe(1);
     expect(importMocks.publishImportRun).toHaveBeenCalledWith("run-1");
@@ -222,7 +234,9 @@ describe("Import Routes Integration", () => {
 
     expect(stageResponse.status).toBe(201);
 
-    const validateResponse = await request(app).post("/api/import/run-fail/validate");
+    const validateResponse = await request(app).post(
+      "/api/import/run-fail/validate",
+    );
     expect(validateResponse.status).toBe(200);
 
     const planResponse = await request(app).post("/api/import/run-fail/plan");
@@ -236,7 +250,9 @@ describe("Import Routes Integration", () => {
   });
 
   it("executes rollback plan -> apply and fetches rollback summaries", async () => {
-    rollbackReadModelMocks.assertRollbackRunBelongsToImportRun.mockResolvedValue(undefined);
+    rollbackReadModelMocks.assertRollbackRunBelongsToImportRun.mockResolvedValue(
+      undefined,
+    );
     rollbackPipelineMocks.planRollbackRun.mockResolvedValueOnce({
       rollbackRunId: "rollback-1",
       status: "planned",
@@ -269,7 +285,9 @@ describe("Import Routes Integration", () => {
 
     const app = createApp();
 
-    const planResponse = await request(app).post("/api/import/run-1/rollback/plan");
+    const planResponse = await request(app).post(
+      "/api/import/run-1/rollback/plan",
+    );
     expect(planResponse.status).toBe(200);
     expect(planResponse.body.rollbackRunId).toBe("rollback-1");
     expect(rollbackPipelineMocks.planRollbackRun).toHaveBeenCalledWith({
@@ -277,33 +295,46 @@ describe("Import Routes Integration", () => {
       initiatedByUserId: "test-user",
     });
 
-    const applyResponse = await request(app).post("/api/import/run-1/rollback/rollback-1/apply");
+    const applyResponse = await request(app).post(
+      "/api/import/run-1/rollback/rollback-1/apply",
+    );
     expect(applyResponse.status).toBe(200);
     expect(applyResponse.body.status).toBe("applied");
-    expect(rollbackReadModelMocks.assertRollbackRunBelongsToImportRun).toHaveBeenCalledWith(
+    expect(
+      rollbackReadModelMocks.assertRollbackRunBelongsToImportRun,
+    ).toHaveBeenCalledWith("rollback-1", "run-1");
+    expect(rollbackPipelineMocks.applyRollbackRun).toHaveBeenCalledWith(
       "rollback-1",
-      "run-1",
     );
-    expect(rollbackPipelineMocks.applyRollbackRun).toHaveBeenCalledWith("rollback-1");
 
     const listResponse = await request(app).get("/api/import/run-1/rollback");
     expect(listResponse.status).toBe(200);
     expect(listResponse.body.rollbacks).toHaveLength(1);
-    expect(rollbackReadModelMocks.listRollbackRunsForImportRun).toHaveBeenCalledWith("run-1");
+    expect(
+      rollbackReadModelMocks.listRollbackRunsForImportRun,
+    ).toHaveBeenCalledWith("run-1");
 
-    const summaryResponse = await request(app).get("/api/import/run-1/rollback/rollback-1");
+    const summaryResponse = await request(app).get(
+      "/api/import/run-1/rollback/rollback-1",
+    );
     expect(summaryResponse.status).toBe(200);
     expect(summaryResponse.body.run.id).toBe("rollback-1");
-    expect(summaryResponse.body.run.appliedRowCountsByKind).toEqual({ trait: 1, feat_trait: 1 });
-    expect(rollbackReadModelMocks.assertRollbackRunBelongsToImportRun).toHaveBeenLastCalledWith(
+    expect(summaryResponse.body.run.appliedRowCountsByKind).toEqual({
+      trait: 1,
+      feat_trait: 1,
+    });
+    expect(
+      rollbackReadModelMocks.assertRollbackRunBelongsToImportRun,
+    ).toHaveBeenLastCalledWith("rollback-1", "run-1");
+    expect(rollbackReadModelMocks.getRollbackRunSummary).toHaveBeenCalledWith(
       "rollback-1",
-      "run-1",
     );
-    expect(rollbackReadModelMocks.getRollbackRunSummary).toHaveBeenCalledWith("rollback-1");
   });
 
   it("returns failure response when rollback apply fails", async () => {
-    rollbackReadModelMocks.assertRollbackRunBelongsToImportRun.mockResolvedValue(undefined);
+    rollbackReadModelMocks.assertRollbackRunBelongsToImportRun.mockResolvedValue(
+      undefined,
+    );
     rollbackPipelineMocks.applyRollbackRun.mockRejectedValueOnce(
       Object.assign(new Error("Rollback apply failed."), {
         name: "RollbackPipelineError",
@@ -313,25 +344,34 @@ describe("Import Routes Integration", () => {
 
     const app = createApp();
 
-    const response = await request(app).post("/api/import/run-1/rollback/rollback-fail/apply");
+    const response = await request(app).post(
+      "/api/import/run-1/rollback/rollback-fail/apply",
+    );
 
     expect(response.status).toBe(400);
     expect(response.body.error).toBe("RollbackPipelineError");
     expect(response.body.message).toContain("Rollback apply failed");
-    expect(rollbackPipelineMocks.applyRollbackRun).toHaveBeenCalledWith("rollback-fail");
+    expect(rollbackPipelineMocks.applyRollbackRun).toHaveBeenCalledWith(
+      "rollback-fail",
+    );
   });
 
   it("returns failure response when rollback run does not belong to import run", async () => {
     rollbackReadModelMocks.assertRollbackRunBelongsToImportRun.mockRejectedValueOnce(
-      Object.assign(new Error("Rollback run does not belong to source import run."), {
-        name: "RollbackPipelineError",
-        statusCode: 400,
-      }),
+      Object.assign(
+        new Error("Rollback run does not belong to source import run."),
+        {
+          name: "RollbackPipelineError",
+          statusCode: 400,
+        },
+      ),
     );
 
     const app = createApp();
 
-    const response = await request(app).post("/api/import/run-1/rollback/rollback-2/apply");
+    const response = await request(app).post(
+      "/api/import/run-1/rollback/rollback-2/apply",
+    );
 
     expect(response.status).toBe(400);
     expect(response.body.error).toBe("RollbackPipelineError");

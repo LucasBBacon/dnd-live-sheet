@@ -51,7 +51,9 @@ describe("Reference Routes", () => {
       expect(mockRace.subraces).toHaveLength(2);
       expect(mockRace.subraces[0]).toBeDefined();
       expect(mockRace.subraces[0]?.traits).toBeDefined();
-      expect(mockRace.subraces[0]?.traits[0]?.sourceOrigin).toContain("Subrace");
+      expect(mockRace.subraces[0]?.traits[0]?.sourceOrigin).toContain(
+        "Subrace",
+      );
     });
 
     it("includes source origin metadata on traits", () => {
@@ -162,7 +164,9 @@ describe("Reference Routes", () => {
       const payload = {
         classes: [{ id: "class_fighter", name: "Fighter" }],
         feats: [{ id: "feat_alert", name: "Alert" }],
-        subclasses: [{ id: "subclass_champion", parentClassId: "class_fighter" }],
+        subclasses: [
+          { id: "subclass_champion", parentClassId: "class_fighter" },
+        ],
         timeline: [{ level: 1, features: [] }],
         selected: {
           classId: "class_fighter",
@@ -206,7 +210,11 @@ describe("Reference Routes", () => {
     it("returns multiple subclasses for multiclassing", () => {
       const subclasses = [
         { id: "champion", name: "Champion", parentClassId: "fighter" },
-        { id: "eldritch_knight", name: "Eldritch Knight", parentClassId: "fighter" },
+        {
+          id: "eldritch_knight",
+          name: "Eldritch Knight",
+          parentClassId: "fighter",
+        },
         { id: "battlemaster", name: "Battle Master", parentClassId: "fighter" },
       ];
 
@@ -337,9 +345,21 @@ describe("Reference Routes", () => {
         id: "criminal",
         name: "Criminal",
         traits: [
-          { id: "trait_1", name: "Trait 1", sourceOrigin: "Background: Criminal" },
-          { id: "trait_2", name: "Trait 2", sourceOrigin: "Background: Criminal" },
-          { id: "trait_3", name: "Trait 3", sourceOrigin: "Background: Criminal" },
+          {
+            id: "trait_1",
+            name: "Trait 1",
+            sourceOrigin: "Background: Criminal",
+          },
+          {
+            id: "trait_2",
+            name: "Trait 2",
+            sourceOrigin: "Background: Criminal",
+          },
+          {
+            id: "trait_3",
+            name: "Trait 3",
+            sourceOrigin: "Background: Criminal",
+          },
         ],
       };
 
@@ -406,8 +426,7 @@ describe("Reference Routes", () => {
         (t) =>
           t.effects.some(
             (e) => e.category === "tools" || e.category === "languages",
-          ) &&
-          !t.effects.some((e) => e.category === "skills"),
+          ) && !t.effects.some((e) => e.category === "skills"),
       );
       expect(toolLanguageTraits).toHaveLength(2);
     });
@@ -422,9 +441,7 @@ describe("Reference Routes", () => {
       const trait = {
         id: "trait_skill",
         name: "Acrobatics",
-        effects: [
-          { type: "proficiency", category: "skills" },
-        ],
+        effects: [{ type: "proficiency", category: "skills" }],
       };
 
       const hasSkillEffect = trait.effects.some(
@@ -445,7 +462,9 @@ describe("Reference Routes", () => {
         { id: "t2", name: "Tool Mastery", effects: [] },
       ];
 
-      const skillTraits = traits.filter((t) => t.name.toLowerCase().includes("skill"));
+      const skillTraits = traits.filter((t) =>
+        t.name.toLowerCase().includes("skill"),
+      );
       expect(skillTraits).toHaveLength(1);
     });
   });
@@ -497,9 +516,7 @@ describe("Reference Routes", () => {
   describe("Helper Functions", () => {
     describe("hasEffectCategory", () => {
       it("identifies proficiency effects with category", () => {
-        const effects = [
-          { type: "proficiency", category: "skills" },
-        ];
+        const effects = [{ type: "proficiency", category: "skills" }];
 
         const hasSkillProf = effects.some(
           (e) => e.type === "proficiency" && e.category === "skills",
@@ -508,9 +525,7 @@ describe("Reference Routes", () => {
       });
 
       it("returns false for non-proficiency effects", () => {
-        const effects = [
-          { type: "bonus", value: 2 },
-        ];
+        const effects = [{ type: "bonus", value: 2 }];
 
         const hasProf = effects.some((e) => e.type === "proficiency");
         expect(hasProf).toBe(false);
@@ -567,7 +582,9 @@ describe("Reference Routes", () => {
 
         const category = "tools_and_languages";
         const matches =
-          trait.effects.some((e) => e.category === "tools" || e.category === "languages") ||
+          trait.effects.some(
+            (e) => e.category === "tools" || e.category === "languages",
+          ) ||
           trait.id.includes("_prof_tools") ||
           trait.id.includes("_languages");
         expect(matches).toBe(true);

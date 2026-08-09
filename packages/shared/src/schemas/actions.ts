@@ -88,11 +88,17 @@ export const SummonEffectSchema = z.object({
   materialCostGP: z.number().optional(),
 });
 
+const EffectStatePredicateSchema = z.object({
+  requiredStates: z.array(z.string()).default([]),
+  forbiddenStates: z.array(z.string()).default([]),
+});
+
 export const ApplyStateEffectSchema = z.object({
   type: z.literal("apply_effect"),
   effectName: z.string().optional(), // defaults to the Action's name if omitted
   requiredStates: z.array(z.string()).default([]),
   forbiddenStates: z.array(z.string()).default([]),
+  predicates: EffectStatePredicateSchema.optional(),
   durationType: z.enum([
     "turn_start",
     "turn_end",

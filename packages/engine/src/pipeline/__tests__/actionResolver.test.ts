@@ -222,6 +222,46 @@ describe("ActionResolver effect predicates", () => {
     expect(applied.executed).toBe(true);
     expect(effectManager.getActiveEffects()).toHaveLength(1);
   });
+
+  it("honours nested predicates for apply_effect actions", () => {
+    const gatedAction: ActionGrant = {
+      id: "action_gated_predicate",
+      name: "Gated Predicate",
+      activation: "special",
+      effect: {
+        type: "apply_effect",
+        effectName: "Sneaking",
+        durationType: "manual",
+        predicates: {
+          requiredStates: ["hidden"],
+          forbiddenStates: ["seen"],
+        },
+        states: ["sneaking"],
+        modifiers: [],
+        isSelfConcentration: false,
+        forbiddenStates: [],
+        requiredStates: [],
+      },
+    };
+
+    const skipped = ActionResolver.execute(gatedAction, payload(), {
+      effectManager,
+      resourceManager,
+      activeStates: ["seen"],
+    });
+
+    expect(skipped.executed).toBe(true);
+    expect(effectManager.getActiveEffects()).toHaveLength(0);
+
+    const applied = ActionResolver.execute(gatedAction, payload(), {
+      effectManager,
+      resourceManager,
+      activeStates: ["hidden"],
+    });
+
+    expect(applied.executed).toBe(true);
+    expect(effectManager.getActiveEffects()).toHaveLength(1);
+  });
 });
 
 describe("ActionResolver attack resolution", () => {
@@ -276,7 +316,7 @@ describe("ActionResolver attack resolution", () => {
     );
 
     expect(result.executed).toBe(true);
-    expect(result.rollResults?.[0]?.total).toBe(6);
+    expect(result.rollResults?.[1]?.total).toBe(6);
 
     randomSpy.mockRestore();
   });
@@ -304,6 +344,9 @@ describe("ActionResolver attack resolution", () => {
 
     const randomSpy = vi
       .spyOn(Math, "random")
+      .mockReturnValueOnce(0)
+      .mockReturnValueOnce(0)
+      .mockReturnValueOnce(0.9)
       .mockReturnValueOnce(0)
       .mockReturnValueOnce(0.9);
 
@@ -333,8 +376,53 @@ describe("ActionResolver attack resolution", () => {
       ],
     });
 
-    expect(mismatched.rollResults?.[0]?.total).toBe(1);
-    expect(matched.rollResults?.[0]?.total).toBe(6);
+    expect(mismatched.rollResults?.[1]?.total).toBe(1);
+    expect(matched.rollResults?.[1]?.total).toBe(6);
+
+    randomSpy.mockRestore();
+  });
+
+  it("emits both an attack roll and a damage roll for authored attack effects", () => {
+    const attackAction: ActionGrant = {
+      ...bowShot,
+      consumesAmmo: undefined,
+      effect: {
+        type: "attack",
+        attackType: "melee_weapon",
+        attackStat: "STR",
+        range: 5,
+        damage: [
+          {
+            sourceName: "Sword",
+            baseDice: "1d6",
+            damageType: "slashing",
+            scalingMode: "none",
+            levelScaling: [],
+          },
+        ],
+      },
+    };
+
+    const randomSpy = vi
+      .spyOn(Math, "random")
+      .mockReturnValueOnce(0)
+      .mockReturnValueOnce(0.9);
+
+    const result = ActionResolver.execute(attackAction, payload(), {
+      effectManager,
+      resourceManager,
+    });
+
+    expect(result.executed).toBe(true);
+    expect(result.rollResults).toHaveLength(2);
+    expect(result.rollResults?.[0]).toMatchObject({
+      target: "ATTACK_ROLL",
+      total: 1,
+    });
+    expect(result.rollResults?.[1]).toMatchObject({
+      target: "DAMAGE_ROLL",
+      total: 6,
+    });
 
     randomSpy.mockRestore();
   });
@@ -377,7 +465,7 @@ describe("ActionResolver save resolution", () => {
       },
     };
 
-    const randomSpy = vi.spyOn(Math, "random").mockReturnValue(0.95);
+    const randomSpy = vi.spyOn(Math, "random").mockReturnValue(0.999);
 
     const result = ActionResolver.execute(saveAction, payload(), {
       effectManager,

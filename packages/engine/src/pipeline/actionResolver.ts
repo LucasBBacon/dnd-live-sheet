@@ -72,21 +72,46 @@ const fail = (
   ...(offendingId !== undefined && { offendingId }),
 });
 
-const hasStatePredicate = (effect: ActionGrant["effect"]): boolean =>
-  "requiredStates" in effect || "forbiddenStates" in effect;
+const getStatePredicate = (effect: ActionGrant["effect"]): {
+  requiredStates: string[];
+  forbiddenStates: string[];
+} => {
+  const topLevelRequiredStates =
+    "requiredStates" in effect && Array.isArray(effect.requiredStates)
+      ? effect.requiredStates
+      : [];
+  const topLevelForbiddenStates =
+    "forbiddenStates" in effect && Array.isArray(effect.forbiddenStates)
+      ? effect.forbiddenStates
+      : [];
+
+  const predicateGroup =
+    "predicates" in effect && effect.predicates && typeof effect.predicates === "object"
+      ? effect.predicates
+      : undefined;
+
+  const requiredStates = [
+    ...topLevelRequiredStates,
+    ...(predicateGroup?.requiredStates ?? []),
+  ];
+  const forbiddenStates = [
+    ...topLevelForbiddenStates,
+    ...(predicateGroup?.forbiddenStates ?? []),
+  ];
+
+  return { requiredStates, forbiddenStates };
+};
+
+const hasStatePredicate = (effect: ActionGrant["effect"]): boolean => {
+  const { requiredStates, forbiddenStates } = getStatePredicate(effect);
+  return requiredStates.length > 0 || forbiddenStates.length > 0;
+};
 
 const matchesStatePredicate = (
   effect: ActionGrant["effect"],
   activeStates: string[],
 ): boolean => {
-  const requiredStates =
-    "requiredStates" in effect && Array.isArray(effect.requiredStates)
-      ? effect.requiredStates
-      : [];
-  const forbiddenStates =
-    "forbiddenStates" in effect && Array.isArray(effect.forbiddenStates)
-      ? effect.forbiddenStates
-      : [];
+  const { requiredStates, forbiddenStates } = getStatePredicate(effect);
 
   const meetsRequired = requiredStates.every((state) => activeStates.includes(state));
   const hasForbidden = forbiddenStates.some((state) => activeStates.includes(state));
@@ -224,6 +249,27 @@ export class ActionResolver {
       case "attack": {
         const damageSegments = effect.damage ?? [];
         const rollResults: ActionRollResult[] = [];
+        const resolvedActiveStates =
+          activeStates.length > 0 ? activeStates : context.activeStates ?? [];
+
+        const attackRoll = DiceEngine.rollDigital("1d20");
+        const appliedAttackRolls = DiceEngine.applyDiceRules(
+          attackRoll.rolls,
+          context.diceRules ?? [],
+          "ATTACK_ROLL",
+          {
+            activeStates: resolvedActiveStates,
+            sides: 20,
+            rollFn: (sides) => DiceEngine.rollDigital(`1d${sides}`).total,
+          },
+        );
+
+        rollResults.push({
+          total: appliedAttackRolls.reduce((sum, value) => sum + value, 0),
+          rolls: appliedAttackRolls,
+          modifier: attackRoll.modifier,
+          target: "ATTACK_ROLL",
+        });
 
         for (const segment of damageSegments) {
           const baseDice = segment.baseDice;
@@ -233,7 +279,7 @@ export class ActionResolver {
             context.diceRules ?? [],
             "DAMAGE_ROLL",
             {
-              activeStates: activeStates.length > 0 ? activeStates : context.activeStates ?? [],
+              activeStates: resolvedActiveStates,
               sides: Number.parseInt(baseDice.split("d")[1] ?? "6", 10),
               rollFn: (sides) =>
                 DiceEngine.rollDigital(`1d${sides}`).total,

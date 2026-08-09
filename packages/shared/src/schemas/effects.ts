@@ -6,6 +6,12 @@ const BaseEffectSchema = z.object({
   levelAvailable: z.number().int().min(1).max(20).optional(),
   requiredStates: z.array(z.string()).default([]),
   forbiddenStates: z.array(z.string()).default([]),
+  predicates: z
+    .object({
+      requiredStates: z.array(z.string()).default([]),
+      forbiddenStates: z.array(z.string()).default([]),
+    })
+    .optional(),
 });
 
 // #endregion

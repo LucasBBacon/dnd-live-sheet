@@ -5,10 +5,7 @@ import type {
   TraitDefinition,
   TraitModifier,
 } from "@project/shared";
-import type {
-  ChoiceRejection,
-  ChoiceResolution,
-} from "./choiceResolution.js";
+import type { ChoiceRejection, ChoiceResolution } from "./choiceResolution.js";
 
 export interface ModifierChoiceResolution extends ChoiceResolution {
   accepted: ModifierTarget[];

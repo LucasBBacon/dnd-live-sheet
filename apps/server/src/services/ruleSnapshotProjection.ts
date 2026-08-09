@@ -66,7 +66,7 @@ const toWeaponCapability = ({
  * silently dropped - which is exactly how weight, equipSlot, requiresAttunement
  * and ammoTag went missing for as long as they did.
  *
- * A single unparseable row is reported via malformedItemIds and otherwise
+ * A single unparsable row is reported via malformedItemIds and otherwise
  * ignored. If every row in a non-empty set fails, that is treated as a
  * schema/data divergence rather than bad data, and this throws instead of
  * returning an empty snapshot; ruleSnapshotCache does not catch it, so it
@@ -94,12 +94,10 @@ export const projectEquipmentRows = (
       // extractor carried weight hold a stale 0, so reading the column heals
       // them without a re-seed
       weight: hundredthsToPounds(row.weight),
-      ...(row.weaponRule
-        ? { weapon: toWeaponCapability(row.weaponRule) }
-        : {}),
+      ...(row.weaponRule ? { weapon: toWeaponCapability(row.weaponRule) } : {}),
     });
 
-    // one unparseable row must not take the whole snapshot - and with it every
+    // one unparsable row must not take the whole snapshot - and with it every
     // request that needs one - down. the id is reported so the caller can log
     // it, and the item resolves to nothing, which InventoryExtractor already
     // surfaces as an unknown id
@@ -116,7 +114,7 @@ export const projectEquipmentRows = (
     if (weapon) weaponsById[row.id] = weapon;
   }
 
-  // one unparseable row is bad data, handled above. every row unparseable is a
+  // one unparsable row is bad data, handled above. every row unparsable is a
   // different thing entirely - a schema change that no stored payload
   // satisfies - and skipping them all would hand back a snapshot in which
   // nothing resolves. the empty-catalogue case is excluded because zero of

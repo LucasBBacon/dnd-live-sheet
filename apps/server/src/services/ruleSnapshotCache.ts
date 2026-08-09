@@ -39,7 +39,7 @@ const buildRuleSnapshot = async (): Promise<CachedRuleSnapshot> => {
   // silent - an item missing from the snapshot resolves to nothing downstream
   if (malformedItemIds.length > 0) {
     console.warn(
-      `[ruleSnapshotCache] skipped ${malformedItemIds.length} item(s) with unparseable rules: ${malformedItemIds.join(", ")}`,
+      `[ruleSnapshotCache] skipped ${malformedItemIds.length} item(s) with unparsable rules: ${malformedItemIds.join(", ")}`,
     );
   }
 

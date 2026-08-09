@@ -9,7 +9,9 @@ import { RollbackPipelineError } from "./rollbackPipeline.js";
 
 type RollbackRunRow = typeof rollbackRuns.$inferSelect;
 
-const getRollbackRun = async (rollbackRunId: string): Promise<RollbackRunRow> => {
+const getRollbackRun = async (
+  rollbackRunId: string,
+): Promise<RollbackRunRow> => {
   const [run] = await db
     .select()
     .from(rollbackRuns)
@@ -30,18 +32,25 @@ export const assertRollbackRunBelongsToImportRun = async (
   const run = await getRollbackRun(rollbackRunId);
 
   if (run.sourceRunId !== sourceRunId) {
-    throw new RollbackPipelineError("Rollback run does not belong to source import run.", 400);
+    throw new RollbackPipelineError(
+      "Rollback run does not belong to source import run.",
+      400,
+    );
   }
 };
 
-export const listRollbackRunsForImportRun = async (sourceRunId: string): Promise<RollbackRunRow[]> =>
+export const listRollbackRunsForImportRun = async (
+  sourceRunId: string,
+): Promise<RollbackRunRow[]> =>
   db
     .select()
     .from(rollbackRuns)
     .where(eq(rollbackRuns.sourceRunId, sourceRunId))
     .orderBy(desc(rollbackRuns.plannedAt));
 
-export const getRollbackRunSummary = async (rollbackRunId: string): Promise<{
+export const getRollbackRunSummary = async (
+  rollbackRunId: string,
+): Promise<{
   run: RollbackRunRow;
   rowCounts: Record<string, number>;
   issues: Array<typeof rollbackIssues.$inferSelect>;

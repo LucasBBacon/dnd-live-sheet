@@ -20,7 +20,10 @@ import {
  * subclass selection, ability score improvement or feat selection, trait selection, and spell selection.
  */
 export type ResolverDecisionType =
-  "subclass" | "asi_or_feat" | "trait_selection" | "spell_selection";
+  | "subclass"
+  | "asi_or_feat"
+  | "trait_selection"
+  | "spell_selection";
 
 /**
  * Represents a decision that needs to be made during the level-up process, including its type, description, and any associated options or requirements.
@@ -40,7 +43,9 @@ export type ResolverDecision = {
 };
 
 export type GrantSourceType =
-  "multiclass_grant" | "class_progression" | "subclass_progression";
+  | "multiclass_grant"
+  | "class_progression"
+  | "subclass_progression";
 
 export type ResolvedGrantedTrait = {
   id: string;
