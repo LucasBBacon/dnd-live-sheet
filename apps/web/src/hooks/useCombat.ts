@@ -19,6 +19,7 @@ export const useCombat = () => {
   const proficiencies = useCharacterSheetStore((state) => state.proficiencies);
   const traitGrants = useCharacterSheetStore((state) => state.traitGrants);
   const availableTraits = useCharacterSheetStore((state) => state.traits);
+  const activeStates = useCharacterSheetStore((state) => state.activeStates);
   const ruleSnapshot = useCharacterSheetStore((state) => state.ruleSnapshot);
 
   // compose the prerequisite math engines
@@ -56,7 +57,10 @@ export const useCombat = () => {
 
     // 2 - map equipped items to their combat matrices
     const attacks = equippedHands.reduce((acc, item) => {
-      const weaponDef = resolveWeaponDefinition(item.itemId, ruleSnapshot ?? undefined);
+      const weaponDef = resolveWeaponDefinition(
+        item.itemId,
+        ruleSnapshot ?? undefined,
+      );
 
       // if equipped item is not a weapon, skip it
       if (!weaponDef) return acc;
@@ -94,7 +98,7 @@ export const useCombat = () => {
         profBonus,
         weaponProficiencies,
         applicableMods,
-        [],
+        activeStates,
         criticalHitModifiers,
       );
 
@@ -126,5 +130,15 @@ export const useCombat = () => {
     }, [] as any[]);
 
     return { attacks };
-  }, [inventory, proficiencies, traitGrants, availableTraits, finalAbilities, profBonus, totalMods, ruleSnapshot]);
+  }, [
+    inventory,
+    proficiencies,
+    traitGrants,
+    availableTraits,
+    activeStates,
+    finalAbilities,
+    profBonus,
+    totalMods,
+    ruleSnapshot,
+  ]);
 };

@@ -1,5 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { CharacterBootstrapper } from "@project/engine";
+import {
+  CharacterBootstrapper,
+  EffectManager,
+  ResourceManager,
+} from "@project/engine";
 import { socketService } from "../../services/socketService";
 import { useCharacterSheetStore } from "../characterSheetStore";
 
@@ -224,6 +228,39 @@ describe("useCharacterSheetStore hp trigger handling", () => {
     expect(state.latestRollResults[0]?.damageType).toBe("slashing");
   });
 
+  it("keeps mixed combat and authored roll entries in a single capped log", () => {
+    const store = useCharacterSheetStore.getState();
+
+    store.recordCombatRoll({
+      characterId: "char_1",
+      attackName: "Longsword",
+      attackBonus: 5,
+      damageExpression: "1d8 + 3 slashing",
+      slot: "main_hand",
+      requiresAmmo: false,
+      timestamp: Date.now(),
+    });
+
+    store.recordRollResult({
+      characterId: "char_1",
+      rollResults: [
+        {
+          total: 7,
+          rolls: [7],
+          modifier: 0,
+          target: "DAMAGE_ROLL",
+          damageType: "slashing",
+        },
+      ],
+      timestamp: Date.now(),
+    });
+
+    const state = useCharacterSheetStore.getState();
+    expect(state.latestRollResults).toHaveLength(2);
+    expect(state.latestRollResults[0]?.target).toBe("ATTACK_ROLL");
+    expect(state.latestRollResults[1]?.target).toBe("DAMAGE_ROLL");
+  });
+
   it("applies authored dice rules from traits while dispatching runtime events", () => {
     const randomSpy = vi
       .spyOn(Math, "random")
@@ -380,6 +417,68 @@ describe("useCharacterSheetStore hp trigger handling", () => {
     store.handleSaveOutcome(false);
     expect(useCharacterSheetStore.getState().activeStates).toContain(
       "save_failed",
+    );
+
+    compileSpy.mockRestore();
+  });
+
+  it("rehydrates runtime managers from the latest save when trait grants change", () => {
+    const runtimeEffects = new EffectManager();
+    const runtimeResources = new ResourceManager();
+
+    runtimeEffects.addEffect({
+      instanceId: "trait_state_stale",
+      sourceName: "Stale",
+      durationType: "manual",
+      isSelfConcentration: false,
+      modifiers: [],
+      grantedStates: ["stale_state"],
+    });
+
+    const compileSpy = vi
+      .spyOn(CharacterBootstrapper, "compileActiveTraits")
+      .mockReturnValue([
+        {
+          id: "trait_test_granted_state",
+          name: "Granted State",
+          description: "Adds a fresh runtime state",
+          modifiers: { fixed: [], choices: [] },
+          resources: [
+            {
+              id: "resource_test",
+              name: "Test Resource",
+              maxCharges: 1,
+              resetOn: "long_rest",
+            },
+          ],
+          diceRules: [],
+          criticalHitModifiers: [],
+          grantedStates: ["fresh_state"],
+          triggers: [],
+          actions: [],
+        },
+      ]);
+
+    const nextSave = {
+      attributes: { str: 10, dex: 10, con: 10, int: 10, wis: 10, cha: 10 },
+      race: { baseRaceId: "race_human", hasSubraces: false, subraceId: null },
+      classes: [{ classId: "class_fighter", level: 1, selections: {} }],
+      traitSelections: {},
+      hp: { current: 10, temporary: 0, baseRolledHp: 10, hitDiceSpent: {} },
+    } as const;
+
+    CharacterBootstrapper.hydrateRuntimeManagers(
+      nextSave,
+      runtimeEffects,
+      runtimeResources,
+    );
+
+    expect(runtimeEffects.getActiveStates()).toContain("fresh_state");
+    expect(runtimeEffects.getActiveStates()).not.toContain("stale_state");
+    expect(runtimeResources.getRuntimeResources()).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ id: "resource_test", currentCharges: 1 }),
+      ]),
     );
 
     compileSpy.mockRestore();

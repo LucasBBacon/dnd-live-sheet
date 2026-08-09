@@ -54,9 +54,8 @@ hardcoded fallback.
 | 6 | Thrown range hardcoded to `20/60` | [weaponSynthesizer.ts:98](packages/engine/src/pipeline/weaponSynthesizer.ts:98) | Same fix as #5 — one schema change closes both |
 | 7 | `BaseEffectSchema` predicates (e.g. armor restrictions) | [effects.ts:7](packages/shared/src/schemas/effects.ts:7) | Prerequisite for the conditional-trait items in P2 |
 | 8 | `SKILL_MAP` lives in engine but is used by engine + client | [core.ts:10](packages/engine/src/types/core.ts:10) | Pure move to `@project/shared`; no logic change |
-| 9 | `AuthenticatedUser` needs roles / subscription tiers | [AuthInterface.ts:6](apps/server/src/core/auth/AuthInterface.ts:6) | Independent of everything else; do whenever |
 
-**Suggested order:** 5+6 together, then 7, then 8, then 9.
+**Suggested order:** 5+6 together, then 7, then 8.
 
 ---
 
@@ -150,7 +149,6 @@ are genuine polish.
 6. **2b summons (#15–#17)** — needs the actor-model decision first.
 7. **P3 remainder**, then **2e (#23, #24)** as a deliberate modifier-system redesign.
 
-`#9` (auth roles) is orthogonal and can be slotted in anywhere.
 
 ---
 

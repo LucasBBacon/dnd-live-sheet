@@ -19,6 +19,7 @@ export const useAbilities = () => {
     (state) => state.activeModifiers,
   );
   const inventory = useCharacterSheetStore((state) => state.inventory);
+  const activeStates = useCharacterSheetStore((state) => state.activeStates);
   const ruleSnapshot = useCharacterSheetStore((state) => state.ruleSnapshot);
 
   return useMemo(() => {
@@ -40,6 +41,7 @@ export const useAbilities = () => {
         baseScores[stat],
         stat,
         totalMods,
+        activeStates,
       );
       finalAbilities[stat] = {
         score: derived.score,
@@ -48,7 +50,7 @@ export const useAbilities = () => {
     });
 
     return { finalAbilities, totalMods };
-  }, [baseScores, activeModifiers, inventory, ruleSnapshot]);
+  }, [baseScores, activeModifiers, inventory, activeStates, ruleSnapshot]);
 };
 
 export const useDerivedStats = () => {
@@ -56,6 +58,7 @@ export const useDerivedStats = () => {
   const classLevels = useCharacterSheetStore((state) => state.classLevels);
   const proficiencies = useCharacterSheetStore((state) => state.proficiencies);
   const baseHpRolled = useCharacterSheetStore((state) => state.baseHpRolled);
+  const activeStates = useCharacterSheetStore((state) => state.activeStates);
 
   const { finalAbilities, totalMods } = useAbilities();
 
@@ -82,6 +85,7 @@ export const useDerivedStats = () => {
         classes: classLevels,
       },
       totalMods,
+      activeStates,
     );
 
     // initiative
@@ -90,10 +94,11 @@ export const useDerivedStats = () => {
       profBonus,
       skillAndInitiativeProficiencies,
       totalMods,
+      activeStates,
     );
 
     // ac calc
-    const armorClass = DerivedStatEngine.calculateAC(dexMod, totalMods);
+    const armorClass = DerivedStatEngine.calculateAC(dexMod, totalMods, activeStates);
 
     // skills calc
     const skills = Object.values(SKILL_MAP).map((skillDef) => {
@@ -103,6 +108,7 @@ export const useDerivedStats = () => {
         profBonus,
         skillAndInitiativeProficiencies,
         totalMods,
+        activeStates,
       );
     });
 
@@ -114,5 +120,6 @@ export const useDerivedStats = () => {
     classLevels,
     finalAbilities,
     totalMods,
+    activeStates,
   ]);
 };

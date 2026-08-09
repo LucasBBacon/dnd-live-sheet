@@ -14,6 +14,7 @@ let mockStoreState: {
     traitId: string;
     source: string;
   }>;
+  activeStates: string[];
   ruleSnapshot: {
     equipmentById?: Record<string, unknown>;
     weaponsById: Record<string, unknown>;
@@ -31,8 +32,9 @@ vi.mock("react", async () => {
 });
 
 vi.mock("../../store/characterSheetStore", () => ({
-  useCharacterSheetStore: (selector: (state: typeof mockStoreState) => unknown) =>
-    selector(mockStoreState),
+  useCharacterSheetStore: (
+    selector: (state: typeof mockStoreState) => unknown,
+  ) => selector(mockStoreState),
 }));
 
 vi.mock("../useCharacterStats", () => ({
@@ -40,6 +42,7 @@ vi.mock("../useCharacterStats", () => ({
     finalAbilities: {
       STR: { score: 16, modifier: 3 },
       DEX: { score: 12, modifier: 1 },
+      WIS: { score: 14, modifier: 2 },
     },
     totalMods: [],
   }),
@@ -56,6 +59,7 @@ describe("useCombat", () => {
       inventory: [],
       proficiencies: {},
       traitGrants: [],
+      activeStates: [],
       ruleSnapshot: null,
     };
   });
@@ -114,6 +118,28 @@ describe("useCombat", () => {
     expect(attacks).toHaveLength(1);
     expect(attacks[0].criticalDamageExpression).toContain("2d8");
     expect(attacks[0].criticalDamageExpression).toContain("slashing");
+  });
+
+  it("uses active states when resolving the governing stat for an attack", () => {
+    mockStoreState.inventory = [
+      {
+        id: "inv_2",
+        itemId: "item_weapon_longsword",
+        quantity: 1,
+        slot: "main_hand",
+        isAttuned: false,
+      },
+    ];
+    mockStoreState.proficiencies = {
+      martial_melee: "proficient",
+    };
+    mockStoreState.activeStates = ["shillelagh"];
+
+    const { attacks } = useCombat();
+
+    expect(attacks).toHaveLength(1);
+    expect(attacks[0].breakdown.governingStat).toBe("WIS");
+    expect(attacks[0].attackBonus).toBe(4);
   });
 
   it("does not derive attacks for non-weapon equipped items", () => {

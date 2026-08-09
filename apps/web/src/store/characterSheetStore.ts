@@ -163,6 +163,11 @@ const toActionRollResult = (
   ...(payload.summary !== undefined && { summary: payload.summary }),
 });
 
+const appendRollResults = (
+  state: Pick<CharacterSheetState, "latestRollResults">,
+  nextResults: ActionRollResult[],
+): ActionRollResult[] => [...state.latestRollResults.slice(-4), ...nextResults];
+
 const dispatchAuthoredEvent = (
   state: CharacterSheetState,
   eventName: EngineEvent,
@@ -171,13 +176,11 @@ const dispatchAuthoredEvent = (
   const runtimeEffects = state.runtimeEffects ?? new EffectManager();
   const runtimeResources = state.runtimeResources ?? new ResourceManager();
 
-  if (!state.runtimeEffects || !state.runtimeResources) {
-    CharacterBootstrapper.hydrateRuntimeManagers(
-      nextSave,
-      runtimeEffects,
-      runtimeResources,
-    );
-  }
+  CharacterBootstrapper.hydrateRuntimeManagers(
+    nextSave,
+    runtimeEffects,
+    runtimeResources,
+  );
 
   const activeTraits = CharacterBootstrapper.compileActiveTraits(nextSave);
   const actionLookup = Object.fromEntries(
@@ -200,8 +203,13 @@ const dispatchAuthoredEvent = (
     },
   );
 
-  if (state.id && results.some((result) => (result.rollResults?.length ?? 0) > 0)) {
-    const authoredRollResults = results.flatMap((result) => result.rollResults ?? []);
+  if (
+    state.id &&
+    results.some((result) => (result.rollResults?.length ?? 0) > 0)
+  ) {
+    const authoredRollResults = results.flatMap(
+      (result) => result.rollResults ?? [],
+    );
     if (authoredRollResults.length > 0) {
       socketService.emitRollResults({
         characterId: state.id,
@@ -210,7 +218,9 @@ const dispatchAuthoredEvent = (
           rolls: result.rolls,
           modifier: result.modifier,
           target: result.target,
-          ...(result.damageType !== undefined && { damageType: result.damageType }),
+          ...(result.damageType !== undefined && {
+            damageType: result.damageType,
+          }),
           ...(result.label !== undefined && { label: result.label }),
           ...(result.summary !== undefined && { summary: result.summary }),
         })),
@@ -870,19 +880,18 @@ export const useCharacterSheetStore = create<CharacterSheetState>(
 
     recordCombatRoll: (payload) => {
       set((state) => ({
-        latestRollResults: [
-          ...state.latestRollResults.slice(-4),
+        latestRollResults: appendRollResults(state, [
           createCombatRollResult(payload),
-        ],
+        ]),
       }));
     },
 
     recordRollResult: (payload) => {
       set((state) => ({
-        latestRollResults: [
-          ...state.latestRollResults.slice(-4),
-          ...payload.rollResults.map(toActionRollResult),
-        ],
+        latestRollResults: appendRollResults(
+          state,
+          payload.rollResults.map(toActionRollResult),
+        ),
       }));
     },
 

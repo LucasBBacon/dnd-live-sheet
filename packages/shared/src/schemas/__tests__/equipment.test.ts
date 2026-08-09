@@ -33,7 +33,7 @@ describe("WeaponCapability and WeaponDefinition stay complementary", () => {
 
     const { id, name, ...capability } = definition;
 
-    // the capability schema is strict, so an unrecognised key throws here
+    // the capability schema is strict, so an unrecognized key throws here
     // rather than being quietly dropped
     const parsed = WeaponCapabilitySchema.parse(capability);
 
@@ -52,6 +52,20 @@ describe("WeaponCapability and WeaponDefinition stay complementary", () => {
     });
 
     expect(parsed.versatileDamageDice).toBe("1d10");
+  });
+
+  it("preserves authored weapon range and long-range values", () => {
+    const parsed = WeaponCapabilitySchema.parse({
+      category: "martial_ranged",
+      damageDice: "1d8",
+      damageType: "piercing",
+      properties: ["ammunition"],
+      range: 150,
+      longRange: 600,
+    });
+
+    expect(parsed.range).toBe(150);
+    expect(parsed.longRange).toBe(600);
   });
 });
 
@@ -72,7 +86,7 @@ describe("a container carries its capacity through both shapes", () => {
   it("round-trips a pounds-of-gear capacity", () => {
     // if `container` were ever dropped from one of these schemas, the two
     // parses below would not fail the same way. EquipmentDefinitionSchema is
-    // strict, so it would throw on the now-unrecognised key. ItemDefinitionSchema
+    // strict, so it would throw on the now-unrecognized key. ItemDefinitionSchema
     // is not strict, so it would silently strip the key instead - only the
     // toEqual assertions below would catch that, by finding container missing
     const equipment = EquipmentDefinitionSchema.parse({
