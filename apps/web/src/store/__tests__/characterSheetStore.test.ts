@@ -41,6 +41,7 @@ describe("useCharacterSheetStore hp trigger handling", () => {
     });
 
     vi.spyOn(socketService, "emitHpModification").mockImplementation(() => {});
+    vi.spyOn(socketService, "emitActionIntent").mockImplementation(() => {});
   });
 
   it("drops a half-orc to one hp and records the trigger state when hp hits zero", () => {
@@ -531,9 +532,14 @@ describe("useCharacterSheetStore hp trigger handling", () => {
     const store = useCharacterSheetStore.getState();
     store.executeActorAction("action_actor_clockwork_toy_scuttle");
 
-    const state = useCharacterSheetStore.getState();
-    expect(state.selectedActorInstanceId).toBe(actor.instanceId);
-    expect(state.activeStates).toContain("actor_clockwork_toy_scuttling");
+    expect(socketService.emitActionIntent).toHaveBeenCalledWith(
+      expect.objectContaining({
+        characterId: "char_1",
+        actionId: "action_actor_clockwork_toy_scuttle",
+        source: "actor",
+        actorInstanceId: actor.instanceId,
+      }),
+    );
   });
 
   it("executes a character summon action and creates active summon actors", () => {
@@ -568,16 +574,13 @@ describe("useCharacterSheetStore hp trigger handling", () => {
     const store = useCharacterSheetStore.getState();
     store.executeCharacterAction("action_tinker_construct");
 
-    const state = useCharacterSheetStore.getState();
-    expect(state.runtimeEffects?.getActiveActors()).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          templateId: "actor_clockwork_toy",
-          displayLabel: "Clockwork Toy",
-        }),
-      ]),
+    expect(socketService.emitActionIntent).toHaveBeenCalledWith(
+      expect.objectContaining({
+        characterId: "char_1",
+        actionId: "action_tinker_construct",
+        source: "character",
+      }),
     );
-    expect(state.activeStates).toContain("actor_clockwork_toy");
 
     compileSpy.mockRestore();
   });
@@ -625,9 +628,34 @@ describe("useCharacterSheetStore hp trigger handling", () => {
     const store = useCharacterSheetStore.getState();
     store.syncRemoteActionExecution({
       characterId: "char_1",
+      requestId: "request_1",
       actionId: "action_actor_clockwork_toy_scuttle",
       source: "actor",
       actorInstanceId: actor.instanceId,
+      executed: true,
+      rollResults: [],
+      activeStates: ["actor_clockwork_toy", "actor_clockwork_toy_scuttling"],
+      resources: [],
+      effects: [
+        {
+          instanceId: "effect_actor",
+          sourceName: "Scuttle",
+          durationType: "manual",
+          isSelfConcentration: false,
+          modifiers: [],
+          grantedStates: ["actor_clockwork_toy_scuttling"],
+          kind: "effect",
+        },
+      ],
+      actors: [
+        {
+          ...actor,
+          currentStates: [
+            "actor_clockwork_toy",
+            "actor_clockwork_toy_scuttling",
+          ],
+        },
+      ],
       timestamp: Date.now(),
     });
 

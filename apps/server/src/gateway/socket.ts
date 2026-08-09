@@ -1,26 +1,37 @@
 import { db } from "@project/database";
 import {
   EQUIPMENT_SLOTS,
+  characterClasses,
   characterInventory,
   characterResources,
   characters,
 } from "@project/database/src/schema/operational.js";
 import { items } from "@project/database/src/schema/reference.js";
 import {
-  type ActionExecutedPayload,
+  type ActionGrant,
+  type ActionIntentPayload,
+  type ActionResolvedPayload,
   type CombatRollPayload,
   type InventorySyncPayload,
   type RoomJoinPayload,
   SOCKET_EVENTS,
+  type CharacterSave,
   type HpModifiedPayload,
   type ItemConsumedPayload,
   type ItemEquippedPayload,
   type ResourceConsumedPayload,
+  type RuntimeEffectSyncPayload,
   type RollResultsBroadcastPayload,
 } from "@project/shared";
 import { Server, Socket } from "socket.io";
 import { and, eq, not, sql } from "drizzle-orm";
-import { RestEngine } from "@project/engine";
+import {
+  ActionResolver,
+  CharacterBootstrapper,
+  EffectManager,
+  ResourceManager,
+  RestEngine,
+} from "@project/engine";
 import {
   getCampaignMembershipRole,
   getUserIdFromSocket,
@@ -92,6 +103,179 @@ const ensureCharacterInSocketCampaign = async (
   }
 
   return context.campaignId;
+};
+
+const AUTHORITY_RUNTIME_TTL_MS = 1000 * 60 * 45;
+const AUTHORITY_REQUEST_CACHE_LIMIT = 200;
+
+interface AuthoritativeRuntimeContext {
+  save: CharacterSave;
+  effectManager: EffectManager;
+  resourceManager: ResourceManager;
+  responseByRequestId: Map<string, ActionResolvedPayload>;
+  lastTouchedAt: number;
+}
+
+const authoritativeRuntimeByCharacter = new Map<
+  string,
+  AuthoritativeRuntimeContext
+>();
+
+const pruneAuthoritativeRuntime = () => {
+  const now = Date.now();
+
+  for (const [characterId, runtime] of authoritativeRuntimeByCharacter) {
+    if (now - runtime.lastTouchedAt > AUTHORITY_RUNTIME_TTL_MS) {
+      authoritativeRuntimeByCharacter.delete(characterId);
+    }
+  }
+};
+
+const toCharacterSave = (
+  character: {
+    raceId: string;
+    subraceId: string;
+    str: number;
+    dex: number;
+    con: number;
+    int: number;
+    wis: number;
+    cha: number;
+    currentHp: number | null;
+    maxHp: number | null;
+  },
+  classes: Array<{ classId: string; classLevel: number }>,
+): CharacterSave => ({
+  attributes: {
+    str: character.str,
+    dex: character.dex,
+    con: character.con,
+    int: character.int,
+    wis: character.wis,
+    cha: character.cha,
+  },
+  race: {
+    baseRaceId: character.raceId,
+    hasSubraces: true,
+    subraceId: character.subraceId,
+  },
+  classes:
+    classes.length > 0
+      ? classes.map((entry) => ({
+          classId: entry.classId,
+          level: entry.classLevel,
+          selections: {},
+        }))
+      : [{ classId: "class_fighter", level: 1, selections: {} }],
+  traitSelections: {},
+  hp: {
+    current: character.currentHp ?? character.maxHp ?? 1,
+    temporary: 0,
+    baseRolledHp: character.maxHp ?? 1,
+    hitDiceSpent: {},
+  },
+});
+
+const toRuntimeEffectsPayload = (
+  effectManager: EffectManager,
+): RuntimeEffectSyncPayload[] =>
+  effectManager.getActiveEffects().map((effect) => ({
+    instanceId: effect.instanceId,
+    sourceName: effect.sourceName,
+    durationType: effect.durationType,
+    ...(effect.durationRemaining !== undefined && {
+      durationRemaining: effect.durationRemaining,
+    }),
+    isSelfConcentration: effect.isSelfConcentration,
+    modifiers: effect.modifiers,
+    grantedStates: effect.grantedStates,
+    ...(effect.kind !== undefined && { kind: effect.kind }),
+    ...(effect.durationHours !== undefined && {
+      durationHours: effect.durationHours,
+    }),
+    ...(effect.summonEntities !== undefined && {
+      summonEntities: effect.summonEntities,
+    }),
+  }));
+
+const getAuthoritativeRuntimeContext = async (
+  characterId: string,
+): Promise<AuthoritativeRuntimeContext> => {
+  const [character] = await db
+    .select({
+      raceId: characters.raceId,
+      subraceId: characters.subraceId,
+      str: characters.str,
+      dex: characters.dex,
+      con: characters.con,
+      int: characters.int,
+      wis: characters.wis,
+      cha: characters.cha,
+      currentHp: characters.currentHp,
+      maxHp: characters.maxHp,
+    })
+    .from(characters)
+    .where(eq(characters.id, characterId))
+    .limit(1);
+
+  if (!character) {
+    throw new Error("Character not found for authoritative action resolution.");
+  }
+
+  const classRows = await db
+    .select({
+      classId: characterClasses.classId,
+      classLevel: characterClasses.classLevel,
+    })
+    .from(characterClasses)
+    .where(eq(characterClasses.characterId, characterId));
+
+  const nextSave = toCharacterSave(character, classRows);
+  const existing = authoritativeRuntimeByCharacter.get(characterId);
+
+  if (existing) {
+    existing.save = nextSave;
+    existing.lastTouchedAt = Date.now();
+    CharacterBootstrapper.hydrateRuntimeManagers(
+      existing.save,
+      existing.effectManager,
+      existing.resourceManager,
+    );
+    return existing;
+  }
+
+  const effectManager = new EffectManager();
+  const resourceManager = new ResourceManager();
+  CharacterBootstrapper.hydrateRuntimeManagers(
+    nextSave,
+    effectManager,
+    resourceManager,
+  );
+
+  const runtime: AuthoritativeRuntimeContext = {
+    save: nextSave,
+    effectManager,
+    resourceManager,
+    responseByRequestId: new Map(),
+    lastTouchedAt: Date.now(),
+  };
+
+  authoritativeRuntimeByCharacter.set(characterId, runtime);
+  return runtime;
+};
+
+const resolveCharacterAction = (
+  runtime: AuthoritativeRuntimeContext,
+  actionId: string,
+): { action: ActionGrant | null; diceRules: Array<any> } => {
+  const activeTraits = CharacterBootstrapper.compileActiveTraits(runtime.save);
+  const diceRules = activeTraits.flatMap((trait) => trait.diceRules ?? []);
+  const action =
+    activeTraits
+      .flatMap((trait) => trait.actions ?? [])
+      .find((entry) => entry.id === actionId) ?? null;
+
+  return { action, diceRules };
 };
 
 export function initializeWebSocketGateway(httpServer: any) {
@@ -262,27 +446,134 @@ export function initializeWebSocketGateway(httpServer: any) {
 
     // #endregion
 
-    // #region ACTION EXECUTED
+    // #region ACTION INTENT
 
     socket.on(
-      SOCKET_EVENTS.ACTION_EXECUTED,
-      async (payload: ActionExecutedPayload) => {
+      SOCKET_EVENTS.ACTION_INTENT,
+      async (payload: ActionIntentPayload) => {
         try {
+          pruneAuthoritativeRuntime();
+
           const campaignId = await ensureCharacterInSocketCampaign(
             socket,
             payload.characterId,
           );
 
-          socket
-            .to(`campaign_${campaignId}`)
-            .emit(SOCKET_EVENTS.ACTION_EXECUTED, {
-              actorId: socket.id,
-              data: payload,
-            });
+          const runtime = await getAuthoritativeRuntimeContext(
+            payload.characterId,
+          );
+          runtime.lastTouchedAt = Date.now();
+
+          const cached = runtime.responseByRequestId.get(payload.requestId);
+          if (cached) {
+            socket.emit(SOCKET_EVENTS.ACTION_RESOLVED, cached);
+            return;
+          }
+
+          let action: ActionGrant | null = null;
+          let diceRules: Array<unknown> = [];
+          let actorInstanceId: string | undefined = payload.actorInstanceId;
+          let actionStates = runtime.effectManager.getActiveStates();
+
+          if (payload.source === "character") {
+            const resolved = resolveCharacterAction(runtime, payload.actionId);
+            action = resolved.action;
+            diceRules = resolved.diceRules;
+          } else {
+            if (!payload.actorInstanceId) {
+              throw new Error("Actor action intent missing actorInstanceId.");
+            }
+
+            const actor = runtime.effectManager
+              .getActiveActors()
+              .find((entry) => entry.instanceId === payload.actorInstanceId);
+
+            if (!actor) {
+              throw new Error("Actor action intent references unknown actor.");
+            }
+
+            action =
+              actor.availableActions.find(
+                (entry) => entry.id === payload.actionId,
+              ) ?? null;
+            actionStates = actor.currentStates;
+            actorInstanceId = actor.instanceId;
+          }
+
+          const execution =
+            action !== null
+              ? ActionResolver.execute(
+                  action,
+                  {
+                    actionId: payload.actionId,
+                    activeStates: actionStates,
+                  },
+                  {
+                    effectManager: runtime.effectManager,
+                    resourceManager: runtime.resourceManager,
+                    activeStates: runtime.effectManager.getActiveStates(),
+                    diceRules: diceRules as any,
+                  },
+                )
+              : { executed: false, reason: "action_not_found" as const };
+
+          const executionRollResults =
+            "rollResults" in execution ? execution.rollResults : [];
+
+          const resolvedPayload: ActionResolvedPayload = {
+            characterId: payload.characterId,
+            requestId: payload.requestId,
+            actionId: payload.actionId,
+            source: payload.source,
+            ...(actorInstanceId !== undefined && { actorInstanceId }),
+            executed: execution.executed,
+            ...(execution.reason !== undefined && { reason: execution.reason }),
+            rollResults: executionRollResults.map((result) => ({
+              total: result.total,
+              rolls: result.rolls,
+              modifier: result.modifier,
+              target: result.target,
+              ...(result.damageType !== undefined && {
+                damageType: result.damageType,
+              }),
+              ...(result.label !== undefined && { label: result.label }),
+              ...(result.summary !== undefined && { summary: result.summary }),
+            })),
+            activeStates: runtime.effectManager.getActiveStates(),
+            resources: runtime.resourceManager
+              .getRuntimeResources()
+              .map((resource) => ({
+                id: resource.id,
+                current: resource.currentCharges,
+                currentCharges: resource.currentCharges,
+              })),
+            effects: toRuntimeEffectsPayload(runtime.effectManager),
+            actors: runtime.effectManager.getActiveActors(),
+            timestamp: Date.now(),
+          };
+
+          runtime.responseByRequestId.set(payload.requestId, resolvedPayload);
+
+          if (
+            runtime.responseByRequestId.size > AUTHORITY_REQUEST_CACHE_LIMIT
+          ) {
+            const oldestKey = runtime.responseByRequestId.keys().next().value;
+            if (oldestKey) {
+              runtime.responseByRequestId.delete(oldestKey);
+            }
+          }
+
+          io.to(`campaign_${campaignId}`).emit(SOCKET_EVENTS.ACTION_RESOLVED, {
+            actorId: socket.id,
+            data: resolvedPayload,
+          });
         } catch (error) {
-          console.error("Failed to process action execution broadcast:", error);
+          console.error(
+            "Failed to process authoritative action intent:",
+            error,
+          );
           socket.emit("error:rollback", {
-            event: SOCKET_EVENTS.ACTION_EXECUTED,
+            event: SOCKET_EVENTS.ACTION_INTENT,
             payload,
           });
         }

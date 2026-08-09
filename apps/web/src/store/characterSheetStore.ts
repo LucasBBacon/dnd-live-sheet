@@ -18,7 +18,7 @@ import {
 import {
   CharacterSlotSchema,
   type ActionGrant,
-  type ActionExecutedPayload,
+  type ActionResolvedPayload,
   type CharacterSave,
   type CharacterSlot,
   type CombatRollPayload,
@@ -169,6 +169,52 @@ const appendRollResults = (
   state: Pick<CharacterSheetState, "latestRollResults">,
   nextResults: ActionRollResult[],
 ): ActionRollResult[] => [...state.latestRollResults.slice(-4), ...nextResults];
+
+const hydrateRuntimeEffectsFromResolved = (
+  payload: ActionResolvedPayload,
+): EffectManager => {
+  const manager = new EffectManager();
+
+  for (const effect of payload.effects) {
+    manager.addEffect({
+      instanceId: effect.instanceId,
+      sourceName: effect.sourceName,
+      durationType: effect.durationType,
+      durationRemaining: effect.durationRemaining,
+      isSelfConcentration: effect.isSelfConcentration,
+      modifiers: effect.modifiers,
+      grantedStates: effect.grantedStates,
+      kind: effect.kind,
+      durationHours: effect.durationHours,
+      summonEntities: effect.summonEntities,
+    });
+  }
+
+  manager.addActors(payload.actors);
+  return manager;
+};
+
+const alignRuntimeResources = (
+  manager: ResourceManager,
+  targetResources: ActionResolvedPayload["resources"],
+) => {
+  const currentById = new Map(
+    manager
+      .getRuntimeResources()
+      .map((resource) => [resource.id, resource.currentCharges] as const),
+  );
+
+  for (const target of targetResources) {
+    const current = currentById.get(target.id);
+    if (current === undefined) continue;
+
+    if (current > target.currentCharges) {
+      manager.consume(target.id, current - target.currentCharges);
+    } else if (current < target.currentCharges) {
+      manager.restore(target.id, target.currentCharges - current);
+    }
+  }
+};
 
 const dispatchAuthoredEvent = (
   state: CharacterSheetState,
@@ -504,7 +550,7 @@ export interface CharacterSheetState {
   executeCharacterAction: (actionId: string) => void;
   selectActorInstance: (actorInstanceId: string | null) => void;
   executeActorAction: (actionId: string, actorInstanceId?: string) => void;
-  syncRemoteActionExecution: (payload: ActionExecutedPayload) => void;
+  syncRemoteActionExecution: (payload: ActionResolvedPayload) => void;
   recordCombatRoll: (payload: CombatRollPayload) => void;
   recordRollResult: (payload: RollResultsBroadcastPayload) => void;
   beginTurn: () => void;
@@ -905,91 +951,15 @@ export const useCharacterSheetStore = create<CharacterSheetState>(
 
     executeCharacterAction: (actionId) => {
       const state = get();
-      const nextSave = toCharacterSave(state);
-      const runtimeEffects = state.runtimeEffects ?? new EffectManager();
-      const runtimeResources = state.runtimeResources ?? new ResourceManager();
-
-      CharacterBootstrapper.hydrateRuntimeManagers(
-        nextSave,
-        runtimeEffects,
-        runtimeResources,
-      );
-
-      const activeTraits = CharacterBootstrapper.compileActiveTraits(nextSave);
-      const diceRules = activeTraits.flatMap((trait) => trait.diceRules ?? []);
-      const action = activeTraits
-        .flatMap((trait) => trait.actions ?? [])
-        .find((entry) => entry.id === actionId);
-
-      if (!action) {
-        return;
-      }
-
-      const execution = ActionResolver.execute(
-        action,
-        {
-          actionId,
-          activeStates: state.activeStates,
-        },
-        {
-          effectManager: runtimeEffects,
-          resourceManager: runtimeResources,
-          activeStates: state.activeStates,
-          diceRules,
-        },
-      );
-
-      if (!execution.executed) {
-        return;
-      }
-
       if (state.id) {
-        socketService.emitActionExecuted({
+        socketService.emitActionIntent({
           characterId: state.id,
+          requestId: crypto.randomUUID(),
           actionId,
           source: "character",
           timestamp: Date.now(),
         });
       }
-
-      const rollResults = execution.rollResults ?? [];
-      if (state.id && rollResults.length > 0) {
-        socketService.emitRollResults({
-          characterId: state.id,
-          rollResults: rollResults.map((result) => ({
-            total: result.total,
-            rolls: result.rolls,
-            modifier: result.modifier,
-            target: result.target,
-            ...(result.damageType !== undefined && {
-              damageType: result.damageType,
-            }),
-            ...(result.label !== undefined && { label: result.label }),
-            ...(result.summary !== undefined && { summary: result.summary }),
-          })),
-          timestamp: Date.now(),
-        });
-      }
-
-      set((previous) => ({
-        activeStates: Array.from(
-          new Set([
-            ...previous.activeStates,
-            ...runtimeEffects.getActiveStates(),
-          ]),
-        ),
-        resources: runtimeResources.getRuntimeResources().map((resource) => ({
-          id: resource.id,
-          current: resource.currentCharges,
-          currentCharges: resource.currentCharges,
-        })),
-        latestRollResults:
-          rollResults.length > 0
-            ? appendRollResults(previous, rollResults)
-            : previous.latestRollResults,
-        runtimeEffects,
-        runtimeResources,
-      }));
     },
 
     selectActorInstance: (actorInstanceId) => {
@@ -998,17 +968,7 @@ export const useCharacterSheetStore = create<CharacterSheetState>(
 
     executeActorAction: (actionId, actorInstanceId) => {
       const state = get();
-      const nextSave = toCharacterSave(state);
       const runtimeEffects = state.runtimeEffects ?? new EffectManager();
-      const runtimeResources = state.runtimeResources ?? new ResourceManager();
-
-      if (!state.runtimeEffects || !state.runtimeResources) {
-        CharacterBootstrapper.hydrateRuntimeManagers(
-          nextSave,
-          runtimeEffects,
-          runtimeResources,
-        );
-      }
 
       const resolvedActorInstanceId =
         actorInstanceId ?? state.selectedActorInstanceId;
@@ -1032,82 +992,22 @@ export const useCharacterSheetStore = create<CharacterSheetState>(
         return;
       }
 
-      const execution = ActionResolver.execute(
-        action,
-        {
-          actionId,
-          activeStates: actor.currentStates,
-        },
-        {
-          effectManager: runtimeEffects,
-          resourceManager: runtimeResources,
-          activeStates: Array.from(
-            new Set([...state.activeStates, ...actor.currentStates]),
-          ),
-        },
-      );
-
-      if (!execution.executed) {
-        return;
-      }
-
       if (state.id) {
-        socketService.emitActionExecuted({
+        socketService.emitActionIntent({
           characterId: state.id,
+          requestId: crypto.randomUUID(),
           actionId,
           source: "actor",
-          actorInstanceId: actor.instanceId,
+          actorInstanceId: resolvedActorInstanceId,
           timestamp: Date.now(),
         });
       }
-
-      const rollResults = execution.rollResults ?? [];
-
-      if (state.id && rollResults.length > 0) {
-        socketService.emitRollResults({
-          characterId: state.id,
-          rollResults: rollResults.map((result) => ({
-            total: result.total,
-            rolls: result.rolls,
-            modifier: result.modifier,
-            target: result.target,
-            ...(result.damageType !== undefined && {
-              damageType: result.damageType,
-            }),
-            ...(result.label !== undefined && { label: result.label }),
-            ...(result.summary !== undefined && { summary: result.summary }),
-          })),
-          timestamp: Date.now(),
-        });
-      }
-
-      set((previous) => ({
-        activeStates: Array.from(
-          new Set([
-            ...previous.activeStates,
-            ...runtimeEffects.getActiveStates(),
-            ...actor.currentStates,
-          ]),
-        ),
-        resources: runtimeResources.getRuntimeResources().map((resource) => ({
-          id: resource.id,
-          current: resource.currentCharges,
-          currentCharges: resource.currentCharges,
-        })),
-        latestRollResults:
-          rollResults.length > 0
-            ? appendRollResults(previous, rollResults)
-            : previous.latestRollResults,
-        runtimeEffects,
-        runtimeResources,
-        selectedActorInstanceId: actor.instanceId,
-      }));
     },
 
     syncRemoteActionExecution: (payload) => {
       const state = get();
       const nextSave = toCharacterSave(state);
-      const runtimeEffects = state.runtimeEffects ?? new EffectManager();
+      const runtimeEffects = hydrateRuntimeEffectsFromResolved(payload);
       const runtimeResources = state.runtimeResources ?? new ResourceManager();
 
       CharacterBootstrapper.hydrateRuntimeManagers(
@@ -1116,113 +1016,22 @@ export const useCharacterSheetStore = create<CharacterSheetState>(
         runtimeResources,
       );
 
-      if (payload.source === "character") {
-        const activeTraits =
-          CharacterBootstrapper.compileActiveTraits(nextSave);
-        const diceRules = activeTraits.flatMap(
-          (trait) => trait.diceRules ?? [],
-        );
-        const action = activeTraits
-          .flatMap((trait) => trait.actions ?? [])
-          .find((entry) => entry.id === payload.actionId);
-
-        if (!action) {
-          return;
-        }
-
-        const execution = ActionResolver.execute(
-          action,
-          {
-            actionId: payload.actionId,
-            activeStates: state.activeStates,
-          },
-          {
-            effectManager: runtimeEffects,
-            resourceManager: runtimeResources,
-            activeStates: state.activeStates,
-            diceRules,
-          },
-        );
-
-        if (!execution.executed) {
-          return;
-        }
-
-        set((previous) => ({
-          activeStates: Array.from(
-            new Set([
-              ...previous.activeStates,
-              ...runtimeEffects.getActiveStates(),
-            ]),
-          ),
-          resources: runtimeResources.getRuntimeResources().map((resource) => ({
-            id: resource.id,
-            current: resource.currentCharges,
-            currentCharges: resource.currentCharges,
-          })),
-          runtimeEffects,
-          runtimeResources,
-        }));
-
-        return;
-      }
-
-      const actorInstanceId = payload.actorInstanceId;
-      if (!actorInstanceId) {
-        return;
-      }
-
-      const actor = runtimeEffects
-        .getActiveActors()
-        .find((entry) => entry.instanceId === actorInstanceId);
-
-      if (!actor) {
-        return;
-      }
-
-      const action = actor.availableActions.find(
-        (entry: ActionGrant) => entry.id === payload.actionId,
-      );
-
-      if (!action) {
-        return;
-      }
-
-      const execution = ActionResolver.execute(
-        action,
-        {
-          actionId: payload.actionId,
-          activeStates: actor.currentStates,
-        },
-        {
-          effectManager: runtimeEffects,
-          resourceManager: runtimeResources,
-          activeStates: Array.from(
-            new Set([...state.activeStates, ...actor.currentStates]),
-          ),
-        },
-      );
-
-      if (!execution.executed) {
-        return;
-      }
+      alignRuntimeResources(runtimeResources, payload.resources);
 
       set((previous) => ({
-        activeStates: Array.from(
-          new Set([
-            ...previous.activeStates,
-            ...runtimeEffects.getActiveStates(),
-            ...actor.currentStates,
-          ]),
-        ),
-        resources: runtimeResources.getRuntimeResources().map((resource) => ({
-          id: resource.id,
-          current: resource.currentCharges,
-          currentCharges: resource.currentCharges,
-        })),
+        activeStates: payload.activeStates,
+        resources: payload.resources,
+        latestRollResults:
+          payload.rollResults.length > 0
+            ? appendRollResults(
+                previous,
+                payload.rollResults.map(toActionRollResult),
+              )
+            : previous.latestRollResults,
         runtimeEffects,
         runtimeResources,
-        selectedActorInstanceId: actor.instanceId,
+        selectedActorInstanceId:
+          payload.actorInstanceId ?? previous.selectedActorInstanceId,
       }));
     },
 

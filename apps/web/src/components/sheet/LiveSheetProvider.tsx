@@ -76,7 +76,7 @@ export const LiveSheetProvider = ({
       recordRollResult(broadcast);
     });
 
-    socketService.subscribeToActionExecuted((broadcast) => {
+    socketService.subscribeToActionResolved((broadcast) => {
       syncRemoteActionExecution(broadcast);
     });
 

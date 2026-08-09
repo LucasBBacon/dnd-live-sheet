@@ -13,6 +13,8 @@ export const SOCKET_EVENTS = {
   COMBAT_ROLL: "character:combat_roll",
   ROLL_RESULTS: "character:roll_results",
   ACTION_EXECUTED: "character:action_executed",
+  ACTION_INTENT: "character:action_intent",
+  ACTION_RESOLVED: "character:action_resolved",
 } as const;
 
 // #endregion
@@ -108,6 +110,61 @@ export interface ActionExecutedPayload {
   actionId: string;
   source: "character" | "actor";
   actorInstanceId?: string;
+  timestamp: number;
+}
+
+export interface ActionIntentPayload {
+  characterId: string;
+  requestId: string;
+  actionId: string;
+  source: "character" | "actor";
+  actorInstanceId?: string;
+  timestamp: number;
+}
+
+export interface RuntimeResourceSyncPayload {
+  id: string;
+  current: number;
+  currentCharges: number;
+}
+
+export interface RuntimeSummonEntitySyncPayload {
+  templateId: string;
+  label: string;
+}
+
+export interface RuntimeEffectSyncPayload {
+  instanceId: string;
+  sourceName: string;
+  durationType:
+    | "turn_start"
+    | "turn_end"
+    | "rounds"
+    | "rest_short"
+    | "rest_long"
+    | "manual";
+  durationRemaining?: number;
+  isSelfConcentration: boolean;
+  modifiers: import("../schemas/modifiers.js").RuntimeModifier[];
+  grantedStates: string[];
+  kind?: "summon" | "effect";
+  durationHours?: number;
+  summonEntities?: RuntimeSummonEntitySyncPayload[];
+}
+
+export interface ActionResolvedPayload {
+  characterId: string;
+  requestId: string;
+  actionId: string;
+  source: "character" | "actor";
+  actorInstanceId?: string;
+  executed: boolean;
+  reason?: string;
+  rollResults: RollResultPayload[];
+  activeStates: string[];
+  resources: RuntimeResourceSyncPayload[];
+  effects: RuntimeEffectSyncPayload[];
+  actors: import("../schemas/actors.js").ActorInstance[];
   timestamp: number;
 }
 

@@ -1,5 +1,6 @@
 import {
-  type ActionExecutedPayload,
+  type ActionIntentPayload,
+  type ActionResolvedPayload,
   type CombatRollPayload,
   type InventorySyncPayload,
   type MaybeServerBroadcastPayload,
@@ -140,9 +141,7 @@ class SocketManager {
     this.socket?.emit(SOCKET_EVENTS.COMBAT_ROLL, payload);
   }
 
-  public subscribeToCombatRoll(
-    callback: (payload: CombatRollPayload) => void,
-  ) {
+  public subscribeToCombatRoll(callback: (payload: CombatRollPayload) => void) {
     this.socket?.on(
       SOCKET_EVENTS.COMBAT_ROLL,
       (payload: MaybeServerBroadcastPayload<CombatRollPayload>) => {
@@ -155,8 +154,8 @@ class SocketManager {
     this.socket?.emit(SOCKET_EVENTS.ROLL_RESULTS, payload);
   }
 
-  public emitActionExecuted(payload: ActionExecutedPayload) {
-    this.socket?.emit(SOCKET_EVENTS.ACTION_EXECUTED, payload);
+  public emitActionIntent(payload: ActionIntentPayload) {
+    this.socket?.emit(SOCKET_EVENTS.ACTION_INTENT, payload);
   }
 
   public subscribeToRollResults(
@@ -170,12 +169,12 @@ class SocketManager {
     );
   }
 
-  public subscribeToActionExecuted(
-    callback: (payload: ActionExecutedPayload) => void,
+  public subscribeToActionResolved(
+    callback: (payload: ActionResolvedPayload) => void,
   ) {
     this.socket?.on(
-      SOCKET_EVENTS.ACTION_EXECUTED,
-      (payload: MaybeServerBroadcastPayload<ActionExecutedPayload>) => {
+      SOCKET_EVENTS.ACTION_RESOLVED,
+      (payload: MaybeServerBroadcastPayload<ActionResolvedPayload>) => {
         callback(unwrapServerBroadcastPayload(payload));
       },
     );
