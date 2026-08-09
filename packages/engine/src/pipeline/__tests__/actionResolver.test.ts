@@ -473,6 +473,49 @@ describe("ActionResolver attack resolution", () => {
   });
 });
 
+describe("ActionResolver ability-check resolution", () => {
+  let effectManager: EffectManager;
+  let resourceManager: ResourceManager;
+
+  beforeEach(() => {
+    effectManager = new EffectManager();
+    resourceManager = new ResourceManager();
+  });
+
+  it("rerolls a natural 1 for authored ability checks", () => {
+    const abilityCheckAction: ActionGrant = {
+      ...bowShot,
+      consumesAmmo: undefined,
+      effect: {
+        type: "ability_check",
+      } as ActionGrant["effect"],
+    };
+
+    const randomSpy = vi
+      .spyOn(Math, "random")
+      .mockReturnValueOnce(0)
+      .mockReturnValueOnce(0.9);
+
+    const result = ActionResolver.execute(abilityCheckAction, payload(), {
+      effectManager,
+      resourceManager,
+      diceRules: [
+        {
+          target: "ABILITY_CHECK",
+          requiredStates: [],
+          mutator: { type: "reroll_once", triggerOn: [1] },
+        },
+      ],
+    });
+
+    expect(result.executed).toBe(true);
+    expect(result.rollResults?.[0]?.target).toBe("ABILITY_CHECK");
+    expect(result.rollResults?.[0]?.total).toBe(19);
+
+    randomSpy.mockRestore();
+  });
+});
+
 describe("ActionResolver save resolution", () => {
   let effectManager: EffectManager;
   let resourceManager: ResourceManager;

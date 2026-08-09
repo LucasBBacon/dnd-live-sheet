@@ -109,7 +109,7 @@ about applying it to specific authored rules rather than inventing the mechanism
 | --- | --- | --- |
 | 20 | ✅ Resolved | Ability caps now consult active states and support higher caps such as barbarian capstone / tome states. |
 | 21 | ✅ Resolved | Governing-stat selection now respects active-state overrides such as Hexblade / Shillelagh. |
-| 22 | ⚠️ Open | Halfling Lucky still needs a concrete authored conditional rule to trigger the reroll logic beyond the generic dice-rule support. |
+| 22 | ✅ Resolved | Halfling Lucky now has a concrete authored ability-check path that exercises the reroll logic at runtime. |
 
 ### 2e. Modifier-system expressiveness
 

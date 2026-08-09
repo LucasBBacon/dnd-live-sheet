@@ -71,6 +71,10 @@ export const SaveEffectSchema = z.object({
   damage: z.array(DamageSegmentSchema).optional(),
 });
 
+export const AbilityCheckEffectSchema = z.object({
+  type: z.literal("ability_check"),
+});
+
 export const AttackEffectSchema = z.object({
   type: z.literal("attack"),
   attackType: AttackTypeSchema,
@@ -123,6 +127,7 @@ export const DynamicWeaponAttackSchema = z.object({
 
 export const CoreEffectUnion = z.discriminatedUnion("type", [
   SaveEffectSchema,
+  AbilityCheckEffectSchema,
   AttackEffectSchema,
   DamageRiderEffectSchema,
   SummonEffectSchema,

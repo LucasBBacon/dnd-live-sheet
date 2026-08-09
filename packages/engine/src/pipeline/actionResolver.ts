@@ -418,6 +418,35 @@ export class ActionResolver {
         };
       }
 
+      case "ability_check": {
+        const abilityCheckRoll = DiceEngine.rollDigital("1d20");
+        const appliedRolls = DiceEngine.applyDiceRules(
+          abilityCheckRoll.rolls,
+          context.diceRules ?? [],
+          "ABILITY_CHECK",
+          {
+            activeStates:
+              activeStates.length > 0 ? activeStates : context.activeStates ?? [],
+            sides: 20,
+            rollFn: (sides) => DiceEngine.rollDigital(`1d${sides}`).total,
+          },
+        );
+
+        const total = appliedRolls.reduce((sum, value) => sum + value, 0);
+
+        return {
+          ...ok,
+          rollResults: [
+            {
+              total,
+              rolls: appliedRolls,
+              modifier: abilityCheckRoll.modifier,
+              target: "ABILITY_CHECK",
+            },
+          ],
+        };
+      }
+
       default:
         return ok;
     }
