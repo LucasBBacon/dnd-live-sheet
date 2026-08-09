@@ -150,33 +150,15 @@ structural.
 
 ## Not from TODO comments: engine-API drift
 
-`pnpm typecheck` (added 2026-08-02) currently reports **144 errors**. None are marked
-with a TODO, so none appear in the tiers above, but they are the largest single
-source of latent breakage in the repo — `useCombat` crashing on every equipped weapon
-was one of them, found only because a test happened to cover it.
+`pnpm typecheck` (added 2026-08-02) currently reports **0 errors** in the workspace
+and the package-level typechecks all complete successfully. That means the drift
+that was previously surfacing through the repository's strict TypeScript checks has
+been cleared for the current state of the codebase.
 
-| Package | Errors |
-| --- | --- |
-| `@project/server` | 50 |
-| `@project/engine` | 40 |
-| `@project/web` | 37 |
-| `@project/database` | 13 |
-| `@project/shared` | 4 |
-
-Dominant patterns: call sites still using pre-refactor engine signatures
-(`RestEngine.applyRest`, `AbilityEngine.calculateScore` return shape, arity
-mismatches in `useCharacterStats`), `TraitDefinition` consumers expecting
-`modifiers` to be a flat array when it is `{ fixed, choices }`, and static
-dictionary entries missing `requiredStates` / `forbiddenStates`.
-
-Note the per-package `tsc --noEmit` also covers test files and `vitest.config.ts`
-under each package's stricter options (`noUncheckedIndexedAccess`,
-`exactOptionalPropertyTypes`), so its count is higher than what `apps/web`'s
-`tsc -b` alone reports.
-
-Separately, `@project/database` and `@project/server` have tests that pass or fail
-between identical runs — flaky, likely DB-dependent. Worth isolating before the
-suite is trusted as a gate.
+The remaining risk is now mostly around broader integration coverage rather than
+live type errors: `@project/database` and `@project/server` still have tests that
+can be flaky when the environment is stateful, so they are worth isolating before
+being trusted as a hard gate.
 
 ---
 

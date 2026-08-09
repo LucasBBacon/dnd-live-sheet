@@ -429,6 +429,22 @@ describe("CharacterEngine.buildLiveSheet", () => {
     expect(sheet.skills.athletics!.multiplier).toBe(0);
   });
 
+  it("hydrates the chosen two-weapon fighting style state into the live sheet", () => {
+    const sheet = buildSheet(
+      halfElfFighter({
+        classes: [
+          {
+            classId: "class_fighter",
+            level: 1,
+            selections: { fighter_level_1_fighting_style: ["trait_fs_two_weapon_fighting"] },
+          },
+        ],
+      }),
+    );
+
+    expect(sheet.baseStates).toContain("two_weapon_fighting_style");
+  });
+
   it("gates a state-conditional modifier on the live state", () => {
     const bare = buildSheet(halfElfFighter());
     expect(bare.armorClass.total).toBe(12); // 10 + 2 DEX, no Defense style
@@ -458,6 +474,24 @@ describe("CharacterEngine.buildLiveSheet", () => {
 
     expect(sheet.currentHp).toBe(12);
     expect(sheet.maxHp.total).toBe(12); // 10 rolled + CON 2 x level 1
+  });
+
+  it("synthesizes attack actions from equipped weapons in inventory", () => {
+    const sheet = buildSheet(halfElfFighter(), [
+      { ...carried("item_weapon_longsword"), slot: "main_hand" },
+    ]);
+
+    const longswordAction = sheet.actions.find(
+      (action) => action.id === "action_weapon_item_weapon_longsword",
+    );
+
+    expect(longswordAction).toBeDefined();
+    expect(longswordAction?.effect.type).toBe("attack");
+    if (longswordAction?.effect.type !== "attack") {
+      throw new Error("Expected the synthesized action to be an attack effect");
+    }
+    expect(longswordAction.effect.attackType).toBe("melee_weapon");
+    expect(longswordAction.effect.attackStat).toBe("STR");
   });
 });
 

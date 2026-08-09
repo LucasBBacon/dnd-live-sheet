@@ -100,9 +100,10 @@ export const characters = pgTable("characters", {
   currentHp: integer("current_hp"),
   maxHp: integer("max_hp"),
 
-  temporaryInventory: jsonb("temporary_inventory")
+  inventorySnapshot: jsonb("temporary_inventory")
     .$type<InventoryInstance[] | null>()
-    .default([]),
+    .default([])
+    .notNull(),
 });
 
 // #endregion

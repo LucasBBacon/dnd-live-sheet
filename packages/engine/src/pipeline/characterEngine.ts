@@ -14,6 +14,7 @@ import {
 import { SKILL_MAP } from "@project/shared";
 import type { Ability } from "../types/core.js";
 import { SkillEngine, type DerivedSkill } from "../calculators/skills.js";
+import { CombatEngine } from "../calculators/combat.js";
 import type { EffectManager } from "../calculators/effects.js";
 import type { ResourceManager } from "../calculators/resources.js";
 import { CharacterBootstrapper } from "./characterBootstrapper.js";
@@ -24,6 +25,7 @@ import { StateExtractor } from "./stateExtractor.js";
 import { InventoryExtractor } from "./inventoryExtractor.js";
 import { DerivedStatEngine } from "../calculators/derivedStats.js";
 import { SpeedEngine } from "../calculators/speed.js";
+import { WeaponSynthesizer } from "./weaponSynthesizer.js";
 import { InventoryWeightCalculator } from "../calculators/weight.js";
 import {
   DEFAULT_ENCUMBRANCE_RULES,
@@ -40,7 +42,10 @@ import {
   DEFAULT_WALKING_SPEED,
   RACE_DICTIONARY,
 } from "../rules/raceDictionary.js";
-import type { RuleSnapshotLookup } from "../rules/ruleLookup.js";
+import {
+  resolveWeaponDefinition,
+  type RuleSnapshotLookup,
+} from "../rules/ruleLookup.js";
 
 /**
  * Everything stage one is allowed to see.
@@ -276,7 +281,35 @@ export class CharacterEngine {
     // aggregate static actions from traits
     const actions: ActionGrant[] = activeTraits.flatMap((t) => t.actions || []);
 
-    // TODO: synthesize weapon actions from the character's inventory (future implementation)
+    for (const instance of inventory) {
+      if (!instance.slot || instance.slot === "backpack") continue;
+
+      const weapon = resolveWeaponDefinition(instance.itemId, options.snapshot);
+      if (!weapon) continue;
+
+      const attackAnalysis = CombatEngine.calculateWeaponAttack(
+        weapon,
+        {
+          STR: abilities.STR.score,
+          DEX: abilities.DEX.score,
+          CON: abilities.CON.score,
+          INT: abilities.INT.score,
+          WIS: abilities.WIS.score,
+          CHA: abilities.CHA.score,
+        },
+        profBonus,
+        proficiencies,
+        allModifiers,
+        activeStates,
+      );
+
+      const governingStat = attackAnalysis.breakdown.governingStat as Ability;
+      const synthesizedActions = weapon.properties.includes("thrown")
+        ? WeaponSynthesizer.generateThrownWeaponActions(weapon, governingStat)
+        : [WeaponSynthesizer.generateWeaponAction(weapon, governingStat)];
+
+      actions.push(...synthesizedActions);
+    }
 
     // endregion
 

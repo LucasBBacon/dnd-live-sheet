@@ -14,6 +14,10 @@ type StartingEquipmentGrant = {
 
 type StartingEquipmentDefinitionLike = {
   given?: StartingEquipmentGrant[];
+  choices?: Array<{
+    choose?: number;
+    options?: Array<{ equipmentBundle?: StartingEquipmentGrant[] }>;
+  }>;
 };
 
 function isStartingEquipmentDefinition(
@@ -24,7 +28,18 @@ function isStartingEquipmentDefinition(
 
 function normalizeGrantList(rawSelections: unknown): StartingEquipmentGrant[] {
   if (!isStartingEquipmentDefinition(rawSelections)) return [];
-  return rawSelections.given ?? [];
+
+  const granted = rawSelections.given ?? [];
+  const choices = rawSelections.choices ?? [];
+
+  const selectedChoices = choices.flatMap((choice) => {
+    const options = choice.options ?? [];
+    const firstOption = options[0];
+    if (!firstOption?.equipmentBundle) return [];
+    return firstOption.equipmentBundle;
+  });
+
+  return [...granted, ...selectedChoices];
 }
 
 function matchesCategory(item: any, categoryRefId: string): boolean {

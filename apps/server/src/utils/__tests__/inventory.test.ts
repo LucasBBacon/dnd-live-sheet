@@ -145,5 +145,38 @@ describe("inventory utils", () => {
         { characterId: "char_1", itemId: "item_torch", quantity: 2 },
       ]);
     });
+
+    it("resolves choice-based starting equipment bundles from the authored definition", async () => {
+      itemRowsById.set("item_torch", { id: "item_torch", isBundle: false });
+      itemRowsById.set("item_rope", { id: "item_rope", isBundle: false });
+
+      const values = vi.fn().mockResolvedValue(undefined);
+      const tx = {
+        insert: vi.fn(() => ({ values })),
+      };
+
+      await processStartingEquipment(tx, "char_1", {
+        given: [],
+        choices: [
+          {
+            choose: 1,
+            options: [
+              {
+                equipmentBundle: [
+                  { kind: "item", refId: "item_torch", quantity: 2 },
+                  { kind: "item", refId: "item_rope", quantity: 1 },
+                ],
+              },
+            ],
+          },
+        ],
+      } as any);
+
+      expect(tx.insert).toHaveBeenCalledWith(mockCharacterInventoryTable);
+      expect(values).toHaveBeenCalledWith([
+        { characterId: "char_1", itemId: "item_torch", quantity: 2 },
+        { characterId: "char_1", itemId: "item_rope", quantity: 1 },
+      ]);
+    });
   });
 });

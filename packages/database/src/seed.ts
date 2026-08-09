@@ -35,6 +35,7 @@ import {
   characterTraits,
 } from "./schema/operational.js";
 import { extractItemsForMigration } from "./itemsExtraction.js";
+import { normalizeStartingEquipment } from "./utils/startingEquipment.js";
 
 dotenv.config({ path: "../../.env" });
 
@@ -451,7 +452,7 @@ const runMigration = async () => {
         name: c.name,
         hitDie: c.hitDie,
         subclassRequirementLevel: c.subclassInfo?.choiceLevel || 3, // Strict gatekeeper
-        startingEquipment: c.startingEquipment || {},
+        startingEquipment: normalizeStartingEquipment(c.startingEquipment),
         multiclassPrerequisites: c.multiclassPrerequisites
           ? ClassMulticlassPrerequisitesSchema.parse(c.multiclassPrerequisites)
           : null,
@@ -617,7 +618,7 @@ const runMigration = async () => {
             bonds: b.bonds || [],
             flaws: b.flaws || [],
             personalityTraits: b.personalityTraits || [],
-            startingEquipment: b.startingEquipment || {},
+            startingEquipment: normalizeStartingEquipment(b.startingEquipment),
             lore: normalizeLore(b.lore, b.name ?? b.id ?? "Background"),
             packId: CORE_PACK_ID,
             packVersion: CORE_PACK_VERSION,
@@ -890,7 +891,7 @@ const seed = async () => {
         alignment: "Lawful Good",
         currentHp: 12,
         maxHp: 12,
-        temporaryInventory: [],
+        inventorySnapshot: [],
       })
       .onConflictDoNothing({ target: characters.id });
 

@@ -1,4 +1,5 @@
 import { describe, it, expect, vi } from "vitest";
+import { normalizeStartingEquipment } from "../utils/startingEquipment.js";
 
 // Helper functions from seed.ts (re-implemented for testing)
 const normalizeSpeed = (speed: unknown): number => {
@@ -217,6 +218,36 @@ describe("Seed Helper Functions", () => {
     it("should handle empty fallback name", () => {
       const result = normalizeLore(null, "");
       expect(result.shortDescription).toBe(" reference data.");
+    });
+  });
+
+  describe("normalizeStartingEquipment", () => {
+    it("parses a valid starting-equipment definition with choices", () => {
+      const parsed = normalizeStartingEquipment({
+        given: [{ kind: "item", refId: "item_spear", quantity: 1 }],
+        choices: [
+          {
+            choose: 1,
+            options: [{ equipmentBundle: [{ kind: "item", refId: "item_dagger", quantity: 1 }] }],
+          },
+        ],
+      });
+
+      expect(parsed).toEqual({
+        given: [{ kind: "item", refId: "item_spear", quantity: 1 }],
+        choices: [
+          {
+            choose: 1,
+            options: [{ equipmentBundle: [{ kind: "item", refId: "item_dagger", quantity: 1 }] }],
+          },
+        ],
+      });
+    });
+
+    it("falls back to an empty definition for missing or invalid values", () => {
+      expect(normalizeStartingEquipment(undefined)).toEqual({ given: [], choices: [] });
+      expect(normalizeStartingEquipment(null)).toEqual({ given: [], choices: [] });
+      expect(normalizeStartingEquipment({ given: "invalid" })).toEqual({ given: [], choices: [] });
     });
   });
 

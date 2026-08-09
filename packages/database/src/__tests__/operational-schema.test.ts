@@ -22,7 +22,7 @@ describe("operational schema", () => {
         "subraceId",
         "alignment",
         "backgroundId",
-        "temporaryInventory",
+        "inventorySnapshot",
       ]),
     );
 
@@ -32,13 +32,25 @@ describe("operational schema", () => {
     expect(characters.raceId.notNull).toBe(true);
     expect(characters.subraceId.notNull).toBe(true);
     expect(characters.customBackgroundData.dataType).toBe("json");
-    expect(characters.temporaryInventory.dataType).toBe("json");
+    expect(characters.inventorySnapshot.dataType).toBe("json");
   });
 
-  it("stores temporary inventory as typed inventory stacks", () => {
-    type TemporaryInventoryValue = InferSelectModel<typeof characters>["temporaryInventory"];
+  it("stores inventory snapshots as typed inventory stacks", () => {
+    type InventorySnapshotValue = InferSelectModel<typeof characters>["inventorySnapshot"];
 
-    expectTypeOf<TemporaryInventoryValue>().toEqualTypeOf<
+    expectTypeOf<InventorySnapshotValue>().toEqualTypeOf<
+      InventoryInstance[] | null
+    >();
+  });
+
+  it("stores inventory snapshots as a non-null JSON payload by default", () => {
+    expect(characters.inventorySnapshot.notNull).toBe(true);
+  });
+
+  it("keeps the database schema aligned with the shared inventory contract", () => {
+    type InventorySnapshotValue = InferSelectModel<typeof characters>["inventorySnapshot"];
+
+    expectTypeOf<InventorySnapshotValue>().toEqualTypeOf<
       InventoryInstance[] | null
     >();
   });

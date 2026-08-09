@@ -128,6 +128,7 @@ export const FIGHTING_STYLE_TRAITS: Record<string, TraitDefinition> = {
     // TODO: needs an off-hand damage roll to modify; DAMAGE_BONUS has no notion
     // of which hand made the attack.
     modifiers: { fixed: [], choices: [] },
+    grantedStates: ["two_weapon_fighting_style"],
     resources: [],
     triggers: [],
     diceRules: [],
