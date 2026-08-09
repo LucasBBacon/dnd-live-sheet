@@ -258,7 +258,21 @@ export const GNOME_TRAITS: Record<string, TraitDefinition> = {
           maxActive: 3,
           durationHours: 24,
           materialCostGP: 10,
-          // TODO: Dismantle action in the toy's actor sheet
+        },
+      },
+      {
+        id: "action_tinker_dismantle",
+        name: "Dismantle Clockwork Device",
+        activation: "action",
+        effect: {
+          type: "apply_effect",
+          effectName: "Dismiss Summon",
+          durationType: "manual",
+          states: [],
+          modifiers: [],
+          isSelfConcentration: false,
+          requiredStates: [],
+          forbiddenStates: [],
         },
       },
     ],

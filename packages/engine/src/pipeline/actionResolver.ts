@@ -329,6 +329,10 @@ export class ActionResolver {
           modifiers: [],
           grantedStates: [...effect.entityTemplateIds],
           kind: "summon",
+          summonEntities: effect.entityTemplateIds.map((templateId) => ({
+            templateId,
+            label: templateId,
+          })),
         };
 
         if (effect.durationHours !== undefined) {

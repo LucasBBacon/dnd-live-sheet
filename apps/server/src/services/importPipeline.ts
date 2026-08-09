@@ -36,6 +36,7 @@ import { and, eq, inArray, sql } from "drizzle-orm";
 import { getCampaignMembershipRole } from "./campaignAccess.js";
 import { invalidateReferenceCache } from "./referenceCache.js";
 import { invalidateRuleSnapshotCache } from "./ruleSnapshotCache.js";
+import { normalizeStartingEquipment } from "@project/database/src/utils/startingEquipment.js";
 
 type ImportRunRow = typeof importRuns.$inferSelect;
 type ImportRowRow = typeof importRows.$inferSelect;
@@ -966,7 +967,7 @@ const applyEntityEntry = async (
         name: entry.data.name,
         hitDie: entry.data.hitDie,
         subclassRequirementLevel: entry.data.subclassRequirementLevel,
-        startingEquipment: entry.data.startingEquipment,
+        startingEquipment: normalizeStartingEquipment(entry.data.startingEquipment),
         multiclassPrerequisites: entry.data.multiclassPrerequisites,
         lore: normalizeLore(entry.data.lore),
         supersedesId: entry.supersedesId,
@@ -1038,7 +1039,7 @@ const applyEntityEntry = async (
         bonds: entry.data.bonds,
         flaws: entry.data.flaws,
         personalityTraits: entry.data.personalityTraits,
-        startingEquipment: entry.data.startingEquipment,
+        startingEquipment: normalizeStartingEquipment(entry.data.startingEquipment),
         lore: normalizeLore(entry.data.lore),
         supersedesId: entry.supersedesId,
         ...scoped,

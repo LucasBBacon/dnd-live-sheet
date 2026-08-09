@@ -8,6 +8,11 @@ export type DurationType =
   | "rest_long"
   | "manual";
 
+export interface SummonEntity {
+  templateId: string;
+  label: string;
+}
+
 export interface ActiveEffect {
   instanceId: string; // unique UUId for this specific application of the effect
   sourceName: string; // e.g., "Shield Spell"
@@ -18,6 +23,7 @@ export interface ActiveEffect {
   grantedStates: string[]; // e.g., ["shield_spell_active", "immune_to_magic_missile"]
   kind?: "summon" | "effect";
   durationHours?: number;
+  summonEntities?: SummonEntity[];
 }
 
 // region EFFECT MANAGER

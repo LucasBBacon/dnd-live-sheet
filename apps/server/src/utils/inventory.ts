@@ -29,14 +29,23 @@ function isStartingEquipmentDefinition(
 function normalizeGrantList(rawSelections: unknown): StartingEquipmentGrant[] {
   if (!isStartingEquipmentDefinition(rawSelections)) return [];
 
-  const granted = rawSelections.given ?? [];
-  const choices = rawSelections.choices ?? [];
+  const granted = Array.isArray(rawSelections.given) ? rawSelections.given : [];
+  const choices = Array.isArray(rawSelections.choices) ? rawSelections.choices : [];
 
   const selectedChoices = choices.flatMap((choice) => {
-    const options = choice.options ?? [];
+    if (!choice || typeof choice !== "object" || Array.isArray(choice)) return [];
+
+    const options = Array.isArray(choice.options) ? choice.options : [];
     const firstOption = options[0];
-    if (!firstOption?.equipmentBundle) return [];
-    return firstOption.equipmentBundle;
+    if (!firstOption || typeof firstOption !== "object" || Array.isArray(firstOption)) {
+      return [];
+    }
+
+    const equipmentBundle = Array.isArray(firstOption.equipmentBundle)
+      ? firstOption.equipmentBundle
+      : [];
+
+    return equipmentBundle;
   });
 
   return [...granted, ...selectedChoices];

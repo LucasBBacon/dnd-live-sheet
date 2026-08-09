@@ -178,5 +178,19 @@ describe("inventory utils", () => {
         { characterId: "char_1", itemId: "item_rope", quantity: 1 },
       ]);
     });
+
+    it("ignores malformed starting equipment payloads instead of crashing", async () => {
+      const tx = {
+        insert: vi.fn(),
+      };
+
+      await expect(
+        processStartingEquipment(tx, "char_1", {
+          given: { kind: "item", refId: "item_torch" },
+        } as any),
+      ).resolves.toBeUndefined();
+
+      expect(tx.insert).not.toHaveBeenCalled();
+    });
   });
 });

@@ -436,7 +436,9 @@ describe("CharacterEngine.buildLiveSheet", () => {
           {
             classId: "class_fighter",
             level: 1,
-            selections: { fighter_level_1_fighting_style: ["trait_fs_two_weapon_fighting"] },
+            selections: {
+              fighter_level_1_fighting_style: ["trait_fs_two_weapon_fighting"],
+            },
           },
         ],
       }),
@@ -492,6 +494,59 @@ describe("CharacterEngine.buildLiveSheet", () => {
     }
     expect(longswordAction.effect.attackType).toBe("melee_weapon");
     expect(longswordAction.effect.attackStat).toBe("STR");
+  });
+
+  it("includes authored dismiss actions from traits in the live sheet actions", () => {
+    const save = halfElfFighter({
+      race: {
+        baseRaceId: "race_gnome",
+        hasSubraces: true,
+        subraceId: "subrace_gnome_rock",
+      },
+    });
+
+    const sheet = buildSheet(save);
+    const dismissAction = sheet.actions.find(
+      (action) => action.id === "action_tinker_dismantle",
+    );
+
+    expect(dismissAction).toBeDefined();
+    expect(dismissAction?.effect.type).toBe("apply_effect");
+    if (dismissAction?.effect.type !== "apply_effect") {
+      throw new Error("Expected the authored action to be an apply_effect");
+    }
+    expect(dismissAction.effect.effectName).toBe("Dismiss Summon");
+  });
+
+  it("tracks active summon entities on the live sheet", () => {
+    const effectManager = new EffectManager();
+    effectManager.addEffect({
+      instanceId: "summon_clockwork_toy",
+      sourceName: "Construct Clockwork Device",
+      durationType: "manual",
+      isSelfConcentration: false,
+      modifiers: [],
+      grantedStates: ["actor_clockwork_toy"],
+      kind: "summon",
+      summonEntities: [{ templateId: "actor_clockwork_toy", label: "Clockwork Toy" }],
+    });
+
+    const sheet = CharacterEngine.buildLiveSheet(
+      halfElfFighter({
+        race: {
+          baseRaceId: "race_gnome",
+          hasSubraces: true,
+          subraceId: "subrace_gnome_rock",
+        },
+      }),
+      [],
+      effectManager,
+      new ResourceManager(),
+    );
+
+    expect(sheet.summons).toEqual([
+      expect.objectContaining({ templateId: "actor_clockwork_toy" }),
+    ]);
   });
 });
 
@@ -708,7 +763,7 @@ describe("CharacterEngine.buildLiveSheet: inventory modifiers", () => {
       { ...carried("item_armor_plate"), slot: "body" },
     ]);
 
-    // plate sets base AC 18 with no dex, beating the 12 of an unarmoured
+    // plate sets base AC 18 with no dex, beating the 12 of an unarmored
     // half-elf with +2 DEX
     expect(sheet.armorClass.total).toBe(18);
   });

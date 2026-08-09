@@ -108,6 +108,12 @@ export interface LiveCharacterSheet {
 
   // executable actions (traits, spells, weapons)
   actions: ActionGrant[];
+  summons: Array<{
+    templateId: string;
+    label: string;
+    instanceId: string;
+    sourceName: string;
+  }>;
 
   // current environment
   /**
@@ -191,6 +197,27 @@ export class CharacterEngine {
         ...effectManager.getActiveStates(),
       ]),
     );
+    const summons = effectManager
+      .getActiveEffects()
+      .filter((effect) => effect.kind === "summon")
+      .flatMap((effect) => {
+        const entities = effect.summonEntities ?? [];
+        if (entities.length > 0) {
+          return entities.map((entry) => ({
+            templateId: entry.templateId,
+            label: entry.label,
+            instanceId: effect.instanceId,
+            sourceName: effect.sourceName,
+          }));
+        }
+
+        return effect.grantedStates.map((state) => ({
+          templateId: state,
+          label: state,
+          instanceId: effect.instanceId,
+          sourceName: effect.sourceName,
+        }));
+      });
     const inventoryModifiers = InventoryExtractor.extractModifiers(
       inventory,
       options.snapshot,
@@ -330,6 +357,7 @@ export class CharacterEngine {
       encumbrance,
       containers,
       actions,
+      summons,
       baseStates,
       activeStates,
     };
