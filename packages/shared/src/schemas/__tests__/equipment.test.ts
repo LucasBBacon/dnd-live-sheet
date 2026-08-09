@@ -3,7 +3,10 @@ import {
   EquipmentDefinitionSchema,
   WeaponCapabilitySchema,
 } from "../equipment.js";
-import { ItemDefinitionSchema } from "../items.js";
+import {
+  ItemDefinitionSchema,
+  StartingEquipmentDefinitionSchema,
+} from "../items.js";
 import { WeaponDefinitionSchema } from "../weapons.js";
 
 /**
@@ -89,6 +92,40 @@ describe("WeaponCapability and WeaponDefinition stay complementary", () => {
 
     expect(parsed.range).toBe(150);
     expect(parsed.longRange).toBe(600);
+  });
+});
+
+describe("StartingEquipmentDefinitionSchema", () => {
+  it("parses the authored bundles used by classes and backgrounds", () => {
+    const parsed = StartingEquipmentDefinitionSchema.parse({
+      given: [{ kind: "item", refId: "item_pack_explorers", quantity: 1 }],
+      choices: [
+        {
+          choose: 1,
+          options: [
+            {
+              equipmentBundle: [
+                { kind: "item", refId: "item_weapon_dagger", quantity: 1 },
+              ],
+            },
+          ],
+        },
+      ],
+    });
+
+    expect(parsed.given).toEqual([
+      { kind: "item", refId: "item_pack_explorers", quantity: 1 },
+    ]);
+    expect(parsed.choices[0]?.options[0]?.equipmentBundle).toEqual([
+      { kind: "item", refId: "item_weapon_dagger", quantity: 1 },
+    ]);
+  });
+
+  it("defaults missing sections to empty arrays", () => {
+    const parsed = StartingEquipmentDefinitionSchema.parse({});
+
+    expect(parsed.given).toEqual([]);
+    expect(parsed.choices).toEqual([]);
   });
 });
 

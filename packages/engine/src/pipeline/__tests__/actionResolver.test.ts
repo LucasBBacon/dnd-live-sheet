@@ -262,6 +262,51 @@ describe("ActionResolver effect predicates", () => {
     expect(applied.executed).toBe(true);
     expect(effectManager.getActiveEffects()).toHaveLength(1);
   });
+
+  it("skips nested apply_effect predicates inside macros", () => {
+    const macroAction: ActionGrant = {
+      id: "action_macro_predicate",
+      name: "Macro Predicate",
+      activation: "special",
+      effect: {
+        type: "macro",
+        effects: [
+          {
+            type: "apply_effect",
+            effectName: "Sneaking",
+            durationType: "manual",
+            predicates: {
+              requiredStates: ["hidden"],
+              forbiddenStates: ["seen"],
+            },
+            states: ["sneaking"],
+            modifiers: [],
+            isSelfConcentration: false,
+            forbiddenStates: [],
+            requiredStates: [],
+          },
+        ],
+      },
+    };
+
+    const skipped = ActionResolver.execute(macroAction, payload(), {
+      effectManager,
+      resourceManager,
+      activeStates: ["seen"],
+    });
+
+    expect(skipped.executed).toBe(true);
+    expect(effectManager.getActiveEffects()).toHaveLength(0);
+
+    const applied = ActionResolver.execute(macroAction, payload(), {
+      effectManager,
+      resourceManager,
+      activeStates: ["hidden"],
+    });
+
+    expect(applied.executed).toBe(true);
+    expect(effectManager.getActiveEffects()).toHaveLength(1);
+  });
 });
 
 describe("ActionResolver attack resolution", () => {

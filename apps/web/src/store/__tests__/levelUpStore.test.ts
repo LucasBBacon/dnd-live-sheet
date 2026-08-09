@@ -86,4 +86,42 @@ describe("useLevelUpStore", () => {
     expect(nextState.isActive).toBe(false);
     expect(nextState.errorMessage).toContain("Level 1 is not configured");
   });
+
+  it("clears the wizard state after a successful submission", async () => {
+    vi.mocked(apiClient).mockResolvedValueOnce({ ok: true });
+
+    useLevelUpStore.setState({
+      isActive: true,
+      progressionContext: {
+        classId: "class_fighter",
+        level: 2,
+        grantedTraits: [],
+        decisions: [],
+      },
+      grantedTraitDetails: [
+        {
+          id: "trait_second_wind",
+          name: "Second Wind",
+          grantSourceType: "class_progression",
+        },
+      ],
+      draftPayload: {
+        characterId: "character-1",
+        targetClassId: "class_fighter",
+        newTotalLevel: 2,
+        hpRoll: 6,
+      },
+      errorMessage: null,
+    });
+
+    await useLevelUpStore.getState().validateAndSubmit();
+
+    const nextState = useLevelUpStore.getState();
+
+    expect(nextState.isActive).toBe(false);
+    expect(nextState.progressionContext).toBeNull();
+    expect(nextState.grantedTraitDetails).toEqual([]);
+    expect(nextState.draftPayload).toEqual({});
+    expect(nextState.errorMessage).toBeNull();
+  });
 });

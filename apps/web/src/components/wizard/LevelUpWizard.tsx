@@ -103,7 +103,7 @@ export const LevelUpWizard = () => {
         {/* GLOBAL NAVIGATION CONTROLS */}
         <div className="border-t-2 border-gray-300 p-4 bg-gray-50 flex justify-between">
           <button
-            onClick={cancelLevelUp}
+            onClick={handleClose}
             className="px-4 py-2 text-red-600 font-bold hover:text-red-800 uppercase text-sm"
           >
             Cancel Execution

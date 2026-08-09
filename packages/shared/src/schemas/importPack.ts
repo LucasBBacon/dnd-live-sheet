@@ -4,7 +4,10 @@ import {
   ClassMulticlassPrerequisitesSchema,
   FeatPrerequisitesSchema,
 } from "./prerequisites.js";
-import { ItemDefinitionSchema } from "./items.js";
+import {
+  ItemDefinitionSchema,
+  StartingEquipmentDefinitionSchema,
+} from "./items.js";
 import { WeaponDefinitionSchema } from "./weapons.js";
 
 // #region Import Pack Schemas
@@ -145,7 +148,10 @@ const ClassImportDataSchema = z.object({
   name: z.string().min(1).max(255),
   hitDie: z.number().int().min(1).max(20),
   subclassRequirementLevel: z.number().int().min(1).max(20),
-  startingEquipment: z.record(z.string(), z.unknown()).default({}),
+  startingEquipment: StartingEquipmentDefinitionSchema.default({
+    given: [],
+    choices: [],
+  }),
   multiclassPrerequisites: ClassMulticlassPrerequisitesSchema.optional(),
   lore: LoreSchema,
 });
@@ -164,7 +170,10 @@ const BackgroundImportDataSchema = z.object({
   bonds: z.array(z.string()),
   flaws: z.array(z.string()),
   personalityTraits: z.array(z.string()),
-  startingEquipment: z.record(z.string(), z.unknown()).default({}),
+  startingEquipment: StartingEquipmentDefinitionSchema.default({
+    given: [],
+    choices: [],
+  }),
   lore: LoreSchema,
 });
 

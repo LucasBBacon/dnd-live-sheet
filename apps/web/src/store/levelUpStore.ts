@@ -231,6 +231,14 @@ export const useLevelUpStore = create<LevelUpState>((set, get) => ({
       method: "POST",
       body: JSON.stringify(payload),
     });
+
+    set({
+      isActive: false,
+      progressionContext: null,
+      grantedTraitDetails: [],
+      draftPayload: {},
+      errorMessage: null,
+    });
   },
 
   cancelLevelUp: () => {

@@ -77,6 +77,26 @@ export const ItemDefinitionSchema = z.object({
   modifiers: z.array(BaseModifierSchema).optional(),
 });
 
+export const StartingEquipmentGrantSchema = z.object({
+  kind: z.enum(["item", "category", "money"]),
+  refId: z.string(),
+  quantity: z.number().int().min(1).default(1),
+});
+
+export const StartingEquipmentChoiceOptionSchema = z.object({
+  equipmentBundle: z.array(StartingEquipmentGrantSchema).default([]),
+});
+
+export const StartingEquipmentChoiceSchema = z.object({
+  choose: z.number().int().min(1).default(1),
+  options: z.array(StartingEquipmentChoiceOptionSchema).default([]),
+});
+
+export const StartingEquipmentDefinitionSchema = z.object({
+  given: z.array(StartingEquipmentGrantSchema).default([]),
+  choices: z.array(StartingEquipmentChoiceSchema).default([]),
+});
+
 /**
  * One stack of one item in a character's possession.
  *
@@ -118,6 +138,14 @@ export type EquipSlot = z.infer<typeof EquipSlotSchema>;
 export type CharacterSlot = z.infer<typeof CharacterSlotSchema>;
 export type ContainerCapacity = z.infer<typeof ContainerCapacitySchema>;
 export type ItemDefinition = z.infer<typeof ItemDefinitionSchema>;
+export type StartingEquipmentGrant = z.infer<typeof StartingEquipmentGrantSchema>;
+export type StartingEquipmentChoiceOption = z.infer<
+  typeof StartingEquipmentChoiceOptionSchema
+>;
+export type StartingEquipmentChoice = z.infer<typeof StartingEquipmentChoiceSchema>;
+export type StartingEquipmentDefinition = z.infer<
+  typeof StartingEquipmentDefinitionSchema
+>;
 export type InventoryInstance = z.infer<typeof InventoryInstanceSchema>;
 
 // #endregion

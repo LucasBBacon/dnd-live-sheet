@@ -1,8 +1,8 @@
 # TODO Backlog
 
-Triage of every `TODO` comment in the repo (30 as of `066cbeb`, 29 open), grouped by
-what actually blocks what rather than by file location. Tiers are ordered so that
-finishing a tier removes blockers from the tiers below it.
+This backlog has been refreshed to reflect the repo state as of 2026-08-09. Several
+of the originally inert seams are now wired end to end, so the remaining work below
+focuses on the pieces that still genuinely block the next milestones.
 
 Two `NOTE:` comments in `packages/engine/src/calculators/__tests__/` are
 documentation, not work items, and are excluded.
@@ -11,72 +11,70 @@ documentation, not work items, and are excluded.
 
 ## Structural finding (context for several items below)
 
-Three data channels are declared in the schemas and populated by the trait
-dictionaries, but **no engine code reads them**:
+This was the original blocker, and it has now been cleared: the runtime consumes
+these authored channels instead of treating them as dead data.
 
-| Channel | Declared in | Consumed by |
+| Channel | Declared in | Current runtime state |
 | --- | --- | --- |
-| `triggers` (`listenFor` / `executeAction`) | `packages/shared/src/schemas/triggers.ts` | nothing |
-| `effect.type: "macro"` | `packages/shared/src/schemas/actions.ts` | `ActionResolver` case is empty |
-| `criticalHitModifiers` | `packages/shared/src/schemas/traits.ts` | nothing outside `traitDictionary` re-export |
+| `triggers` (`listenFor` / `executeAction`) | `packages/shared/src/schemas/triggers.ts` | Consumed by `ActionResolver.dispatchEvent()` |
+| `effect.type: "macro"` | `packages/shared/src/schemas/actions.ts` | Executed by `ActionResolver` via nested effect dispatch |
+| `criticalHitModifiers` | `packages/shared/src/schemas/traits.ts` | Applied by `CombatEngine` for qualifying critical hits |
 
-This is why the "Conditional events" TODOs on Half-Orc traits exist: the data is
-authored correctly, the runtime just never dispatches it. Several P2 items collapse
-into "build the event bus" rather than "implement this one trait".
+The remaining work is therefore less about wiring the bus and more about finishing
+feature-specific behaviour, inventory shape, and remaining polish.
 
 ---
 
-## P0 — Traits that are authored but inert
+## P0 — Previously inert runtime seams (now resolved)
 
-These read as finished features in the dictionaries and in any UI listing them, but
-produce no runtime behaviour. Highest risk of being mistaken for done.
+These gaps were the highest-risk items because they looked complete in the authored
+content but were dead at runtime. They are now wired through the engine.
 
-| # | Item | Location |
+| # | Status | Notes |
 | --- | --- | --- |
-| 1 | `macro` action handler — empty switch case, so `MACRO_DROP_TO_ONE_HP` never fires | [actionResolver.ts:68](packages/engine/src/pipeline/actionResolver.ts:68) |
-| 2 | Relentless Endurance "conditional events" — declares a trigger nothing listens for | [halfOrcDictionary.ts:88](packages/engine/src/rules/traits/halfOrcDictionary.ts:88) |
-| 3 | Savage Attacks "conditional events" — `criticalHitModifiers` has no consumer | [halfOrcDictionary.ts:115](packages/engine/src/rules/traits/halfOrcDictionary.ts:115) |
-| 4 | `EffectManager` / `ResourceManager` hydration — bootstrapper validates and builds the sheet but restores no live state | [characterBootstraper.ts:385-386](packages/engine/src/pipeline/characterBootstraper.ts:385) |
+| 1 | ✅ Resolved | `macro` effects now execute nested effects through `ActionResolver`. |
+| 2 | ✅ Resolved | Relentless Endurance uses the trigger dispatch path and consumes its resource correctly. |
+| 3 | ✅ Resolved | Savage Attacks now applies critical-hit modifiers via `CombatEngine`. |
+| 4 | ✅ Resolved | Character bootstrap hydrates granted states and resources into the live runtime managers. |
 
-**Suggested order:** 4 → 1 → 2 → 3. Hydration first, because a trigger bus that
-fires against an unhydrated `ResourceManager` cannot consume charges correctly.
+No remaining P0 work is left from this original bucket.
 
 ---
 
-## P1 — Schema foundations (small, unblock the tiers below)
+## P1 — Schema foundations (now largely complete)
 
-Each is a localised schema edit whose absence is currently papered over with a
-hardcoded fallback.
+These were small, mechanical gaps that were previously papered over with hardcoded
+fallbacks. They are now present in the shared schema layer and consumed by the
+engine.
 
-| # | Item | Location | Note |
-| --- | --- | --- | --- |
-| 5 | `WeaponDefinitionSchema` has no range fields; synthesizer hardcodes `80/320` and `5/10` | [weaponSynthesizer.ts:27](packages/engine/src/pipeline/weaponSynthesizer.ts:27) | Add `range` / `longRange` to [weapons.ts](packages/shared/src/schemas/weapons.ts), backfill `weaponDictionary` |
-| 6 | Thrown range hardcoded to `20/60` | [weaponSynthesizer.ts:98](packages/engine/src/pipeline/weaponSynthesizer.ts:98) | Same fix as #5 — one schema change closes both |
-| 7 | `BaseEffectSchema` predicates (e.g. armor restrictions) | [effects.ts:7](packages/shared/src/schemas/effects.ts:7) | Prerequisite for the conditional-trait items in P2 |
-| 8 | `SKILL_MAP` lives in engine but is used by engine + client | [core.ts:10](packages/engine/src/types/core.ts:10) | Pure move to `@project/shared`; no logic change |
+| # | Status | Notes |
+| --- | --- | --- |
+| 5 | ✅ Resolved | Weapon range and long-range values are defined in [weapons.ts](packages/shared/src/schemas/weapons.ts) and consumed by weapon synthesis. |
+| 6 | ✅ Resolved | Thrown weapon range now uses the same schema-backed values. |
+| 7 | ✅ Resolved | Effect predicates are part of the shared effect schema and are honoured by the runtime. |
+| 8 | ✅ Resolved | `SKILL_MAP` now lives in the shared package and is consumed by engine and client code. |
 
-**Suggested order:** 5+6 together, then 7, then 8.
+No remaining P1 work is left from the original list.
 
 ---
 
 ## P2 — Feature verticals
 
-### 2a. Dice & attack resolution (largest cluster)
+### 2a. Dice & attack resolution (mostly implemented)
 
-`ActionResolver` only implements `apply_effect`. Everything else is a stub, and the
-UI has matching stubs waiting on it. `packages/engine/src/utils/diceParser.ts` and
-`pipeline/rollContextBuilder.ts` already exist and are the natural starting points.
+The core resolver path for attack, save, and damage-rider effects is now in place,
+and the UI now surfaces roll outcomes in the live-sheet experience.
 
-| # | Item | Location |
+| # | Status | Notes |
 | --- | --- | --- |
-| 10 | `attack` — dice rolling for attacks | [actionResolver.ts:58](packages/engine/src/pipeline/actionResolver.ts:58) |
-| 11 | `save` — saving-throw rolls | [actionResolver.ts:78](packages/engine/src/pipeline/actionResolver.ts:78) |
-| 12 | `damage_rider` — damage-over-time application | [actionResolver.ts:73](packages/engine/src/pipeline/actionResolver.ts:73) |
-| 13 | Dispatch roll results to the VTT log (currently `console.log`) | [CombatWidget.tsx:39](apps/web/src/components/sheet/CombatWidget.tsx:39) |
-| 14 | Hit Dice roll/spend buttons in the rest flow | [RestModal.tsx:128](apps/web/src/components/sheet/modals/RestModal.tsx:128) |
+| 10 | ✅ Resolved | Attack effects now roll and return results through the resolver. |
+| 11 | ✅ Resolved | Save effects now roll and return results through the resolver. |
+| 12 | ✅ Resolved | Damage-rider effects now roll and return results through the resolver. |
+| 13 | ✅ Resolved | Roll results are surfaced in the combat widget and store rather than remaining hidden behind console output. |
+| 14 | ✅ Resolved | Rest flow now supports hit-die spend-and-roll interaction. |
 
-**Suggested order:** 10 → 13 (one end-to-end slice proves the roll → log contract) →
-11 → 12 → 14.
+The remaining work in this area is now about richer authored-edge cases and deeper
+roll/log integration rather than the basic resolver plumbing.
 
 ### 2b. Summons
 
@@ -104,14 +102,14 @@ Do 19 before 18 — the runtime shape should define the parse target, not the re
 
 ### 2d. State-conditional calculations
 
-Each needs the calculator to consult `activeStates` at a point where it currently
-uses a constant. Depends on #7 (predicates) for the cleanest implementation.
+The generic state-aware infrastructure is now in place; the remaining gap is mostly
+about applying it to specific authored rules rather than inventing the mechanism.
 
-| # | Item | Location |
+| # | Status | Notes |
 | --- | --- | --- |
-| 20 | Ability max cap of 20 — Barbarian capstone / Tomes must raise it | [abilities.ts:52](packages/engine/src/calculators/abilities.ts:52) |
-| 21 | Governing-stat override for Hexblade / Shillelagh | [combat.ts:77](packages/engine/src/calculators/combat.ts:77) |
-| 22 | Halfling Lucky "conditional measures" | [halflingDictionary.ts:36](packages/engine/src/rules/traits/halflingDictionary.ts:36) |
+| 20 | ✅ Resolved | Ability caps now consult active states and support higher caps such as barbarian capstone / tome states. |
+| 21 | ✅ Resolved | Governing-stat selection now respects active-state overrides such as Hexblade / Shillelagh. |
+| 22 | ⚠️ Open | Halfling Lucky still needs a concrete authored conditional rule to trigger the reroll logic beyond the generic dice-rule support. |
 
 ### 2e. Modifier-system expressiveness
 
@@ -127,27 +125,25 @@ Neither is a small fix — they change what a `RuntimeModifier` can address.
 
 ## P3 — UI wiring & polish
 
-| # | Item | Location | Note |
-| --- | --- | --- | --- |
-| 26 | Projected CON modifier is read pre-ASI | [ReviewStep.tsx:43](apps/web/src/components/wizard/steps/ReviewStep.tsx:43) | Shows wrong HP delta when the level-up includes a CON increase |
-| 27 | Level-up success routing (close, toast) | [LevelUpWizard.tsx:49](apps/web/src/components/wizard/LevelUpWizard.tsx:49) | |
-| 28 | Surface level-up errors to the UI (currently `console.error`) | [LevelUpWizard.tsx:52](apps/web/src/components/wizard/LevelUpWizard.tsx:52) | Failures are invisible to the user |
-| 29 | `ArmorClassWidget` is unstyled | [ArmorClassWidget.tsx:6](apps/web/src/components/sheet/ArmorClassWidget.tsx:6) | Rest of `apps/web` already uses Tailwind — the "maybe" is settled |
+| # | Status | Notes |
+| --- | --- | --- |
+| 26 | ⚠️ Open | Projected CON modifier still needs to read the post-ASI state when the wizard shows HP deltas. |
+| 27 | ✅ Resolved | Level-up success now closes or resets the wizard flow and shows feedback. |
+| 28 | ✅ Resolved | Level-up failures now surface through the wizard feedback banner. |
+| 29 | ⚠️ Open | `ArmorClassWidget` still needs the styling pass. |
 
-`#26` and `#28` are correctness bugs wearing polish clothing; `#27` and `#29`
-are genuine polish.
+The remaining polish work is now mostly visual or correctness-driven rather than
+structural.
 
 ---
 
 ## Recommended sequence
 
-1. **P1 schema work (#5–#8)** — small, mechanical, removes hardcoded constants.
-2. **P0 (#4 → #1 → #2 → #3)** — hydration, then the trigger/macro bus.
-3. **2a dice pipeline (#10 → #13)** as a single vertical slice, then the rest of 2a.
-4. **2c inventory (#19 → #18)** — independent of the above, parallelisable.
-5. **2d conditionals (#20–#22)**, now cheap given #7.
-6. **2b summons (#15–#17)** — needs the actor-model decision first.
-7. **P3 remainder**, then **2e (#23, #24)** as a deliberate modifier-system redesign.
+1. **2b summons (#15–#17)** — this is still the biggest open feature vertical and needs the actor-model decision first.
+2. **2c inventory (#19 → #18)** — independent of the above and still worth tackling in parallel.
+3. **P3 remainder (#26, #29)** — the remaining correctness and visual polish items.
+4. **2e (#23, #24)** — a deliberate modifier-system redesign, now that the core runtime is in place.
+5. **Typecheck / API drift cleanup** — keep this in parallel with the feature work, since it is the broadest remaining quality risk.
 
 
 ---

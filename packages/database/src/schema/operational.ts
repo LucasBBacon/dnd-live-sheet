@@ -1,3 +1,4 @@
+import type { InventoryInstance } from "@project/shared";
 import {
   boolean,
   integer,
@@ -99,8 +100,9 @@ export const characters = pgTable("characters", {
   currentHp: integer("current_hp"),
   maxHp: integer("max_hp"),
 
-  // TODO - INVENTORY
-  temporaryInventory: jsonb("temporary_inventory").default([]),
+  temporaryInventory: jsonb("temporary_inventory")
+    .$type<InventoryInstance[] | null>()
+    .default([]),
 });
 
 // #endregion

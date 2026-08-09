@@ -125,5 +125,28 @@ describe("inventory utils", () => {
         ]),
       );
     });
+
+    it("resolves typed starting equipment definitions with item grants", async () => {
+      itemRowsById.set("item_torch", { id: "item_torch", isBundle: false });
+
+      const values = vi.fn().mockResolvedValue(undefined);
+      const tx = {
+        insert: vi.fn(() => ({ values })),
+      };
+
+      await processStartingEquipment(
+        tx,
+        "char_1",
+        {
+          given: [{ kind: "item", refId: "item_torch", quantity: 2 }],
+          choices: [],
+        } as any,
+      );
+
+      expect(tx.insert).toHaveBeenCalledWith(mockCharacterInventoryTable);
+      expect(values).toHaveBeenCalledWith([
+        { characterId: "char_1", itemId: "item_torch", quantity: 2 },
+      ]);
+    });
   });
 });

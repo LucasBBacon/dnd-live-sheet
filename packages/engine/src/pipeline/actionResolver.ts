@@ -209,6 +209,14 @@ export class ActionResolver {
     context: ActionExecutionContext,
     activeStates: string[] = [],
   ): ActionResult {
+    if (hasStatePredicate(effect)) {
+      const resolvedActiveStates =
+        activeStates.length > 0 ? activeStates : context.activeStates ?? [];
+      if (!matchesStatePredicate(effect, resolvedActiveStates)) {
+        return ok;
+      }
+    }
+
     switch (effect.type) {
       case "apply_effect": {
         const blueprint = effect;

@@ -8,6 +8,7 @@ import {
 } from "@project/engine";
 import { useRollStore } from "../../../store/rollStore";
 import { useAbilities } from "../../../hooks/useCharacterStats";
+import { buildHitDieHealingExpression } from "../../../utils/hitDieRoll";
 
 interface RestModalProps {
   onClose: () => void;
@@ -38,7 +39,7 @@ export const RestModal = ({ onClose }: RestModalProps) => {
 
   const handleSpendHitDie = async (resourceId: string, sides: number) => {
     try {
-      const expression = `1d${sides} ${conMod >= 0 ? "+" : "0"} ${Math.abs(conMod)}`;
+      const expression = buildHitDieHealingExpression(sides, conMod);
 
       // execution halts here until user interacts with global RollInterceptor
       const totalHeal = await requestRoll(

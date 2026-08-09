@@ -2,6 +2,7 @@ import type {
   ClassMulticlassPrerequisites,
   FeatPrerequisites,
   ItemDefinition,
+  StartingEquipmentDefinition,
   TraitEffect,
   WeaponDefinition,
 } from "@project/shared";
@@ -320,8 +321,10 @@ export const classes = pgTable(
       .$type<{ shortDescription: string; fullText?: string }>()
       .notNull(),
 
-    // starting equipment/wealth options can be stored as jsonb as they're only used once
-    startingEquipment: jsonb("starting_equipment").notNull(),
+    // starting equipment/wealth options are authored once and resolved at character creation
+    startingEquipment: jsonb("starting_equipment")
+      .$type<StartingEquipmentDefinition>()
+      .notNull(),
     multiclassPrerequisites: jsonb(
       "multiclass_prerequisites",
     ).$type<ClassMulticlassPrerequisites>(),
@@ -507,8 +510,9 @@ export const backgrounds = pgTable(
     flaws: jsonb("flaws").$type<string[]>().notNull(),
     personalityTraits: jsonb("personality_traits").$type<string[]>().notNull(),
 
-    // TODO: INVENTORY PARSING
-    startingEquipment: jsonb("starting_equipment").notNull(),
+    startingEquipment: jsonb("starting_equipment")
+      .$type<StartingEquipmentDefinition>()
+      .notNull(),
 
     lore: jsonb("lore")
       .$type<{ shortDescription: string; fullText?: string }>()

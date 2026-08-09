@@ -1,4 +1,6 @@
-import { describe, expect, it } from "vitest";
+import type { InferSelectModel } from "drizzle-orm";
+import type { InventoryInstance } from "@project/shared";
+import { describe, expect, expectTypeOf, it } from "vitest";
 import {
   EQUIPMENT_SLOTS,
   campaignMembers,
@@ -31,6 +33,14 @@ describe("operational schema", () => {
     expect(characters.subraceId.notNull).toBe(true);
     expect(characters.customBackgroundData.dataType).toBe("json");
     expect(characters.temporaryInventory.dataType).toBe("json");
+  });
+
+  it("stores temporary inventory as typed inventory stacks", () => {
+    type TemporaryInventoryValue = InferSelectModel<typeof characters>["temporaryInventory"];
+
+    expectTypeOf<TemporaryInventoryValue>().toEqualTypeOf<
+      InventoryInstance[] | null
+    >();
   });
 
   it("defines campaign and membership tables", () => {
