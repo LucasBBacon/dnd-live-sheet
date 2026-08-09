@@ -21,7 +21,7 @@ these authored channels instead of treating them as dead data.
 | `criticalHitModifiers` | `packages/shared/src/schemas/traits.ts` | Applied by `CombatEngine` for qualifying critical hits |
 
 The remaining work is therefore less about wiring the bus and more about finishing
-feature-specific behaviour, inventory shape, and remaining polish.
+feature-specific behavior, inventory shape, and remaining polish.
 
 ---
 
@@ -127,10 +127,10 @@ Neither is a small fix — they change what a `RuntimeModifier` can address.
 
 | # | Status | Notes |
 | --- | --- | --- |
-| 26 | ⚠️ Open | Projected CON modifier still needs to read the post-ASI state when the wizard shows HP deltas. |
+| 26 | ✅ Resolved | Projected CON modifier now reads the post-ASI state when the wizard shows HP deltas. |
 | 27 | ✅ Resolved | Level-up success now closes or resets the wizard flow and shows feedback. |
 | 28 | ✅ Resolved | Level-up failures now surface through the wizard feedback banner. |
-| 29 | ⚠️ Open | `ArmorClassWidget` still needs the styling pass. |
+| 29 | ✅ Resolved | `ArmorClassWidget` now has the styling pass and is rendered as a dedicated sheet card. |
 
 The remaining polish work is now mostly visual or correctness-driven rather than
 structural.

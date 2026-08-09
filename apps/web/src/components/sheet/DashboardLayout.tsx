@@ -11,6 +11,7 @@ import { useLevelUpStore } from "../../store/levelUpStore";
 import { CombatWidget } from "./CombatWidget";
 import { RestModal } from "./modals/RestModal";
 import { LevelUpWizard } from "../wizard/LevelUpWizard";
+import { ArmorClassWidget } from "./ArmorClassWidget";
 
 export const DashboardLayout = () => {
   const character = useCharacterSheetStore();
@@ -28,7 +29,7 @@ export const DashboardLayout = () => {
   );
   const beginLevelUp = useLevelUpStore((state) => state.beginLevelUp);
 
-  const { armorClass, skills, initiative } = useDerivedStats();
+  const { skills, initiative } = useDerivedStats();
   const { finalAbilities } = useAbilities();
 
   const activeClassId = useMemo(() => {
@@ -179,10 +180,7 @@ export const DashboardLayout = () => {
             </div>
           </div>
 
-          <div className="flex justify-between items-center bg-gray-50 border p-3 rounded">
-            <span className="font-bold">Armor Class</span>
-            <span className="text-2xl font-bold">{armorClass.total}</span>
-          </div>
+          <ArmorClassWidget />
 
           <div className="flex justify-between items-center bg-gray-50 border p-3 rounded mt-2">
             <span className="font-bold">Initiative</span>

@@ -468,7 +468,7 @@ describe("useCharacterSheetStore hp trigger handling", () => {
       classes: [{ classId: "class_fighter", level: 1, selections: {} }],
       traitSelections: {},
       hp: { current: 10, temporary: 0, baseRolledHp: 10, hitDiceSpent: {} },
-    } as const;
+    };
 
     CharacterBootstrapper.hydrateRuntimeManagers(
       nextSave,

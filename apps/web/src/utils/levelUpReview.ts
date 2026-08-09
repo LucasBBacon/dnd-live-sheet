@@ -1,4 +1,4 @@
-import type { Ability } from "@project/engine";
+import { AbilityEngine, type Ability } from "@project/engine";
 
 export type LevelUpAbilityChoice = {
   stat: Ability;
@@ -17,5 +17,5 @@ export const getProjectedConModifier = (
     .reduce((total, choice) => total + choice.value, 0);
 
   const projectedScore = baseConScore + conIncrease;
-  return Math.floor((projectedScore - 10) / 2);
+  return AbilityEngine.getModifier(projectedScore);
 };
