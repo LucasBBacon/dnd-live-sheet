@@ -6,22 +6,40 @@ import { CombatWidget } from "../CombatWidget";
 
 const mocks = vi.hoisted(() => ({
   consumeItem: vi.fn(),
-  dispatchAuthoredEvent: vi.fn(),
   executeActorAction: vi.fn(),
   executeCharacterAction: vi.fn(),
-  recordCombatRoll: vi.fn(),
   selectActorInstance: vi.fn(),
-}));
-
-vi.mock("../../../services/socketService", () => ({
-  socketService: {
-    emitCombatRoll: vi.fn(),
-  },
 }));
 
 vi.mock("../../../hooks/useCombat", () => ({
   useCombat: () => ({
-    attacks: [],
+    attacks: [
+      {
+        weaponId: "item_weapon_longsword",
+        name: "Longsword",
+        attackBonus: 5,
+        damageBonus: 3,
+        damageExpression: "1d8 +3 slashing",
+        criticalDamageExpression: "2d8 +3 slashing",
+        isProficient: true,
+        context: {
+          hand: "main_hand",
+          attackUsage: "standard",
+          isTwoHandedGrip: false,
+        },
+        breakdown: {
+          governingStat: "STR",
+          attack: ["STR (+3)", "Proficiency (+2)"],
+          damage: ["STR (+3)"],
+        },
+        slot: "main_hand",
+        activation: "action",
+        actionId: "action_weapon_item_weapon_longsword",
+        requiresAmmo: false,
+        currentAmmo: 0,
+        ammoInventoryId: null,
+      },
+    ],
   }),
 }));
 
@@ -56,7 +74,6 @@ const storeState = {
   id: "char_1",
   consumeItem: mocks.consumeItem,
   latestRollResults: [],
-  dispatchAuthoredEvent: mocks.dispatchAuthoredEvent,
   runtimeEffects: {
     getActiveActors: () => [actor],
   },
@@ -75,7 +92,6 @@ const storeState = {
     } as ActionGrant,
   ],
   executeCharacterAction: mocks.executeCharacterAction,
-  recordCombatRoll: mocks.recordCombatRoll,
 };
 
 vi.mock("../../../store/characterSheetStore", () => ({
@@ -111,6 +127,34 @@ describe("CombatWidget", () => {
     expect(mocks.executeActorAction).toHaveBeenCalledWith(
       "action_actor_clockwork_toy_scuttle",
       "effect_actor:actor_clockwork_toy:0",
+    );
+
+    root.unmount();
+    container.remove();
+  });
+
+  it("executes a weapon action through the character action path", async () => {
+    const container = document.createElement("div");
+    document.body.appendChild(container);
+    const root = createRoot(container);
+
+    await act(async () => {
+      root.render(<CombatWidget />);
+    });
+
+    const button = Array.from(container.querySelectorAll("button")).find(
+      (candidate) => candidate.textContent === "STRIKE",
+    );
+
+    expect(button).toBeDefined();
+
+    await act(async () => {
+      button?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    });
+
+    expect(mocks.consumeItem).not.toHaveBeenCalled();
+    expect(mocks.executeCharacterAction).toHaveBeenCalledWith(
+      "action_weapon_item_weapon_longsword",
     );
 
     root.unmount();

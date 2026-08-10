@@ -101,7 +101,7 @@ export interface LiveCharacterSheet {
 
   // skills and saves
   skills: Record<string, DerivedSkill>; // keyed by skillId
-  saves: Record<string, DerivedSave>;  // keyed by Ability (STR, DEX, …)
+  saves: Record<string, DerivedSave>; // keyed by Ability (STR, DEX, …)
 
   // load
   encumbrance: EncumbranceResult;
@@ -134,9 +134,7 @@ export interface LiveCharacterSheet {
   activeStates: string[];
 }
 
-const buildActiveActors = (
-  effectManager: EffectManager,
-): ActorInstance[] =>
+const buildActiveActors = (effectManager: EffectManager): ActorInstance[] =>
   effectManager.getActiveActors().length > 0
     ? effectManager.getActiveActors()
     : effectManager
@@ -151,7 +149,8 @@ const buildActiveActors = (
                 instanceId: `${effect.instanceId}:${state}:${index}`,
                 templateId: state,
                 displayLabel: blueprint?.label ?? state,
-                controller: blueprint?.controllerRules.defaultController ?? "player",
+                controller:
+                  blueprint?.controllerRules.defaultController ?? "player",
                 lifecycleState: "active",
                 currentStates: [...(blueprint?.baseStates ?? [state])],
                 availableActions: blueprint?.authoredActions ?? [],
@@ -170,7 +169,8 @@ const buildActiveActors = (
               instanceId: `${effect.instanceId}:${entry.templateId}:${index}`,
               templateId: entry.templateId,
               displayLabel: blueprint?.label ?? entry.label,
-              controller: blueprint?.controllerRules.defaultController ?? "player",
+              controller:
+                blueprint?.controllerRules.defaultController ?? "player",
               lifecycleState: "active",
               currentStates: [...(blueprint?.baseStates ?? [entry.templateId])],
               availableActions: blueprint?.authoredActions ?? [],
@@ -371,7 +371,10 @@ export class CharacterEngine {
       if (!weapon) continue;
 
       const weaponAttackContext = {
-        hand: instance.slot === "off_hand" ? ("off_hand" as const) : ("main_hand" as const),
+        hand:
+          instance.slot === "off_hand"
+            ? ("off_hand" as const)
+            : ("main_hand" as const),
         attackUsage:
           instance.slot === "off_hand"
             ? ("two_weapon_bonus" as const)
@@ -413,6 +416,13 @@ export class CharacterEngine {
               weaponAttackContext,
             ),
           ];
+
+      for (const action of synthesizedActions) {
+        if (action.effect.type !== "attack") continue;
+
+        action.effect.attackBonus = attackAnalysis.attackBonus;
+        action.effect.damageBonus = attackAnalysis.damageBonus;
+      }
 
       actions.push(...synthesizedActions);
     }

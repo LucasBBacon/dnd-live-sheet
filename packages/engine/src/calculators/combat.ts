@@ -12,6 +12,7 @@ export interface DerivedAttack {
   weaponId: string;
   name: string;
   attackBonus: number;
+  damageBonus: number;
   damageExpression: string; // e.g., '1d8 + 4'
   criticalDamageExpression: string; // e.g., '2d8 + 4'
   isProficient: boolean;
@@ -376,6 +377,7 @@ export class CombatEngine {
       weaponId: weapon.id,
       name: weapon.name,
       attackBonus,
+      damageBonus: totalDamageBonus,
       damageExpression,
       criticalDamageExpression,
       isProficient,

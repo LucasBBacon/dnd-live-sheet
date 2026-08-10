@@ -471,6 +471,54 @@ describe("ActionResolver attack resolution", () => {
 
     randomSpy.mockRestore();
   });
+
+  it("applies embedded weapon attack bonuses and damage bonuses", () => {
+    const weaponAction: ActionGrant = {
+      ...bowShot,
+      consumesAmmo: undefined,
+      effect: {
+        type: "attack",
+        attackType: "melee_weapon",
+        attackStat: "STR",
+        attackBonus: 5,
+        damageBonus: 3,
+        range: 5,
+        damage: [
+          {
+            sourceName: "Sword",
+            baseDice: "1d6",
+            damageType: "slashing",
+            scalingMode: "none",
+            levelScaling: [],
+          },
+        ],
+      },
+    };
+
+    const randomSpy = vi
+      .spyOn(Math, "random")
+      .mockReturnValueOnce(0)
+      .mockReturnValueOnce(0.9);
+
+    const result = ActionResolver.execute(weaponAction, payload(), {
+      effectManager,
+      resourceManager,
+    });
+
+    expect(result.executed).toBe(true);
+    expect(result.rollResults?.[0]).toMatchObject({
+      target: "ATTACK_ROLL",
+      total: 6,
+      modifier: 5,
+    });
+    expect(result.rollResults?.[1]).toMatchObject({
+      target: "DAMAGE_ROLL",
+      total: 9,
+      modifier: 3,
+    });
+
+    randomSpy.mockRestore();
+  });
 });
 
 describe("ActionResolver ability-check resolution", () => {
@@ -692,7 +740,9 @@ describe("ActionResolver summon resolution", () => {
           controller: "player",
           lifecycleState: "active",
           availableActions: expect.arrayContaining([
-            expect.objectContaining({ id: "action_actor_clockwork_toy_scuttle" }),
+            expect.objectContaining({
+              id: "action_actor_clockwork_toy_scuttle",
+            }),
           ]),
           sourceEffectInstanceId: expect.any(String),
         }),

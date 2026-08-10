@@ -1,4 +1,9 @@
-import type { ActionGrant, DamageType, EngineEvent, TriggerGrant } from "@project/shared";
+import type {
+  ActionGrant,
+  DamageType,
+  EngineEvent,
+  TriggerGrant,
+} from "@project/shared";
 import type { ActiveEffect, EffectManager } from "../calculators/effects.js";
 import type { ResourceManager } from "../calculators/resources.js";
 import { DiceEngine } from "../utils/diceParser.js";
@@ -73,7 +78,9 @@ const fail = (
   ...(offendingId !== undefined && { offendingId }),
 });
 
-const getStatePredicate = (effect: ActionGrant["effect"]): {
+const getStatePredicate = (
+  effect: ActionGrant["effect"],
+): {
   requiredStates: string[];
   forbiddenStates: string[];
 } => {
@@ -87,7 +94,9 @@ const getStatePredicate = (effect: ActionGrant["effect"]): {
       : [];
 
   const predicateGroup =
-    "predicates" in effect && effect.predicates && typeof effect.predicates === "object"
+    "predicates" in effect &&
+    effect.predicates &&
+    typeof effect.predicates === "object"
       ? effect.predicates
       : undefined;
 
@@ -114,8 +123,12 @@ const matchesStatePredicate = (
 ): boolean => {
   const { requiredStates, forbiddenStates } = getStatePredicate(effect);
 
-  const meetsRequired = requiredStates.every((state) => activeStates.includes(state));
-  const hasForbidden = forbiddenStates.some((state) => activeStates.includes(state));
+  const meetsRequired = requiredStates.every((state) =>
+    activeStates.includes(state),
+  );
+  const hasForbidden = forbiddenStates.some((state) =>
+    activeStates.includes(state),
+  );
 
   return meetsRequired && !hasForbidden;
 };
@@ -147,9 +160,12 @@ export class ActionResolver {
     const activeStates =
       payload.activeStates.length > 0
         ? payload.activeStates
-        : context.activeStates ?? [];
+        : (context.activeStates ?? []);
 
-    if (hasStatePredicate(action.effect) && !matchesStatePredicate(action.effect, activeStates)) {
+    if (
+      hasStatePredicate(action.effect) &&
+      !matchesStatePredicate(action.effect, activeStates)
+    ) {
       return ok;
     }
 
@@ -158,7 +174,12 @@ export class ActionResolver {
     if (!settlement.executed) return settlement;
 
     // 2 - route the effect to correct handler
-    return this.executeEffect(action.effect, action, context, payload.activeStates);
+    return this.executeEffect(
+      action.effect,
+      action,
+      context,
+      payload.activeStates,
+    );
   }
 
   public static dispatchEvent(
@@ -212,7 +233,7 @@ export class ActionResolver {
   ): ActionResult {
     if (hasStatePredicate(effect)) {
       const resolvedActiveStates =
-        activeStates.length > 0 ? activeStates : context.activeStates ?? [];
+        activeStates.length > 0 ? activeStates : (context.activeStates ?? []);
       if (!matchesStatePredicate(effect, resolvedActiveStates)) {
         return ok;
       }
@@ -259,7 +280,9 @@ export class ActionResolver {
         const damageSegments = effect.damage ?? [];
         const rollResults: ActionRollResult[] = [];
         const resolvedActiveStates =
-          activeStates.length > 0 ? activeStates : context.activeStates ?? [];
+          activeStates.length > 0 ? activeStates : (context.activeStates ?? []);
+        const attackBonus = effect.attackBonus ?? 0;
+        const damageBonus = effect.damageBonus ?? 0;
 
         const attackRoll = DiceEngine.rollDigital("1d20");
         const appliedAttackRolls = DiceEngine.applyDiceRules(
@@ -274,13 +297,15 @@ export class ActionResolver {
         );
 
         rollResults.push({
-          total: appliedAttackRolls.reduce((sum, value) => sum + value, 0),
+          total:
+            appliedAttackRolls.reduce((sum, value) => sum + value, 0) +
+            attackBonus,
           rolls: appliedAttackRolls,
-          modifier: attackRoll.modifier,
+          modifier: attackBonus,
           target: "ATTACK_ROLL",
         });
 
-        for (const segment of damageSegments) {
+        for (const [index, segment] of damageSegments.entries()) {
           const baseDice = segment.baseDice;
           const roll = DiceEngine.rollDigital(baseDice);
           const appliedRolls = DiceEngine.applyDiceRules(
@@ -290,17 +315,18 @@ export class ActionResolver {
             {
               activeStates: resolvedActiveStates,
               sides: Number.parseInt(baseDice.split("d")[1] ?? "6", 10),
-              rollFn: (sides) =>
-                DiceEngine.rollDigital(`1d${sides}`).total,
+              rollFn: (sides) => DiceEngine.rollDigital(`1d${sides}`).total,
               requiredDamageType: segment.damageType,
             },
           );
 
-          const total = appliedRolls.reduce((sum, value) => sum + value, 0);
+          const total =
+            appliedRolls.reduce((sum, value) => sum + value, 0) +
+            (index === 0 ? damageBonus : 0);
           rollResults.push({
             total,
             rolls: appliedRolls,
-            modifier: roll.modifier,
+            modifier: index === 0 ? damageBonus : roll.modifier,
             target: "DAMAGE_ROLL",
             damageType: segment.damageType,
           });
@@ -314,7 +340,10 @@ export class ActionResolver {
           .getActiveEffects()
           .filter((entry) => entry.kind === "summon");
 
-        if (effect.maxActive !== undefined && activeSummons.length >= effect.maxActive) {
+        if (
+          effect.maxActive !== undefined &&
+          activeSummons.length >= effect.maxActive
+        ) {
           return fail("summon_limit_reached");
         }
 
@@ -328,7 +357,8 @@ export class ActionResolver {
         const newEffect: ActiveEffect = {
           instanceId: effectInstanceId,
           sourceName: action.name,
-          durationType: effect.durationHours !== undefined ? "rounds" : "manual",
+          durationType:
+            effect.durationHours !== undefined ? "rounds" : "manual",
           durationRemaining:
             effect.durationHours !== undefined
               ? Math.max(1, Math.ceil((effect.durationHours * 60) / 24))
@@ -337,10 +367,12 @@ export class ActionResolver {
           modifiers: [],
           grantedStates: [...effect.entityTemplateIds],
           kind: "summon",
-          summonEntities: summonEntities.map(({ templateId, displayLabel }) => ({
-            templateId,
-            label: displayLabel,
-          })),
+          summonEntities: summonEntities.map(
+            ({ templateId, displayLabel }) => ({
+              templateId,
+              label: displayLabel,
+            }),
+          ),
         };
 
         if (effect.durationHours !== undefined) {
@@ -378,10 +410,11 @@ export class ActionResolver {
             "DAMAGE_ROLL",
             {
               activeStates:
-                activeStates.length > 0 ? activeStates : context.activeStates ?? [],
+                activeStates.length > 0
+                  ? activeStates
+                  : (context.activeStates ?? []),
               sides: Number.parseInt(baseDice.split("d")[1] ?? "6", 10),
-              rollFn: (sides) =>
-                DiceEngine.rollDigital(`1d${sides}`).total,
+              rollFn: (sides) => DiceEngine.rollDigital(`1d${sides}`).total,
               requiredDamageType: segment.damageType,
             },
           );
@@ -407,7 +440,9 @@ export class ActionResolver {
           "SAVING_THROW",
           {
             activeStates:
-              activeStates.length > 0 ? activeStates : context.activeStates ?? [],
+              activeStates.length > 0
+                ? activeStates
+                : (context.activeStates ?? []),
             sides: 20,
             rollFn: (sides) => DiceEngine.rollDigital(`1d${sides}`).total,
           },
@@ -439,7 +474,9 @@ export class ActionResolver {
           "ABILITY_CHECK",
           {
             activeStates:
-              activeStates.length > 0 ? activeStates : context.activeStates ?? [],
+              activeStates.length > 0
+                ? activeStates
+                : (context.activeStates ?? []),
             sides: 20,
             rollFn: (sides) => DiceEngine.rollDigital(`1d${sides}`).total,
           },

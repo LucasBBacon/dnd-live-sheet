@@ -13,6 +13,7 @@ import {
   type ActionResolvedPayload,
   type CombatRollPayload,
   type InventorySyncPayload,
+  type InventoryInstance,
   type RoomJoinPayload,
   SOCKET_EVENTS,
   type CharacterSave,
@@ -26,6 +27,7 @@ import {
 import { Server, Socket } from "socket.io";
 import { and, eq, not, sql } from "drizzle-orm";
 import {
+  CharacterEngine,
   ActionResolver,
   CharacterBootstrapper,
   EffectManager,
@@ -264,16 +266,35 @@ const getAuthoritativeRuntimeContext = async (
   return runtime;
 };
 
-const resolveCharacterAction = (
+const resolveCharacterAction = async (
   runtime: AuthoritativeRuntimeContext,
+  characterId: string,
   actionId: string,
-): { action: ActionGrant | null; diceRules: Array<any> } => {
+): Promise<{ action: ActionGrant | null; diceRules: Array<any> }> => {
+  const inventoryRows = await db
+    .select({
+      id: characterInventory.id,
+      itemId: characterInventory.itemId,
+      quantity: characterInventory.quantity,
+      slot: characterInventory.slot,
+      isAttuned: characterInventory.isAttuned,
+      customName: characterInventory.customName,
+    })
+    .from(characterInventory)
+    .where(eq(characterInventory.characterId, characterId));
+
+  const inventory = inventoryRows as InventoryInstance[];
+  const liveSheet = CharacterEngine.buildLiveSheet(
+    runtime.save,
+    inventory,
+    runtime.effectManager,
+    runtime.resourceManager,
+  );
+
   const activeTraits = CharacterBootstrapper.compileActiveTraits(runtime.save);
   const diceRules = activeTraits.flatMap((trait) => trait.diceRules ?? []);
   const action =
-    activeTraits
-      .flatMap((trait) => trait.actions ?? [])
-      .find((entry) => entry.id === actionId) ?? null;
+    liveSheet.actions.find((entry) => entry.id === actionId) ?? null;
 
   return { action, diceRules };
 };
@@ -478,7 +499,11 @@ export function initializeWebSocketGateway(httpServer: any) {
           let actionStates = runtime.effectManager.getActiveStates();
 
           if (payload.source === "character") {
-            const resolved = resolveCharacterAction(runtime, payload.actionId);
+            const resolved = await resolveCharacterAction(
+              runtime,
+              payload.characterId,
+              payload.actionId,
+            );
             action = resolved.action;
             diceRules = resolved.diceRules;
           } else {

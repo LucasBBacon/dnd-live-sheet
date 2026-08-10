@@ -1,20 +1,14 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useEffect, useState, type MouseEvent } from "react";
-import type { CombatRollPayload } from "@project/shared";
 import { useCombat } from "../../hooks/useCombat";
-import { socketService } from "../../services/socketService";
 import { useCharacterSheetStore } from "../../store/characterSheetStore";
 
 export const CombatWidget = () => {
   const { attacks } = useCombat();
 
-  const characterId = useCharacterSheetStore((state) => state.id ?? "");
   const consumeItem = useCharacterSheetStore((state) => state.consumeItem);
   const latestRollResults = useCharacterSheetStore(
     (state) => state.latestRollResults,
-  );
-  const dispatchAuthoredEvent = useCharacterSheetStore(
-    (state) => state.dispatchAuthoredEvent,
   );
   const runtimeEffects = useCharacterSheetStore(
     (state) => state.runtimeEffects,
@@ -33,9 +27,6 @@ export const CombatWidget = () => {
   );
   const executeCharacterAction = useCharacterSheetStore(
     (state) => state.executeCharacterAction,
-  );
-  const recordCombatRoll = useCharacterSheetStore(
-    (state) => state.recordCombatRoll,
   );
   const activeActors = runtimeEffects?.getActiveActors() ?? [];
   const characterActions = getCharacterActions().filter(
@@ -92,20 +83,7 @@ export const CombatWidget = () => {
       consumeItem(attack.ammoInventoryId, 1);
     }
 
-    dispatchAuthoredEvent("ON_ATTACK_HIT");
-
-    const payload: CombatRollPayload = {
-      characterId,
-      attackName: attack.name,
-      attackBonus: attack.attackBonus,
-      damageExpression: attack.damageExpression,
-      slot: attack.slot,
-      requiresAmmo: Boolean(attack.requiresAmmo),
-      timestamp: Date.now(),
-    };
-
-    recordCombatRoll(payload);
-    socketService.emitCombatRoll(payload);
+    executeCharacterAction(attack.actionId);
   };
 
   return (
@@ -254,6 +232,26 @@ export const CombatWidget = () => {
                   </div>
                 </div>
                 <div className="flex flex-wrap gap-4 p-3">
+                  <div
+                    className="cursor-help"
+                    onMouseEnter={(event) =>
+                      showTooltip(event, "Action Type", [
+                        attack.activation === "bonus_action"
+                          ? "Bonus action"
+                          : "Action",
+                      ])
+                    }
+                    onMouseLeave={() => setTooltip(null)}
+                  >
+                    <span className="block text-[11px] uppercase tracking-[0.2em] text-gray-500">
+                      ACT
+                    </span>
+                    <span className="font-bold text-gray-900">
+                      {attack.activation === "bonus_action"
+                        ? "BONUS"
+                        : "ACTION"}
+                    </span>
+                  </div>
                   <div
                     className="cursor-help"
                     onMouseEnter={(event) =>

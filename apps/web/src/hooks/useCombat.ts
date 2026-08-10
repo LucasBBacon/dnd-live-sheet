@@ -136,6 +136,11 @@ export const useCombat = () => {
       acc.push({
         ...derivedAttack,
         slot: item.slot,
+        activation: item.slot === "off_hand" ? "bonus_action" : "action",
+        actionId:
+          item.slot === "off_hand"
+            ? `action_weapon_${weaponDef.id}_off_hand`
+            : `action_weapon_${weaponDef.id}`,
         requiresAmmo: !!weaponDef.ammoItemId,
         currentAmmo,
         ammoInventoryId,

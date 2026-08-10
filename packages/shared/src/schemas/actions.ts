@@ -91,6 +91,8 @@ export const AttackEffectSchema = z.object({
   range: z.number().default(5),
   longRange: z.number().optional(),
   weaponContext: WeaponAttackContextSchema.optional(),
+  attackBonus: z.number().optional(),
+  damageBonus: z.number().optional(),
   damage: z.array(DamageSegmentSchema),
 });
 
