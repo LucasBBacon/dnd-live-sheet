@@ -17,6 +17,7 @@ import { ELEMENTAL_DISCIPLINE_TRAITS } from "./traits/elementalDisciplineDiction
 import { HUNTER_OPTION_TRAITS } from "./traits/hunterOptionDictionary.js";
 import { DRACONIC_ANCESTRY_TRAITS } from "./traits/draconicAncestryDictionary.js";
 import { MANEUVER_TRAITS } from "./traits/maneuverDictionary.js";
+import { CLASS_SAVE_TRAITS } from "./traits/classSaveTraitDictionary.js";
 
 export const TRAIT_DICTIONARY: Record<string, TraitDefinition> = {
   feat_tough: {
@@ -181,4 +182,30 @@ export const TRAIT_DICTIONARY: Record<string, TraitDefinition> = {
   ...HUNTER_OPTION_TRAITS,
   ...DRACONIC_ANCESTRY_TRAITS,
   ...MANEUVER_TRAITS,
+  ...CLASS_SAVE_TRAITS,
+  trait_aura_of_protection: {
+    id: "trait_aura_of_protection",
+    name: "Aura of Protection",
+    description:
+      "You and friendly creatures within 10 feet add your Charisma modifier to saving throws, as long as you are not incapacitated.",
+    modifiers: {
+      fixed: [
+        {
+          target: "ALL_SAVES",
+          type: "add",
+          value: 0,
+          valueSource: "cha_modifier",
+          scalingFactor: "none",
+          requiredStates: [],
+          forbiddenStates: ["incapacitated"],
+        },
+      ],
+      choices: [],
+    },
+    resources: [],
+    triggers: [],
+    diceRules: [],
+    criticalHitModifiers: [],
+    actions: [],
+  },
 };

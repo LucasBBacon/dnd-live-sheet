@@ -48,13 +48,14 @@ export const ModifierAttackContextSchema = z.enum(["main_hand", "off_hand"]);
 export const ModifierValueSourceSchema = z.enum([
   "fixed",
   "governing_stat_modifier",
+  "cha_modifier",
 ]);
 
 export const BaseModifierSchema = z.object({
   target: ModifierTargetSchema,
   type: ModifierTypeSchema,
   value: z.number().default(0),
-  valueSource: ModifierValueSourceSchema.default("fixed"),
+  valueSource: ModifierValueSourceSchema.optional(),
   scalingFactor: ModifierScalingSchema.default("none"),
   scalingClassId: z.string().optional(),
   maxDexCap: z.number().optional(),
@@ -70,7 +71,7 @@ export const ChoiceModifierGrantSchema = z.object({
   modifierTemplate: z.object({
     type: ModifierTypeSchema,
     value: z.number(),
-    valueSource: ModifierValueSourceSchema.default("fixed"),
+    valueSource: ModifierValueSourceSchema.optional(),
     scalingFactor: ModifierScalingSchema.default("none"),
     scalingClassId: z.string().optional(),
   }),

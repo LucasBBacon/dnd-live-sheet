@@ -33,7 +33,6 @@ export const HALFLING_TRAITS: Record<string, TraitDefinition> = {
       fixed: [],
       choices: [],
     },
-    // TODO: Conditional measures
     resources: [],
     triggers: [],
     diceRules: [

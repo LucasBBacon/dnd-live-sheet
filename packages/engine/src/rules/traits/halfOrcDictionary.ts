@@ -85,7 +85,6 @@ export const HALF_ORC_TRAITS: Record<string, TraitDefinition> = {
     name: "Relentless Endurance",
     description:
       "When you are reduced to 0 hit points but not killed outright, you can drop to 1 hit point instead. You can't use this feature again until you finish a long rest.",
-    // TODO: Conditional events
     modifiers: { fixed: [], choices: [] },
     resources: [
       {
@@ -133,7 +132,6 @@ export const HALF_ORC_TRAITS: Record<string, TraitDefinition> = {
     name: "Savage Attacks",
     description:
       "When you score a critical hit with a melee weapon attack, you can roll one of the weapon's damage dice one additional time and add it to the extra damage on the critical hit.",
-    // TODO: Conditional events
     modifiers: { fixed: [], choices: [] },
     resources: [],
     triggers: [],

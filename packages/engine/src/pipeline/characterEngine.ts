@@ -15,6 +15,7 @@ import {
 import { SKILL_MAP } from "@project/shared";
 import type { Ability } from "../types/core.js";
 import { SkillEngine, type DerivedSkill } from "../calculators/skills.js";
+import { SaveEngine, type DerivedSave } from "../calculators/saves.js";
 import { CombatEngine } from "../calculators/combat.js";
 import type { EffectManager } from "../calculators/effects.js";
 import type { ResourceManager } from "../calculators/resources.js";
@@ -75,6 +76,7 @@ interface StageOneResult {
   armorClass: CalculationResult;
   initiative: CalculationResult;
   skills: Record<string, DerivedSkill>;
+  saves: Record<string, DerivedSave>;
 }
 
 export interface LiveSheetOptions {
@@ -99,6 +101,7 @@ export interface LiveCharacterSheet {
 
   // skills and saves
   skills: Record<string, DerivedSkill>; // keyed by skillId
+  saves: Record<string, DerivedSave>;  // keyed by Ability (STR, DEX, …)
 
   // load
   encumbrance: EncumbranceResult;
@@ -292,7 +295,7 @@ export class CharacterEngine {
     const totalLevel = save.classes.reduce((sum, cls) => sum + cls.level, 0);
     const profBonus = AbilityEngine.getProficiencyBonus(totalLevel);
 
-    const { abilities, maxHp, armorClass, initiative, skills } =
+    const { abilities, maxHp, armorClass, initiative, skills, saves } =
       this.computeStageOne({
         attributes: save.attributes,
         classes: save.classes,
@@ -412,6 +415,7 @@ export class CharacterEngine {
       actions,
       activeActors,
       summons,
+      saves,
       baseStates,
       activeStates,
     };
@@ -500,6 +504,21 @@ export class CharacterEngine {
       );
     }
 
-    return { abilities, maxHp, armorClass, initiative, skills };
+    const saves = SaveEngine.calculateSaves(
+      {
+        STR: abilities.STR.score,
+        DEX: abilities.DEX.score,
+        CON: abilities.CON.score,
+        INT: abilities.INT.score,
+        WIS: abilities.WIS.score,
+        CHA: abilities.CHA.score,
+      },
+      profBonus,
+      proficiencies,
+      modifiers,
+      baseStates,
+    );
+
+    return { abilities, maxHp, armorClass, initiative, skills, saves };
   }
 }
