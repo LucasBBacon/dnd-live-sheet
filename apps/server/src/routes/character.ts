@@ -99,6 +99,8 @@ const fetchCharacterPayload = async (userId: string, characterId: string) => {
       quantity: characterInventory.quantity,
       slot: characterInventory.slot,
       isAttuned: characterInventory.isAttuned,
+      customName: characterInventory.customName,
+      containerId: characterInventory.containerId,
     })
     .from(characterInventory)
     .where(eq(characterInventory.characterId, characterId));

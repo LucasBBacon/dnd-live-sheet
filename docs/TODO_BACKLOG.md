@@ -90,15 +90,13 @@ feature work focused on inventory shape and modifier-system expressiveness.
 
 ### 2c. Inventory
 
-Both columns are untyped `jsonb` placeholders. `pipeline/inventoryBridge.ts` is the
-existing seam.
+Both columns are now typed and consumed at runtime. The server inventory sync
+includes the full `InventoryInstance` contract.
 
-| # | Item | Location |
+| # | Status | Notes |
 | --- | --- | --- |
-| 18 | `startingEquipment` parsing on backgrounds | [reference.ts:510](packages/database/src/schema/reference.ts:510) |
-| 19 | `temporaryInventory` shape on the operational table | [operational.ts:102](packages/database/src/schema/operational.ts:102) |
-
-Do 19 before 18 — the runtime shape should define the parse target, not the reverse.
+| 18 | ✅ Resolved | `startingEquipment` on backgrounds was already typed via `StartingEquipmentDefinition` and seeded through `normalizeStartingEquipment`. |
+| 19 | ✅ Resolved | `character_inventory` now carries `custom_name` and `container_id`; server SELECT sites include the full `InventoryInstance` shape. |
 
 ### 2d. State-conditional calculations
 
@@ -119,7 +117,7 @@ Neither is a small fix — they change what a `RuntimeModifier` can address.
 | # | Item | Location | Missing concept |
 | --- | --- | --- | --- |
 | 23 | Fighting Style: Protection | [fightingStyleDictionary.ts:114](packages/engine/src/rules/traits/fightingStyleDictionary.ts:114) | Reactions targeting *another creature's* roll |
-| 24 | Fighting Style: Two-Weapon Fighting | [fightingStyleDictionary.ts:128](packages/engine/src/rules/traits/fightingStyleDictionary.ts:128) | Which hand made the attack |
+| 24 | Fighting Style: Two-Weapon Fighting | [fightingStyleDictionary.ts:128](packages/engine/src/rules/traits/fightingStyleDictionary.ts:128) | Implemented via hand-aware damage modifiers and a governing-stat modifier source |
 
 ---
 

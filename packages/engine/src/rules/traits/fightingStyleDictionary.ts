@@ -125,9 +125,21 @@ export const FIGHTING_STYLE_TRAITS: Record<string, TraitDefinition> = {
     name: "Fighting Style: Two-Weapon Fighting",
     description:
       "When you engage in two-weapon fighting, you can add your ability modifier to the damage of the second attack.",
-    // TODO: needs an off-hand damage roll to modify; DAMAGE_BONUS has no notion
-    // of which hand made the attack.
-    modifiers: { fixed: [], choices: [] },
+    modifiers: {
+      fixed: [
+        {
+          target: "DAMAGE_BONUS",
+          type: "add",
+          value: 0,
+          valueSource: "governing_stat_modifier",
+          scalingFactor: "none",
+          requiredStates: ["offhand_attack", "two_weapon_fighting_style"],
+          forbiddenStates: [],
+          attackContext: "off_hand",
+        },
+      ],
+      choices: [],
+    },
     grantedStates: ["two_weapon_fighting_style"],
     resources: [],
     triggers: [],

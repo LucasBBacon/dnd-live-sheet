@@ -45,11 +45,16 @@ export const ModifierScalingSchema = z.enum([
 ]);
 
 export const ModifierAttackContextSchema = z.enum(["main_hand", "off_hand"]);
+export const ModifierValueSourceSchema = z.enum([
+  "fixed",
+  "governing_stat_modifier",
+]);
 
 export const BaseModifierSchema = z.object({
   target: ModifierTargetSchema,
   type: ModifierTypeSchema,
   value: z.number().default(0),
+  valueSource: ModifierValueSourceSchema.default("fixed"),
   scalingFactor: ModifierScalingSchema.default("none"),
   scalingClassId: z.string().optional(),
   maxDexCap: z.number().optional(),
@@ -65,6 +70,7 @@ export const ChoiceModifierGrantSchema = z.object({
   modifierTemplate: z.object({
     type: ModifierTypeSchema,
     value: z.number(),
+    valueSource: ModifierValueSourceSchema.default("fixed"),
     scalingFactor: ModifierScalingSchema.default("none"),
     scalingClassId: z.string().optional(),
   }),
@@ -90,6 +96,7 @@ export type ModifierTarget = z.infer<typeof ModifierTargetSchema>;
 export type ModifierType = z.infer<typeof ModifierTypeSchema>;
 export type ModifierScaling = z.infer<typeof ModifierScalingSchema>;
 export type ModifierAttackContext = z.infer<typeof ModifierAttackContextSchema>;
+export type ModifierValueSource = z.infer<typeof ModifierValueSourceSchema>;
 
 export type TraitModifier = z.infer<typeof BaseModifierSchema>;
 export type ChoiceModifierGrant = z.infer<typeof ChoiceModifierGrantSchema>;

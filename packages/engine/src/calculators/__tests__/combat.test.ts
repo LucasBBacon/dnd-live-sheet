@@ -475,6 +475,28 @@ describe("CombatEngine.calculateWeaponAttack - damage bonus and offhand rules", 
     expect(result.breakdown.attack).toEqual(["STR (-1)"]);
   });
 
+  it("uses a governing-stat-derived damage modifier for an offhand attack when the matching state is active", () => {
+    const result = CombatEngine.calculateWeaponAttack(
+      makeWeapon(),
+      makeScores({ STR: 16 }),
+      0,
+      [],
+      [
+        makeMod({
+          target: "DAMAGE_BONUS",
+          sourceName: "Two-Weapon Fighting",
+          value: 0,
+          requiredStates: ["offhand_attack"],
+          attackContext: "off_hand",
+          valueSource: "governing_stat_modifier",
+        } as RuntimeModifier),
+      ],
+      ["offhand_attack"],
+    );
+
+    expect(result.damageExpression).toBe("1d6 +3 piercing");
+  });
+
   it("applies hand-specific DAMAGE_BONUS modifiers only to the matching attack context", () => {
     const offhandResult = CombatEngine.calculateWeaponAttack(
       makeWeapon(),

@@ -68,6 +68,7 @@ describe("the extractor and the rule snapshot projection agree", () => {
       target: "ARMOR_CLASS",
       type: "set_base",
       value: 18,
+      valueSource: "fixed",
       scalingFactor: "none",
       requiredStates: [],
       forbiddenStates: [],

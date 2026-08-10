@@ -24,6 +24,7 @@ const fullItemRule: ItemDefinition = {
       target: "ARMOR_CLASS",
       type: "set_base",
       value: 18,
+      valueSource: "fixed",
       scalingFactor: "none",
       maxDexCap: 0,
       requiredStates: [],

@@ -203,6 +203,12 @@ export const characterInventory = pgTable(
 
     // attunement state tracker
     isAttuned: boolean("is_attuned").notNull().default(false),
+
+    // display override for renamed items (matches InventoryInstance.customName)
+    customName: varchar("custom_name", { length: 255 }),
+
+    // row id of the container this stack sits inside, when applicable
+    containerId: uuid("container_id"),
   },
   (table) => ({
     idIdx: uniqueIndex("character_inventory_id_idx").on(table.id),

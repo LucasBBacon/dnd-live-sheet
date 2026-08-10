@@ -270,9 +270,14 @@ export class CombatEngine {
     let totalDamageBonus = baseDamageBonus;
 
     for (const mod of damageMods) {
-      totalDamageBonus += mod.value;
+      const bonusValue =
+        mod.valueSource === "governing_stat_modifier"
+          ? governingMod
+          : mod.value;
+
+      totalDamageBonus += bonusValue;
       damageBreakdown.push(
-        `${mod.sourceName} (${mod.value >= 0 ? "+" : ""}${mod.value})`,
+        `${mod.sourceName} (${bonusValue >= 0 ? "+" : ""}${bonusValue})`,
       );
     }
 
