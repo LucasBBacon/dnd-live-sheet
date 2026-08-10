@@ -137,7 +137,7 @@ structural.
 
 ## Recommended sequence
 
-1. **2c inventory (#19 → #18)** — the next meaningful feature gap and still worth tackling in parallel with the remaining polish work.
+1. **2c inventory (#18, #19)** — completed; the remaining feature work now sits in the polish and modifier-system buckets.
 2. **P3 remainder (#26, #29)** — the remaining correctness and visual polish items.
 3. **2e (#23, #24)** — a deliberate modifier-system redesign, now that the core runtime is in place.
 4. **Typecheck / API drift cleanup** — keep this in parallel with the feature work, since it is the broadest remaining quality risk.

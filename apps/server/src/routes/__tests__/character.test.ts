@@ -75,35 +75,38 @@ describe("Character Routes", () => {
   }) => {
     vi.resetModules();
 
+    const selectResults = [
+      [
+        {
+          id: "char-1",
+          campaignId: "camp-1",
+          str: 16,
+          dex: 12,
+          con: 14,
+          int: 10,
+          wis: 10,
+          cha: 8,
+        },
+      ],
+      existingClasses,
+    ];
+
     const tx = {
       select: vi.fn().mockReturnThis(),
       from: vi.fn().mockReturnThis(),
-      where: vi
-        .fn()
-        .mockResolvedValueOnce([
-          {
-            id: "char-1",
-            campaignId: "camp-1",
-            str: 16,
-            dex: 12,
-            con: 14,
-            int: 10,
-            wis: 10,
-            cha: 8,
-          },
-        ])
-        .mockResolvedValueOnce(existingClasses),
+      where: vi.fn().mockImplementation(async () => {
+        const nextResult = selectResults.shift();
+        return nextResult ?? [];
+      }),
       update: vi.fn().mockReturnThis(),
       set: vi.fn().mockReturnThis(),
       insert: vi.fn().mockReturnThis(),
       values: vi.fn().mockResolvedValue(undefined),
     };
 
-    const transactionMock = vi
-      .fn()
-      .mockImplementation(
-        async (callback: (trx: unknown) => Promise<unknown>) => callback(tx),
-      );
+    const transactionMock = vi.fn().mockImplementation(
+      async (callback: (trx: unknown) => Promise<unknown>) => callback(tx),
+    );
 
     const effectiveReferenceMock = vi.fn().mockResolvedValue({
       classes: [],

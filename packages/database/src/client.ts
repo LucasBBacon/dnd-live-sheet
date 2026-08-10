@@ -12,18 +12,42 @@ const schema = {
   ...referenceSchema,
 };
 
-const createMissingDatabaseProxy = <T extends object>(message: string): T =>
+let initializedDb: ReturnType<typeof drizzle> | null = null;
+
+const createDatabase = () => {
+  if (initializedDb) {
+    return initializedDb;
+  }
+
+  if (!connectionString) {
+    throw new Error("DATABASE_URL is missing");
+  }
+
+  initializedDb = drizzle(postgres(connectionString), { schema });
+  return initializedDb;
+};
+
+const createLazyDatabaseProxy = <T extends object>(): T =>
   new Proxy({} as T, {
-    get() {
-      throw new Error(message);
+    get(_target, prop, receiver) {
+      const database = createDatabase();
+      const value = Reflect.get(database as object, prop, receiver);
+
+      if (typeof value === "function") {
+        return value.bind(database);
+      }
+
+      return value;
+    },
+    has(_target, prop) {
+      return prop in createDatabase();
+    },
+    ownKeys() {
+      return Reflect.ownKeys(createDatabase());
+    },
+    getOwnPropertyDescriptor(_target, prop) {
+      return Object.getOwnPropertyDescriptor(createDatabase(), prop);
     },
   });
 
-const initializedDb = connectionString
-  ? drizzle(postgres(connectionString), { schema })
-  : null;
-
-export const db = (initializedDb ??
-  createMissingDatabaseProxy<NonNullable<typeof initializedDb>>(
-    "DATABASE_URL is missing",
-  )) as NonNullable<typeof initializedDb>;
+export const db = createLazyDatabaseProxy<ReturnType<typeof createDatabase>>();

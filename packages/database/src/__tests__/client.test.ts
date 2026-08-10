@@ -45,6 +45,12 @@ describe("database client", () => {
     const mod = await import("../client.js");
 
     expect(mockConfig).toHaveBeenCalledWith({ path: "../../.env" });
+    expect(mockPostgres).not.toHaveBeenCalled();
+    expect(mockDrizzle).not.toHaveBeenCalled();
+
+    expect(
+      () => (mod.db as unknown as Record<string, unknown>).select,
+    ).not.toThrow();
     expect(mockPostgres).toHaveBeenCalledWith(
       "postgresql://user:pass@localhost:5432/test_db",
     );
@@ -54,6 +60,5 @@ describe("database client", () => {
         schema: expect.any(Object),
       }),
     );
-    expect(mod.db).toBe(drizzleDb);
   });
 });
