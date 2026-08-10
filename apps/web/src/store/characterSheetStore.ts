@@ -21,7 +21,6 @@ import {
   type ActionResolvedPayload,
   type CharacterSave,
   type CharacterSlot,
-  type CombatRollPayload,
   type DamageType,
   type EngineEvent,
   type InventoryInstance,
@@ -137,18 +136,6 @@ const toCharacterSave = (state: CharacterSheetState): CharacterSave => ({
     baseRolledHp: state.baseHpRolled,
     hitDiceSpent: {},
   },
-});
-
-const createCombatRollResult = (
-  payload: CombatRollPayload,
-): ActionRollResult => ({
-  total: payload.attackBonus,
-  rolls: [payload.attackBonus],
-  modifier: 0,
-  target: "ATTACK_ROLL",
-  label: payload.attackName,
-  summary: payload.damageExpression,
-  damageType: undefined,
 });
 
 const toActionRollResult = (
@@ -551,7 +538,6 @@ export interface CharacterSheetState {
   selectActorInstance: (actorInstanceId: string | null) => void;
   executeActorAction: (actionId: string, actorInstanceId?: string) => void;
   syncRemoteActionExecution: (payload: ActionResolvedPayload) => void;
-  recordCombatRoll: (payload: CombatRollPayload) => void;
   recordRollResult: (payload: RollResultsBroadcastPayload) => void;
   beginTurn: () => void;
   endTurn: () => void;
@@ -1032,14 +1018,6 @@ export const useCharacterSheetStore = create<CharacterSheetState>(
         runtimeResources,
         selectedActorInstanceId:
           payload.actorInstanceId ?? previous.selectedActorInstanceId,
-      }));
-    },
-
-    recordCombatRoll: (payload) => {
-      set((state) => ({
-        latestRollResults: appendRollResults(state, [
-          createCombatRollResult(payload),
-        ]),
       }));
     },
 

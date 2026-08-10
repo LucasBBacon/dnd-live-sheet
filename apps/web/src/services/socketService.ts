@@ -1,7 +1,6 @@
 import {
   type ActionIntentPayload,
   type ActionResolvedPayload,
-  type CombatRollPayload,
   type InventorySyncPayload,
   type MaybeServerBroadcastPayload,
   type RoomJoinPayload,
@@ -135,19 +134,6 @@ class SocketManager {
     this.socket?.on("action_error", (payload: SocketActionErrorPayload) => {
       callback(payload);
     });
-  }
-
-  public emitCombatRoll(payload: CombatRollPayload) {
-    this.socket?.emit(SOCKET_EVENTS.COMBAT_ROLL, payload);
-  }
-
-  public subscribeToCombatRoll(callback: (payload: CombatRollPayload) => void) {
-    this.socket?.on(
-      SOCKET_EVENTS.COMBAT_ROLL,
-      (payload: MaybeServerBroadcastPayload<CombatRollPayload>) => {
-        callback(unwrapServerBroadcastPayload(payload));
-      },
-    );
   }
 
   public emitRollResults(payload: RollResultsBroadcastPayload) {

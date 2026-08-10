@@ -32,9 +32,6 @@ export const LiveSheetProvider = ({
   const setInventoryError = useCharacterSheetStore(
     (state) => state.setInventoryError,
   );
-  const recordCombatRoll = useCharacterSheetStore(
-    (state) => state.recordCombatRoll,
-  );
   const recordRollResult = useCharacterSheetStore(
     (state) => state.recordRollResult,
   );
@@ -66,10 +63,6 @@ export const LiveSheetProvider = ({
 
     socketService.subscribeToItemConsumed((broadcast) => {
       syncRemoteConsumption(broadcast.inventoryId, broadcast.amount);
-    });
-
-    socketService.subscribeToCombatRoll((broadcast) => {
-      recordCombatRoll(broadcast);
     });
 
     socketService.subscribeToRollResults((broadcast) => {
@@ -104,7 +97,6 @@ export const LiveSheetProvider = ({
     syncRemoteConsumption,
     syncRemoteAttunement,
     setInventoryError,
-    recordCombatRoll,
     recordRollResult,
     syncRemoteActionExecution,
   ]);

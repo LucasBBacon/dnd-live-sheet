@@ -187,26 +187,6 @@ describe("useCharacterSheetStore hp trigger handling", () => {
     compileSpy.mockRestore();
   });
 
-  it("adds incoming combat roll payloads to the latest roll log", () => {
-    const store = useCharacterSheetStore.getState();
-
-    store.recordCombatRoll({
-      characterId: "char_1",
-      attackName: "Longsword",
-      attackBonus: 5,
-      damageExpression: "1d8 + 3 slashing",
-      slot: "main_hand",
-      requiresAmmo: false,
-      timestamp: Date.now(),
-    });
-
-    const state = useCharacterSheetStore.getState();
-    expect(state.latestRollResults).toHaveLength(1);
-    expect(state.latestRollResults[0]?.target).toBe("ATTACK_ROLL");
-    expect(state.latestRollResults[0]?.total).toBe(5);
-    expect(state.latestRollResults[0]?.label).toBe("Longsword");
-  });
-
   it("appends authored roll-result broadcasts to the latest roll log", () => {
     const store = useCharacterSheetStore.getState();
 
@@ -231,18 +211,8 @@ describe("useCharacterSheetStore hp trigger handling", () => {
     expect(state.latestRollResults[0]?.damageType).toBe("slashing");
   });
 
-  it("keeps mixed combat and authored roll entries in a single capped log", () => {
+  it("keeps authored roll entries in a single capped log", () => {
     const store = useCharacterSheetStore.getState();
-
-    store.recordCombatRoll({
-      characterId: "char_1",
-      attackName: "Longsword",
-      attackBonus: 5,
-      damageExpression: "1d8 + 3 slashing",
-      slot: "main_hand",
-      requiresAmmo: false,
-      timestamp: Date.now(),
-    });
 
     store.recordRollResult({
       characterId: "char_1",
@@ -259,9 +229,8 @@ describe("useCharacterSheetStore hp trigger handling", () => {
     });
 
     const state = useCharacterSheetStore.getState();
-    expect(state.latestRollResults).toHaveLength(2);
-    expect(state.latestRollResults[0]?.target).toBe("ATTACK_ROLL");
-    expect(state.latestRollResults[1]?.target).toBe("DAMAGE_ROLL");
+    expect(state.latestRollResults).toHaveLength(1);
+    expect(state.latestRollResults[0]?.target).toBe("DAMAGE_ROLL");
   });
 
   it("applies authored dice rules from traits while dispatching runtime events", () => {

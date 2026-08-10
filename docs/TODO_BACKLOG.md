@@ -117,7 +117,7 @@ Neither is a small fix — they change what a `RuntimeModifier` can address.
 | # | Item | Location | Missing concept |
 | --- | --- | --- | --- |
 | 23 | Fighting Style: Protection | [fightingStyleDictionary.ts:114](packages/engine/src/rules/traits/fightingStyleDictionary.ts:114) | Reactions targeting *another creature's* roll |
-| 24 | Fighting Style: Two-Weapon Fighting | [fightingStyleDictionary.ts:128](packages/engine/src/rules/traits/fightingStyleDictionary.ts:128) | Implemented via hand-aware damage modifiers and a governing-stat modifier source |
+| 24 | ✅ Resolved | [fightingStyleDictionary.ts:128](packages/engine/src/rules/traits/fightingStyleDictionary.ts:128) | Implemented via hand-aware damage modifiers and a governing-stat modifier source |
 
 ---
 
@@ -139,7 +139,7 @@ structural.
 
 1. **2c inventory (#18, #19)** — completed; the remaining feature work now sits in the polish and modifier-system buckets.
 2. **P3 remainder (#26, #29)** — the remaining correctness and visual polish items.
-3. **2e (#23, #24)** — a deliberate modifier-system redesign, now that the core runtime is in place.
+3. **2e (#23)** — the remaining deliberate modifier-system redesign, now that the core runtime is in place.
 4. **Typecheck / API drift cleanup** — keep this in parallel with the feature work, since it is the broadest remaining quality risk.
 
 
