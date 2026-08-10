@@ -6,6 +6,7 @@ import type {
   RuntimeModifier,
   WeaponDefinition,
 } from "@project/shared";
+import type { WeaponAttackContext } from "../../types/combat.js";
 
 const makeWeapon = (
   overrides: Partial<WeaponDefinition> = {},
@@ -53,6 +54,15 @@ const makeMod = (overrides: Partial<RuntimeModifier>): RuntimeModifier => ({
   sourceName: "Test Source",
   sourceOrigin: "item",
   isActive: true,
+  ...overrides,
+});
+
+const makeAttackContext = (
+  overrides: Partial<WeaponAttackContext> = {},
+): WeaponAttackContext => ({
+  hand: "main_hand",
+  attackUsage: "standard",
+  isTwoHandedGrip: false,
   ...overrides,
 });
 
@@ -488,12 +498,48 @@ describe("CombatEngine.calculateWeaponAttack - damage bonus and offhand rules", 
           value: 0,
           requiredStates: ["offhand_attack"],
           attackContext: "off_hand",
-          valueSource: "governing_stat_modifier",
+          valueSource: "attack_ability_modifier",
         } as RuntimeModifier),
       ],
       ["offhand_attack"],
     );
 
+    expect(result.damageExpression).toBe("1d6 +3 piercing");
+  });
+
+  it("honours explicit attack context without needing the offhand state", () => {
+    const result = CombatEngine.calculateWeaponAttack(
+      makeWeapon(),
+      makeScores({ STR: 16 }),
+      0,
+      [],
+      [
+        makeMod({
+          target: "DAMAGE_BONUS",
+          sourceName: "Two-Weapon Fighting",
+          value: 0,
+          attackContext: "off_hand",
+          valueSource: "attack_ability_modifier",
+        } as RuntimeModifier),
+      ],
+      [],
+      [],
+      false,
+      undefined,
+      makeAttackContext({
+        hand: "off_hand",
+        attackUsage: "two_weapon_bonus",
+      }),
+    );
+
+    expect(result.context).toMatchObject({
+      hand: "off_hand",
+      attackUsage: "two_weapon_bonus",
+    });
+    expect(result.breakdown.damage).toEqual([
+      "Offhand Damage (+0)",
+      "Two-Weapon Fighting (+3)",
+    ]);
     expect(result.damageExpression).toBe("1d6 +3 piercing");
   });
 

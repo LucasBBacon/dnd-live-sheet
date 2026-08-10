@@ -1,6 +1,15 @@
 import { describe, expect, it } from "vitest";
-import type { WeaponDefinition } from "@project/shared";
+import type { WeaponAttackContext, WeaponDefinition } from "@project/shared";
 import { WeaponSynthesizer } from "../weaponSynthesizer.js";
+
+const makeAttackContext = (
+  overrides: Partial<WeaponAttackContext> = {},
+): WeaponAttackContext => ({
+  hand: "main_hand",
+  attackUsage: "standard",
+  isTwoHandedGrip: false,
+  ...overrides,
+});
 
 describe("WeaponSynthesizer", () => {
   it("uses authored weapon ranges for ranged and thrown attacks", () => {
@@ -51,5 +60,39 @@ describe("WeaponSynthesizer", () => {
     }
     expect(thrownAction.effect.range).toBe(20);
     expect(thrownAction.effect.longRange).toBe(60);
+  });
+
+  it("marks an off-hand two-weapon attack as a bonus action and carries its context", () => {
+    const shortsword: WeaponDefinition = {
+      id: "item_weapon_shortsword",
+      name: "Shortsword",
+      category: "martial_melee",
+      damageDice: "1d6",
+      damageType: "piercing",
+      properties: ["light", "finesse"],
+      range: 5,
+    };
+
+    const action = WeaponSynthesizer.generateWeaponAction(
+      shortsword,
+      "DEX",
+      makeAttackContext({
+        hand: "off_hand",
+        attackUsage: "two_weapon_bonus",
+      }),
+    );
+
+    expect(action.id).toBe("action_weapon_item_weapon_shortsword_off_hand");
+    expect(action.name).toBe("Shortsword (Off-Hand)");
+    expect(action.activation).toBe("bonus_action");
+    expect(action.effect.type).toBe("attack");
+    if (action.effect.type !== "attack") {
+      throw new Error("Expected off-hand action to be an attack effect");
+    }
+    expect(action.effect.weaponContext).toEqual({
+      hand: "off_hand",
+      attackUsage: "two_weapon_bonus",
+      isTwoHandedGrip: false,
+    });
   });
 });

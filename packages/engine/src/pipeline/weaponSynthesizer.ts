@@ -1,4 +1,8 @@
-import type { ActionGrant, WeaponDefinition } from "@project/shared";
+import type {
+  ActionGrant,
+  WeaponAttackContext,
+  WeaponDefinition,
+} from "@project/shared";
 import type { Ability } from "../types/core.js";
 
 /**
@@ -16,7 +20,11 @@ export class WeaponSynthesizer {
   public static generateWeaponAction(
     weapon: WeaponDefinition,
     governingStat: Ability,
-    isTwoHandedGrip: boolean = false,
+    attackContext: WeaponAttackContext = {
+      hand: "main_hand",
+      attackUsage: "standard",
+      isTwoHandedGrip: false,
+    },
   ): ActionGrant {
     const isRanged =
       weapon.category === "martial_ranged" ||
@@ -31,17 +39,25 @@ export class WeaponSynthesizer {
     const maxRange = isRanged ? weapon.longRange : undefined;
 
     const damageDice =
-      isTwoHandedGrip && weapon.versatileDamageDice
+      attackContext.isTwoHandedGrip && weapon.versatileDamageDice
         ? weapon.versatileDamageDice
         : weapon.damageDice;
 
+    const isOffHandAttack = attackContext.hand === "off_hand";
+    const isTwoWeaponBonusAttack =
+      attackContext.attackUsage === "two_weapon_bonus";
+    const activation = isTwoWeaponBonusAttack ? "bonus_action" : "action";
+    const idSuffix = isOffHandAttack ? "_off_hand" : "";
+    const labelSuffix = isOffHandAttack ? " (Off-Hand)" : "";
+    const gripSuffix =
+      attackContext.isTwoHandedGrip && weapon.versatileDamageDice
+        ? " (Two-Handed)"
+        : "";
+
     return {
-      id: `action_weapon_${weapon.id}`,
-      // append grip status for UI clarity
-      name:
-        weapon.name +
-        (isTwoHandedGrip && weapon.versatileDamageDice ? " (Two-Handed)" : ""),
-      activation: "action",
+      id: `action_weapon_${weapon.id}${idSuffix}`,
+      name: `${weapon.name}${labelSuffix}${gripSuffix}`,
+      activation,
 
       // ammunition is drawn from the inventory, not from a charge pool, so it
       // travels on its own field. Routing it through consumesResource made
@@ -57,6 +73,7 @@ export class WeaponSynthesizer {
         attackStat: governingStat,
         range: baseRange,
         longRange: maxRange,
+        weaponContext: attackContext,
         damage: [
           {
             sourceName: weapon.name,
@@ -80,21 +97,32 @@ export class WeaponSynthesizer {
   public static generateThrownWeaponActions(
     weapon: WeaponDefinition,
     governingStat: Ability,
+    attackContext: WeaponAttackContext = {
+      hand: "main_hand",
+      attackUsage: "standard",
+      isTwoHandedGrip: false,
+    },
   ): ActionGrant[] {
     const actions: ActionGrant[] = [];
 
     // 1 - generate standard actions
-    actions.push(this.generateWeaponAction(weapon, governingStat, false));
+    actions.push(
+      this.generateWeaponAction(weapon, governingStat, attackContext),
+    );
 
     // 2 - generate alternate thrown action
     if (weapon.properties.includes("thrown")) {
       const thrownAction = this.generateWeaponAction(
         weapon,
         governingStat,
-        false,
+        attackContext,
       );
-      thrownAction.id = `action_weapon_${weapon.id}_thrown`;
+      thrownAction.id = `${thrownAction.id}_thrown`;
       thrownAction.name = `${weapon.name} (Thrown)`;
+
+      if (attackContext.hand === "off_hand") {
+        thrownAction.name += " (Off-Hand)";
+      }
 
       if (thrownAction.effect.type === "attack") {
         thrownAction.effect.attackType = "ranged_weapon"; // shift taxonomy for traits

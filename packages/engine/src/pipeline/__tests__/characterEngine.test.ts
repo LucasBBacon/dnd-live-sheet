@@ -496,6 +496,30 @@ describe("CharacterEngine.buildLiveSheet", () => {
     expect(longswordAction.effect.attackStat).toBe("STR");
   });
 
+  it("synthesizes an off-hand weapon action as a bonus action", () => {
+    const sheet = buildSheet(halfElfFighter(), [
+      { ...carried("item_weapon_longsword"), slot: "off_hand" },
+    ]);
+
+    const shortswordAction = sheet.actions.find(
+      (action) => action.id === "action_weapon_item_weapon_longsword_off_hand",
+    );
+
+    expect(shortswordAction).toBeDefined();
+    expect(shortswordAction?.activation).toBe("bonus_action");
+    expect(shortswordAction?.effect.type).toBe("attack");
+    if (shortswordAction?.effect.type !== "attack") {
+      throw new Error(
+        "Expected the off-hand synthesized action to be an attack effect",
+      );
+    }
+    expect(shortswordAction.effect.weaponContext).toEqual({
+      hand: "off_hand",
+      attackUsage: "two_weapon_bonus",
+      isTwoHandedGrip: false,
+    });
+  });
+
   it("includes authored dismiss actions from traits in the live sheet actions", () => {
     const save = halfElfFighter({
       race: {
@@ -528,7 +552,9 @@ describe("CharacterEngine.buildLiveSheet", () => {
       modifiers: [],
       grantedStates: ["actor_clockwork_toy"],
       kind: "summon",
-      summonEntities: [{ templateId: "actor_clockwork_toy", label: "Clockwork Toy" }],
+      summonEntities: [
+        { templateId: "actor_clockwork_toy", label: "Clockwork Toy" },
+      ],
     });
 
     const sheet = CharacterEngine.buildLiveSheet(

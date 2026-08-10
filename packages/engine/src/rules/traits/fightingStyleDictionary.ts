@@ -131,7 +131,7 @@ export const FIGHTING_STYLE_TRAITS: Record<string, TraitDefinition> = {
           target: "DAMAGE_BONUS",
           type: "add",
           value: 0,
-          valueSource: "governing_stat_modifier",
+          valueSource: "attack_ability_modifier",
           scalingFactor: "none",
           requiredStates: ["offhand_attack", "two_weapon_fighting_style"],
           forbiddenStates: [],

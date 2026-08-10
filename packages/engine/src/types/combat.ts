@@ -2,6 +2,8 @@ import type { HitDicePool } from "./resources.js";
 
 export type {
   WeaponCategory,
+  WeaponAttackContext,
+  WeaponAttackUsage,
   WeaponDefinition,
   WeaponProperty,
 } from "@project/shared";

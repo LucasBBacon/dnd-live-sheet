@@ -1,6 +1,7 @@
 import z from "zod";
 import {
   BaseModifierSchema,
+  ModifierAttackContextSchema,
   ModifierScalingSchema,
   ModifierTargetSchema,
 } from "./modifiers.js";
@@ -36,6 +37,14 @@ export const AttackTypeSchema = z.enum([
   "melee_spell",
   "ranged_spell",
 ]);
+
+export const WeaponAttackUsageSchema = z.enum(["standard", "two_weapon_bonus"]);
+
+export const WeaponAttackContextSchema = z.object({
+  hand: ModifierAttackContextSchema,
+  attackUsage: WeaponAttackUsageSchema,
+  isTwoHandedGrip: z.boolean().optional(),
+});
 
 export const ActionSaveSchema = z.object({
   targetStat: ModifierTargetSchema,
@@ -81,6 +90,7 @@ export const AttackEffectSchema = z.object({
   attackStat: ModifierTargetSchema,
   range: z.number().default(5),
   longRange: z.number().optional(),
+  weaponContext: WeaponAttackContextSchema.optional(),
   damage: z.array(DamageSegmentSchema),
 });
 
@@ -161,3 +171,5 @@ export const ActionGrantSchema = z.object({
 
 export type ActionGrant = z.infer<typeof ActionGrantSchema>;
 export type DamageSegment = z.infer<typeof DamageSegmentSchema>;
+export type WeaponAttackContext = z.infer<typeof WeaponAttackContextSchema>;
+export type WeaponAttackUsage = z.infer<typeof WeaponAttackUsageSchema>;

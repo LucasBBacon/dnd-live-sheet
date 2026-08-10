@@ -91,6 +91,18 @@ export const useCombat = () => {
         return owner === undefined || owner === item.id;
       });
 
+      const weaponAttackContext = {
+        hand:
+          item.slot === "off_hand"
+            ? ("off_hand" as const)
+            : ("main_hand" as const),
+        attackUsage:
+          item.slot === "off_hand"
+            ? ("two_weapon_bonus" as const)
+            : ("standard" as const),
+        isTwoHandedGrip: activeStates.includes("two_handed_grip"),
+      };
+
       // 5 - execute engine pipeline
       const derivedAttack = CombatEngine.calculateWeaponAttack(
         weaponDef,
@@ -100,6 +112,9 @@ export const useCombat = () => {
         applicableMods,
         activeStates,
         criticalHitModifiers,
+        false,
+        undefined,
+        weaponAttackContext,
       );
 
       // 6 - ammo logic

@@ -370,6 +370,15 @@ export class CharacterEngine {
       const weapon = resolveWeaponDefinition(instance.itemId, options.snapshot);
       if (!weapon) continue;
 
+      const weaponAttackContext = {
+        hand: instance.slot === "off_hand" ? ("off_hand" as const) : ("main_hand" as const),
+        attackUsage:
+          instance.slot === "off_hand"
+            ? ("two_weapon_bonus" as const)
+            : ("standard" as const),
+        isTwoHandedGrip: activeStates.includes("two_handed_grip"),
+      };
+
       const attackAnalysis = CombatEngine.calculateWeaponAttack(
         weapon,
         {
@@ -384,12 +393,26 @@ export class CharacterEngine {
         proficiencies,
         allModifiers,
         activeStates,
+        [],
+        false,
+        undefined,
+        weaponAttackContext,
       );
 
       const governingStat = attackAnalysis.breakdown.governingStat as Ability;
       const synthesizedActions = weapon.properties.includes("thrown")
-        ? WeaponSynthesizer.generateThrownWeaponActions(weapon, governingStat)
-        : [WeaponSynthesizer.generateWeaponAction(weapon, governingStat)];
+        ? WeaponSynthesizer.generateThrownWeaponActions(
+            weapon,
+            governingStat,
+            weaponAttackContext,
+          )
+        : [
+            WeaponSynthesizer.generateWeaponAction(
+              weapon,
+              governingStat,
+              weaponAttackContext,
+            ),
+          ];
 
       actions.push(...synthesizedActions);
     }

@@ -47,6 +47,7 @@ export const ModifierScalingSchema = z.enum([
 export const ModifierAttackContextSchema = z.enum(["main_hand", "off_hand"]);
 export const ModifierValueSourceSchema = z.enum([
   "fixed",
+  "attack_ability_modifier",
   "governing_stat_modifier",
   "cha_modifier",
 ]);

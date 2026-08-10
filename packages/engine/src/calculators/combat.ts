@@ -6,6 +6,7 @@ import type {
 } from "@project/shared";
 import { AbilityEngine } from "./abilities.js";
 import type { Ability } from "../types/core.js";
+import type { WeaponAttackContext } from "../types/combat.js";
 
 export interface DerivedAttack {
   weaponId: string;
@@ -14,6 +15,7 @@ export interface DerivedAttack {
   damageExpression: string; // e.g., '1d8 + 4'
   criticalDamageExpression: string; // e.g., '2d8 + 4'
   isProficient: boolean;
+  context: WeaponAttackContext;
   breakdown: {
     governingStat: string;
     attack: string[];
@@ -166,6 +168,42 @@ export class CombatEngine {
       : `${damageDiceExpression} ${totalDamageBonus > 0 ? "+" : ""}${totalDamageBonus} ${damageType}`;
   }
 
+  private static resolveAttackContext(
+    activeStates: string[],
+    attackContext?: WeaponAttackContext,
+  ): WeaponAttackContext {
+    if (attackContext) {
+      return {
+        ...attackContext,
+        isTwoHandedGrip:
+          attackContext.isTwoHandedGrip ??
+          activeStates.includes("two_handed_grip"),
+      };
+    }
+
+    const isOffhand = activeStates.includes("offhand_attack");
+
+    return {
+      hand: isOffhand ? "off_hand" : "main_hand",
+      attackUsage: isOffhand ? "two_weapon_bonus" : "standard",
+      isTwoHandedGrip: activeStates.includes("two_handed_grip"),
+    };
+  }
+
+  private static resolveModifierValue(
+    modifier: RuntimeModifier,
+    governingMod: number,
+  ): number {
+    if (
+      modifier.valueSource === "attack_ability_modifier" ||
+      modifier.valueSource === "governing_stat_modifier"
+    ) {
+      return governingMod;
+    }
+
+    return modifier.value;
+  }
+
   /**
    * Calculates the final attack matrix for a given equipped weapon.
    * @param weapon The weapon definition object containing properties and categories
@@ -177,6 +215,7 @@ export class CombatEngine {
    * @param criticalHitModifiers Optional list of critical-hit modifiers granted by traits
    * @param isCriticalHit Whether the attack being evaluated is a critical hit
    * @param attackType The attack classification that the modifier rules should match against
+   * @param attackContext Explicit hand and usage metadata for the requested attack
    * @returns A DerivedAttack object containing the calculated attack bonus, damage expression, and breakdown of contributing factors
    */
   public static calculateWeaponAttack(
@@ -193,7 +232,13 @@ export class CombatEngine {
       | "ranged_weapon"
       | "melee_spell"
       | "ranged_spell",
+    attackContext?: WeaponAttackContext,
   ): DerivedAttack {
+    const resolvedContext = this.resolveAttackContext(
+      activeStates,
+      attackContext,
+    );
+
     // 1 - resolve governing stat
     const { statName, mod: governingMod } = this.determineGoverningModifier(
       weapon,
@@ -226,10 +271,7 @@ export class CombatEngine {
 
       if (m.attackContext === undefined) return true;
 
-      const requestIsOffhand = activeStates.includes("offhand_attack");
-      return requestIsOffhand
-        ? m.attackContext === "off_hand"
-        : m.attackContext === "main_hand";
+      return m.attackContext === resolvedContext.hand;
     });
 
     // 3 - calculate attack bonus
@@ -255,10 +297,17 @@ export class CombatEngine {
     const damageBreakdown: string[] = [];
 
     // 5e rule - offhand attacks don't add positive stat mods to damage unless TWF style
-    const isOffhand = activeStates.includes("offhand_attack");
+    const isOffhand = resolvedContext.hand === "off_hand";
+    const isTwoWeaponBonusAttack =
+      resolvedContext.attackUsage === "two_weapon_bonus";
     const hasTWFStyle = activeStates.includes("two_weapon_fighting_style");
 
-    if (isOffhand && !hasTWFStyle && baseDamageBonus > 0) {
+    if (
+      isOffhand &&
+      isTwoWeaponBonusAttack &&
+      !hasTWFStyle &&
+      baseDamageBonus > 0
+    ) {
       baseDamageBonus = 0;
       damageBreakdown.push(`Offhand Damage (+0)`);
     } else {
@@ -270,10 +319,7 @@ export class CombatEngine {
     let totalDamageBonus = baseDamageBonus;
 
     for (const mod of damageMods) {
-      const bonusValue =
-        mod.valueSource === "governing_stat_modifier"
-          ? governingMod
-          : mod.value;
+      const bonusValue = this.resolveModifierValue(mod, governingMod);
 
       totalDamageBonus += bonusValue;
       damageBreakdown.push(
@@ -282,7 +328,7 @@ export class CombatEngine {
     }
 
     // determine based dice (versatile check)
-    const isTwoHandedGrip = activeStates.includes("two_handed_grip");
+    const isTwoHandedGrip = resolvedContext.isTwoHandedGrip ?? false;
     const hasVersatile =
       weapon.properties.includes("versatile") && weapon.versatileDamageDice;
     const finalDice =
@@ -333,6 +379,7 @@ export class CombatEngine {
       damageExpression,
       criticalDamageExpression,
       isProficient,
+      context: resolvedContext,
       breakdown: {
         governingStat: statName,
         attack: attackBreakdown,
