@@ -8,6 +8,8 @@ const mocks = vi.hoisted(() => ({
   consumeItem: vi.fn(),
   executeActorAction: vi.fn(),
   executeCharacterAction: vi.fn(),
+  recordRollResult: vi.fn(),
+  requestRoll: vi.fn(),
   selectActorInstance: vi.fn(),
 }));
 
@@ -43,6 +45,11 @@ vi.mock("../../../hooks/useCombat", () => ({
   }),
 }));
 
+vi.mock("../../../store/rollStore", () => ({
+  useRollStore: (selector: (state: { requestRoll: typeof mocks.requestRoll }) => unknown) =>
+    selector({ requestRoll: mocks.requestRoll }),
+}));
+
 const actorAction: ActionGrant = {
   id: "action_actor_clockwork_toy_scuttle",
   name: "Scuttle",
@@ -73,12 +80,31 @@ const actor: ActorInstance = {
 const storeState = {
   id: "char_1",
   consumeItem: mocks.consumeItem,
+  inventory: [
+    {
+      id: "inv_shield",
+      itemId: "item_armor_shield",
+      quantity: 1,
+      slot: "off_hand",
+      isAttuned: false,
+    },
+  ],
   latestRollResults: [],
+  recordRollResult: mocks.recordRollResult,
+  ruleSnapshot: null,
   runtimeEffects: {
     getActiveActors: () => [actor],
   },
   selectedActorInstanceId: actor.instanceId,
   selectActorInstance: mocks.selectActorInstance,
+  traitGrants: [
+    {
+      id: "grant_protection",
+      traitId: "trait_fs_protection",
+      source: "test",
+    },
+  ],
+  traits: [],
   executeActorAction: mocks.executeActorAction,
   getCharacterActions: () => [
     {
@@ -100,6 +126,59 @@ vi.mock("../../../store/characterSheetStore", () => ({
 }));
 
 describe("CombatWidget", () => {
+  it("renders the Protection helper and records a manual enemy attack result", async () => {
+    mocks.requestRoll.mockResolvedValueOnce(11);
+
+    const container = document.createElement("div");
+    document.body.appendChild(container);
+    const root = createRoot(container);
+
+    await act(async () => {
+      root.render(<CombatWidget />);
+    });
+
+    expect(container.textContent).toContain("Reaction helper");
+    expect(container.textContent).toContain("Fighting Style: Protection");
+    expect(container.textContent).toContain("Shield equipped");
+
+    const button = Array.from(container.querySelectorAll("button")).find(
+      (candidate) => candidate.textContent === "Use Protection",
+    );
+
+    expect(button).toBeDefined();
+
+    await act(async () => {
+      button?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    });
+
+    expect(mocks.requestRoll).toHaveBeenCalledWith(
+      "1d20",
+      "Enter the enemy attack total after applying Protection disadvantage.",
+      {
+        mode: "manual_total",
+        targetLabel: "Enemy attack total",
+        allowDigitalRoll: false,
+        manualPlaceholder: "Attack total...",
+        submitLabel: "Record",
+      },
+    );
+    expect(mocks.recordRollResult).toHaveBeenCalledWith(
+      expect.objectContaining({
+        rollResults: [
+          expect.objectContaining({
+            total: 11,
+            target: "ATTACK_ROLL",
+            label: "Fighting Style: Protection",
+            summary: "Manual disadvantaged enemy attack total",
+          }),
+        ],
+      }),
+    );
+
+    root.unmount();
+    container.remove();
+  });
+
   it("renders actor and character action panels and executes actor action on click", async () => {
     const container = document.createElement("div");
     document.body.appendChild(container);

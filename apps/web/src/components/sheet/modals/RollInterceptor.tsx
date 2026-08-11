@@ -6,8 +6,6 @@ export const RollInterceptor = () => {
   const { pendingRoll, fulfillRoll, cancelRoll } = useRollStore();
   const [manualInput, setManualInput] = useState<string>("");
 
-  console.log(pendingRoll);
-
   if (!pendingRoll) return null;
 
   const handleDigitalRoll = () => {
@@ -20,8 +18,6 @@ export const RollInterceptor = () => {
     const result = parseInt(manualInput, 10);
     if (!isNaN(result)) fulfillRoll(result);
   };
-
-  console.log("Called!");
 
   return (
     <div className="fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center z-[100] font-mono">
@@ -36,32 +32,36 @@ export const RollInterceptor = () => {
             Target
           </span>
           <span className="text-3xl font-extrabold text-gray-900">
-            {pendingRoll.expression}
+            {pendingRoll.targetLabel}
           </span>
         </div>
 
         <div className="flex flex-col gap-4">
-          <button
-            onClick={handleDigitalRoll}
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded shadow"
-          >
-            Roll Digitally
-          </button>
+          {pendingRoll.allowDigitalRoll && (
+            <>
+              <button
+                onClick={handleDigitalRoll}
+                className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded shadow"
+              >
+                Roll Digitally
+              </button>
 
-          <div className="relative flex py-2 items-center">
-            <div className="flex-grow border-t border-gray-300"></div>
-            <span className="flex-shrink-0 mx-4 text-gray-400 text-xs font-bold uppercase">
-              Or Physical Roll
-            </span>
-            <div className="flex-grow border-t border-gray-300"></div>
-          </div>
+              <div className="relative flex py-2 items-center">
+                <div className="flex-grow border-t border-gray-300"></div>
+                <span className="flex-shrink-0 mx-4 text-gray-400 text-xs font-bold uppercase">
+                  Or Physical Roll
+                </span>
+                <div className="flex-grow border-t border-gray-300"></div>
+              </div>
+            </>
+          )}
 
           <form onSubmit={handlePhysicalRoll} className="flex gap-2">
             <input
               type="number"
               value={manualInput}
               onChange={(e) => setManualInput(e.target.value)}
-              placeholder="Total..."
+              placeholder={pendingRoll.manualPlaceholder}
               className="flex-grow border-2 border-gray-300 p-2 rounded text-center font-bold"
               autoFocus
             />
@@ -70,7 +70,7 @@ export const RollInterceptor = () => {
               disabled={!manualInput}
               className="bg-gray-800 hover:bg-gray-900 text-white font-bold px-4 rounded disabled:opacity-50"
             >
-              Submit
+              {pendingRoll.submitLabel}
             </button>
           </form>
         </div>

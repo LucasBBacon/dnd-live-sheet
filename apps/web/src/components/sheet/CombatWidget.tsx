@@ -1,15 +1,35 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import { TRAIT_DICTIONARY, resolveItemDefinition } from "@project/engine";
 import { useEffect, useState, type MouseEvent } from "react";
 import { useCombat } from "../../hooks/useCombat";
 import { useCharacterSheetStore } from "../../store/characterSheetStore";
+import { useRollStore } from "../../store/rollStore";
+
+const PROTECTION_TRAIT_ID = "trait_fs_protection";
+
+const hasProtectionTrait = (
+  traits: Array<{ id: string }>,
+  traitGrants: Array<{ traitId: string }>,
+) => {
+  return (
+    traits.some((trait) => trait.id === PROTECTION_TRAIT_ID) ||
+    traitGrants.some((grant) => grant.traitId === PROTECTION_TRAIT_ID)
+  );
+};
 
 export const CombatWidget = () => {
   const { attacks } = useCombat();
+  const requestRoll = useRollStore((state) => state.requestRoll);
 
   const consumeItem = useCharacterSheetStore((state) => state.consumeItem);
+  const traits = useCharacterSheetStore((state) => state.traits);
+  const traitGrants = useCharacterSheetStore((state) => state.traitGrants);
+  const inventory = useCharacterSheetStore((state) => state.inventory);
+  const ruleSnapshot = useCharacterSheetStore((state) => state.ruleSnapshot);
   const latestRollResults = useCharacterSheetStore(
     (state) => state.latestRollResults,
   );
+  const recordRollResult = useCharacterSheetStore((state) => state.recordRollResult);
   const runtimeEffects = useCharacterSheetStore(
     (state) => state.runtimeEffects,
   );
@@ -32,6 +52,14 @@ export const CombatWidget = () => {
   const characterActions = getCharacterActions().filter(
     (action) => !action.id.startsWith("action_weapon_"),
   );
+  const protectionTrait = TRAIT_DICTIONARY[PROTECTION_TRAIT_ID];
+  const protectionAvailable = hasProtectionTrait(traits, traitGrants);
+  const hasEquippedShield = inventory.some((item) => {
+    if (item.slot !== "off_hand") return false;
+
+    const definition = resolveItemDefinition(item.itemId, ruleSnapshot ?? undefined);
+    return definition?.type === "armor" && definition.equipSlot === "off_hand";
+  });
   const selectedActor =
     activeActors.find(
       (actor) => actor.instanceId === selectedActorInstanceId,
@@ -86,8 +114,77 @@ export const CombatWidget = () => {
     executeCharacterAction(attack.actionId);
   };
 
+  const handleProtection = async () => {
+    try {
+      const total = await requestRoll(
+        "1d20",
+        "Enter the enemy attack total after applying Protection disadvantage.",
+        {
+          mode: "manual_total",
+          targetLabel: "Enemy attack total",
+          allowDigitalRoll: false,
+          manualPlaceholder: "Attack total...",
+          submitLabel: "Record",
+        },
+      );
+
+      recordRollResult({
+        characterId: "",
+        rollResults: [
+          {
+            total,
+            rolls: [total],
+            modifier: 0,
+            target: "ATTACK_ROLL",
+            label: protectionTrait?.name,
+            summary: "Manual disadvantaged enemy attack total",
+          },
+        ],
+        timestamp: Date.now(),
+      });
+    } catch {
+      return;
+    }
+  };
+
   return (
     <div className="flex flex-col gap-3">
+      {protectionAvailable && (
+        <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-3">
+          <div className="mb-2 text-[11px] font-semibold uppercase tracking-[0.2em] text-emerald-700">
+            Reaction helper
+          </div>
+          <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+            <div className="max-w-2xl">
+              <div className="text-sm font-semibold text-emerald-950">
+                {protectionTrait?.name ?? "Protection"}
+              </div>
+              <p className="mt-1 text-xs leading-5 text-emerald-900">
+                {protectionTrait?.description}
+              </p>
+              <p className="mt-2 text-xs text-emerald-800">
+                Record the enemy attack total after disadvantage is applied at the table.
+              </p>
+            </div>
+            <div className="flex flex-col items-start gap-2 md:items-end">
+              <button
+                type="button"
+                onClick={() => {
+                  void handleProtection();
+                }}
+                disabled={!hasEquippedShield}
+                className="rounded bg-emerald-700 px-3 py-2 text-xs font-semibold uppercase tracking-wide text-white hover:bg-emerald-800 disabled:cursor-not-allowed disabled:bg-emerald-200 disabled:text-emerald-700"
+              >
+                Use Protection
+              </button>
+              <span className="text-[11px] uppercase tracking-[0.18em] text-emerald-700">
+                {hasEquippedShield ? "Shield equipped" : "Equip a shield in your off hand"}
+              </span>
+            </div>
+          </div>
+        </div>
+      )}
+
       {characterActions.length > 0 && (
         <div className="rounded-xl border border-amber-200 bg-amber-50 p-3">
           <div className="mb-2 text-[11px] font-semibold uppercase tracking-[0.2em] text-amber-700">

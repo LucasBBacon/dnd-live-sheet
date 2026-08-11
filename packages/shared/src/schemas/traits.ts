@@ -14,6 +14,12 @@ import { CriticalHitModifierSchema, DiceRuleSchema } from "./dice.js";
 import { ActionGrantSchema } from "./actions.js";
 import { SpellGrantBlockSchema } from "./spells.js";
 
+export const TraitImplementationMetadataSchema = z.object({
+  mode: z.enum(["engine", "manual_sheet_helper"]),
+  summary: z.string(),
+  blockedBy: z.array(z.string()).default([]),
+});
+
 export const TraitDefinitionSchema = z.object({
   id: z.string(),
   name: z.string(),
@@ -57,6 +63,10 @@ export const TraitDefinitionSchema = z.object({
   // spells). Resource-limited entries point at an id in `resources` below.
   spells: SpellGrantBlockSchema.optional(),
 
+  // Optional delivery metadata for rules that are intentionally surfaced as a
+  // sheet helper rather than a fully engine-driven behaviour.
+  implementation: TraitImplementationMetadataSchema.optional(),
+
   // reactive blocks
   resources: z.array(ResourceGrantSchema).default([]),
   triggers: z.array(TriggerGrantSchema).default([]),
@@ -68,6 +78,9 @@ export const TraitDefinitionSchema = z.object({
 });
 
 export type TraitDefinition = z.infer<typeof TraitDefinitionSchema>;
+export type TraitImplementationMetadata = z.infer<
+  typeof TraitImplementationMetadataSchema
+>;
 
 export const ResolvedTraitChoiceSchema = z.object({
   traitId: z.string(),

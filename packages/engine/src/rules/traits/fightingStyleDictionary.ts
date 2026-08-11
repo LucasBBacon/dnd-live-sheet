@@ -111,6 +111,12 @@ export const FIGHTING_STYLE_TRAITS: Record<string, TraitDefinition> = {
     name: "Fighting Style: Protection",
     description:
       "When a creature you can see attacks a target other than you that is within 5 feet of you, you can use your reaction to impose disadvantage on the attack roll. You must be wielding a shield.",
+    implementation: {
+      mode: "manual_sheet_helper",
+      summary:
+        "Phase 1 keeps Protection as a sheet-level reaction helper for tabletop play rather than forcing a target-aware enemy model into the engine.",
+      blockedBy: ["other_creature_attack_roll_targeting"],
+    },
     // TODO: needs a reaction that targets someone else's attack roll; neither
     // triggers nor actions can point at another creature's roll yet.
     modifiers: { fixed: [], choices: [] },

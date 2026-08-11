@@ -1,15 +1,32 @@
 import { create } from "zustand";
 
+export interface RollRequestOptions {
+  mode?: "dice_expression" | "manual_total";
+  targetLabel?: string;
+  allowDigitalRoll?: boolean;
+  manualPlaceholder?: string;
+  submitLabel?: string;
+}
+
 interface PendingRoll {
   expression: string;
   reason: string;
+  mode: "dice_expression" | "manual_total";
+  targetLabel: string;
+  allowDigitalRoll: boolean;
+  manualPlaceholder: string;
+  submitLabel: string;
   resolve: (value: number) => void;
   reject: (reason?: unknown) => void;
 }
 
 interface RollStoreState {
   pendingRoll: PendingRoll | null;
-  requestRoll: (expression: string, reason: string) => Promise<number>;
+  requestRoll: (
+    expression: string,
+    reason: string,
+    options?: RollRequestOptions,
+  ) => Promise<number>;
   fulfillRoll: (result: number) => void;
   cancelRoll: () => void;
 }
@@ -17,10 +34,21 @@ interface RollStoreState {
 export const useRollStore = create<RollStoreState>((set, get) => ({
   pendingRoll: null,
 
-  requestRoll: (expression, reason) => {
+  requestRoll: (expression, reason, options) => {
     return new Promise((resolve, reject) => {
-      // mount interceptor UI and store the promise resolver
-      set({ pendingRoll: { expression, reason, resolve, reject } });
+      set({
+        pendingRoll: {
+          expression,
+          reason,
+          mode: options?.mode ?? "dice_expression",
+          targetLabel: options?.targetLabel ?? expression,
+          allowDigitalRoll: options?.allowDigitalRoll ?? true,
+          manualPlaceholder: options?.manualPlaceholder ?? "Total...",
+          submitLabel: options?.submitLabel ?? "Submit",
+          resolve,
+          reject,
+        },
+      });
     });
   },
 
