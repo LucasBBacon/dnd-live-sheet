@@ -1,6 +1,11 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useWizardStore } from "../../../store/wizardStore";
-import { describeStartingEquipmentGrant } from "../../../utils/startingEquipment";
+import {
+  buildStartingEquipmentCategoryKey,
+  describeStartingEquipmentGrant,
+  resolveCategoryGrant,
+} from "../../../utils/startingEquipment";
+import { StartingEquipmentCategoryPicker } from "../equipment/StartingEquipmentCategoryPicker";
 import { CustomBackgroundBuilder } from "./CustomBackgroundBuilder";
 
 export const BackgroundDetailView = ({
@@ -14,6 +19,13 @@ export const BackgroundDetailView = ({
   const updatePersonality = useWizardStore((state) => state.updatePersonality);
   const setAlignment = useWizardStore((state) => state.setAlignment);
   const alignment = useWizardStore((state) => state.alignment);
+  const campaignId = useWizardStore((state) => state.campaignId);
+  const selectedCategoryChoices = useWizardStore(
+    (state) => state.selectedEquipmentCategoryChoices,
+  );
+  const setCategoryChoice = useWizardStore(
+    (state) => state.setEquipmentCategoryChoice,
+  );
 
   const activeBg = backgrounds.find((b) => b.id === bgId);
 
@@ -82,7 +94,45 @@ export const BackgroundDetailView = ({
                       {activeBg.startingEquipment.given.map(
                         (grant: any, index: number) => (
                           <li key={`${grant.refId}-${index}`}>
-                            {describeStartingEquipmentGrant(grant)}
+                            {describeStartingEquipmentGrant(
+                              resolveCategoryGrant(
+                                grant,
+                                buildStartingEquipmentCategoryKey(
+                                  "background-given",
+                                  index,
+                                ),
+                                selectedCategoryChoices,
+                              ),
+                            )}
+                            {grant.kind === "category" && (
+                              <StartingEquipmentCategoryPicker
+                                campaignId={campaignId}
+                                categoryGrant={grant}
+                                selectedGrant={(() => {
+                                  const resolvedGrant = resolveCategoryGrant(
+                                    grant,
+                                    buildStartingEquipmentCategoryKey(
+                                      "background-given",
+                                      index,
+                                    ),
+                                    selectedCategoryChoices,
+                                  );
+
+                                  return resolvedGrant.kind === "category"
+                                    ? null
+                                    : resolvedGrant;
+                                })()}
+                                onChange={(nextGrant) =>
+                                  setCategoryChoice(
+                                    buildStartingEquipmentCategoryKey(
+                                      "background-given",
+                                      index,
+                                    ),
+                                    nextGrant,
+                                  )
+                                }
+                              />
+                            )}
                           </li>
                         ),
                       )}

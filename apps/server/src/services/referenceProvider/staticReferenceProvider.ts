@@ -299,6 +299,7 @@ export class StaticReferenceProvider implements ReferenceProvider {
         name: background.name,
         featureName: background.featureName,
         featureDescription: background.featureDescription,
+        startingEquipment: background.startingEquipment,
         ideals: background.ideals,
         bonds: background.bonds,
         flaws: background.flaws,

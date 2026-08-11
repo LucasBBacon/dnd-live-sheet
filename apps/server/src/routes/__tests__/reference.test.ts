@@ -1,6 +1,64 @@
-import { describe, expect, it, vi } from "vitest";
+import express from "express";
+import request from "supertest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import { globalErrorHandler } from "../../middleware/errorHandler.js";
+
+const setupReferenceApp = async (
+  providerOverrides: Record<string, unknown>,
+) => {
+  vi.resetModules();
+
+  const provider = {
+    source: "static",
+    warm: vi.fn(),
+    getRaces: vi.fn().mockResolvedValue([]),
+    getClasses: vi.fn().mockResolvedValue([]),
+    getFeats: vi.fn().mockResolvedValue([]),
+    getLevelUpOptions: vi.fn().mockResolvedValue({}),
+    getSubclasses: vi.fn().mockResolvedValue([]),
+    getClassTimeline: vi.fn().mockResolvedValue([]),
+    getBackgrounds: vi.fn().mockResolvedValue([]),
+    getTraits: vi.fn().mockResolvedValue([]),
+    getTraitById: vi.fn().mockResolvedValue(null),
+    getVersion: vi.fn().mockResolvedValue({ version: 1, loadedAt: 1 }),
+    searchItems: vi.fn().mockResolvedValue({ rows: [], total: 0 }),
+    getRulesSnapshot: vi.fn().mockResolvedValue({
+      version: 1,
+      loadedAt: 1,
+      snapshot: {
+        itemsById: {},
+        weaponsById: {},
+        resourcesById: {},
+        traitsById: {},
+      },
+    }),
+    ...providerOverrides,
+  };
+
+  vi.doMock("../../services/referenceProvider/index.js", () => ({
+    getReferenceProvider: () => provider,
+  }));
+
+  vi.doMock("../../services/campaignAccess.js", () => ({
+    getHeaderOrAuthUserId: vi.fn().mockReturnValue("test-user"),
+    isUserCampaignMember: vi.fn().mockResolvedValue(true),
+  }));
+
+  const { default: referenceRoutes } = await import("../reference.js");
+
+  const app = express();
+  app.use(express.json());
+  app.use("/api/reference", referenceRoutes);
+  app.use(globalErrorHandler);
+
+  return { app, provider };
+};
 
 describe("Reference Routes", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
   describe("GET /api/reference/races", () => {
     it("returns array of races with traits", () => {
       const mockRace = {
@@ -102,6 +160,46 @@ describe("Reference Routes", () => {
 
       expect(mockClass.hd).toBe(6);
       expect(Array.isArray(mockClass.savingThrowProficiencies)).toBe(true);
+    });
+
+    it("returns starting equipment on fetched class payloads", async () => {
+      const { app } = await setupReferenceApp({
+        getClasses: vi.fn().mockResolvedValue([
+          {
+            id: "class_fighter",
+            name: "Fighter",
+            hitDie: 10,
+            subclassRequirementLevel: 3,
+            startingEquipment: {
+              given: [
+                {
+                  kind: "item",
+                  refId: "item_armor_chain_mail",
+                  quantity: 1,
+                },
+              ],
+              choices: [],
+            },
+            lore: { shortDescription: "Martial class" },
+            sourceType: "core",
+            ownerCharacterId: null,
+          },
+        ]),
+      });
+
+      const response = await request(app).get("/api/reference/classes");
+
+      expect(response.status).toBe(200);
+      expect(response.body.classes[0].startingEquipment).toEqual({
+        given: [
+          {
+            kind: "item",
+            refId: "item_armor_chain_mail",
+            quantity: 1,
+          },
+        ],
+        choices: [],
+      });
     });
   });
 
@@ -364,6 +462,51 @@ describe("Reference Routes", () => {
       };
 
       expect(background.traits).toHaveLength(3);
+    });
+
+    it("returns starting equipment on fetched background payloads", async () => {
+      const { app } = await setupReferenceApp({
+        getBackgrounds: vi.fn().mockResolvedValue([
+          {
+            id: "background_acolyte",
+            name: "Acolyte",
+            featureName: "Shelter of the Faithful",
+            featureDescription: "Temple support",
+            startingEquipment: {
+              given: [
+                {
+                  kind: "category",
+                  refId: "category_holy_symbol",
+                  quantity: 1,
+                },
+              ],
+              choices: [],
+            },
+            ideals: [],
+            bonds: [],
+            flaws: [],
+            personalityTraits: [],
+            lore: { shortDescription: "Temple servant" },
+            traits: [],
+            sourceType: "core",
+            ownerCharacterId: null,
+          },
+        ]),
+      });
+
+      const response = await request(app).get("/api/reference/backgrounds");
+
+      expect(response.status).toBe(200);
+      expect(response.body.backgrounds[0].startingEquipment).toEqual({
+        given: [
+          {
+            kind: "category",
+            refId: "category_holy_symbol",
+            quantity: 1,
+          },
+        ],
+        choices: [],
+      });
     });
   });
 

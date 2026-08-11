@@ -1,5 +1,25 @@
 import type { WizardState } from "../store/wizardStore";
-import type { CreateCharacterPayload, StartingEquipmentGrant } from "@project/shared";
+import type {
+  CreateCharacterPayload,
+  StartingEquipmentGrant,
+} from "@project/shared";
+import {
+  buildStartingEquipmentCategoryKey,
+  resolveCategoryGrant,
+} from "./startingEquipment";
+
+const resolveTopLevelGrants = (
+  grants: StartingEquipmentGrant[],
+  state: WizardState,
+  scope: "class-given" | "background-given",
+): StartingEquipmentGrant[] =>
+  grants.map((grant, grantIndex) =>
+    resolveCategoryGrant(
+      grant,
+      buildStartingEquipmentCategoryKey(scope, grantIndex),
+      state.selectedEquipmentCategoryChoices,
+    ),
+  );
 
 export const compileCharacterPayload = (
   state: WizardState,
@@ -9,10 +29,18 @@ export const compileCharacterPayload = (
   ).flat() as StartingEquipmentGrant[];
 
   const compiledEquipment = [
-    ...state.classStartingEquipment.given,
+    ...resolveTopLevelGrants(
+      state.classStartingEquipment.given,
+      state,
+      "class-given",
+    ),
     ...selectedClassEquipment,
     ...(state.backgroundType === "PRESET"
-      ? state.presetBackgroundStartingEquipment.given
+      ? resolveTopLevelGrants(
+          state.presetBackgroundStartingEquipment.given,
+          state,
+          "background-given",
+        )
       : []),
   ];
 

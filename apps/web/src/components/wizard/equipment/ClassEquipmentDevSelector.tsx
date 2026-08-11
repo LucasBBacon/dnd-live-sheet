@@ -1,28 +1,55 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+import type {
+  StartingEquipmentDefinition,
+  StartingEquipmentGrant,
+} from "@project/shared";
 import {
   useWizardStore,
   type WizardEquipmentChoice,
 } from "../../../store/wizardStore";
-import { describeStartingEquipmentGrant } from "../../../utils/startingEquipment";
+import {
+  buildStartingEquipmentCategoryKey,
+  describeStartingEquipmentGrant,
+  resolveCategoryGrant,
+} from "../../../utils/startingEquipment";
+import { StartingEquipmentCategoryPicker } from "./StartingEquipmentCategoryPicker";
+
+const resolveBundle = (
+  bundle: StartingEquipmentGrant[],
+  groupIndex: number,
+  optionIndex: number,
+  categoryChoices: Record<string, WizardEquipmentChoice>,
+): WizardEquipmentChoice[] =>
+  bundle.map((grant, grantIndex) =>
+    resolveCategoryGrant(
+      grant,
+      buildStartingEquipmentCategoryKey(
+        "class-choice",
+        grantIndex,
+        groupIndex,
+        optionIndex,
+      ),
+      categoryChoices,
+    ),
+  );
 
 export const ClassEquipmentDevSelector = ({
   startingEquipment,
 }: {
-  startingEquipment: any;
+  startingEquipment: StartingEquipmentDefinition;
 }) => {
-  const selectedChoices = useWizardStore(
-    (state) => state.selectedClassEquipmentChoices,
+  const campaignId = useWizardStore((state) => state.campaignId);
+  const selectedOptionIndices = useWizardStore(
+    (state) => state.selectedClassEquipmentOptionIndices,
+  );
+  const selectedCategoryChoices = useWizardStore(
+    (state) => state.selectedEquipmentCategoryChoices,
+  );
+  const setCategoryChoice = useWizardStore(
+    (state) => state.setEquipmentCategoryChoice,
   );
   const setChoice = useWizardStore((state) => state.setClassEquipmentChoice);
 
-  if (!startingEquipment) return null;
-
   const { given, choices } = startingEquipment;
-
-  // helper to stringify items within an option bundle for readable dev labels
-  const getBundleLabel = (bundle: any[]) => {
-    return bundle.map(describeStartingEquipmentGrant).join(" AND ");
-  };
 
   return (
     <div
@@ -36,28 +63,49 @@ export const ClassEquipmentDevSelector = ({
         [DEV TEST] Starting Equipment Orchestrator
       </h3>
 
-      {/* Static/Guaranteed Item List */}
       <div
         style={{ background: "#eee", padding: "0.5rem", marginBottom: "1rem" }}
       >
         <strong>Guaranteed Grants:</strong>
         <ul style={{ margin: "0.5rem 0 0 0", paddingLeft: "1.5rem" }}>
-          {given?.map((item: any, idx: number) => (
-            <li key={idx}>{describeStartingEquipmentGrant(item)}</li>
-          ))}
+          {given.map((grant, grantIndex) => {
+            const categoryKey = buildStartingEquipmentCategoryKey(
+              "class-given",
+              grantIndex,
+            );
+            const resolvedGrant = resolveCategoryGrant(
+              grant,
+              categoryKey,
+              selectedCategoryChoices,
+            );
+
+            return (
+              <li key={categoryKey}>
+                {describeStartingEquipmentGrant(resolvedGrant)}
+                {grant.kind === "category" && (
+                  <StartingEquipmentCategoryPicker
+                    campaignId={campaignId}
+                    categoryGrant={grant}
+                    selectedGrant={
+                      resolvedGrant.kind === "category" ? null : resolvedGrant
+                    }
+                    onChange={(nextGrant) =>
+                      setCategoryChoice(categoryKey, nextGrant)
+                    }
+                  />
+                )}
+              </li>
+            );
+          })}
         </ul>
       </div>
 
-      {/* Manually exclusive choice groups  */}
-      {choices?.map((group: any, groupIdx: number) => {
-        // find if this group already has a selection mapped in state
-        const currentSelectionString = JSON.stringify(
-          selectedChoices[groupIdx] || [],
-        );
+      {choices.map((group, groupIndex) => {
+        const selectedOptionIndex = selectedOptionIndices[groupIndex];
 
         return (
           <div
-            key={groupIdx}
+            key={groupIndex}
             style={{
               border: "1px solid #999",
               padding: "0.5rem",
@@ -65,7 +113,7 @@ export const ClassEquipmentDevSelector = ({
             }}
           >
             <strong>
-              Choice Group #{groupIdx + 1} (Choose {group.choose}):
+              Choice Group #{groupIndex + 1} (Choose {group.choose}):
             </strong>
 
             <div
@@ -76,36 +124,102 @@ export const ClassEquipmentDevSelector = ({
                 gap: "0.25rem",
               }}
             >
-              {group.options.map((option: any, optionIdx: number) => {
-                // map custom data schema structure into unified store model
-                const storePayload: WizardEquipmentChoice[] =
-                  option.equipmentBundle.map((grant: any) => ({
-                    kind: grant.kind,
-                    refId: grant.refId,
-                    quantity: grant.quantity,
-                  }));
-
-                const isChecked =
-                  currentSelectionString === JSON.stringify(storePayload);
+              {group.options.map((option, optionIndex) => {
+                const resolvedBundle = resolveBundle(
+                  option.equipmentBundle,
+                  groupIndex,
+                  optionIndex,
+                  selectedCategoryChoices,
+                );
+                const isChecked = selectedOptionIndex === optionIndex;
 
                 return (
-                  <label
-                    key={optionIdx}
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "0.5rem",
-                      cursor: "pointer",
-                    }}
-                  >
-                    <input
-                      type="radio"
-                      name={`equipment-group-${groupIdx}`}
-                      checked={isChecked}
-                      onChange={() => setChoice(groupIdx, storePayload)}
-                    />
-                    <span>{getBundleLabel(option.equipmentBundle)}</span>
-                  </label>
+                  <div key={optionIndex}>
+                    <label
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "0.5rem",
+                        cursor: "pointer",
+                      }}
+                    >
+                      <input
+                        type="radio"
+                        name={`equipment-group-${groupIndex}`}
+                        checked={isChecked}
+                        onChange={() =>
+                          setChoice(groupIndex, optionIndex, resolvedBundle)
+                        }
+                      />
+                      <span>
+                        {resolvedBundle
+                          .map(describeStartingEquipmentGrant)
+                          .join(" AND ")}
+                      </span>
+                    </label>
+
+                    {isChecked &&
+                      option.equipmentBundle.map((grant, grantIndex) => {
+                        if (grant.kind !== "category") {
+                          return null;
+                        }
+
+                        const categoryKey = buildStartingEquipmentCategoryKey(
+                          "class-choice",
+                          grantIndex,
+                          groupIndex,
+                          optionIndex,
+                        );
+                        const resolvedGrant = resolveCategoryGrant(
+                          grant,
+                          categoryKey,
+                          selectedCategoryChoices,
+                        );
+
+                        return (
+                          <div
+                            key={categoryKey}
+                            style={{
+                              marginLeft: "1.5rem",
+                              marginTop: "0.5rem",
+                            }}
+                          >
+                            <StartingEquipmentCategoryPicker
+                              campaignId={campaignId}
+                              categoryGrant={grant}
+                              selectedGrant={
+                                resolvedGrant.kind === "category"
+                                  ? null
+                                  : resolvedGrant
+                              }
+                              onChange={(nextGrant) => {
+                                const nextCategoryChoices = {
+                                  ...selectedCategoryChoices,
+                                };
+
+                                if (nextGrant) {
+                                  nextCategoryChoices[categoryKey] = nextGrant;
+                                } else {
+                                  delete nextCategoryChoices[categoryKey];
+                                }
+
+                                setCategoryChoice(categoryKey, nextGrant);
+                                setChoice(
+                                  groupIndex,
+                                  optionIndex,
+                                  resolveBundle(
+                                    option.equipmentBundle,
+                                    groupIndex,
+                                    optionIndex,
+                                    nextCategoryChoices,
+                                  ),
+                                );
+                              }}
+                            />
+                          </div>
+                        );
+                      })}
+                  </div>
                 );
               })}
             </div>

@@ -1,6 +1,9 @@
+import express from "express";
+import request from "supertest";
 import { describe, expect, it, vi, beforeEach, afterAll } from "vitest";
 import { CreateCharacterPayloadSchema } from "@project/shared";
 import type { Request, Response } from "express";
+import { globalErrorHandler } from "../../middleware/errorHandler.js";
 
 describe("Character Routes", () => {
   const consoleErrorSpy = vi
@@ -104,9 +107,11 @@ describe("Character Routes", () => {
       values: vi.fn().mockResolvedValue(undefined),
     };
 
-    const transactionMock = vi.fn().mockImplementation(
-      async (callback: (trx: unknown) => Promise<unknown>) => callback(tx),
-    );
+    const transactionMock = vi
+      .fn()
+      .mockImplementation(
+        async (callback: (trx: unknown) => Promise<unknown>) => callback(tx),
+      );
 
     const effectiveReferenceMock = vi.fn().mockResolvedValue({
       classes: [],
@@ -191,6 +196,46 @@ describe("Character Routes", () => {
       bonds: "Friends",
       flaws: "Reckless",
     },
+  };
+
+  const setupCreateCharacterApp = async () => {
+    vi.resetModules();
+
+    const transactionMock = vi.fn();
+    const processStartingEquipmentMock = vi.fn();
+    const isUserCampaignMemberMock = vi.fn().mockResolvedValue(true);
+
+    vi.doMock("@project/database", () => ({
+      db: {
+        transaction: transactionMock,
+      },
+    }));
+
+    vi.doMock("../../utils/inventory.js", () => ({
+      processStartingEquipment: processStartingEquipmentMock,
+    }));
+
+    vi.doMock("../../services/campaignAccess.js", () => ({
+      isUserCampaignMember: isUserCampaignMemberMock,
+    }));
+
+    const { default: characterRoutes } = await import("../character.js");
+
+    const app = express();
+    app.use(express.json());
+    app.use((req, _res, next) => {
+      (req as Request & { user?: { id: string } }).user = { id: "test-user" };
+      next();
+    });
+    app.use("/api/character", characterRoutes);
+    app.use(globalErrorHandler);
+
+    return {
+      app,
+      transactionMock,
+      processStartingEquipmentMock,
+      isUserCampaignMemberMock,
+    };
   };
 
   describe("POST /api/character - Create Character", () => {
@@ -609,6 +654,44 @@ describe("Character Routes", () => {
 
       const result = CreateCharacterPayloadSchema.safeParse(payload);
       expect(result.success).toBe(true);
+    });
+
+    it("rejects unresolved starting equipment choices before writing", async () => {
+      const { app, transactionMock, processStartingEquipmentMock } =
+        await setupCreateCharacterApp();
+
+      const response = await request(app)
+        .post("/api/character")
+        .send({
+          ...validCreatePayload,
+          startingEquipment: {
+            given: [],
+            choices: [
+              {
+                choose: 1,
+                options: [
+                  {
+                    equipmentBundle: [
+                      {
+                        kind: "category",
+                        refId: "category_weapon_simple",
+                        quantity: 1,
+                      },
+                    ],
+                  },
+                ],
+              },
+            ],
+          },
+        });
+
+      expect(response.status).toBe(400);
+      expect(response.body).toEqual({
+        error:
+          "Starting equipment choices must be resolved before character creation.",
+      });
+      expect(transactionMock).not.toHaveBeenCalled();
+      expect(processStartingEquipmentMock).not.toHaveBeenCalled();
     });
   });
 

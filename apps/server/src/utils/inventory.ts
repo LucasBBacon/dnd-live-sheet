@@ -172,11 +172,17 @@ export async function processStartingEquipment(
   const unpackedItems = [];
   for (const grant of grants) {
     if (grant.kind === "money") continue;
+    if (grant.kind === "category") {
+      throw new Error(
+        "Starting equipment categories must be resolved before inventory processing.",
+      );
+    }
 
-    const resolved =
-      grant.kind === "category"
-        ? await resolveCategoryPayload(tx, grant.refId, grant.quantity ?? 1)
-        : await resolveItemPayload(tx, grant.refId, grant.quantity ?? 1);
+    const resolved = await resolveItemPayload(
+      tx,
+      grant.refId,
+      grant.quantity ?? 1,
+    );
 
     unpackedItems.push(...resolved);
   }

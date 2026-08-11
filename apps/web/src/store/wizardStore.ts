@@ -5,6 +5,10 @@ import type {
   StartingEquipmentGrant,
 } from "@project/shared";
 import { STANDARD_ARRAY } from "../utils/abilityConstants";
+import {
+  buildStartingEquipmentCategoryKey,
+  resolveCategoryGrant,
+} from "../utils/startingEquipment";
 
 export type GenerationMethod = "STANDARD_ARRAY" | "POINT_BUY" | "MANUAL";
 
@@ -54,6 +58,8 @@ export interface WizardState {
 
   classStartingEquipment: StartingEquipmentDefinition;
   presetBackgroundStartingEquipment: StartingEquipmentDefinition;
+  selectedClassEquipmentOptionIndices: Record<number, number>;
+  selectedEquipmentCategoryChoices: Record<string, WizardEquipmentChoice>;
   selectedClassEquipmentChoices: Record<number, WizardEquipmentChoice[]>;
   requiredEquipmentChoiceCount: number;
 
@@ -74,7 +80,7 @@ export interface WizardState {
   setBackgroundMode: (mode: "PRESET" | "CUSTOM") => void;
   setPresetBackground: (
     id: string,
-    startingEquipment: StartingEquipmentDefinition,
+    startingEquipment?: StartingEquipmentDefinition,
   ) => void;
   updateCustomBackground: (
     updates: Partial<WizardState["customBackground"]>,
@@ -86,10 +92,15 @@ export interface WizardState {
 
   setClassEquipmentChoice: (
     groupIndex: number,
+    optionIndex: number,
     bundleItems: WizardEquipmentChoice[],
   ) => void;
   setClassStartingEquipment: (
     startingEquipment: StartingEquipmentDefinition,
+  ) => void;
+  setEquipmentCategoryChoice: (
+    categoryKey: string,
+    grant: WizardEquipmentChoice | null,
   ) => void;
   setRequiredEquipmentChoiceCount: (count: number) => void;
 
@@ -132,6 +143,8 @@ export const useWizardStore = create<WizardState>((set, get) => ({
 
   classStartingEquipment: EMPTY_STARTING_EQUIPMENT,
   presetBackgroundStartingEquipment: EMPTY_STARTING_EQUIPMENT,
+  selectedClassEquipmentOptionIndices: {},
+  selectedEquipmentCategoryChoices: {},
   selectedClassEquipmentChoices: {},
   requiredEquipmentChoiceCount: 0,
 
@@ -151,14 +164,21 @@ export const useWizardStore = create<WizardState>((set, get) => ({
   setSubrace: (subraceId) => set({ subraceId }),
 
   setClass: (classId, reqLevel) =>
-    set({
+    set((state) => ({
       classId,
       classSubclassReqLevel: reqLevel,
       subclassId: null,
       classStartingEquipment: EMPTY_STARTING_EQUIPMENT,
+      selectedClassEquipmentOptionIndices: {},
       selectedClassEquipmentChoices: {},
+      selectedEquipmentCategoryChoices: Object.fromEntries(
+        Object.entries(state.selectedEquipmentCategoryChoices).filter(
+          ([key]) =>
+            !key.startsWith("class-given:") && !key.startsWith("class-choice:"),
+        ),
+      ),
       requiredEquipmentChoiceCount: 0,
-    }),
+    })),
 
   setSubclass: (subclassId) => set({ subclassId }),
 
@@ -196,11 +216,16 @@ export const useWizardStore = create<WizardState>((set, get) => ({
   setAlignment: (alignment) => set({ alignment }),
 
   setBackgroundMode: (mode) =>
-    set({
+    set((state) => ({
       backgroundType: mode,
       // wipe specific selections when toggling
       backgroundId: null,
       presetBackgroundStartingEquipment: EMPTY_STARTING_EQUIPMENT,
+      selectedEquipmentCategoryChoices: Object.fromEntries(
+        Object.entries(state.selectedEquipmentCategoryChoices).filter(
+          ([key]) => !key.startsWith("background-given:"),
+        ),
+      ),
       customBackground: {
         name: "",
         featureName: "",
@@ -208,13 +233,18 @@ export const useWizardStore = create<WizardState>((set, get) => ({
         skillTraitIds: [],
         toolLanguageTraitIds: [],
       },
-    }),
+    })),
 
-  setPresetBackground: (id, startingEquipment) =>
-    set({
+  setPresetBackground: (id, startingEquipment = EMPTY_STARTING_EQUIPMENT) =>
+    set((state) => ({
       backgroundId: id,
       presetBackgroundStartingEquipment: startingEquipment,
-    }),
+      selectedEquipmentCategoryChoices: Object.fromEntries(
+        Object.entries(state.selectedEquipmentCategoryChoices).filter(
+          ([key]) => !key.startsWith("background-given:"),
+        ),
+      ),
+    })),
 
   updateCustomBackground: (updates) =>
     set((state) => ({
@@ -226,8 +256,12 @@ export const useWizardStore = create<WizardState>((set, get) => ({
       personality: { ...state.personality, [field]: value },
     })),
 
-  setClassEquipmentChoice: (groupIndex, bundleItems) =>
+  setClassEquipmentChoice: (groupIndex, optionIndex, bundleItems) =>
     set((state) => ({
+      selectedClassEquipmentOptionIndices: {
+        ...state.selectedClassEquipmentOptionIndices,
+        [groupIndex]: optionIndex,
+      },
       selectedClassEquipmentChoices: {
         ...state.selectedClassEquipmentChoices,
         [groupIndex]: bundleItems,
@@ -235,6 +269,20 @@ export const useWizardStore = create<WizardState>((set, get) => ({
     })),
   setClassStartingEquipment: (startingEquipment) =>
     set({ classStartingEquipment: startingEquipment }),
+  setEquipmentCategoryChoice: (categoryKey, grant) =>
+    set((state) => {
+      const nextChoices = { ...state.selectedEquipmentCategoryChoices };
+
+      if (grant) {
+        nextChoices[categoryKey] = grant;
+      } else {
+        delete nextChoices[categoryKey];
+      }
+
+      return {
+        selectedEquipmentCategoryChoices: nextChoices,
+      };
+    }),
   setRequiredEquipmentChoiceCount: (count) =>
     set({ requiredEquipmentChoiceCount: count }),
 
@@ -270,6 +318,25 @@ export const useWizardStore = create<WizardState>((set, get) => ({
         )
           return false;
 
+        if (
+          state.classStartingEquipment.given.some(
+            (grant, grantIndex) =>
+              resolveCategoryGrant(
+                grant,
+                buildStartingEquipmentCategoryKey("class-given", grantIndex),
+                state.selectedEquipmentCategoryChoices,
+              ).kind === "category",
+          )
+        )
+          return false;
+
+        if (
+          Object.values(state.selectedClassEquipmentChoices).some((grants) =>
+            grants.some((grant) => grant.kind === "category"),
+          )
+        )
+          return false;
+
         return true;
 
       case 4: // ability score
@@ -283,6 +350,21 @@ export const useWizardStore = create<WizardState>((set, get) => ({
         if (!state.backgroundType) return false;
 
         if (state.backgroundType === "PRESET" && !state.backgroundId)
+          return false;
+        if (
+          state.backgroundType === "PRESET" &&
+          state.presetBackgroundStartingEquipment.given.some(
+            (grant, grantIndex) =>
+              resolveCategoryGrant(
+                grant,
+                buildStartingEquipmentCategoryKey(
+                  "background-given",
+                  grantIndex,
+                ),
+                state.selectedEquipmentCategoryChoices,
+              ).kind === "category",
+          )
+        )
           return false;
         if (state.backgroundType === "CUSTOM") {
           const cb = state.customBackground;

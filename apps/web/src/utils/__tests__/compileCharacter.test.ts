@@ -29,6 +29,8 @@ describe("compileCharacterPayload", () => {
       bonds: "Friends",
       flaws: "Reckless",
     },
+    selectedClassEquipmentOptionIndices: {},
+    selectedEquipmentCategoryChoices: {},
     classStartingEquipment: {
       given: [{ kind: "item", refId: "chain_mail", quantity: 1 }],
       choices: [],
@@ -57,7 +59,14 @@ describe("compileCharacterPayload", () => {
       classId: "fighter",
       subclassId: null,
       // payload contract is lowercase; compile translates at the boundary
-      baseAbilityScores: { str: 15, dex: 14, con: 13, int: 12, wis: 10, cha: 8 },
+      baseAbilityScores: {
+        str: 15,
+        dex: 14,
+        con: 13,
+        int: 12,
+        wis: 10,
+        cha: 8,
+      },
       alignment: "Lawful Good",
       background: {
         type: "PRESET",
@@ -183,7 +192,7 @@ describe("compileCharacterPayload", () => {
 
   it("handles special characters in personality", () => {
     const personality = {
-      traits: "I love \"heroic\" deeds",
+      traits: 'I love "heroic" deeds',
       ideals: "Justice (at any cost)",
       bonds: "My family - they're everything",
       flaws: "I'm overly cautious & paranoid",
@@ -238,5 +247,43 @@ describe("compileCharacterPayload", () => {
     const state = { ...validState, campaignId: null };
     const result = compileCharacterPayload(state);
     expect(result.campaignId).toBeUndefined();
+  });
+
+  it("resolves class and background category grants before submit", () => {
+    const state = {
+      ...validState,
+      classStartingEquipment: {
+        given: [
+          { kind: "category", refId: "category_holy_symbol", quantity: 1 },
+        ],
+        choices: [],
+      },
+      presetBackgroundStartingEquipment: {
+        given: [
+          { kind: "category", refId: "category_arcane_focus", quantity: 1 },
+        ],
+        choices: [],
+      },
+      selectedEquipmentCategoryChoices: {
+        "class-given:0": {
+          kind: "item",
+          refId: "item_holy_symbol_amulet",
+          quantity: 1,
+        },
+        "background-given:0": {
+          kind: "item",
+          refId: "item_focus_wand",
+          quantity: 1,
+        },
+      },
+      selectedClassEquipmentChoices: {},
+    };
+
+    const result = compileCharacterPayload(state);
+
+    expect(result.startingEquipment.given).toEqual([
+      { kind: "item", refId: "item_holy_symbol_amulet", quantity: 1 },
+      { kind: "item", refId: "item_focus_wand", quantity: 1 },
+    ]);
   });
 });
