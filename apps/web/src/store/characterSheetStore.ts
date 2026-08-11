@@ -3,6 +3,7 @@ import {
   ATTUNEMENT_LIMIT,
   CARRIED_SLOT,
   CharacterBootstrapper,
+  CombatContextManager,
   EffectManager,
   ResourceManager,
   RestEngine,
@@ -16,6 +17,10 @@ import {
   type ProficiencyLevel,
 } from "@project/engine";
 import {
+  CombatContextSchema,
+  type CombatContext,
+  type CombatEventInput,
+  type CombatRollSnapshot,
   CharacterSlotSchema,
   type ActionGrant,
   type ActionResolvedPayload,
@@ -156,6 +161,16 @@ const appendRollResults = (
   state: Pick<CharacterSheetState, "latestRollResults">,
   nextResults: ActionRollResult[],
 ): ActionRollResult[] => [...state.latestRollResults.slice(-4), ...nextResults];
+
+const createCombatManager = (initialContext?: Partial<CombatContext>) => {
+  const manager = new CombatContextManager();
+  manager.initialize(initialContext);
+  return manager;
+};
+
+const ensureCombatManager = (
+  state: Pick<CharacterSheetState, "runtimeCombat" | "combatContext">,
+) => state.runtimeCombat ?? createCombatManager(state.combatContext);
 
 const hydrateRuntimeEffectsFromResolved = (
   payload: ActionResolvedPayload,
@@ -505,6 +520,8 @@ export interface CharacterSheetState {
   latestRollResults: ActionRollResult[];
   runtimeEffects: EffectManager | null;
   runtimeResources: ResourceManager | null;
+  combatContext: CombatContext;
+  runtimeCombat: CombatContextManager | null;
   ruleSnapshot: Pick<
     RuleSnapshot,
     "equipmentById" | "itemsById" | "weaponsById" | "resourcesById"
@@ -531,6 +548,8 @@ export interface CharacterSheetState {
   consumeResource: (resourceId: string, amount?: number) => void;
   syncRemoteResource: (resourceId: string, amount: number) => void;
 
+  beginCombat: () => void;
+  endCombat: () => void;
   triggerRest: (restType: "short" | "long") => void;
   dispatchAuthoredEvent: (eventName: EngineEvent) => void;
   getCharacterActions: () => ActionGrant[];
@@ -539,6 +558,17 @@ export interface CharacterSheetState {
   executeActorAction: (actionId: string, actorInstanceId?: string) => void;
   syncRemoteActionExecution: (payload: ActionResolvedPayload) => void;
   recordRollResult: (payload: RollResultsBroadcastPayload) => void;
+  pushCombatEvent: (event: CombatEventInput) => void;
+  resolveCombatEvent: (
+    eventId: string,
+    resolution?: {
+      summary?: string;
+      reactionSourceId?: string;
+      rollSnapshot?: CombatRollSnapshot;
+      status?: "resolved" | "dismissed";
+    },
+  ) => void;
+  spendReaction: (sourceId: string) => boolean;
   beginTurn: () => void;
   endTurn: () => void;
   handleSaveOutcome: (succeeded: boolean) => void;
@@ -571,6 +601,8 @@ export const useCharacterSheetStore = create<CharacterSheetState>(
     latestRollResults: [],
     runtimeEffects: null,
     runtimeResources: null,
+    combatContext: CombatContextSchema.parse({}),
+    runtimeCombat: null,
     ruleSnapshot: null,
 
     initialize: (payload) => set((state) => ({ ...state, ...payload })),
@@ -870,6 +902,26 @@ export const useCharacterSheetStore = create<CharacterSheetState>(
       set({ resources: updatedResources });
     },
 
+    beginCombat: () => {
+      const state = get();
+      const runtimeCombat = ensureCombatManager(state);
+
+      set({
+        runtimeCombat,
+        combatContext: runtimeCombat.beginCombat(),
+      });
+    },
+
+    endCombat: () => {
+      const state = get();
+      const runtimeCombat = ensureCombatManager(state);
+
+      set({
+        runtimeCombat,
+        combatContext: runtimeCombat.endCombat(),
+      });
+    },
+
     triggerRest: (restType: "short" | "long") => {
       const state = get();
       const restEvent = restType === "short" ? "ON_SHORT_REST" : "ON_LONG_REST";
@@ -1030,12 +1082,71 @@ export const useCharacterSheetStore = create<CharacterSheetState>(
       }));
     },
 
+    pushCombatEvent: (event) => {
+      const state = get();
+      const runtimeCombat = ensureCombatManager(state);
+
+      set({
+        runtimeCombat,
+        combatContext: runtimeCombat.pushEvent(event),
+      });
+    },
+
+    resolveCombatEvent: (eventId, resolution) => {
+      const state = get();
+      const runtimeCombat = ensureCombatManager(state);
+
+      set({
+        runtimeCombat,
+        combatContext: runtimeCombat.resolveEvent(eventId, resolution),
+      });
+    },
+
+    spendReaction: (sourceId) => {
+      const state = get();
+      const runtimeCombat = ensureCombatManager(state);
+      const spent = runtimeCombat.spendReaction(sourceId);
+
+      set({
+        runtimeCombat,
+        combatContext: runtimeCombat.getContext(),
+      });
+
+      return spent;
+    },
+
     beginTurn: () => {
-      get().dispatchAuthoredEvent("ON_START_OF_TURN");
+      const state = get();
+      const runtimeCombat = ensureCombatManager(state);
+      const combatContext = runtimeCombat.beginTurn({ kind: "player" });
+      const dispatched = dispatchAuthoredEvent(state, "ON_START_OF_TURN");
+
+      set({
+        activeStates: dispatched.activeStates,
+        latestRollResults: dispatched.rollResults,
+        resources: dispatched.resources,
+        runtimeEffects: dispatched.runtimeEffects,
+        runtimeResources: dispatched.runtimeResources,
+        runtimeCombat,
+        combatContext,
+      });
     },
 
     endTurn: () => {
-      get().dispatchAuthoredEvent("ON_END_OF_TURN");
+      const state = get();
+      const runtimeCombat = ensureCombatManager(state);
+      const combatContext = runtimeCombat.endTurn({ kind: "player" });
+      const dispatched = dispatchAuthoredEvent(state, "ON_END_OF_TURN");
+
+      set({
+        activeStates: dispatched.activeStates,
+        latestRollResults: dispatched.rollResults,
+        resources: dispatched.resources,
+        runtimeEffects: dispatched.runtimeEffects,
+        runtimeResources: dispatched.runtimeResources,
+        runtimeCombat,
+        combatContext,
+      });
     },
 
     handleSaveOutcome: (succeeded) => {

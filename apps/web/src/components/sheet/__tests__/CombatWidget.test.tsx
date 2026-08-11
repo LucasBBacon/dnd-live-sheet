@@ -11,6 +11,7 @@ const mocks = vi.hoisted(() => ({
   recordRollResult: vi.fn(),
   requestRoll: vi.fn(),
   selectActorInstance: vi.fn(),
+  spendReaction: vi.fn(() => true),
 }));
 
 vi.mock("../../../hooks/useCombat", () => ({
@@ -46,8 +47,9 @@ vi.mock("../../../hooks/useCombat", () => ({
 }));
 
 vi.mock("../../../store/rollStore", () => ({
-  useRollStore: (selector: (state: { requestRoll: typeof mocks.requestRoll }) => unknown) =>
-    selector({ requestRoll: mocks.requestRoll }),
+  useRollStore: (
+    selector: (state: { requestRoll: typeof mocks.requestRoll }) => unknown,
+  ) => selector({ requestRoll: mocks.requestRoll }),
 }));
 
 const actorAction: ActionGrant = {
@@ -90,6 +92,13 @@ const storeState = {
     },
   ],
   latestRollResults: [],
+  combatContext: {
+    economy: {
+      actionAvailable: true,
+      bonusActionAvailable: true,
+      reactionAvailable: true,
+    },
+  },
   recordRollResult: mocks.recordRollResult,
   ruleSnapshot: null,
   runtimeEffects: {
@@ -106,6 +115,7 @@ const storeState = {
   ],
   traits: [],
   executeActorAction: mocks.executeActorAction,
+  spendReaction: mocks.spendReaction,
   getCharacterActions: () => [
     {
       id: "action_tinker_construct",
@@ -139,7 +149,7 @@ describe("CombatWidget", () => {
 
     expect(container.textContent).toContain("Reaction helper");
     expect(container.textContent).toContain("Fighting Style: Protection");
-    expect(container.textContent).toContain("Shield equipped");
+    expect(container.textContent).toContain("Reaction available");
 
     const button = Array.from(container.querySelectorAll("button")).find(
       (candidate) => candidate.textContent === "Use Protection",
@@ -174,6 +184,7 @@ describe("CombatWidget", () => {
         ],
       }),
     );
+    expect(mocks.spendReaction).toHaveBeenCalledWith("trait_fs_protection");
 
     root.unmount();
     container.remove();

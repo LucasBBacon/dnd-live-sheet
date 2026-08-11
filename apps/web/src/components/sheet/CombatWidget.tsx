@@ -26,10 +26,14 @@ export const CombatWidget = () => {
   const traitGrants = useCharacterSheetStore((state) => state.traitGrants);
   const inventory = useCharacterSheetStore((state) => state.inventory);
   const ruleSnapshot = useCharacterSheetStore((state) => state.ruleSnapshot);
+  const combatContext = useCharacterSheetStore((state) => state.combatContext);
   const latestRollResults = useCharacterSheetStore(
     (state) => state.latestRollResults,
   );
-  const recordRollResult = useCharacterSheetStore((state) => state.recordRollResult);
+  const recordRollResult = useCharacterSheetStore(
+    (state) => state.recordRollResult,
+  );
+  const spendReaction = useCharacterSheetStore((state) => state.spendReaction);
   const runtimeEffects = useCharacterSheetStore(
     (state) => state.runtimeEffects,
   );
@@ -54,10 +58,14 @@ export const CombatWidget = () => {
   );
   const protectionTrait = TRAIT_DICTIONARY[PROTECTION_TRAIT_ID];
   const protectionAvailable = hasProtectionTrait(traits, traitGrants);
+  const reactionAvailable = combatContext.economy.reactionAvailable;
   const hasEquippedShield = inventory.some((item) => {
     if (item.slot !== "off_hand") return false;
 
-    const definition = resolveItemDefinition(item.itemId, ruleSnapshot ?? undefined);
+    const definition = resolveItemDefinition(
+      item.itemId,
+      ruleSnapshot ?? undefined,
+    );
     return definition?.type === "armor" && definition.equipSlot === "off_hand";
   });
   const selectedActor =
@@ -142,6 +150,8 @@ export const CombatWidget = () => {
         ],
         timestamp: Date.now(),
       });
+
+      spendReaction(PROTECTION_TRAIT_ID);
     } catch {
       return;
     }
@@ -163,7 +173,8 @@ export const CombatWidget = () => {
                 {protectionTrait?.description}
               </p>
               <p className="mt-2 text-xs text-emerald-800">
-                Record the enemy attack total after disadvantage is applied at the table.
+                Record the enemy attack total after disadvantage is applied at
+                the table.
               </p>
             </div>
             <div className="flex flex-col items-start gap-2 md:items-end">
@@ -172,13 +183,17 @@ export const CombatWidget = () => {
                 onClick={() => {
                   void handleProtection();
                 }}
-                disabled={!hasEquippedShield}
+                disabled={!hasEquippedShield || !reactionAvailable}
                 className="rounded bg-emerald-700 px-3 py-2 text-xs font-semibold uppercase tracking-wide text-white hover:bg-emerald-800 disabled:cursor-not-allowed disabled:bg-emerald-200 disabled:text-emerald-700"
               >
                 Use Protection
               </button>
               <span className="text-[11px] uppercase tracking-[0.18em] text-emerald-700">
-                {hasEquippedShield ? "Shield equipped" : "Equip a shield in your off hand"}
+                {!hasEquippedShield
+                  ? "Equip a shield in your off hand"
+                  : reactionAvailable
+                    ? "Reaction available"
+                    : "Reaction spent"}
               </span>
             </div>
           </div>

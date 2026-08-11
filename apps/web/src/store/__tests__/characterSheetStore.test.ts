@@ -4,7 +4,7 @@ import {
   EffectManager,
   ResourceManager,
 } from "@project/engine";
-import type { ActorInstance } from "@project/shared";
+import { CombatContextSchema, type ActorInstance } from "@project/shared";
 import { socketService } from "../../services/socketService";
 import { useCharacterSheetStore } from "../characterSheetStore";
 
@@ -38,6 +38,8 @@ describe("useCharacterSheetStore hp trigger handling", () => {
       latestRollResults: [],
       runtimeEffects: null,
       runtimeResources: null,
+      combatContext: CombatContextSchema.parse({}),
+      runtimeCombat: null,
     });
 
     vi.spyOn(socketService, "emitHpModification").mockImplementation(() => {});
@@ -394,6 +396,57 @@ describe("useCharacterSheetStore hp trigger handling", () => {
     );
 
     compileSpy.mockRestore();
+  });
+
+  it("refreshes the player's reaction economy on turn start and tracks pending combat events", () => {
+    const store = useCharacterSheetStore.getState();
+
+    store.beginCombat();
+    expect(useCharacterSheetStore.getState().combatContext.inCombat).toBe(true);
+
+    expect(store.spendReaction("reaction_protection")).toBe(true);
+    expect(store.spendReaction("reaction_shield")).toBe(false);
+
+    store.pushCombatEvent({
+      id: "evt_protection",
+      type: "reaction_window_opened",
+      relationship: "adjacent_ally",
+      rollSnapshot: {
+        id: "roll_enemy_attack",
+        kind: "attack",
+        relationship: "unknown",
+        rawRolls: [],
+        knowledge: "manual_total",
+        total: 15,
+        hasAdvantage: false,
+        hasDisadvantage: false,
+      },
+    });
+
+    let state = useCharacterSheetStore.getState();
+    expect(state.combatContext.pendingEvents).toHaveLength(1);
+    expect(state.combatContext.economy.reactionAvailable).toBe(false);
+
+    store.beginTurn();
+
+    state = useCharacterSheetStore.getState();
+    expect(state.combatContext.economy.reactionAvailable).toBe(true);
+    expect(state.combatContext.roundNumber).toBe(2);
+
+    store.resolveCombatEvent("evt_protection", {
+      status: "resolved",
+      summary: "Protection applied",
+      reactionSourceId: "trait_fs_protection",
+    });
+
+    state = useCharacterSheetStore.getState();
+    expect(state.combatContext.pendingEvents).toEqual([]);
+    expect(state.combatContext.recentEvents[0]).toMatchObject({
+      id: "evt_protection",
+      status: "resolved",
+      summary: "Protection applied",
+      reactionSourceId: "trait_fs_protection",
+    });
   });
 
   it("rehydrates runtime managers from the latest save when trait grants change", () => {
