@@ -3,6 +3,149 @@ import type {
   ItemDefinition,
   WeaponDefinition,
 } from "@project/shared";
+import { EquipmentDefinitionSchema } from "@project/shared";
+
+const createPlaceholderEquipment = (
+  id: string,
+  name: string,
+): EquipmentDefinition => EquipmentDefinitionSchema.parse({ id, name });
+
+const STARTING_EQUIPMENT_PLACEHOLDERS: Record<string, EquipmentDefinition> = {
+  item_pack_explorers: createPlaceholderEquipment(
+    "item_pack_explorers",
+    "Explorer's Pack",
+  ),
+  item_weapon_javelin: createPlaceholderEquipment(
+    "item_weapon_javelin",
+    "Javelin",
+  ),
+  item_weapon_greataxe: createPlaceholderEquipment(
+    "item_weapon_greataxe",
+    "Greataxe",
+  ),
+  item_weapon_handaxe: createPlaceholderEquipment(
+    "item_weapon_handaxe",
+    "Handaxe",
+  ),
+  item_weapon_rapier: createPlaceholderEquipment(
+    "item_weapon_rapier",
+    "Rapier",
+  ),
+  item_pack_diplomats: createPlaceholderEquipment(
+    "item_pack_diplomats",
+    "Diplomat's Pack",
+  ),
+  item_pack_entertainers: createPlaceholderEquipment(
+    "item_pack_entertainers",
+    "Entertainer's Pack",
+  ),
+  item_musical_instrument_lute: createPlaceholderEquipment(
+    "item_musical_instrument_lute",
+    "Lute",
+  ),
+  item_weapon_mace: createPlaceholderEquipment("item_weapon_mace", "Mace"),
+  item_weapon_warhammer: createPlaceholderEquipment(
+    "item_weapon_warhammer",
+    "Warhammer",
+  ),
+  item_armor_scale_mail: createPlaceholderEquipment(
+    "item_armor_scale_mail",
+    "Scale Mail",
+  ),
+  item_armor_chain_mail: createPlaceholderEquipment(
+    "item_armor_chain_mail",
+    "Chain Mail",
+  ),
+  item_weapon_crossbow_light: createPlaceholderEquipment(
+    "item_weapon_crossbow_light",
+    "Light Crossbow",
+  ),
+  item_ammo_bolt: createPlaceholderEquipment("item_ammo_bolt", "Bolts"),
+  item_pack_priests: createPlaceholderEquipment(
+    "item_pack_priests",
+    "Priest's Pack",
+  ),
+  item_armor_shield_wooden: createPlaceholderEquipment(
+    "item_armor_shield_wooden",
+    "Wooden Shield",
+  ),
+  item_weapon_scimitar: createPlaceholderEquipment(
+    "item_weapon_scimitar",
+    "Scimitar",
+  ),
+  item_weapon_arrow: createPlaceholderEquipment("item_weapon_arrow", "Arrows"),
+  item_weapon_light_crossbow: createPlaceholderEquipment(
+    "item_weapon_light_crossbow",
+    "Light Crossbow",
+  ),
+  item_weapon_crossbow_bolt: createPlaceholderEquipment(
+    "item_weapon_crossbow_bolt",
+    "Crossbow Bolts",
+  ),
+  item_pack_dungeoneers: createPlaceholderEquipment(
+    "item_pack_dungeoneers",
+    "Dungeoneer's Pack",
+  ),
+  item_weapon_dart: createPlaceholderEquipment("item_weapon_dart", "Dart"),
+  item_weapon_shortsword: createPlaceholderEquipment(
+    "item_weapon_shortsword",
+    "Shortsword",
+  ),
+  item_pack_quiver: createPlaceholderEquipment("item_pack_quiver", "Quiver"),
+  item_armor_scale: createPlaceholderEquipment("item_armor_scale", "Scale Armor"),
+  item_tool_thieves_tools: createPlaceholderEquipment(
+    "item_tool_thieves_tools",
+    "Thieves' Tools",
+  ),
+  item_weapon_shortbow: createPlaceholderEquipment(
+    "item_weapon_shortbow",
+    "Shortbow",
+  ),
+  item_pack_burglars: createPlaceholderEquipment(
+    "item_pack_burglars",
+    "Burglar's Pack",
+  ),
+  item_gear_component_pouch: createPlaceholderEquipment(
+    "item_gear_component_pouch",
+    "Component Pouch",
+  ),
+  item_pack_scholars: createPlaceholderEquipment(
+    "item_pack_scholars",
+    "Scholar's Pack",
+  ),
+  item_magic_item_spellbook: createPlaceholderEquipment(
+    "item_magic_item_spellbook",
+    "Spellbook",
+  ),
+  item_weapon_quarterstaff: createPlaceholderEquipment(
+    "item_weapon_quarterstaff",
+    "Quarterstaff",
+  ),
+  item_incense_stick: createPlaceholderEquipment(
+    "item_incense_stick",
+    "Incense Stick",
+  ),
+  item_clothes_vestments: createPlaceholderEquipment(
+    "item_clothes_vestments",
+    "Vestments",
+  ),
+  item_clothes_common: createPlaceholderEquipment(
+    "item_clothes_common",
+    "Common Clothes",
+  ),
+  item_clothes_fine: createPlaceholderEquipment(
+    "item_clothes_fine",
+    "Fine Clothes",
+  ),
+  item_ring_signet: createPlaceholderEquipment(
+    "item_ring_signet",
+    "Signet Ring",
+  ),
+  item_scroll_pedigree: createPlaceholderEquipment(
+    "item_scroll_pedigree",
+    "Scroll of Pedigree",
+  ),
+};
 
 /**
  * Canonical authored rules dictionary for equipment.
@@ -293,6 +436,8 @@ export const EQUIPMENT_DICTIONARY: Record<string, EquipmentDefinition> = {
     requiresAttunement: false,
     container: { capacityPounds: 300 },
   },
+
+  ...STARTING_EQUIPMENT_PLACEHOLDERS,
 };
 
 export const toItemDefinition = (equipment: EquipmentDefinition): ItemDefinition => {

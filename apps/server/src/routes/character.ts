@@ -141,6 +141,13 @@ router.post("/", async (req, res, next) => {
       return res.status(403).json({ error: "Forbidden campaign access." });
     }
 
+    if (payload.startingEquipment.choices.length > 0) {
+      return res.status(400).json({
+        error:
+          "Starting equipment choices must be resolved before character creation.",
+      });
+    }
+
     // generate the UUID for the new character
     const newCharacterId = uuidv4();
 

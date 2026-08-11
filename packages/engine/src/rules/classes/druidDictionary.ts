@@ -1,4 +1,5 @@
 import type { ClassDefinition } from "@project/shared";
+import { CLASS_STARTING_EQUIPMENT } from "../startingEquipmentDictionary.js";
 import type { SubclassDefinition } from "../subclassDictionary.js";
 
 export const DRUID_CLASS: ClassDefinition = {
@@ -6,6 +7,7 @@ export const DRUID_CLASS: ClassDefinition = {
   name: "Druid",
   hitDie: 8,
   subclassUnlockLevel: 2,
+  startingEquipment: CLASS_STARTING_EQUIPMENT.class_druid,
   multiclassTraitIds: ["trait_druid_mult_prof_armor"],
   multiclassPrerequisites: { abilityMinimums: { wis: 13 } },
   startingProficiencyTraitIds: [

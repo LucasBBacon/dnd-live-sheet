@@ -1,18 +1,5 @@
-export interface BackgroundDefinition {
-  id: string;
-  name: string;
-  featureName: string;
-  featureDescription: string;
-  ideals: string[];
-  bonds: string[];
-  flaws: string[];
-  personalityTraits: string[];
-  backgroundTraitIds: string[];
-  lore: {
-    shortDescription: string;
-    fullText?: string;
-  };
-}
+import type { BackgroundDefinition } from "@project/shared";
+import { BACKGROUND_STARTING_EQUIPMENT } from "./startingEquipmentDictionary.js";
 
 export const BACKGROUND_DICTIONARY: Record<string, BackgroundDefinition> = {
   background_acolyte: {
@@ -41,7 +28,11 @@ export const BACKGROUND_DICTIONARY: Record<string, BackgroundDefinition> = {
       "I look for omens in everyday events.",
       "I try to calm conflict before it becomes violence.",
     ],
-    backgroundTraitIds: ["trait_acolyte_prof_skills", "trait_acolyte_languages"],
+    backgroundTraitIds: [
+      "trait_acolyte_prof_skills",
+      "trait_acolyte_languages",
+    ],
+    startingEquipment: BACKGROUND_STARTING_EQUIPMENT.background_acolyte,
     lore: {
       shortDescription:
         "A servant of a temple or sacred order who carries rituals and teachings into the wider world.",
@@ -80,6 +71,7 @@ export const BACKGROUND_DICTIONARY: Record<string, BackgroundDefinition> = {
       "trait_noble_prof_tools",
       "trait_noble_languages",
     ],
+    startingEquipment: BACKGROUND_STARTING_EQUIPMENT.background_noble,
     lore: {
       shortDescription:
         "A person of title, wealth, or inherited influence, trained to navigate status and power.",
@@ -117,6 +109,7 @@ export const BACKGROUND_DICTIONARY: Record<string, BackgroundDefinition> = {
       "trait_soldier_prof_skills",
       "trait_soldier_prof_tools",
     ],
+    startingEquipment: BACKGROUND_STARTING_EQUIPMENT.background_soldier,
     lore: {
       shortDescription:
         "A veteran of organised warfare who understands discipline, logistics, and command structures.",
@@ -154,6 +147,7 @@ export const BACKGROUND_DICTIONARY: Record<string, BackgroundDefinition> = {
       "trait_criminal_prof_skills",
       "trait_criminal_prof_tools",
     ],
+    startingEquipment: BACKGROUND_STARTING_EQUIPMENT.background_criminal,
     lore: {
       shortDescription:
         "A former lawbreaker accustomed to covert networks, coded communication, and operating outside institutions.",

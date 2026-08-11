@@ -1,11 +1,19 @@
 import { create } from "zustand";
 import type { Ability } from "@project/engine";
-import type { StartingEquipmentGrant } from "@project/shared";
+import type {
+  StartingEquipmentDefinition,
+  StartingEquipmentGrant,
+} from "@project/shared";
 import { STANDARD_ARRAY } from "../utils/abilityConstants";
 
 export type GenerationMethod = "STANDARD_ARRAY" | "POINT_BUY" | "MANUAL";
 
 export type WizardEquipmentChoice = StartingEquipmentGrant;
+
+const EMPTY_STARTING_EQUIPMENT: StartingEquipmentDefinition = {
+  given: [],
+  choices: [],
+};
 
 export interface WizardState {
   currentStep: number;
@@ -44,6 +52,8 @@ export interface WizardState {
     flaws: string;
   };
 
+  classStartingEquipment: StartingEquipmentDefinition;
+  presetBackgroundStartingEquipment: StartingEquipmentDefinition;
   selectedClassEquipmentChoices: Record<number, WizardEquipmentChoice[]>;
   requiredEquipmentChoiceCount: number;
 
@@ -62,7 +72,10 @@ export interface WizardState {
 
   setAlignment: (alignment: string) => void;
   setBackgroundMode: (mode: "PRESET" | "CUSTOM") => void;
-  setPresetBackground: (id: string) => void;
+  setPresetBackground: (
+    id: string,
+    startingEquipment: StartingEquipmentDefinition,
+  ) => void;
   updateCustomBackground: (
     updates: Partial<WizardState["customBackground"]>,
   ) => void;
@@ -74,6 +87,9 @@ export interface WizardState {
   setClassEquipmentChoice: (
     groupIndex: number,
     bundleItems: WizardEquipmentChoice[],
+  ) => void;
+  setClassStartingEquipment: (
+    startingEquipment: StartingEquipmentDefinition,
   ) => void;
   setRequiredEquipmentChoiceCount: (count: number) => void;
 
@@ -114,6 +130,8 @@ export const useWizardStore = create<WizardState>((set, get) => ({
     flaws: "",
   },
 
+  classStartingEquipment: EMPTY_STARTING_EQUIPMENT,
+  presetBackgroundStartingEquipment: EMPTY_STARTING_EQUIPMENT,
   selectedClassEquipmentChoices: {},
   requiredEquipmentChoiceCount: 0,
 
@@ -137,6 +155,7 @@ export const useWizardStore = create<WizardState>((set, get) => ({
       classId,
       classSubclassReqLevel: reqLevel,
       subclassId: null,
+      classStartingEquipment: EMPTY_STARTING_EQUIPMENT,
       selectedClassEquipmentChoices: {},
       requiredEquipmentChoiceCount: 0,
     }),
@@ -181,6 +200,7 @@ export const useWizardStore = create<WizardState>((set, get) => ({
       backgroundType: mode,
       // wipe specific selections when toggling
       backgroundId: null,
+      presetBackgroundStartingEquipment: EMPTY_STARTING_EQUIPMENT,
       customBackground: {
         name: "",
         featureName: "",
@@ -190,7 +210,11 @@ export const useWizardStore = create<WizardState>((set, get) => ({
       },
     }),
 
-  setPresetBackground: (id) => set({ backgroundId: id }),
+  setPresetBackground: (id, startingEquipment) =>
+    set({
+      backgroundId: id,
+      presetBackgroundStartingEquipment: startingEquipment,
+    }),
 
   updateCustomBackground: (updates) =>
     set((state) => ({
@@ -209,6 +233,8 @@ export const useWizardStore = create<WizardState>((set, get) => ({
         [groupIndex]: bundleItems,
       },
     })),
+  setClassStartingEquipment: (startingEquipment) =>
+    set({ classStartingEquipment: startingEquipment }),
   setRequiredEquipmentChoiceCount: (count) =>
     set({ requiredEquipmentChoiceCount: count }),
 

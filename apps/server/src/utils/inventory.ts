@@ -1,4 +1,3 @@
-import { db } from "@project/database";
 import { characterInventory } from "@project/database/src/schema/operational.js";
 import {
   bundleContents,
@@ -34,31 +33,13 @@ function normalizeGrantList(rawSelections: unknown): StartingEquipmentGrant[] {
     ? rawSelections.choices
     : [];
 
-  const selectedChoices = choices.flatMap((choice) => {
-    if (!choice || typeof choice !== "object" || Array.isArray(choice))
-      return [];
+  if (choices.length > 0) {
+    throw new Error(
+      "Starting equipment choices must be resolved before inventory processing.",
+    );
+  }
 
-    const chooseCount = Number.isInteger(choice.choose)
-      ? Math.max(1, Number(choice.choose))
-      : 1;
-
-    const options = Array.isArray(choice.options) ? choice.options : [];
-    const selectedOptions = options.slice(0, chooseCount);
-
-    return selectedOptions.flatMap((option) => {
-      if (!option || typeof option !== "object" || Array.isArray(option)) {
-        return [];
-      }
-
-      const equipmentBundle = Array.isArray(option.equipmentBundle)
-        ? option.equipmentBundle
-        : [];
-
-      return equipmentBundle;
-    });
-  });
-
-  return [...granted, ...selectedChoices];
+  return granted;
 }
 
 function matchesCategory(item: any, categoryRefId: string): boolean {
@@ -130,7 +111,7 @@ export async function resolveItemPayload(
   itemId: string,
   multiplier = 1,
 ): Promise<Array<{ id: string; quantity: number }>> {
-  const [item] = await db.select().from(items).where(eq(items.id, itemId));
+  const [item] = await tx.select().from(items).where(eq(items.id, itemId));
   if (!item) return [];
 
   if (!item.isBundle) {
@@ -163,16 +144,20 @@ export async function resolveCategoryPayload(
   categoryRefId: string,
   multiplier = 1,
 ): Promise<Array<{ id: string; quantity: number }>> {
-  const allItems = await db.select().from(items);
+  const allItems = await tx.select().from(items);
+  const match = allItems
+    .filter((item: any) => matchesCategory(item, categoryRefId))
+    .sort((left: any, right: any) => {
+      const leftKey = `${left.name ?? ""}::${left.id}`;
+      const rightKey = `${right.name ?? ""}::${right.id}`;
+      return leftKey.localeCompare(rightKey);
+    })[0];
 
-  const resolved: Array<{ id: string; quantity: number }> = [];
-  for (const item of allItems) {
-    if (!matchesCategory(item, categoryRefId)) continue;
-    const childItems = await resolveItemPayload(tx, item.id, multiplier);
-    resolved.push(...childItems);
+  if (!match) {
+    return [];
   }
 
-  return resolved;
+  return resolveItemPayload(tx, match.id, multiplier);
 }
 
 export async function processStartingEquipment(

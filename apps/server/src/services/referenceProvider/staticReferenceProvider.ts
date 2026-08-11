@@ -70,6 +70,7 @@ const asClassRow = (classDefinition: (typeof CLASS_DICTIONARY)[string]) => ({
   name: classDefinition.name,
   hitDie: classDefinition.hitDie,
   subclassRequirementLevel: classDefinition.subclassUnlockLevel,
+  startingEquipment: classDefinition.startingEquipment,
   lore: toLore(`${classDefinition.name} class reference data.`),
   sourceType: "core",
   ownerCharacterId: null,
@@ -362,7 +363,9 @@ export class StaticReferenceProvider implements ReferenceProvider {
     const query = input.query.trim().toLowerCase();
 
     const all = Object.values(ITEM_DICTIONARY)
-      .filter((item) => (query ? item.name.toLowerCase().includes(query) : true))
+      .filter((item) =>
+        query ? item.name.toLowerCase().includes(query) : true,
+      )
       .map((item) => ({
         id: item.id,
         name: item.name,

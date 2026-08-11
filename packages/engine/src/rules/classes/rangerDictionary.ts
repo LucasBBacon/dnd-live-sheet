@@ -1,4 +1,5 @@
 import type { ClassDefinition } from "@project/shared";
+import { CLASS_STARTING_EQUIPMENT } from "../startingEquipmentDictionary.js";
 import type { SubclassDefinition } from "../subclassDictionary.js";
 
 export const RANGER_CLASS: ClassDefinition = {
@@ -6,6 +7,7 @@ export const RANGER_CLASS: ClassDefinition = {
   name: "Ranger",
   hitDie: 10,
   subclassUnlockLevel: 3,
+  startingEquipment: CLASS_STARTING_EQUIPMENT.class_ranger,
   multiclassTraitIds: [
     "trait_ranger_mult_prof_armor",
     "trait_ranger_mult_prof_weapons",

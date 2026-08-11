@@ -1,4 +1,5 @@
 import type { ClassDefinition } from "@project/shared";
+import { CLASS_STARTING_EQUIPMENT } from "../startingEquipmentDictionary.js";
 import type { SubclassDefinition } from "../subclassDictionary.js";
 
 export const SORCERER_CLASS: ClassDefinition = {
@@ -6,6 +7,7 @@ export const SORCERER_CLASS: ClassDefinition = {
   name: "Sorcerer",
   hitDie: 6,
   subclassUnlockLevel: 1,
+  startingEquipment: CLASS_STARTING_EQUIPMENT.class_sorcerer,
   multiclassTraitIds: [],
   multiclassPrerequisites: { abilityMinimums: { cha: 13 } },
   startingProficiencyTraitIds: [

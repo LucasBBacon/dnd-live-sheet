@@ -116,6 +116,11 @@ export const ClassDefinitionSchema = z.object({
   hitDie: z.number(), // e.g., 8 for d8
   subclassUnlockLevel: z.number().int().min(1).max(3),
 
+  startingEquipment: StartingEquipmentDefinitionSchema.default({
+    given: [],
+    choices: [],
+  }),
+
   // what the class grants at lvl 1 (e.g., light armor, simple weapons)
   startingProficiencyTraitIds: z.array(z.string()).default([]),
 
@@ -132,6 +137,28 @@ export const ClassDefinitionSchema = z.object({
 export type FeatureGrant = z.infer<typeof FeatureGrantUnion>;
 export type ClassLevelFeature = z.infer<typeof ClassLevelFeatureSchema>;
 export type ClassDefinition = z.infer<typeof ClassDefinitionSchema>;
+
+export const BackgroundDefinitionSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  featureName: z.string(),
+  featureDescription: z.string(),
+  ideals: z.array(z.string()).default([]),
+  bonds: z.array(z.string()).default([]),
+  flaws: z.array(z.string()).default([]),
+  personalityTraits: z.array(z.string()).default([]),
+  backgroundTraitIds: z.array(z.string()).default([]),
+  startingEquipment: StartingEquipmentDefinitionSchema.default({
+    given: [],
+    choices: [],
+  }),
+  lore: z.object({
+    shortDescription: z.string(),
+    fullText: z.string().optional(),
+  }),
+});
+
+export type BackgroundDefinition = z.infer<typeof BackgroundDefinitionSchema>;
 
 // #endregion
 

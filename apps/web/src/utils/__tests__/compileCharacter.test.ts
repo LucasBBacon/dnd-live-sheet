@@ -29,6 +29,14 @@ describe("compileCharacterPayload", () => {
       bonds: "Friends",
       flaws: "Reckless",
     },
+    classStartingEquipment: {
+      given: [{ kind: "item", refId: "chain_mail", quantity: 1 }],
+      choices: [],
+    },
+    presetBackgroundStartingEquipment: {
+      given: [{ kind: "money", refId: "money_gp", quantity: 10 }],
+      choices: [],
+    },
     selectedClassEquipmentChoices: {
       0: [
         { kind: "item", refId: "longsword", quantity: 1 },
@@ -59,9 +67,11 @@ describe("compileCharacterPayload", () => {
       personality: validState.personality,
       startingEquipment: {
         given: [
+          { kind: "item", refId: "chain_mail", quantity: 1 },
           { kind: "item", refId: "longsword", quantity: 1 },
           { kind: "item", refId: "shield", quantity: 1 },
           { kind: "item", refId: "crossbow_bolt", quantity: 20 },
+          { kind: "money", refId: "money_gp", quantity: 10 },
         ],
         choices: [],
       },
@@ -97,6 +107,12 @@ describe("compileCharacterPayload", () => {
       type: "CUSTOM",
       presetId: null,
       customData: customBg,
+    });
+
+    expect(result.startingEquipment.given).not.toContainEqual({
+      kind: "money",
+      refId: "money_gp",
+      quantity: 10,
     });
   });
 
@@ -192,7 +208,7 @@ describe("compileCharacterPayload", () => {
     expect(result).toHaveProperty("startingEquipment");
   });
 
-  it("flattens selected class equipment choices", () => {
+  it("merges guaranteed and selected starting equipment grants", () => {
     const state = {
       ...validState,
       selectedClassEquipmentChoices: {
@@ -208,9 +224,11 @@ describe("compileCharacterPayload", () => {
 
     expect(result.startingEquipment).toEqual({
       given: [
+        { kind: "item", refId: "chain_mail", quantity: 1 },
         { kind: "item", refId: "dagger", quantity: 2 },
         { kind: "item", refId: "rope", quantity: 1 },
         { kind: "item", refId: "torch", quantity: 5 },
+        { kind: "money", refId: "money_gp", quantity: 10 },
       ],
       choices: [],
     });

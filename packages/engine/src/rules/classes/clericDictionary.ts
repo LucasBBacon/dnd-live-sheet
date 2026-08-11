@@ -1,4 +1,5 @@
 import type { ClassDefinition } from "@project/shared";
+import { CLASS_STARTING_EQUIPMENT } from "../startingEquipmentDictionary.js";
 import type { SubclassDefinition } from "../subclassDictionary.js";
 
 export const CLERIC_CLASS: ClassDefinition = {
@@ -6,6 +7,7 @@ export const CLERIC_CLASS: ClassDefinition = {
   name: "Cleric",
   hitDie: 8,
   subclassUnlockLevel: 1,
+  startingEquipment: CLASS_STARTING_EQUIPMENT.class_cleric,
   multiclassTraitIds: [
     "trait_cleric_mult_prof_armor",
     "trait_cleric_mult_prof_weapons",

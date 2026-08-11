@@ -4,11 +4,17 @@ import type { CreateCharacterPayload, StartingEquipmentGrant } from "@project/sh
 export const compileCharacterPayload = (
   state: WizardState,
 ): CreateCharacterPayload => {
-  // flatten the class equipment choices from their grouped wizard state into a
-  // resolved grant list for the server schema
-  const compiledEquipment = Object.values(
+  const selectedClassEquipment = Object.values(
     state.selectedClassEquipmentChoices,
   ).flat() as StartingEquipmentGrant[];
+
+  const compiledEquipment = [
+    ...state.classStartingEquipment.given,
+    ...selectedClassEquipment,
+    ...(state.backgroundType === "PRESET"
+      ? state.presetBackgroundStartingEquipment.given
+      : []),
+  ];
 
   return {
     campaignId: state.campaignId ?? undefined,

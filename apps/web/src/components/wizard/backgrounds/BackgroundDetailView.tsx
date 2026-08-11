@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useWizardStore } from "../../../store/wizardStore";
+import { describeStartingEquipmentGrant } from "../../../utils/startingEquipment";
 import { CustomBackgroundBuilder } from "./CustomBackgroundBuilder";
 
 export const BackgroundDetailView = ({
@@ -71,6 +72,23 @@ export const BackgroundDetailView = ({
                 <p style={{ fontSize: "0.85rem", marginTop: "0.5rem" }}>
                   {activeBg.featureDescription}
                 </p>
+
+                {activeBg.startingEquipment?.given?.length > 0 && (
+                  <div style={{ marginTop: "1rem" }}>
+                    <strong>Starting Equipment</strong>
+                    <ul
+                      style={{ margin: "0.5rem 0 0 0", paddingLeft: "1.25rem" }}
+                    >
+                      {activeBg.startingEquipment.given.map(
+                        (grant: any, index: number) => (
+                          <li key={`${grant.refId}-${index}`}>
+                            {describeStartingEquipmentGrant(grant)}
+                          </li>
+                        ),
+                      )}
+                    </ul>
+                  </div>
+                )}
               </div>
             )}
 
@@ -158,31 +176,33 @@ export const BackgroundDetailView = ({
                             "No summary provided for this trait."}
                         </div>
 
-                        {Array.isArray(trait.effects) && trait.effects.length > 0 && (
-                          <div
-                            style={{
-                              marginTop: "0.5rem",
-                              display: "flex",
-                              gap: "0.5rem",
-                              flexWrap: "wrap",
-                            }}
-                          >
-                            {trait.effects.map((eff: any, idx: number) => (
-                              <span
-                                key={idx}
-                                style={{
-                                  fontSize: "0.7rem",
-                                  background: "#eef9ee",
-                                  border: "1px solid #cceecc",
-                                  padding: "0.1rem 0.3rem",
-                                  color: "#155724",
-                                }}
-                              >
-                                Mod: {eff.type} {eff.target || eff.category || ""}
-                              </span>
-                            ))}
-                          </div>
-                        )}
+                        {Array.isArray(trait.effects) &&
+                          trait.effects.length > 0 && (
+                            <div
+                              style={{
+                                marginTop: "0.5rem",
+                                display: "flex",
+                                gap: "0.5rem",
+                                flexWrap: "wrap",
+                              }}
+                            >
+                              {trait.effects.map((eff: any, idx: number) => (
+                                <span
+                                  key={idx}
+                                  style={{
+                                    fontSize: "0.7rem",
+                                    background: "#eef9ee",
+                                    border: "1px solid #cceecc",
+                                    padding: "0.1rem 0.3rem",
+                                    color: "#155724",
+                                  }}
+                                >
+                                  Mod: {eff.type}{" "}
+                                  {eff.target || eff.category || ""}
+                                </span>
+                              ))}
+                            </div>
+                          )}
                       </div>
                     ))}
                   </div>

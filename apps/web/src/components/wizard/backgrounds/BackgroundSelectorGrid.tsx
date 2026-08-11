@@ -1,3 +1,4 @@
+import type { StartingEquipmentDefinition } from "@project/shared";
 import { useState, useMemo } from "react";
 import { useWizardStore } from "../../../store/wizardStore";
 
@@ -6,6 +7,7 @@ interface BackgroundSelectorGridProps {
     id: string;
     name: string;
     lore: { shortDescription: string };
+    startingEquipment?: StartingEquipmentDefinition;
   }>;
 }
 
@@ -52,7 +54,12 @@ export const BackgroundSelectorGrid = ({
         {filteredBackgrounds.map((bg) => (
           <div
             key={bg.id}
-            onClick={() => setPresetBackground(bg.id)}
+            onClick={() =>
+              setPresetBackground(
+                bg.id,
+                bg.startingEquipment ?? { given: [], choices: [] },
+              )
+            }
             style={{
               padding: "0.75rem",
               border: `1px solid ${bg.id === selectedBgId ? "#000" : "#ccc"}`,

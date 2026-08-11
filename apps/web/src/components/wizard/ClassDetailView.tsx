@@ -11,6 +11,9 @@ export const ClassDetailView = ({ classes }: { classes: any[] }) => {
   const setSubclass = useWizardStore((state) => state.setSubclass);
   const campaignId = useWizardStore((state) => state.campaignId);
   const targetLevel = useWizardStore((state) => state.targetLevel); // Defaults to 1
+  const setClassStartingEquipment = useWizardStore(
+    (state) => state.setClassStartingEquipment,
+  );
   const setRequiredEquipmentChoiceCount = useWizardStore(
     (state) => state.setRequiredEquipmentChoiceCount,
   );
@@ -18,6 +21,10 @@ export const ClassDetailView = ({ classes }: { classes: any[] }) => {
   const activeClass = classes.find((c) => c.id === selectedClassId);
 
   useEffect(() => {
+    setClassStartingEquipment(
+      activeClass?.startingEquipment ?? { given: [], choices: [] },
+    );
+
     if (activeClass?.startingEquipment?.choices) {
       setRequiredEquipmentChoiceCount(
         activeClass.startingEquipment.choices.length,
@@ -25,7 +32,7 @@ export const ClassDetailView = ({ classes }: { classes: any[] }) => {
     } else {
       setRequiredEquipmentChoiceCount(0);
     }
-  }, [activeClass, setRequiredEquipmentChoiceCount]);
+  }, [activeClass, setClassStartingEquipment, setRequiredEquipmentChoiceCount]);
 
   // On-Demand Data Fetching
   const { data: subclassesData } = useQuery({

@@ -3,6 +3,7 @@ import {
   useWizardStore,
   type WizardEquipmentChoice,
 } from "../../../store/wizardStore";
+import { describeStartingEquipmentGrant } from "../../../utils/startingEquipment";
 
 export const ClassEquipmentDevSelector = ({
   startingEquipment,
@@ -20,9 +21,7 @@ export const ClassEquipmentDevSelector = ({
 
   // helper to stringify items within an option bundle for readable dev labels
   const getBundleLabel = (bundle: any[]) => {
-    return bundle
-      .map((item) => `${item.refId} (x${item.quantity})`)
-      .join(" AND ");
+    return bundle.map(describeStartingEquipmentGrant).join(" AND ");
   };
 
   return (
@@ -44,9 +43,7 @@ export const ClassEquipmentDevSelector = ({
         <strong>Guaranteed Grants:</strong>
         <ul style={{ margin: "0.5rem 0 0 0", paddingLeft: "1.5rem" }}>
           {given?.map((item: any, idx: number) => (
-            <li key={idx}>
-              {item.refId} x{item.quantity}
-            </li>
+            <li key={idx}>{describeStartingEquipmentGrant(item)}</li>
           ))}
         </ul>
       </div>
