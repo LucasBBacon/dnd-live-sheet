@@ -3,6 +3,7 @@ import type { ActionGrant } from "@project/shared";
 import { ActionResolver } from "../actionResolver.js";
 import type { InventoryLedger } from "../inventoryLedger.js";
 import type { RollContextPayload } from "../rollContextBuilder.js";
+import { CombatContextManager } from "../../calculators/combatContext.js";
 import { EffectManager } from "../../calculators/effects.js";
 import { ResourceManager } from "../../calculators/resources.js";
 
@@ -964,10 +965,13 @@ describe("ActionResolver trigger dispatch", () => {
 describe("ActionResolver cost settlement", () => {
   let effectManager: EffectManager;
   let resourceManager: ResourceManager;
+  let combatContext: CombatContextManager;
 
   beforeEach(() => {
     effectManager = new EffectManager();
     resourceManager = new ResourceManager();
+    combatContext = new CombatContextManager();
+    combatContext.beginTurn({ kind: "player" });
     resourceManager.initializeFromGrants([
       { id: "pool_ki", name: "Ki", maxCharges: 2, resetOn: "short_rest" },
     ]);
@@ -986,7 +990,7 @@ describe("ActionResolver cost settlement", () => {
         { type: "trait_pool", id: "pool_ki", amount: 1 },
         { type: "inventory_instance", id: "inv_plain", amount: 1 },
       ]),
-      { effectManager, resourceManager, inventoryLedger: ledger },
+      { effectManager, resourceManager, inventoryLedger: ledger, combatContext },
     );
 
     expect(result.executed).toBe(true);
@@ -1005,7 +1009,7 @@ describe("ActionResolver cost settlement", () => {
         { type: "trait_pool", id: "pool_ki", amount: 1 },
         { type: "inventory_instance", id: "inv_plain", amount: 1 },
       ]),
-      { effectManager, resourceManager, inventoryLedger: ledger },
+      { effectManager, resourceManager, inventoryLedger: ledger, combatContext },
     );
 
     expect(result.executed).toBe(false);
@@ -1025,7 +1029,7 @@ describe("ActionResolver cost settlement", () => {
         { type: "trait_pool", id: "pool_someone_elses", amount: 1 },
         { type: "inventory_instance", id: "inv_plain", amount: 1 },
       ]),
-      { effectManager, resourceManager, inventoryLedger: ledger },
+      { effectManager, resourceManager, inventoryLedger: ledger, combatContext },
     );
 
     expect(result.executed).toBe(false);
@@ -1042,10 +1046,107 @@ describe("ActionResolver cost settlement", () => {
     const result = ActionResolver.execute(kiOnly, payload(), {
       effectManager,
       resourceManager,
+      combatContext,
     });
 
     expect(result.executed).toBe(true);
     // omitting the cost must not make the action free
     expect(resourceManager.consume("pool_ki", 2)).toBe(false);
+  });
+
+  it("spends reaction economy for a reaction action during combat", () => {
+    const reactionAction: ActionGrant = {
+      ...bowShot,
+      id: "action_reactive_parry",
+      name: "Reactive Parry",
+      activation: "reaction",
+      consumesAmmo: undefined,
+    };
+
+    const result = ActionResolver.execute(reactionAction, payload(), {
+      effectManager,
+      resourceManager,
+      combatContext,
+    });
+
+    expect(result.executed).toBe(true);
+    expect(combatContext.getContext().economy.reactionAvailable).toBe(false);
+    expect(combatContext.getContext().economy.spentReactionSourceId).toBe(
+      "action_reactive_parry",
+    );
+  });
+
+  it("rejects a second reaction action after the reaction is spent", () => {
+    const reactionAction: ActionGrant = {
+      ...bowShot,
+      id: "action_reactive_parry",
+      name: "Reactive Parry",
+      activation: "reaction",
+      consumesAmmo: undefined,
+    };
+
+    const first = ActionResolver.execute(reactionAction, payload(), {
+      effectManager,
+      resourceManager,
+      combatContext,
+    });
+    const second = ActionResolver.execute(reactionAction, payload(), {
+      effectManager,
+      resourceManager,
+      combatContext,
+    });
+
+    expect(first.executed).toBe(true);
+    expect(second.executed).toBe(false);
+    expect(second.reason).toBe("reaction_unavailable");
+  });
+
+  it("refunds reaction economy if a later resource cost aborts the action", () => {
+    const reactionKiAction: ActionGrant = {
+      ...bowShot,
+      id: "action_reactive_ki_guard",
+      name: "Reactive Ki Guard",
+      activation: "reaction",
+      consumesAmmo: undefined,
+      consumesResource: "pool_ki",
+    };
+
+    resourceManager.consume("pool_ki", 2);
+
+    const result = ActionResolver.execute(reactionKiAction, payload(), {
+      effectManager,
+      resourceManager,
+      combatContext,
+    });
+
+    expect(result.executed).toBe(false);
+    expect(result.reason).toBe("insufficient_resource");
+    expect(combatContext.getContext().economy.reactionAvailable).toBe(true);
+    expect(combatContext.getContext().economy.spentReactionSourceId).toBeUndefined();
+  });
+
+  it("spends bonus action economy for bonus actions during combat", () => {
+    const bonusAction: ActionGrant = {
+      ...bowShot,
+      id: "action_offhand_strike",
+      name: "Offhand Strike",
+      activation: "bonus_action",
+      consumesAmmo: undefined,
+    };
+
+    const first = ActionResolver.execute(bonusAction, payload(), {
+      effectManager,
+      resourceManager,
+      combatContext,
+    });
+    const second = ActionResolver.execute(bonusAction, payload(), {
+      effectManager,
+      resourceManager,
+      combatContext,
+    });
+
+    expect(first.executed).toBe(true);
+    expect(second.executed).toBe(false);
+    expect(second.reason).toBe("bonus_action_unavailable");
   });
 });

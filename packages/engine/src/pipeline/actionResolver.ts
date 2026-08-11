@@ -5,6 +5,7 @@ import type {
   TriggerGrant,
 } from "@project/shared";
 import type { ActiveEffect, EffectManager } from "../calculators/effects.js";
+import type { CombatContextManager } from "../calculators/combatContext.js";
 import type { ResourceManager } from "../calculators/resources.js";
 import { DiceEngine } from "../utils/diceParser.js";
 import {
@@ -22,6 +23,9 @@ const generateId = () => Math.random().toString(36).substring(2, 9);
 
 export type ActionFailureReason =
   | "insufficient_resource"
+  | "action_unavailable"
+  | "bonus_action_unavailable"
+  | "reaction_unavailable"
   | "missing_stack"
   | "insufficient_stack"
   | "wrong_ammo"
@@ -51,6 +55,7 @@ export interface ActionResult {
 export interface ActionExecutionContext {
   effectManager: EffectManager;
   resourceManager: ResourceManager;
+  combatContext?: CombatContextManager;
   /** Required only for actions that spend ammunition. */
   inventoryLedger?: InventoryLedger;
   snapshot?: RuleSnapshotLookup;
@@ -132,6 +137,26 @@ const matchesStatePredicate = (
 
   return meetsRequired && !hasForbidden;
 };
+
+const activationFailureReason = (
+  activation: ActionGrant["activation"],
+): ActionFailureReason | null => {
+  switch (activation) {
+    case "action":
+      return "action_unavailable";
+    case "bonus_action":
+      return "bonus_action_unavailable";
+    case "reaction":
+      return "reaction_unavailable";
+    default:
+      return null;
+  }
+};
+
+const spendsCombatEconomy = (activation: ActionGrant["activation"]): boolean =>
+  activation === "action" ||
+  activation === "bonus_action" ||
+  activation === "reaction";
 
 /**
  * ActionResolver handles the execution of proactive abilities, translating
@@ -581,11 +606,51 @@ export class ActionResolver {
     // an unwind is other pools — which restore in memory.
 
     const spentPools: ConsumedResource[] = [];
+    let spentActivation: ActionGrant["activation"] | null = null;
+
+    if (
+      spendsCombatEconomy(action.activation) &&
+      context.combatContext?.getContext().inCombat
+    ) {
+      let activationSpent = false;
+
+      switch (action.activation) {
+        case "action":
+          activationSpent = context.combatContext.spendAction(action.id);
+          break;
+        case "bonus_action":
+          activationSpent = context.combatContext.spendBonusAction(action.id);
+          break;
+        case "reaction":
+          activationSpent = context.combatContext.spendReaction(action.id);
+          break;
+      }
+
+      if (!activationSpent) {
+        return fail(activationFailureReason(action.activation) ?? "unrequested_cost", action.id);
+      }
+
+      spentActivation = action.activation;
+    }
 
     for (const cost of pools) {
       if (context.resourceManager.consume(cost.id, cost.amount)) {
         spentPools.push(cost);
         continue;
+      }
+
+      if (spentActivation && context.combatContext) {
+        switch (spentActivation) {
+          case "action":
+            context.combatContext.refundAction();
+            break;
+          case "bonus_action":
+            context.combatContext.refundBonusAction();
+            break;
+          case "reaction":
+            context.combatContext.refundReaction();
+            break;
+        }
       }
 
       for (const spent of spentPools) {

@@ -116,6 +116,11 @@ export class CombatContextManager {
     return true;
   }
 
+  public refundAction(): void {
+    this.context.economy.actionAvailable = true;
+    this.context.economy.spentActionSourceId = undefined;
+  }
+
   public spendBonusAction(sourceId: string): boolean {
     if (!this.context.economy.bonusActionAvailable) return false;
     this.context.economy.bonusActionAvailable = false;
@@ -123,11 +128,21 @@ export class CombatContextManager {
     return true;
   }
 
+  public refundBonusAction(): void {
+    this.context.economy.bonusActionAvailable = true;
+    this.context.economy.spentBonusActionSourceId = undefined;
+  }
+
   public spendReaction(sourceId: string): boolean {
     if (!this.context.economy.reactionAvailable) return false;
     this.context.economy.reactionAvailable = false;
     this.context.economy.spentReactionSourceId = sourceId;
     return true;
+  }
+
+  public refundReaction(): void {
+    this.context.economy.reactionAvailable = true;
+    this.context.economy.spentReactionSourceId = undefined;
   }
 
   public setTurnFlag(flagId: string): void {

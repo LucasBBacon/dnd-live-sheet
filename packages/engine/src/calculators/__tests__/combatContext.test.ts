@@ -82,4 +82,17 @@ describe("CombatContextManager", () => {
     expect(manager.spendReaction("reaction_protection")).toBe(true);
     expect(manager.spendReaction("reaction_shield")).toBe(false);
   });
+
+  it("can refund spent economy when a later runtime cost aborts the action", () => {
+    const manager = new CombatContextManager();
+
+    manager.beginTurn({ kind: "player" });
+    expect(manager.spendReaction("reaction_protection")).toBe(true);
+
+    manager.refundReaction();
+
+    const state = manager.getContext();
+    expect(state.economy.reactionAvailable).toBe(true);
+    expect(state.economy.spentReactionSourceId).toBeUndefined();
+  });
 });
