@@ -20,6 +20,8 @@ import {
   CombatContextSchema,
   type CombatContext,
   type CombatEventInput,
+  type CombatRollSnapshotInput,
+  type CombatTargetRelationship,
   type CombatRollSnapshot,
   CharacterSlotSchema,
   type ActionGrant,
@@ -568,6 +570,12 @@ export interface CharacterSheetState {
       status?: "resolved" | "dismissed";
     },
   ) => void;
+  openHostileAttackReactionWindow: (options?: {
+    sourceLabel?: string;
+    targetLabel?: string;
+    relationship?: CombatTargetRelationship;
+    rollSnapshot?: CombatRollSnapshotInput;
+  }) => string;
   spendReaction: (sourceId: string) => boolean;
   beginTurn: () => void;
   endTurn: () => void;
@@ -1100,6 +1108,35 @@ export const useCharacterSheetStore = create<CharacterSheetState>(
         runtimeCombat,
         combatContext: runtimeCombat.resolveEvent(eventId, resolution),
       });
+    },
+
+    openHostileAttackReactionWindow: (options) => {
+      const state = get();
+      const runtimeCombat = ensureCombatManager(state);
+      const eventId = `evt_${crypto.randomUUID()}`;
+      const current = runtimeCombat.getContext();
+
+      if (!current.inCombat) {
+        runtimeCombat.beginCombat();
+      }
+
+      const combatContext = runtimeCombat.pushEvent({
+        id: eventId,
+        type: "reaction_window_opened",
+        relationship: options?.relationship ?? "adjacent_ally",
+        ...(options?.sourceLabel !== undefined && {
+          sourceLabel: options.sourceLabel,
+        }),
+        ...(options?.targetLabel !== undefined && {
+          targetLabel: options.targetLabel,
+        }),
+        ...(options?.rollSnapshot !== undefined && {
+          rollSnapshot: options.rollSnapshot,
+        }),
+      });
+
+      set({ runtimeCombat, combatContext });
+      return eventId;
     },
 
     spendReaction: (sourceId) => {

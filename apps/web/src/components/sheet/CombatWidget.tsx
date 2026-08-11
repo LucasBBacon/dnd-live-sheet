@@ -33,6 +33,12 @@ export const CombatWidget = () => {
   const recordRollResult = useCharacterSheetStore(
     (state) => state.recordRollResult,
   );
+  const openHostileAttackReactionWindow = useCharacterSheetStore(
+    (state) => state.openHostileAttackReactionWindow,
+  );
+  const resolveCombatEvent = useCharacterSheetStore(
+    (state) => state.resolveCombatEvent,
+  );
   const spendReaction = useCharacterSheetStore((state) => state.spendReaction);
   const runtimeEffects = useCharacterSheetStore(
     (state) => state.runtimeEffects,
@@ -59,6 +65,12 @@ export const CombatWidget = () => {
   const protectionTrait = TRAIT_DICTIONARY[PROTECTION_TRAIT_ID];
   const protectionAvailable = hasProtectionTrait(traits, traitGrants);
   const reactionAvailable = combatContext.economy.reactionAvailable;
+  const pendingProtectionWindow = combatContext.pendingEvents.find(
+    (event) =>
+      event.type === "reaction_window_opened" &&
+      event.status === "pending" &&
+      event.relationship === "adjacent_ally",
+  );
   const hasEquippedShield = inventory.some((item) => {
     if (item.slot !== "off_hand") return false;
 
@@ -123,6 +135,9 @@ export const CombatWidget = () => {
   };
 
   const handleProtection = async () => {
+    const pendingWindowId = pendingProtectionWindow?.id;
+    if (!pendingWindowId) return;
+
     try {
       const total = await requestRoll(
         "1d20",
@@ -135,6 +150,15 @@ export const CombatWidget = () => {
           submitLabel: "Record",
         },
       );
+
+      if (!spendReaction(PROTECTION_TRAIT_ID)) {
+        resolveCombatEvent(pendingWindowId, {
+          status: "dismissed",
+          summary: "Reaction unavailable",
+          reactionSourceId: PROTECTION_TRAIT_ID,
+        });
+        return;
+      }
 
       recordRollResult({
         characterId: "",
@@ -151,7 +175,57 @@ export const CombatWidget = () => {
         timestamp: Date.now(),
       });
 
-      spendReaction(PROTECTION_TRAIT_ID);
+      resolveCombatEvent(pendingWindowId, {
+        status: "resolved",
+        summary: "Protection applied",
+        reactionSourceId: PROTECTION_TRAIT_ID,
+        rollSnapshot: {
+          id: `roll_${pendingWindowId}`,
+          kind: "attack",
+          knowledge: "manual_total",
+          total,
+          relationship: "adjacent_ally",
+          rawRolls: [],
+          hasAdvantage: false,
+          hasDisadvantage: true,
+          sourceLabel: pendingProtectionWindow.sourceLabel,
+          targetLabel: pendingProtectionWindow.targetLabel,
+        },
+      });
+    } catch {
+      return;
+    }
+  };
+
+  const handleDeclareHostileAttack = async () => {
+    try {
+      const total = await requestRoll(
+        "1d20",
+        "Enter the hostile attack total that is threatening an ally within 5 feet.",
+        {
+          mode: "manual_total",
+          targetLabel: "Hostile attack total",
+          allowDigitalRoll: false,
+          manualPlaceholder: "Attack total...",
+          submitLabel: "Open window",
+        },
+      );
+
+      openHostileAttackReactionWindow({
+        sourceLabel: "Hostile creature",
+        targetLabel: "Nearby ally",
+        relationship: "adjacent_ally",
+        rollSnapshot: {
+          id: `roll_declared_${Date.now()}`,
+          kind: "attack",
+          knowledge: "manual_total",
+          total,
+          relationship: "adjacent_ally",
+          rawRolls: [],
+          hasAdvantage: false,
+          hasDisadvantage: false,
+        },
+      });
     } catch {
       return;
     }
@@ -173,17 +247,30 @@ export const CombatWidget = () => {
                 {protectionTrait?.description}
               </p>
               <p className="mt-2 text-xs text-emerald-800">
-                Record the enemy attack total after disadvantage is applied at
-                the table.
+                Declare a hostile attack to open a reaction window, then apply
+                Protection to resolve it.
               </p>
             </div>
             <div className="flex flex-col items-start gap-2 md:items-end">
               <button
                 type="button"
                 onClick={() => {
+                  void handleDeclareHostileAttack();
+                }}
+                className="rounded border border-emerald-700 bg-white px-3 py-2 text-xs font-semibold uppercase tracking-wide text-emerald-800 hover:bg-emerald-100"
+              >
+                Declare hostile attack
+              </button>
+              <button
+                type="button"
+                onClick={() => {
                   void handleProtection();
                 }}
-                disabled={!hasEquippedShield || !reactionAvailable}
+                disabled={
+                  !hasEquippedShield ||
+                  !reactionAvailable ||
+                  pendingProtectionWindow === undefined
+                }
                 className="rounded bg-emerald-700 px-3 py-2 text-xs font-semibold uppercase tracking-wide text-white hover:bg-emerald-800 disabled:cursor-not-allowed disabled:bg-emerald-200 disabled:text-emerald-700"
               >
                 Use Protection
@@ -191,9 +278,11 @@ export const CombatWidget = () => {
               <span className="text-[11px] uppercase tracking-[0.18em] text-emerald-700">
                 {!hasEquippedShield
                   ? "Equip a shield in your off hand"
-                  : reactionAvailable
-                    ? "Reaction available"
-                    : "Reaction spent"}
+                  : !reactionAvailable
+                    ? "Reaction spent"
+                    : pendingProtectionWindow
+                      ? "Reaction window open"
+                      : "Declare hostile attack first"}
               </span>
             </div>
           </div>

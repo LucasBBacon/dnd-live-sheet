@@ -8,8 +8,10 @@ const mocks = vi.hoisted(() => ({
   consumeItem: vi.fn(),
   executeActorAction: vi.fn(),
   executeCharacterAction: vi.fn(),
+  openHostileAttackReactionWindow: vi.fn(() => "evt_1"),
   recordRollResult: vi.fn(),
   requestRoll: vi.fn(),
+  resolveCombatEvent: vi.fn(),
   selectActorInstance: vi.fn(),
   spendReaction: vi.fn(() => true),
 }));
@@ -93,13 +95,27 @@ const storeState = {
   ],
   latestRollResults: [],
   combatContext: {
+    pendingEvents: [
+      {
+        id: "evt_1",
+        type: "reaction_window_opened",
+        status: "pending",
+        relationship: "adjacent_ally",
+        openedAtRound: 1,
+        sourceLabel: "Hostile creature",
+        targetLabel: "Nearby ally",
+      },
+    ],
     economy: {
       actionAvailable: true,
       bonusActionAvailable: true,
       reactionAvailable: true,
     },
+    recentEvents: [],
   },
+  openHostileAttackReactionWindow: mocks.openHostileAttackReactionWindow,
   recordRollResult: mocks.recordRollResult,
+  resolveCombatEvent: mocks.resolveCombatEvent,
   ruleSnapshot: null,
   runtimeEffects: {
     getActiveActors: () => [actor],
@@ -149,7 +165,7 @@ describe("CombatWidget", () => {
 
     expect(container.textContent).toContain("Reaction helper");
     expect(container.textContent).toContain("Fighting Style: Protection");
-    expect(container.textContent).toContain("Reaction available");
+    expect(container.textContent).toContain("Reaction window open");
 
     const button = Array.from(container.querySelectorAll("button")).find(
       (candidate) => candidate.textContent === "Use Protection",
@@ -185,6 +201,58 @@ describe("CombatWidget", () => {
       }),
     );
     expect(mocks.spendReaction).toHaveBeenCalledWith("trait_fs_protection");
+    expect(mocks.resolveCombatEvent).toHaveBeenCalledWith(
+      "evt_1",
+      expect.objectContaining({
+        status: "resolved",
+        summary: "Protection applied",
+        reactionSourceId: "trait_fs_protection",
+      }),
+    );
+
+    root.unmount();
+    container.remove();
+  });
+
+  it("opens a hostile attack reaction window through the declare action", async () => {
+    mocks.requestRoll.mockResolvedValueOnce(14);
+
+    const container = document.createElement("div");
+    document.body.appendChild(container);
+    const root = createRoot(container);
+
+    await act(async () => {
+      root.render(<CombatWidget />);
+    });
+
+    const declareButton = Array.from(container.querySelectorAll("button")).find(
+      (candidate) => candidate.textContent === "Declare hostile attack",
+    );
+
+    expect(declareButton).toBeDefined();
+
+    await act(async () => {
+      declareButton?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    });
+
+    expect(mocks.requestRoll).toHaveBeenCalledWith(
+      "1d20",
+      "Enter the hostile attack total that is threatening an ally within 5 feet.",
+      {
+        mode: "manual_total",
+        targetLabel: "Hostile attack total",
+        allowDigitalRoll: false,
+        manualPlaceholder: "Attack total...",
+        submitLabel: "Open window",
+      },
+    );
+    expect(mocks.openHostileAttackReactionWindow).toHaveBeenCalledWith(
+      expect.objectContaining({
+        sourceLabel: "Hostile creature",
+        targetLabel: "Nearby ally",
+        relationship: "adjacent_ally",
+      }),
+    );
 
     root.unmount();
     container.remove();
