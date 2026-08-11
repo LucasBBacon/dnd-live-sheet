@@ -3,6 +3,8 @@ export * from "./types/combat.js";
 export * from "./types/progression.js";
 export * from "./types/resources.js";
 export * from "./rules/classDictionary.js";
+export * from "./rules/featDictionary.js";
+export * from "./rules/backgroundDictionary.js";
 export * from "./rules/equipmentDictionary.js";
 export * from "./rules/equipSlots.js";
 export * from "./rules/raceDictionary.js";

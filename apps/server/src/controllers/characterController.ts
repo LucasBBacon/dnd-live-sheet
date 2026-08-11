@@ -4,6 +4,7 @@ import {
   characters,
   characterTraits,
 } from "@project/database/src/schema/operational.js";
+import { featTraits, traits } from "@project/database/src/schema/reference.js";
 import type { LevelUpPayload } from "@project/shared";
 import type { Request, Response } from "express";
 import { eq, sql } from "drizzle-orm";
@@ -131,11 +132,40 @@ export const applyLevelUp = async (req: Request, res: Response) => {
             sql`${characters[choice.stat as keyof typeof characters]} + ${choice.value}`;
         }
       } else if (payload.featId) {
-        await tx.insert(characterTraits).values({
-          characterId,
-          traitId: payload.featId,
-          source: "feat_selection",
-        });
+        const featTraitRows = await tx
+          .select({ traitId: featTraits.traitId })
+          .from(featTraits)
+          .where(eq(featTraits.featId, payload.featId));
+
+        const mappedTraitIds = featTraitRows.map((row) => row.traitId);
+
+        // Backward-compatible fallback: some packs model feat ids directly as
+        // trait ids. Prefer explicit feat->trait mappings whenever present.
+        if (mappedTraitIds.length === 0) {
+          const [directTrait] = await tx
+            .select({ id: traits.id })
+            .from(traits)
+            .where(eq(traits.id, payload.featId))
+            .limit(1);
+
+          if (directTrait) {
+            mappedTraitIds.push(payload.featId);
+          }
+        }
+
+        if (mappedTraitIds.length === 0) {
+          throw new Error(
+            `Feat ${payload.featId} has no mapped trait grants and cannot be applied.`,
+          );
+        }
+
+        await tx.insert(characterTraits).values(
+          mappedTraitIds.map((traitId) => ({
+            characterId,
+            traitId,
+            source: "feat_selection",
+          })),
+        );
       }
 
       // 7 - mutate top level character state

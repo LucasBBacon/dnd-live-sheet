@@ -11,6 +11,9 @@ const mockListen = vi.fn();
 
 const mockCreateAuthMiddleware = vi.fn(() => "auth_middleware");
 const mockInitializeWebSocketGateway = vi.fn();
+const mockInitialiseReferenceProvider = vi.fn(async () => ({
+  source: "static",
+}));
 
 vi.mock("express", () => {
   (mockExpressFactory as any).json = mockExpressJson;
@@ -63,6 +66,10 @@ vi.mock("../gateway/socket.js", () => ({
   initializeWebSocketGateway: mockInitializeWebSocketGateway,
 }));
 
+vi.mock("../services/referenceProvider/index.js", () => ({
+  initialiseReferenceProvider: mockInitialiseReferenceProvider,
+}));
+
 describe("server bootstrap", () => {
   beforeEach(() => {
     vi.resetModules();
@@ -81,6 +88,7 @@ describe("server bootstrap", () => {
 
     expect(mockCreateServer).toHaveBeenCalled();
     expect(mockCreateAuthMiddleware).toHaveBeenCalled();
+    expect(mockInitialiseReferenceProvider).toHaveBeenCalledTimes(1);
     expect(mockInitializeWebSocketGateway).toHaveBeenCalledWith(
       expect.objectContaining({ listen: mockListen }),
     );

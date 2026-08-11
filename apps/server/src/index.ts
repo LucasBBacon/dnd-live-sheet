@@ -10,6 +10,7 @@ import { createAuthMiddleware } from "./middleware/requireAuth.js";
 import { MockAuthProvider } from "./core/auth/MockAuthProvider.js";
 import { globalErrorHandler } from "./middleware/errorHandler.js";
 import { initializeWebSocketGateway } from "./gateway/socket.js";
+import { initialiseReferenceProvider } from "./services/referenceProvider/index.js";
 
 const app = express();
 const server = http.createServer(app); // wrap express in standard http server
@@ -36,10 +37,8 @@ initializeWebSocketGateway(server);
 const PORT = process.env.PORT || 3000;
 
 const bootstrap = async () => {
-  if (process.env.DATABASE_URL) {
-    const { warmReferenceCache } = await import("./services/referenceCache.js");
-    await warmReferenceCache();
-  }
+  await initialiseReferenceProvider();
+
   server.listen(PORT, () => {
     console.log(`Server & WebSockets initialized on port ${PORT}`);
   });
