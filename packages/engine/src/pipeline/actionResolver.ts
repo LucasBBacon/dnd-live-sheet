@@ -310,6 +310,7 @@ export class ActionResolver {
         const damageBonus = effect.damageBonus ?? 0;
 
         const attackRoll = DiceEngine.rollDigital("1d20");
+        const isCriticalHit = attackRoll.rolls[0] === 20;
         const appliedAttackRolls = DiceEngine.applyDiceRules(
           attackRoll.rolls,
           context.diceRules ?? [],
@@ -332,14 +333,19 @@ export class ActionResolver {
 
         for (const [index, segment] of damageSegments.entries()) {
           const baseDice = segment.baseDice;
-          const roll = DiceEngine.rollDigital(baseDice);
+          const roll =
+            segment.maximized ||
+            (isCriticalHit && effect.criticalDamageMaximized)
+              ? DiceEngine.rollMaximized(baseDice)
+              : DiceEngine.rollDigital(baseDice);
+          const { sides } = DiceEngine.parse(baseDice);
           const appliedRolls = DiceEngine.applyDiceRules(
             roll.rolls,
             context.diceRules ?? [],
             "DAMAGE_ROLL",
             {
               activeStates: resolvedActiveStates,
-              sides: Number.parseInt(baseDice.split("d")[1] ?? "6", 10),
+              sides,
               rollFn: (sides) => DiceEngine.rollDigital(`1d${sides}`).total,
               requiredDamageType: segment.damageType,
             },
@@ -428,7 +434,10 @@ export class ActionResolver {
 
         for (const segment of effect.damage) {
           const baseDice = segment.baseDice;
-          const roll = DiceEngine.rollDigital(baseDice);
+          const roll = segment.maximized
+            ? DiceEngine.rollMaximized(baseDice)
+            : DiceEngine.rollDigital(baseDice);
+          const { sides } = DiceEngine.parse(baseDice);
           const appliedRolls = DiceEngine.applyDiceRules(
             roll.rolls,
             context.diceRules ?? [],
@@ -438,7 +447,7 @@ export class ActionResolver {
                 activeStates.length > 0
                   ? activeStates
                   : (context.activeStates ?? []),
-              sides: Number.parseInt(baseDice.split("d")[1] ?? "6", 10),
+              sides,
               rollFn: (sides) => DiceEngine.rollDigital(`1d${sides}`).total,
               requiredDamageType: segment.damageType,
             },
@@ -627,7 +636,10 @@ export class ActionResolver {
       }
 
       if (!activationSpent) {
-        return fail(activationFailureReason(action.activation) ?? "unrequested_cost", action.id);
+        return fail(
+          activationFailureReason(action.activation) ?? "unrequested_cost",
+          action.id,
+        );
       }
 
       spentActivation = action.activation;

@@ -7,6 +7,7 @@ import type {
 import { AbilityEngine } from "./abilities.js";
 import type { Ability } from "../types/core.js";
 import type { WeaponAttackContext } from "../types/combat.js";
+import { DiceEngine } from "../utils/diceParser.js";
 
 export interface DerivedAttack {
   weaponId: string;
@@ -15,6 +16,7 @@ export interface DerivedAttack {
   damageBonus: number;
   damageExpression: string; // e.g., '1d8 + 4'
   criticalDamageExpression: string; // e.g., '2d8 + 4'
+  criticalDamageMaximized: boolean;
   isProficient: boolean;
   context: WeaponAttackContext;
   breakdown: {
@@ -25,9 +27,17 @@ export interface DerivedAttack {
 }
 
 /**
- * The CombatEngine class provides methods to calculate derived combat statistics for a character based on their ability scores, proficiency, and weapon properties. It encapsulates the logic for determining the governing ability score modifier, calculating attack bonuses, and generating damage expressions.
+ * The CombatEngine class provides methods to calculate derived combat statistics for a character based on their ability scores, proficiency, and weapon properties.
+ * It encapsulates the logic for determining the governing ability score modifier, calculating attack bonuses, and generating damage expressions.
  */
 export class CombatEngine {
+  // region Derive Stat
+
+  /**
+   * Determines if any active states override the governing ability score for attacks.
+   * @param activeStates An array of strings representing the current active states affecting the character.
+   * @returns The Ability that should govern the attack calculations, or undefined if no overrides are present.
+   */
   private static stateDrivenGoverningStat(
     activeStates: string[] = [],
   ): Ability | undefined {
@@ -64,12 +74,15 @@ export class CombatEngine {
       weapon.category === "martial_ranged";
     const hasFinesse = weapon.properties.includes("finesse");
 
+    // 1 - fetch mods
     const strMod = AbilityEngine.getModifier(abilityScores.STR);
     const dexMod = AbilityEngine.getModifier(abilityScores.DEX);
     const chaMod = AbilityEngine.getModifier(abilityScores.CHA);
     const wisMod = AbilityEngine.getModifier(abilityScores.WIS);
 
+    // 2 - determine governing stat based on weapon properties and active states
     const stateOverride = this.stateDrivenGoverningStat(activeStates);
+    // 3 - overrides 
     if (stateOverride === "CHA") {
       return { statName: "CHA", mod: chaMod };
     }
@@ -86,6 +99,7 @@ export class CombatEngine {
       return { statName: "DEX", mod: dexMod };
     }
 
+    // 4 - default logic based on weapon properties
     if (hasFinesse) {
       return dexMod > strMod
         ? { statName: "DEX", mod: dexMod }
@@ -100,6 +114,15 @@ export class CombatEngine {
     return { statName: "STR", mod: strMod };
   }
 
+  // endregion
+
+  // region Attack Matrix
+
+  /**
+   * Infers the attack type based on the weapon's category and properties.
+   * @param weapon The weapon definition object containing properties and categories
+   * @returns A string representing the inferred attack type: "melee_weapon", "ranged_weapon", "melee_spell", or "ranged_spell".
+   */
   private static inferAttackType(
     weapon: WeaponDefinition,
   ): "melee_weapon" | "ranged_weapon" | "melee_spell" | "ranged_spell" {
@@ -110,6 +133,13 @@ export class CombatEngine {
     return isRangedCategory ? "ranged_weapon" : "melee_weapon";
   }
 
+  /**
+   * Determines if a given critical hit modifier applies to the current attack context based on required and forbidden states, as well as required attack types.
+   * @param modifier The critical hit modifier being evaluated
+   * @param attackType The attack classification that the modifier rules should match against
+   * @param activeStates Flat array of all active states affecting the character
+   * @returns A boolean indicating whether the critical hit modifier applies to the current attack context
+   */
   private static matchesCriticalHitModifier(
     modifier: CriticalHitModifier,
     attackType:
@@ -122,43 +152,59 @@ export class CombatEngine {
     if (
       modifier.requiredStates?.some((state) => !activeStates.includes(state))
     ) {
-      return false;
+      return false; // required states not met
     }
 
     if (
       modifier.forbiddenStates?.some((state) => activeStates.includes(state))
     ) {
-      return false;
+      return false; // forbidden states present
     }
 
     if (modifier.requiredAttackTypes.length === 0) {
-      return true;
+      return true; // no specific attack type required
     }
 
+    // check if the attack type matches any of the required attack types
     return modifier.requiredAttackTypes.includes(attackType);
   }
 
+  /**
+   * Applies a critical hit modifier to the base damage dice expression based on the modifier's type and properties.
+   * @param baseDice The base damage dice expression (e.g., "1d8")
+   * @param modifier The critical hit modifier being applied
+   * @returns A new damage dice expression reflecting the applied critical hit modifier
+   */
   private static applyCriticalHitModifier(
     baseDice: string,
     modifier: CriticalHitModifier,
   ): string {
     if (modifier.type === "add_base_die") {
-      const match = baseDice.match(/^(\d+)d(\d+)$/i);
-      if (!match || !match[1] || !match[2]) return baseDice;
-      return `${Number.parseInt(match[1], 10) + 1}d${match[2]}`;
+      // if the base dice is a valid dice expression, parse it and add one more die of the same type
+      try {
+        const { count, sides } = DiceEngine.parse(baseDice);
+        return `${count + 1}d${sides}`;
+      } catch {
+        return baseDice;
+      }
     }
 
     if (modifier.type === "add_specific_die" && modifier.diceToAdd) {
+      // if the modifier specifies a specific die to add, append it to the base dice expression
       return modifier.diceToAdd;
     }
 
-    if (modifier.type === "maximize_dice") {
-      return baseDice;
-    }
-
+    // if the modifier type is unrecognized, return the base dice expression unchanged
     return baseDice;
   }
 
+  /**
+   * Formats the final damage expression by combining the base dice expression, total damage bonus, and damage type into a single string.
+   * @param damageDiceExpression The base damage dice expression (e.g., "1d8")
+   * @param totalDamageBonus The total damage bonus to be added to the base damage
+   * @param damageType The type of damage being dealt (e.g., "slashing", "fire")
+   * @returns A formatted string representing the complete damage expression (e.g., "1d8 + 4 slashing")
+   */
   private static formatDamageExpression(
     damageDiceExpression: string,
     totalDamageBonus: number,
@@ -169,11 +215,19 @@ export class CombatEngine {
       : `${damageDiceExpression} ${totalDamageBonus > 0 ? "+" : ""}${totalDamageBonus} ${damageType}`;
   }
 
+  /**
+   * Resolves the attack context based on active states and any explicitly provided context, determining the hand used, attack usage, and whether a two-handed grip is applied.
+   * @param activeStates Flat array of all active states affecting the character
+   * @param attackContext Optional explicit hand and usage metadata for the requested attack
+   * @returns A fully resolved WeaponAttackContext object reflecting the current attack context
+   */
   private static resolveAttackContext(
     activeStates: string[],
     attackContext?: WeaponAttackContext,
   ): WeaponAttackContext {
     if (attackContext) {
+      // if an explicit context is provided, respect it 
+      // but resolve the two-handed grip state based on active states if not explicitly set
       return {
         ...attackContext,
         isTwoHandedGrip:
@@ -182,8 +236,10 @@ export class CombatEngine {
       };
     }
 
+    // if no explicit context is provided, infer the hand and usage based on active states
     const isOffhand = activeStates.includes("offhand_attack");
 
+    // if no explicit context is provided, infer the hand and usage based on active states
     return {
       hand: isOffhand ? "off_hand" : "main_hand",
       attackUsage: isOffhand ? "two_weapon_bonus" : "standard",
@@ -191,6 +247,12 @@ export class CombatEngine {
     };
   }
 
+  /**
+   * Resolves the effective value of a runtime modifier based on its source and the governing ability modifier.
+   * @param modifier The runtime modifier being evaluated
+   * @param governingMod The governing ability score modifier for the current attack context
+   * @returns The effective numeric value of the modifier, taking into account its source and any relevant overrides
+   */
   private static resolveModifierValue(
     modifier: RuntimeModifier,
     governingMod: number,
@@ -199,11 +261,15 @@ export class CombatEngine {
       modifier.valueSource === "attack_ability_modifier" ||
       modifier.valueSource === "governing_stat_modifier"
     ) {
-      return governingMod;
+      return governingMod; // if the modifier's value is derived from the governing stat, return the governing modifier
     }
 
-    return modifier.value;
+    return modifier.value; // otherwise, return the static value defined in the modifier
   }
+
+  // endregion
+
+  // region Weapon Attack
 
   /**
    * Calculates the final attack matrix for a given equipped weapon.
@@ -337,10 +403,13 @@ export class CombatEngine {
         ? weapon.versatileDamageDice
         : weapon.damageDice;
 
+    // determine attack type for critical hit modifiers
     const resolvedAttackType = attackType ?? this.inferAttackType(weapon);
     let damageDiceExpression = finalDice ?? weapon.damageDice;
     let criticalDamageDiceExpression = damageDiceExpression;
+    let criticalDamageMaximized = false;
 
+    // apply critical hit modifiers if this is a critical hit
     for (const modifier of criticalHitModifiers) {
       if (
         !this.matchesCriticalHitModifier(
@@ -352,16 +421,25 @@ export class CombatEngine {
         continue;
       }
 
+      // if the modifier is of type 'maximize_dice', set the criticalDamageMaximized flag to true
+      if (modifier.type === "maximize_dice") {
+        criticalDamageMaximized = true;
+        continue;
+      }
+
+      // if the modifier is of type 'add_base_die' or 'add_specific_die', apply it to the critical damage dice expression
       criticalDamageDiceExpression = this.applyCriticalHitModifier(
         criticalDamageDiceExpression,
         modifier,
       );
     }
 
+    // if this is a critical hit and the critical damage is maximized, override the damage dice expression to reflect maximized damage
     if (isCriticalHit) {
       damageDiceExpression = criticalDamageDiceExpression;
     }
 
+    // format the final damage expressions for both normal and critical hits
     const damageExpression = this.formatDamageExpression(
       damageDiceExpression,
       totalDamageBonus,
@@ -380,6 +458,7 @@ export class CombatEngine {
       damageBonus: totalDamageBonus,
       damageExpression,
       criticalDamageExpression,
+      criticalDamageMaximized,
       isProficient,
       context: resolvedContext,
       breakdown: {
@@ -389,4 +468,6 @@ export class CombatEngine {
       },
     };
   }
+
+  // endregion
 }

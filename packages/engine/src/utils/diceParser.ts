@@ -7,10 +7,31 @@ export interface DiceRuleContext {
   requiredDamageType?: string;
 }
 
+export interface ParsedDiceExpression {
+  count: number;
+  sides: number;
+  modifier: number;
+}
+
 /**
  * DiceEngine class provides functionality to parse standard dice notation and execute digital rolls.
  */
 export class DiceEngine {
+  public static parse(expression: string): ParsedDiceExpression {
+    const cleanExpr = expression.replace(/\s+/g, "").toLowerCase();
+    const match = cleanExpr.match(/^(\d+)d(\d+)([+-]\d+)?$/);
+
+    if (!match || !match[1] || !match[2]) {
+      throw new Error(`Invalid dice expression: ${expression}`);
+    }
+
+    return {
+      count: Number.parseInt(match[1], 10),
+      sides: Number.parseInt(match[2], 10),
+      modifier: match[3] ? Number.parseInt(match[3], 10) : 0,
+    };
+  }
+
   private static matchesStateRequirements(
     rule: DiceRule,
     activeStates: string[],
@@ -23,7 +44,11 @@ export class DiceEngine {
       return false;
     }
 
-    if (requiredDamageType && rule.requiredDamageType && rule.requiredDamageType !== requiredDamageType) {
+    if (
+      requiredDamageType &&
+      rule.requiredDamageType &&
+      rule.requiredDamageType !== requiredDamageType
+    ) {
       return false;
     }
 
@@ -67,7 +92,14 @@ export class DiceEngine {
 
     for (const rule of rules) {
       if (rule.target !== target) continue;
-      if (!this.matchesStateRequirements(rule, context.activeStates, context.requiredDamageType)) continue;
+      if (
+        !this.matchesStateRequirements(
+          rule,
+          context.activeStates,
+          context.requiredDamageType,
+        )
+      )
+        continue;
       currentRolls = this.applyMutator(currentRolls, rule, context);
     }
 
@@ -84,24 +116,7 @@ export class DiceEngine {
     rolls: number[];
     modifier: number;
   } {
-    // strip whitespace and force lowercase
-    const cleanExpr = expression.replace(/\s+/g, "").toLowerCase();
-
-    // regex to match XdY + Z or XdY - Z
-    const match = cleanExpr.match(/^(\d+)d(\d+)([+-]\d+)?$/);
-
-    if (!match) throw new Error(`Invalid dice expression: ${expression}`);
-
-    const countRaw = match[1];
-    const sidesRaw = match[2];
-    const modifierRaw = match[3];
-
-    if (!countRaw || !sidesRaw)
-      throw new Error(`Invalid dice expression groups: ${expression}`);
-
-    const count = parseInt(countRaw, 10);
-    const sides = parseInt(sidesRaw, 10);
-    const modifier = modifierRaw ? parseInt(modifierRaw, 10) : 0;
+    const { count, sides, modifier } = this.parse(expression);
 
     const rolls: number[] = [];
     let sum = 0;
@@ -115,6 +130,21 @@ export class DiceEngine {
 
     return {
       total: Math.max(0, sum + modifier),
+      rolls,
+      modifier,
+    };
+  }
+
+  public static rollMaximized(expression: string): {
+    total: number;
+    rolls: number[];
+    modifier: number;
+  } {
+    const { count, sides, modifier } = this.parse(expression);
+    const rolls = Array.from({ length: count }, () => sides);
+
+    return {
+      total: Math.max(0, count * sides + modifier),
       rolls,
       modifier,
     };

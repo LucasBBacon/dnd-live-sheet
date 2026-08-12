@@ -59,6 +59,7 @@ export const ActionSaveSchema = z.object({
 export const DamageSegmentSchema = z.object({
   sourceName: z.string(),
   baseDice: z.string(),
+  maximized: z.boolean().optional(),
   damageType: DamageTypeSchema,
   scalingMode: ModifierScalingSchema.default("none"),
   scalingClassId: z.string().optional(), // must be provided if mode is 'class_level'
@@ -93,6 +94,7 @@ export const AttackEffectSchema = z.object({
   weaponContext: WeaponAttackContextSchema.optional(),
   attackBonus: z.number().optional(),
   damageBonus: z.number().optional(),
+  criticalDamageMaximized: z.boolean().optional(),
   damage: z.array(DamageSegmentSchema),
 });
 

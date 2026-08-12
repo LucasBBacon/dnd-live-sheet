@@ -1,6 +1,11 @@
 import type { Ability } from "../types/core.js";
 import type { RuntimeModifier } from "@project/shared";
 
+/**
+ * Determines the maximum ability score cap based on active states.
+ * @param activeStates An array of strings representing the current active states that may influence ability score caps.
+ * @returns The maximum ability score cap as a number, defaulting to 20 if no relevant states are active.
+ */
 const getStateDrivenAbilityCap = (activeStates: string[] = []): number => {
   const stateCaps = new Map<string, number>([
     ["barbarian_capstone", 24],

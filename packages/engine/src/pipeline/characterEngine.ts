@@ -229,6 +229,9 @@ export class CharacterEngine {
       effectManager,
       resourceManager,
     );
+    const criticalHitModifiers = activeTraits.flatMap(
+      (trait) => trait.criticalHitModifiers ?? [],
+    );
 
     // 2 - extract static math and proficiencies
     // both extractors read from the same flattened pick table: trait choice
@@ -396,7 +399,7 @@ export class CharacterEngine {
         proficiencies,
         allModifiers,
         activeStates,
-        [],
+        criticalHitModifiers,
         false,
         undefined,
         weaponAttackContext,
@@ -408,12 +411,14 @@ export class CharacterEngine {
             weapon,
             governingStat,
             weaponAttackContext,
+            attackAnalysis.criticalDamageMaximized,
           )
         : [
             WeaponSynthesizer.generateWeaponAction(
               weapon,
               governingStat,
               weaponAttackContext,
+              attackAnalysis.criticalDamageMaximized,
             ),
           ];
 

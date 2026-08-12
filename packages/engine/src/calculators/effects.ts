@@ -38,8 +38,8 @@ export class EffectManager {
   private actors: Map<string, ActorInstance> = new Map();
 
   /**
-   * Ingests a new effect. If it requires concentration, it automatically
-   * clears any existing self-concentration effect per 5e rules.
+   * Ingests a new effect.
+   * If it requires concentration, it automatically clears any existing self-concentration effect per 5e rules.
    * @param effect Effect to be ingested.
    */
   public addEffect(effect: ActiveEffect): void {
@@ -50,6 +50,11 @@ export class EffectManager {
     this.effects.set(effect.instanceId, effect);
   }
 
+  /**
+   * Removes an effect from the manager by its instance ID.
+   * If the effect is associated with any actors, those actors are also removed.
+   * @param instanceId The unique instance ID of the effect to be removed.
+   */
   public removeEffect(instanceId: string): void {
     this.effects.delete(instanceId);
     for (const [actorId, actor] of this.actors.entries()) {
@@ -59,16 +64,29 @@ export class EffectManager {
     }
   }
 
+  /**
+   * Adds an actor to the manager.
+   * Actors are typically associated with effects, and this method ensures that the actor is tracked alongside its corresponding effect.
+   * @param actor The actor instance to be added to the manager.
+   */
   public addActor(actor: ActorInstance): void {
     this.actors.set(actor.instanceId, actor);
   }
 
+  /**
+   * Adds multiple actors to the manager.
+   * @param actors An array of actor instances to be added to the manager.
+   */
   public addActors(actors: ActorInstance[]): void {
     for (const actor of actors) {
       this.addActor(actor);
     }
   }
 
+  /**
+   * Retrieves all active actors currently managed by the EffectManager.
+   * @returns An array of active ActorInstance objects.
+   */
   public getActiveActors(): ActorInstance[] {
     return Array.from(this.actors.values());
   }
@@ -87,10 +105,14 @@ export class EffectManager {
   // region LIFECYCLE TRIGGERS
 
   /**
-   * Triggered when the player clicks "Start Turn" in their UI.
+   * Triggered at the start of a character's turn.
+   * It decrements the duration of any effects that are set to expire at the start of the turn.
+   * If an effect's duration reaches zero, it is removed from the manager.
    */
   public tickTurnStart(): void {
+    // iterate through all effects and handle those that expire at turn start or have a duration in rounds
     for (const [id, effect] of this.effects.entries()) {
+      // 1 - handle effects that expire at the start of the turn
       if (effect.durationType === "turn_start") {
         this.effects.delete(id);
         for (const [actorId, actor] of this.actors.entries()) {
@@ -98,6 +120,7 @@ export class EffectManager {
             this.actors.delete(actorId);
           }
         }
+        // 2 - handle effects that have a duration in rounds
       } else if (
         effect.durationType === "rounds" &&
         effect.durationRemaining !== undefined
@@ -116,10 +139,14 @@ export class EffectManager {
   }
 
   /**
-   * Triggered when the player clicks "End Turn" in their UI.
+   * Triggered at the end of a character's turn.
+   * It removes any effects that are set to expire at the end of the turn.
+   * This method ensures that the EffectManager maintains an accurate state of active effects after each turn.
    */
   public tickTurnEnd(): void {
+    // iterate through all effects and handle those that expire at turn end
     for (const [id, effect] of this.effects.entries()) {
+      // handle effects that expire at the end of the turn
       if (effect.durationType === "turn_end") {
         this.effects.delete(id);
         for (const [actorId, actor] of this.actors.entries()) {
@@ -131,8 +158,17 @@ export class EffectManager {
     }
   }
 
+  /**
+   * Triggered when a character takes a short or long rest.
+   * It removes any effects that are set to expire on a short or long rest, respectively.
+   * This method ensures that the EffectManager maintains an accurate state of active effects after resting.
+   * @param isLongRest A boolean indicating whether the rest is a long rest (true) or a short rest (false).
+   * If true, effects with a duration type of "rest_long" will be removed;
+   */
   public tickRest(isLongRest: boolean): void {
+    // iterate through all effects and handle those that expire on rest
     for (const [id, effect] of this.effects.entries()) {
+      // 1 - handle effects that expire on a short rest
       if (effect.durationType === "rest_short") {
         this.effects.delete(id);
         for (const [actorId, actor] of this.actors.entries()) {
@@ -140,6 +176,7 @@ export class EffectManager {
             this.actors.delete(actorId);
           }
         }
+      // 2 - handle effects that expire on a long rest
       } else if (isLongRest && effect.durationType === "rest_long") {
         this.effects.delete(id);
         for (const [actorId, actor] of this.actors.entries()) {

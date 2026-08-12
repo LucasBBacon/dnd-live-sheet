@@ -92,6 +92,12 @@ export class ResourceManager {
 
   // region LIFECYCLE TRIGGERS
 
+  /**
+   * Triggered when a character takes a short or long rest.
+   * It resets resources that are set to reset on short or long rests, respectively.
+   * This method ensures that the ResourceManager maintains an accurate state of resources after resting.
+   * @param isLongRest A boolean indicating whether the rest is a long rest (true) or a short rest (false).
+   */
   public tickRest(isLongRest: boolean): void {
     for (const resource of this.resources.values()) {
       if (
@@ -104,6 +110,9 @@ export class ResourceManager {
     }
   }
 
+  /**
+   * Triggered at the start of a character's turn.
+   */
   public tickStartOfTurn(): void {
     for (const resource of this.resources.values()) {
       if (resource.resetOn === "start_of_turn") {

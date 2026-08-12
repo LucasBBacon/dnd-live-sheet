@@ -3,6 +3,14 @@ import { DiceEngine } from "../diceParser.js";
 import { FIGHTING_STYLE_TRAITS } from "../../rules/traits/fightingStyleDictionary.js";
 
 describe("DiceEngine dice-rule application", () => {
+  it("maximizes every die while preserving the expression modifier", () => {
+    expect(DiceEngine.rollMaximized("2d6 + 3")).toEqual({
+      total: 15,
+      rolls: [6, 6],
+      modifier: 3,
+    });
+  });
+
   it("rerolls matching damage dice for authored traits when the required state is active", () => {
     const trait = FIGHTING_STYLE_TRAITS.trait_fs_great_weapon_fighting;
 

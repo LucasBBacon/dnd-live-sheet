@@ -2,6 +2,9 @@ import type { ActionGrant, SpellDefinition } from "@project/shared";
 import type { RuntimeSpellSource } from "../types/spells.js";
 import type { Ability } from "../types/core.js";
 
+/**
+ * The SpellbookEngine class provides methods for managing a character's spellcasting capabilities, including retrieving castable spells and preparing spells based on the character's spell sources and governing abilities.
+ */
 export class SpellbookEngine {
   /**
    * Evaluates all of a character's Spell Sources and returns a flattened array

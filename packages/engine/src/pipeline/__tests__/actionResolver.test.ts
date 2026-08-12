@@ -367,6 +367,79 @@ describe("ActionResolver attack resolution", () => {
     randomSpy.mockRestore();
   });
 
+  it("rolls maximized damage segments at their maximum values", () => {
+    const attackAction: ActionGrant = {
+      ...bowShot,
+      consumesAmmo: undefined,
+      effect: {
+        type: "attack",
+        attackType: "ranged_weapon",
+        attackStat: "DEX",
+        range: 150,
+        damage: [
+          {
+            sourceName: "Longbow",
+            baseDice: "2d6",
+            maximized: true,
+            damageType: "piercing",
+            scalingMode: "none",
+            levelScaling: [],
+          },
+        ],
+      },
+    };
+
+    const result = ActionResolver.execute(attackAction, payload(), {
+      effectManager,
+      resourceManager,
+    });
+
+    expect(result.executed).toBe(true);
+    expect(result.rollResults?.[1]).toMatchObject({
+      total: 12,
+      rolls: [6, 6],
+      modifier: 0,
+    });
+  });
+
+  it("maximizes flagged critical damage only on a natural 20", () => {
+    const attackAction: ActionGrant = {
+      ...bowShot,
+      consumesAmmo: undefined,
+      effect: {
+        type: "attack",
+        attackType: "ranged_weapon",
+        attackStat: "DEX",
+        range: 150,
+        criticalDamageMaximized: true,
+        damage: [
+          {
+            sourceName: "Longbow",
+            baseDice: "1d6",
+            damageType: "piercing",
+            scalingMode: "none",
+            levelScaling: [],
+          },
+        ],
+      },
+    };
+
+    const randomSpy = vi
+      .spyOn(Math, "random")
+      .mockReturnValueOnce(0.999)
+      .mockReturnValueOnce(0);
+
+    const result = ActionResolver.execute(attackAction, payload(), {
+      effectManager,
+      resourceManager,
+    });
+
+    expect(result.executed).toBe(true);
+    expect(result.rollResults?.[1]?.rolls).toEqual([6]);
+
+    randomSpy.mockRestore();
+  });
+
   it("filters damage dice rules by required damage type", () => {
     const attackAction: ActionGrant = {
       ...bowShot,
@@ -990,7 +1063,12 @@ describe("ActionResolver cost settlement", () => {
         { type: "trait_pool", id: "pool_ki", amount: 1 },
         { type: "inventory_instance", id: "inv_plain", amount: 1 },
       ]),
-      { effectManager, resourceManager, inventoryLedger: ledger, combatContext },
+      {
+        effectManager,
+        resourceManager,
+        inventoryLedger: ledger,
+        combatContext,
+      },
     );
 
     expect(result.executed).toBe(true);
@@ -1009,7 +1087,12 @@ describe("ActionResolver cost settlement", () => {
         { type: "trait_pool", id: "pool_ki", amount: 1 },
         { type: "inventory_instance", id: "inv_plain", amount: 1 },
       ]),
-      { effectManager, resourceManager, inventoryLedger: ledger, combatContext },
+      {
+        effectManager,
+        resourceManager,
+        inventoryLedger: ledger,
+        combatContext,
+      },
     );
 
     expect(result.executed).toBe(false);
@@ -1029,7 +1112,12 @@ describe("ActionResolver cost settlement", () => {
         { type: "trait_pool", id: "pool_someone_elses", amount: 1 },
         { type: "inventory_instance", id: "inv_plain", amount: 1 },
       ]),
-      { effectManager, resourceManager, inventoryLedger: ledger, combatContext },
+      {
+        effectManager,
+        resourceManager,
+        inventoryLedger: ledger,
+        combatContext,
+      },
     );
 
     expect(result.executed).toBe(false);
@@ -1122,7 +1210,9 @@ describe("ActionResolver cost settlement", () => {
     expect(result.executed).toBe(false);
     expect(result.reason).toBe("insufficient_resource");
     expect(combatContext.getContext().economy.reactionAvailable).toBe(true);
-    expect(combatContext.getContext().economy.spentReactionSourceId).toBeUndefined();
+    expect(
+      combatContext.getContext().economy.spentReactionSourceId,
+    ).toBeUndefined();
   });
 
   it("spends bonus action economy for bonus actions during combat", () => {

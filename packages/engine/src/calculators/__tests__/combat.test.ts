@@ -767,6 +767,29 @@ describe("CombatEngine.calculateWeaponAttack - critical hit modifiers", () => {
 
     expect(result.damageExpression).toBe("1d6 piercing");
   });
+
+  it("marks critical damage as maximized when the modifier matches", () => {
+    const result = CombatEngine.calculateWeaponAttack(
+      makeWeapon({ damageDice: "1d6", damageType: "piercing" }),
+      makeScores(),
+      0,
+      [],
+      [],
+      [],
+      [
+        {
+          type: "maximize_dice",
+          requiredAttackTypes: ["melee_weapon"],
+          requiredStates: [],
+          forbiddenStates: [],
+        },
+      ],
+      true,
+    );
+
+    expect(result.criticalDamageExpression).toBe("1d6 piercing");
+    expect(result.criticalDamageMaximized).toBe(true);
+  });
 });
 
 describe("CombatEngine.calculateWeaponAttack - return shape", () => {

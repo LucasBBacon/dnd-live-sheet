@@ -36,10 +36,16 @@ export interface ContainerReport {
  * because 5e counts a worn breastplate and a packed one identically. This one
  * only cares where things sit, and never changes the total.
  *
- * Nothing here is enforced. A container over capacity is reported so a UI can
- * say so; no 5e rule stops a player overfilling a sack, so neither does this.
+ * nothing here is enforced!! A container over capacity is reported so a UI can say so
+ * no 5e rule stops a player overfilling a sack
  */
 export class ContainerEngine {
+  /**
+   * Generates a report of the character's containers and their loads.
+   * @param items The character's inventory items, including containers and their contents.
+   * @param snapshot Optional snapshot of rule definitions to resolve item definitions.
+   * @returns A ContainerReport detailing each container's load and any unplaced items.
+   */
   public static report(
     items: InventoryInstance[],
     snapshot?: RuleSnapshotLookup,

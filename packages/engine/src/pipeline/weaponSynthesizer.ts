@@ -25,6 +25,7 @@ export class WeaponSynthesizer {
       attackUsage: "standard",
       isTwoHandedGrip: false,
     },
+    criticalDamageMaximized = false,
   ): ActionGrant {
     const isRanged =
       weapon.category === "martial_ranged" ||
@@ -74,6 +75,7 @@ export class WeaponSynthesizer {
         range: baseRange,
         longRange: maxRange,
         weaponContext: attackContext,
+        criticalDamageMaximized,
         damage: [
           {
             sourceName: weapon.name,
@@ -102,12 +104,18 @@ export class WeaponSynthesizer {
       attackUsage: "standard",
       isTwoHandedGrip: false,
     },
+    criticalDamageMaximized = false,
   ): ActionGrant[] {
     const actions: ActionGrant[] = [];
 
     // 1 - generate standard actions
     actions.push(
-      this.generateWeaponAction(weapon, governingStat, attackContext),
+      this.generateWeaponAction(
+        weapon,
+        governingStat,
+        attackContext,
+        criticalDamageMaximized,
+      ),
     );
 
     // 2 - generate alternate thrown action
@@ -116,6 +124,7 @@ export class WeaponSynthesizer {
         weapon,
         governingStat,
         attackContext,
+        criticalDamageMaximized,
       );
       thrownAction.id = `${thrownAction.id}_thrown`;
       thrownAction.name = `${weapon.name} (Thrown)`;
