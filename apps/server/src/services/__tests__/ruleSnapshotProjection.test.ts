@@ -18,6 +18,7 @@ const fullItemRule: ItemDefinition = {
   weight: 65,
   equipSlot: "body",
   requiresAttunement: true,
+  categoryTags: [],
   ammoTag: "bolt",
   modifiers: [
     {
@@ -128,6 +129,10 @@ describe("projectEquipmentRows", () => {
           type: "weapon",
           weight: 3,
           requiresAttunement: false,
+          categoryTags: [
+            "category_weapon_martial",
+            "category_weapon_martial_melee",
+          ],
         },
         weaponRule,
       }),

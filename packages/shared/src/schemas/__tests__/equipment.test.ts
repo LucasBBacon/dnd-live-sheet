@@ -180,4 +180,41 @@ describe("a container carries its capacity through both shapes", () => {
 
     expect(item.container).toBeUndefined();
   });
+
+  it("parses category tags on authored equipment and projected item shapes", () => {
+    const equipment = EquipmentDefinitionSchema.parse({
+      id: "item_holy_symbol_amulet",
+      name: "Holy Symbol (Amulet)",
+      type: "gear",
+      categoryTags: ["category_holy_symbol"],
+    });
+
+    expect(equipment.categoryTags).toEqual(["category_holy_symbol"]);
+
+    const item = ItemDefinitionSchema.parse({
+      id: "item_holy_symbol_amulet",
+      name: "Holy Symbol (Amulet)",
+      type: "gear",
+      categoryTags: ["category_holy_symbol"],
+    });
+
+    expect(item.categoryTags).toEqual(["category_holy_symbol"]);
+  });
+
+  it("defaults missing category tags to an empty array", () => {
+    const equipment = EquipmentDefinitionSchema.parse({
+      id: "item_pack_explorers",
+      name: "Explorer's Pack",
+      type: "gear",
+    });
+
+    const item = ItemDefinitionSchema.parse({
+      id: "item_pack_explorers",
+      name: "Explorer's Pack",
+      type: "gear",
+    });
+
+    expect(equipment.categoryTags).toEqual([]);
+    expect(item.categoryTags).toEqual([]);
+  });
 });

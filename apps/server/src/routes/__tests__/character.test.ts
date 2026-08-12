@@ -693,6 +693,35 @@ describe("Character Routes", () => {
       expect(transactionMock).not.toHaveBeenCalled();
       expect(processStartingEquipmentMock).not.toHaveBeenCalled();
     });
+
+    it("rejects unresolved given category grants before writing", async () => {
+      const { app, transactionMock, processStartingEquipmentMock } =
+        await setupCreateCharacterApp();
+
+      const response = await request(app)
+        .post("/api/character")
+        .send({
+          ...validCreatePayload,
+          startingEquipment: {
+            given: [
+              {
+                kind: "category",
+                refId: "category_holy_symbol",
+                quantity: 1,
+              },
+            ],
+            choices: [],
+          },
+        });
+
+      expect(response.status).toBe(400);
+      expect(response.body).toEqual({
+        error:
+          "Starting equipment choices must be resolved before character creation.",
+      });
+      expect(transactionMock).not.toHaveBeenCalled();
+      expect(processStartingEquipmentMock).not.toHaveBeenCalled();
+    });
   });
 
   describe("POST /api/character/:characterId/level-up", () => {

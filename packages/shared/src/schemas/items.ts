@@ -61,6 +61,21 @@ export const ContainerCapacitySchema = z
   })
   .strict();
 
+// explicit category vocabulary for starting-equipment category resolution
+export const StartingEquipmentCategoryTagSchema = z.enum([
+  "category_weapon_simple",
+  "category_weapon_simple_melee",
+  "category_weapon_simple_ranged",
+  "category_weapon_martial",
+  "category_weapon_martial_melee",
+  "category_weapon_martial_ranged",
+  "category_armor_shield",
+  "category_holy_symbol",
+  "category_arcane_focus",
+  "category_druidic_focus",
+  "category_musical_instrument",
+]);
+
 export const ItemDefinitionSchema = z.object({
   id: z.string(),
   name: z.string(),
@@ -74,6 +89,8 @@ export const ItemDefinitionSchema = z.object({
   ammoTag: z.string().optional(),
   // present only on items that hold other items
   container: ContainerCapacitySchema.optional(),
+  // category membership for deterministic starting-equipment category matching
+  categoryTags: z.array(StartingEquipmentCategoryTagSchema).default([]),
   modifiers: z.array(BaseModifierSchema).optional(),
 });
 
@@ -145,12 +162,19 @@ export type ItemType = z.infer<typeof ItemTypeSchema>;
 export type EquipSlot = z.infer<typeof EquipSlotSchema>;
 export type CharacterSlot = z.infer<typeof CharacterSlotSchema>;
 export type ContainerCapacity = z.infer<typeof ContainerCapacitySchema>;
+export type StartingEquipmentCategoryTag = z.infer<
+  typeof StartingEquipmentCategoryTagSchema
+>;
 export type ItemDefinition = z.infer<typeof ItemDefinitionSchema>;
-export type StartingEquipmentGrant = z.infer<typeof StartingEquipmentGrantSchema>;
+export type StartingEquipmentGrant = z.infer<
+  typeof StartingEquipmentGrantSchema
+>;
 export type StartingEquipmentChoiceOption = z.infer<
   typeof StartingEquipmentChoiceOptionSchema
 >;
-export type StartingEquipmentChoice = z.infer<typeof StartingEquipmentChoiceSchema>;
+export type StartingEquipmentChoice = z.infer<
+  typeof StartingEquipmentChoiceSchema
+>;
 export type StartingEquipmentDefinition = z.infer<
   typeof StartingEquipmentDefinitionSchema
 >;

@@ -57,6 +57,7 @@ describe("toItemDefinition and container capacity", () => {
       type: "gear",
       weight: 5,
       requiresAttunement: false,
+      categoryTags: [],
       container: { capacityPounds: 30 },
     });
 
@@ -72,6 +73,7 @@ describe("toItemDefinition and container capacity", () => {
       type: "weapon",
       weight: 1,
       requiresAttunement: false,
+      categoryTags: [],
     });
 
     expect("container" in item).toBe(false);

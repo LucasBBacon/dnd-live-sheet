@@ -1,14 +1,41 @@
 import type {
   EquipmentDefinition,
   ItemDefinition,
+  StartingEquipmentCategoryTag,
   WeaponDefinition,
 } from "@project/shared";
 import { EquipmentDefinitionSchema } from "@project/shared";
 
+type EquipmentDefinitionSeed = Omit<EquipmentDefinition, "categoryTags"> & {
+  categoryTags?: StartingEquipmentCategoryTag[];
+};
+
+const SIMPLE_MELEE_TAGS: StartingEquipmentCategoryTag[] = [
+  "category_weapon_simple",
+  "category_weapon_simple_melee",
+];
+
+const SIMPLE_RANGED_TAGS: StartingEquipmentCategoryTag[] = [
+  "category_weapon_simple",
+  "category_weapon_simple_ranged",
+];
+
+const MARTIAL_MELEE_TAGS: StartingEquipmentCategoryTag[] = [
+  "category_weapon_martial",
+  "category_weapon_martial_melee",
+];
+
+const MARTIAL_RANGED_TAGS: StartingEquipmentCategoryTag[] = [
+  "category_weapon_martial",
+  "category_weapon_martial_ranged",
+];
+
 const createPlaceholderEquipment = (
   id: string,
   name: string,
-): EquipmentDefinition => EquipmentDefinitionSchema.parse({ id, name });
+  categoryTags: StartingEquipmentCategoryTag[] = [],
+): EquipmentDefinition =>
+  EquipmentDefinitionSchema.parse({ id, name, categoryTags });
 
 const STARTING_EQUIPMENT_PLACEHOLDERS: Record<string, EquipmentDefinition> = {
   item_pack_explorers: createPlaceholderEquipment(
@@ -18,18 +45,22 @@ const STARTING_EQUIPMENT_PLACEHOLDERS: Record<string, EquipmentDefinition> = {
   item_weapon_javelin: createPlaceholderEquipment(
     "item_weapon_javelin",
     "Javelin",
+    SIMPLE_MELEE_TAGS,
   ),
   item_weapon_greataxe: createPlaceholderEquipment(
     "item_weapon_greataxe",
     "Greataxe",
+    MARTIAL_MELEE_TAGS,
   ),
   item_weapon_handaxe: createPlaceholderEquipment(
     "item_weapon_handaxe",
     "Handaxe",
+    SIMPLE_MELEE_TAGS,
   ),
   item_weapon_rapier: createPlaceholderEquipment(
     "item_weapon_rapier",
     "Rapier",
+    MARTIAL_MELEE_TAGS,
   ),
   item_pack_diplomats: createPlaceholderEquipment(
     "item_pack_diplomats",
@@ -42,11 +73,17 @@ const STARTING_EQUIPMENT_PLACEHOLDERS: Record<string, EquipmentDefinition> = {
   item_musical_instrument_lute: createPlaceholderEquipment(
     "item_musical_instrument_lute",
     "Lute",
+    ["category_musical_instrument"],
   ),
-  item_weapon_mace: createPlaceholderEquipment("item_weapon_mace", "Mace"),
+  item_weapon_mace: createPlaceholderEquipment(
+    "item_weapon_mace",
+    "Mace",
+    SIMPLE_MELEE_TAGS,
+  ),
   item_weapon_warhammer: createPlaceholderEquipment(
     "item_weapon_warhammer",
     "Warhammer",
+    MARTIAL_MELEE_TAGS,
   ),
   item_armor_scale_mail: createPlaceholderEquipment(
     "item_armor_scale_mail",
@@ -59,6 +96,7 @@ const STARTING_EQUIPMENT_PLACEHOLDERS: Record<string, EquipmentDefinition> = {
   item_weapon_crossbow_light: createPlaceholderEquipment(
     "item_weapon_crossbow_light",
     "Light Crossbow",
+    SIMPLE_RANGED_TAGS,
   ),
   item_ammo_bolt: createPlaceholderEquipment("item_ammo_bolt", "Bolts"),
   item_pack_priests: createPlaceholderEquipment(
@@ -68,15 +106,18 @@ const STARTING_EQUIPMENT_PLACEHOLDERS: Record<string, EquipmentDefinition> = {
   item_armor_shield_wooden: createPlaceholderEquipment(
     "item_armor_shield_wooden",
     "Wooden Shield",
+    ["category_armor_shield"],
   ),
   item_weapon_scimitar: createPlaceholderEquipment(
     "item_weapon_scimitar",
     "Scimitar",
+    MARTIAL_MELEE_TAGS,
   ),
   item_weapon_arrow: createPlaceholderEquipment("item_weapon_arrow", "Arrows"),
   item_weapon_light_crossbow: createPlaceholderEquipment(
     "item_weapon_light_crossbow",
     "Light Crossbow",
+    SIMPLE_RANGED_TAGS,
   ),
   item_weapon_crossbow_bolt: createPlaceholderEquipment(
     "item_weapon_crossbow_bolt",
@@ -86,13 +127,21 @@ const STARTING_EQUIPMENT_PLACEHOLDERS: Record<string, EquipmentDefinition> = {
     "item_pack_dungeoneers",
     "Dungeoneer's Pack",
   ),
-  item_weapon_dart: createPlaceholderEquipment("item_weapon_dart", "Dart"),
+  item_weapon_dart: createPlaceholderEquipment(
+    "item_weapon_dart",
+    "Dart",
+    SIMPLE_RANGED_TAGS,
+  ),
   item_weapon_shortsword: createPlaceholderEquipment(
     "item_weapon_shortsword",
     "Shortsword",
+    MARTIAL_MELEE_TAGS,
   ),
   item_pack_quiver: createPlaceholderEquipment("item_pack_quiver", "Quiver"),
-  item_armor_scale: createPlaceholderEquipment("item_armor_scale", "Scale Armor"),
+  item_armor_scale: createPlaceholderEquipment(
+    "item_armor_scale",
+    "Scale Armor",
+  ),
   item_tool_thieves_tools: createPlaceholderEquipment(
     "item_tool_thieves_tools",
     "Thieves' Tools",
@@ -100,6 +149,7 @@ const STARTING_EQUIPMENT_PLACEHOLDERS: Record<string, EquipmentDefinition> = {
   item_weapon_shortbow: createPlaceholderEquipment(
     "item_weapon_shortbow",
     "Shortbow",
+    SIMPLE_RANGED_TAGS,
   ),
   item_pack_burglars: createPlaceholderEquipment(
     "item_pack_burglars",
@@ -120,6 +170,7 @@ const STARTING_EQUIPMENT_PLACEHOLDERS: Record<string, EquipmentDefinition> = {
   item_weapon_quarterstaff: createPlaceholderEquipment(
     "item_weapon_quarterstaff",
     "Quarterstaff",
+    SIMPLE_MELEE_TAGS,
   ),
   item_incense_stick: createPlaceholderEquipment(
     "item_incense_stick",
@@ -145,13 +196,26 @@ const STARTING_EQUIPMENT_PLACEHOLDERS: Record<string, EquipmentDefinition> = {
     "item_scroll_pedigree",
     "Scroll of Pedigree",
   ),
+  item_holy_symbol_amulet: createPlaceholderEquipment(
+    "item_holy_symbol_amulet",
+    "Holy Symbol (Amulet)",
+    ["category_holy_symbol"],
+  ),
+  item_focus_wand: createPlaceholderEquipment("item_focus_wand", "Wand", [
+    "category_arcane_focus",
+  ]),
+  item_focus_druidic_totem: createPlaceholderEquipment(
+    "item_focus_druidic_totem",
+    "Druidic Totem",
+    ["category_druidic_focus"],
+  ),
 };
 
 /**
  * Canonical authored rules dictionary for equipment.
  * Derived item and weapon dictionaries are projected from this source.
  */
-export const EQUIPMENT_DICTIONARY: Record<string, EquipmentDefinition> = {
+const RAW_EQUIPMENT_DICTIONARY: Record<string, EquipmentDefinitionSeed> = {
   item_armor_padded: {
     id: "item_armor_padded",
     name: "Padded Armor",
@@ -254,6 +318,7 @@ export const EQUIPMENT_DICTIONARY: Record<string, EquipmentDefinition> = {
     weight: 6,
     equipSlot: "off_hand",
     requiresAttunement: false,
+    categoryTags: ["category_armor_shield"],
     modifiers: [
       {
         target: "ARMOR_CLASS",
@@ -302,6 +367,7 @@ export const EQUIPMENT_DICTIONARY: Record<string, EquipmentDefinition> = {
     weight: 3,
     equipSlot: "main_hand",
     requiresAttunement: false,
+    categoryTags: MARTIAL_MELEE_TAGS,
     weapon: {
       category: "martial_melee",
       damageDice: "1d8",
@@ -320,6 +386,7 @@ export const EQUIPMENT_DICTIONARY: Record<string, EquipmentDefinition> = {
     weight: 1,
     equipSlot: "main_hand",
     requiresAttunement: false,
+    categoryTags: SIMPLE_MELEE_TAGS,
     weapon: {
       category: "simple_melee",
       damageDice: "1d4",
@@ -337,6 +404,7 @@ export const EQUIPMENT_DICTIONARY: Record<string, EquipmentDefinition> = {
     weight: 2,
     equipSlot: "main_hand",
     requiresAttunement: false,
+    categoryTags: MARTIAL_RANGED_TAGS,
     weapon: {
       category: "martial_ranged",
       damageDice: "1d8",
@@ -440,13 +508,24 @@ export const EQUIPMENT_DICTIONARY: Record<string, EquipmentDefinition> = {
   ...STARTING_EQUIPMENT_PLACEHOLDERS,
 };
 
-export const toItemDefinition = (equipment: EquipmentDefinition): ItemDefinition => {
+export const EQUIPMENT_DICTIONARY: Record<string, EquipmentDefinition> =
+  Object.fromEntries(
+    Object.entries(RAW_EQUIPMENT_DICTIONARY).map(([equipmentId, equipment]) => [
+      equipmentId,
+      EquipmentDefinitionSchema.parse(equipment),
+    ]),
+  );
+
+export const toItemDefinition = (
+  equipment: EquipmentDefinition,
+): ItemDefinition => {
   const base: ItemDefinition = {
     id: equipment.id,
     name: equipment.name,
     type: equipment.type,
     weight: equipment.weight,
     requiresAttunement: equipment.requiresAttunement,
+    categoryTags: equipment.categoryTags,
     // these stay absent rather than undefined so the projection keeps matching
     // the exact-shape assertions the dictionary tests make
     ...(equipment.equipSlot && { equipSlot: equipment.equipSlot }),
@@ -474,12 +553,13 @@ export const toWeaponDefinition = (
 
 const equipmentEntries = Object.entries(EQUIPMENT_DICTIONARY);
 
-export const ITEM_DICTIONARY: Record<string, ItemDefinition> = Object.fromEntries(
-  equipmentEntries.map(([equipmentId, equipment]) => [
-    equipmentId,
-    toItemDefinition(equipment),
-  ]),
-);
+export const ITEM_DICTIONARY: Record<string, ItemDefinition> =
+  Object.fromEntries(
+    equipmentEntries.map(([equipmentId, equipment]) => [
+      equipmentId,
+      toItemDefinition(equipment),
+    ]),
+  );
 
 export const WEAPON_DICTIONARY: Record<string, WeaponDefinition> =
   Object.fromEntries(

@@ -3,7 +3,14 @@ import {
   bundleContents,
   items,
 } from "@project/database/src/schema/reference.js";
+import { db } from "@project/database";
+import {
+  isResolvedStartingEquipmentGrant,
+  matchesStartingEquipmentCategory,
+} from "@project/shared";
 import { eq } from "drizzle-orm";
+
+const resolveReadDb = (tx: any) => (tx?.select ? tx : db);
 
 type StartingEquipmentGrant = {
   kind: "item" | "category" | "money";
@@ -42,64 +49,6 @@ function normalizeGrantList(rawSelections: unknown): StartingEquipmentGrant[] {
   return granted;
 }
 
-function matchesCategory(item: any, categoryRefId: string): boolean {
-  const category = categoryRefId.toLowerCase();
-  const itemName = `${item?.name ?? ""} ${item?.id ?? ""}`.toLowerCase();
-  const itemRule = item?.itemRule;
-  const weaponRule = item?.weaponRule;
-
-  const weaponCategoryMatches = (expected: string[]) => {
-    return expected.includes(weaponRule?.category);
-  };
-
-  if (category.includes("weapon_")) {
-    if (itemRule?.type !== "weapon") return false;
-
-    if (category.includes("simple")) {
-      if (category.includes("melee")) {
-        return weaponCategoryMatches(["simple_melee"]);
-      }
-      if (category.includes("ranged")) {
-        return weaponCategoryMatches(["simple_ranged"]);
-      }
-      return weaponCategoryMatches(["simple_melee", "simple_ranged"]);
-    }
-
-    if (category.includes("martial")) {
-      if (category.includes("melee")) {
-        return weaponCategoryMatches(["martial_melee"]);
-      }
-      if (category.includes("ranged")) {
-        return weaponCategoryMatches(["martial_ranged"]);
-      }
-      return weaponCategoryMatches(["martial_melee", "martial_ranged"]);
-    }
-  }
-
-  if (category.includes("armor_shield")) {
-    return itemRule?.type === "armor" && itemName.includes("shield");
-  }
-
-  if (category.includes("holy_symbol")) {
-    return itemName.includes("holy") || itemName.includes("symbol");
-  }
-
-  if (category.includes("arcane_focus")) {
-    return itemName.includes("focus") || itemName.includes("arcane");
-  }
-
-  if (category.includes("druidic_focus")) {
-    return itemName.includes("focus") || itemName.includes("druidic");
-  }
-
-  if (category.includes("musical_instrument")) {
-    return itemName.includes("instrument") || itemName.includes("musical");
-  }
-
-  const tokens = category.replace(/^category_/, "").split("_");
-  return tokens.every((token) => itemName.includes(token));
-}
-
 /**
  * Recursively resolves an item or bundle into a flat array of base items.
  * @param itemId Item or bundle ID.
@@ -111,7 +60,12 @@ export async function resolveItemPayload(
   itemId: string,
   multiplier = 1,
 ): Promise<Array<{ id: string; quantity: number }>> {
-  const [item] = await tx.select().from(items).where(eq(items.id, itemId));
+  const readDb = resolveReadDb(tx);
+
+  const [item] = await readDb
+    .select()
+    .from(items)
+    .where(eq(items.id, itemId));
   if (!item) return [];
 
   if (!item.isBundle) {
@@ -119,7 +73,7 @@ export async function resolveItemPayload(
   }
 
   // if it's a bundle, fetch contents and unpack
-  const contents = await db
+  const contents = await readDb
     .select()
     .from(bundleContents)
     .where(eq(bundleContents.bundleId, itemId));
@@ -146,7 +100,18 @@ export async function resolveCategoryPayload(
 ): Promise<Array<{ id: string; quantity: number }>> {
   const allItems = await tx.select().from(items);
   const match = allItems
-    .filter((item: any) => matchesCategory(item, categoryRefId))
+    .filter((item: any) =>
+      matchesStartingEquipmentCategory(
+        {
+          id: item?.id ?? "",
+          name: item?.name ?? "",
+          categoryTags: Array.isArray(item?.itemRule?.categoryTags)
+            ? item.itemRule.categoryTags
+            : [],
+        },
+        categoryRefId,
+      ),
+    )
     .sort((left: any, right: any) => {
       const leftKey = `${left.name ?? ""}::${left.id}`;
       const rightKey = `${right.name ?? ""}::${right.id}`;
@@ -172,7 +137,7 @@ export async function processStartingEquipment(
   const unpackedItems = [];
   for (const grant of grants) {
     if (grant.kind === "money") continue;
-    if (grant.kind === "category") {
+    if (!isResolvedStartingEquipmentGrant(grant)) {
       throw new Error(
         "Starting equipment categories must be resolved before inventory processing.",
       );

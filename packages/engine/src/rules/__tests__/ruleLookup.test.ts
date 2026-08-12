@@ -31,6 +31,7 @@ describe("ruleLookup", () => {
           type: "armor",
           weight: 6,
           requiresAttunement: false,
+          categoryTags: ["category_armor_shield"],
           modifiers: [acBonusModifier],
         },
       },
@@ -49,6 +50,7 @@ describe("ruleLookup", () => {
           type: "armor",
           weight: 6,
           requiresAttunement: false,
+          categoryTags: ["category_armor_shield"],
           modifiers: [acBonusModifier],
         },
       },
@@ -67,6 +69,7 @@ describe("ruleLookup", () => {
           type: "armor",
           weight: 6,
           requiresAttunement: false,
+          categoryTags: ["category_armor_shield"],
         },
       },
       equipmentById: {
@@ -76,6 +79,7 @@ describe("ruleLookup", () => {
           type: "armor",
           weight: 6,
           requiresAttunement: false,
+          categoryTags: ["category_armor_shield"],
           modifiers: [acBonusModifier],
         },
       },
@@ -118,6 +122,10 @@ describe("ruleLookup", () => {
           type: "weapon",
           weight: 3,
           requiresAttunement: false,
+          categoryTags: [
+            "category_weapon_martial",
+            "category_weapon_martial_melee",
+          ],
           weapon: {
             category: "martial_melee",
             damageDice: "1d10",
@@ -142,6 +150,7 @@ describe("ruleLookup", () => {
           type: "armor",
           weight: 6,
           requiresAttunement: false,
+          categoryTags: ["category_armor_shield"],
           modifiers: [{ ...acBonusModifier, value: 2 }],
         },
       },
@@ -165,6 +174,10 @@ describe("ruleLookup", () => {
           type: "weapon",
           weight: 3,
           requiresAttunement: false,
+          categoryTags: [
+            "category_weapon_martial",
+            "category_weapon_martial_melee",
+          ],
           weapon: {
             category: "martial_melee",
             damageDice: "1d12",
