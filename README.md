@@ -14,9 +14,11 @@ This repository is a pnpm + Turborepo monorepo containing:
 
 The system follows a **3-layer authority model**:
 
-1. **Core reference layer** (static compendium): canonical core 5e records in PostgreSQL.
+1. **Core reference layer** (validated compendium packs): version-controlled core 5e packs author the data; imported, published PostgreSQL rows are the runtime authority.
 2. **Scoped homebrew layer** (mutable reference): campaign and character overrides, also in PostgreSQL.
 3. **Operational layer** (live state): transactional character/campaign runtime data.
+
+The engine interprets database-derived rule snapshots. It does not own a second authored core catalogue. During the current migration, the checked-in static dictionaries are transitional material and will be removed once pack import and database snapshots cover all rule types.
 
 Reference reads are resolved through precedence:
 
@@ -68,7 +70,7 @@ pnpm install
 pnpm --filter @project/database db:push
 ```
 
-3. Seed core reference data:
+3. Import the checked-in core reference pack:
 
 ```bash
 pnpm --filter @project/database db:seed
@@ -176,7 +178,7 @@ pnpm --filter @project/server build
 
 When adding new behaviour:
 
-1. Keep database as source of truth for reference and operational data.
+1. Treat version-controlled, validated core packs as the authoring authority and PostgreSQL as the runtime authority for reference data.
 2. Add schema-level constraints first, then API-level guards.
 3. Thread campaign/character scope end-to-end (request, resolver, cache key, client query key).
 4. Invalidate targeted cache entries on homebrew mutation lifecycle events.

@@ -8,7 +8,7 @@ The objective is to avoid divergent truth between in-memory dictionaries and per
 
 ## Layer definitions
 
-## 1) Core reference layer (static)
+## 1) Core reference layer (version-controlled packs, runtime projection)
 
 Scope:
 
@@ -18,8 +18,17 @@ Scope:
 
 Ownership:
 
-- maintained via seed/import workflows;
+- authored in version-controlled, schema-validated core rule packs;
+- imported and published into PostgreSQL through a strict transactional workflow;
 - marked as `sourceType = core`.
+
+Authoring and runtime boundary:
+
+- core pack files are the sole authoring authority for the core compendium;
+- PostgreSQL is the runtime authority after a pack is imported and published;
+- reference caches and rule snapshots are derived, disposable projections of published database rows;
+- the rules engine interprets an explicit immutable snapshot and does not own a parallel authored catalogue;
+- invalid core pack data fails validation and import. Importers must not create placeholder rules or silently repair data.
 
 Examples:
 
@@ -132,11 +141,13 @@ Future multi-node strategy:
 
 ## Operational design rules
 
-1. Database is source of truth for all reference and operational entities.
-2. In-memory structures are caches or derivations only.
-3. Homebrew resolution logic must remain centralised in resolver services.
-4. Runtime rule snapshots must be built from database-backed reference rows, not static files.
-5. Any new scoped endpoint must include:
+1. Version-controlled core rule packs are the sole authoring authority for core reference data.
+2. PostgreSQL is the runtime authority for imported core reference data, scoped homebrew, and operational entities.
+3. In-memory structures are caches or derivations only.
+4. Homebrew resolution logic must remain centralised in resolver services.
+5. Runtime rule snapshots must be built from database-backed reference rows, not static files.
+6. The engine owns deterministic rule interpretation, not authored core reference records.
+7. Any new scoped endpoint must include:
    - campaign membership guard
    - deterministic precedence resolution
    - scope-aware cache keying
@@ -145,6 +156,7 @@ Future multi-node strategy:
 ## Anti-patterns (do not introduce)
 
 - Static TypeScript dictionaries as parallel authority.
+- Static-provider or static-lookup fallbacks in production runtime paths.
 - Endpoint-specific ad-hoc precedence logic.
 - Scope-less query keys in client cache for scoped data.
 - Silent fallback from unauthorised scoped reads to broader scopes.
