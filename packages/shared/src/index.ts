@@ -2,6 +2,7 @@ export * from "./schemas/actions.js";
 export * from "./schemas/affinities.js";
 export * from "./schemas/character.js";
 export * from "./schemas/combatContext.js";
+export * from "./schemas/coreRulePack.js";
 export * from "./schemas/creatures.js";
 export * from "./schemas/dice.js";
 export * from "./schemas/effects.js";
