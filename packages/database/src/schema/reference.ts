@@ -1,5 +1,6 @@
 import type {
   ClassMulticlassPrerequisites,
+  CoreRulePack,
   FeatPrerequisites,
   ItemDefinition,
   StartingEquipmentDefinition,
@@ -92,6 +93,35 @@ const buildReferenceScopeChecks = (
     sql`${table.ownerCharacterId} IS NULL OR ${table.ownerCampaignId} IS NOT NULL`,
   ),
 });
+
+// #region Core Rule Packs
+
+/**
+ * The immutable, validated source payload for one imported core rules pack.
+ *
+ * Relational tables remain the query and precedence projection. This payload
+ * retains the complete rule AST, including structures that cannot be expressed
+ * by legacy link tables such as choice nodes and spell selections.
+ */
+export const coreRulePacks = pgTable(
+  "core_rule_packs",
+  {
+    packId: varchar("pack_id", { length: 100 }).notNull(),
+    version: integer("version").notNull(),
+    ruleset: varchar("ruleset", { length: 100 }).notNull(),
+    contentHash: varchar("content_hash", { length: 64 }),
+    payload: jsonb("payload").$type<CoreRulePack>().notNull(),
+    publishedAt: timestamp("published_at", { withTimezone: true }).notNull(),
+    importedAt: timestamp("imported_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => ({
+    pk: primaryKey({ columns: [table.packId, table.version] }),
+  }),
+);
+
+// #endregion
 
 // #region Traits
 

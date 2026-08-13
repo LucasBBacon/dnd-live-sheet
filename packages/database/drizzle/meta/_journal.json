@@ -78,6 +78,13 @@
       "when": 1786575225395,
       "tag": "0010_nullable_subrace",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1786612457748,
+      "tag": "0011_easy_naoko",
+      "breakpoints": true
     }
   ]
 }
