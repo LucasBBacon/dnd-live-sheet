@@ -65,9 +65,10 @@ export const characters = pgTable("characters", {
   raceId: varchar("race_id", { length: 100 })
     .references(() => races.id)
     .notNull(),
-  subraceId: varchar("subrace_id", { length: 100 })
-    .references(() => subraces.id)
-    .notNull(),
+  // NULL for races without subraces (e.g. Human).
+  subraceId: varchar("subrace_id", { length: 100 }).references(
+    () => subraces.id,
+  ),
 
   // base ability scores (flattened for index and query)
   str: integer("str").notNull(),

@@ -71,6 +71,13 @@
       "when": 1754870400000,
       "tag": "0009_inventory_custom_name_and_container",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1786575225395,
+      "tag": "0010_nullable_subrace",
+      "breakpoints": true
     }
   ]
 }

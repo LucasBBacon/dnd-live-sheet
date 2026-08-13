@@ -135,7 +135,7 @@ const pruneAuthoritativeRuntime = () => {
 const toCharacterSave = (
   character: {
     raceId: string;
-    subraceId: string;
+    subraceId: string | null;
     str: number;
     dex: number;
     con: number;
@@ -157,7 +157,7 @@ const toCharacterSave = (
   },
   race: {
     baseRaceId: character.raceId,
-    hasSubraces: true,
+    hasSubraces: character.subraceId !== null,
     subraceId: character.subraceId,
   },
   classes:

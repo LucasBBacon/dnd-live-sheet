@@ -160,10 +160,6 @@ router.post("/", async (req, res, next) => {
 
     // execute atomic transaction
     await db.transaction(async (tx) => {
-      if (!payload.subraceId) {
-        throw new Error("subraceId is required for character creation");
-      }
-
       const campaignId = payload.campaignId
         ? payload.campaignId
         : await resolveDefaultCampaignForUser(tx, userId);

@@ -1,7 +1,11 @@
 // Centralized fetch wrapper to ensure mock auth header is always present
 import type { RuleSnapshot } from "@project/shared";
 
-const BASE_URL = "http://localhost:3000/api";
+export const API_ORIGIN = (
+  import.meta.env.VITE_API_URL ?? "http://localhost:3000"
+).replace(/\/+$/, "");
+
+const BASE_URL = `${API_ORIGIN}/api`;
 export const MOCK_USER_ID = "dev-user-1";
 
 export type ReferenceScope = {

@@ -30,7 +30,8 @@ describe("operational schema", () => {
     expect(characters.campaignId.notNull).toBe(true);
     expect(characters.name.notNull).toBe(true);
     expect(characters.raceId.notNull).toBe(true);
-    expect(characters.subraceId.notNull).toBe(true);
+    // races without subraces (e.g. Human) store NULL here
+    expect(characters.subraceId.notNull).toBe(false);
     expect(characters.customBackgroundData.dataType).toBe("json");
     expect(characters.inventorySnapshot.dataType).toBe("json");
   });

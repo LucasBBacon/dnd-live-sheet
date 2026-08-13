@@ -3,5 +3,6 @@ export const buildHitDieHealingExpression = (
   conModifier: number,
 ): string => {
   if (conModifier === 0) return `1d${sides}`;
-  return `1d${sides}${conModifier > 0 ? "+" : ""}${conModifier}`;
+  const sign = conModifier > 0 ? "+" : "";
+  return `1d${sides}${sign}${conModifier}`;
 };

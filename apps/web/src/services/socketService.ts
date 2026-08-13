@@ -14,6 +14,7 @@ import {
   unwrapServerBroadcastPayload,
 } from "@project/shared";
 import { io, type Socket } from "socket.io-client";
+import { API_ORIGIN } from "../api/client";
 
 export type SocketActionErrorPayload = {
   event?: string;
@@ -26,13 +27,8 @@ class SocketManager {
 
   public connect(campaignId: string, userId: string, characterId?: string) {
     if (this.socket) return;
-    const apiUrl = import.meta.env.VITE_API_URL;
 
-    if (!apiUrl) {
-      throw new Error("Missing VITE_API_URL environment variable");
-    }
-
-    this.socket = io(apiUrl, {
+    this.socket = io(API_ORIGIN, {
       auth: {
         userId,
       },

@@ -153,5 +153,81 @@
       "shortDescription": "A servant of a temple, shrine, or sacred order who carries its rituals and teachings into the wider world.",
       "fullText": "You understand wealth, power, and privilege. You carry a noble title, and your family owns land, collects taxes, and wields significant political influence. You might be a pampered aristocrat unfamiliar with work or discomfort, a former merchant just elevated to the nobility, or a disinherited scoundrel with a disproportionate sense of entitlement. Or you could be an honest, hard-working landowner who cares deeply about the people who live and work on your land, keenly aware of your responsibility to them.\nWork with your DM to come up with an appropriate title and determine how much authority that title carries. A noble title doesn’t stand on its own—it’s connected to an entire family, and whatever title you hold, you will pass it down to your own children. Not only do you need to determine your noble title, but you should also work with the DM to describe your family and their influence on you.\nIs your family old and established, or was your title only recently bestowed? How much influence do they wield, and over what area? What kind of reputation does your family have among the other aristocrats of the region? How do the common people regard them?\nWhat's your position in the family? Are you the heir to the head of the family? Have you already inherited the title? How do you feel about that responsibility? Or are you so far down the line of inheritance that no one cares what you do, as long as you don’t embarrass the family? How does the head of your family feel about your adventuring career? Are you in your family's good graces, or shunned by the rest of your family?\nDoes your family have a coat of arms? An insignia you might wear on a signet ring? Particular colors you wear all the time? An animal you regard as a symbol of your line or even a spiritual member of the family?\nThese details help establish your family and your title as features of the world of the campaign."
     }
+  },
+  {
+    "id": "background_soldier",
+    "name": "Soldier",
+    "featureName": "Military Rank",
+    "featureDescription": "Soldiers loyal to your former organisation recognise your rank and can offer practical assistance in military contexts.",
+    "ideals": [
+      "Duty. Orders exist for a reason.",
+      "Nation. I fight to defend my people.",
+      "Glory. Great deeds are remembered."
+    ],
+    "bonds": [
+      "I protect comrades who survived my old campaign.",
+      "I must honour the fallen who trained me.",
+      "I carry a debt to my old commanding officer."
+    ],
+    "flaws": [
+      "I default to violence too quickly.",
+      "I can become reckless when challenged.",
+      "I have little patience for civilian caution."
+    ],
+    "personalityTraits": [
+      "I keep my kit immaculate and ready.",
+      "I evaluate every room as a battlefield.",
+      "I rely on clear chains of command."
+    ],
+    "backgroundTraits": [
+      "trait_soldier_prof_skills",
+      "trait_soldier_prof_tools"
+    ],
+    "startingEquipment": {
+      "given": [],
+      "choices": []
+    },
+    "lore": {
+      "shortDescription": "A veteran of organised warfare who understands discipline, logistics, and command structures.",
+      "fullText": "You served in a formal military force and learned to survive under pressure, obey orders, and maintain cohesion in chaos."
+    }
+  },
+  {
+    "id": "background_criminal",
+    "name": "Criminal",
+    "featureName": "Criminal Contact",
+    "featureDescription": "You have a trusted underworld contact who can pass messages and rumours through illicit networks.",
+    "ideals": [
+      "Freedom. No authority should own my choices.",
+      "Loyalty. My crew comes first.",
+      "Survival. I do what keeps me alive."
+    ],
+    "bonds": [
+      "I protect the person who taught me the trade.",
+      "I owe a dangerous debt from a failed job.",
+      "I want to dismantle the gang that betrayed me."
+    ],
+    "flaws": [
+      "I distrust almost everyone by default.",
+      "I keep secrets even when honesty is safer.",
+      "I chase high-risk scores when I should walk away."
+    ],
+    "personalityTraits": [
+      "I always identify exits and blind spots first.",
+      "I bargain hard and never reveal my full hand.",
+      "I use humour to deflect suspicion."
+    ],
+    "backgroundTraits": [
+      "trait_criminal_prof_skills",
+      "trait_criminal_prof_tools"
+    ],
+    "startingEquipment": {
+      "given": [],
+      "choices": []
+    },
+    "lore": {
+      "shortDescription": "A former lawbreaker accustomed to covert networks, coded communication, and operating outside institutions.",
+      "fullText": "You learned to exploit social and physical gaps in the law, and you still carry contacts and instincts from that world."
+    }
   }
 ]

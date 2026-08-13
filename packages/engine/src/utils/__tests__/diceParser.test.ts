@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { DiceEngine } from "../diceParser.js";
 import { FIGHTING_STYLE_TRAITS } from "../../rules/traits/fightingStyleDictionary.js";
 
@@ -43,5 +43,34 @@ describe("DiceEngine dice-rule application", () => {
     );
 
     expect(rerolled).toEqual([1, 4]);
+  });
+
+  it("applies dice rules to a full expression through one entry point", () => {
+    vi.spyOn(Math, "random").mockReturnValue(0);
+
+    const result = DiceEngine.applyDiceRulesToExpression(
+      "1d20",
+      [
+        {
+          target: "ATTACK_ROLL",
+          requiredStates: ["status_wielding_two_handed"],
+          mutator: { type: "reroll_once", triggerOn: [1] },
+        },
+      ],
+      "ATTACK_ROLL",
+      {
+        activeStates: ["status_wielding_two_handed"],
+        sides: 20,
+        rollFn: () => 5,
+      },
+    );
+
+    expect(result).toEqual({
+      total: 5,
+      rolls: [5],
+      modifier: 0,
+    });
+
+    vi.restoreAllMocks();
   });
 });

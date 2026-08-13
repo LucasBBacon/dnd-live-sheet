@@ -1,6 +1,7 @@
 import type {
   ActionGrant,
   DamageType,
+  DiceRule,
   EngineEvent,
   TriggerGrant,
 } from "@project/shared";
@@ -60,16 +61,7 @@ export interface ActionExecutionContext {
   inventoryLedger?: InventoryLedger;
   snapshot?: RuleSnapshotLookup;
   activeStates?: string[];
-  diceRules?: Array<{
-    target: "DAMAGE_ROLL" | "ATTACK_ROLL" | "SAVING_THROW" | "ABILITY_CHECK";
-    requiredStates: string[];
-    requiredDamageType?: DamageType;
-    mutator: {
-      type: "reroll_once" | "minimum_value" | "explode";
-      triggerOn?: number[];
-      floorValue?: number;
-    };
-  }>;
+  diceRules?: DiceRule[];
 }
 
 const ok: ActionResult = { executed: true };
@@ -250,6 +242,31 @@ export class ActionResolver {
     return results;
   }
 
+  private static resolveTargetRoll(
+    roll: {
+      total: number;
+      rolls: number[];
+      modifier: number;
+    },
+    target: "DAMAGE_ROLL" | "ATTACK_ROLL" | "SAVING_THROW" | "ABILITY_CHECK",
+    context: ActionExecutionContext,
+    activeStates: string[] = [],
+    sides: number,
+    requiredDamageType?: DamageType,
+  ) {
+    return DiceEngine.applyDiceRulesToRollResult(
+      roll,
+      context.diceRules ?? [],
+      target,
+      {
+        activeStates,
+        sides,
+        ...(requiredDamageType !== undefined ? { requiredDamageType } : {}),
+        rollFn: (nextSides) => DiceEngine.rollDigital(`1d${nextSides}`).total,
+      },
+    );
+  }
+
   private static executeEffect(
     effect: ActionGrant["effect"],
     action: ActionGrant,
@@ -311,22 +328,17 @@ export class ActionResolver {
 
         const attackRoll = DiceEngine.rollDigital("1d20");
         const isCriticalHit = attackRoll.rolls[0] === 20;
-        const appliedAttackRolls = DiceEngine.applyDiceRules(
-          attackRoll.rolls,
-          context.diceRules ?? [],
+        const resolvedAttackRoll = this.resolveTargetRoll(
+          attackRoll,
           "ATTACK_ROLL",
-          {
-            activeStates: resolvedActiveStates,
-            sides: 20,
-            rollFn: (sides) => DiceEngine.rollDigital(`1d${sides}`).total,
-          },
+          context,
+          resolvedActiveStates,
+          20,
         );
 
         rollResults.push({
-          total:
-            appliedAttackRolls.reduce((sum, value) => sum + value, 0) +
-            attackBonus,
-          rolls: appliedAttackRolls,
+          total: resolvedAttackRoll.total + attackBonus,
+          rolls: resolvedAttackRoll.rolls,
           modifier: attackBonus,
           target: "ATTACK_ROLL",
         });
@@ -338,25 +350,19 @@ export class ActionResolver {
             (isCriticalHit && effect.criticalDamageMaximized)
               ? DiceEngine.rollMaximized(baseDice)
               : DiceEngine.rollDigital(baseDice);
-          const { sides } = DiceEngine.parse(baseDice);
-          const appliedRolls = DiceEngine.applyDiceRules(
-            roll.rolls,
-            context.diceRules ?? [],
+          const resolvedRoll = this.resolveTargetRoll(
+            roll,
             "DAMAGE_ROLL",
-            {
-              activeStates: resolvedActiveStates,
-              sides,
-              rollFn: (sides) => DiceEngine.rollDigital(`1d${sides}`).total,
-              requiredDamageType: segment.damageType,
-            },
+            context,
+            resolvedActiveStates,
+            DiceEngine.parse(baseDice).sides,
+            segment.damageType,
           );
 
-          const total =
-            appliedRolls.reduce((sum, value) => sum + value, 0) +
-            (index === 0 ? damageBonus : 0);
+          const total = resolvedRoll.total + (index === 0 ? damageBonus : 0);
           rollResults.push({
             total,
-            rolls: appliedRolls,
+            rolls: resolvedRoll.rolls,
             modifier: index === 0 ? damageBonus : roll.modifier,
             target: "DAMAGE_ROLL",
             damageType: segment.damageType,
@@ -437,26 +443,21 @@ export class ActionResolver {
           const roll = segment.maximized
             ? DiceEngine.rollMaximized(baseDice)
             : DiceEngine.rollDigital(baseDice);
-          const { sides } = DiceEngine.parse(baseDice);
-          const appliedRolls = DiceEngine.applyDiceRules(
-            roll.rolls,
-            context.diceRules ?? [],
+          const resolvedRoll = this.resolveTargetRoll(
+            roll,
             "DAMAGE_ROLL",
-            {
-              activeStates:
-                activeStates.length > 0
-                  ? activeStates
-                  : (context.activeStates ?? []),
-              sides,
-              rollFn: (sides) => DiceEngine.rollDigital(`1d${sides}`).total,
-              requiredDamageType: segment.damageType,
-            },
+            context,
+            activeStates.length > 0
+              ? activeStates
+              : (context.activeStates ?? []),
+            DiceEngine.parse(baseDice).sides,
+            segment.damageType,
           );
 
-          const total = appliedRolls.reduce((sum, value) => sum + value, 0);
+          const total = resolvedRoll.total;
           rollResults.push({
             total,
-            rolls: appliedRolls,
+            rolls: resolvedRoll.rolls,
             modifier: roll.modifier,
             target: "DAMAGE_ROLL",
             damageType: segment.damageType,
@@ -468,28 +469,22 @@ export class ActionResolver {
 
       case "save": {
         const saveRoll = DiceEngine.rollDigital("1d20");
-        const appliedRolls = DiceEngine.applyDiceRules(
-          saveRoll.rolls,
-          context.diceRules ?? [],
+        const resolvedRoll = this.resolveTargetRoll(
+          saveRoll,
           "SAVING_THROW",
-          {
-            activeStates:
-              activeStates.length > 0
-                ? activeStates
-                : (context.activeStates ?? []),
-            sides: 20,
-            rollFn: (sides) => DiceEngine.rollDigital(`1d${sides}`).total,
-          },
+          context,
+          activeStates.length > 0 ? activeStates : (context.activeStates ?? []),
+          20,
         );
 
-        const total = appliedRolls.reduce((sum, value) => sum + value, 0);
+        const total = resolvedRoll.total;
 
         return {
           ...ok,
           rollResults: [
             {
               total,
-              rolls: appliedRolls,
+              rolls: resolvedRoll.rolls,
               modifier: saveRoll.modifier,
               target: "SAVING_THROW",
               ...(effect.damage?.[0]?.damageType !== undefined
@@ -502,28 +497,22 @@ export class ActionResolver {
 
       case "ability_check": {
         const abilityCheckRoll = DiceEngine.rollDigital("1d20");
-        const appliedRolls = DiceEngine.applyDiceRules(
-          abilityCheckRoll.rolls,
-          context.diceRules ?? [],
+        const resolvedRoll = this.resolveTargetRoll(
+          abilityCheckRoll,
           "ABILITY_CHECK",
-          {
-            activeStates:
-              activeStates.length > 0
-                ? activeStates
-                : (context.activeStates ?? []),
-            sides: 20,
-            rollFn: (sides) => DiceEngine.rollDigital(`1d${sides}`).total,
-          },
+          context,
+          activeStates.length > 0 ? activeStates : (context.activeStates ?? []),
+          20,
         );
 
-        const total = appliedRolls.reduce((sum, value) => sum + value, 0);
+        const total = resolvedRoll.total;
 
         return {
           ...ok,
           rollResults: [
             {
               total,
-              rolls: appliedRolls,
+              rolls: resolvedRoll.rolls,
               modifier: abilityCheckRoll.modifier,
               target: "ABILITY_CHECK",
             },

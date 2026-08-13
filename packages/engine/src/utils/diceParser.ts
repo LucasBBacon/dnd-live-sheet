@@ -1,10 +1,10 @@
-import type { DiceRule, DiceRuleTarget } from "@project/shared";
+import type { DamageType, DiceRule, DiceRuleTarget } from "@project/shared";
 
 export interface DiceRuleContext {
   activeStates: string[];
   sides: number;
   rollFn?: (sides: number) => number;
-  requiredDamageType?: string;
+  requiredDamageType?: DamageType;
 }
 
 export interface ParsedDiceExpression {
@@ -30,6 +30,52 @@ export class DiceEngine {
       sides: Number.parseInt(match[2], 10),
       modifier: match[3] ? Number.parseInt(match[3], 10) : 0,
     };
+  }
+
+  public static applyDiceRulesToRollResult(
+    rollResult: {
+      total: number;
+      rolls: number[];
+      modifier: number;
+    },
+    rules: DiceRule[],
+    target: DiceRuleTarget,
+    context: DiceRuleContext,
+  ): {
+    total: number;
+    rolls: number[];
+    modifier: number;
+  } {
+    const appliedRolls = this.applyDiceRules(rollResult.rolls, rules, target, {
+      ...context,
+      sides: context.sides,
+    });
+
+    const total =
+      appliedRolls.reduce((sum, value) => sum + value, 0) + rollResult.modifier;
+
+    return {
+      total: Math.max(0, total),
+      rolls: appliedRolls,
+      modifier: rollResult.modifier,
+    };
+  }
+
+  public static applyDiceRulesToExpression(
+    expression: string,
+    rules: DiceRule[],
+    target: DiceRuleTarget,
+    context: DiceRuleContext,
+  ): {
+    total: number;
+    rolls: number[];
+    modifier: number;
+  } {
+    const baseRoll = this.rollDigital(expression);
+    return this.applyDiceRulesToRollResult(baseRoll, rules, target, {
+      ...context,
+      sides: this.parse(expression).sides,
+    });
   }
 
   private static matchesStateRequirements(
