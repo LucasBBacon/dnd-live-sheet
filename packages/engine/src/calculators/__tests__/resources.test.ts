@@ -31,6 +31,32 @@ describe("ResourceManager.initializeFromGrants", () => {
     expect(manager.consume("ki", 1)).toBe(false);
   });
 
+  it("resolves class-level threshold capacities", () => {
+    manager.initializeFromGrants(
+      [
+        {
+          id: "rage",
+          name: "Rage",
+          maxRule: {
+            kind: "class_level_thresholds",
+            classId: "class_barbarian",
+            thresholds: [
+              { minimumLevel: 1, value: 2 },
+              { minimumLevel: 3, value: 3 },
+              { minimumLevel: 6, value: 4 },
+            ],
+          },
+          resetOn: "long_rest",
+        },
+      ],
+      { classes: { class_barbarian: 6 } },
+    );
+
+    expect(manager.getRuntimeResources()).toContainEqual(
+      expect.objectContaining({ id: "rage", maxCharges: 4, currentCharges: 4 }),
+    );
+  });
+
   it("initializes multiple distinct resources independently", () => {
     manager.initializeFromGrants([
       makeGrant({ id: "ki", maxCharges: 2 }),

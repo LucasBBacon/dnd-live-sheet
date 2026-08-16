@@ -76,6 +76,18 @@ export class DerivedStatEngine {
         } else if (mod.scalingFactor === "class_level" && mod.scalingClassId) {
           const classLvl = levels.classes[mod.scalingClassId] || 0;
           addition *= classLvl;
+        } else if (
+          mod.scalingFactor === "class_level_thresholds" &&
+          mod.scalingClassId
+        ) {
+          const classLevel = levels.classes[mod.scalingClassId] ?? 0;
+          addition = (mod.scalingThresholds ?? []).reduce(
+            (resolved, threshold) =>
+              classLevel >= threshold.minimumLevel
+                ? threshold.value
+                : resolved,
+            0,
+          );
         }
 
         if (addition !== 0) {

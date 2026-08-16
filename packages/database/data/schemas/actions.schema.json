@@ -1,0 +1,502 @@
+{
+    "$schema": "https://json-schema.org/draft-07/schema#",
+    "$id": "actions.schema.json",
+    "title": "Actions",
+    "type": "object",
+    "definitions": {
+        "attackType": {
+            "type": "string",
+            "enum": [
+                "melee_weapon",
+                "ranged_weapon",
+                "melee_spell",
+                "ranged_spell"
+            ]
+        },
+        "actionActivation": {
+            "type": "string",
+            "enum": [
+                "action",
+                "bonus_action",
+                "reaction",
+                "special",
+                "minute",
+                "hour",
+                "eight_hours"
+            ]
+        },
+        "saveEffect": {
+            "type": "object",
+            "required": [
+                "type",
+                "savingThrow"
+            ],
+            "properties": {
+                "type": {
+                    "const": "save"
+                },
+                "areaOfEffect": {
+                    "$ref": "#/definitions/areaOfEffect"
+                },
+                "savingThrow": {
+                    "$ref": "#/definitions/actionSave"
+                },
+                "damage": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/damageSegment"
+                    }
+                }
+            }
+        },
+        "areaOfEffect": {
+            "type": "object",
+            "required": [
+                "type"
+            ],
+            "properties": {
+                "type": {
+                    "const": "ability_check"
+                }
+            }
+        },
+        "actionSave": {
+            "type": "object",
+            "required": [
+                "targetStat",
+                "dcCalculation",
+                "saveEffect"
+            ],
+            "properties": {
+                "targetStat": {
+                    "$ref": "./modifiers.schema.json#/definitions/modifierTarget"
+                },
+                "dcCalculation": {
+                    "type": "object",
+                    "required": [
+                        "scalingStat"
+                    ],
+                    "properties": {
+                        "base": {
+                            "type": "number",
+                            "default": 8
+                        },
+                        "scalingStat": {
+                            "$ref": "./modifiers.schema.json#/definitions/modifierTarget"
+                        },
+                        "includeProficiency": {
+                            "type": "boolean",
+                            "default": true
+                        }
+                    }
+                },
+                "saveEffect": {
+                    "type": "string",
+                    "enum": [
+                        "half_damage",
+                        "no_damage",
+                        "negates_effect"
+                    ]
+                }
+            }
+        },
+        "levelScaling": {
+            "type": "object",
+            "required": [
+                "levelRequired",
+                "newDice"
+            ],
+            "properties": {
+                "levelRequired": {
+                    "type": "number"
+                },
+                "newDice": {
+                    "type": "string"
+                }
+            }
+        },
+        "damageSegment": {
+            "type": "object",
+            "required": [
+                "sourceName",
+                "baseDice",
+                "damageType"
+            ],
+            "properties": {
+                "sourceName": {
+                    "type": "string"
+                },
+                "baseDice": {
+                    "type": "string"
+                },
+                "maximized": {
+                    "type": "boolean"
+                },
+                "damageType": {
+                    "$ref": "./affinities.schema.json#/definitions/damageType"
+                },
+                "scalingMode": {
+                    "$ref": "./modifiers.schema.json#/definitions/modifierScaling",
+                    "default": "none"
+                },
+                "scalingClassId": {
+                    "type": "string"
+                },
+                "levelScaling": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/levelScaling"
+                    },
+                    "default": []
+                }
+            }
+        },
+        "abilityCheckEffect": {
+            "type": "object",
+            "required": [
+                "shape",
+                "size"
+            ],
+            "properties": {
+                "shape": {
+                    "type": "string",
+                    "enum": [
+                        "cone",
+                        "line",
+                        "sphere",
+                        "cube",
+                        "cylinder",
+                        "single_target"
+                    ]
+                },
+                "size": {
+                    "type": "number"
+                },
+                "secondarySize": {
+                    "type": "number"
+                }
+            }
+        },
+        "weaponAttackContext": {
+            "type": "object",
+            "required": [
+                "hand",
+                "attackUsage"
+            ],
+            "properties": {
+                "hand": {
+                    "$ref": "./modifiers.schema.json#/definitions/modifierAttackContext"
+                },
+                "attackUsage": {
+                    "type": "string",
+                    "enum": [
+                        "standard",
+                        "two_weapon_bonus"
+                    ]
+                },
+                "isTwoHandedGrip": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "attackEffect": {
+            "type": "object",
+            "required": [
+                "type",
+                "attackType",
+                "attackStat",
+                "damage"
+            ],
+            "properties": {
+                "type": {
+                    "const": "attack"
+                },
+                "attackType": {
+                    "$ref": "#/definitions/attackType"
+                },
+                "attackStat": {
+                    "$ref": "./modifiers.schema.json#/definitions/modifierTarget"
+                },
+                "range": {
+                    "type": "number",
+                    "default": 5
+                },
+                "longRange": {
+                    "type": "number"
+                },
+                "weaponContext": {
+                    "$ref": "#/definitions/weaponAttackContext"
+                },
+                "attackBonus": {
+                    "type": "number"
+                },
+                "damageBonus": {
+                    "type": "number"
+                },
+                "criticalDamageMaximized": {
+                    "type": "boolean"
+                },
+                "damage": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/damageSegment"
+                    }
+                }
+            }
+        },
+        "damageRiderEffect": {
+            "type": "object",
+            "required": [
+                "type",
+                "damage"
+            ],
+            "properties": {
+                "type": {
+                    "const": "damage_rider"
+                },
+                "requiredWeaponProperties": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "default": []
+                },
+                "damage": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/damageSegment"
+                    }
+                }
+            }
+        },
+        "summonEffect": {
+            "type": "object",
+            "required": [
+                "type",
+                "entityTemplateIds"
+            ],
+            "properties": {
+                "type": {
+                    "const": "summon"
+                },
+                "effectTag": {
+                    "type": "string"
+                },
+                "entityTemplateIds": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "maxActive": {
+                    "type": "number"
+                },
+                "durationHours": {
+                    "type": "number"
+                },
+                "materialCostGP": {
+                    "type": "number"
+                }
+            }
+        },
+        "effectStatePredicate": {
+            "type": "object",
+            "properties": {
+                "requiredStates": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "default": []
+                },
+                "forbiddenStates": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "default": []
+                }
+            }
+        },
+        "applyStateEffect": {
+            "type": "object",
+            "required": [
+                "type",
+                "durationType"
+            ],
+            "properties": {
+                "type": {
+                    "const": "apply_effect"
+                },
+                "effectName": {
+                    "type": "string"
+                },
+                "effectTag": {
+                    "type": "string"
+                },
+                "requiredStates": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "default": []
+                },
+                "forbiddenStates": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "default": []
+                },
+                "predicates": {
+                    "$ref": "#/definitions/effectStatePredicate"
+                },
+                "durationType": {
+                    "type": "string",
+                    "enum": [
+                        "turn_start",
+                        "turn_end",
+                        "rounds",
+                        "rest_short",
+                        "rest_long",
+                        "manual"
+                    ]
+                },
+                "durationRounds": {
+                    "type": "number"
+                },
+                "isSelfConcentration": {
+                    "type": "boolean",
+                    "default": false
+                },
+                "modifiers": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "./modifiers.schema.json#/definitions/baseModifier"
+                    },
+                    "default": []
+                },
+                "states": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "default": []
+                }
+            }
+        },
+        "removeEffect": {
+            "type": "object",
+            "required": [
+                "type",
+                "effectTag"
+            ],
+            "properties": {
+                "type": {
+                    "const": "remove_effect"
+                },
+                "effectTag": {
+                    "type": "string",
+                    "minLength": 1
+                }
+            }
+        },
+        "dynamicWeaponAttack": {
+            "type": "object",
+            "required": [
+                "type"
+            ],
+            "properties": {
+                "type": {
+                    "const": "dynamic_weapon_attack"
+                },
+                "requiredWeaponProperties": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "default": []
+                },
+                "requiredWeaponCategory": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "default": []
+                }
+            }
+        },
+        "macroEffect": {
+            "type": "object",
+            "required": [
+                "type",
+                "effects"
+            ],
+            "properties": {
+                "type": {
+                    "const": "macro"
+                },
+                "effects": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/actionEffect"
+                    }
+                }
+            }
+        },
+        "actionEffect": {
+            "oneOf": [
+                {
+                    "$ref": "#/definitions/saveEffect"
+                },
+                {
+                    "$ref": "#/definitions/abilityCheckEffect"
+                },
+                {
+                    "$ref": "#/definitions/attackEffect"
+                },
+                {
+                    "$ref": "#/definitions/damageRiderEffect"
+                },
+                {
+                    "$ref": "#/definitions/summonEffect"
+                },
+                {
+                    "$ref": "#/definitions/applyStateEffect"
+                },
+                {
+                    "$ref": "#/definitions/removeEffect"
+                },
+                {
+                    "$ref": "#/definitions/dynamicWeaponAttack"
+                },
+                {
+                    "$ref": "#/definitions/macroEffect"
+                }
+            ]
+        }
+    },
+    "properties": {
+        "id": {
+            "type": "string"
+        },
+        "name": {
+            "type": "string"
+        },
+        "activation": {
+            "$ref": "#/definitions/actionActivation"
+        },
+        "consumesResource": {
+            "type": "string"
+        },
+        "consumesAmmo": {
+            "type": "string"
+        },
+        "targetFilter": {
+            "$ref": "./creatures.schema.json#/definitions/targetFilter"
+        },
+        "effect": {
+            "$ref": "#/definitions/actionEffect"
+        }
+    }
+}

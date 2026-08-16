@@ -1,0 +1,94 @@
+{
+    "$schema": "https://json-schema.org/draft-07/schema#",
+    "$id": "resources.schema.json",
+    "title": "Resource Grant",
+    "type": "object",
+    "definitions": {
+        "resourceThreshold": {
+            "type": "object",
+            "properties": {},
+            "required": [
+                "minimumLevel",
+                "value"
+            ]
+        },
+        "resourceMaxRule": {
+            "oneOf": [
+                {
+                    "type": "object",
+                    "properties": {
+                        "kind": {
+                            "const": "fixed"
+                        },
+                        "value": {
+                            "type": "integer",
+                            "minimum": 0
+                        }
+                    },
+                    "required": [
+                        "type",
+                        "value"
+                    ],
+                    "additionalProperties": false
+                },
+                {
+                    "type": "object",
+                    "properties": {
+                        "kind": {
+                            "const": "class_level_thresholds"
+                        },
+                        "classId": {
+                            "type": "string"
+                        },
+                        "thresholds": {
+                            "type": "array",
+                            "minItems": 1,
+                            "items": {
+                                "$ref": "#/definitions/resourceThreshold"
+                            }
+                        }
+                    },
+                    "required": [
+                        "kind",
+                        "classId",
+                        "thresholds"
+                    ],
+                    "additionalProperties": false
+                }
+            ]
+        },
+        "resourceReset": {
+            "type": "string",
+            "enum": [
+                "short_rest",
+                "long_rest",
+                "dawn",
+                "initiative_roll",
+                "start_of_turn"
+            ]
+        }
+    },
+    "properties": {
+        "id": {
+            "type": "string"
+        },
+        "name": {
+            "type": "string"
+        },
+        "maxCharges": {
+            "type": "integer",
+            "minimum": 0
+        },
+        "maxRule": {
+            "$ref": "#/definitions/resourceMaxRule"
+        },
+        "resetOn": {
+            "$ref": "#/definitions/resourceReset"
+        }
+    },
+    "required": [
+        "id",
+        "name",
+        "resetOn"
+    ]
+}

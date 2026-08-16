@@ -403,6 +403,13 @@ export class CharacterEngine {
         false,
         undefined,
         weaponAttackContext,
+        save.classes.reduce(
+          (levelsByClass, classState) => {
+            levelsByClass[classState.classId] = classState.level;
+            return levelsByClass;
+          },
+          {} as Record<string, number>,
+        ),
       );
 
       const governingStat = attackAnalysis.breakdown.governingStat as Ability;

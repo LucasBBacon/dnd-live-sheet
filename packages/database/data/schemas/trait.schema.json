@@ -1,0 +1,282 @@
+{
+    "$schema": "https://json-schema.org/draft-07/schema#",
+    "$id": "trait.schema.json",
+    "title": "Trait Definition",
+    "type": "object",
+    "required": ["id", "name", "description"],
+    "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "description": { "type": "string" },
+        "modifiers": { "$ref": "#/definitions/ModifierBlock" },
+        "grantedStates": { "type": "array", "items": { "type": "string" } },
+        "proficiencies": { "$ref": "#/definitions/ProficiencyBlock" },
+        "affinities": { "$ref": "#/definitions/AffinityBlock" },
+        "spells": { "$ref": "#/definitions/SpellGrantBlock" },
+        "implementation": { "$ref": "#/definitions/TraitImplementationMetadata" },
+        "resources": { "type": "array", "items": { "$ref": "#/definitions/ResourceGrant" }, "default": [] },
+        "triggers": { "type": "array", "items": { "$ref": "#/definitions/TriggerGrant" }, "default": [] },
+        "diceRules": { "type": "array", "items": { "$ref": "#/definitions/DiceRule" }, "default": [] },
+        "criticalHitModifiers": { "type": "array", "items": { "$ref": "#/definitions/CriticalHitModifier" }, "default": [] },
+        "actions": { "type": "array", "items": { "$ref": "#/definitions/ActionGrant" }, "default": [] }
+    },
+    "definitions": {
+        "ModifierTarget": { "type": "string", "enum": ["MAX_HP", "ARMOR_CLASS", "INITIATIVE", "SPEED", "ATTACK_BONUS", "DAMAGE_BONUS", "STR_SAVE", "DEX_SAVE", "CON_SAVE", "INT_SAVE", "WIS_SAVE", "CHA_SAVE", "ALL_SAVES", "POISON_SAVE", "CHARM_SAVE", "FRIGHTEN_SAVE", "STR", "DEX", "CON", "INT", "WIS", "CHA", "STEALTH_CHECK", "SENSE_DARKVISION", "SPELLCASTING_MOD"] },
+        "ModifierType": { "type": "string", "enum": ["set_base", "add", "multiplier", "advantage", "disadvantage"] },
+        "ModifierScaling": { "type": "string", "enum": ["total_level", "class_level", "class_level_thresholds", "none"] },
+        "ModifierValueSource": { "type": "string", "enum": ["fixed", "attack_ability_modifier", "governing_stat_modifier", "cha_modifier"] },
+        "ModifierAttackContext": { "type": "string", "enum": ["main_hand", "off_hand"] },
+        "BaseModifier": {
+            "type": "object",
+            "required": ["target", "type"],
+            "properties": {
+                "target": { "$ref": "#/definitions/ModifierTarget" },
+                "type": { "$ref": "#/definitions/ModifierType" },
+                "value": { "type": "number", "default": 0 },
+                "valueSource": { "$ref": "#/definitions/ModifierValueSource" },
+                "scalingFactor": { "$ref": "#/definitions/ModifierScaling", "default": "none" },
+                "scalingClassId": { "type": "string" },
+                "scalingThresholds": { "type": "array", "minItems": 1, "items": { "$ref": "#/definitions/ModifierScalingThreshold" } },
+                "maxDexCap": { "type": "number" },
+                "attackContext": { "$ref": "#/definitions/ModifierAttackContext" },
+                "requiredStates": { "type": "array", "items": { "type": "string" }, "default": [] },
+                "forbiddenStates": { "type": "array", "items": { "type": "string" }, "default": [] }
+            }
+        },
+        "ModifierScalingThreshold": {
+            "type": "object",
+            "required": ["minimumLevel", "value"],
+            "properties": { "minimumLevel": { "type": "integer", "exclusiveMinimum": 0 }, "value": { "type": "number" } },
+            "additionalProperties": false
+        },
+        "ChoiceModifierGrant": {
+            "type": "object",
+            "required": ["id", "options", "modifierTemplate"],
+            "properties": {
+                "id": { "type": "string" },
+                "chooseAmount": { "type": "number", "minimum": 1, "default": 1 },
+                "options": { "type": "array", "items": { "$ref": "#/definitions/ModifierTarget" } },
+                "modifierTemplate": {
+                    "type": "object",
+                    "required": ["type", "value"],
+                    "properties": {
+                        "type": { "$ref": "#/definitions/ModifierType" },
+                        "value": { "type": "number" },
+                        "valueSource": { "$ref": "#/definitions/ModifierValueSource" },
+                        "scalingFactor": { "$ref": "#/definitions/ModifierScaling", "default": "none" },
+                        "scalingClassId": { "type": "string" }
+                    }
+                },
+                "allowDuplicates": { "type": "boolean", "default": false }
+            }
+        },
+        "ModifierBlock": {
+            "type": "object",
+            "properties": {
+                "fixed": { "type": "array", "items": { "$ref": "#/definitions/BaseModifier" }, "default": [] },
+                "choices": { "type": "array", "items": { "$ref": "#/definitions/ChoiceModifierGrant" }, "default": [] }
+            }
+        },
+        "DamageType": { "type": "string", "enum": ["acid", "bludgeoning", "cold", "fire", "force", "lightning", "necrotic", "piercing", "poison", "psychic", "radiant", "slashing", "thunder", "same_as_weapon"] },
+        "AffinityLevel": { "type": "string", "enum": ["vulnerability", "resistance", "immunity"] },
+        "DamageBypass": { "type": "string", "enum": ["magical", "silvered", "adamantine", "spell"] },
+        "FixedAffinityGrant": {
+            "type": "object",
+            "required": ["damageType"],
+            "properties": {
+                "damageType": { "$ref": "#/definitions/DamageType" },
+                "level": { "$ref": "#/definitions/AffinityLevel", "default": "resistance" },
+                "bypassedBy": { "type": "array", "items": { "$ref": "#/definitions/DamageBypass" }, "default": [] },
+                "requiredStates": { "type": "array", "items": { "type": "string" }, "default": [] }
+            }
+        },
+        "ChoiceAffinityGrant": {
+            "type": "object",
+            "required": ["id"],
+            "properties": {
+                "id": { "type": "string" },
+                "chooseAmount": { "type": "number", "minimum": 1, "default": 1 },
+                "options": { "type": "array", "items": { "$ref": "#/definitions/DamageType" } },
+                "level": { "$ref": "#/definitions/AffinityLevel", "default": "resistance" },
+                "bypassedBy": { "type": "array", "items": { "$ref": "#/definitions/DamageBypass" }, "default": [] },
+                "requiredStates": { "type": "array", "items": { "type": "string" }, "default": [] }
+            }
+        },
+        "AffinityBlock": {
+            "type": "object",
+            "properties": {
+                "fixed": { "type": "array", "items": { "$ref": "#/definitions/FixedAffinityGrant" }, "default": [] },
+                "choices": { "type": "array", "items": { "$ref": "#/definitions/ChoiceAffinityGrant" }, "default": [] }
+            }
+        },
+        "TraitProficiencyCategory": { "type": "string", "enum": ["armor", "weapons", "tools", "saving_throws", "skills", "languages", "ability_check"] },
+        "ProficiencyLevel": { "type": "string", "enum": ["half", "proficient", "expertise"] },
+        "FixedProficiencyGrant": {
+            "type": "object",
+            "required": ["category", "proficiencyId"],
+            "properties": {
+                "category": { "$ref": "#/definitions/TraitProficiencyCategory" },
+                "proficiencyId": { "type": "string" },
+                "level": { "$ref": "#/definitions/ProficiencyLevel", "default": "proficient" },
+                "requiredStates": { "type": "array", "items": { "type": "string" }, "default": [] }
+            }
+        },
+        "ChoiceProficiencyGrant": {
+            "type": "object",
+            "required": ["id", "category"],
+            "properties": {
+                "id": { "type": "string" },
+                "category": { "$ref": "#/definitions/TraitProficiencyCategory" },
+                "chooseAmount": { "type": "number", "minimum": 1, "default": 1 },
+                "options": { "type": "array", "items": { "type": "string" } },
+                "level": { "$ref": "#/definitions/ProficiencyLevel", "default": "proficient" },
+                "requiredStates": { "type": "array", "items": { "type": "string" }, "default": [] }
+            }
+        },
+        "ProficiencyBlock": {
+            "type": "object",
+            "properties": {
+                "fixed": { "type": "array", "items": { "$ref": "#/definitions/FixedProficiencyGrant" }, "default": [] },
+                "choices": { "type": "array", "items": { "$ref": "#/definitions/ChoiceProficiencyGrant" }, "default": [] }
+            }
+        },
+        "ResourceReset": { "type": "string", "enum": ["short_rest", "long_rest", "dawn", "initiative_roll", "start_of_turn"] },
+        "ResourceThreshold": {
+            "type": "object",
+            "required": ["minimumLevel", "value"],
+            "properties": { "minimumLevel": { "type": "integer", "exclusiveMinimum": 0 }, "value": { "type": "integer", "minimum": 0 } },
+            "additionalProperties": false
+        },
+        "ResourceMaxRule": {
+            "oneOf": [
+                { "type": "object", "required": ["kind", "value"], "properties": { "kind": { "const": "fixed" }, "value": { "type": "integer", "minimum": 0 } }, "additionalProperties": false },
+                { "type": "object", "required": ["kind", "classId", "thresholds"], "properties": { "kind": { "const": "class_level_thresholds" }, "classId": { "type": "string" }, "thresholds": { "type": "array", "minItems": 1, "items": { "$ref": "#/definitions/ResourceThreshold" } } }, "additionalProperties": false }
+            ]
+        },
+        "ResourceGrant": {
+            "type": "object",
+            "required": ["id", "name", "resetOn"],
+            "properties": {
+                "id": { "type": "string" },
+                "name": { "type": "string" },
+                "maxCharges": { "type": "integer", "minimum": 0 },
+                "maxRule": { "$ref": "#/definitions/ResourceMaxRule" },
+                "resetOn": { "$ref": "#/definitions/ResourceReset" }
+            }
+        },
+        "EngineEvent": { "type": "string", "enum": ["ON_HP_REDUCED_TO_ZERO", "ON_ATTACK_HIT", "ON_SAVING_THROW_FAILED", "ON_START_OF_TURN", "ON_END_OF_TURN", "ON_SHORT_REST", "ON_LONG_REST"] },
+        "TriggerGrant": {
+            "type": "object",
+            "required": ["listenFor", "executeAction"],
+            "properties": { "listenFor": { "$ref": "#/definitions/EngineEvent" }, "executeAction": { "type": "string" }, "consumeResource": { "type": "string" } }
+        },
+        "DiceRule": {
+            "type": "object",
+            "required": ["target", "mutator"],
+            "properties": {
+                "target": { "type": "string", "enum": ["DAMAGE_ROLL", "ATTACK_ROLL", "SAVING_THROW", "ABILITY_CHECK"] },
+                "requiredStates": { "type": "array", "items": { "type": "string" }, "default": [] },
+                "requiredDamageType": { "$ref": "#/definitions/DamageType" },
+                "mutator": { "$ref": "#/definitions/RNGMutator" }
+            }
+        },
+        "RNGMutator": {
+            "type": "object",
+            "required": ["type"],
+            "properties": { "type": { "type": "string", "enum": ["reroll_once", "minimum_value", "explode"] }, "triggerOn": { "type": "array", "items": { "type": "number" } }, "floorValue": { "type": "number" } }
+        },
+        "AttackType": { "type": "string", "enum": ["melee_weapon", "ranged_weapon", "melee_spell", "ranged_spell"] },
+        "CriticalHitModifier": {
+            "type": "object",
+            "required": ["type"],
+            "properties": {
+                "type": { "type": "string", "enum": ["add_base_die", "add_specific_die", "maximize_dice"] },
+                "diceToAdd": { "type": "string" },
+                "damageType": { "$ref": "#/definitions/DamageType" },
+                "requiredAttackTypes": { "type": "array", "items": { "$ref": "#/definitions/AttackType" }, "default": [] },
+                "requiredStates": { "type": "array", "items": { "type": "string" }, "default": [] },
+                "forbiddenStates": { "type": "array", "items": { "type": "string" }, "default": [] }
+            }
+        },
+        "TraitImplementationMetadata": {
+            "type": "object",
+            "required": ["mode", "summary"],
+            "properties": { "mode": { "type": "string", "enum": ["engine", "manual_sheet_helper"] }, "summary": { "type": "string" }, "blockedBy": { "type": "array", "items": { "type": "string" }, "default": [] } }
+        },
+        "SpellGrantBlock": {
+            "type": "object",
+            "properties": {
+                "fixed": { "type": "array", "items": { "$ref": "#/definitions/FixedSpellGrant" }, "default": [] },
+                "choices": { "type": "array", "items": { "$ref": "#/definitions/SpellChoiceNode" }, "default": [] }
+            }
+        },
+        "FixedSpellGrant": {
+            "type": "object",
+            "required": ["type", "spellId", "usage"],
+            "properties": { "type": { "const": "fixed_spell" }, "spellId": { "type": "string" }, "castingStat": { "$ref": "#/definitions/ModifierTarget" }, "unlockLevel": { "type": "integer", "minimum": 1, "maximum": 20 }, "unlockScaling": { "type": "string", "enum": ["total_level", "class_level", "class_level_thresholds"], "default": "total_level" }, "usage": { "$ref": "#/definitions/SpellUsage" } }
+        },
+        "SpellChoiceNode": {
+            "type": "object",
+            "required": ["type", "nodeId", "listSource", "maxSpellLevel", "pickCount"],
+            "properties": { "type": { "const": "spell_choice" }, "nodeId": { "type": "string" }, "listSource": { "type": "string", "enum": ["any", "arcane", "divine", "bard", "cleric", "druid", "paladin", "ranger", "sorcerer", "warlock", "wizard"] }, "maxSpellLevel": { "type": "integer" }, "pickCount": { "type": "integer" }, "castingStat": { "$ref": "#/definitions/ModifierTarget" } }
+        },
+        "SpellUsage": {
+            "oneOf": [
+                { "type": "object", "required": ["kind"], "properties": { "kind": { "enum": ["at_will", "always_prepared"] }, "resourceId": { "type": "string" } } },
+                { "type": "object", "required": ["kind", "resourceId"], "properties": { "kind": { "const": "resource" }, "resourceId": { "type": "string" } } }
+            ]
+        },
+        "ActionActivation": { "type": "string", "enum": ["action", "bonus_action", "reaction", "special", "minute", "hour", "eight_hours"] },
+        "ActionGrant": {
+            "type": "object",
+            "required": ["id", "name", "activation", "effect"],
+            "properties": { "id": { "type": "string" }, "name": { "type": "string" }, "activation": { "$ref": "#/definitions/ActionActivation" }, "consumesResource": { "type": "string" }, "consumesAmmo": { "type": "string" }, "targetFilter": { "$ref": "#/definitions/TargetFilter" }, "effect": { "$ref": "#/definitions/ActionEffect" } }
+        },
+        "CreatureType": { "type": "string", "enum": ["aberration", "beast", "celestial", "construct", "dragon", "elemental", "fey", "fiend", "giant", "humanoid", "monstrosity", "ooze", "plant", "undead"] },
+        "TargetFilter": {
+            "type": "object",
+            "required": ["targetEntity"],
+            "properties": { "targetEntity": { "type": "string", "enum": ["self", "creature", "object", "point_in_space"] }, "maxCount": { "type": "number", "default": 1 }, "allowedTypes": { "type": "array", "items": { "$ref": "#/definitions/CreatureType" } }, "forbiddenTypes": { "type": "array", "items": { "$ref": "#/definitions/CreatureType" }, "default": [] }, "requiresVisibility": { "type": "boolean", "default": true } }
+        },
+        "ActionEffect": {
+            "oneOf": [
+                { "$ref": "#/definitions/SaveEffect" },
+                { "$ref": "#/definitions/AbilityCheckEffect" },
+                { "$ref": "#/definitions/AttackEffect" },
+                { "$ref": "#/definitions/DamageRiderEffect" },
+                { "$ref": "#/definitions/SummonEffect" },
+                { "$ref": "#/definitions/ApplyStateEffect" },
+                { "$ref": "#/definitions/RemoveEffect" },
+                { "$ref": "#/definitions/DynamicWeaponAttack" },
+                { "$ref": "#/definitions/MacroEffect" }
+            ]
+        },
+        "SaveEffect": { "type": "object", "required": ["type", "savingThrow"], "properties": { "type": { "const": "save" }, "areaOfEffect": { "$ref": "#/definitions/AreaOfEffect" }, "savingThrow": { "$ref": "#/definitions/ActionSave" }, "damage": { "type": "array", "items": { "$ref": "#/definitions/DamageSegment" } } } },
+        "AbilityCheckEffect": { "type": "object", "required": ["type"], "properties": { "type": { "const": "ability_check" } } },
+        "AttackEffect": {
+            "type": "object",
+            "required": ["type", "attackType", "attackStat", "damage"],
+            "properties": { "type": { "const": "attack" }, "attackType": { "$ref": "#/definitions/AttackType" }, "attackStat": { "$ref": "#/definitions/ModifierTarget" }, "range": { "type": "number", "default": 5 }, "longRange": { "type": "number" }, "weaponContext": { "$ref": "#/definitions/WeaponAttackContext" }, "attackBonus": { "type": "number" }, "damageBonus": { "type": "number" }, "criticalDamageMaximized": { "type": "boolean" }, "damage": { "type": "array", "items": { "$ref": "#/definitions/DamageSegment" } } }
+        },
+        "DamageRiderEffect": { "type": "object", "required": ["type", "damage"], "properties": { "type": { "const": "damage_rider" }, "requiredWeaponProperties": { "type": "array", "items": { "type": "string" }, "default": [] }, "damage": { "type": "array", "items": { "$ref": "#/definitions/DamageSegment" } } } },
+        "SummonEffect": { "type": "object", "required": ["type", "entityTemplateIds"], "properties": { "type": { "const": "summon" }, "effectTag": { "type": "string" }, "entityTemplateIds": { "type": "array", "items": { "type": "string" } }, "maxActive": { "type": "number" }, "durationHours": { "type": "number" }, "materialCostGP": { "type": "number" } } },
+        "ApplyStateEffect": {
+            "type": "object",
+            "required": ["type", "durationType"],
+            "properties": { "type": { "const": "apply_effect" }, "effectName": { "type": "string" }, "effectTag": { "type": "string" }, "requiredStates": { "type": "array", "items": { "type": "string" }, "default": [] }, "forbiddenStates": { "type": "array", "items": { "type": "string" }, "default": [] }, "predicates": { "$ref": "#/definitions/EffectStatePredicate" }, "durationType": { "type": "string", "enum": ["turn_start", "turn_end", "rounds", "rest_short", "rest_long", "manual"] }, "durationRounds": { "type": "number" }, "isSelfConcentration": { "type": "boolean", "default": false }, "modifiers": { "type": "array", "items": { "$ref": "#/definitions/BaseModifier" }, "default": [] }, "states": { "type": "array", "items": { "type": "string" }, "default": [] } }
+        },
+        "EffectStatePredicate": { "type": "object", "properties": { "requiredStates": { "type": "array", "items": { "type": "string" }, "default": [] }, "forbiddenStates": { "type": "array", "items": { "type": "string" }, "default": [] } } },
+        "RemoveEffect": { "type": "object", "required": ["type", "effectTag"], "properties": { "type": { "const": "remove_effect" }, "effectTag": { "type": "string", "minLength": 1 } } },
+        "DynamicWeaponAttack": { "type": "object", "required": ["type"], "properties": { "type": { "const": "dynamic_weapon_attack" }, "requiredWeaponProperties": { "type": "array", "items": { "type": "string" }, "default": [] }, "requiredWeaponCategory": { "type": "array", "items": { "type": "string" }, "default": [] } } },
+        "MacroEffect": { "type": "object", "required": ["type", "effects"], "properties": { "type": { "const": "macro" }, "effects": { "type": "array", "items": { "$ref": "#/definitions/ActionEffect" } } } },
+        "AreaOfEffect": { "type": "object", "required": ["shape", "size"], "properties": { "shape": { "type": "string", "enum": ["cone", "line", "sphere", "cube", "cylinder", "single_target"] }, "size": { "type": "number" }, "secondarySize": { "type": "number" } } },
+        "ActionSave": {
+            "type": "object",
+            "required": ["targetStat", "dcCalculation", "saveEffect"],
+            "properties": { "targetStat": { "$ref": "#/definitions/ModifierTarget" }, "dcCalculation": { "type": "object", "required": ["scalingStat"], "properties": { "base": { "type": "number", "default": 8 }, "scalingStat": { "$ref": "#/definitions/ModifierTarget" }, "includeProficiency": { "type": "boolean", "default": true } } }, "saveEffect": { "type": "string", "enum": ["half_damage", "no_damage", "negates_effect"] } }
+        },
+        "DamageSegment": { "type": "object", "required": ["sourceName", "baseDice", "damageType"], "properties": { "sourceName": { "type": "string" }, "baseDice": { "type": "string" }, "maximized": { "type": "boolean" }, "damageType": { "$ref": "#/definitions/DamageType" }, "scalingMode": { "$ref": "#/definitions/ModifierScaling", "default": "none" }, "scalingClassId": { "type": "string" }, "levelScaling": { "type": "array", "items": { "$ref": "#/definitions/LevelScaling" }, "default": [] } } },
+        "LevelScaling": { "type": "object", "required": ["levelRequired", "newDice"], "properties": { "levelRequired": { "type": "number" }, "newDice": { "type": "string" } } },
+        "WeaponAttackContext": { "type": "object", "required": ["hand", "attackUsage"], "properties": { "hand": { "$ref": "#/definitions/ModifierAttackContext" }, "attackUsage": { "type": "string", "enum": ["standard", "two_weapon_bonus"] }, "isTwoHandedGrip": { "type": "boolean" } } }
+    }
+}

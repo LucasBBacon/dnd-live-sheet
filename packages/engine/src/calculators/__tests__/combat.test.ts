@@ -595,6 +595,52 @@ describe("CombatEngine.calculateWeaponAttack - damage bonus and offhand rules", 
     expect(result.damageExpression).toBe("1d6 +3 piercing");
   });
 
+  it("resolves class-level threshold damage scaling", () => {
+    const rageModifier = makeMod({
+      target: "DAMAGE_BONUS",
+      sourceName: "Rage",
+      value: 2,
+      scalingFactor: "class_level_thresholds",
+      scalingClassId: "class_barbarian",
+      scalingThresholds: [
+        { minimumLevel: 1, value: 2 },
+        { minimumLevel: 9, value: 3 },
+        { minimumLevel: 16, value: 4 },
+      ],
+      requiredStates: ["status_raging"],
+    });
+
+    const levelEight = CombatEngine.calculateWeaponAttack(
+      makeWeapon(),
+      makeScores(),
+      0,
+      [],
+      [rageModifier],
+      ["status_raging"],
+      [],
+      false,
+      undefined,
+      undefined,
+      { class_barbarian: 8 },
+    );
+    const levelNine = CombatEngine.calculateWeaponAttack(
+      makeWeapon(),
+      makeScores(),
+      0,
+      [],
+      [rageModifier],
+      ["status_raging"],
+      [],
+      false,
+      undefined,
+      undefined,
+      { class_barbarian: 9 },
+    );
+
+    expect(levelEight.damageExpression).toBe("1d6 +2 piercing");
+    expect(levelNine.damageExpression).toBe("1d6 +3 piercing");
+  });
+
   it("ignores DAMAGE_BONUS modifiers whose type is not 'add'", () => {
     const result = CombatEngine.calculateWeaponAttack(
       makeWeapon(),

@@ -569,6 +569,11 @@ export class CharacterBootstrapper {
 
     resourceManager.initializeFromGrants(
       activeTraits.flatMap((trait) => trait.resources ?? []),
+      {
+        classes: Object.fromEntries(
+          save.classes.map((classState) => [classState.classId, classState.level]),
+        ),
+      },
     );
 
     return activeTraits;

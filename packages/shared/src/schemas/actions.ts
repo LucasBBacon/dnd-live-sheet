@@ -100,6 +100,7 @@ export const AttackEffectSchema = z.object({
 
 export const SummonEffectSchema = z.object({
   type: z.literal("summon"),
+  effectTag: z.string().optional(),
   entityTemplateIds: z.array(z.string()),
   maxActive: z.number().optional(),
   durationHours: z.number().optional(),
@@ -114,6 +115,7 @@ const EffectStatePredicateSchema = z.object({
 export const ApplyStateEffectSchema = z.object({
   type: z.literal("apply_effect"),
   effectName: z.string().optional(), // defaults to the Action's name if omitted
+  effectTag: z.string().optional(),
   requiredStates: z.array(z.string()).default([]),
   forbiddenStates: z.array(z.string()).default([]),
   predicates: EffectStatePredicateSchema.optional(),
@@ -133,6 +135,11 @@ export const ApplyStateEffectSchema = z.object({
   states: z.array(z.string()).default([]),
 });
 
+export const RemoveEffectSchema = z.object({
+  type: z.literal("remove_effect"),
+  effectTag: z.string().min(1),
+});
+
 export const DynamicWeaponAttackSchema = z.object({
   type: z.literal("dynamic_weapon_attack"),
   requiredWeaponProperties: z.array(z.string()).default([]),
@@ -146,6 +153,7 @@ export const CoreEffectUnion = z.discriminatedUnion("type", [
   DamageRiderEffectSchema,
   SummonEffectSchema,
   ApplyStateEffectSchema,
+  RemoveEffectSchema,
   DynamicWeaponAttackSchema,
 ]);
 

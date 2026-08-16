@@ -1,0 +1,114 @@
+{
+    "traits": [
+        {
+            "id": "race_human_asi",
+            "name": "(Human) Ability Score Increase",
+            "description": "Your ability scores each increase by 1.",
+            "modifiers": {
+                "fixed": [
+                    {
+                        "target": "STR",
+                        "type": "add",
+                        "value": 1,
+                        "scalingFactor": "none",
+                        "requiredStates": [],
+                        "forbiddenStates": []
+                    },
+                    {
+                        "target": "DEX",
+                        "type": "add",
+                        "value": 1,
+                        "scalingFactor": "none",
+                        "requiredStates": [],
+                        "forbiddenStates": []
+                    },
+                    {
+                        "target": "CON",
+                        "type": "add",
+                        "value": 1,
+                        "scalingFactor": "none",
+                        "requiredStates": [],
+                        "forbiddenStates": []
+                    },
+                    {
+                        "target": "INT",
+                        "type": "add",
+                        "value": 1,
+                        "scalingFactor": "none",
+                        "requiredStates": [],
+                        "forbiddenStates": []
+                    },
+                    {
+                        "target": "WIS",
+                        "type": "add",
+                        "value": 1,
+                        "scalingFactor": "none",
+                        "requiredStates": [],
+                        "forbiddenStates": []
+                    },
+                    {
+                        "target": "CHA",
+                        "type": "add",
+                        "value": 1,
+                        "scalingFactor": "none",
+                        "requiredStates": [],
+                        "forbiddenStates": []
+                    }
+                ],
+                "choices": []
+            },
+            "resources": [],
+            "triggers": [],
+            "diceRules": [],
+            "criticalHitModifiers": [],
+            "actions": []
+        },
+        {
+            "id": "race_human_languages",
+            "name": "(Human) Languages",
+            "description": "You can speak, read, and write Common and one extra language of your choice. Humans typically learn the languages of other peoples they deal with, including obscure dialects. They are fond of sprinkling their speech with words borrowed from other tongues: Orc curses, Elvish musical expressions, Dwarvish military phrases, and so on.",
+            "modifiers": {
+                "fixed": [],
+                "choices": []
+            },
+            "proficiencies": {
+                "fixed": [
+                    {
+                        "category": "languages",
+                        "proficiencyId": "common",
+                        "level": "proficient",
+                        "requiredStates": []
+                    }
+                ],
+                "choices": [
+                    {
+                        "id": "human_language_choice",
+                        "category": "languages",
+                        "chooseAmount": 1,
+                        "level": "proficient",
+                        "requiredStates": []
+                    }
+                ]
+            },
+            "resources": [],
+            "triggers": [],
+            "diceRules": [],
+            "criticalHitModifiers": [],
+            "actions": []
+        }
+    ],
+    "races": [
+        {
+            "id": "race_human",
+            "name": "Human",
+            "size": "medium",
+            "speed": 30,
+            "grantedTraitIds": [
+                "race_human_asi",
+                "race_human_languages"
+            ],
+            "hasSubraces": false,
+            "subraces": {}
+        }
+    ]
+}

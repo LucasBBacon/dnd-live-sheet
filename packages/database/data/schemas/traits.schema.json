@@ -1,0 +1,102 @@
+{
+    "$schema": "https://json-schema.org/draft-07/schema#",
+    "$id": "traits.schema.json",
+    "title": "Trait Definition",
+    "type": "object",
+    "definitions": {
+        "traitImplementationMetadata": {
+            "type": "object",
+            "properties": {
+                "mode": {
+                    "type": "string",
+                    "enum": [
+                        "engine",
+                        "manual_sheet_helper"
+                    ]
+                },
+                "summary": {
+                    "type": "string"
+                },
+                "blockedBy": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "default": []
+                }
+            }
+        }
+    },
+    "required": [
+        "id",
+        "name",
+        "description"
+    ],
+    "properties": {
+        "id": {
+            "type": "string"
+        },
+        "name": {
+            "type": "string"
+        },
+        "description": {
+            "type": "string"
+        },
+        "modifiers": {
+            "$ref": "./modifiers.schema.json"
+        },
+        "grantedStates": {
+            "type": "array",
+            "items": {
+                "type": "string"
+            }
+        },
+        "proficiencies": {
+            "$ref": "./proficiencies.schema.json"
+        },
+        "affinities": {
+            "$ref": "./affinities.schema.json"
+        },
+        "spells": {
+            "$ref": "./spells.schema.json"
+        },
+        "implementation": {
+            "$ref": "#/definitions/traitImplementationMetadata"
+        },
+        "resources": {
+            "type": "array",
+            "items": {
+                "$ref": "./resources.schema.json"
+            },
+            "default": []
+        },
+        "triggers": {
+            "type": "array",
+            "items": {
+                "$ref": "./triggers.schema.json"
+            },
+            "default": []
+        },
+        "diceRules": {
+            "type": "array",
+            "items": {
+                "$ref": "./dice.schema.json"
+            },
+            "default": []
+        },
+        "criticalHitModifiers": {
+            "type": "array",
+            "items": {
+                "$ref": "./dice.schema.json#/definitions/criticalHitModifiers"
+            },
+            "default": []
+        },
+        "actions": {
+            "type": "array",
+            "items": {
+                "$ref": "./actions.schema.json"
+            },
+            "default": []
+        }
+    }
+}

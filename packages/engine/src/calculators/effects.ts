@@ -16,6 +16,7 @@ export interface SummonEntity {
 export interface ActiveEffect {
   instanceId: string; // unique UUId for this specific application of the effect
   sourceName: string; // e.g., "Shield Spell"
+  effectTag?: string;
   durationType: DurationType;
   durationRemaining?: number | undefined; // used on for 'rounds'
   isSelfConcentration: boolean; // if true, drops on failed CON save
@@ -57,6 +58,22 @@ export class EffectManager {
    */
   public removeEffect(instanceId: string): void {
     this.effects.delete(instanceId);
+    this.removeActorsForEffect(instanceId);
+  }
+
+  /** Removes every active effect carrying the semantic tag. */
+  public removeEffectsByTag(effectTag: string): number {
+    let removed = 0;
+    for (const [instanceId, effect] of this.effects.entries()) {
+      if (effect.effectTag !== effectTag) continue;
+      this.effects.delete(instanceId);
+      this.removeActorsForEffect(instanceId);
+      removed += 1;
+    }
+    return removed;
+  }
+
+  private removeActorsForEffect(instanceId: string): void {
     for (const [actorId, actor] of this.actors.entries()) {
       if (actor.sourceEffectInstanceId === instanceId) {
         this.actors.delete(actorId);
@@ -115,11 +132,7 @@ export class EffectManager {
       // 1 - handle effects that expire at the start of the turn
       if (effect.durationType === "turn_start") {
         this.effects.delete(id);
-        for (const [actorId, actor] of this.actors.entries()) {
-          if (actor.sourceEffectInstanceId === id) {
-            this.actors.delete(actorId);
-          }
-        }
+        this.removeActorsForEffect(id);
         // 2 - handle effects that have a duration in rounds
       } else if (
         effect.durationType === "rounds" &&
@@ -128,11 +141,7 @@ export class EffectManager {
         effect.durationRemaining -= 1;
         if (effect.durationRemaining <= 0) {
           this.effects.delete(id);
-          for (const [actorId, actor] of this.actors.entries()) {
-            if (actor.sourceEffectInstanceId === id) {
-              this.actors.delete(actorId);
-            }
-          }
+          this.removeActorsForEffect(id);
         }
       }
     }
@@ -149,11 +158,7 @@ export class EffectManager {
       // handle effects that expire at the end of the turn
       if (effect.durationType === "turn_end") {
         this.effects.delete(id);
-        for (const [actorId, actor] of this.actors.entries()) {
-          if (actor.sourceEffectInstanceId === id) {
-            this.actors.delete(actorId);
-          }
-        }
+        this.removeActorsForEffect(id);
       }
     }
   }
@@ -171,11 +176,7 @@ export class EffectManager {
       // 1 - handle effects that expire on a short rest
       if (effect.durationType === "rest_short") {
         this.effects.delete(id);
-        for (const [actorId, actor] of this.actors.entries()) {
-          if (actor.sourceEffectInstanceId === id) {
-            this.actors.delete(actorId);
-          }
-        }
+        this.removeActorsForEffect(id);
       // 2 - handle effects that expire on a long rest
       } else if (isLongRest && effect.durationType === "rest_long") {
         this.effects.delete(id);

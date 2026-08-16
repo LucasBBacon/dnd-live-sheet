@@ -16,7 +16,15 @@ type CorePackItemRow = {
   weaponRule?: WeaponDefinition | undefined;
 };
 
-type Lore = { shortDescription: string; fullText?: string | undefined };
+type Lore = { shortDescription: string; fullText?: string };
+
+const toLore = (lore: {
+  shortDescription: string;
+  fullText?: string | undefined;
+}): Lore =>
+  lore.fullText === undefined
+    ? { shortDescription: lore.shortDescription }
+    : { shortDescription: lore.shortDescription, fullText: lore.fullText };
 
 export type CoreRulePackProjection = {
   corePack: CoreRulePack;
@@ -24,7 +32,7 @@ export type CoreRulePackProjection = {
     id: string;
     name: string;
     lore: Lore;
-    effects: unknown[];
+    effects: never[];
     isStartingProficiency: boolean;
   }>;
   feats: Array<{
@@ -120,7 +128,7 @@ export const projectCoreRulePack = (
   traits: corePack.traits.map((trait) => ({
     id: trait.id,
     name: trait.name,
-    lore: trait.lore,
+    lore: toLore(trait.lore),
     // The complete trait AST stays in corePack. The legacy relation table only
     // has an effects column until the Phase 3 snapshot reader consumes it.
     effects: [],
@@ -132,7 +140,7 @@ export const projectCoreRulePack = (
     category: feat.category,
     ...(feat.source === undefined ? {} : { source: feat.source }),
     repeatable: feat.repeatable,
-    lore: feat.lore,
+    lore: toLore(feat.lore),
     ...(feat.prerequisites === undefined
       ? {}
       : { prerequisites: feat.prerequisites }),
@@ -152,7 +160,7 @@ export const projectCoreRulePack = (
     speed: race.speed,
     requiresSubrace: race.hasSubraces,
     displayLabel: race.hasSubraces ? "Subrace" : "Lineage",
-    lore: race.lore,
+    lore: toLore(race.lore),
   })),
   raceTraits: corePack.races.flatMap((race) =>
     race.grantedTraitIds.map((traitId) => ({ raceId: race.id, traitId })),
@@ -162,7 +170,7 @@ export const projectCoreRulePack = (
       id: subrace.id,
       parentRaceId: race.id,
       name: subrace.name,
-      lore: subrace.lore,
+      lore: toLore(subrace.lore),
     })),
   ),
   subraceTraits: corePack.races.flatMap((race) =>
@@ -182,7 +190,7 @@ export const projectCoreRulePack = (
     ...(entry.multiclassPrerequisites === undefined
       ? {}
       : { multiclassPrerequisites: entry.multiclassPrerequisites }),
-    lore: entry.lore,
+    lore: toLore(entry.lore),
   })),
   classMulticlassTraits: corePack.classes.flatMap((entry) =>
     entry.multiclassTraitIds.map((traitId) => ({ classId: entry.id, traitId })),
@@ -206,7 +214,7 @@ export const projectCoreRulePack = (
     id: entry.id,
     parentClassId: entry.classId,
     name: entry.name,
-    lore: entry.lore,
+    lore: toLore(entry.lore),
   })),
   subclassLevels: corePack.subclasses.flatMap((entry) =>
     entry.progression.map((level) => ({

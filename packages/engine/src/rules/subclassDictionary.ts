@@ -1,5 +1,4 @@
 import type { FeatureGrant } from "@project/shared";
-import { BARBARIAN_SUBCLASSES } from "./classes/barbarianDictionary.js";
 import { BARD_SUBCLASSES } from "./classes/bardDictionary.js";
 import { CLERIC_SUBCLASSES } from "./classes/clericDictionary.js";
 import { DRUID_SUBCLASSES } from "./classes/druidDictionary.js";
@@ -35,7 +34,6 @@ export interface SubclassDefinition {
 }
 
 export const SUBCLASS_DICTIONARY: Record<string, SubclassDefinition> = {
-  ...BARBARIAN_SUBCLASSES,
   ...BARD_SUBCLASSES,
   ...CLERIC_SUBCLASSES,
   ...DRUID_SUBCLASSES,

@@ -1,0 +1,135 @@
+{
+    "$schema": "https://json-schema.org/draft-07/schema#",
+    "$id": "spells.schema.json",
+    "title": "Spell Grant Block",
+    "type": "object",
+    "definitions": {
+        "spellUsage": {
+            "oneOf": [
+                {
+                    "type": "object",
+                    "properties": {
+                        "kind": {
+                            "enum": [
+                                "at_will",
+                                "always_prepared"
+                            ]
+                        },
+                        "resourceId": {
+                            "type": "string"
+                        }
+                    },
+                    "required": [
+                        "kind"
+                    ]
+                },
+                {
+                    "type": "object",
+                    "properties": {
+                        "kind": {
+                            "const": "resource"
+                        },
+                        "resourceId": {
+                            "type": "string"
+                        }
+                    }
+                }
+            ]
+        },
+        "fixedSpellGrant": {
+            "type": "object",
+            "required": [
+                "type",
+                "spellId",
+                "usage"
+            ],
+            "properties": {
+                "type": {
+                    "const": "fixed_spell"
+                },
+                "spellId": {
+                    "type": "string"
+                },
+                "castingStat": {
+                    "$ref": "./modifiers.schema.json#/definitions/modifierTarget"
+                },
+                "unlockLevel": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 20
+                },
+                "unlockScaling": {
+                    "type": "string",
+                    "enum": [
+                        "total_level",
+                        "class_level",
+                        "class_level_thresholds"
+                    ],
+                    "default": "total_level"
+                },
+                "usage": {
+                    "$ref": "#/definitions/spellUsage"
+                }
+            }
+        },
+        "spellChoiceNode": {
+            "type": "object",
+            "required": [
+                "type",
+                "nodeId",
+                "listSource",
+                "maxSpellLevel",
+                "pickCount"
+            ],
+            "properties": {
+                "type": {
+                    "const": "spell_choice"
+                },
+                "nodeId": {
+                    "type": "string"
+                },
+                "listSource": {
+                    "type": "string",
+                    "enum": [
+                        "any",
+                        "arcane",
+                        "divine",
+                        "bard",
+                        "cleric",
+                        "druid",
+                        "paladin",
+                        "ranger",
+                        "sorcerer",
+                        "warlock",
+                        "wizard"
+                    ]
+                },
+                "maxSpellLevel": {
+                    "type": "integer"
+                },
+                "pickCount": {
+                    "type": "integer"
+                },
+                "castingStat": {
+                    "$ref": "./modifiers.schema.json#/definitions/modifierTarget"
+                }
+            }
+        }
+    },
+    "properties": {
+        "fixed": {
+            "type": "array",
+            "items": {
+                "$ref": "#/definitions/fixedSpellGrant"
+            },
+            "default": []
+        },
+        "choices": {
+            "type": "array",
+            "items": {
+                "$ref": "#/definitions/spellChoiceNode"
+            },
+            "default": []
+        }
+    }
+}

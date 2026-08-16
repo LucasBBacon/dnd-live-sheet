@@ -1,0 +1,210 @@
+{
+    "$schema": "https://json-schema.org/draft-07/schema#",
+    "$id": "modifiers.schema.json",
+    "title": "Modifier Block",
+    "type": "object",
+    "definitions": {
+        "modifierTarget": {
+            "type": "string",
+            "enum": [
+                "MAX_HP",
+                "ARMOR_CLASS",
+                "INITIATIVE",
+                "SPEED",
+                "ATTACK_BONUS",
+                "DAMAGE_BONUS",
+                "STR_SAVE",
+                "DEX_SAVE",
+                "CON_SAVE",
+                "INT_SAVE",
+                "WIS_SAVE",
+                "CHA_SAVE",
+                "ALL_SAVES",
+                "POISON_SAVE",
+                "CHARM_SAVE",
+                "FRIGHTEN_SAVE",
+                "STR",
+                "DEX",
+                "CON",
+                "INT",
+                "WIS",
+                "CHA",
+                "STEALTH_CHECK",
+                "SENSE_DARKVISION",
+                "SPELLCASTING_MOD"
+            ]
+        },
+        "modifierType": {
+            "type": "string",
+            "enum": [
+                "set_base",
+                "add",
+                "multiplier",
+                "advantage",
+                "disadvantage"
+            ]
+        },
+        "modifierValueSource": {
+            "type": "string",
+            "enum": [
+                "fixed",
+                "attack_ability_modifier",
+                "governing_stat_modifier",
+                "cha_modifier"
+            ]
+        },
+        "modifierScaling": {
+            "type": "string",
+            "enum": [
+                "total_level",
+                "class_level",
+                "class_level_thresholds",
+                "none"
+            ]
+        },
+        "modifierScalingThreshold": {
+            "type": "object",
+            "properties": {
+                "minimumLevel": {
+                    "type": "integer",
+                    "exclusiveMinimum": 0
+                },
+                "value": {
+                    "type": "number"
+                }
+            },
+            "required": [
+                "minimumLevel",
+                "value"
+            ],
+            "additionalProperties": false
+        },
+        "modifierAttackContext": {
+            "type": "string",
+            "enum": [
+                "main_hand",
+                "off_hand"
+            ]
+        },
+        "baseModifier": {
+            "type": "object",
+            "properties": {
+                "target": {
+                    "$ref": "#/definitions/modifierTarget"
+                },
+                "type": {
+                    "$ref": "#/definitions/modifierType"
+                },
+                "value": {
+                    "type": "number",
+                    "default": 0
+                },
+                "valueSource": {
+                    "$ref": "#/definitions/modifierValueSource"
+                },
+                "scalingFactor": {
+                    "$ref": "#/definitions/modifierScaling"
+                },
+                "scalingClassId": {
+                    "type": "string"
+                },
+                "scalingThresholds": {
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {
+                        "$ref": "#/definitions/modifierScalingThreshold"
+                    }
+                },
+                "maxDexCap": {
+                    "type": "number"
+                },
+                "attackContext": {
+                    "$ref": "#/definitions/modifierAttackContext"
+                },
+                "requiredStates": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "default": []
+                },
+                "forbiddenStates": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "default": []
+                }
+            },
+            "required": [
+                "target",
+                "type"
+            ]
+        },
+        "choiceModifierGrant": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "chooseAmount": {
+                    "type": "number",
+                    "minimum": 1,
+                    "default": 1
+                },
+                "options": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/modifierTarget"
+                    }
+                },
+                "modifierTemplate": {
+                    "type": "object",
+                    "properties": {
+                        "type": {
+                            "$ref": "#/definitions/modifierType"
+                        },
+                        "value": {
+                            "type": "number"
+                        },
+                        "valueSource": {
+                            "$ref": "#/definitions/modifierValueSource"
+                        },
+                        "scalingFactor": {
+                            "$ref": "#/definitions/modifierScaling",
+                            "default": "none"
+                        },
+                        "scalingClassId": {
+                            "type": "string"
+                        }
+                    }
+                },
+                "allowDuplicates": {
+                    "type": "boolean",
+                    "default": false
+                }
+            },
+            "required": [
+                "id",
+                "options",
+                "modifierTemplate"
+            ]
+        }
+    },
+    "properties": {
+        "fixed": {
+            "type": "array",
+            "items": {
+                "$ref": "#/definitions/baseModifier"
+            },
+            "default": []
+        },
+        "choices": {
+            "type": "array",
+            "items": {
+                "$ref": "#/definitions/choiceModifierGrant"
+            },
+            "default": []
+        }
+    }
+}

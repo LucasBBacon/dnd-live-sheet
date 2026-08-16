@@ -1,5 +1,4 @@
 import type { ClassDefinition } from "@project/shared";
-import { BARBARIAN_CLASS } from "./classes/barbarianDictionary.js";
 import { BARD_CLASS } from "./classes/bardDictionary.js";
 import { CLERIC_CLASS } from "./classes/clericDictionary.js";
 import { DRUID_CLASS } from "./classes/druidDictionary.js";
@@ -33,7 +32,6 @@ import { WIZARD_CLASS } from "./classes/wizardDictionary.js";
  * and the engine, not this dictionary, decides how to fold them.
  */
 export const CLASS_DICTIONARY: Record<string, ClassDefinition> = {
-  class_barbarian: BARBARIAN_CLASS,
   class_bard: BARD_CLASS,
   class_cleric: CLERIC_CLASS,
   class_druid: DRUID_CLASS,

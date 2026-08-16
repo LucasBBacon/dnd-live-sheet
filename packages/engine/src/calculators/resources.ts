@@ -1,4 +1,9 @@
-import type { ResourceGrant } from "@project/shared";
+import type { ResourceGrant, ResourceMaxRule } from "@project/shared";
+
+export type ResourceLevelProfile = {
+  total?: number;
+  classes: Record<string, number>;
+};
 
 export interface RuntimeResource {
   id: string;
@@ -23,13 +28,23 @@ export class ResourceManager {
    * it sums the max charges to handle combined pools safely.
    * @param grants Static trait resource grant to be processed.
    */
-  public initializeFromGrants(grants: ResourceGrant[]): void {
+  public initializeFromGrants(
+    grants: ResourceGrant[],
+    levels: ResourceLevelProfile = { classes: {} },
+  ): void {
     for (const grant of grants) {
+      const maxCharges = this.resolveMaxCharges(
+        grant.maxRule ?? {
+          kind: "fixed",
+          value: grant.maxCharges ?? 1,
+        },
+        levels,
+      );
       if (this.resources.has(grant.id)) {
         // handle overlapping pools (e.g., standard spellcasting accumulation)
         const existing = this.resources.get(grant.id);
         if (existing) {
-          existing.maxCharges += grant.maxCharges;
+          existing.maxCharges += maxCharges;
           existing.currentCharges = existing?.maxCharges;
         } else {
           console.error(`Resource exists but is not defined.`);
@@ -39,12 +54,35 @@ export class ResourceManager {
         this.resources.set(grant.id, {
           id: grant.id,
           name: grant.name,
-          maxCharges: grant.maxCharges,
-          currentCharges: grant.maxCharges,
+          maxCharges,
+          currentCharges: maxCharges,
           resetOn: grant.resetOn,
         });
       }
     }
+  }
+
+  private resolveMaxCharges(
+    maxRule: ResourceMaxRule,
+    levels: ResourceLevelProfile,
+  ): number {
+    if (maxRule.kind === "fixed") return maxRule.value;
+
+    if (maxRule.kind === "total_level_thresholds") {
+      const totalLevel = levels.total ?? 0;
+      return maxRule.thresholds.reduce(
+        (resolved, threshold) =>
+          totalLevel >= threshold.minimumLevel ? threshold.value : resolved,
+        0,
+      );
+    }
+
+    const classLevel = levels.classes[maxRule.classId] ?? 0;
+    return maxRule.thresholds.reduce(
+      (resolved, threshold) =>
+        classLevel >= threshold.minimumLevel ? threshold.value : resolved,
+      0,
+    );
   }
 
   /**

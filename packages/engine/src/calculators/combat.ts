@@ -256,12 +256,29 @@ export class CombatEngine {
   private static resolveModifierValue(
     modifier: RuntimeModifier,
     governingMod: number,
+    classLevels: Record<string, number> = {},
   ): number {
     if (
       modifier.valueSource === "attack_ability_modifier" ||
       modifier.valueSource === "governing_stat_modifier"
     ) {
       return governingMod; // if the modifier's value is derived from the governing stat, return the governing modifier
+    }
+
+    if (modifier.scalingFactor === "class_level" && modifier.scalingClassId) {
+      return modifier.value * (classLevels[modifier.scalingClassId] ?? 0);
+    }
+
+    if (
+      modifier.scalingFactor === "class_level_thresholds" &&
+      modifier.scalingClassId
+    ) {
+      const classLevel = classLevels[modifier.scalingClassId] ?? 0;
+      return (modifier.scalingThresholds ?? []).reduce(
+        (resolved, threshold) =>
+          classLevel >= threshold.minimumLevel ? threshold.value : resolved,
+        0,
+      );
     }
 
     return modifier.value; // otherwise, return the static value defined in the modifier
@@ -300,6 +317,7 @@ export class CombatEngine {
       | "melee_spell"
       | "ranged_spell",
     attackContext?: WeaponAttackContext,
+    classLevels: Record<string, number> = {},
   ): DerivedAttack {
     const resolvedContext = this.resolveAttackContext(
       activeStates,
@@ -386,7 +404,11 @@ export class CombatEngine {
     let totalDamageBonus = baseDamageBonus;
 
     for (const mod of damageMods) {
-      const bonusValue = this.resolveModifierValue(mod, governingMod);
+      const bonusValue = this.resolveModifierValue(
+        mod,
+        governingMod,
+        classLevels,
+      );
 
       totalDamageBonus += bonusValue;
       damageBreakdown.push(

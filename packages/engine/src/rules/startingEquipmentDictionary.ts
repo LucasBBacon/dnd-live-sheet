@@ -1,52 +1,7 @@
 import type { StartingEquipmentDefinition } from "@project/shared";
 
 export const CLASS_STARTING_EQUIPMENT = {
-  class_barbarian: {
-    given: [
-      { kind: "item", refId: "item_pack_explorers", quantity: 1 },
-      { kind: "item", refId: "item_weapon_javelin", quantity: 4 },
-    ],
-    choices: [
-      {
-        choose: 1,
-        options: [
-          {
-            equipmentBundle: [
-              { kind: "item", refId: "item_weapon_greataxe", quantity: 1 },
-            ],
-          },
-          {
-            equipmentBundle: [
-              {
-                kind: "category",
-                refId: "category_weapon_martial_melee",
-                quantity: 1,
-              },
-            ],
-          },
-        ],
-      },
-      {
-        choose: 1,
-        options: [
-          {
-            equipmentBundle: [
-              { kind: "item", refId: "item_weapon_handaxe", quantity: 2 },
-            ],
-          },
-          {
-            equipmentBundle: [
-              {
-                kind: "category",
-                refId: "category_weapon_simple",
-                quantity: 1,
-              },
-            ],
-          },
-        ],
-      },
-    ],
-  },
+  
   class_bard: {
     given: [
       { kind: "item", refId: "item_armor_leather", quantity: 1 },

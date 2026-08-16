@@ -41,8 +41,16 @@ export const ModifierTypeSchema = z.enum([
 export const ModifierScalingSchema = z.enum([
   "total_level",
   "class_level",
+  "class_level_thresholds",
   "none",
 ]);
+
+export const ModifierScalingThresholdSchema = z
+  .object({
+    minimumLevel: z.number().int().positive(),
+    value: z.number(),
+  })
+  .strict();
 
 export const ModifierAttackContextSchema = z.enum(["main_hand", "off_hand"]);
 export const ModifierValueSourceSchema = z.enum([
@@ -59,6 +67,7 @@ export const BaseModifierSchema = z.object({
   valueSource: ModifierValueSourceSchema.optional(),
   scalingFactor: ModifierScalingSchema.default("none"),
   scalingClassId: z.string().optional(),
+  scalingThresholds: z.array(ModifierScalingThresholdSchema).min(1).optional(),
   maxDexCap: z.number().optional(),
   attackContext: ModifierAttackContextSchema.optional(),
   requiredStates: z.array(z.string()).default([]),

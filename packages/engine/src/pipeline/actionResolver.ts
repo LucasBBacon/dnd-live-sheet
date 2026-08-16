@@ -282,26 +282,11 @@ export class ActionResolver {
     }
 
     switch (effect.type) {
+      case "remove_effect":
+        context.effectManager.removeEffectsByTag(effect.effectTag);
+        return ok;
       case "apply_effect": {
         const blueprint = effect;
-
-        if (
-          blueprint.effectName?.toLowerCase().includes("dismiss") ||
-          action.name.toLowerCase().includes("dismiss")
-        ) {
-          const activeSummons = context.effectManager
-            .getActiveEffects()
-            .filter((entry) => entry.kind === "summon");
-
-          if (activeSummons.length > 0) {
-            const [summon] = activeSummons;
-            if (summon) {
-              context.effectManager.removeEffect(summon.instanceId);
-            }
-          }
-
-          return ok;
-        }
 
         // translate static blueprint into live ActiveEffect
         const newEffect: ActiveEffect = {
@@ -310,6 +295,9 @@ export class ActionResolver {
           durationType: blueprint.durationType,
           durationRemaining: blueprint.durationRounds,
           isSelfConcentration: blueprint.isSelfConcentration,
+          ...(blueprint.effectTag === undefined
+            ? {}
+            : { effectTag: blueprint.effectTag }),
           // deep clone modifiers to prevent mutating static dict data
           modifiers: JSON.parse(JSON.stringify(blueprint.modifiers)),
           grantedStates: [...blueprint.states],
@@ -394,6 +382,9 @@ export class ActionResolver {
         const newEffect: ActiveEffect = {
           instanceId: effectInstanceId,
           sourceName: action.name,
+          ...(effect.effectTag === undefined
+            ? {}
+            : { effectTag: effect.effectTag }),
           durationType:
             effect.durationHours !== undefined ? "rounds" : "manual",
           durationRemaining:

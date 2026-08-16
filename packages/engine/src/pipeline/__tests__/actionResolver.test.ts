@@ -842,6 +842,7 @@ describe("ActionResolver summon resolution", () => {
       name: "Construct Clockwork Device",
       effect: {
         type: "summon",
+        effectTag: "clockwork_toy_summon",
         entityTemplateIds: ["actor_clockwork_toy"],
         maxActive: 1,
       } as ActionGrant["effect"],
@@ -880,6 +881,7 @@ describe("ActionResolver summon resolution", () => {
       name: "Construct Clockwork Device",
       effect: {
         type: "summon",
+        effectTag: "clockwork_toy_summon",
         entityTemplateIds: ["actor_clockwork_toy"],
       },
     };
@@ -908,6 +910,7 @@ describe("ActionResolver summon resolution", () => {
       name: "Construct Clockwork Device",
       effect: {
         type: "summon",
+        effectTag: "clockwork_toy_summon",
         entityTemplateIds: ["actor_clockwork_toy"],
       },
     };
@@ -918,14 +921,8 @@ describe("ActionResolver summon resolution", () => {
       id: "action_dismiss_summon",
       name: "Dismiss Summon",
       effect: {
-        type: "apply_effect",
-        effectName: "Dismiss Summon",
-        durationType: "manual",
-        states: [],
-        modifiers: [],
-        isSelfConcentration: false,
-        requiredStates: [],
-        forbiddenStates: [],
+        type: "remove_effect",
+        effectTag: "clockwork_toy_summon",
       },
     };
 

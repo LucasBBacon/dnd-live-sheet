@@ -1,0 +1,103 @@
+{
+    "$schema": "https://json-schema.org/draft-07/schema#",
+    "$id": "proficiencies.schema.json",
+    "title": "Proficiency Block",
+    "type": "object",
+    "definitions": {
+        "traitProficiencyCategory": {
+            "type": "string",
+            "enum": [
+                "armor",
+                "weapons",
+                "tools",
+                "saving_throws",
+                "skills",
+                "languages",
+                "ability_check"
+            ]
+        },
+        "proficiencyLevel": {
+            "type": "string",
+            "enum": [
+                "half",
+                "proficient",
+                "expertise"
+            ]
+        },
+        "fixedProficiencyGrant": {
+            "type": "object",
+            "properties": {
+                "category": {
+                    "$ref": "#/definitions/traitProficiencyCategory"
+                },
+                "proficiencyId": {
+                    "type": "string"
+                },
+                "level": {
+                    "$ref": "#/definitions/proficiencyLevel",
+                    "default": "proficient"
+                },
+                "requiredStates": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "default": []
+                }
+            },
+            "required": [
+                "category",
+                "proficiencyId"
+            ]
+        },
+        "choiceProficiencyGrant": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "category": {
+                    "$ref": "#/definitions/traitProficiencyCategory"
+                },
+                "chooseAmount": {
+                    "type": "number",
+                    "minimum": 1,
+                    "default": 1
+                },
+                "options": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "level": {
+                    "$ref": "#/definitions/proficiencyLevel",
+                    "default": "proficient"
+                },
+                "requiredStates": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "default": []
+                }
+            }
+        }
+    },
+    "properties": {
+        "fixed": {
+            "type": "array",
+            "items": {
+                "$ref": "#/definitions/fixedProficiencyGrant"
+            },
+            "default": []
+        },
+        "choices": {
+            "type": "array",
+            "items": {
+                "$ref": "#/definitions/choiceProficiencyGrant"
+            },
+            "default": []
+        }
+    }
+}

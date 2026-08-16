@@ -135,6 +135,29 @@ describe("EffectManager.removeEffect", () => {
   });
 });
 
+describe("EffectManager.removeEffectsByTag", () => {
+  it("removes all matching tagged effects and their actors", () => {
+    manager.addEffect({
+      ...makeEffect({ instanceId: "rage_1", grantedStates: ["status_raging"] }),
+      effectTag: "rage",
+    });
+    manager.addEffect({
+      ...makeEffect({ instanceId: "rage_2", grantedStates: ["status_raging"] }),
+      effectTag: "rage",
+    });
+    manager.addEffect(
+      makeEffect({ instanceId: "other", grantedStates: ["other_state"] }),
+    );
+
+    expect(manager.removeEffectsByTag("rage")).toBe(2);
+    expect(manager.getActiveStates()).toEqual(["other_state"]);
+  });
+
+  it("is a no-op when no effect carries the tag", () => {
+    expect(manager.removeEffectsByTag("missing")).toBe(0);
+  });
+});
+
 // #endregion
 
 // #region dropConcentration
