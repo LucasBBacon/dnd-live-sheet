@@ -86,6 +86,27 @@
                 "off_hand"
             ]
         },
+        "acFormula": {
+            "type": "object",
+            "properties": {
+                "kind": {
+                    "const": "ability_sum"
+                },
+                "base": {
+                    "type": "integer"
+                },
+                "abilities": {
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {
+                        "type": "string",
+                        "enum": ["STR", "DEX", "CON", "INT", "WIS", "CHA"]
+                    }
+                }
+            },
+            "required": ["kind", "base", "abilities"],
+            "additionalProperties": false
+        },
         "baseModifier": {
             "type": "object",
             "properties": {
@@ -117,6 +138,9 @@
                 },
                 "maxDexCap": {
                     "type": "number"
+                },
+                "formula": {
+                    "$ref": "#/definitions/acFormula"
                 },
                 "attackContext": {
                     "$ref": "#/definitions/modifierAttackContext"

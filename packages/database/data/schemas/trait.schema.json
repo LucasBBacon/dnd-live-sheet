@@ -26,6 +26,16 @@
         "ModifierScaling": { "type": "string", "enum": ["total_level", "class_level", "class_level_thresholds", "none"] },
         "ModifierValueSource": { "type": "string", "enum": ["fixed", "attack_ability_modifier", "governing_stat_modifier", "cha_modifier"] },
         "ModifierAttackContext": { "type": "string", "enum": ["main_hand", "off_hand"] },
+        "ACFormula": {
+            "type": "object",
+            "required": ["kind", "base", "abilities"],
+            "properties": {
+                "kind": { "const": "ability_sum" },
+                "base": { "type": "integer" },
+                "abilities": { "type": "array", "minItems": 1, "items": { "type": "string", "enum": ["STR", "DEX", "CON", "INT", "WIS", "CHA"] } }
+            },
+            "additionalProperties": false
+        },
         "BaseModifier": {
             "type": "object",
             "required": ["target", "type"],
@@ -38,6 +48,7 @@
                 "scalingClassId": { "type": "string" },
                 "scalingThresholds": { "type": "array", "minItems": 1, "items": { "$ref": "#/definitions/ModifierScalingThreshold" } },
                 "maxDexCap": { "type": "number" },
+                "formula": { "$ref": "#/definitions/ACFormula" },
                 "attackContext": { "$ref": "#/definitions/ModifierAttackContext" },
                 "requiredStates": { "type": "array", "items": { "type": "string" }, "default": [] },
                 "forbiddenStates": { "type": "array", "items": { "type": "string" }, "default": [] }

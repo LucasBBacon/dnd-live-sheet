@@ -1,0 +1,41 @@
+{
+    "$schema": "https://json-schema.org/draft-07/schema#",
+    "$id": "common.schema.json",
+    "definitions": {
+        "coreRuleId": {
+            "type": "string",
+            "minLength": 3,
+            "maxLength": 100,
+            "pattern": "^[a-z0-9_]+$"
+        },
+        "lore": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+                "shortDescription"
+            ],
+            "properties": {
+                "shortDescription": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 280
+                },
+                "fullText": {
+                    "type": "string",
+                    "maxLength": 8000
+                }
+            }
+        },
+        "creatureSize": {
+            "type": "string",
+            "enum": [
+                "tiny",
+                "small",
+                "medium",
+                "large",
+                "huge",
+                "gargantuan"
+            ]
+        }
+    }
+}

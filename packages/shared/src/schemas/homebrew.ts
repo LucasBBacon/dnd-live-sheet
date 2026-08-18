@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { TraitEffectSchema } from "./effects.js";
+import { LoreSchema } from "./lore.js";
 
 // #region Homebrew Schemas
 
@@ -8,11 +9,6 @@ const HomebrewIdSchema = z
   .min(3)
   .max(100)
   .regex(/^[a-z0-9_]+$/, "Use lowercase snake_case ids.");
-
-const HomebrewLoreSchema = z.object({
-  shortDescription: z.string().min(1).max(280),
-  fullText: z.string().max(8000).optional(),
-});
 
 /**
  * Schema for the context of a homebrew entity, including campaign and character information.
@@ -29,7 +25,7 @@ export const HomebrewContextSchema = z.object({
 export const CreateHomebrewTraitSchema = HomebrewContextSchema.extend({
   id: HomebrewIdSchema,
   name: z.string().min(1).max(255),
-  lore: HomebrewLoreSchema,
+  lore: LoreSchema,
   effects: z.array(TraitEffectSchema),
   isStartingProficiency: z.boolean().optional(),
 });
@@ -39,7 +35,7 @@ export const CreateHomebrewTraitSchema = HomebrewContextSchema.extend({
  */
 export const UpdateHomebrewTraitSchema = HomebrewContextSchema.extend({
   name: z.string().min(1).max(255).optional(),
-  lore: HomebrewLoreSchema.optional(),
+  lore: LoreSchema.optional(),
   effects: z.array(TraitEffectSchema).optional(),
   isStartingProficiency: z.boolean().optional(),
 });

@@ -803,7 +803,8 @@ describe("CharacterEngine.buildLiveSheet: inventory modifiers", () => {
 
     // plate sets base AC 18 with no dex, beating the 12 of an unarmored
     // half-elf with +2 DEX
-    expect(sheet.armorClass.total).toBe(18);
+    // plate sets 18 and the fighter's Defense style adds +1 while armour is worn
+    expect(sheet.armorClass.total).toBe(19);
   });
 
   it("leaves armour in the pack out of the maths", () => {

@@ -3,7 +3,10 @@
         {
             "id": "trait_barbarian_mult_prof_armor",
             "name": "Barbarian Armor Proficiencies (Multiclass)",
-            "description": "",
+            "lore": {
+                "fullText": "placeholder",
+                "shortDescription": "placeholder"
+            },
             "modifiers": {
                 "fixed": [],
                 "choices": []
@@ -16,7 +19,8 @@
                         "level": "proficient",
                         "requiredStates": []
                     }
-                ]
+                ],
+                "choices": []
             },
             "resources": [],
             "triggers": [],
@@ -27,7 +31,10 @@
         {
             "id": "trait_barbarian_mult_prof_weapons",
             "name": "Barbarian Weapon Proficiencies (Multiclass)",
-            "description": "",
+            "lore": {
+                "shortDescription": "placeholder",
+                "fullText": "placeholder"
+            },
             "modifiers": {
                 "fixed": [],
                 "choices": []
@@ -40,7 +47,8 @@
                         "level": "proficient",
                         "requiredStates": []
                     }
-                ]
+                ],
+                "choices": []
             },
             "resources": [],
             "triggers": [],
@@ -51,7 +59,10 @@
         {
             "id": "trait_barbarian_prof_armor",
             "name": "Armor Proficiency (Barbarian)",
-            "description": "",
+            "lore": {
+                "shortDescription": "placeholder",
+                "fullText": "placeholder"
+            },
             "modifiers": {
                 "fixed": [],
                 "choices": []
@@ -60,7 +71,124 @@
                 "fixed": [
                     {
                         "category": "armor",
+                        "proficiencyId": "light_armor",
+                        "level": "proficient",
+                        "requiredStates": []
+                    },
+                    {
+                        "category": "armor",
+                        "proficiencyId": "medium_armor",
+                        "level": "proficient",
+                        "requiredStates": []
+                    },
+                    {
+                        "category": "armor",
+                        "proficiencyId": "shield",
+                        "level": "proficient",
+                        "requiredStates": []
+                    }
+                ],
+                "choices": []
+            },
+            "resources": [],
+            "triggers": [],
+            "diceRules": [],
+            "criticalHitModifiers": [],
+            "actions": []
+        },
+        {
+            "id": "trait_barbarian_prof_weapons",
+            "name": "Weapon Proficiency (Barbarian)",
+            "lore": {
+                "shortDescription": "placeholder",
+                "fullText": "placeholder"
+            },
+            "modifiers": {
+                "fixed": [],
+                "choices": []
+            },
+            "proficiencies": {
+                "fixed": [
+                    {
+                        "category": "weapons",
                         "proficiencyId": "simple_weapons",
+                        "level": "proficient",
+                        "requiredStates": []
+                    },
+                    {
+                        "category": "weapons",
+                        "proficiencyId": "martial_weapons",
+                        "level": "proficient",
+                        "requiredStates": []
+                    }
+                ],
+                "choices": []
+            },
+            "resources": [],
+            "triggers": [],
+            "diceRules": [],
+            "criticalHitModifiers": [],
+            "actions": []
+        },
+        {
+            "id": "trait_barbarian_prof_saving_throw",
+            "name": "Saving Throws (Barbarian)",
+            "lore": {
+                "shortDescription": "placeholder",
+                "fullText": "placeholder"
+            },
+            "modifiers": {
+                "fixed": [],
+                "choices": []
+            },
+            "proficiencies": {
+                "fixed": [
+                    {
+                        "category": "saving_throws",
+                        "proficiencyId": "STR",
+                        "level": "proficient",
+                        "requiredStates": []
+                    },
+                    {
+                        "category": "saving_throws",
+                        "proficiencyId": "CON",
+                        "level": "proficient",
+                        "requiredStates": []
+                    }
+                ],
+                "choices": []
+            },
+            "resources": [],
+            "triggers": [],
+            "diceRules": [],
+            "criticalHitModifiers": [],
+            "actions": []
+        },
+        {
+            "id": "trait_barbarian_prof_skills",
+            "name": "Skill Proficiencies (Barbarian)",
+            "lore": {
+                "shortDescription": "placeholder",
+                "fullText": "placeholder"
+            },
+            "modifiers": {
+                "fixed": [],
+                "choices": []
+            },
+            "proficiencies": {
+                "fixed": [],
+                "choices": [
+                    {
+                        "id": "barbarian_starting_skills",
+                        "category": "skills",
+                        "options": [
+                            "animal_handling",
+                            "athletics",
+                            "intimidation",
+                            "nature",
+                            "perception",
+                            "survival"
+                        ],
                         "level": "proficient",
                         "requiredStates": []
                     }
@@ -73,51 +201,12 @@
             "actions": []
         },
         {
-            "id": "trait_barbarian_prof_weapons",
-            "name": "Weapon Proficiency (Barbarian)",
-            "description": "",
-            "modifiers": {
-                "fixed": [],
-                "choices": []
-            },
-            "resources": [],
-            "triggers": [],
-            "diceRules": [],
-            "criticalHitModifiers": [],
-            "actions": []
-        },
-        {
-            "id": "trait_barbarian_prof_saving_throw",
-            "name": "Saving Throws (Barbarian)",
-            "description": "",
-            "modifiers": {
-                "fixed": [],
-                "choices": []
-            },
-            "resources": [],
-            "triggers": [],
-            "diceRules": [],
-            "criticalHitModifiers": [],
-            "actions": []
-        },
-        {
-            "id": "trait_barbarian_prof_skills",
-            "name": "Skill Proficiencies (Barbarian)",
-            "description": "",
-            "modifiers": {
-                "fixed": [],
-                "choices": []
-            },
-            "resources": [],
-            "triggers": [],
-            "diceRules": [],
-            "criticalHitModifiers": [],
-            "actions": []
-        },
-        {
             "id": "trait_rage",
             "name": "Rage",
-            "description": "While raging, you have resistance to bludgeoning, piercing, and slashing damage.",
+            "lore": {
+                "shortDescription": "placeholder",
+                "fullText": "placeholder"
+            },
             "modifiers": {
                 "fixed": [
                     {
@@ -247,9 +336,39 @@
         {
             "id": "trait_unarmored_defense_barbarian",
             "name": "Unarmored Defense (Barbarian)",
-            "description": "",
+            "lore": {
+                "shortDescription": "While you are not wearing armour, your AC is 10 + your Dexterity modifier + your Constitution modifier.",
+                "fullText": "While you are not wearing armour, your AC is 10 + your Dexterity modifier + your Constitution modifier. This trait does not apply if you are wearing armour."
+            },
+            "isStartingProficiency": false,
+            "implementation": {
+                "mode": "engine",
+                "summary": "Uses an AC formula of 10 + DEX + CON while not wearing armour.",
+                "blockedBy": [
+                    "status_wearing_armor"
+                ]
+            },
             "modifiers": {
-                "fixed": [],
+                "fixed": [
+                    {
+                        "target": "ARMOR_CLASS",
+                        "type": "set_base",
+                        "value": 10,
+                        "formula": {
+                            "kind": "ability_sum",
+                            "base": 10,
+                            "abilities": [
+                                "DEX",
+                                "CON"
+                            ]
+                        },
+                        "scalingFactor": "none",
+                        "requiredStates": [],
+                        "forbiddenStates": [
+                            "status_wearing_armor"
+                        ]
+                    }
+                ],
                 "choices": []
             },
             "resources": [],
@@ -261,7 +380,10 @@
         {
             "id": "trait_reckless_attack",
             "name": "Reckless Attack",
-            "description": "",
+            "lore": {
+                "shortDescription": "placeholder",
+                "fullText": "placeholder"
+            },
             "modifiers": {
                 "fixed": [],
                 "choices": []
@@ -275,7 +397,10 @@
         {
             "id": "trait_danger_sense",
             "name": "Danger Sense",
-            "description": "",
+            "lore": {
+                "shortDescription": "placeholder",
+                "fullText": "placeholder"
+            },
             "modifiers": {
                 "fixed": [],
                 "choices": []
@@ -289,7 +414,10 @@
         {
             "id": "trait_primal_path",
             "name": "Primal Path",
-            "description": "",
+            "lore": {
+                "shortDescription": "placeholder",
+                "fullText": "placeholder"
+            },
             "modifiers": {
                 "fixed": [],
                 "choices": []
@@ -303,7 +431,10 @@
         {
             "id": "trait_extra_attack",
             "name": "Extra Attack",
-            "description": "",
+            "lore": {
+                "shortDescription": "placeholder",
+                "fullText": "placeholder"
+            },
             "modifiers": {
                 "fixed": [],
                 "choices": []
@@ -317,7 +448,10 @@
         {
             "id": "trait_fast_movement",
             "name": "Fast Movement",
-            "description": "",
+            "lore": {
+                "shortDescription": "placeholder",
+                "fullText": "placeholder"
+            },
             "modifiers": {
                 "fixed": [],
                 "choices": []
@@ -331,7 +465,10 @@
         {
             "id": "trait_feral_instinct",
             "name": "Feral Instinct",
-            "description": "",
+            "lore": {
+                "shortDescription": "placeholder",
+                "fullText": "placeholder"
+            },
             "modifiers": {
                 "fixed": [],
                 "choices": []
@@ -345,7 +482,10 @@
         {
             "id": "trait_brutal_critical",
             "name": "Brutal Critical",
-            "description": "",
+            "lore": {
+                "shortDescription": "placeholder",
+                "fullText": "placeholder"
+            },
             "modifiers": {
                 "fixed": [],
                 "choices": []
@@ -359,7 +499,10 @@
         {
             "id": "trait_relentless_rage",
             "name": "Relentless Rage",
-            "description": "",
+            "lore": {
+                "shortDescription": "placeholder",
+                "fullText": "placeholder"
+            },
             "modifiers": {
                 "fixed": [],
                 "choices": []
@@ -373,7 +516,10 @@
         {
             "id": "trait_persistent_rage",
             "name": "Persistent Rage",
-            "description": "",
+            "lore": {
+                "shortDescription": "placeholder",
+                "fullText": "placeholder"
+            },
             "modifiers": {
                 "fixed": [],
                 "choices": []
@@ -387,7 +533,10 @@
         {
             "id": "trait_indomitable_might",
             "name": "Indomitable Might",
-            "description": "",
+            "lore": {
+                "shortDescription": "placeholder",
+                "fullText": "placeholder"
+            },
             "modifiers": {
                 "fixed": [],
                 "choices": []
@@ -401,7 +550,10 @@
         {
             "id": "trait_primal_champion",
             "name": "Primal Champion",
-            "description": "",
+            "lore": {
+                "shortDescription": "placeholder",
+                "fullText": "placeholder"
+            },
             "modifiers": {
                 "fixed": [],
                 "choices": []
@@ -417,6 +569,10 @@
         {
             "id": "class_barbarian",
             "name": "Barbarian",
+            "lore": {
+                "shortDescription": "placeholder",
+                "fullText": "placeholder"
+            },
             "hitDie": 12,
             "subclassUnlockLevel": 3,
             "startingEquipment": {
@@ -646,6 +802,10 @@
             "id": "subclass_barbarian_berserker",
             "classId": "class_barbarian",
             "name": "Path of the Berserker",
+            "lore": {
+                "shortDescription": "placeholder",
+                "fullText": "placeholder"
+            },
             "progression": [
                 {
                     "level": 3,
@@ -677,6 +837,10 @@
             "id": "subclass_barbarian_totem_warrior",
             "classId": "class_barbarian",
             "name": "Path of the Totem Warrior",
+            "lore": {
+                "shortDescription": "placeholder",
+                "fullText": "placeholder"
+            },
             "progression": [
                 {
                     "level": 3,

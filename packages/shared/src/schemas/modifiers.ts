@@ -1,5 +1,7 @@
 import z from "zod";
 
+const AbilitySchema = z.enum(["STR", "DEX", "CON", "INT", "WIS", "CHA"]);
+
 // #region Modifier Schemas
 
 export const ModifierTargetSchema = z.enum([
@@ -60,6 +62,14 @@ export const ModifierValueSourceSchema = z.enum([
   "cha_modifier",
 ]);
 
+export const ACFormulaSchema = z
+  .object({
+    kind: z.literal("ability_sum"),
+    base: z.number().int(),
+    abilities: z.array(AbilitySchema).min(1),
+  })
+  .strict();
+
 export const BaseModifierSchema = z.object({
   target: ModifierTargetSchema,
   type: ModifierTypeSchema,
@@ -69,6 +79,7 @@ export const BaseModifierSchema = z.object({
   scalingClassId: z.string().optional(),
   scalingThresholds: z.array(ModifierScalingThresholdSchema).min(1).optional(),
   maxDexCap: z.number().optional(),
+  formula: ACFormulaSchema.optional(),
   attackContext: ModifierAttackContextSchema.optional(),
   requiredStates: z.array(z.string()).default([]),
   forbiddenStates: z.array(z.string()).default([]),
@@ -108,6 +119,7 @@ export type ModifierType = z.infer<typeof ModifierTypeSchema>;
 export type ModifierScaling = z.infer<typeof ModifierScalingSchema>;
 export type ModifierAttackContext = z.infer<typeof ModifierAttackContextSchema>;
 export type ModifierValueSource = z.infer<typeof ModifierValueSourceSchema>;
+export type ACFormula = z.infer<typeof ACFormulaSchema>;
 
 export type TraitModifier = z.infer<typeof BaseModifierSchema>;
 export type ChoiceModifierGrant = z.infer<typeof ChoiceModifierGrantSchema>;

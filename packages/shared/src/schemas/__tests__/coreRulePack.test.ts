@@ -21,7 +21,6 @@ const createValidPack = (): CoreRulePack => {
     {
       id: "trait_test_training",
       name: "Test Training",
-      description: "A minimal trait for pack validation.",
       lore,
     },
   ],

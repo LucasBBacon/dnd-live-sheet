@@ -3,7 +3,10 @@
         {
             "id": "race_elf_asi",
             "name": "(Elf) Ability Score Increase",
-            "description": "Your Dexterity score increases by 2.",
+            "lore": {
+                "shortDescription": "Your Dexterity score increases by 2.",
+                "fullText": "Your Dexterity score increases by 2."
+            },
             "modifiers": {
                 "fixed": [
                     {
@@ -26,7 +29,10 @@
         {
             "id": "race_elf_darkvision",
             "name": "(Elf) Darkvision",
-            "description": "Accustomed to twilit forests and the night sky, you have superior vision in dark and dim conditions. You can see in dim light within 60 feet of you as if it were bright light, and in darkness as if it were dim light. You can't discern color in darkness, only shades of gray.",
+            "lore": {
+                "shortDescription": "Accustomed to twilit forests and the night sky, you have superior vision in dark and dim conditions. You can see in dim light within 60 feet of you as if it were bright light, and in darkness as if it were dim light. You can't discern color in darkness, only shades of gray.",
+                "fullText": "Accustomed to twilit forests and the night sky, you have superior vision in dark and dim conditions. You can see in dim light within 60 feet of you as if it were bright light, and in darkness as if it were dim light. You can't discern color in darkness, only shades of gray."
+            },
             "modifiers": {
                 "fixed": [
                     {
@@ -49,7 +55,10 @@
         {
             "id": "keen_senses",
             "name": "Keen Senses",
-            "description": "You have proficiency in the Perception skill.",
+            "lore": {
+                "shortDescription": "You have proficiency in the Perception skill.",
+                "fullText": "You have proficiency in the Perception skill."
+            },
             "modifiers": {
                 "fixed": [],
                 "choices": []
@@ -74,7 +83,10 @@
         {
             "id": "fey_ancestry",
             "name": "Fey Ancestry",
-            "description": "You have advantage on saving throws against being charmed, and magic can't put you to sleep.",
+            "lore": {
+                "shortDescription": "You have advantage on saving throws against being charmed, and magic can't put you to sleep.",
+                "fullText": "You have advantage on saving throws against being charmed, and magic can't put you to sleep."
+            },
             "modifiers": {
                 "fixed": [
                     {
@@ -97,7 +109,10 @@
         {
             "id": "trance",
             "name": "Trance",
-            "description": "Elves don't need to sleep. Instead, they meditate deeply, remaining semiconscious, for 4 hours a day. (The Common word for such meditation is \u201ctrance.\u201d) While meditating, you can dream after a fashion; such dreams are actually mental exercises that have become reflexive through years of practice. After resting in this way, you gain the same benefit that a human does from 8 hours of sleep.",
+            "lore": {
+                "shortDescription": "Elves don't need to sleep. Instead, they meditate deeply, remaining semiconscious, for 4 hours a day. (The Common word for such meditation is “trance.”) While meditating, you can dream after a fashion; such dreams are actually mental exercises that have become reflexive through years of practice. After resting in this way, you gain the same benefit that a human does from 8 hours of sleep.",
+                "fullText": "Elves don't need to sleep. Instead, they meditate deeply, remaining semiconscious, for 4 hours a day. (The Common word for such meditation is “trance.”) While meditating, you can dream after a fashion; such dreams are actually mental exercises that have become reflexive through years of practice. After resting in this way, you gain the same benefit that a human does from 8 hours of sleep."
+            },
             "modifiers": {
                 "fixed": [],
                 "choices": []
@@ -111,7 +126,10 @@
         {
             "id": "elf_languages",
             "name": "(Elf) Languages",
-            "description": "You can speak, read, and write Common and Elvish. Elvish is fluid, with subtle intonations and intricate grammar. Elven literature is rich and varied, and their songs and poems are famous among other races. Many bards learn their language so they can add Elvish ballads to their repertoires.",
+            "lore": {
+                "shortDescription": "You can speak, read, and write Common and Elvish. Elvish is fluid, with subtle intonations and intricate grammar. Elven literature is rich and varied, and their songs and poems are famous among other races. Many bards learn their language so they can add Elvish ballads to their repertoires.",
+                "fullText": "You can speak, read, and write Common and Elvish. Elvish is fluid, with subtle intonations and intricate grammar. Elven literature is rich and varied, and their songs and poems are famous among other races. Many bards learn their language so they can add Elvish ballads to their repertoires."
+            },
             "modifiers": {
                 "fixed": [],
                 "choices": []
@@ -142,7 +160,10 @@
         {
             "id": "subrace_elf_high_asi",
             "name": "(High Elf) Ability Score Increase",
-            "description": "Your Intelligence score increases by 1.",
+            "lore": {
+                "shortDescription": "Your Intelligence score increases by 1.",
+                "fullText": "Your Intelligence score increases by 1."
+            },
             "modifiers": {
                 "fixed": [
                     {
@@ -165,7 +186,10 @@
         {
             "id": "elf_weapon_training",
             "name": "Elf Weapon Training",
-            "description": "You have proficiency with the longsword, shortsword, shortbow, and longbow.",
+            "lore": {
+                "shortDescription": "You have proficiency with the longsword, shortsword, shortbow, and longbow.",
+                "fullText": "You have proficiency with the longsword, shortsword, shortbow, and longbow."
+            },
             "modifiers": {
                 "fixed": [],
                 "choices": []
@@ -208,7 +232,10 @@
         {
             "id": "subrace_elf_high_cantrip",
             "name": "(High Elf) Cantrip",
-            "description": "You know one cantrip of your choice from the wizard spell list. Intelligence is your spellcasting ability for it.",
+            "lore": {
+                "shortDescription": "You know one cantrip of your choice from the wizard spell list. Intelligence is your spellcasting ability for it.",
+                "fullText": "You know one cantrip of your choice from the wizard spell list. Intelligence is your spellcasting ability for it."
+            },
             "modifiers": {
                 "fixed": [],
                 "choices": []
@@ -235,7 +262,10 @@
         {
             "id": "subrace_elf_high_extra_language",
             "name": "(Elf High) Extra Language",
-            "description": "You can speak, read, and write one extra language of your choice.",
+            "lore": {
+                "shortDescription": "You can speak, read, and write one extra language of your choice.",
+                "fullText": "You can speak, read, and write one extra language of your choice."
+            },
             "modifiers": {
                 "fixed": [],
                 "choices": []
@@ -261,7 +291,10 @@
         {
             "id": "subrace_elf_wood_asi",
             "name": "(Wood Elf) Ability Score Increase",
-            "description": "Your Wisdom score increases by 1.",
+            "lore": {
+                "shortDescription": "Your Wisdom score increases by 1.",
+                "fullText": "Your Wisdom score increases by 1."
+            },
             "modifiers": {
                 "fixed": [
                     {
@@ -284,7 +317,10 @@
         {
             "id": "fleet_of_foot",
             "name": "Fleet of Foot",
-            "description": "Your base walking speed increases to 35 feet.",
+            "lore": {
+                "shortDescription": "Your base walking speed increases to 35 feet.",
+                "fullText": "Your base walking speed increases to 35 feet."
+            },
             "modifiers": {
                 "fixed": [
                     {
@@ -307,7 +343,10 @@
         {
             "id": "mask_of_the_wild",
             "name": "Mask of the Wild",
-            "description": "You can attempt to hide even when you are only lightly obscured by foliage, heavy rain, falling snow, mist, and other natural phenomena.",
+            "lore": {
+                "shortDescription": "You can attempt to hide even when you are only lightly obscured by foliage, heavy rain, falling snow, mist, and other natural phenomena.",
+                "fullText": "You can attempt to hide even when you are only lightly obscured by foliage, heavy rain, falling snow, mist, and other natural phenomena."
+            },
             "modifiers": {
                 "fixed": [],
                 "choices": []
@@ -321,7 +360,10 @@
         {
             "id": "subrace_elf_dark_asi",
             "name": "(Dark Elf) Ability Score Increase",
-            "description": "Your Charisma score increases by 1.",
+            "lore": {
+                "shortDescription": "Your Charisma score increases by 1.",
+                "fullText": "Your Charisma score increases by 1."
+            },
             "modifiers": {
                 "fixed": [
                     {
@@ -344,7 +386,10 @@
         {
             "id": "subrace_elf_dark_superior_darkvision",
             "name": "(Dark Elf) Darkvision",
-            "description": "Your darkvision has a radius of 120 feet.",
+            "lore": {
+                "shortDescription": "Your darkvision has a radius of 120 feet.",
+                "fullText": "Your darkvision has a radius of 120 feet."
+            },
             "modifiers": {
                 "fixed": [
                     {
@@ -367,7 +412,10 @@
         {
             "id": "sunlight_sensitivity",
             "name": "Sunlight Sensitivity",
-            "description": "You have disadvantage on attack rolls and on Wisdom (Perception) checks that rely on sight when you, the target of your attack, or whatever you are trying to perceive is in direct sunlight.",
+            "lore": {
+                "shortDescription": "You have disadvantage on attack rolls and on Wisdom (Perception) checks that rely on sight when you, the target of your attack, or whatever you are trying to perceive is in direct sunlight.",
+                "fullText": "You have disadvantage on attack rolls and on Wisdom (Perception) checks that rely on sight when you, the target of your attack, or whatever you are trying to perceive is in direct sunlight."
+            },
             "modifiers": {
                 "fixed": [],
                 "choices": []
@@ -381,7 +429,10 @@
         {
             "id": "drow_magic",
             "name": "Drow Magic",
-            "description": "You know the dancing lights cantrip. When you reach 3rd level, you can cast the faerie fire spell once per day. When you reach 5th level, you can also cast the darkness spell once per day. Charisma is your spellcasting ability for these spells.",
+            "lore": {
+                "shortDescription": "You know the dancing lights cantrip. When you reach 3rd level, you can cast the faerie fire spell once per day. When you reach 5th level, you can also cast the darkness spell once per day. Charisma is your spellcasting ability for these spells.",
+                "fullText": "You know the dancing lights cantrip. When you reach 3rd level, you can cast the faerie fire spell once per day. When you reach 5th level, you can also cast the darkness spell once per day. Charisma is your spellcasting ability for these spells."
+            },
             "modifiers": {
                 "fixed": [],
                 "choices": []
@@ -444,7 +495,10 @@
         {
             "id": "drow_weapon_training",
             "name": "Drow Weapon Training",
-            "description": "You have proficiency with rapiers, shortswords, and hand crossbows.",
+            "lore": {
+                "shortDescription": "You have proficiency with rapiers, shortswords, and hand crossbows.",
+                "fullText": "You have proficiency with rapiers, shortswords, and hand crossbows."
+            },
             "modifiers": {
                 "fixed": [],
                 "choices": []

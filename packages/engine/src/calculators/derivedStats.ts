@@ -3,6 +3,7 @@ import type {
   FixedProficiencyGrant,
   RuntimeModifier,
 } from "@project/shared";
+import type { Ability } from "../types/core.js";
 
 export interface LevelProfile {
   total: number;
@@ -113,11 +114,22 @@ export class DerivedStatEngine {
    * @throws An error if any of the input parameters are invalid or if the calculation cannot be completed.
    */
   public static calculateAC(
-    baseDexMod: number,
+    abilityModifiersOrDex: Record<Ability, number> | number,
     modifiers: RuntimeModifier[],
     activeStates: string[] = [],
   ): CalculationResult {
     const breakdown: CalculationResult["breakdown"] = [];
+    const abilityModifiers: Record<Ability, number> =
+      typeof abilityModifiersOrDex === "number"
+        ? {
+            STR: 0,
+            DEX: abilityModifiersOrDex,
+            CON: 0,
+            INT: 0,
+            WIS: 0,
+            CHA: 0,
+          }
+        : abilityModifiersOrDex;
 
     const validMods = modifiers.filter((m) => {
       if (m.target !== "ARMOR_CLASS" || !m.isActive) {
@@ -136,19 +148,18 @@ export class DerivedStatEngine {
     const baseSetters = validMods.filter((m) => m.type === "set_base");
     let baseAc = 10;
     let dexCap: number | undefined = undefined;
+    let bestBase: RuntimeModifier | undefined;
 
     if (baseSetters.length > 0) {
       // 5e rule - if multiple ways to calculate base AC use highest
       // find highest base base setting armor/trait (e.g., plate > mage armor)
-      const bestBase = baseSetters.reduce((prev, current) => {
-        const prevTotal =
-          prev.value + Math.min(baseDexMod, prev.maxDexCap ?? Infinity);
-        const currTotal =
-          current.value + Math.min(baseDexMod, current.maxDexCap ?? Infinity);
+      bestBase = baseSetters.reduce((prev, current) => {
+        const prevTotal = this.getBaseCandidateTotal(prev, abilityModifiers);
+        const currTotal = this.getBaseCandidateTotal(current, abilityModifiers);
         return prevTotal >= currTotal ? prev : current;
       });
 
-      baseAc = bestBase.value;
+      baseAc = bestBase.formula?.base ?? bestBase.value;
       dexCap = bestBase.maxDexCap;
 
       breakdown.push({
@@ -170,7 +181,8 @@ export class DerivedStatEngine {
     }
 
     // 2 - evaluate dexterity contribution
-    let finalDex = baseDexMod;
+    const baseDexMod = abilityModifiers.DEX;
+    let finalDex = bestBase?.formula ? 0 : baseDexMod;
     let dexLabel = "Dexterity Modifier";
 
     if (dexCap !== undefined) {
@@ -215,10 +227,45 @@ export class DerivedStatEngine {
       breakdown.push({ name: mod.sourceName, value: `${sign}${mod.value}` });
     }
 
+    if (bestBase?.formula) {
+      for (const ability of bestBase.formula.abilities) {
+        const modifier = abilityModifiers[ability];
+        const sign = modifier >= 0 ? "+" : "";
+        const abilityName =
+          ability === "DEX"
+            ? "Dexterity"
+            : ability === "CON"
+              ? "Constitution"
+              : ability;
+        breakdown.push({
+          name: `${abilityName} Modifier`,
+          value: `${sign}${modifier}`,
+        });
+        addedBonus += modifier;
+      }
+    }
+
     return {
       total: baseAc + finalDex + addedBonus,
       breakdown,
     };
+  }
+
+  private static getBaseCandidateTotal(
+    modifier: RuntimeModifier,
+    abilityModifiers: Record<Ability, number>,
+  ): number {
+    if (modifier.formula) {
+      return modifier.formula.base + modifier.formula.abilities.reduce(
+        (total, ability) => total + abilityModifiers[ability],
+        0,
+      );
+    }
+
+    return modifier.value + Math.min(
+      abilityModifiers.DEX,
+      modifier.maxDexCap ?? Infinity,
+    );
   }
 
   // #endregion

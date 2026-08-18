@@ -32,12 +32,15 @@ const toTraitRow = (traitId: string, sourceOrigin?: string) => {
   const trait = TRAIT_DICTIONARY[traitId];
   const fallbackName = traitId.replace(/_/g, " ");
   const name = trait?.name ?? fallbackName;
-  const description = trait?.description || `${name} reference data.`;
+  const summary =
+    trait?.lore?.shortDescription ??
+    trait?.lore?.fullText ??
+    `${name} reference data.`;
 
   return {
     id: traitId,
     name,
-    lore: toLore(description),
+    lore: toLore(summary),
     effects: [],
     isStartingProficiency: false,
     sourceType: "core",

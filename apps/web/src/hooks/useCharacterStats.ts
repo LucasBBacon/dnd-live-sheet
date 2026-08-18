@@ -64,8 +64,6 @@ export const useDerivedStats = () => {
 
   return useMemo(() => {
     const profBonus = AbilityEngine.getProficiencyBonus(level);
-    const dexMod = finalAbilities.DEX.modifier;
-
     const skillAndInitiativeProficiencies: FixedProficiencyGrant[] =
       Object.entries(proficiencies)
         .filter(([, value]) => value !== "none")
@@ -98,7 +96,16 @@ export const useDerivedStats = () => {
     );
 
     // ac calc
-    const armorClass = DerivedStatEngine.calculateAC(dexMod, totalMods, activeStates);
+    const armorClass = DerivedStatEngine.calculateAC(
+      Object.fromEntries(
+        Object.entries(finalAbilities).map(([ability, derived]) => [
+          ability,
+          derived.modifier,
+        ]),
+      ) as Record<Ability, number>,
+      totalMods,
+      activeStates,
+    );
 
     // skills calc
     const skills = Object.values(SKILL_MAP).map((skillDef) => {

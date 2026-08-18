@@ -3,9 +3,15 @@
     "$id": "traits.schema.json",
     "title": "Trait Definition",
     "type": "object",
+    "additionalProperties": false,
     "definitions": {
         "traitImplementationMetadata": {
             "type": "object",
+            "additionalProperties": false,
+            "required": [
+                "mode",
+                "summary"
+            ],
             "properties": {
                 "mode": {
                     "type": "string",
@@ -30,17 +36,23 @@
     "required": [
         "id",
         "name",
-        "description"
+        "lore"
     ],
     "properties": {
         "id": {
-            "type": "string"
+            "$ref": "./common.schema.json#/definitions/coreRuleId"
         },
         "name": {
-            "type": "string"
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 255
         },
-        "description": {
-            "type": "string"
+        "lore": {
+            "$ref": "./common.schema.json#/definitions/lore"
+        },
+        "isStartingProficiency": {
+            "type": "boolean",
+            "default": false
         },
         "modifiers": {
             "$ref": "./modifiers.schema.json"

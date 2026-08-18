@@ -1,0 +1,95 @@
+{
+    "$schema": "https://json-schema.org/draft-07/schema#",
+    "$id": "races.schema.json",
+    "title": "Core Race Definition",
+    "type": "object",
+    "additionalProperties": false,
+    "$defs": {
+        "subrace": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+                "id",
+                "name",
+                "lore",
+                "grantedTraitIds"
+            ],
+            "properties": {
+                "id": {
+                    "$ref": "./common.schema.json#/definitions/coreRuleId"
+                },
+                "name": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 255
+                },
+                "lore": {
+                    "$ref": "./common.schema.json#/definitions/lore"
+                },
+                "grantedTraitIds": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "./common.schema.json#/definitions/coreRuleId"
+                    },
+                    "default": []
+                }
+            }
+        }
+    },
+    "required": [
+        "id",
+        "name",
+        "size",
+        "speed",
+        "lore",
+        "grantedTraitIds",
+        "hasSubraces",
+        "subraces"
+    ],
+    "properties": {
+        "id": {
+            "$ref": "./common.schema.json#/definitions/coreRuleId"
+        },
+        "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 255
+        },
+        "size": {
+            "type": "string",
+            "enum": [
+                "tiny",
+                "small",
+                "medium",
+                "large",
+                "huge",
+                "gargantuan"
+            ]
+        },
+        "speed": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 120
+        },
+        "lore": {
+            "$ref": "./common.schema.json#/definitions/lore"
+        },
+        "grantedTraitIds": {
+            "type": "array",
+            "items": {
+                "$ref": "./common.schema.json#/definitions/coreRuleId"
+            },
+            "default": []
+        },
+        "hasSubraces": {
+            "type": "boolean"
+        },
+        "subraces": {
+            "type": "array",
+            "items": {
+                "$ref": "#/$defs/subrace"
+            },
+            "default": []
+        }
+    }
+}

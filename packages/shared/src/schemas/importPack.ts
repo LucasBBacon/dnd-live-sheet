@@ -9,6 +9,7 @@ import {
   StartingEquipmentDefinitionSchema,
 } from "./items.js";
 import { WeaponDefinitionSchema } from "./weapons.js";
+import { LoreSchema } from "./lore.js";
 
 // #region Import Pack Schemas
 
@@ -17,11 +18,6 @@ const ImportIdSchema = z
   .min(3)
   .max(100)
   .regex(/^[a-z0-9_]+$/, "Use lowercase snake_case ids.");
-
-const LoreSchema = z.object({
-  shortDescription: z.string().min(1).max(280),
-  fullText: z.string().max(8000).optional(),
-});
 
 export const ImportSourceTypeSchema = z.enum(["core", "homebrew"]);
 export const ImportPublishModeSchema = z.enum(["draft", "published"]);

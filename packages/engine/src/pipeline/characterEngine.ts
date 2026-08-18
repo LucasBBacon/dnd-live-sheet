@@ -253,6 +253,9 @@ export class CharacterEngine {
       new Set([
         ...StateExtractor.extractStates(activeTraits),
         ...effectManager.getActiveStates(),
+        ...(inventory.some((item) => item.slot === "body")
+          ? ["status_wearing_armor"]
+          : []),
       ]),
     );
     const summons = effectManager
@@ -521,7 +524,12 @@ export class CharacterEngine {
     );
 
     const armorClass = DerivedStatEngine.calculateAC(
-      abilities.DEX.modifier,
+      Object.fromEntries(
+        Object.entries(abilities).map(([ability, derived]) => [
+          ability,
+          derived.modifier,
+        ]),
+      ) as Record<Ability, number>,
       modifiers,
       baseStates,
     );

@@ -9,6 +9,12 @@
             "items": {
                 "$ref": "./traits.schema.json"
             }
+        },
+        "races": {
+            "type": "array",
+            "items": {
+                "$ref": "./races.schema.json"
+            }
         }
     }
 }

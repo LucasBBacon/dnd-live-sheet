@@ -103,4 +103,64 @@ describe("DerivedStatEngine.calculateAC", () => {
       { name: "Cursed Aura", value: "-1" },
     ]);
   });
+
+  it("evaluates an ability-sum AC formula and reports its components", () => {
+    const result = DerivedStatEngine.calculateAC(
+      { STR: 0, DEX: 3, CON: 4, INT: 0, WIS: 0, CHA: 0 },
+      [
+        makeMod({
+          id: "barbarian_unarmored_defense",
+          type: "set_base",
+          value: 10,
+          formula: {
+            kind: "ability_sum",
+            base: 10,
+            abilities: ["DEX", "CON"],
+          },
+          sourceName: "Unarmored Defense (Barbarian)",
+          forbiddenStates: ["status_wearing_armor"],
+        }),
+      ],
+    );
+
+    expect(result.total).toBe(17);
+    expect(result.breakdown).toEqual([
+      { name: "Base AC (Unarmored Defense (Barbarian))", value: 10 },
+      { name: "Dexterity Modifier", value: "+3" },
+      { name: "Constitution Modifier", value: "+4" },
+    ]);
+  });
+
+  it("suppresses an ability-sum AC formula while armour is equipped", () => {
+    const result = DerivedStatEngine.calculateAC(
+      { STR: 0, DEX: 3, CON: 4, INT: 0, WIS: 0, CHA: 0 },
+      [
+        makeMod({
+          id: "barbarian_unarmored_defense",
+          type: "set_base",
+          value: 10,
+          formula: {
+            kind: "ability_sum",
+            base: 10,
+            abilities: ["DEX", "CON"],
+          },
+          sourceName: "Unarmored Defense (Barbarian)",
+          forbiddenStates: ["status_wearing_armor"],
+        }),
+        makeMod({
+          id: "leather",
+          type: "set_base",
+          value: 11,
+          sourceName: "Leather Armour",
+        }),
+      ],
+      ["status_wearing_armor"],
+    );
+
+    expect(result.total).toBe(14);
+    expect(result.breakdown).toContainEqual({
+      name: "Base AC (Leather Armour)",
+      value: 11,
+    });
+  });
 });

@@ -3,7 +3,10 @@
         {
             "id": "race_dragonborn_asi",
             "name": "(Dragonborn) Ability Score Increase",
-            "description": "Your Strength score increases by 2, and your Charisma score increases by 1.",
+            "lore": {
+                "shortDescription": "Your Strength score increases by 2, and your Charisma score increases by 1.",
+                "fullText": "Your Strength score increases by 2, and your Charisma score increases by 1."
+            },
             "modifiers": {
                 "fixed": [
                     {
@@ -34,7 +37,10 @@
         {
             "id": "subrace_dragonborn_black",
             "name": "Black Dragon Ancestry",
-            "description": "Your lineage traces back to a Black Dragon, granting you resistance to acid damage and an acid breath weapon.",
+            "lore": {
+                "shortDescription": "Your lineage traces back to a Black Dragon, granting you resistance to acid damage and an acid breath weapon.",
+                "fullText": "Your lineage traces back to a Black Dragon, granting you resistance to acid damage and an acid breath weapon."
+            },
             "modifiers": {
                 "fixed": [],
                 "choices": []
@@ -111,7 +117,10 @@
         {
             "id": "subrace_dragonborn_blue",
             "name": "Blue Dragon Ancestry",
-            "description": "Your lineage traces back to a Blue Dragon, granting you resistance to lightning damage and a lightning breath weapon.",
+            "lore": {
+                "shortDescription": "Your lineage traces back to a Blue Dragon, granting you resistance to lightning damage and a lightning breath weapon.",
+                "fullText": "Your lineage traces back to a Blue Dragon, granting you resistance to lightning damage and a lightning breath weapon."
+            },
             "modifiers": {
                 "fixed": [],
                 "choices": []
@@ -188,7 +197,10 @@
         {
             "id": "subrace_dragonborn_brass",
             "name": "Brass Dragon Ancestry",
-            "description": "Your lineage traces back to a Brass Dragon, granting you resistance to fire damage and a fire breath weapon.",
+            "lore": {
+                "shortDescription": "Your lineage traces back to a Brass Dragon, granting you resistance to fire damage and a fire breath weapon.",
+                "fullText": "Your lineage traces back to a Brass Dragon, granting you resistance to fire damage and a fire breath weapon."
+            },
             "modifiers": {
                 "fixed": [],
                 "choices": []
@@ -265,7 +277,10 @@
         {
             "id": "subrace_dragonborn_bronze",
             "name": "Bronze Dragon Ancestry",
-            "description": "Your lineage traces back to a Bronze Dragon, granting you resistance to lightning damage and a lightning breath weapon.",
+            "lore": {
+                "shortDescription": "Your lineage traces back to a Bronze Dragon, granting you resistance to lightning damage and a lightning breath weapon.",
+                "fullText": "Your lineage traces back to a Bronze Dragon, granting you resistance to lightning damage and a lightning breath weapon."
+            },
             "modifiers": {
                 "fixed": [],
                 "choices": []
@@ -342,7 +357,10 @@
         {
             "id": "subrace_dragonborn_copper",
             "name": "Copper Dragon Ancestry",
-            "description": "Your lineage traces back to a Copper Dragon, granting you resistance to acid damage and an acid breath weapon.",
+            "lore": {
+                "shortDescription": "Your lineage traces back to a Copper Dragon, granting you resistance to acid damage and an acid breath weapon.",
+                "fullText": "Your lineage traces back to a Copper Dragon, granting you resistance to acid damage and an acid breath weapon."
+            },
             "modifiers": {
                 "fixed": [],
                 "choices": []
@@ -419,7 +437,10 @@
         {
             "id": "subrace_dragonborn_gold",
             "name": "Gold Dragon Ancestry",
-            "description": "Your lineage traces back to a Gold Dragon, granting you resistance to fire damage and a fiery breath weapon.",
+            "lore": {
+                "shortDescription": "Your lineage traces back to a Gold Dragon, granting you resistance to fire damage and a fiery breath weapon.",
+                "fullText": "Your lineage traces back to a Gold Dragon, granting you resistance to fire damage and a fiery breath weapon."
+            },
             "modifiers": {
                 "fixed": [],
                 "choices": []
@@ -496,7 +517,10 @@
         {
             "id": "subrace_dragonborn_green",
             "name": "Green Dragon Ancestry",
-            "description": "Your lineage traces back to a Green Dragon, granting you resistance to poison damage and a poison breath weapon.",
+            "lore": {
+                "shortDescription": "Your lineage traces back to a Green Dragon, granting you resistance to poison damage and a poison breath weapon.",
+                "fullText": "Your lineage traces back to a Green Dragon, granting you resistance to poison damage and a poison breath weapon."
+            },
             "modifiers": {
                 "fixed": [],
                 "choices": []
@@ -573,7 +597,10 @@
         {
             "id": "subrace_dragonborn_red",
             "name": "Red Dragon Ancestry",
-            "description": "Your lineage traces back to a Red Dragon, granting you resistance to fire damage and a fire breath weapon.",
+            "lore": {
+                "shortDescription": "Your lineage traces back to a Red Dragon, granting you resistance to fire damage and a fire breath weapon.",
+                "fullText": "Your lineage traces back to a Red Dragon, granting you resistance to fire damage and a fire breath weapon."
+            },
             "modifiers": {
                 "fixed": [],
                 "choices": []
@@ -650,7 +677,10 @@
         {
             "id": "subrace_dragonborn_silver",
             "name": "Silver Dragon Ancestry",
-            "description": "Your lineage traces back to a Silver Dragon, granting you resistance to cold damage and a cold breath weapon.",
+            "lore": {
+                "shortDescription": "Your lineage traces back to a Silver Dragon, granting you resistance to cold damage and a cold breath weapon.",
+                "fullText": "Your lineage traces back to a Silver Dragon, granting you resistance to cold damage and a cold breath weapon."
+            },
             "modifiers": {
                 "fixed": [],
                 "choices": []
@@ -727,7 +757,10 @@
         {
             "id": "subrace_dragonborn_white",
             "name": "White Dragon Ancestry",
-            "description": "Your lineage traces back to a White Dragon, granting you resistance to cold damage and a cold breath weapon.",
+            "lore": {
+                "shortDescription": "Your lineage traces back to a White Dragon, granting you resistance to cold damage and a cold breath weapon.",
+                "fullText": "Your lineage traces back to a White Dragon, granting you resistance to cold damage and a cold breath weapon."
+            },
             "modifiers": {
                 "fixed": [],
                 "choices": []
@@ -804,7 +837,10 @@
         {
             "id": "race_dragonborn_languages",
             "name": "(Dragonborn) Languages",
-            "description": "You can speak, read, and write Common and Draconic. Draconic is thought to be one of the oldest languages and is often used in the study of magic. The language sounds harsh to most other creatures and includes numerous hard consonants and sibilants.",
+            "lore": {
+                "shortDescription": "You can speak, read, and write Common and Draconic. Draconic is thought to be one of the oldest languages and is often used in the study of magic. The language sounds harsh to most other creatures and includes numerous hard consonants and sibilants.",
+                "fullText": "You can speak, read, and write Common and Draconic. Draconic is thought to be one of the oldest languages and is often used in the study of magic. The language sounds harsh to most other creatures and includes numerous hard consonants and sibilants."
+            },
             "modifiers": {
                 "fixed": [],
                 "choices": []
@@ -835,7 +871,10 @@
         {
             "id": "trait_dragon_ancestor_black",
             "name": "Dragon Ancestor: Black",
-            "description": "Your draconic ancestry is black; the associated damage type is acid. You can speak, read, and write Draconic and double your proficiency bonus on Charisma checks with dragons.",
+            "lore": {
+                "shortDescription": "Your draconic ancestry is black; the associated damage type is acid. You can speak, read, and write Draconic and double your proficiency bonus on Charisma checks with dragons.",
+                "fullText": "Your draconic ancestry is black; the associated damage type is acid. You can speak, read, and write Draconic and double your proficiency bonus on Charisma checks with dragons."
+            },
             "modifiers": {
                 "fixed": [],
                 "choices": []
@@ -849,7 +888,10 @@
         {
             "id": "trait_dragon_ancestor_blue",
             "name": "Dragon Ancestor: Blue",
-            "description": "Your draconic ancestry is blue; the associated damage type is lightning. You can speak, read, and write Draconic and double your proficiency bonus on Charisma checks with dragons.",
+            "lore": {
+                "shortDescription": "Your draconic ancestry is blue; the associated damage type is lightning. You can speak, read, and write Draconic and double your proficiency bonus on Charisma checks with dragons.",
+                "fullText": "Your draconic ancestry is blue; the associated damage type is lightning. You can speak, read, and write Draconic and double your proficiency bonus on Charisma checks with dragons."
+            },
             "modifiers": {
                 "fixed": [],
                 "choices": []
@@ -863,7 +905,10 @@
         {
             "id": "trait_dragon_ancestor_brass",
             "name": "Dragon Ancestor: Brass",
-            "description": "Your draconic ancestry is brass; the associated damage type is fire. You can speak, read, and write Draconic and double your proficiency bonus on Charisma checks with dragons.",
+            "lore": {
+                "shortDescription": "Your draconic ancestry is brass; the associated damage type is fire. You can speak, read, and write Draconic and double your proficiency bonus on Charisma checks with dragons.",
+                "fullText": "Your draconic ancestry is brass; the associated damage type is fire. You can speak, read, and write Draconic and double your proficiency bonus on Charisma checks with dragons."
+            },
             "modifiers": {
                 "fixed": [],
                 "choices": []
@@ -877,7 +922,10 @@
         {
             "id": "trait_dragon_ancestor_bronze",
             "name": "Dragon Ancestor: Bronze",
-            "description": "Your draconic ancestry is bronze; the associated damage type is lightning. You can speak, read, and write Draconic and double your proficiency bonus on Charisma checks with dragons.",
+            "lore": {
+                "shortDescription": "Your draconic ancestry is bronze; the associated damage type is lightning. You can speak, read, and write Draconic and double your proficiency bonus on Charisma checks with dragons.",
+                "fullText": "Your draconic ancestry is bronze; the associated damage type is lightning. You can speak, read, and write Draconic and double your proficiency bonus on Charisma checks with dragons."
+            },
             "modifiers": {
                 "fixed": [],
                 "choices": []
@@ -891,7 +939,10 @@
         {
             "id": "trait_dragon_ancestor_copper",
             "name": "Dragon Ancestor: Copper",
-            "description": "Your draconic ancestry is copper; the associated damage type is acid. You can speak, read, and write Draconic and double your proficiency bonus on Charisma checks with dragons.",
+            "lore": {
+                "shortDescription": "Your draconic ancestry is copper; the associated damage type is acid. You can speak, read, and write Draconic and double your proficiency bonus on Charisma checks with dragons.",
+                "fullText": "Your draconic ancestry is copper; the associated damage type is acid. You can speak, read, and write Draconic and double your proficiency bonus on Charisma checks with dragons."
+            },
             "modifiers": {
                 "fixed": [],
                 "choices": []
@@ -905,7 +956,10 @@
         {
             "id": "trait_dragon_ancestor_gold",
             "name": "Dragon Ancestor: Gold",
-            "description": "Your draconic ancestry is gold; the associated damage type is fire. You can speak, read, and write Draconic and double your proficiency bonus on Charisma checks with dragons.",
+            "lore": {
+                "shortDescription": "Your draconic ancestry is gold; the associated damage type is fire. You can speak, read, and write Draconic and double your proficiency bonus on Charisma checks with dragons.",
+                "fullText": "Your draconic ancestry is gold; the associated damage type is fire. You can speak, read, and write Draconic and double your proficiency bonus on Charisma checks with dragons."
+            },
             "modifiers": {
                 "fixed": [],
                 "choices": []
@@ -919,7 +973,10 @@
         {
             "id": "trait_dragon_ancestor_green",
             "name": "Dragon Ancestor: Green",
-            "description": "Your draconic ancestry is green; the associated damage type is poison. You can speak, read, and write Draconic and double your proficiency bonus on Charisma checks with dragons.",
+            "lore": {
+                "shortDescription": "Your draconic ancestry is green; the associated damage type is poison. You can speak, read, and write Draconic and double your proficiency bonus on Charisma checks with dragons.",
+                "fullText": "Your draconic ancestry is green; the associated damage type is poison. You can speak, read, and write Draconic and double your proficiency bonus on Charisma checks with dragons."
+            },
             "modifiers": {
                 "fixed": [],
                 "choices": []
@@ -933,7 +990,10 @@
         {
             "id": "trait_dragon_ancestor_red",
             "name": "Dragon Ancestor: Red",
-            "description": "Your draconic ancestry is red; the associated damage type is fire. You can speak, read, and write Draconic and double your proficiency bonus on Charisma checks with dragons.",
+            "lore": {
+                "shortDescription": "Your draconic ancestry is red; the associated damage type is fire. You can speak, read, and write Draconic and double your proficiency bonus on Charisma checks with dragons.",
+                "fullText": "Your draconic ancestry is red; the associated damage type is fire. You can speak, read, and write Draconic and double your proficiency bonus on Charisma checks with dragons."
+            },
             "modifiers": {
                 "fixed": [],
                 "choices": []
@@ -947,7 +1007,10 @@
         {
             "id": "trait_dragon_ancestor_silver",
             "name": "Dragon Ancestor: Silver",
-            "description": "Your draconic ancestry is silver; the associated damage type is cold. You can speak, read, and write Draconic and double your proficiency bonus on Charisma checks with dragons.",
+            "lore": {
+                "shortDescription": "Your draconic ancestry is silver; the associated damage type is cold. You can speak, read, and write Draconic and double your proficiency bonus on Charisma checks with dragons.",
+                "fullText": "Your draconic ancestry is silver; the associated damage type is cold. You can speak, read, and write Draconic and double your proficiency bonus on Charisma checks with dragons."
+            },
             "modifiers": {
                 "fixed": [],
                 "choices": []
@@ -961,7 +1024,10 @@
         {
             "id": "trait_dragon_ancestor_white",
             "name": "Dragon Ancestor: White",
-            "description": "Your draconic ancestry is white; the associated damage type is cold. You can speak, read, and write Draconic and double your proficiency bonus on Charisma checks with dragons.",
+            "lore": {
+                "shortDescription": "Your draconic ancestry is white; the associated damage type is cold. You can speak, read, and write Draconic and double your proficiency bonus on Charisma checks with dragons.",
+                "fullText": "Your draconic ancestry is white; the associated damage type is cold. You can speak, read, and write Draconic and double your proficiency bonus on Charisma checks with dragons."
+            },
             "modifiers": {
                 "fixed": [],
                 "choices": []

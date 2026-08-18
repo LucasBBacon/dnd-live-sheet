@@ -3,7 +3,10 @@
         {
             "id": "race_human_asi",
             "name": "(Human) Ability Score Increase",
-            "description": "Your ability scores each increase by 1.",
+            "lore": {
+                "shortDescription": "Your ability scores each increase by 1.",
+                "fullText": "Your ability scores each increase by 1."
+            },
             "modifiers": {
                 "fixed": [
                     {
@@ -66,7 +69,10 @@
         {
             "id": "race_human_languages",
             "name": "(Human) Languages",
-            "description": "You can speak, read, and write Common and one extra language of your choice. Humans typically learn the languages of other peoples they deal with, including obscure dialects. They are fond of sprinkling their speech with words borrowed from other tongues: Orc curses, Elvish musical expressions, Dwarvish military phrases, and so on.",
+            "lore": {
+                "shortDescription": "You can speak, read, and write Common and one extra language of your choice. Humans typically learn the languages of other peoples they deal with, including obscure dialects. They are fond of sprinkling their speech with words borrowed from other tongues: Orc curses, Elvish musical expressions, Dwarvish military phrases, and so on.",
+                "fullText": "You can speak, read, and write Common and one extra language of your choice. Humans typically learn the languages of other peoples they deal with, including obscure dialects. They are fond of sprinkling their speech with words borrowed from other tongues: Orc curses, Elvish musical expressions, Dwarvish military phrases, and so on."
+            },
             "modifiers": {
                 "fixed": [],
                 "choices": []

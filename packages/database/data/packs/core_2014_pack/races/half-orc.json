@@ -3,7 +3,10 @@
         {
             "id": "race_half_orc_asi",
             "name": "(Half Orc) Ability Score Increase",
-            "description": "Your Strength score increases by 2, and your Constitution score increases by 1.",
+            "lore": {
+                "shortDescription": "Your Strength score increases by 2, and your Constitution score increases by 1.",
+                "fullText": "Your Strength score increases by 2, and your Constitution score increases by 1."
+            },
             "modifiers": {
                 "fixed": [
                     {
@@ -34,7 +37,10 @@
         {
             "id": "race_half_orc_darkvision",
             "name": "(Half Orc) Darkvision",
-            "description": "Thanks to your orc blood, you have superior vision in dark and dim conditions. You can see in dim light within 60 feet of you as if it were bright light, and in darkness as if it were dim light. You can't discern color in darkness, only shades of gray.",
+            "lore": {
+                "shortDescription": "Thanks to your orc blood, you have superior vision in dark and dim conditions. You can see in dim light within 60 feet of you as if it were bright light, and in darkness as if it were dim light. You can't discern color in darkness, only shades of gray.",
+                "fullText": "Thanks to your orc blood, you have superior vision in dark and dim conditions. You can see in dim light within 60 feet of you as if it were bright light, and in darkness as if it were dim light. You can't discern color in darkness, only shades of gray."
+            },
             "modifiers": {
                 "fixed": [
                     {
@@ -57,7 +63,10 @@
         {
             "id": "menacing",
             "name": "Menacing",
-            "description": "You gain proficiency in the Intimidation skill.",
+            "lore": {
+                "shortDescription": "You gain proficiency in the Intimidation skill.",
+                "fullText": "You gain proficiency in the Intimidation skill."
+            },
             "modifiers": {
                 "fixed": [],
                 "choices": []
@@ -82,7 +91,10 @@
         {
             "id": "relentless_endurance",
             "name": "Relentless Endurance",
-            "description": "When you are reduced to 0 hit points but not killed outright, you can drop to 1 hit point instead. You can't use this feature again until you finish a long rest.",
+            "lore": {
+                "shortDescription": "When you are reduced to 0 hit points but not killed outright, you can drop to 1 hit point instead. You can't use this feature again until you finish a long rest.",
+                "fullText": "When you are reduced to 0 hit points but not killed outright, you can drop to 1 hit point instead. You can't use this feature again until you finish a long rest."
+            },
             "modifiers": {
                 "fixed": [],
                 "choices": []
@@ -132,7 +144,10 @@
         {
             "id": "savage_attacks",
             "name": "Savage Attacks",
-            "description": "When you score a critical hit with a melee weapon attack, you can roll one of the weapon's damage dice one additional time and add it to the extra damage on the critical hit.",
+            "lore": {
+                "shortDescription": "When you score a critical hit with a melee weapon attack, you can roll one of the weapon's damage dice one additional time and add it to the extra damage on the critical hit.",
+                "fullText": "When you score a critical hit with a melee weapon attack, you can roll one of the weapon's damage dice one additional time and add it to the extra damage on the critical hit."
+            },
             "modifiers": {
                 "fixed": [],
                 "choices": []
@@ -155,7 +170,10 @@
         {
             "id": "race_half_orc_languages",
             "name": "(Half Orc) Languages",
-            "description": "You can speak. read, and write Common and Orc. Orc is a harsh. grating language with hard consonants. It has no script of its own but is written in the Dwarvish script.",
+            "lore": {
+                "shortDescription": "You can speak. read, and write Common and Orc. Orc is a harsh. grating language with hard consonants. It has no script of its own but is written in the Dwarvish script.",
+                "fullText": "You can speak. read, and write Common and Orc. Orc is a harsh. grating language with hard consonants. It has no script of its own but is written in the Dwarvish script."
+            },
             "modifiers": {
                 "fixed": [],
                 "choices": []

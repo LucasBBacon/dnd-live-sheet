@@ -2,6 +2,7 @@ import { z } from "zod";
 import { StartingEquipmentDefinitionSchema } from "./items.js";
 import { SpellChoiceNodeSchema } from "./spells.js";
 import { ClassMulticlassPrerequisitesSchema } from "./prerequisites.js";
+import { LoreSchema } from "./lore.js";
 
 // #region Core Primitives Schemas
 
@@ -152,10 +153,7 @@ export const BackgroundDefinitionSchema = z.object({
     given: [],
     choices: [],
   }),
-  lore: z.object({
-    shortDescription: z.string(),
-    fullText: z.string().optional(),
-  }),
+  lore: LoreSchema,
 });
 
 export type BackgroundDefinition = z.infer<typeof BackgroundDefinitionSchema>;

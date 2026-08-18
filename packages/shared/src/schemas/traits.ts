@@ -13,6 +13,7 @@ import {
 import { CriticalHitModifierSchema, DiceRuleSchema } from "./dice.js";
 import { ActionGrantSchema } from "./actions.js";
 import { SpellGrantBlockSchema } from "./spells.js";
+import { LoreSchema } from "./lore.js";
 
 export const TraitImplementationMetadataSchema = z.object({
   mode: z.enum(["engine", "manual_sheet_helper"]),
@@ -23,7 +24,7 @@ export const TraitImplementationMetadataSchema = z.object({
 export const TraitDefinitionSchema = z.object({
   id: z.string(),
   name: z.string(),
-  description: z.string(),
+  lore: LoreSchema.optional(),
 
   modifiers: z
     .object({
@@ -78,6 +79,10 @@ export const TraitDefinitionSchema = z.object({
 });
 
 export type TraitDefinition = z.infer<typeof TraitDefinitionSchema>;
+/** Transitional shape for the retired static dictionaries. */
+export type LegacyTraitDefinition = TraitDefinition & {
+  description: string;
+};
 export type TraitImplementationMetadata = z.infer<
   typeof TraitImplementationMetadataSchema
 >;
