@@ -20,6 +20,7 @@ export const useCombat = () => {
   const traitGrants = useCharacterSheetStore((state) => state.traitGrants);
   const availableTraits = useCharacterSheetStore((state) => state.traits);
   const activeStates = useCharacterSheetStore((state) => state.activeStates);
+  const classLevels = useCharacterSheetStore((state) => state.classLevels);
   const ruleSnapshot = useCharacterSheetStore((state) => state.ruleSnapshot);
 
   // compose the prerequisite math engines
@@ -115,6 +116,9 @@ export const useCombat = () => {
         false,
         undefined,
         weaponAttackContext,
+        // without this a class_level_thresholds modifier resolves to zero, so
+        // Rage's damage bonus silently vanishes from the attack panel
+        classLevels,
       );
 
       // 6 - ammo logic
@@ -156,6 +160,7 @@ export const useCombat = () => {
     traitGrants,
     availableTraits,
     activeStates,
+    classLevels,
     finalAbilities,
     profBonus,
     totalMods,

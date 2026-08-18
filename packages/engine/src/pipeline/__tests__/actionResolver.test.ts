@@ -1237,3 +1237,127 @@ describe("ActionResolver cost settlement", () => {
     expect(second.reason).toBe("bonus_action_unavailable");
   });
 });
+
+describe("ActionResolver apply_effect modifier metadata", () => {
+  let effectManager: EffectManager;
+  let resourceManager: ResourceManager;
+
+  beforeEach(() => {
+    effectManager = new EffectManager();
+    resourceManager = new ResourceManager();
+  });
+
+  const shieldSpell: ActionGrant = {
+    ...bowShot,
+    consumesAmmo: undefined,
+    id: "action_shield",
+    name: "Shield",
+    effect: {
+      type: "apply_effect",
+      effectName: "Shield Spell",
+      durationType: "rounds",
+      durationRounds: 1,
+      states: [],
+      modifiers: [
+        {
+          target: "ARMOR_CLASS",
+          type: "add",
+          value: 5,
+          scalingFactor: "none",
+          requiredStates: [],
+          forbiddenStates: [],
+        },
+      ],
+      isSelfConcentration: false,
+      requiredStates: [],
+      forbiddenStates: [],
+    },
+  };
+
+  it("marks an applied effect's modifiers active so calculators do not discard them", () => {
+    ActionResolver.execute(shieldSpell, payload(), {
+      effectManager,
+      resourceManager,
+    });
+
+    const [modifier] = effectManager.getActiveModifiers();
+
+    expect(modifier?.isActive).toBe(true);
+  });
+
+  it("names the effect as the modifier's source so breakdowns can attribute it", () => {
+    ActionResolver.execute(shieldSpell, payload(), {
+      effectManager,
+      resourceManager,
+    });
+
+    const [modifier] = effectManager.getActiveModifiers();
+
+    expect(modifier?.sourceName).toBe("Shield Spell");
+    expect(modifier?.sourceOrigin).toBe("action:action_shield");
+  });
+
+  it("falls back to the action name when the effect is unnamed", () => {
+    const unnamed: ActionGrant = {
+      ...shieldSpell,
+      effect: { ...shieldSpell.effect, effectName: undefined } as never,
+    };
+
+    ActionResolver.execute(unnamed, payload(), {
+      effectManager,
+      resourceManager,
+    });
+
+    expect(effectManager.getActiveModifiers()[0]?.sourceName).toBe("Shield");
+  });
+
+  it("gives each applied modifier a distinct id", () => {
+    const twin: ActionGrant = {
+      ...shieldSpell,
+      effect: {
+        ...shieldSpell.effect,
+        modifiers: [
+          {
+            target: "ARMOR_CLASS",
+            type: "add",
+            value: 5,
+            scalingFactor: "none",
+            requiredStates: [],
+            forbiddenStates: [],
+          },
+          {
+            target: "SPEED",
+            type: "add",
+            value: 10,
+            scalingFactor: "none",
+            requiredStates: [],
+            forbiddenStates: [],
+          },
+        ],
+      } as never,
+    };
+
+    ActionResolver.execute(twin, payload(), {
+      effectManager,
+      resourceManager,
+    });
+
+    const ids = effectManager.getActiveModifiers().map((mod) => mod.id);
+
+    expect(new Set(ids).size).toBe(2);
+  });
+
+  it("does not mutate the authored blueprint when stamping metadata", () => {
+    ActionResolver.execute(shieldSpell, payload(), {
+      effectManager,
+      resourceManager,
+    });
+
+    const authored =
+      shieldSpell.effect.type === "apply_effect"
+        ? shieldSpell.effect.modifiers[0]
+        : undefined;
+
+    expect(authored).not.toHaveProperty("sourceName");
+  });
+});

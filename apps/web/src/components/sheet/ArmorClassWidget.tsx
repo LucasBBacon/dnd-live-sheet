@@ -1,7 +1,21 @@
 import { useDerivedStats } from "../../hooks/useCharacterStats";
+import { useCharacterSheetStore } from "../../store/characterSheetStore";
+
+/**
+ * Rules that make the character easier to hit without changing their AC.
+ *
+ * Reckless Attack is the first of these: the attack rolls it affects are the
+ * DM's, so there is no number for the engine to move. Surfacing the state next
+ * to the AC is the honest alternative to inventing one - the player can see the
+ * cost they accepted, and can tell the table about it.
+ */
+const EXPOSURE_STATE = "status_attacks_against_have_advantage";
 
 export const ArmorClassWidget = () => {
   const { armorClass } = useDerivedStats();
+  const isExposed = useCharacterSheetStore((state) =>
+    state.activeStates.includes(EXPOSURE_STATE),
+  );
 
   return (
     <div className="overflow-hidden rounded-2xl border border-slate-200 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-700 p-4 text-white shadow-sm">
@@ -29,6 +43,25 @@ export const ArmorClassWidget = () => {
           </div>
         </div>
       </div>
+
+      {isExposed && (
+        <div
+          role="status"
+          className="mt-4 flex items-start gap-2 rounded-xl border border-amber-300/40 bg-amber-400/15 p-3"
+        >
+          <span aria-hidden="true" className="text-base leading-none">
+            ⚠️
+          </span>
+          <div>
+            <p className="text-sm font-semibold text-amber-100">
+              Attacks against you have advantage
+            </p>
+            <p className="mt-0.5 text-xs text-amber-100/80">
+              Until the start of your next turn.
+            </p>
+          </div>
+        </div>
+      )}
 
       <div className="mt-4 rounded-xl border border-white/10 bg-white/10 p-3 backdrop-blur-sm">
         <div className="mb-2 text-[10px] font-semibold uppercase tracking-[0.25em] text-slate-300">

@@ -220,6 +220,22 @@ const alignRuntimeResources = (
   }
 };
 
+/**
+ * The character's full state list, rebuilt from its two sources.
+ *
+ * Rebuilt rather than accumulated on purpose. Folding the effect manager's
+ * states into the previous activeStates makes the list monotonic - it can only
+ * ever grow - so an effect that expires stays visible forever and a one-turn
+ * rule like Reckless Attack never switches off. baseStates holds what is true
+ * of the character independently of any effect (worn armour, encumbrance),
+ * and the effect manager is asked fresh for the rest.
+ */
+const composeActiveStates = (
+  baseStates: string[] | undefined,
+  effectManager: EffectManager,
+): string[] =>
+  Array.from(new Set([...(baseStates ?? []), ...effectManager.getActiveStates()]));
+
 const dispatchAuthoredEvent = (
   state: CharacterSheetState,
   eventName: EngineEvent,
@@ -284,9 +300,7 @@ const dispatchAuthoredEvent = (
   return {
     results,
     rollResults: results.flatMap((result) => result.rollResults ?? []),
-    activeStates: Array.from(
-      new Set([...state.activeStates, ...runtimeEffects.getActiveStates()]),
-    ),
+    activeStates: composeActiveStates(state.baseStates, runtimeEffects),
     resources: runtimeResources.getRuntimeResources().map((resource) => ({
       id: resource.id,
       current: resource.currentCharges,
@@ -318,9 +332,7 @@ const resolveHealthTransition = (
 
   let appliedHp = targetHp;
   let rollResults: ActionRollResult[] = [];
-  let activeStates = Array.from(
-    new Set([...state.activeStates, ...runtimeEffects.getActiveStates()]),
-  );
+  let activeStates = composeActiveStates(state.baseStates, runtimeEffects);
   let resources = runtimeResources.getRuntimeResources().map((resource) => ({
     id: resource.id,
     current: resource.currentCharges,
@@ -517,6 +529,12 @@ export interface CharacterSheetState {
   activeModifiers: RuntimeModifier[];
 
   resources: OperationalResource[];
+  /**
+   * What is true of the character regardless of any active effect: worn armour,
+   * encumbrance, and anything the sheet was hydrated with. Kept apart from
+   * activeStates so effect expiry can be seen - see composeActiveStates.
+   */
+  baseStates: string[];
   activeStates: string[];
   selectedActorInstanceId: string | null;
   latestRollResults: ActionRollResult[];
@@ -604,6 +622,7 @@ export const useCharacterSheetStore = create<CharacterSheetState>(
     inventoryError: null,
     activeModifiers: [],
     resources: [],
+    baseStates: [],
     activeStates: [],
     selectedActorInstanceId: null,
     latestRollResults: [],
@@ -1065,7 +1084,9 @@ export const useCharacterSheetStore = create<CharacterSheetState>(
       alignRuntimeResources(runtimeResources, payload.resources);
 
       set((previous) => ({
-        activeStates: payload.activeStates,
+        // the payload carries the server's effect states only, so the states
+        // that do not come from effects have to be folded back in here
+        activeStates: composeActiveStates(previous.baseStates, runtimeEffects),
         resources: payload.resources,
         latestRollResults:
           payload.rollResults.length > 0
@@ -1156,6 +1177,12 @@ export const useCharacterSheetStore = create<CharacterSheetState>(
       const state = get();
       const runtimeCombat = ensureCombatManager(state);
       const combatContext = runtimeCombat.beginTurn({ kind: "player" });
+
+      // expire first, dispatch second: an ON_START_OF_TURN trigger can raise a
+      // fresh effect, and ticking afterwards would sweep away the very thing it
+      // just created
+      state.runtimeEffects?.tickTurnStart();
+
       const dispatched = dispatchAuthoredEvent(state, "ON_START_OF_TURN");
 
       set({
@@ -1173,6 +1200,10 @@ export const useCharacterSheetStore = create<CharacterSheetState>(
       const state = get();
       const runtimeCombat = ensureCombatManager(state);
       const combatContext = runtimeCombat.endTurn({ kind: "player" });
+
+      // same ordering as beginTurn, for the same reason
+      state.runtimeEffects?.tickTurnEnd();
+
       const dispatched = dispatchAuthoredEvent(state, "ON_END_OF_TURN");
 
       set({

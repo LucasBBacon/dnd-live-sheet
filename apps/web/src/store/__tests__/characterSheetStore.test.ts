@@ -686,3 +686,240 @@ describe("useCharacterSheetStore hp trigger handling", () => {
     expect(state.activeStates).toContain("actor_clockwork_toy_scuttling");
   });
 });
+
+describe("useCharacterSheetStore turn lifecycle", () => {
+  beforeEach(() => {
+    vi.restoreAllMocks();
+
+    useCharacterSheetStore.setState({
+      ...useCharacterSheetStore.getState(),
+      id: "char_turns",
+      campaignId: null,
+      level: 2,
+      classLevels: { class_barbarian: 2 },
+      raceId: "race_human",
+      subraceId: null,
+      currentHp: 20,
+      maxHp: 20,
+      baseHpRolled: 1,
+      baseScores: { STR: 16, DEX: 10, CON: 14, INT: 10, WIS: 10, CHA: 10 },
+      proficiencies: {},
+      traits: [],
+      traitGrants: [],
+      inventory: [],
+      inventoryError: null,
+      activeModifiers: [],
+      resources: [],
+      ruleSnapshot: null,
+      baseStates: [],
+      activeStates: [],
+      latestRollResults: [],
+      runtimeEffects: null,
+      runtimeResources: null,
+      combatContext: CombatContextSchema.parse({}),
+      runtimeCombat: null,
+    });
+
+    vi.spyOn(socketService, "emitActionIntent").mockImplementation(() => {});
+  });
+
+  /** Seeds the store with one live effect, the way an executed action would. */
+  const seedEffect = (
+    durationType: "turn_start" | "turn_end" | "manual",
+    state: string,
+    baseStates: string[] = [],
+  ) => {
+    const runtimeEffects = new EffectManager();
+    runtimeEffects.addEffect({
+      instanceId: `effect_${state}`,
+      sourceName: "Reckless Attack",
+      durationType,
+      isSelfConcentration: false,
+      modifiers: [],
+      grantedStates: [state],
+    });
+
+    useCharacterSheetStore.setState({
+      runtimeEffects,
+      runtimeResources: new ResourceManager(),
+      baseStates,
+      activeStates: [...baseStates, state],
+    });
+  };
+
+  it("clears a turn_end effect when the turn ends", () => {
+    seedEffect("turn_end", "status_reckless_attack");
+
+    useCharacterSheetStore.getState().endTurn();
+
+    expect(useCharacterSheetStore.getState().activeStates).not.toContain(
+      "status_reckless_attack",
+    );
+  });
+
+  it("keeps a turn_end effect alive until the turn actually ends", () => {
+    seedEffect("turn_end", "status_reckless_attack");
+
+    useCharacterSheetStore.getState().beginTurn();
+
+    expect(useCharacterSheetStore.getState().activeStates).toContain(
+      "status_reckless_attack",
+    );
+  });
+
+  it("clears a turn_start effect when the next turn begins", () => {
+    seedEffect("turn_start", "status_attacks_against_have_advantage");
+
+    useCharacterSheetStore.getState().beginTurn();
+
+    expect(useCharacterSheetStore.getState().activeStates).not.toContain(
+      "status_attacks_against_have_advantage",
+    );
+  });
+
+  it("carries a turn_start effect through the end of the turn it was declared on", () => {
+    seedEffect("turn_start", "status_attacks_against_have_advantage");
+
+    useCharacterSheetStore.getState().endTurn();
+
+    expect(useCharacterSheetStore.getState().activeStates).toContain(
+      "status_attacks_against_have_advantage",
+    );
+  });
+
+  it("leaves a manual effect such as Rage untouched by a full turn cycle", () => {
+    seedEffect("manual", "status_raging");
+
+    useCharacterSheetStore.getState().endTurn();
+    useCharacterSheetStore.getState().beginTurn();
+
+    expect(useCharacterSheetStore.getState().activeStates).toContain(
+      "status_raging",
+    );
+  });
+
+  it("preserves states that do not come from effects across a turn cycle", () => {
+    seedEffect("turn_end", "status_reckless_attack", ["status_wearing_armor"]);
+
+    useCharacterSheetStore.getState().endTurn();
+    useCharacterSheetStore.getState().beginTurn();
+
+    expect(useCharacterSheetStore.getState().activeStates).toContain(
+      "status_wearing_armor",
+    );
+  });
+
+  it("expires effects before dispatching, so a start-of-turn trigger's own effect survives", () => {
+    const compileSpy = vi
+      .spyOn(CharacterBootstrapper, "compileActiveTraits")
+      .mockReturnValue([
+        {
+          id: "trait_regenerating_ward",
+          name: "Regenerating Ward",
+          modifiers: { fixed: [], choices: [] },
+          resources: [],
+          diceRules: [],
+          criticalHitModifiers: [],
+          triggers: [
+            {
+              listenFor: "ON_START_OF_TURN",
+              executeAction: "action_raise_ward",
+            },
+          ],
+          actions: [
+            {
+              id: "action_raise_ward",
+              name: "Raise Ward",
+              activation: "special",
+              effect: {
+                type: "apply_effect",
+                effectName: "Ward",
+                durationType: "turn_start",
+                states: ["status_warded"],
+                modifiers: [],
+                isSelfConcentration: false,
+                requiredStates: [],
+                forbiddenStates: [],
+              },
+            },
+          ],
+        },
+      ] as never);
+
+    useCharacterSheetStore.setState({
+      runtimeEffects: new EffectManager(),
+      runtimeResources: new ResourceManager(),
+      baseStates: [],
+      activeStates: [],
+    });
+
+    useCharacterSheetStore.getState().beginTurn();
+
+    expect(useCharacterSheetStore.getState().activeStates).toContain(
+      "status_warded",
+    );
+
+    compileSpy.mockRestore();
+  });
+});
+
+describe("useCharacterSheetStore remote action state composition", () => {
+  beforeEach(() => {
+    vi.restoreAllMocks();
+
+    useCharacterSheetStore.setState({
+      ...useCharacterSheetStore.getState(),
+      id: "char_remote",
+      campaignId: null,
+      level: 1,
+      classLevels: {},
+      raceId: "race_human",
+      subraceId: null,
+      currentHp: 10,
+      maxHp: 10,
+      baseHpRolled: 1,
+      baseScores: { STR: 10, DEX: 10, CON: 10, INT: 10, WIS: 10, CHA: 10 },
+      proficiencies: {},
+      traits: [],
+      traitGrants: [],
+      inventory: [],
+      activeModifiers: [],
+      resources: [],
+      ruleSnapshot: null,
+      baseStates: ["status_wearing_armor"],
+      activeStates: ["status_wearing_armor"],
+      runtimeEffects: null,
+      runtimeResources: null,
+    });
+  });
+
+  it("keeps non-effect states when the server reports an executed action", () => {
+    useCharacterSheetStore.getState().syncRemoteActionExecution({
+      characterId: "char_remote",
+      requestId: "req_1",
+      actionId: "action_reckless_attack",
+      source: "character",
+      executed: true,
+      rollResults: [],
+      activeStates: ["status_reckless_attack"],
+      resources: [],
+      effects: [
+        {
+          instanceId: "effect_reckless",
+          sourceName: "Reckless Attack",
+          durationType: "turn_end",
+          isSelfConcentration: false,
+          modifiers: [],
+          grantedStates: ["status_reckless_attack"],
+        },
+      ],
+      actors: [],
+      timestamp: Date.now(),
+    } as never);
+
+    const state = useCharacterSheetStore.getState();
+
+    expect(state.activeStates).toContain("status_wearing_armor");
+    expect(state.activeStates).toContain("status_reckless_attack");
+  });
+});

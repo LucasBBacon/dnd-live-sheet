@@ -287,19 +287,32 @@ export class ActionResolver {
         return ok;
       case "apply_effect": {
         const blueprint = effect;
+        const instanceId = `effect_${generateId()}`;
+        const sourceName = blueprint.effectName || action.name;
 
         // translate static blueprint into live ActiveEffect
         const newEffect: ActiveEffect = {
-          instanceId: `effect_${generateId()}`,
-          sourceName: blueprint.effectName || action.name,
+          instanceId,
+          sourceName,
           durationType: blueprint.durationType,
           durationRemaining: blueprint.durationRounds,
           isSelfConcentration: blueprint.isSelfConcentration,
           ...(blueprint.effectTag === undefined
             ? {}
             : { effectTag: blueprint.effectTag }),
-          // deep clone modifiers to prevent mutating static dict data
-          modifiers: JSON.parse(JSON.stringify(blueprint.modifiers)),
+          // an authored blueprint carries a BaseModifier, but the calculators
+          // consume RuntimeModifiers: without the identity fields stamped on
+          // here, every one of these would be dropped by the `!isActive` guard
+          // and any that survived would attribute itself to "undefined".
+          // Cloned rather than spread in place so the static pack data the
+          // blueprint points at is never written through.
+          modifiers: blueprint.modifiers.map((modifier, index) => ({
+            ...structuredClone(modifier),
+            id: `${instanceId}:${index}`,
+            sourceName,
+            sourceOrigin: `action:${action.id}`,
+            isActive: true,
+          })),
           grantedStates: [...blueprint.states],
         };
 

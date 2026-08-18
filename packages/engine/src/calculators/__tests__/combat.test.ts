@@ -865,3 +865,242 @@ describe("CombatEngine.calculateWeaponAttack - return shape", () => {
     expect(result.breakdown.attack).not.toContain("Offhand Damage (+0)");
   });
 });
+
+describe("CombatEngine.calculateWeaponAttack - derived attack context states", () => {
+  it("satisfies a melee STR gate without the caller supplying the context states", () => {
+    const result = CombatEngine.calculateWeaponAttack(
+      makeWeapon(),
+      makeScores({ STR: 16 }),
+      0,
+      [],
+      [
+        makeMod({
+          target: "DAMAGE_BONUS",
+          sourceName: "Rage",
+          value: 2,
+          requiredStates: [
+            "status_raging",
+            "action_melee_attack",
+            "action_using_str",
+          ],
+        }),
+      ],
+      ["status_raging"],
+    );
+
+    expect(result.damageBonus).toBe(5);
+    expect(result.breakdown.damage).toContain("Rage (+2)");
+  });
+
+  it("blocks a melee gate on a ranged weapon", () => {
+    const result = CombatEngine.calculateWeaponAttack(
+      makeWeapon({
+        id: "weapon_longbow",
+        category: "martial_ranged",
+        properties: ["range"],
+      }),
+      makeScores({ STR: 16, DEX: 16 }),
+      0,
+      [],
+      [
+        makeMod({
+          target: "DAMAGE_BONUS",
+          sourceName: "Rage",
+          value: 2,
+          requiredStates: [
+            "status_raging",
+            "action_melee_attack",
+            "action_using_str",
+          ],
+        }),
+      ],
+      ["status_raging"],
+    );
+
+    expect(result.damageBonus).toBe(3);
+    expect(result.breakdown.damage).not.toContain("Rage (+2)");
+  });
+
+  it("blocks a STR gate on a finesse weapon that resolves to DEX", () => {
+    const result = CombatEngine.calculateWeaponAttack(
+      makeWeapon({ properties: ["finesse"] }),
+      makeScores({ STR: 10, DEX: 18 }),
+      0,
+      [],
+      [
+        makeMod({
+          target: "DAMAGE_BONUS",
+          sourceName: "Rage",
+          value: 2,
+          requiredStates: ["action_melee_attack", "action_using_str"],
+        }),
+      ],
+      [],
+    );
+
+    expect(result.breakdown.governingStat).toBe("DEX");
+    expect(result.damageBonus).toBe(4);
+  });
+
+  it("satisfies a ranged gate on a ranged weapon", () => {
+    const result = CombatEngine.calculateWeaponAttack(
+      makeWeapon({
+        id: "weapon_longbow",
+        category: "martial_ranged",
+        properties: ["range"],
+      }),
+      makeScores({ DEX: 16 }),
+      0,
+      [],
+      [
+        makeMod({
+          target: "DAMAGE_BONUS",
+          sourceName: "Archery Rider",
+          value: 1,
+          requiredStates: ["action_ranged_attack", "action_using_dex"],
+        }),
+      ],
+      [],
+    );
+
+    expect(result.damageBonus).toBe(4);
+  });
+
+  it("blocks a modifier forbidden on the derived melee context state", () => {
+    const result = CombatEngine.calculateWeaponAttack(
+      makeWeapon(),
+      makeScores({ STR: 16 }),
+      0,
+      [],
+      [
+        makeMod({
+          target: "DAMAGE_BONUS",
+          sourceName: "Ranged Only",
+          value: 5,
+          forbiddenStates: ["action_melee_attack"],
+        }),
+      ],
+      [],
+    );
+
+    expect(result.damageBonus).toBe(3);
+  });
+});
+
+describe("CombatEngine.calculateWeaponAttack - roll state", () => {
+  it("reports a normal roll when no advantage or disadvantage applies", () => {
+    const result = CombatEngine.calculateWeaponAttack(
+      makeWeapon(),
+      makeScores(),
+      0,
+      [],
+      [],
+      [],
+    );
+
+    expect(result.rollState).toBe("normal");
+    expect(result.breakdown.attack).toEqual(["STR (0)"]);
+  });
+
+  it("reports advantage granted by its source", () => {
+    const result = CombatEngine.calculateWeaponAttack(
+      makeWeapon(),
+      makeScores(),
+      0,
+      [],
+      [
+        makeMod({
+          sourceName: "Reckless Attack",
+          type: "advantage",
+          requiredStates: ["status_reckless_attack", "action_melee_attack"],
+        }),
+      ],
+      ["status_reckless_attack"],
+    );
+
+    expect(result.rollState).toBe("advantage");
+    expect(result.breakdown.attack).toContain(
+      "Advantage (Granted by Reckless Attack)",
+    );
+  });
+
+  it("leaves the numeric attack bonus untouched when advantage applies", () => {
+    const result = CombatEngine.calculateWeaponAttack(
+      makeWeapon(),
+      makeScores({ STR: 14 }),
+      2,
+      [makeProf({})],
+      [makeMod({ sourceName: "Reckless Attack", type: "advantage" })],
+      [],
+    );
+
+    expect(result.attackBonus).toBe(4);
+  });
+
+  it("reports disadvantage imposed by its source", () => {
+    const result = CombatEngine.calculateWeaponAttack(
+      makeWeapon(),
+      makeScores(),
+      0,
+      [],
+      [makeMod({ sourceName: "Prone", type: "disadvantage" })],
+      [],
+    );
+
+    expect(result.rollState).toBe("disadvantage");
+    expect(result.breakdown.attack).toContain(
+      "Disadvantage (Imposed by Prone)",
+    );
+  });
+
+  it("cancels advantage against disadvantage back to a straight roll", () => {
+    const result = CombatEngine.calculateWeaponAttack(
+      makeWeapon(),
+      makeScores(),
+      0,
+      [],
+      [
+        makeMod({ id: "mod_adv", sourceName: "Reckless Attack", type: "advantage" }),
+        makeMod({ id: "mod_dis", sourceName: "Prone", type: "disadvantage" }),
+      ],
+      [],
+    );
+
+    expect(result.rollState).toBe("normal");
+    expect(result.breakdown.attack).toContain(
+      "Straight Roll (Advantage/Disadvantage cancel out)",
+    );
+  });
+
+  it("ignores an advantage modifier whose required states are not met", () => {
+    const result = CombatEngine.calculateWeaponAttack(
+      makeWeapon(),
+      makeScores(),
+      0,
+      [],
+      [
+        makeMod({
+          sourceName: "Reckless Attack",
+          type: "advantage",
+          requiredStates: ["status_reckless_attack"],
+        }),
+      ],
+      [],
+    );
+
+    expect(result.rollState).toBe("normal");
+  });
+
+  it("ignores an advantage modifier aimed at a target other than ATTACK_BONUS", () => {
+    const result = CombatEngine.calculateWeaponAttack(
+      makeWeapon(),
+      makeScores(),
+      0,
+      [],
+      [makeMod({ target: "STEALTH_CHECK", sourceName: "Cloak", type: "advantage" })],
+      [],
+    );
+
+    expect(result.rollState).toBe("normal");
+  });
+});

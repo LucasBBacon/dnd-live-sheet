@@ -381,18 +381,92 @@
             "id": "trait_reckless_attack",
             "name": "Reckless Attack",
             "lore": {
-                "shortDescription": "placeholder",
-                "fullText": "placeholder"
+                "shortDescription": "Attack recklessly for advantage on Strength melee attacks this turn, at the cost of advantage on attacks against you.",
+                "fullText": "Starting at 2nd level, you can throw aside all concern for defence to attack with fierce desperation. When you make your first attack on your turn, you can decide to attack recklessly. Doing so gives you advantage on melee weapon attack rolls using Strength during this turn, but attack rolls against you have advantage until your next turn."
+            },
+            "isStartingProficiency": false,
+            "implementation": {
+                "mode": "engine",
+                "summary": "While status_reckless_attack is active the engine rolls Strength-based melee weapon attacks with advantage. The exposure half is surfaced to the sheet as status_attacks_against_have_advantage, because the attack rolls it affects belong to the DM rather than to this character.",
+                "blockedBy": []
             },
             "modifiers": {
-                "fixed": [],
+                "fixed": [
+                    {
+                        "target": "ATTACK_BONUS",
+                        "type": "advantage",
+                        "value": 0,
+                        "scalingFactor": "none",
+                        "requiredStates": [
+                            "status_reckless_attack",
+                            "action_melee_attack",
+                            "action_using_str"
+                        ],
+                        "forbiddenStates": []
+                    }
+                ],
                 "choices": []
             },
             "resources": [],
             "triggers": [],
             "diceRules": [],
             "criticalHitModifiers": [],
-            "actions": []
+            "actions": [
+                {
+                    "id": "action_reckless_attack",
+                    "name": "Reckless Attack",
+                    "activation": "special",
+                    "effect": {
+                        "type": "macro",
+                        "effects": [
+                            {
+                                "type": "apply_effect",
+                                "effectName": "Reckless Attack",
+                                "effectTag": "reckless_attack",
+                                "durationType": "turn_end",
+                                "isSelfConcentration": false,
+                                "modifiers": [],
+                                "states": [
+                                    "status_reckless_attack"
+                                ],
+                                "requiredStates": [],
+                                "forbiddenStates": []
+                            },
+                            {
+                                "type": "apply_effect",
+                                "effectName": "Reckless Attack (Exposed)",
+                                "effectTag": "reckless_attack_exposed",
+                                "durationType": "turn_start",
+                                "isSelfConcentration": false,
+                                "modifiers": [],
+                                "states": [
+                                    "status_attacks_against_have_advantage"
+                                ],
+                                "requiredStates": [],
+                                "forbiddenStates": []
+                            }
+                        ]
+                    }
+                },
+                {
+                    "id": "action_end_reckless_attack",
+                    "name": "End Reckless Attack",
+                    "activation": "special",
+                    "effect": {
+                        "type": "macro",
+                        "effects": [
+                            {
+                                "type": "remove_effect",
+                                "effectTag": "reckless_attack"
+                            },
+                            {
+                                "type": "remove_effect",
+                                "effectTag": "reckless_attack_exposed"
+                            }
+                        ]
+                    }
+                }
+            ]
         },
         {
             "id": "trait_danger_sense",

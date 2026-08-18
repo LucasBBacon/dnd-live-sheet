@@ -140,6 +140,26 @@ A modifier contains these main options:
 
 State names must match the states emitted by the pipeline or effect system. A typo in a state name does not create a new runtime condition; it creates a rule that never gates as intended.
 
+### Attack context states
+
+A weapon attack derives its own states inside `CombatEngine.calculateWeaponAttack`, so a rule that only applies to a *kind* of attack can be gated without the sheet knowing which swing is coming:
+
+| State | Emitted when |
+| --- | --- |
+| `action_melee_attack` | the resolved attack type is melee |
+| `action_ranged_attack` | the resolved attack type is ranged |
+| `action_using_str` … `action_using_cha` | the named ability ended up governing the attack |
+
+These are local to one attack. They gate that attack's modifiers and critical-hit modifiers, and they never appear in the character's `activeStates`, because "currently making a melee attack" is not true of the character between attacks.
+
+Both halves of Rage are authored against them:
+
+```json
+"requiredStates": ["status_raging", "action_melee_attack", "action_using_str"]
+```
+
+The ability state follows the *resolved* governing stat, not the weapon's default. A finesse weapon wielded by a character with higher Dexterity emits `action_using_dex`, so a Strength-gated rule correctly declines to apply.
+
 ### Choice modifiers
 
 Use `modifiers.choices` when the player chooses one or more targets from an allowed list:
@@ -186,6 +206,24 @@ Use the dedicated blocks when the trait grants that capability:
 - `actions`: proactive capabilities such as attacks, bonus actions, reactions, or resource-consuming actions.
 
 Do not encode a new mechanic into an unrelated block simply because the JSON shape is convenient. If the mechanic does not match the semantics of the block, either use a sheet helper or extend the contract deliberately.
+
+### Effect durations
+
+An `apply_effect` action names when its effect ends. The sheet expires them by ticking the effect manager as turns begin and end, so a timed rule switches itself off without the player clearing it:
+
+| `durationType` | Ends |
+| --- | --- |
+| `turn_end` | at the end of the current turn |
+| `turn_start` | at the start of the character's next turn |
+| `rounds` | after `durationRounds` turn starts |
+| `rest_short` / `rest_long` | on the matching rest |
+| `manual` | only when something removes it |
+
+Reserve `manual` for rules that genuinely have no timer, such as Rage, and pair it with a `remove_effect` action so the player can end it.
+
+When a rule's two halves expire at different moments, author them as two effects inside a `macro` rather than approximating with one. Reckless Attack gives the character advantage *during this turn* but leaves attacks against them advantaged *until their next turn*; collapsing those into a single `turn_start` effect would wrongly grant advantage on an opportunity attack made during another creature's turn.
+
+Expiry runs before the matching `ON_START_OF_TURN` or `ON_END_OF_TURN` triggers dispatch, so a trigger that raises a fresh effect is not swept away by the same tick.
 
 ## AC Formula Example
 
@@ -234,6 +272,31 @@ Total: 17
 When `status_wearing_armor` is active, the candidate is filtered out and the equipped armour calculation can win instead.
 
 Do not represent this rule as a conditional `add` of Constitution alongside an unconditional or separately competing base. That could allow Constitution to leak into another AC formula, such as Mage Armor.
+
+## Advantage Example
+
+Advantage is a second d20, not a bonus, so it is authored as a modifier `type` rather than a `value`. Reckless Attack grants it on the attack roll:
+
+```json
+{
+  "target": "ATTACK_BONUS",
+  "type": "advantage",
+  "value": 0,
+  "scalingFactor": "none",
+  "requiredStates": [
+    "status_reckless_attack",
+    "action_melee_attack",
+    "action_using_str"
+  ],
+  "forbiddenStates": []
+}
+```
+
+`CombatEngine` reports the outcome as `DerivedAttack.rollState`, which is `advantage`, `disadvantage`, or `normal`, and adds a line to the attack breakdown naming the source. Any amount of advantage cancels against any amount of disadvantage back to `normal`, matching the behaviour `DerivedStatEngine` and `SkillEngine` already implement for their own targets. The numeric `attackBonus` is never changed by these modifiers.
+
+### Rules whose effect lands on someone else's roll
+
+Reckless Attack also makes attack rolls *against* the character have advantage. Those rolls belong to the DM, and this project is a single-character live sheet, so there is no roll for the engine to modify. Author that half as a granted state the sheet can surface — `status_attacks_against_have_advantage`, shown as a warning beside Armour Class — and say so in `implementation.summary`. Inventing a modifier target for a roll the engine never sees would produce a contract with no calculator behind it.
 
 ## How the Engine Handles Authored Traits
 

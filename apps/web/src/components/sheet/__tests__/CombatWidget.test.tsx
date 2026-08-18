@@ -5,6 +5,7 @@ import type { ActionGrant, ActorInstance } from "@project/shared";
 import { CombatWidget } from "../CombatWidget";
 
 const mocks = vi.hoisted(() => ({
+  rollState: { current: "normal" as "advantage" | "disadvantage" | "normal" },
   consumeItem: vi.fn(),
   executeActorAction: vi.fn(),
   executeCharacterAction: vi.fn(),
@@ -23,6 +24,7 @@ vi.mock("../../../hooks/useCombat", () => ({
         weaponId: "item_weapon_longsword",
         name: "Longsword",
         attackBonus: 5,
+        rollState: mocks.rollState.current,
         damageBonus: 3,
         damageExpression: "1d8 +3 slashing",
         criticalDamageExpression: "2d8 +3 slashing",
@@ -317,5 +319,44 @@ describe("CombatWidget", () => {
 
     root.unmount();
     container.remove();
+  });
+});
+
+describe("CombatWidget roll state", () => {
+  const renderWidget = async () => {
+    const container = document.createElement("div");
+    document.body.appendChild(container);
+    const root = createRoot(container);
+
+    await act(async () => {
+      root.render(<CombatWidget />);
+    });
+
+    return container;
+  };
+
+  it("flags an attack that is rolled with advantage", async () => {
+    mocks.rollState.current = "advantage";
+
+    const container = await renderWidget();
+
+    expect(container.textContent).toContain("ADV");
+  });
+
+  it("flags an attack that is rolled with disadvantage", async () => {
+    mocks.rollState.current = "disadvantage";
+
+    const container = await renderWidget();
+
+    expect(container.textContent).toContain("DIS");
+  });
+
+  it("shows no roll-state flag on an ordinary attack", async () => {
+    mocks.rollState.current = "normal";
+
+    const container = await renderWidget();
+
+    expect(container.textContent).not.toContain("ADV");
+    expect(container.textContent).not.toContain("DIS");
   });
 });

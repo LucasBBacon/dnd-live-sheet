@@ -9,10 +9,20 @@ import type { Ability } from "../types/core.js";
 import type { WeaponAttackContext } from "../types/combat.js";
 import { DiceEngine } from "../utils/diceParser.js";
 
+/**
+ * Whether the d20 for this attack is rolled twice, and which half counts.
+ *
+ * "normal" covers both the ordinary case and the 5e rule that any amount of
+ * advantage cancels against any amount of disadvantage; the breakdown says
+ * which of the two happened.
+ */
+export type AttackRollState = "advantage" | "disadvantage" | "normal";
+
 export interface DerivedAttack {
   weaponId: string;
   name: string;
   attackBonus: number;
+  rollState: AttackRollState;
   damageBonus: number;
   damageExpression: string; // e.g., '1d8 + 4'
   criticalDamageExpression: string; // e.g., '2d8 + 4'
@@ -131,6 +141,39 @@ export class CombatEngine {
       weapon.category === "martial_ranged";
 
     return isRangedCategory ? "ranged_weapon" : "melee_weapon";
+  }
+
+  /**
+   * The states an attack knows about itself.
+   *
+   * A rule like Rage or Reckless Attack is gated on the *kind* of attack being
+   * made - melee, and governed by Strength - but only this calculation knows
+   * which weapon and which ability actually resolved. Deriving the states here
+   * rather than asking the caller for them is what lets that authored data
+   * gate correctly without the sheet having to guess ahead of the swing.
+   *
+   * Local to one attack on purpose: they join the gating list for this call and
+   * never reach the character's activeStates, because "currently making a melee
+   * attack" is not true of the character between attacks.
+   * @param attackType The resolved classification of this attack
+   * @param statName The ability that ended up governing the attack
+   * @returns The context states this attack satisfies
+   */
+  private static deriveAttackContextStates(
+    attackType:
+      | "melee_weapon"
+      | "ranged_weapon"
+      | "melee_spell"
+      | "ranged_spell",
+    statName: Ability,
+  ): string[] {
+    const isMelee =
+      attackType === "melee_weapon" || attackType === "melee_spell";
+
+    return [
+      isMelee ? "action_melee_attack" : "action_ranged_attack",
+      `action_using_${statName.toLowerCase()}`,
+    ];
   }
 
   /**
@@ -338,13 +381,22 @@ export class CombatEngine {
         (p.proficiencyId === weapon.category || p.proficiencyId === weapon.id),
     );
 
+    // this attack's own classification, resolved before the modifier filter so
+    // the states it implies can gate that filter
+    const resolvedAttackType = attackType ?? this.inferAttackType(weapon);
+
+    // what the character carries, plus what this particular swing is
+    const gatingStates = [
+      ...activeStates,
+      ...this.deriveAttackContextStates(resolvedAttackType, statName),
+    ];
+
     // filter active modifiers for this specific attack
     const validMods = modifiers.filter((m) => {
       if (!m.isActive) return false;
-      if (m.forbiddenStates?.some((s) => activeStates.includes(s)))
-        return false;
+      if (m.forbiddenStates?.some((s) => gatingStates.includes(s))) return false;
       return m.requiredStates
-        ? m.requiredStates.every((s) => activeStates.includes(s))
+        ? m.requiredStates.every((s) => gatingStates.includes(s))
         : true;
     });
 
@@ -375,6 +427,32 @@ export class CombatEngine {
       attackBreakdown.push(
         `${mod.sourceName} (${mod.value >= 0 ? "+" : ""}${mod.value})`,
       );
+    }
+
+    // 3b - resolve the roll state. This changes no total: advantage is a second
+    // d20, not a bonus, so it is reported alongside the number rather than
+    // folded into it.
+    const advantageSource = validMods.find(
+      (m) => m.target === "ATTACK_BONUS" && m.type === "advantage",
+    );
+    const disadvantageSource = validMods.find(
+      (m) => m.target === "ATTACK_BONUS" && m.type === "disadvantage",
+    );
+
+    let rollState: AttackRollState = "normal";
+
+    if (advantageSource && !disadvantageSource) {
+      rollState = "advantage";
+      attackBreakdown.push(
+        `Advantage (Granted by ${advantageSource.sourceName})`,
+      );
+    } else if (disadvantageSource && !advantageSource) {
+      rollState = "disadvantage";
+      attackBreakdown.push(
+        `Disadvantage (Imposed by ${disadvantageSource.sourceName})`,
+      );
+    } else if (advantageSource && disadvantageSource) {
+      attackBreakdown.push("Straight Roll (Advantage/Disadvantage cancel out)");
     }
 
     // 4 - calculate damage
@@ -425,8 +503,6 @@ export class CombatEngine {
         ? weapon.versatileDamageDice
         : weapon.damageDice;
 
-    // determine attack type for critical hit modifiers
-    const resolvedAttackType = attackType ?? this.inferAttackType(weapon);
     let damageDiceExpression = finalDice ?? weapon.damageDice;
     let criticalDamageDiceExpression = damageDiceExpression;
     let criticalDamageMaximized = false;
@@ -437,7 +513,7 @@ export class CombatEngine {
         !this.matchesCriticalHitModifier(
           modifier,
           resolvedAttackType,
-          activeStates,
+          gatingStates,
         )
       ) {
         continue;
@@ -477,6 +553,7 @@ export class CombatEngine {
       weaponId: weapon.id,
       name: weapon.name,
       attackBonus,
+      rollState,
       damageBonus: totalDamageBonus,
       damageExpression,
       criticalDamageExpression,

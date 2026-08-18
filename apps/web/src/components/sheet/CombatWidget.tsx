@@ -463,8 +463,21 @@ export const CombatWidget = () => {
                     <span className="block text-[11px] uppercase tracking-[0.2em] text-gray-500">
                       ATK
                     </span>
-                    <span className="font-bold text-gray-900">
-                      +{attack.attackBonus}
+                    <span className="flex items-center gap-1.5">
+                      <span className="font-bold text-gray-900">
+                        +{attack.attackBonus}
+                      </span>
+                      {attack.rollState !== "normal" && (
+                        <span
+                          className={`rounded px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide ${
+                            attack.rollState === "advantage"
+                              ? "bg-emerald-100 text-emerald-800"
+                              : "bg-amber-100 text-amber-800"
+                          }`}
+                        >
+                          {attack.rollState === "advantage" ? "ADV" : "DIS"}
+                        </span>
+                      )}
                     </span>
                   </div>
                   <div
