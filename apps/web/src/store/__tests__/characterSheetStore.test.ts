@@ -92,7 +92,7 @@ describe("useCharacterSheetStore hp trigger handling", () => {
         {
           id: "trait_test_hit",
           name: "Test Hit Trigger",
-          description: "Adds a state on hit",
+          lore: { shortDescription: "Adds a state on hit" },
           modifiers: { fixed: [], choices: [] },
           resources: [],
           diceRules: [],
@@ -140,7 +140,7 @@ describe("useCharacterSheetStore hp trigger handling", () => {
         {
           id: "trait_test_rolls",
           name: "Roll Trigger",
-          description: "Produces a damage roll on hit",
+          lore: { shortDescription: "Produces a damage roll on hit" },
           modifiers: { fixed: [], choices: [] },
           resources: [],
           diceRules: [],
@@ -247,7 +247,7 @@ describe("useCharacterSheetStore hp trigger handling", () => {
         {
           id: "trait_test_dice_rules",
           name: "Test Dice Rules",
-          description: "Rerolls a natural 1 on attacks",
+          lore: { shortDescription: "Rerolls a natural 1 on attacks" },
           modifiers: { fixed: [], choices: [] },
           resources: [],
           diceRules: [
@@ -309,7 +309,7 @@ describe("useCharacterSheetStore hp trigger handling", () => {
         {
           id: "trait_test_turns",
           name: "Turn Trigger",
-          description: "Adds states for turn events",
+          lore: { shortDescription: "Adds states for turn events" },
           modifiers: { fixed: [], choices: [] },
           resources: [],
           diceRules: [],
@@ -468,7 +468,7 @@ describe("useCharacterSheetStore hp trigger handling", () => {
         {
           id: "trait_test_granted_state",
           name: "Granted State",
-          description: "Adds a fresh runtime state",
+          lore: { shortDescription: "Adds a fresh runtime state" },
           modifiers: { fixed: [], choices: [] },
           resources: [
             {
@@ -571,7 +571,7 @@ describe("useCharacterSheetStore hp trigger handling", () => {
         {
           id: "trait_test_summon",
           name: "Summon Trait",
-          description: "Creates a summon actor",
+          lore: { shortDescription: "Creates a summon actor" },
           modifiers: { fixed: [], choices: [] },
           resources: [],
           diceRules: [],

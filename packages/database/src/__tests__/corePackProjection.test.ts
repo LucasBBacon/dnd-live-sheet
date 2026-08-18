@@ -18,7 +18,6 @@ const createPack = () =>
       {
         id: "trait_test",
         name: "Test Trait",
-        description: "A test trait.",
         lore: { shortDescription: "Test trait lore." },
       },
     ],

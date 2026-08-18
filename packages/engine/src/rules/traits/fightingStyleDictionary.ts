@@ -17,8 +17,10 @@ export const FIGHTING_STYLE_TRAITS: Record<string, TraitDefinition> = {
   trait_fs_archery: {
     id: "trait_fs_archery",
     name: "Fighting Style: Archery",
-    description:
-      "You gain a +2 bonus to attack rolls you make with ranged weapons.",
+    lore: {
+      shortDescription:
+        "You gain a +2 bonus to attack rolls you make with ranged weapons.",
+    },
     modifiers: {
       fixed: [
         {
@@ -41,7 +43,10 @@ export const FIGHTING_STYLE_TRAITS: Record<string, TraitDefinition> = {
   trait_fs_defense: {
     id: "trait_fs_defense",
     name: "Fighting Style: Defense",
-    description: "While you are wearing armor, you gain a +1 bonus to AC.",
+    lore: {
+      shortDescription:
+        "While you are wearing armor, you gain a +1 bonus to AC.",
+    },
     modifiers: {
       fixed: [
         {
@@ -64,8 +69,10 @@ export const FIGHTING_STYLE_TRAITS: Record<string, TraitDefinition> = {
   trait_fs_dueling: {
     id: "trait_fs_dueling",
     name: "Fighting Style: Dueling",
-    description:
-      "When you are wielding a melee weapon in one hand and no other weapons, you gain a +2 bonus to damage rolls with that weapon.",
+    lore: {
+      shortDescription:
+        "When you are wielding a melee weapon in one hand and no other weapons, you gain a +2 bonus to damage rolls with that weapon.",
+    },
     modifiers: {
       fixed: [
         {
@@ -91,8 +98,12 @@ export const FIGHTING_STYLE_TRAITS: Record<string, TraitDefinition> = {
   trait_fs_great_weapon_fighting: {
     id: "trait_fs_great_weapon_fighting",
     name: "Fighting Style: Great Weapon Fighting",
-    description:
-      "When you roll a 1 or 2 on a damage die for an attack you make with a melee weapon that you are wielding with two hands, you can reroll the die and must use the new roll, even if the new roll is a 1 or a 2. The weapon must have the two-handed or versatile property for you to gain this benefit.",
+    lore: {
+      shortDescription:
+        "When you roll a 1 or 2 on a damage die for an attack you make with a melee weapon that you are wielding with two hands, you can reroll the die and must use the new roll, even if the new roll is a 1 or a 2. The weapon must have the two-handed or versatile property for you to…",
+      fullText:
+        "When you roll a 1 or 2 on a damage die for an attack you make with a melee weapon that you are wielding with two hands, you can reroll the die and must use the new roll, even if the new roll is a 1 or a 2. The weapon must have the two-handed or versatile property for you to gain this benefit.",
+    },
     modifiers: { fixed: [], choices: [] },
     resources: [],
     triggers: [],
@@ -109,8 +120,10 @@ export const FIGHTING_STYLE_TRAITS: Record<string, TraitDefinition> = {
   trait_fs_protection: {
     id: "trait_fs_protection",
     name: "Fighting Style: Protection",
-    description:
-      "When a creature you can see attacks a target other than you that is within 5 feet of you, you can use your reaction to impose disadvantage on the attack roll. You must be wielding a shield.",
+    lore: {
+      shortDescription:
+        "When a creature you can see attacks a target other than you that is within 5 feet of you, you can use your reaction to impose disadvantage on the attack roll. You must be wielding a shield.",
+    },
     implementation: {
       mode: "manual_sheet_helper",
       summary:
@@ -129,8 +142,10 @@ export const FIGHTING_STYLE_TRAITS: Record<string, TraitDefinition> = {
   trait_fs_two_weapon_fighting: {
     id: "trait_fs_two_weapon_fighting",
     name: "Fighting Style: Two-Weapon Fighting",
-    description:
-      "When you engage in two-weapon fighting, you can add your ability modifier to the damage of the second attack.",
+    lore: {
+      shortDescription:
+        "When you engage in two-weapon fighting, you can add your ability modifier to the damage of the second attack.",
+    },
     modifiers: {
       fixed: [
         {

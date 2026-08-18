@@ -9,7 +9,6 @@ const trait = (
 ): TraitDefinition => ({
   id,
   name: id,
-  description: "",
   modifiers: { fixed: [], choices: [] },
   ...(grantedStates && { grantedStates }),
   resources: [],

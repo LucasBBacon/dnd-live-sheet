@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { TRAIT_DICTIONARY, resolveItemDefinition } from "@project/engine";
-import { useEffect, useState, type MouseEvent } from "react";
+import { useEffect, useMemo, useState, type MouseEvent } from "react";
 import { useCombat } from "../../hooks/useCombat";
 import { useCharacterSheetStore } from "../../store/characterSheetStore";
 import { useRollStore } from "../../store/rollStore";
@@ -58,7 +58,10 @@ export const CombatWidget = () => {
   const executeCharacterAction = useCharacterSheetStore(
     (state) => state.executeCharacterAction,
   );
-  const activeActors = runtimeEffects?.getActiveActors() ?? [];
+  const activeActors = useMemo(
+    () => runtimeEffects?.getActiveActors() ?? [],
+    [runtimeEffects],
+  );
   const characterActions = getCharacterActions().filter(
     (action) => !action.id.startsWith("action_weapon_"),
   );
@@ -244,7 +247,7 @@ export const CombatWidget = () => {
                 {protectionTrait?.name ?? "Protection"}
               </div>
               <p className="mt-1 text-xs leading-5 text-emerald-900">
-                {protectionTrait?.description}
+                {protectionTrait?.lore?.shortDescription}
               </p>
               <p className="mt-2 text-xs text-emerald-800">
                 Declare a hostile attack to open a reaction window, then apply

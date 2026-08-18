@@ -11,8 +11,10 @@ export const MANEUVER_TRAITS: Record<string, TraitDefinition> = {
   trait_maneuver_commanders_strike: {
     id: "trait_maneuver_commanders_strike",
     name: "Commander's Strike",
-    description:
-      "Forgo an attack to let an ally strike, adding a superiority die to the damage.",
+    lore: {
+      shortDescription:
+        "Forgo an attack to let an ally strike, adding a superiority die to the damage.",
+    },
     modifiers: { fixed: [], choices: [] },
     resources: [],
     triggers: [],
@@ -23,7 +25,10 @@ export const MANEUVER_TRAITS: Record<string, TraitDefinition> = {
   trait_maneuver_disarming_attack: {
     id: "trait_maneuver_disarming_attack",
     name: "Disarming Attack",
-    description: "Force a target to drop an item on a failed Strength save.",
+    lore: {
+      shortDescription:
+        "Force a target to drop an item on a failed Strength save.",
+    },
     modifiers: { fixed: [], choices: [] },
     resources: [],
     triggers: [],
@@ -34,7 +39,9 @@ export const MANEUVER_TRAITS: Record<string, TraitDefinition> = {
   trait_maneuver_distracting_strike: {
     id: "trait_maneuver_distracting_strike",
     name: "Distracting Strike",
-    description: "Give the next attacker advantage against your target.",
+    lore: {
+      shortDescription: "Give the next attacker advantage against your target.",
+    },
     modifiers: { fixed: [], choices: [] },
     resources: [],
     triggers: [],
@@ -45,7 +52,7 @@ export const MANEUVER_TRAITS: Record<string, TraitDefinition> = {
   trait_maneuver_evasive_footwork: {
     id: "trait_maneuver_evasive_footwork",
     name: "Evasive Footwork",
-    description: "Add a superiority die to AC while you move.",
+    lore: { shortDescription: "Add a superiority die to AC while you move." },
     modifiers: { fixed: [], choices: [] },
     resources: [],
     triggers: [],
@@ -56,8 +63,10 @@ export const MANEUVER_TRAITS: Record<string, TraitDefinition> = {
   trait_maneuver_feinting_attack: {
     id: "trait_maneuver_feinting_attack",
     name: "Feinting Attack",
-    description:
-      "Gain advantage against a creature within 5 feet, plus bonus damage.",
+    lore: {
+      shortDescription:
+        "Gain advantage against a creature within 5 feet, plus bonus damage.",
+    },
     modifiers: { fixed: [], choices: [] },
     resources: [],
     triggers: [],
@@ -68,8 +77,10 @@ export const MANEUVER_TRAITS: Record<string, TraitDefinition> = {
   trait_maneuver_goading_attack: {
     id: "trait_maneuver_goading_attack",
     name: "Goading Attack",
-    description:
-      "The target has disadvantage attacking anyone but you on a failed Wisdom save.",
+    lore: {
+      shortDescription:
+        "The target has disadvantage attacking anyone but you on a failed Wisdom save.",
+    },
     modifiers: { fixed: [], choices: [] },
     resources: [],
     triggers: [],
@@ -80,7 +91,9 @@ export const MANEUVER_TRAITS: Record<string, TraitDefinition> = {
   trait_maneuver_lunging_attack: {
     id: "trait_maneuver_lunging_attack",
     name: "Lunging Attack",
-    description: "Extend your melee reach by 5 feet for one attack.",
+    lore: {
+      shortDescription: "Extend your melee reach by 5 feet for one attack.",
+    },
     modifiers: { fixed: [], choices: [] },
     resources: [],
     triggers: [],
@@ -91,8 +104,10 @@ export const MANEUVER_TRAITS: Record<string, TraitDefinition> = {
   trait_maneuver_maneuvering_attack: {
     id: "trait_maneuver_maneuvering_attack",
     name: "Maneuvering Attack",
-    description:
-      "Let an ally move half their speed without provoking from your target.",
+    lore: {
+      shortDescription:
+        "Let an ally move half their speed without provoking from your target.",
+    },
     modifiers: { fixed: [], choices: [] },
     resources: [],
     triggers: [],
@@ -103,8 +118,10 @@ export const MANEUVER_TRAITS: Record<string, TraitDefinition> = {
   trait_maneuver_menacing_attack: {
     id: "trait_maneuver_menacing_attack",
     name: "Menacing Attack",
-    description:
-      "Frighten the target until the end of your next turn on a failed Wisdom save.",
+    lore: {
+      shortDescription:
+        "Frighten the target until the end of your next turn on a failed Wisdom save.",
+    },
     modifiers: { fixed: [], choices: [] },
     resources: [],
     triggers: [],
@@ -115,8 +132,10 @@ export const MANEUVER_TRAITS: Record<string, TraitDefinition> = {
   trait_maneuver_parry: {
     id: "trait_maneuver_parry",
     name: "Parry",
-    description:
-      "React to reduce melee damage by a superiority die plus your Dexterity modifier.",
+    lore: {
+      shortDescription:
+        "React to reduce melee damage by a superiority die plus your Dexterity modifier.",
+    },
     modifiers: { fixed: [], choices: [] },
     resources: [],
     triggers: [],
@@ -127,7 +146,7 @@ export const MANEUVER_TRAITS: Record<string, TraitDefinition> = {
   trait_maneuver_precision_attack: {
     id: "trait_maneuver_precision_attack",
     name: "Precision Attack",
-    description: "Add a superiority die to an attack roll.",
+    lore: { shortDescription: "Add a superiority die to an attack roll." },
     modifiers: { fixed: [], choices: [] },
     resources: [],
     triggers: [],
@@ -138,8 +157,10 @@ export const MANEUVER_TRAITS: Record<string, TraitDefinition> = {
   trait_maneuver_pushing_attack: {
     id: "trait_maneuver_pushing_attack",
     name: "Pushing Attack",
-    description:
-      "Push a Large or smaller target 15 feet on a failed Strength save.",
+    lore: {
+      shortDescription:
+        "Push a Large or smaller target 15 feet on a failed Strength save.",
+    },
     modifiers: { fixed: [], choices: [] },
     resources: [],
     triggers: [],
@@ -150,8 +171,10 @@ export const MANEUVER_TRAITS: Record<string, TraitDefinition> = {
   trait_maneuver_rally: {
     id: "trait_maneuver_rally",
     name: "Rally",
-    description:
-      "Grant an ally temporary hit points equal to a superiority die plus your Charisma modifier.",
+    lore: {
+      shortDescription:
+        "Grant an ally temporary hit points equal to a superiority die plus your Charisma modifier.",
+    },
     modifiers: { fixed: [], choices: [] },
     resources: [],
     triggers: [],
@@ -162,8 +185,10 @@ export const MANEUVER_TRAITS: Record<string, TraitDefinition> = {
   trait_maneuver_riposte: {
     id: "trait_maneuver_riposte",
     name: "Riposte",
-    description:
-      "React to attack a creature that misses you with a melee attack.",
+    lore: {
+      shortDescription:
+        "React to attack a creature that misses you with a melee attack.",
+    },
     modifiers: { fixed: [], choices: [] },
     resources: [],
     triggers: [],
@@ -174,8 +199,10 @@ export const MANEUVER_TRAITS: Record<string, TraitDefinition> = {
   trait_maneuver_sweeping_attack: {
     id: "trait_maneuver_sweeping_attack",
     name: "Sweeping Attack",
-    description:
-      "Deal superiority die damage to a second creature within 5 feet of your target.",
+    lore: {
+      shortDescription:
+        "Deal superiority die damage to a second creature within 5 feet of your target.",
+    },
     modifiers: { fixed: [], choices: [] },
     resources: [],
     triggers: [],
@@ -186,8 +213,10 @@ export const MANEUVER_TRAITS: Record<string, TraitDefinition> = {
   trait_maneuver_trip_attack: {
     id: "trait_maneuver_trip_attack",
     name: "Trip Attack",
-    description:
-      "Knock a Large or smaller target prone on a failed Strength save.",
+    lore: {
+      shortDescription:
+        "Knock a Large or smaller target prone on a failed Strength save.",
+    },
     modifiers: { fixed: [], choices: [] },
     resources: [],
     triggers: [],

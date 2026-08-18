@@ -153,23 +153,24 @@ export class DerivedStatEngine {
     if (baseSetters.length > 0) {
       // 5e rule - if multiple ways to calculate base AC use highest
       // find highest base base setting armor/trait (e.g., plate > mage armor)
-      bestBase = baseSetters.reduce((prev, current) => {
+      const winner = baseSetters.reduce((prev, current) => {
         const prevTotal = this.getBaseCandidateTotal(prev, abilityModifiers);
         const currTotal = this.getBaseCandidateTotal(current, abilityModifiers);
         return prevTotal >= currTotal ? prev : current;
       });
+      bestBase = winner;
 
-      baseAc = bestBase.formula?.base ?? bestBase.value;
-      dexCap = bestBase.maxDexCap;
+      baseAc = winner.formula?.base ?? winner.value;
+      dexCap = winner.maxDexCap;
 
       breakdown.push({
-        name: `Base AC (${bestBase.sourceName})`,
-        value: bestBase.value,
+        name: `Base AC (${winner.sourceName})`,
+        value: winner.value,
       });
 
       // mark others as ignored for the UI to explain WHY they aren't working
       baseSetters.forEach((m) => {
-        if (m.id !== bestBase.id)
+        if (m.id !== winner.id)
           breakdown.push({
             name: m.sourceName,
             value: "Ignored (Does not stack)",

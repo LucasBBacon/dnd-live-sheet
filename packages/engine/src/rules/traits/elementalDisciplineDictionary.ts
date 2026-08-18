@@ -12,8 +12,10 @@ export const ELEMENTAL_DISCIPLINE_TRAITS: Record<string, TraitDefinition> = {
   trait_elemental_attunement: {
     id: "trait_elemental_attunement",
     name: "Elemental Attunement",
-    description:
-      "Spend an action to briefly manipulate a Tiny elemental effect within 30 feet.",
+    lore: {
+      shortDescription:
+        "Spend an action to briefly manipulate a Tiny elemental effect within 30 feet.",
+    },
     modifiers: { fixed: [], choices: [] },
     resources: [],
     triggers: [],
@@ -24,8 +26,10 @@ export const ELEMENTAL_DISCIPLINE_TRAITS: Record<string, TraitDefinition> = {
   trait_discipline_fangs_of_the_fire_snake: {
     id: "trait_discipline_fangs_of_the_fire_snake",
     name: "Fangs of the Fire Snake",
-    description:
-      "Spend 1 ki to extend your unarmed reach by 10 feet and deal fire damage.",
+    lore: {
+      shortDescription:
+        "Spend 1 ki to extend your unarmed reach by 10 feet and deal fire damage.",
+    },
     modifiers: { fixed: [], choices: [] },
     resources: [],
     triggers: [],
@@ -36,7 +40,7 @@ export const ELEMENTAL_DISCIPLINE_TRAITS: Record<string, TraitDefinition> = {
   trait_discipline_fist_of_four_thunders: {
     id: "trait_discipline_fist_of_four_thunders",
     name: "Fist of Four Thunders",
-    description: "Spend 2 ki to cast thunderwave.",
+    lore: { shortDescription: "Spend 2 ki to cast thunderwave." },
     modifiers: { fixed: [], choices: [] },
     resources: [],
     triggers: [],
@@ -47,7 +51,10 @@ export const ELEMENTAL_DISCIPLINE_TRAITS: Record<string, TraitDefinition> = {
   trait_discipline_fist_of_unbroken_air: {
     id: "trait_discipline_fist_of_unbroken_air",
     name: "Fist of Unbroken Air",
-    description: "Spend 2 ki to push and damage a creature within 30 feet.",
+    lore: {
+      shortDescription:
+        "Spend 2 ki to push and damage a creature within 30 feet.",
+    },
     modifiers: { fixed: [], choices: [] },
     resources: [],
     triggers: [],
@@ -58,7 +65,7 @@ export const ELEMENTAL_DISCIPLINE_TRAITS: Record<string, TraitDefinition> = {
   trait_discipline_rush_of_the_gale_spirits: {
     id: "trait_discipline_rush_of_the_gale_spirits",
     name: "Rush of the Gale Spirits",
-    description: "Spend 2 ki to cast gust of wind.",
+    lore: { shortDescription: "Spend 2 ki to cast gust of wind." },
     modifiers: { fixed: [], choices: [] },
     resources: [],
     triggers: [],
@@ -69,8 +76,10 @@ export const ELEMENTAL_DISCIPLINE_TRAITS: Record<string, TraitDefinition> = {
   trait_discipline_shape_the_flowing_river: {
     id: "trait_discipline_shape_the_flowing_river",
     name: "Shape the Flowing River",
-    description:
-      "Spend 1 ki to freeze, thaw, or reshape water within 120 feet.",
+    lore: {
+      shortDescription:
+        "Spend 1 ki to freeze, thaw, or reshape water within 120 feet.",
+    },
     modifiers: { fixed: [], choices: [] },
     resources: [],
     triggers: [],
@@ -81,7 +90,7 @@ export const ELEMENTAL_DISCIPLINE_TRAITS: Record<string, TraitDefinition> = {
   trait_discipline_sweeping_cinder_strike: {
     id: "trait_discipline_sweeping_cinder_strike",
     name: "Sweeping Cinder Strike",
-    description: "Spend 2 ki to cast burning hands.",
+    lore: { shortDescription: "Spend 2 ki to cast burning hands." },
     modifiers: { fixed: [], choices: [] },
     resources: [],
     triggers: [],
@@ -92,8 +101,10 @@ export const ELEMENTAL_DISCIPLINE_TRAITS: Record<string, TraitDefinition> = {
   trait_discipline_water_whip: {
     id: "trait_discipline_water_whip",
     name: "Water Whip",
-    description:
-      "Spend 2 ki to pull, knock prone, and damage a creature within 30 feet.",
+    lore: {
+      shortDescription:
+        "Spend 2 ki to pull, knock prone, and damage a creature within 30 feet.",
+    },
     modifiers: { fixed: [], choices: [] },
     resources: [],
     triggers: [],
@@ -104,7 +115,7 @@ export const ELEMENTAL_DISCIPLINE_TRAITS: Record<string, TraitDefinition> = {
   trait_discipline_clench_of_the_north_wind: {
     id: "trait_discipline_clench_of_the_north_wind",
     name: "Clench of the North Wind",
-    description: "Spend 3 ki to cast hold person.",
+    lore: { shortDescription: "Spend 3 ki to cast hold person." },
     modifiers: { fixed: [], choices: [] },
     resources: [],
     triggers: [],
@@ -115,7 +126,7 @@ export const ELEMENTAL_DISCIPLINE_TRAITS: Record<string, TraitDefinition> = {
   trait_discipline_gong_of_the_summit: {
     id: "trait_discipline_gong_of_the_summit",
     name: "Gong of the Summit",
-    description: "Spend 3 ki to cast shatter.",
+    lore: { shortDescription: "Spend 3 ki to cast shatter." },
     modifiers: { fixed: [], choices: [] },
     resources: [],
     triggers: [],
@@ -126,7 +137,7 @@ export const ELEMENTAL_DISCIPLINE_TRAITS: Record<string, TraitDefinition> = {
   trait_discipline_flames_of_the_phoenix: {
     id: "trait_discipline_flames_of_the_phoenix",
     name: "Flames of the Phoenix",
-    description: "Spend 4 ki to cast fireball.",
+    lore: { shortDescription: "Spend 4 ki to cast fireball." },
     modifiers: { fixed: [], choices: [] },
     resources: [],
     triggers: [],
@@ -137,7 +148,7 @@ export const ELEMENTAL_DISCIPLINE_TRAITS: Record<string, TraitDefinition> = {
   trait_discipline_mist_stance: {
     id: "trait_discipline_mist_stance",
     name: "Mist Stance",
-    description: "Spend 4 ki to cast gaseous form on yourself.",
+    lore: { shortDescription: "Spend 4 ki to cast gaseous form on yourself." },
     modifiers: { fixed: [], choices: [] },
     resources: [],
     triggers: [],
@@ -148,7 +159,7 @@ export const ELEMENTAL_DISCIPLINE_TRAITS: Record<string, TraitDefinition> = {
   trait_discipline_ride_the_wind: {
     id: "trait_discipline_ride_the_wind",
     name: "Ride the Wind",
-    description: "Spend 4 ki to cast fly on yourself.",
+    lore: { shortDescription: "Spend 4 ki to cast fly on yourself." },
     modifiers: { fixed: [], choices: [] },
     resources: [],
     triggers: [],
@@ -159,7 +170,7 @@ export const ELEMENTAL_DISCIPLINE_TRAITS: Record<string, TraitDefinition> = {
   trait_discipline_breath_of_winter: {
     id: "trait_discipline_breath_of_winter",
     name: "Breath of Winter",
-    description: "Spend 6 ki to cast cone of cold.",
+    lore: { shortDescription: "Spend 6 ki to cast cone of cold." },
     modifiers: { fixed: [], choices: [] },
     resources: [],
     triggers: [],
@@ -170,7 +181,7 @@ export const ELEMENTAL_DISCIPLINE_TRAITS: Record<string, TraitDefinition> = {
   trait_discipline_eternal_mountain_defense: {
     id: "trait_discipline_eternal_mountain_defense",
     name: "Eternal Mountain Defense",
-    description: "Spend 5 ki to cast stoneskin on yourself.",
+    lore: { shortDescription: "Spend 5 ki to cast stoneskin on yourself." },
     modifiers: { fixed: [], choices: [] },
     resources: [],
     triggers: [],
@@ -181,7 +192,7 @@ export const ELEMENTAL_DISCIPLINE_TRAITS: Record<string, TraitDefinition> = {
   trait_discipline_river_of_hungry_flame: {
     id: "trait_discipline_river_of_hungry_flame",
     name: "River of Hungry Flame",
-    description: "Spend 5 ki to cast wall of fire.",
+    lore: { shortDescription: "Spend 5 ki to cast wall of fire." },
     modifiers: { fixed: [], choices: [] },
     resources: [],
     triggers: [],
@@ -192,7 +203,7 @@ export const ELEMENTAL_DISCIPLINE_TRAITS: Record<string, TraitDefinition> = {
   trait_discipline_wave_of_rolling_earth: {
     id: "trait_discipline_wave_of_rolling_earth",
     name: "Wave of Rolling Earth",
-    description: "Spend 6 ki to cast wall of stone.",
+    lore: { shortDescription: "Spend 6 ki to cast wall of stone." },
     modifiers: { fixed: [], choices: [] },
     resources: [],
     triggers: [],

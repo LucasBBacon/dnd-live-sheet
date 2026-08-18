@@ -12,8 +12,10 @@ export const TOTEM_TRAITS: Record<string, TraitDefinition> = {
   trait_totem_spirit_bear: {
     id: "trait_totem_spirit_bear",
     name: "Totem Spirit: Bear",
-    description:
-      "While raging you have resistance to all damage except psychic.",
+    lore: {
+      shortDescription:
+        "While raging you have resistance to all damage except psychic.",
+    },
     modifiers: { fixed: [], choices: [] },
     resources: [],
     triggers: [],
@@ -24,8 +26,10 @@ export const TOTEM_TRAITS: Record<string, TraitDefinition> = {
   trait_totem_spirit_eagle: {
     id: "trait_totem_spirit_eagle",
     name: "Totem Spirit: Eagle",
-    description:
-      "While raging and unarmored, opportunity attacks against you have disadvantage and you can Dash as a bonus action.",
+    lore: {
+      shortDescription:
+        "While raging and unarmored, opportunity attacks against you have disadvantage and you can Dash as a bonus action.",
+    },
     modifiers: { fixed: [], choices: [] },
     resources: [],
     triggers: [],
@@ -36,8 +40,10 @@ export const TOTEM_TRAITS: Record<string, TraitDefinition> = {
   trait_totem_spirit_wolf: {
     id: "trait_totem_spirit_wolf",
     name: "Totem Spirit: Wolf",
-    description:
-      "While raging, your allies have advantage on melee attacks against enemies within 5 feet of you.",
+    lore: {
+      shortDescription:
+        "While raging, your allies have advantage on melee attacks against enemies within 5 feet of you.",
+    },
     modifiers: { fixed: [], choices: [] },
     resources: [],
     triggers: [],
@@ -48,8 +54,10 @@ export const TOTEM_TRAITS: Record<string, TraitDefinition> = {
   trait_aspect_of_the_beast_bear: {
     id: "trait_aspect_of_the_beast_bear",
     name: "Aspect of the Beast: Bear",
-    description:
-      "Your carrying capacity doubles and you have advantage on Strength checks to move objects.",
+    lore: {
+      shortDescription:
+        "Your carrying capacity doubles and you have advantage on Strength checks to move objects.",
+    },
     modifiers: { fixed: [], choices: [] },
     resources: [],
     triggers: [],
@@ -60,8 +68,10 @@ export const TOTEM_TRAITS: Record<string, TraitDefinition> = {
   trait_aspect_of_the_beast_eagle: {
     id: "trait_aspect_of_the_beast_eagle",
     name: "Aspect of the Beast: Eagle",
-    description:
-      "You can see up to a mile away with ease and dim light does not impose disadvantage on Perception.",
+    lore: {
+      shortDescription:
+        "You can see up to a mile away with ease and dim light does not impose disadvantage on Perception.",
+    },
     modifiers: { fixed: [], choices: [] },
     resources: [],
     triggers: [],
@@ -72,8 +82,10 @@ export const TOTEM_TRAITS: Record<string, TraitDefinition> = {
   trait_aspect_of_the_beast_wolf: {
     id: "trait_aspect_of_the_beast_wolf",
     name: "Aspect of the Beast: Wolf",
-    description:
-      "You can track at a fast pace and move stealthily at a normal pace.",
+    lore: {
+      shortDescription:
+        "You can track at a fast pace and move stealthily at a normal pace.",
+    },
     modifiers: { fixed: [], choices: [] },
     resources: [],
     triggers: [],
@@ -84,8 +96,10 @@ export const TOTEM_TRAITS: Record<string, TraitDefinition> = {
   trait_totemic_attunement_bear: {
     id: "trait_totemic_attunement_bear",
     name: "Totemic Attunement: Bear",
-    description:
-      "While raging, enemies within 5 feet have disadvantage attacking anyone but you.",
+    lore: {
+      shortDescription:
+        "While raging, enemies within 5 feet have disadvantage attacking anyone but you.",
+    },
     modifiers: { fixed: [], choices: [] },
     resources: [],
     triggers: [],
@@ -96,8 +110,10 @@ export const TOTEM_TRAITS: Record<string, TraitDefinition> = {
   trait_totemic_attunement_eagle: {
     id: "trait_totemic_attunement_eagle",
     name: "Totemic Attunement: Eagle",
-    description:
-      "While raging, you gain a flying speed equal to your walking speed for one turn.",
+    lore: {
+      shortDescription:
+        "While raging, you gain a flying speed equal to your walking speed for one turn.",
+    },
     modifiers: { fixed: [], choices: [] },
     resources: [],
     triggers: [],
@@ -108,8 +124,10 @@ export const TOTEM_TRAITS: Record<string, TraitDefinition> = {
   trait_totemic_attunement_wolf: {
     id: "trait_totemic_attunement_wolf",
     name: "Totemic Attunement: Wolf",
-    description:
-      "While raging, you can knock a Large or smaller creature prone when you hit it.",
+    lore: {
+      shortDescription:
+        "While raging, you can knock a Large or smaller creature prone when you hit it.",
+    },
     modifiers: { fixed: [], choices: [] },
     resources: [],
     triggers: [],

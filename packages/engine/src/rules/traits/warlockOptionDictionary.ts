@@ -12,8 +12,10 @@ export const WARLOCK_OPTION_TRAITS: Record<string, TraitDefinition> = {
   trait_pact_of_the_chain: {
     id: "trait_pact_of_the_chain",
     name: "Pact of the Chain",
-    description:
-      "You learn find familiar and can take special forms; your familiar can attack with your bonus action.",
+    lore: {
+      shortDescription:
+        "You learn find familiar and can take special forms; your familiar can attack with your bonus action.",
+    },
     modifiers: { fixed: [], choices: [] },
     resources: [],
     triggers: [],
@@ -24,8 +26,10 @@ export const WARLOCK_OPTION_TRAITS: Record<string, TraitDefinition> = {
   trait_pact_of_the_blade: {
     id: "trait_pact_of_the_blade",
     name: "Pact of the Blade",
-    description:
-      "You can conjure a pact weapon you are proficient with and which counts as magical.",
+    lore: {
+      shortDescription:
+        "You can conjure a pact weapon you are proficient with and which counts as magical.",
+    },
     modifiers: { fixed: [], choices: [] },
     resources: [],
     triggers: [],
@@ -36,8 +40,10 @@ export const WARLOCK_OPTION_TRAITS: Record<string, TraitDefinition> = {
   trait_pact_of_the_tome: {
     id: "trait_pact_of_the_tome",
     name: "Pact of the Tome",
-    description:
-      "You gain a Book of Shadows holding three cantrips from any class's spell list.",
+    lore: {
+      shortDescription:
+        "You gain a Book of Shadows holding three cantrips from any class's spell list.",
+    },
     modifiers: { fixed: [], choices: [] },
     resources: [],
     triggers: [],
@@ -48,7 +54,9 @@ export const WARLOCK_OPTION_TRAITS: Record<string, TraitDefinition> = {
   trait_invocation_agonizing_blast: {
     id: "trait_invocation_agonizing_blast",
     name: "Agonizing Blast",
-    description: "Add your Charisma modifier to eldritch blast damage.",
+    lore: {
+      shortDescription: "Add your Charisma modifier to eldritch blast damage.",
+    },
     modifiers: { fixed: [], choices: [] },
     resources: [],
     triggers: [],
@@ -59,7 +67,9 @@ export const WARLOCK_OPTION_TRAITS: Record<string, TraitDefinition> = {
   trait_invocation_armor_of_shadows: {
     id: "trait_invocation_armor_of_shadows",
     name: "Armor of Shadows",
-    description: "Cast mage armor on yourself at will, without a slot.",
+    lore: {
+      shortDescription: "Cast mage armor on yourself at will, without a slot.",
+    },
     modifiers: { fixed: [], choices: [] },
     resources: [],
     triggers: [],
@@ -70,7 +80,9 @@ export const WARLOCK_OPTION_TRAITS: Record<string, TraitDefinition> = {
   trait_invocation_ascendant_step: {
     id: "trait_invocation_ascendant_step",
     name: "Ascendant Step",
-    description: "Cast levitate on yourself at will, without a slot.",
+    lore: {
+      shortDescription: "Cast levitate on yourself at will, without a slot.",
+    },
     modifiers: { fixed: [], choices: [] },
     resources: [],
     triggers: [],
@@ -81,7 +93,7 @@ export const WARLOCK_OPTION_TRAITS: Record<string, TraitDefinition> = {
   trait_invocation_beast_speech: {
     id: "trait_invocation_beast_speech",
     name: "Beast Speech",
-    description: "Cast speak with animals at will.",
+    lore: { shortDescription: "Cast speak with animals at will." },
     modifiers: { fixed: [], choices: [] },
     resources: [],
     triggers: [],
@@ -92,7 +104,7 @@ export const WARLOCK_OPTION_TRAITS: Record<string, TraitDefinition> = {
   trait_invocation_beguiling_influence: {
     id: "trait_invocation_beguiling_influence",
     name: "Beguiling Influence",
-    description: "Gain proficiency in Deception and Persuasion.",
+    lore: { shortDescription: "Gain proficiency in Deception and Persuasion." },
     modifiers: { fixed: [], choices: [] },
     resources: [],
     triggers: [],
@@ -103,7 +115,10 @@ export const WARLOCK_OPTION_TRAITS: Record<string, TraitDefinition> = {
   trait_invocation_bewitching_whispers: {
     id: "trait_invocation_bewitching_whispers",
     name: "Bewitching Whispers",
-    description: "Cast compulsion once per long rest using a warlock slot.",
+    lore: {
+      shortDescription:
+        "Cast compulsion once per long rest using a warlock slot.",
+    },
     modifiers: { fixed: [], choices: [] },
     resources: [],
     triggers: [],
@@ -114,7 +129,10 @@ export const WARLOCK_OPTION_TRAITS: Record<string, TraitDefinition> = {
   trait_invocation_book_of_ancient_secrets: {
     id: "trait_invocation_book_of_ancient_secrets",
     name: "Book of Ancient Secrets",
-    description: "Inscribe and cast ritual spells from your Book of Shadows.",
+    lore: {
+      shortDescription:
+        "Inscribe and cast ritual spells from your Book of Shadows.",
+    },
     modifiers: { fixed: [], choices: [] },
     resources: [],
     triggers: [],
@@ -125,8 +143,10 @@ export const WARLOCK_OPTION_TRAITS: Record<string, TraitDefinition> = {
   trait_invocation_chains_of_carceri: {
     id: "trait_invocation_chains_of_carceri",
     name: "Chains of Carceri",
-    description:
-      "Cast hold monster at will on a celestial, fiend, or elemental.",
+    lore: {
+      shortDescription:
+        "Cast hold monster at will on a celestial, fiend, or elemental.",
+    },
     modifiers: { fixed: [], choices: [] },
     resources: [],
     triggers: [],
@@ -137,7 +157,10 @@ export const WARLOCK_OPTION_TRAITS: Record<string, TraitDefinition> = {
   trait_invocation_devils_sight: {
     id: "trait_invocation_devils_sight",
     name: "Devil's Sight",
-    description: "See normally in darkness, magical or not, out to 120 feet.",
+    lore: {
+      shortDescription:
+        "See normally in darkness, magical or not, out to 120 feet.",
+    },
     modifiers: { fixed: [], choices: [] },
     resources: [],
     triggers: [],
@@ -148,7 +171,10 @@ export const WARLOCK_OPTION_TRAITS: Record<string, TraitDefinition> = {
   trait_invocation_dreadful_word: {
     id: "trait_invocation_dreadful_word",
     name: "Dreadful Word",
-    description: "Cast confusion once per long rest using a warlock slot.",
+    lore: {
+      shortDescription:
+        "Cast confusion once per long rest using a warlock slot.",
+    },
     modifiers: { fixed: [], choices: [] },
     resources: [],
     triggers: [],
@@ -159,7 +185,7 @@ export const WARLOCK_OPTION_TRAITS: Record<string, TraitDefinition> = {
   trait_invocation_eldritch_sight: {
     id: "trait_invocation_eldritch_sight",
     name: "Eldritch Sight",
-    description: "Cast detect magic at will.",
+    lore: { shortDescription: "Cast detect magic at will." },
     modifiers: { fixed: [], choices: [] },
     resources: [],
     triggers: [],
@@ -170,7 +196,7 @@ export const WARLOCK_OPTION_TRAITS: Record<string, TraitDefinition> = {
   trait_invocation_eldritch_spear: {
     id: "trait_invocation_eldritch_spear",
     name: "Eldritch Spear",
-    description: "Eldritch blast gains 300 feet of range.",
+    lore: { shortDescription: "Eldritch blast gains 300 feet of range." },
     modifiers: { fixed: [], choices: [] },
     resources: [],
     triggers: [],
@@ -181,7 +207,7 @@ export const WARLOCK_OPTION_TRAITS: Record<string, TraitDefinition> = {
   trait_invocation_eyes_of_the_rune_keeper: {
     id: "trait_invocation_eyes_of_the_rune_keeper",
     name: "Eyes of the Rune Keeper",
-    description: "You can read all writing.",
+    lore: { shortDescription: "You can read all writing." },
     modifiers: { fixed: [], choices: [] },
     resources: [],
     triggers: [],
@@ -192,7 +218,10 @@ export const WARLOCK_OPTION_TRAITS: Record<string, TraitDefinition> = {
   trait_invocation_fiendish_vigor: {
     id: "trait_invocation_fiendish_vigor",
     name: "Fiendish Vigor",
-    description: "Cast false life on yourself at will as a 1st-level spell.",
+    lore: {
+      shortDescription:
+        "Cast false life on yourself at will as a 1st-level spell.",
+    },
     modifiers: { fixed: [], choices: [] },
     resources: [],
     triggers: [],
@@ -203,8 +232,10 @@ export const WARLOCK_OPTION_TRAITS: Record<string, TraitDefinition> = {
   trait_invocation_gaze_of_two_minds: {
     id: "trait_invocation_gaze_of_two_minds",
     name: "Gaze of Two Minds",
-    description:
-      "Perceive through a willing humanoid's senses until the end of your next turn.",
+    lore: {
+      shortDescription:
+        "Perceive through a willing humanoid's senses until the end of your next turn.",
+    },
     modifiers: { fixed: [], choices: [] },
     resources: [],
     triggers: [],
@@ -215,8 +246,10 @@ export const WARLOCK_OPTION_TRAITS: Record<string, TraitDefinition> = {
   trait_invocation_lifedrinker: {
     id: "trait_invocation_lifedrinker",
     name: "Lifedrinker",
-    description:
-      "Your pact weapon deals extra necrotic damage equal to your Charisma modifier.",
+    lore: {
+      shortDescription:
+        "Your pact weapon deals extra necrotic damage equal to your Charisma modifier.",
+    },
     modifiers: { fixed: [], choices: [] },
     resources: [],
     triggers: [],
@@ -227,7 +260,7 @@ export const WARLOCK_OPTION_TRAITS: Record<string, TraitDefinition> = {
   trait_invocation_mask_of_many_faces: {
     id: "trait_invocation_mask_of_many_faces",
     name: "Mask of Many Faces",
-    description: "Cast disguise self at will.",
+    lore: { shortDescription: "Cast disguise self at will." },
     modifiers: { fixed: [], choices: [] },
     resources: [],
     triggers: [],
@@ -238,7 +271,7 @@ export const WARLOCK_OPTION_TRAITS: Record<string, TraitDefinition> = {
   trait_invocation_master_of_myriad_forms: {
     id: "trait_invocation_master_of_myriad_forms",
     name: "Master of Myriad Forms",
-    description: "Cast alter self at will.",
+    lore: { shortDescription: "Cast alter self at will." },
     modifiers: { fixed: [], choices: [] },
     resources: [],
     triggers: [],
@@ -249,8 +282,10 @@ export const WARLOCK_OPTION_TRAITS: Record<string, TraitDefinition> = {
   trait_invocation_minions_of_chaos: {
     id: "trait_invocation_minions_of_chaos",
     name: "Minions of Chaos",
-    description:
-      "Cast conjure elemental once per long rest using a warlock slot.",
+    lore: {
+      shortDescription:
+        "Cast conjure elemental once per long rest using a warlock slot.",
+    },
     modifiers: { fixed: [], choices: [] },
     resources: [],
     triggers: [],
@@ -261,7 +296,9 @@ export const WARLOCK_OPTION_TRAITS: Record<string, TraitDefinition> = {
   trait_invocation_mire_the_mind: {
     id: "trait_invocation_mire_the_mind",
     name: "Mire the Mind",
-    description: "Cast slow once per long rest using a warlock slot.",
+    lore: {
+      shortDescription: "Cast slow once per long rest using a warlock slot.",
+    },
     modifiers: { fixed: [], choices: [] },
     resources: [],
     triggers: [],
@@ -272,7 +309,7 @@ export const WARLOCK_OPTION_TRAITS: Record<string, TraitDefinition> = {
   trait_invocation_misty_visions: {
     id: "trait_invocation_misty_visions",
     name: "Misty Visions",
-    description: "Cast silent image at will.",
+    lore: { shortDescription: "Cast silent image at will." },
     modifiers: { fixed: [], choices: [] },
     resources: [],
     triggers: [],
@@ -283,8 +320,10 @@ export const WARLOCK_OPTION_TRAITS: Record<string, TraitDefinition> = {
   trait_invocation_one_with_shadows: {
     id: "trait_invocation_one_with_shadows",
     name: "One with Shadows",
-    description:
-      "Become invisible while in dim light or darkness until you move or act.",
+    lore: {
+      shortDescription:
+        "Become invisible while in dim light or darkness until you move or act.",
+    },
     modifiers: { fixed: [], choices: [] },
     resources: [],
     triggers: [],
@@ -295,7 +334,7 @@ export const WARLOCK_OPTION_TRAITS: Record<string, TraitDefinition> = {
   trait_invocation_otherworldly_leap: {
     id: "trait_invocation_otherworldly_leap",
     name: "Otherworldly Leap",
-    description: "Cast jump on yourself at will.",
+    lore: { shortDescription: "Cast jump on yourself at will." },
     modifiers: { fixed: [], choices: [] },
     resources: [],
     triggers: [],
@@ -306,7 +345,10 @@ export const WARLOCK_OPTION_TRAITS: Record<string, TraitDefinition> = {
   trait_invocation_repelling_blast: {
     id: "trait_invocation_repelling_blast",
     name: "Repelling Blast",
-    description: "Push a creature 10 feet away when eldritch blast hits it.",
+    lore: {
+      shortDescription:
+        "Push a creature 10 feet away when eldritch blast hits it.",
+    },
     modifiers: { fixed: [], choices: [] },
     resources: [],
     triggers: [],
@@ -317,7 +359,10 @@ export const WARLOCK_OPTION_TRAITS: Record<string, TraitDefinition> = {
   trait_invocation_sculptor_of_flesh: {
     id: "trait_invocation_sculptor_of_flesh",
     name: "Sculptor of Flesh",
-    description: "Cast polymorph once per long rest using a warlock slot.",
+    lore: {
+      shortDescription:
+        "Cast polymorph once per long rest using a warlock slot.",
+    },
     modifiers: { fixed: [], choices: [] },
     resources: [],
     triggers: [],
@@ -328,7 +373,10 @@ export const WARLOCK_OPTION_TRAITS: Record<string, TraitDefinition> = {
   trait_invocation_sign_of_ill_omen: {
     id: "trait_invocation_sign_of_ill_omen",
     name: "Sign of Ill Omen",
-    description: "Cast bestow curse once per long rest using a warlock slot.",
+    lore: {
+      shortDescription:
+        "Cast bestow curse once per long rest using a warlock slot.",
+    },
     modifiers: { fixed: [], choices: [] },
     resources: [],
     triggers: [],
@@ -339,7 +387,9 @@ export const WARLOCK_OPTION_TRAITS: Record<string, TraitDefinition> = {
   trait_invocation_thief_of_five_fates: {
     id: "trait_invocation_thief_of_five_fates",
     name: "Thief of Five Fates",
-    description: "Cast bane once per long rest using a warlock slot.",
+    lore: {
+      shortDescription: "Cast bane once per long rest using a warlock slot.",
+    },
     modifiers: { fixed: [], choices: [] },
     resources: [],
     triggers: [],
@@ -350,8 +400,10 @@ export const WARLOCK_OPTION_TRAITS: Record<string, TraitDefinition> = {
   trait_invocation_thirsting_blade: {
     id: "trait_invocation_thirsting_blade",
     name: "Thirsting Blade",
-    description:
-      "Attack twice with your pact weapon when you take the Attack action.",
+    lore: {
+      shortDescription:
+        "Attack twice with your pact weapon when you take the Attack action.",
+    },
     modifiers: { fixed: [], choices: [] },
     resources: [],
     triggers: [],
@@ -362,7 +414,7 @@ export const WARLOCK_OPTION_TRAITS: Record<string, TraitDefinition> = {
   trait_invocation_visions_of_distant_realms: {
     id: "trait_invocation_visions_of_distant_realms",
     name: "Visions of Distant Realms",
-    description: "Cast arcane eye at will.",
+    lore: { shortDescription: "Cast arcane eye at will." },
     modifiers: { fixed: [], choices: [] },
     resources: [],
     triggers: [],
@@ -373,8 +425,10 @@ export const WARLOCK_OPTION_TRAITS: Record<string, TraitDefinition> = {
   trait_invocation_voice_of_the_chain_master: {
     id: "trait_invocation_voice_of_the_chain_master",
     name: "Voice of the Chain Master",
-    description:
-      "Communicate telepathically with your familiar and perceive through its senses.",
+    lore: {
+      shortDescription:
+        "Communicate telepathically with your familiar and perceive through its senses.",
+    },
     modifiers: { fixed: [], choices: [] },
     resources: [],
     triggers: [],
@@ -385,7 +439,7 @@ export const WARLOCK_OPTION_TRAITS: Record<string, TraitDefinition> = {
   trait_invocation_whispers_of_the_grave: {
     id: "trait_invocation_whispers_of_the_grave",
     name: "Whispers of the Grave",
-    description: "Cast speak with dead at will.",
+    lore: { shortDescription: "Cast speak with dead at will." },
     modifiers: { fixed: [], choices: [] },
     resources: [],
     triggers: [],
@@ -396,8 +450,10 @@ export const WARLOCK_OPTION_TRAITS: Record<string, TraitDefinition> = {
   trait_invocation_witch_sight: {
     id: "trait_invocation_witch_sight",
     name: "Witch Sight",
-    description:
-      "See the true form of shapechangers and creatures concealed by illusion within 30 feet.",
+    lore: {
+      shortDescription:
+        "See the true form of shapechangers and creatures concealed by illusion within 30 feet.",
+    },
     modifiers: { fixed: [], choices: [] },
     resources: [],
     triggers: [],

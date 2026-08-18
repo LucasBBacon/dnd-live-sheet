@@ -13,8 +13,10 @@ export const SUBCLASS_SPELL_TRAITS: Record<string, TraitDefinition> = {
   trait_knowledge_domain_spells: {
     id: "trait_knowledge_domain_spells",
     name: "Knowledge Domain Spells",
-    description:
-      "You gain domain spells at the cleric levels listed in the Knowledge Domain table. Once you gain a domain spell, you always have it prepared, and it doesn't count against the number of spells you can prepare each day.",
+    lore: {
+      shortDescription:
+        "You gain domain spells at the cleric levels listed in the Knowledge Domain table. Once you gain a domain spell, you always have it prepared, and it doesn't count against the number of spells you can prepare each day.",
+    },
     modifiers: { fixed: [], choices: [] },
     spells: {
       fixed: [
@@ -98,8 +100,10 @@ export const SUBCLASS_SPELL_TRAITS: Record<string, TraitDefinition> = {
   trait_cleric_life_domain_spells: {
     id: "trait_cleric_life_domain_spells",
     name: "Life Domain Spells",
-    description:
-      "You gain domain spells at the cleric levels listed in the Life Domain table. Once you gain a domain spell, you always have it prepared, and it doesn't count against the number of spells you can prepare each day.",
+    lore: {
+      shortDescription:
+        "You gain domain spells at the cleric levels listed in the Life Domain table. Once you gain a domain spell, you always have it prepared, and it doesn't count against the number of spells you can prepare each day.",
+    },
     modifiers: { fixed: [], choices: [] },
     spells: {
       fixed: [
@@ -183,8 +187,10 @@ export const SUBCLASS_SPELL_TRAITS: Record<string, TraitDefinition> = {
   trait_light_domain_spells: {
     id: "trait_light_domain_spells",
     name: "Light Domain Spells",
-    description:
-      "You gain domain spells at the cleric levels listed in the Light Domain table. Once you gain a domain spell, you always have it prepared, and it doesn't count against the number of spells you can prepare each day.",
+    lore: {
+      shortDescription:
+        "You gain domain spells at the cleric levels listed in the Light Domain table. Once you gain a domain spell, you always have it prepared, and it doesn't count against the number of spells you can prepare each day.",
+    },
     modifiers: { fixed: [], choices: [] },
     spells: {
       fixed: [
@@ -268,8 +274,10 @@ export const SUBCLASS_SPELL_TRAITS: Record<string, TraitDefinition> = {
   trait_nature_domain_spells: {
     id: "trait_nature_domain_spells",
     name: "Nature Domain Spells",
-    description:
-      "You gain domain spells at the cleric levels listed in the Nature Domain table. Once you gain a domain spell, you always have it prepared, and it doesn't count against the number of spells you can prepare each day.",
+    lore: {
+      shortDescription:
+        "You gain domain spells at the cleric levels listed in the Nature Domain table. Once you gain a domain spell, you always have it prepared, and it doesn't count against the number of spells you can prepare each day.",
+    },
     modifiers: { fixed: [], choices: [] },
     spells: {
       fixed: [
@@ -353,8 +361,10 @@ export const SUBCLASS_SPELL_TRAITS: Record<string, TraitDefinition> = {
   trait_tempest_domain_spells: {
     id: "trait_tempest_domain_spells",
     name: "Tempest Domain Spells",
-    description:
-      "You gain domain spells at the cleric levels listed in the Tempest Domain table. Once you gain a domain spell, you always have it prepared, and it doesn't count against the number of spells you can prepare each day.",
+    lore: {
+      shortDescription:
+        "You gain domain spells at the cleric levels listed in the Tempest Domain table. Once you gain a domain spell, you always have it prepared, and it doesn't count against the number of spells you can prepare each day.",
+    },
     modifiers: { fixed: [], choices: [] },
     spells: {
       fixed: [
@@ -438,8 +448,10 @@ export const SUBCLASS_SPELL_TRAITS: Record<string, TraitDefinition> = {
   trait_trickery_domain_spells: {
     id: "trait_trickery_domain_spells",
     name: "Trickery Domain Spells",
-    description:
-      "You gain domain spells at the cleric levels listed in the Trickery Domain table. Once you gain a domain spell, you always have it prepared, and it doesn't count against the number of spells you can prepare each day.",
+    lore: {
+      shortDescription:
+        "You gain domain spells at the cleric levels listed in the Trickery Domain table. Once you gain a domain spell, you always have it prepared, and it doesn't count against the number of spells you can prepare each day.",
+    },
     modifiers: { fixed: [], choices: [] },
     spells: {
       fixed: [
@@ -523,8 +535,10 @@ export const SUBCLASS_SPELL_TRAITS: Record<string, TraitDefinition> = {
   trait_war_domain_spells: {
     id: "trait_war_domain_spells",
     name: "War Domain Spells",
-    description:
-      "You gain domain spells at the cleric levels listed in the War Domain table. Once you gain a domain spell, you always have it prepared, and it doesn't count against the number of spells you can prepare each day.",
+    lore: {
+      shortDescription:
+        "You gain domain spells at the cleric levels listed in the War Domain table. Once you gain a domain spell, you always have it prepared, and it doesn't count against the number of spells you can prepare each day.",
+    },
     modifiers: { fixed: [], choices: [] },
     spells: {
       fixed: [
@@ -608,8 +622,10 @@ export const SUBCLASS_SPELL_TRAITS: Record<string, TraitDefinition> = {
   trait_devotion_oath_spells: {
     id: "trait_devotion_oath_spells",
     name: "Oath of Devotion Spells",
-    description:
-      "You gain oath spells at the paladin levels listed in the Oath of Devotion table. They count as paladin spells for you, but they don't count against the number of spells you can prepare each day.",
+    lore: {
+      shortDescription:
+        "You gain oath spells at the paladin levels listed in the Oath of Devotion table. They count as paladin spells for you, but they don't count against the number of spells you can prepare each day.",
+    },
     modifiers: { fixed: [], choices: [] },
     spells: {
       fixed: [
@@ -693,8 +709,10 @@ export const SUBCLASS_SPELL_TRAITS: Record<string, TraitDefinition> = {
   trait_ancients_oath_spells: {
     id: "trait_ancients_oath_spells",
     name: "Oath of the Ancients Spells",
-    description:
-      "You gain oath spells at the paladin levels listed in the Oath of the Ancients table. They count as paladin spells for you, but they don't count against the number of spells you can prepare each day.",
+    lore: {
+      shortDescription:
+        "You gain oath spells at the paladin levels listed in the Oath of the Ancients table. They count as paladin spells for you, but they don't count against the number of spells you can prepare each day.",
+    },
     modifiers: { fixed: [], choices: [] },
     spells: {
       fixed: [
@@ -778,8 +796,10 @@ export const SUBCLASS_SPELL_TRAITS: Record<string, TraitDefinition> = {
   trait_vengeance_oath_spells: {
     id: "trait_vengeance_oath_spells",
     name: "Oath of Vengeance Spells",
-    description:
-      "You gain oath spells at the paladin levels listed in the Oath of Vengeance table. They count as paladin spells for you, but they don't count against the number of spells you can prepare each day.",
+    lore: {
+      shortDescription:
+        "You gain oath spells at the paladin levels listed in the Oath of Vengeance table. They count as paladin spells for you, but they don't count against the number of spells you can prepare each day.",
+    },
     modifiers: { fixed: [], choices: [] },
     spells: {
       fixed: [
@@ -863,8 +883,12 @@ export const SUBCLASS_SPELL_TRAITS: Record<string, TraitDefinition> = {
   trait_land_circle_spells_arctic: {
     id: "trait_land_circle_spells_arctic",
     name: "Circle Spells (Arctic)",
-    description:
-      "Your mystical connection to the arctic infuses you with the ability to cast certain spells. At 3rd, 5th, 7th, and 9th level you gain access to circle spells connected to the land where you became a druid. Once you gain access to a circle spell, you always have it prepared, and it doesn't count against the number of spells you can prepare each day.",
+    lore: {
+      shortDescription:
+        "Your mystical connection to the arctic infuses you with the ability to cast certain spells. At 3rd, 5th, 7th, and 9th level you gain access to circle spells connected to the land where you became a druid. Once you gain access to a circle spell, you always have it prepared, and…",
+      fullText:
+        "Your mystical connection to the arctic infuses you with the ability to cast certain spells. At 3rd, 5th, 7th, and 9th level you gain access to circle spells connected to the land where you became a druid. Once you gain access to a circle spell, you always have it prepared, and it doesn't count against the number of spells you can prepare each day.",
+    },
     modifiers: { fixed: [], choices: [] },
     spells: {
       fixed: [
@@ -934,8 +958,12 @@ export const SUBCLASS_SPELL_TRAITS: Record<string, TraitDefinition> = {
   trait_land_circle_spells_coast: {
     id: "trait_land_circle_spells_coast",
     name: "Circle Spells (Coast)",
-    description:
-      "Your mystical connection to the coast infuses you with the ability to cast certain spells. At 3rd, 5th, 7th, and 9th level you gain access to circle spells connected to the land where you became a druid. Once you gain access to a circle spell, you always have it prepared, and it doesn't count against the number of spells you can prepare each day.",
+    lore: {
+      shortDescription:
+        "Your mystical connection to the coast infuses you with the ability to cast certain spells. At 3rd, 5th, 7th, and 9th level you gain access to circle spells connected to the land where you became a druid. Once you gain access to a circle spell, you always have it prepared, and…",
+      fullText:
+        "Your mystical connection to the coast infuses you with the ability to cast certain spells. At 3rd, 5th, 7th, and 9th level you gain access to circle spells connected to the land where you became a druid. Once you gain access to a circle spell, you always have it prepared, and it doesn't count against the number of spells you can prepare each day.",
+    },
     modifiers: { fixed: [], choices: [] },
     spells: {
       fixed: [
@@ -1005,8 +1033,12 @@ export const SUBCLASS_SPELL_TRAITS: Record<string, TraitDefinition> = {
   trait_land_circle_spells_desert: {
     id: "trait_land_circle_spells_desert",
     name: "Circle Spells (Desert)",
-    description:
-      "Your mystical connection to the desert infuses you with the ability to cast certain spells. At 3rd, 5th, 7th, and 9th level you gain access to circle spells connected to the land where you became a druid. Once you gain access to a circle spell, you always have it prepared, and it doesn't count against the number of spells you can prepare each day.",
+    lore: {
+      shortDescription:
+        "Your mystical connection to the desert infuses you with the ability to cast certain spells. At 3rd, 5th, 7th, and 9th level you gain access to circle spells connected to the land where you became a druid. Once you gain access to a circle spell, you always have it prepared, and…",
+      fullText:
+        "Your mystical connection to the desert infuses you with the ability to cast certain spells. At 3rd, 5th, 7th, and 9th level you gain access to circle spells connected to the land where you became a druid. Once you gain access to a circle spell, you always have it prepared, and it doesn't count against the number of spells you can prepare each day.",
+    },
     modifiers: { fixed: [], choices: [] },
     spells: {
       fixed: [
@@ -1076,8 +1108,12 @@ export const SUBCLASS_SPELL_TRAITS: Record<string, TraitDefinition> = {
   trait_land_circle_spells_forest: {
     id: "trait_land_circle_spells_forest",
     name: "Circle Spells (Forest)",
-    description:
-      "Your mystical connection to the forest infuses you with the ability to cast certain spells. At 3rd, 5th, 7th, and 9th level you gain access to circle spells connected to the land where you became a druid. Once you gain access to a circle spell, you always have it prepared, and it doesn't count against the number of spells you can prepare each day.",
+    lore: {
+      shortDescription:
+        "Your mystical connection to the forest infuses you with the ability to cast certain spells. At 3rd, 5th, 7th, and 9th level you gain access to circle spells connected to the land where you became a druid. Once you gain access to a circle spell, you always have it prepared, and…",
+      fullText:
+        "Your mystical connection to the forest infuses you with the ability to cast certain spells. At 3rd, 5th, 7th, and 9th level you gain access to circle spells connected to the land where you became a druid. Once you gain access to a circle spell, you always have it prepared, and it doesn't count against the number of spells you can prepare each day.",
+    },
     modifiers: { fixed: [], choices: [] },
     spells: {
       fixed: [
@@ -1147,8 +1183,12 @@ export const SUBCLASS_SPELL_TRAITS: Record<string, TraitDefinition> = {
   trait_land_circle_spells_grassland: {
     id: "trait_land_circle_spells_grassland",
     name: "Circle Spells (Grassland)",
-    description:
-      "Your mystical connection to the grassland infuses you with the ability to cast certain spells. At 3rd, 5th, 7th, and 9th level you gain access to circle spells connected to the land where you became a druid. Once you gain access to a circle spell, you always have it prepared, and it doesn't count against the number of spells you can prepare each day.",
+    lore: {
+      shortDescription:
+        "Your mystical connection to the grassland infuses you with the ability to cast certain spells. At 3rd, 5th, 7th, and 9th level you gain access to circle spells connected to the land where you became a druid. Once you gain access to a circle spell, you always have it prepared…",
+      fullText:
+        "Your mystical connection to the grassland infuses you with the ability to cast certain spells. At 3rd, 5th, 7th, and 9th level you gain access to circle spells connected to the land where you became a druid. Once you gain access to a circle spell, you always have it prepared, and it doesn't count against the number of spells you can prepare each day.",
+    },
     modifiers: { fixed: [], choices: [] },
     spells: {
       fixed: [
@@ -1218,8 +1258,12 @@ export const SUBCLASS_SPELL_TRAITS: Record<string, TraitDefinition> = {
   trait_land_circle_spells_mountain: {
     id: "trait_land_circle_spells_mountain",
     name: "Circle Spells (Mountain)",
-    description:
-      "Your mystical connection to the mountain infuses you with the ability to cast certain spells. At 3rd, 5th, 7th, and 9th level you gain access to circle spells connected to the land where you became a druid. Once you gain access to a circle spell, you always have it prepared, and it doesn't count against the number of spells you can prepare each day.",
+    lore: {
+      shortDescription:
+        "Your mystical connection to the mountain infuses you with the ability to cast certain spells. At 3rd, 5th, 7th, and 9th level you gain access to circle spells connected to the land where you became a druid. Once you gain access to a circle spell, you always have it prepared…",
+      fullText:
+        "Your mystical connection to the mountain infuses you with the ability to cast certain spells. At 3rd, 5th, 7th, and 9th level you gain access to circle spells connected to the land where you became a druid. Once you gain access to a circle spell, you always have it prepared, and it doesn't count against the number of spells you can prepare each day.",
+    },
     modifiers: { fixed: [], choices: [] },
     spells: {
       fixed: [
@@ -1289,8 +1333,12 @@ export const SUBCLASS_SPELL_TRAITS: Record<string, TraitDefinition> = {
   trait_land_circle_spells_swamp: {
     id: "trait_land_circle_spells_swamp",
     name: "Circle Spells (Swamp)",
-    description:
-      "Your mystical connection to the swamp infuses you with the ability to cast certain spells. At 3rd, 5th, 7th, and 9th level you gain access to circle spells connected to the land where you became a druid. Once you gain access to a circle spell, you always have it prepared, and it doesn't count against the number of spells you can prepare each day.",
+    lore: {
+      shortDescription:
+        "Your mystical connection to the swamp infuses you with the ability to cast certain spells. At 3rd, 5th, 7th, and 9th level you gain access to circle spells connected to the land where you became a druid. Once you gain access to a circle spell, you always have it prepared, and…",
+      fullText:
+        "Your mystical connection to the swamp infuses you with the ability to cast certain spells. At 3rd, 5th, 7th, and 9th level you gain access to circle spells connected to the land where you became a druid. Once you gain access to a circle spell, you always have it prepared, and it doesn't count against the number of spells you can prepare each day.",
+    },
     modifiers: { fixed: [], choices: [] },
     spells: {
       fixed: [
@@ -1360,8 +1408,12 @@ export const SUBCLASS_SPELL_TRAITS: Record<string, TraitDefinition> = {
   trait_land_circle_spells_underdark: {
     id: "trait_land_circle_spells_underdark",
     name: "Circle Spells (Underdark)",
-    description:
-      "Your mystical connection to the underdark infuses you with the ability to cast certain spells. At 3rd, 5th, 7th, and 9th level you gain access to circle spells connected to the land where you became a druid. Once you gain access to a circle spell, you always have it prepared, and it doesn't count against the number of spells you can prepare each day.",
+    lore: {
+      shortDescription:
+        "Your mystical connection to the underdark infuses you with the ability to cast certain spells. At 3rd, 5th, 7th, and 9th level you gain access to circle spells connected to the land where you became a druid. Once you gain access to a circle spell, you always have it prepared…",
+      fullText:
+        "Your mystical connection to the underdark infuses you with the ability to cast certain spells. At 3rd, 5th, 7th, and 9th level you gain access to circle spells connected to the land where you became a druid. Once you gain access to a circle spell, you always have it prepared, and it doesn't count against the number of spells you can prepare each day.",
+    },
     modifiers: { fixed: [], choices: [] },
     spells: {
       fixed: [

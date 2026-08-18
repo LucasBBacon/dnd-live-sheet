@@ -8,7 +8,7 @@ const saveTrait = (
 ): TraitDefinition => ({
   id,
   name,
-  description: desc,
+  lore: { shortDescription: desc },
   modifiers: { fixed: [], choices: [] },
   proficiencies: {
     fixed: [

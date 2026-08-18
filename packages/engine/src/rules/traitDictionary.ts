@@ -23,7 +23,6 @@ export const TRAIT_DICTIONARY: Record<string, TraitDefinition> = {
   feat_tough: {
     id: "feat_tough",
     name: "Tough",
-    description: "",
     modifiers: {
       fixed: [
         {
@@ -46,7 +45,6 @@ export const TRAIT_DICTIONARY: Record<string, TraitDefinition> = {
   feat_alert: {
     id: "feat_alert",
     name: "Alert",
-    description: "",
     modifiers: {
       fixed: [
         {
@@ -69,7 +67,7 @@ export const TRAIT_DICTIONARY: Record<string, TraitDefinition> = {
   trait_feat_mobile: {
     id: "trait_feat_mobile",
     name: "Mobile",
-    description: "Placeholder trait for the Mobile feat.",
+    lore: { shortDescription: "Placeholder trait for the Mobile feat." },
     modifiers: { fixed: [], choices: [] },
     resources: [],
     triggers: [],
@@ -80,7 +78,7 @@ export const TRAIT_DICTIONARY: Record<string, TraitDefinition> = {
   trait_feat_skilled: {
     id: "trait_feat_skilled",
     name: "Skilled",
-    description: "Placeholder trait for the Skilled feat.",
+    lore: { shortDescription: "Placeholder trait for the Skilled feat." },
     modifiers: { fixed: [], choices: [] },
     resources: [],
     triggers: [],
@@ -91,8 +89,10 @@ export const TRAIT_DICTIONARY: Record<string, TraitDefinition> = {
   trait_powerful_build: {
     id: "trait_powerful_build",
     name: "Powerful Build",
-    description:
-      "You count as one size larger when determining your carrying capacity and the weight you can push, drag, or lift.",
+    lore: {
+      shortDescription:
+        "You count as one size larger when determining your carrying capacity and the weight you can push, drag, or lift.",
+    },
     modifiers: { fixed: [], choices: [] },
     // the whole trait is this flag: EncumbranceEngine reads the capacity table
     // one row down when it is set. no race grants it yet - it is here for the
@@ -107,7 +107,6 @@ export const TRAIT_DICTIONARY: Record<string, TraitDefinition> = {
   trait_draconic_resilience: {
     id: "trait_draconic_resilience",
     name: "Draconic Resilience",
-    description: "",
     modifiers: {
       fixed: [
         {
@@ -157,8 +156,10 @@ export const TRAIT_DICTIONARY: Record<string, TraitDefinition> = {
   trait_aura_of_protection: {
     id: "trait_aura_of_protection",
     name: "Aura of Protection",
-    description:
-      "You and friendly creatures within 10 feet add your Charisma modifier to saving throws, as long as you are not incapacitated.",
+    lore: {
+      shortDescription:
+        "You and friendly creatures within 10 feet add your Charisma modifier to saving throws, as long as you are not incapacitated.",
+    },
     modifiers: {
       fixed: [
         {

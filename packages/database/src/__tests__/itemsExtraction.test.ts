@@ -73,6 +73,7 @@ describe("extractItemsForMigration", () => {
       weight: 0,
       equipSlot: "ring",
       requiresAttunement: true,
+      categoryTags: [],
       modifiers: [
         {
           target: "ARMOR_CLASS",
