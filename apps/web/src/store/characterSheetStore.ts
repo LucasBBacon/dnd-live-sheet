@@ -18,6 +18,7 @@ import {
 } from "@project/engine";
 import {
   CombatContextSchema,
+  CONDITION_MAP,
   type CombatContext,
   type CombatEventInput,
   type CombatRollSnapshotInput,
@@ -221,20 +222,31 @@ const alignRuntimeResources = (
 };
 
 /**
- * The character's full state list, rebuilt from its two sources.
+ * The character's full state list, rebuilt from its three sources.
  *
  * Rebuilt rather than accumulated on purpose. Folding the effect manager's
  * states into the previous activeStates makes the list monotonic - it can only
  * ever grow - so an effect that expires stays visible forever and a one-turn
- * rule like Reckless Attack never switches off. baseStates holds what is true
- * of the character independently of any effect (worn armour, encumbrance),
- * and the effect manager is asked fresh for the rest.
+ * rule like Reckless Attack never switches off.
+ *
+ * The three sources are distinct in lifetime, which is why they stay separate:
+ * baseStates is what holds regardless of anything temporary (worn armour,
+ * encumbrance), conditions last until the player clears them, and effects
+ * expire on their own timers. Composing here means every calculator gates on
+ * conditions without any of them knowing conditions exist.
  */
 const composeActiveStates = (
   baseStates: string[] | undefined,
+  activeConditions: string[] | undefined,
   effectManager: EffectManager,
 ): string[] =>
-  Array.from(new Set([...(baseStates ?? []), ...effectManager.getActiveStates()]));
+  Array.from(
+    new Set([
+      ...(baseStates ?? []),
+      ...(activeConditions ?? []),
+      ...effectManager.getActiveStates(),
+    ]),
+  );
 
 const dispatchAuthoredEvent = (
   state: CharacterSheetState,
@@ -300,7 +312,7 @@ const dispatchAuthoredEvent = (
   return {
     results,
     rollResults: results.flatMap((result) => result.rollResults ?? []),
-    activeStates: composeActiveStates(state.baseStates, runtimeEffects),
+    activeStates: composeActiveStates(state.baseStates, state.activeConditions, runtimeEffects),
     resources: runtimeResources.getRuntimeResources().map((resource) => ({
       id: resource.id,
       current: resource.currentCharges,
@@ -332,7 +344,7 @@ const resolveHealthTransition = (
 
   let appliedHp = targetHp;
   let rollResults: ActionRollResult[] = [];
-  let activeStates = composeActiveStates(state.baseStates, runtimeEffects);
+  let activeStates = composeActiveStates(state.baseStates, state.activeConditions, runtimeEffects);
   let resources = runtimeResources.getRuntimeResources().map((resource) => ({
     id: resource.id,
     current: resource.currentCharges,
@@ -535,6 +547,11 @@ export interface CharacterSheetState {
    * activeStates so effect expiry can be seen - see composeActiveStates.
    */
   baseStates: string[];
+  /**
+   * Conditions the player has declared on themselves. Ids from CONDITION_MAP;
+   * each one becomes a state that authored rules gate on.
+   */
+  activeConditions: string[];
   activeStates: string[];
   selectedActorInstanceId: string | null;
   latestRollResults: ActionRollResult[];
@@ -597,6 +614,7 @@ export interface CharacterSheetState {
   spendReaction: (sourceId: string) => boolean;
   beginTurn: () => void;
   endTurn: () => void;
+  toggleCondition: (conditionId: string) => void;
   handleSaveOutcome: (succeeded: boolean) => void;
 
   toggleModifier: (modifierId: string, isActive: boolean) => void;
@@ -623,6 +641,7 @@ export const useCharacterSheetStore = create<CharacterSheetState>(
     activeModifiers: [],
     resources: [],
     baseStates: [],
+    activeConditions: [],
     activeStates: [],
     selectedActorInstanceId: null,
     latestRollResults: [],
@@ -1086,7 +1105,7 @@ export const useCharacterSheetStore = create<CharacterSheetState>(
       set((previous) => ({
         // the payload carries the server's effect states only, so the states
         // that do not come from effects have to be folded back in here
-        activeStates: composeActiveStates(previous.baseStates, runtimeEffects),
+        activeStates: composeActiveStates(previous.baseStates, previous.activeConditions, runtimeEffects),
         resources: payload.resources,
         latestRollResults:
           payload.rollResults.length > 0
@@ -1214,6 +1233,27 @@ export const useCharacterSheetStore = create<CharacterSheetState>(
         runtimeResources: dispatched.runtimeResources,
         runtimeCombat,
         combatContext,
+      });
+    },
+
+    toggleCondition: (conditionId) => {
+      // an unknown id would mint a state no authored rule can ever match, and
+      // would sit in the list looking like it worked
+      if (!CONDITION_MAP[conditionId]) return;
+
+      set((state) => {
+        const activeConditions = state.activeConditions.includes(conditionId)
+          ? state.activeConditions.filter((id) => id !== conditionId)
+          : [...state.activeConditions, conditionId];
+
+        return {
+          activeConditions,
+          activeStates: composeActiveStates(
+            state.baseStates,
+            activeConditions,
+            state.runtimeEffects ?? new EffectManager(),
+          ),
+        };
       });
     },
 

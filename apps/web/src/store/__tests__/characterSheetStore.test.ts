@@ -923,3 +923,110 @@ describe("useCharacterSheetStore remote action state composition", () => {
     expect(state.activeStates).toContain("status_reckless_attack");
   });
 });
+
+describe("useCharacterSheetStore conditions", () => {
+  beforeEach(() => {
+    vi.restoreAllMocks();
+
+    useCharacterSheetStore.setState({
+      ...useCharacterSheetStore.getState(),
+      id: "char_conditions",
+      campaignId: null,
+      level: 2,
+      classLevels: { class_barbarian: 2 },
+      raceId: "race_human",
+      subraceId: null,
+      currentHp: 20,
+      maxHp: 20,
+      baseHpRolled: 1,
+      baseScores: { STR: 16, DEX: 14, CON: 14, INT: 10, WIS: 10, CHA: 10 },
+      proficiencies: {},
+      traits: [],
+      traitGrants: [],
+      inventory: [],
+      activeModifiers: [],
+      resources: [],
+      ruleSnapshot: null,
+      baseStates: [],
+      activeConditions: [],
+      activeStates: [],
+      runtimeEffects: null,
+      runtimeResources: null,
+      combatContext: CombatContextSchema.parse({}),
+      runtimeCombat: null,
+    });
+
+    vi.spyOn(socketService, "emitActionIntent").mockImplementation(() => {});
+  });
+
+  it("puts a toggled condition into the state list the calculators read", () => {
+    useCharacterSheetStore.getState().toggleCondition("blinded");
+
+    expect(useCharacterSheetStore.getState().activeConditions).toEqual([
+      "blinded",
+    ]);
+    expect(useCharacterSheetStore.getState().activeStates).toContain("blinded");
+  });
+
+  it("clears the condition when toggled a second time", () => {
+    const store = useCharacterSheetStore.getState();
+    store.toggleCondition("blinded");
+    useCharacterSheetStore.getState().toggleCondition("blinded");
+
+    expect(useCharacterSheetStore.getState().activeConditions).toEqual([]);
+    expect(useCharacterSheetStore.getState().activeStates).not.toContain(
+      "blinded",
+    );
+  });
+
+  it("holds several conditions at once", () => {
+    useCharacterSheetStore.getState().toggleCondition("blinded");
+    useCharacterSheetStore.getState().toggleCondition("prone");
+
+    expect(useCharacterSheetStore.getState().activeStates).toContain("blinded");
+    expect(useCharacterSheetStore.getState().activeStates).toContain("prone");
+  });
+
+  it("refuses an id that is not a known condition, so a typo cannot invent a state", () => {
+    useCharacterSheetStore.getState().toggleCondition("blindd");
+
+    expect(useCharacterSheetStore.getState().activeConditions).toEqual([]);
+    expect(useCharacterSheetStore.getState().activeStates).not.toContain(
+      "blindd",
+    );
+  });
+
+  it("keeps conditions through a turn cycle, since they are not timed effects", () => {
+    useCharacterSheetStore.getState().toggleCondition("incapacitated");
+
+    useCharacterSheetStore.getState().endTurn();
+    useCharacterSheetStore.getState().beginTurn();
+
+    expect(useCharacterSheetStore.getState().activeStates).toContain(
+      "incapacitated",
+    );
+  });
+
+  it("keeps conditions alongside states granted by an effect", () => {
+    const runtimeEffects = new EffectManager();
+    runtimeEffects.addEffect({
+      instanceId: "effect_rage",
+      sourceName: "Rage",
+      durationType: "manual",
+      isSelfConcentration: false,
+      modifiers: [],
+      grantedStates: ["status_raging"],
+    });
+    useCharacterSheetStore.setState({
+      runtimeEffects,
+      runtimeResources: new ResourceManager(),
+    });
+
+    useCharacterSheetStore.getState().toggleCondition("prone");
+    useCharacterSheetStore.getState().endTurn();
+
+    const states = useCharacterSheetStore.getState().activeStates;
+    expect(states).toContain("prone");
+    expect(states).toContain("status_raging");
+  });
+});

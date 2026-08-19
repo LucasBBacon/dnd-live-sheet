@@ -1,11 +1,34 @@
-import type { FixedProficiencyGrant, RuntimeModifier } from "@project/shared";
+import type {
+  FixedProficiencyGrant,
+  ModifierType,
+  RuntimeModifier,
+} from "@project/shared";
 import { AbilityEngine } from "./abilities.js";
 import type { Ability } from "../types/core.js";
+
+/** Whether the d20 is rolled twice, and which half counts. */
+export type SaveRollState = "advantage" | "disadvantage" | "normal";
+
+/**
+ * A modifier the engine declines to apply, reported for the player to judge.
+ *
+ * Danger Sense grants advantage "against effects that you can see". Nothing
+ * this engine tracks says whether a given effect is visible, so the rule is
+ * surfaced as a caveat rather than resolved. Kept out of both the total and the
+ * roll state: a caveated advantage must never cancel a real disadvantage.
+ */
+export interface SaveConditionalNote {
+  source: string;
+  appliesWhen: string;
+  type: ModifierType;
+}
 
 export interface DerivedSave {
   ability: Ability;
   totalModifier: number;
   isProficient: boolean;
+  rollState: SaveRollState;
+  conditionalNotes: SaveConditionalNote[];
   breakdown: string;
 }
 
@@ -126,8 +149,22 @@ export class SaveEngine {
         : true;
     });
 
+    // a modifier carrying appliesWhen names a rider the engine cannot settle,
+    // so it is split off before anything is applied and only reported
+    const conditionalNotes: SaveConditionalNote[] = validMods
+      .filter((mod) => mod.appliesWhen !== undefined)
+      .map((mod) => ({
+        source: mod.sourceName,
+        appliesWhen: mod.appliesWhen!,
+        type: mod.type,
+      }));
+
+    const applicableMods = validMods.filter(
+      (mod) => mod.appliesWhen === undefined,
+    );
+
     let modBonus = 0;
-    for (const mod of validMods) {
+    for (const mod of applicableMods) {
       if (mod.type !== "add") continue;
 
       const chaMod = AbilityEngine.getModifier(chaScore);
@@ -141,12 +178,33 @@ export class SaveEngine {
       breakdown.push(`${mod.sourceName} (${s}${bonusValue})`);
     }
 
+    // advantage is a second d20 rather than a bonus, so it is reported beside
+    // the number instead of being folded into it
+    const advantage = applicableMods.find((mod) => mod.type === "advantage");
+    const disadvantage = applicableMods.find(
+      (mod) => mod.type === "disadvantage",
+    );
+
+    let rollState: SaveRollState = "normal";
+
+    if (advantage && !disadvantage) {
+      rollState = "advantage";
+      breakdown.push(`Advantage (Granted by ${advantage.sourceName})`);
+    } else if (disadvantage && !advantage) {
+      rollState = "disadvantage";
+      breakdown.push(`Disadvantage (Imposed by ${disadvantage.sourceName})`);
+    } else if (advantage && disadvantage) {
+      breakdown.push("Straight Roll (Advantage/Disadvantage cancel out)");
+    }
+
     const totalModifier = abilityMod + profContribution + modBonus;
 
     return {
       ability,
       totalModifier,
       isProficient: maxMultiplier > 0,
+      rollState,
+      conditionalNotes,
       breakdown: breakdown.join(" + "),
     };
   }

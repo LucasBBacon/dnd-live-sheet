@@ -56,3 +56,47 @@ describe("TraitDefinitionSchema", () => {
     });
   });
 });
+describe("BaseModifierSchema appliesWhen", () => {
+  const dangerSense = (appliesWhen?: unknown) => ({
+    id: "trait_danger_sense",
+    name: "Danger Sense",
+    modifiers: {
+      fixed: [
+        {
+          target: "DEX_SAVE",
+          type: "advantage",
+          ...(appliesWhen !== undefined && { appliesWhen }),
+          requiredStates: [],
+          forbiddenStates: ["blinded", "deafened", "incapacitated"],
+        },
+      ],
+      choices: [],
+    },
+  });
+
+  it("accepts a narrative rider the engine cannot evaluate", () => {
+    const parsed = TraitDefinitionSchema.parse(
+      dangerSense("against effects that you can see, such as traps and spells"),
+    );
+
+    expect(parsed.modifiers.fixed[0]?.appliesWhen).toBe(
+      "against effects that you can see, such as traps and spells",
+    );
+  });
+
+  it("leaves the rider absent rather than empty when it is not authored", () => {
+    const parsed = TraitDefinitionSchema.parse(dangerSense());
+
+    expect(parsed.modifiers.fixed[0]?.appliesWhen).toBeUndefined();
+  });
+
+  it("rejects an empty rider, which would render as a meaningless caveat", () => {
+    expect(() => TraitDefinitionSchema.parse(dangerSense(""))).toThrow();
+  });
+
+  it("rejects a rider long enough to break the sheet layout", () => {
+    expect(() =>
+      TraitDefinitionSchema.parse(dangerSense("a".repeat(121))),
+    ).toThrow();
+  });
+});

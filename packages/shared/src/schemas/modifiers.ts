@@ -81,6 +81,20 @@ export const BaseModifierSchema = z.object({
   maxDexCap: z.number().optional(),
   formula: ACFormulaSchema.optional(),
   attackContext: ModifierAttackContextSchema.optional(),
+  /**
+   * A rider the engine cannot evaluate, phrased for the player.
+   *
+   * Danger Sense applies "against effects that you can see": whether the
+   * character can see a given effect is settled at the table, not by any state
+   * this engine tracks. Rather than over-grant the advantage or refuse to model
+   * the rule, the modifier carries the caveat as text.
+   *
+   * A modifier carrying this is **reported, never applied**. A consumer that
+   * understands the field must surface it instead of folding it into a total or
+   * a roll state. Today only SaveEngine does; authoring it on a modifier read by
+   * any other calculator would silently apply it unconditionally.
+   */
+  appliesWhen: z.string().min(1).max(120).optional(),
   requiredStates: z.array(z.string()).default([]),
   forbiddenStates: z.array(z.string()).default([]),
 });

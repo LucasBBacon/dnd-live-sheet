@@ -1,7 +1,11 @@
 import { describe, expect, it } from "vitest";
 import { readFileSync } from "node:fs";
 import path from "node:path";
-import { TraitDefinitionSchema, type TraitDefinition } from "@project/shared";
+import {
+  CONDITION_MAP,
+  TraitDefinitionSchema,
+  type TraitDefinition,
+} from "@project/shared";
 
 const SEGMENT_PATH = path.join(
   process.cwd(),
@@ -119,5 +123,56 @@ describe("trait_reckless_attack", () => {
       "reckless_attack",
       "reckless_attack_exposed",
     ]);
+  });
+});
+
+describe("trait_danger_sense", () => {
+  const trait = findTrait("trait_danger_sense");
+
+  it("is authored as an engine-backed rule", () => {
+    expect(trait.implementation?.mode).toBe("engine");
+  });
+
+  it("carries real rule text rather than a placeholder", () => {
+    expect(trait.lore?.shortDescription).not.toBe("placeholder");
+    expect(trait.lore?.shortDescription.length).toBeGreaterThan(20);
+  });
+
+  it("grants advantage on Dexterity saves, not a numeric bonus", () => {
+    const [modifier, ...rest] = trait.modifiers.fixed;
+
+    expect(rest).toHaveLength(0);
+    expect(modifier?.target).toBe("DEX_SAVE");
+    expect(modifier?.type).toBe("advantage");
+  });
+
+  it("carries the visibility rider the engine cannot settle", () => {
+    expect(trait.modifiers.fixed[0]?.appliesWhen).toContain("see");
+  });
+
+  it("is blocked by the three conditions that switch the benefit off", () => {
+    expect(trait.modifiers.fixed[0]?.forbiddenStates).toEqual([
+      "blinded",
+      "deafened",
+      "incapacitated",
+    ]);
+  });
+
+  it("gates only on conditions the engine actually knows", () => {
+    for (const state of trait.modifiers.fixed[0]?.forbiddenStates ?? []) {
+      expect(CONDITION_MAP[state], state).toBeDefined();
+    }
+  });
+
+  it("records the same conditions as implementation metadata", () => {
+    expect(trait.implementation?.blockedBy).toEqual([
+      "blinded",
+      "deafened",
+      "incapacitated",
+    ]);
+  });
+
+  it("needs no action, because the benefit is passive", () => {
+    expect(trait.actions).toEqual([]);
   });
 });

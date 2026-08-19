@@ -4,10 +4,13 @@ import {
   AbilityEngine,
   DerivedStatEngine,
   InventoryExtractor,
+  SaveEngine,
   SkillEngine,
   type Ability,
 } from "@project/engine";
 import { SKILL_MAP, type FixedProficiencyGrant } from "@project/shared";
+
+const ABILITY_KEYS: Ability[] = ["STR", "DEX", "CON", "INT", "WIS", "CHA"];
 
 /**
  * A custom React hook that calculates the character's final ability scores, modifiers, and total active modifiers based on base scores, active modifiers, and equipped inventory items.
@@ -119,7 +122,38 @@ export const useDerivedStats = () => {
       );
     });
 
-    return { profBonus, maxHp, initiative, armorClass, skills };
+    // the store keeps proficiencies as a flat id -> level record with no
+    // category, so saving-throw grants are recovered by matching ability names;
+    // this is the same recovery useCombat performs for weapon proficiencies
+    const saveProficiencies: FixedProficiencyGrant[] = ABILITY_KEYS.flatMap(
+      (ability) => {
+        const level =
+          proficiencies[ability] ?? proficiencies[ability.toLowerCase()];
+
+        if (level === undefined || level === "none") return [];
+
+        return [
+          {
+            category: "saving_throws" as const,
+            proficiencyId: ability,
+            level: level as FixedProficiencyGrant["level"],
+            requiredStates: [],
+          },
+        ];
+      },
+    );
+
+    const saves = SaveEngine.calculateSaves(
+      Object.fromEntries(
+        ABILITY_KEYS.map((ability) => [ability, finalAbilities[ability].score]),
+      ) as Record<Ability, number>,
+      profBonus,
+      saveProficiencies,
+      totalMods,
+      activeStates,
+    );
+
+    return { profBonus, maxHp, initiative, armorClass, skills, saves };
   }, [
     level,
     baseHpRolled,

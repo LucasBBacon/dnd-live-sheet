@@ -178,3 +178,196 @@ describe("SaveEngine.calculateSaves - modifiers", () => {
     expect(saves.STR!.breakdown).not.toContain("Aura of Protection");
   });
 });
+
+describe("SaveEngine.calculateSaves - roll state", () => {
+  it("reports a normal roll when nothing grants advantage", () => {
+    const saves = SaveEngine.calculateSaves(makeScores(), 0, [], []);
+
+    expect(saves.DEX!.rollState).toBe("normal");
+  });
+
+  it("reports advantage granted by its source", () => {
+    const saves = SaveEngine.calculateSaves(
+      makeScores(),
+      0,
+      [],
+      [makeMod({ target: "DEX_SAVE", type: "advantage", sourceName: "Fey Ancestry" })],
+    );
+
+    expect(saves.DEX!.rollState).toBe("advantage");
+  });
+
+  it("leaves the other five saves normal when only one is targeted", () => {
+    const saves = SaveEngine.calculateSaves(
+      makeScores(),
+      0,
+      [],
+      [makeMod({ target: "DEX_SAVE", type: "advantage", sourceName: "Fey Ancestry" })],
+    );
+
+    expect(saves.STR!.rollState).toBe("normal");
+    expect(saves.CHA!.rollState).toBe("normal");
+  });
+
+  it("applies an ALL_SAVES advantage to every save", () => {
+    const saves = SaveEngine.calculateSaves(
+      makeScores(),
+      0,
+      [],
+      [makeMod({ target: "ALL_SAVES", type: "advantage", sourceName: "Bless" })],
+    );
+
+    for (const ability of ["STR", "DEX", "CON", "INT", "WIS", "CHA"]) {
+      expect(saves[ability]!.rollState, ability).toBe("advantage");
+    }
+  });
+
+  it("reports disadvantage imposed by its source", () => {
+    const saves = SaveEngine.calculateSaves(
+      makeScores(),
+      0,
+      [],
+      [makeMod({ target: "DEX_SAVE", type: "disadvantage", sourceName: "Restrained" })],
+    );
+
+    expect(saves.DEX!.rollState).toBe("disadvantage");
+  });
+
+  it("cancels advantage against disadvantage back to a straight roll", () => {
+    const saves = SaveEngine.calculateSaves(
+      makeScores(),
+      0,
+      [],
+      [
+        makeMod({ id: "adv", target: "DEX_SAVE", type: "advantage", sourceName: "Danger Sense" }),
+        makeMod({ id: "dis", target: "DEX_SAVE", type: "disadvantage", sourceName: "Restrained" }),
+      ],
+    );
+
+    expect(saves.DEX!.rollState).toBe("normal");
+  });
+
+  it("ignores an advantage modifier whose forbidden state is active", () => {
+    const saves = SaveEngine.calculateSaves(
+      makeScores(),
+      0,
+      [],
+      [
+        makeMod({
+          target: "DEX_SAVE",
+          type: "advantage",
+          sourceName: "Danger Sense",
+          forbiddenStates: ["blinded"],
+        }),
+      ],
+      ["blinded"],
+    );
+
+    expect(saves.DEX!.rollState).toBe("normal");
+  });
+
+  it("leaves the numeric modifier untouched by a roll state modifier", () => {
+    const saves = SaveEngine.calculateSaves(
+      makeScores({ DEX: 16 }),
+      0,
+      [],
+      [makeMod({ target: "DEX_SAVE", type: "advantage", value: 5, sourceName: "Danger Sense" })],
+    );
+
+    expect(saves.DEX!.totalModifier).toBe(3);
+  });
+});
+
+describe("SaveEngine.calculateSaves - conditional notes", () => {
+  const dangerSense = (overrides: Partial<RuntimeModifier> = {}) =>
+    makeMod({
+      target: "DEX_SAVE",
+      type: "advantage",
+      sourceName: "Danger Sense",
+      appliesWhen: "against effects that you can see",
+      forbiddenStates: ["blinded", "deafened", "incapacitated"],
+      ...overrides,
+    });
+
+  it("reports a rider the engine cannot evaluate instead of applying it", () => {
+    const saves = SaveEngine.calculateSaves(makeScores(), 0, [], [dangerSense()]);
+
+    expect(saves.DEX!.rollState).toBe("normal");
+    expect(saves.DEX!.conditionalNotes).toEqual([
+      {
+        source: "Danger Sense",
+        appliesWhen: "against effects that you can see",
+        type: "advantage",
+      },
+    ]);
+  });
+
+  it("carries no notes on a save nothing qualifies", () => {
+    const saves = SaveEngine.calculateSaves(makeScores(), 0, [], [dangerSense()]);
+
+    expect(saves.STR!.conditionalNotes).toEqual([]);
+  });
+
+  it.each(["blinded", "deafened", "incapacitated"])(
+    "drops the note entirely while %s",
+    (condition) => {
+      const saves = SaveEngine.calculateSaves(
+        makeScores(),
+        0,
+        [],
+        [dangerSense()],
+        [condition],
+      );
+
+      expect(saves.DEX!.conditionalNotes).toEqual([]);
+    },
+  );
+
+  it("keeps a conditional note out of the cancel-out calculation", () => {
+    const saves = SaveEngine.calculateSaves(
+      makeScores(),
+      0,
+      [],
+      [
+        dangerSense(),
+        makeMod({
+          id: "dis",
+          target: "DEX_SAVE",
+          type: "disadvantage",
+          sourceName: "Restrained",
+        }),
+      ],
+    );
+
+    // the unconditional disadvantage stands alone: a caveated advantage must
+    // not cancel it, or a restrained barbarian would silently roll straight
+    expect(saves.DEX!.rollState).toBe("disadvantage");
+    expect(saves.DEX!.conditionalNotes).toHaveLength(1);
+  });
+
+  it("does not fold a conditional numeric bonus into the total", () => {
+    const saves = SaveEngine.calculateSaves(
+      makeScores(),
+      0,
+      [],
+      [
+        makeMod({
+          target: "DEX_SAVE",
+          type: "add",
+          value: 2,
+          sourceName: "Cloak of Warding",
+          appliesWhen: "against spells",
+        }),
+      ],
+    );
+
+    expect(saves.DEX!.totalModifier).toBe(0);
+    expect(saves.DEX!.conditionalNotes).toEqual([
+      {
+        source: "Cloak of Warding",
+        appliesWhen: "against spells",
+        type: "add",
+      },
+    ]);
+  });
+});

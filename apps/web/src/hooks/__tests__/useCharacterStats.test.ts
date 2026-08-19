@@ -64,7 +64,7 @@ vi.mock("@project/engine", async () => {
   };
 });
 
-import { useAbilities } from "../useCharacterStats";
+import { useAbilities, useDerivedStats } from "../useCharacterStats";
 import { getProjectedConModifier } from "../../utils/levelUpReview";
 
 describe("useAbilities", () => {
@@ -97,5 +97,132 @@ describe("useAbilities", () => {
     } as Record<string, { score: number; modifier: number }>;
 
     expect(getProjectedConModifier(finalAbilities, [{ stat: "CON", value: 2 }])).toBe(3);
+  });
+});
+
+describe("useDerivedStats saving throws", () => {
+  beforeEach(() => {
+    mockStoreState = {
+      baseScores: { STR: 16, DEX: 14, CON: 14, INT: 10, WIS: 10, CHA: 10 },
+      activeModifiers: [],
+      inventory: [],
+      activeStates: [],
+      ruleSnapshot: null,
+      level: 2,
+      classLevels: { class_barbarian: 2 },
+      proficiencies: {},
+      baseHpRolled: 1,
+    };
+  });
+
+  it("derives a saving throw for every ability", () => {
+    const { saves } = useDerivedStats();
+
+    expect(Object.keys(saves).sort()).toEqual([
+      "CHA",
+      "CON",
+      "DEX",
+      "INT",
+      "STR",
+      "WIS",
+    ]);
+  });
+
+  it("uses the ability modifier when the save is not proficient", () => {
+    const { saves } = useDerivedStats();
+
+    expect(saves.DEX.totalModifier).toBe(2);
+    expect(saves.DEX.isProficient).toBe(false);
+  });
+
+  it("adds the proficiency bonus for a save the character is proficient in", () => {
+    mockStoreState.proficiencies = { STR: "proficient", CON: "proficient" };
+
+    const { saves } = useDerivedStats();
+
+    expect(saves.STR.isProficient).toBe(true);
+    expect(saves.STR.totalModifier).toBe(5);
+    expect(saves.DEX.isProficient).toBe(false);
+  });
+
+  it("does not mistake a skill proficiency for a saving throw proficiency", () => {
+    mockStoreState.proficiencies = { athletics: "proficient" };
+
+    const { saves } = useDerivedStats();
+
+    expect(saves.STR.isProficient).toBe(false);
+  });
+
+  it("reports advantage granted by an unconditional modifier", () => {
+    mockStoreState.activeModifiers = [
+      {
+        id: "mod_fey",
+        target: "DEX_SAVE",
+        type: "advantage",
+        value: 0,
+        scalingFactor: "none",
+        requiredStates: [],
+        forbiddenStates: [],
+        sourceName: "Fey Ancestry",
+        sourceOrigin: "trait:trait_fey_ancestry",
+        isActive: true,
+      },
+    ];
+
+    const { saves } = useDerivedStats();
+
+    expect(saves.DEX.rollState).toBe("advantage");
+  });
+
+  it("reports a Danger Sense rider as a note rather than as advantage", () => {
+    mockStoreState.activeModifiers = [
+      {
+        id: "mod_danger_sense",
+        target: "DEX_SAVE",
+        type: "advantage",
+        value: 0,
+        scalingFactor: "none",
+        appliesWhen: "against effects that you can see",
+        requiredStates: [],
+        forbiddenStates: ["blinded", "deafened", "incapacitated"],
+        sourceName: "Danger Sense",
+        sourceOrigin: "trait:trait_danger_sense",
+        isActive: true,
+      },
+    ];
+
+    const { saves } = useDerivedStats();
+
+    expect(saves.DEX.rollState).toBe("normal");
+    expect(saves.DEX.conditionalNotes).toEqual([
+      {
+        source: "Danger Sense",
+        appliesWhen: "against effects that you can see",
+        type: "advantage",
+      },
+    ]);
+  });
+
+  it("drops the Danger Sense note while the character is blinded", () => {
+    mockStoreState.activeModifiers = [
+      {
+        id: "mod_danger_sense",
+        target: "DEX_SAVE",
+        type: "advantage",
+        value: 0,
+        scalingFactor: "none",
+        appliesWhen: "against effects that you can see",
+        requiredStates: [],
+        forbiddenStates: ["blinded", "deafened", "incapacitated"],
+        sourceName: "Danger Sense",
+        sourceOrigin: "trait:trait_danger_sense",
+        isActive: true,
+      },
+    ];
+    mockStoreState.activeStates = ["blinded"];
+
+    const { saves } = useDerivedStats();
+
+    expect(saves.DEX.conditionalNotes).toEqual([]);
   });
 });

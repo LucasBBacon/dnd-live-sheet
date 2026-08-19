@@ -38,5 +38,6 @@ export * from "./schemas/triggers.js";
 export * from "./schemas/weapons.js";
 export * from "./startingEquipment.js";
 export * from "./skills.js";
+export * from "./conditions.js";
 export * from "./events/socket.js";
 export * from "./events/levelUp.js";

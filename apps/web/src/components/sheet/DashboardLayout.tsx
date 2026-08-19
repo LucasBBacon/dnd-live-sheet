@@ -12,6 +12,8 @@ import { CombatWidget } from "./CombatWidget";
 import { RestModal } from "./modals/RestModal";
 import { LevelUpWizard } from "../wizard/LevelUpWizard";
 import { ArmorClassWidget } from "./ArmorClassWidget";
+import { ConditionsWidget } from "./ConditionsWidget";
+import { SavingThrowsWidget } from "./SavingThrowsWidget";
 
 export const DashboardLayout = () => {
   const character = useCharacterSheetStore();
@@ -189,6 +191,8 @@ export const DashboardLayout = () => {
               {initiative.total}
             </span>
           </div>
+
+          <ConditionsWidget />
         </section>
 
         {/* ACTION ECONOMY */}
@@ -226,6 +230,8 @@ export const DashboardLayout = () => {
               ))}
             </div>
           </div>
+
+          <SavingThrowsWidget />
 
           <div className="bg-white border-2 border-gray-300 p-4 rounded flex-grow overflow-y-auto">
             <h2 className="font-bold border-b-2 border-gray-800 pb-1 mb-2 uppercase">

@@ -160,6 +160,20 @@ Both halves of Rage are authored against them:
 
 The ability state follows the *resolved* governing stat, not the weapon's default. A finesse weapon wielded by a character with higher Dexterity emits `action_using_dex`, so a Strength-gated rule correctly declines to apply.
 
+### Condition states
+
+The fourteen flag conditions are declared in `packages/shared/src/conditions.ts` as `CONDITION_MAP`. The player toggles them on the sheet, and each active one becomes a state, so a rule gates on a condition simply by naming it:
+
+```json
+"forbiddenStates": ["blinded", "deafened", "incapacitated"]
+```
+
+Use the **bare id** — `blinded`, not `condition_blinded`. Authored rules already gate on the unprefixed name, and the store rejects any id that is not in `CONDITION_MAP`, so a typo produces no state rather than a silently dead rule.
+
+Conditions are flags only. Marking yourself `prone` grants the state and nothing else; the mechanical riders each condition carries are not modelled, and remain the table's business. Exhaustion is deliberately absent, being a six-level track rather than a flag.
+
+The character's state list is composed from three sources with different lifetimes — `baseStates` (worn armour, encumbrance), conditions (until the player clears them), and effects (until their timer expires). Everything a calculator gates on arrives through that one list.
+
 ### Choice modifiers
 
 Use `modifiers.choices` when the player chooses one or more targets from an allowed list:
@@ -293,6 +307,30 @@ Advantage is a second d20, not a bonus, so it is authored as a modifier `type` r
 ```
 
 `CombatEngine` reports the outcome as `DerivedAttack.rollState`, which is `advantage`, `disadvantage`, or `normal`, and adds a line to the attack breakdown naming the source. Any amount of advantage cancels against any amount of disadvantage back to `normal`, matching the behaviour `DerivedStatEngine` and `SkillEngine` already implement for their own targets. The numeric `attackBonus` is never changed by these modifiers.
+
+### Riders the engine cannot settle: `appliesWhen`
+
+Some rules carry a qualifier no state can capture. Danger Sense grants advantage on Dexterity saves, but only *"against effects that you can see"* — nothing the engine tracks says whether a given effect is visible. Author the qualifier as text:
+
+```json
+{
+  "target": "DEX_SAVE",
+  "type": "advantage",
+  "appliesWhen": "against effects that you can see, such as traps and spells",
+  "forbiddenStates": ["blinded", "deafened", "incapacitated"]
+}
+```
+
+The governing rule: **a modifier carrying `appliesWhen` is reported, never applied.** `SaveEngine` returns it in `DerivedSave.conditionalNotes` and keeps it out of both `totalModifier` and `rollState`. The sheet prints it under the save; the player decides whether it applies.
+
+Keeping it out of `rollState` matters for more than tidiness. If a caveated advantage were folded in, a restrained barbarian would cancel a real disadvantage against an advantage they may not actually have, and silently roll straight.
+
+Note the division of labour in that example. The three conditions are things the engine *can* know, so they gate the modifier and the note disappears entirely while any of them is active. Only the visibility half is deferred.
+
+Two limits to respect:
+
+- Only `SaveEngine` honours this field today. A calculator that does not know about it will apply such a modifier unconditionally, so do not author `appliesWhen` outside saving throws until the consuming calculator supports it.
+- It is display text, not a gate. Anything the engine *can* evaluate belongs in `requiredStates` or `forbiddenStates` instead.
 
 ### Rules whose effect lands on someone else's roll
 
