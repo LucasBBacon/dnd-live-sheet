@@ -177,33 +177,79 @@ deliberately left out and are listed so the absence stays deliberate.
 
 ---
 
-## Open — socket gateway has no test coverage
+## Open — defects found by the socket gateway test pass
 
-`apps/server/src/gateway/socket.ts` is the one substantial file in the repo with no
-tests at all. There is no socket harness, so every handler in it is unverified
-wire code. Nothing in it *decides* anything — the logic it calls out to is unit
-tested — but the wiring itself is not: that events are bound to the right names,
-that the campaign room is resolved before emitting, that the reply payload is
-shaped as the client expects, and that the authoritative runtime is reused rather
-than rebuilt per call.
+Three defects surfaced when the gateway was first put under test on 2026-08-19.
+All three are pinned by passing characterisation tests, so each fix has a test
+to flip rather than a test to write.
 
-Handlers currently uncovered:
+| # | Item | Location | Effect |
+| --- | --- | --- | --- |
+| S1 | Rest zeroes short-rest resources | [socket.ts:894](apps/server/src/gateway/socket.ts:894) | `RestEngine.applyRest(res, type, 1, {})` passes an empty class ledger, so every `class_level_thresholds` resource resolves to max 0. A short rest **drains** Second Wind and Action Surge instead of restoring them. The ledger is already read a few lines away in `getAuthoritativeRuntimeContext`. |
+| S2 | Replayed actions arrive in a different shape | [socket.ts:480](apps/server/src/gateway/socket.ts:480) | The fresh path emits `{ actorId, data }` via `io.to(room)`; the `requestId` replay path emits the bare payload via `socket.emit`. Both land on `character:action_resolved`, so a client reading `msg.data` gets `undefined` for every retried request. |
+| S3 | ROOM_JOIN has no error path | [socket.ts:329](apps/server/src/gateway/socket.ts:329) | The handler has no try/catch, so a `characterId` from another campaign rejects the handler promise. socket.io drops it: the client gets no inventory snapshot and no error. Every other handler emits `action_error` or `error:rollback`. |
 
-| Handler | Added |
-| --- | --- |
-| `ROOM_JOIN`, `HP_MODIFIED`, `ITEM_EQUIPPED`, `ITEM_ATTUNED`, `ITEM_CONSUMED`, `INVENTORY_SYNC`, `RESOURCE_CONSUMED`, `REST_COMPLETED`, `ROLL_RESULTS` | pre-existing |
-| `ACTION_INTENT` / `ACTION_RESOLVED` | pre-existing, extended in action-economy phase 1 (combat context, `economyPolicy`) and phase 2 (`attacksPerAction`) |
-| `TURN_STARTED` / `TURN_ENDED` / `TURN_RESOLVED` | action-economy phase 1 |
+Two smaller findings, recorded but lower value:
 
-Doing this properly means one harness — a fake `Server`/`Socket` pair plus a mocked
-`db` — after which each handler is a small test. Worth doing as a single dedicated
-pass rather than piecemeal, since the harness is most of the work and every handler
-then costs a few lines.
+- `ITEM_ATTUNED` is declared in `SOCKET_EVENTS` and has no server binding at
+  all — a client emitting it is talking to nobody.
+- `EQUIPMENT_SLOTS` advertises `head`, `cloak`, `boots`, `gloves`, `ring_1`,
+  `ring_2` and `amulet`, but `isValidTargetSlotForItem` only ever returns true
+  for `backpack`, the two hands and `armor`, so those seven slots are
+  unreachable for every item type.
 
-Related: `apps/server/vitest.config.ts` carries `testTimeout: 20000` because these
-suites build a real Express app through dynamic imports and the default 5s sat on
-the boundary. A harness that avoids the full app import would likely let that go
-back down.
+---
+
+## Resolved — socket gateway test coverage
+
+Done on 2026-08-19. `apps/server/src/gateway/socket.ts` went from no tests at
+all to **97.7% lines / 77.9% branches** across 82 tests in 7 files.
+
+The harness is `src/gateway/__tests__/socketHarness.ts` plus `fakeDb.ts`. Only
+two modules are replaced — `socket.io` and `@project/database`. The engine and
+`campaignAccess` run for real, so `ROOM_JOIN` exercises the actual membership
+check and `ACTION_INTENT` resolves genuine action-economy grants rather than
+fixtures.
+
+Two things the harness makes assertable that a round-trip test would not:
+
+- **The three emit targets stay distinct.** `socket.emit` (sender only),
+  `socket.to(room).emit` (room minus sender) and `io.to(room).emit` (room
+  including sender) are recorded separately. The gateway uses all three
+  deliberately and collapsing them would hide a real class of bug.
+- **Writes are checked as SQL.** `renderSql` runs a captured `set`/`where`
+  through `PgDialect`, so a test can prove the hp delta is
+  `"characters"."current_hp" + $1` rather than a read-modify-write, and that the
+  equip sweep still carries its `character_id` boundary.
+
+Every assertion was mutation-tested: nine deliberate defects were injected into
+`socket.ts` and each one turned the suite red. One early TTL assertion survived
+its mutation, was found vacuous, and was rewritten to assert on effect count
+instead of on `activeStates` (which dedupes).
+
+Still uncovered, both needing engine fixtures that do not exist while the
+core-pack migration is in flight: the `source: "actor"` happy path (needs a live
+summon actor) and the optional roll-result fields (needs an action that rolls).
+
+The backlog previously listed `ITEM_ATTUNED` and `INVENTORY_SYNC` as handlers
+needing coverage. Neither is an inbound handler: `INVENTORY_SYNC` is emit-only,
+pushed to the joining client during `ROOM_JOIN`, and `ITEM_ATTUNED` is unbound
+(see S-findings above). The eleven real bindings are `ROOM_JOIN`, `HP_MODIFIED`,
+`ROLL_RESULTS`, `ACTION_INTENT`, `TURN_STARTED`, `TURN_ENDED`, `ITEM_EQUIPPED`,
+`ITEM_CONSUMED`, `RESOURCE_CONSUMED`, `REST_COMPLETED` and `disconnect`.
+
+`apps/server/vitest.config.ts` keeps `testTimeout: 20000`. The note that a
+harness avoiding the full app import would let it drop was about these tests —
+which now run in ~1.5s a file — but the *route* tests still build a real Express
+app through dynamic imports and still need the headroom. Lowering it is a
+separate call.
+
+One thing worth knowing before trusting `pnpm test:coverage` as a gate: the
+configured 80% thresholds are not currently met workspace-wide and were not met
+before this pass either. Server-wide coverage is ~49% statements / ~37%
+branches, held down by `src/services` (~21%) and `src/routes` (~38%). The
+gateway is now among the better-covered areas and raised the global number
+rather than lowering it.
 
 ---
 
