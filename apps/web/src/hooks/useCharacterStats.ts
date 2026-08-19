@@ -153,7 +153,21 @@ export const useDerivedStats = () => {
       activeStates,
     );
 
-    return { profBonus, maxHp, initiative, armorClass, skills, saves };
+    const attacksPerAction = DerivedStatEngine.calculateAttacksPerAction(
+      totalMods,
+      { total: level, classes: classLevels },
+      activeStates,
+    );
+
+    return {
+      profBonus,
+      maxHp,
+      initiative,
+      armorClass,
+      skills,
+      saves,
+      attacksPerAction,
+    };
   }, [
     level,
     baseHpRolled,

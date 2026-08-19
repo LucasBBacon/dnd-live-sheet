@@ -54,6 +54,9 @@ describe("CombatContextSchema", () => {
         actionAvailable: true,
         bonusActionAvailable: true,
         reactionAvailable: true,
+        // present, not merely defaulted somewhere else: a default-constructed
+        // context must carry every economy field or the manager reads undefined
+        attacksRemaining: null,
       },
       turnFlags: {},
       pendingEvents: [],

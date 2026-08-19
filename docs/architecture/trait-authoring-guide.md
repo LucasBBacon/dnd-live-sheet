@@ -287,6 +287,29 @@ When `status_wearing_armor` is active, the candidate is filtered out and the equ
 
 Do not represent this rule as a conditional `add` of Constitution alongside an unconditional or separately competing base. That could allow Constitution to leak into another AC formula, such as Mage Armor.
 
+## Competing Candidates Beyond AC
+
+The candidate pattern is not specific to armour class. Any rule where several sources each claim to set the same value, and the rules say they do not stack, belongs in it.
+
+`ATTACKS_PER_ACTION` is the second such target. It answers "how many attacks does one Attack action grant", with a base of one:
+
+```json
+{
+  "target": "ATTACKS_PER_ACTION",
+  "type": "set_base",
+  "value": 2,
+  "scalingFactor": "class_level_thresholds",
+  "scalingClassId": "class_barbarian",
+  "scalingThresholds": [{ "minimumLevel": 5, "value": 2 }]
+}
+```
+
+`DerivedStatEngine.calculateAttacksPerAction` filters candidates by state and activity, resolves each one's scaling, takes the highest, and reports the rest as ignored.
+
+Highest-wins is the rule here, not a tie-break convenience. Extra Attack does not stack across classes, so a Fighter 11 / Barbarian 5 attacks three times rather than five. Authoring it as `add` would be wrong in a way that only shows up on a multiclass sheet.
+
+`trait_extra_attack` is shared by six classes, so it carries one candidate per class, each with its own `scalingClassId` and thresholds. That is deliberate rather than untidy: each class's progression is stated independently and testable on its own, and the competition between them produces the correct multiclass answer for free. A class whose thresholds are all unmet resolves to zero, which is treated as no candidate at all rather than a candidate of zero attacks.
+
 ## Advantage Example
 
 Advantage is a second d20, not a bonus, so it is authored as a modifier `type` rather than a `value`. Reckless Attack grants it on the attack roll:

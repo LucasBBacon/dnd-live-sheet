@@ -69,27 +69,8 @@ export class DerivedStatEngine {
     // process trait mods
     for (const mod of hpMods) {
       if (mod.type === "add") {
-        let addition = mod.value;
-
         // handle scaling based on ModifierScalingSchema
-        if (mod.scalingFactor === "total_level") {
-          addition *= levels.total;
-        } else if (mod.scalingFactor === "class_level" && mod.scalingClassId) {
-          const classLvl = levels.classes[mod.scalingClassId] || 0;
-          addition *= classLvl;
-        } else if (
-          mod.scalingFactor === "class_level_thresholds" &&
-          mod.scalingClassId
-        ) {
-          const classLevel = levels.classes[mod.scalingClassId] ?? 0;
-          addition = (mod.scalingThresholds ?? []).reduce(
-            (resolved, threshold) =>
-              classLevel >= threshold.minimumLevel
-                ? threshold.value
-                : resolved,
-            0,
-          );
-        }
+        const addition = this.resolveScaledValue(mod, levels);
 
         if (addition !== 0) {
           total += addition;
@@ -100,6 +81,113 @@ export class DerivedStatEngine {
     }
 
     return { total, breakdown };
+  }
+
+  // #endregion
+
+  // #region Attacks per action
+
+  /**
+   * How many attacks one Attack action grants.
+   *
+   * Base one, because a character who has never heard of Extra Attack still
+   * swings once. Candidates compete rather than sum: Extra Attack explicitly
+   * does not stack, so a Fighter 11 / Barbarian 5 attacks three times, not
+   * five. Highest candidate wins and the rest are reported as ignored, the same
+   * way calculateAC explains a rejected base.
+   *
+   * This is the count only. Nothing here tracks how many attacks have been
+   * used - the sheet has no turn lifecycle to reset such a counter against.
+   * @param modifiers Active runtime modifiers, of which ATTACKS_PER_ACTION set_base entries are candidates
+   * @param levels The character's total and per-class levels, for threshold scaling
+   * @param activeStates Flat array of all active states affecting the character
+   * @returns The resolved attack count with a breakdown naming the winner and any ignored candidates
+   */
+  public static calculateAttacksPerAction(
+    modifiers: RuntimeModifier[],
+    levels: LevelProfile,
+    activeStates: string[] = [],
+  ): CalculationResult {
+    const BASE_ATTACKS = 1;
+
+    const candidates = modifiers
+      .filter((mod) => {
+        if (!mod.isActive) return false;
+        if (mod.target !== "ATTACKS_PER_ACTION") return false;
+        if (mod.type !== "set_base") return false;
+        if (mod.forbiddenStates?.some((s) => activeStates.includes(s))) {
+          return false;
+        }
+        return mod.requiredStates
+          ? mod.requiredStates.every((s) => activeStates.includes(s))
+          : true;
+      })
+      .map((mod) => ({
+        sourceName: mod.sourceName,
+        value: this.resolveScaledValue(mod, levels),
+      }))
+      // a threshold nobody has reached yet resolves to zero, which is not a
+      // candidate at all rather than a candidate of zero attacks
+      .filter((candidate) => candidate.value > BASE_ATTACKS)
+      .sort((left, right) => right.value - left.value);
+
+    const winner = candidates[0];
+
+    if (!winner) {
+      return {
+        total: BASE_ATTACKS,
+        breakdown: [{ name: "Attack action", value: BASE_ATTACKS }],
+      };
+    }
+
+    return {
+      total: winner.value,
+      breakdown: [
+        { name: winner.sourceName, value: winner.value },
+        ...candidates.slice(1).map((candidate) => ({
+          name: candidate.sourceName,
+          value: "Ignored (Does not stack)",
+          isIgnored: true,
+        })),
+      ],
+    };
+  }
+
+  /**
+   * The value a modifier resolves to once its scaling rule is applied.
+   *
+   * Extracted because calculateMaxHp reasons about class-level thresholds the
+   * same way; keeping one copy means a threshold fix cannot land in only half
+   * of the calculator.
+   * @param modifier The runtime modifier being resolved
+   * @param levels The character's total and per-class levels
+   * @returns The scaled value, or 0 when no threshold has been reached
+   */
+  private static resolveScaledValue(
+    modifier: RuntimeModifier,
+    levels: LevelProfile,
+  ): number {
+    if (modifier.scalingFactor === "total_level") {
+      return modifier.value * levels.total;
+    }
+
+    if (modifier.scalingFactor === "class_level" && modifier.scalingClassId) {
+      return modifier.value * (levels.classes[modifier.scalingClassId] ?? 0);
+    }
+
+    if (
+      modifier.scalingFactor === "class_level_thresholds" &&
+      modifier.scalingClassId
+    ) {
+      const classLevel = levels.classes[modifier.scalingClassId] ?? 0;
+      return (modifier.scalingThresholds ?? []).reduce(
+        (resolved, threshold) =>
+          classLevel >= threshold.minimumLevel ? threshold.value : resolved,
+        0,
+      );
+    }
+
+    return modifier.value;
   }
 
   // #endregion

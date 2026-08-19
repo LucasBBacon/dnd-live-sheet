@@ -11,6 +11,8 @@ import {
   type ItemEquippedPayload,
   type ResourceConsumedPayload,
   type RollResultsBroadcastPayload,
+  type TurnIntentPayload,
+  type TurnResolvedPayload,
   unwrapServerBroadcastPayload,
 } from "@project/shared";
 import { io, type Socket } from "socket.io-client";
@@ -138,6 +140,29 @@ class SocketManager {
 
   public emitActionIntent(payload: ActionIntentPayload) {
     this.socket?.emit(SOCKET_EVENTS.ACTION_INTENT, payload);
+  }
+
+  public emitTurnIntent(
+    transition: "started" | "ended",
+    payload: TurnIntentPayload,
+  ) {
+    this.socket?.emit(
+      transition === "started"
+        ? SOCKET_EVENTS.TURN_STARTED
+        : SOCKET_EVENTS.TURN_ENDED,
+      payload,
+    );
+  }
+
+  public subscribeToTurnResolved(
+    callback: (payload: TurnResolvedPayload) => void,
+  ) {
+    this.socket?.on(
+      SOCKET_EVENTS.TURN_RESOLVED,
+      (payload: MaybeServerBroadcastPayload<TurnResolvedPayload>) => {
+        callback(unwrapServerBroadcastPayload(payload));
+      },
+    );
   }
 
   public subscribeToRollResults(

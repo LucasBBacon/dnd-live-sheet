@@ -1,10 +1,12 @@
 import { describe, expect, it, vi } from "vitest";
-import type {
-  CharacterSave,
-  TraitDefinition,
-  InventoryInstance,
-  RuntimeModifier,
+import {
+  STANDARD_ACTIONS,
+  type CharacterSave,
+  type TraitDefinition,
+  type InventoryInstance,
+  type RuntimeModifier,
 } from "@project/shared";
+import { ActionResolver } from "../actionResolver.js";
 import { TRAIT_DICTIONARY } from "../../rules/traitDictionary.js";
 import { DEFAULT_WALKING_SPEED } from "../../rules/raceDictionary.js";
 import {
@@ -993,5 +995,150 @@ describe("CharacterEngine.buildLiveSheet: containers", () => {
     expect(packed.encumbrance.totalWeight).toBe(loose.encumbrance.totalWeight);
     expect(packed.encumbrance.totalWeight).toBe(6); // backpack 5 + dagger 1
     expect(packed.containers.containers[0]!.carriedHundredths).toBe(100);
+  });
+});
+
+describe("CharacterEngine.buildLiveSheet: attacks per action", () => {
+  const withExtraAttack = () => {
+    const effectManager = new EffectManager();
+    effectManager.addEffect({
+      instanceId: "effect_extra_attack",
+      sourceName: "Extra Attack",
+      durationType: "manual",
+      isSelfConcentration: false,
+      grantedStates: [],
+      modifiers: [
+        {
+          id: "mod_extra_attack",
+          target: "ATTACKS_PER_ACTION",
+          type: "set_base",
+          value: 2,
+          scalingFactor: "none",
+          requiredStates: [],
+          forbiddenStates: [],
+          sourceName: "Extra Attack",
+          sourceOrigin: "trait:trait_extra_attack",
+          isActive: true,
+        },
+      ],
+    });
+
+    return effectManager;
+  };
+
+  it("reports a single attack for a character with nothing that grants more", () => {
+    const sheet = buildSheet(halfElfFighter());
+
+    expect(sheet.attacksPerAction.total).toBe(1);
+  });
+
+  it("reports the raised count when something grants Extra Attack", () => {
+    const sheet = CharacterEngine.buildLiveSheet(
+      halfElfFighter(),
+      [],
+      withExtraAttack(),
+      new ResourceManager(),
+    );
+
+    expect(sheet.attacksPerAction.total).toBe(2);
+  });
+
+  it("names the source so the sheet can explain the extra swing", () => {
+    const sheet = CharacterEngine.buildLiveSheet(
+      halfElfFighter(),
+      [],
+      withExtraAttack(),
+      new ResourceManager(),
+    );
+
+    expect(sheet.attacksPerAction.breakdown).toEqual([
+      { name: "Extra Attack", value: 2 },
+    ]);
+  });
+});
+
+describe("CharacterEngine.buildLiveSheet: standard actions", () => {
+  /** Applies a standard action for real, through the resolver. */
+  const afterTaking = (actionId: string): EffectManager => {
+    const effectManager = new EffectManager();
+    const action = STANDARD_ACTIONS.find((entry) => entry.id === actionId);
+    if (!action) throw new Error(`no standard action ${actionId}`);
+
+    ActionResolver.execute(
+      action,
+      { actionId, activeStates: [] },
+      { effectManager, resourceManager: new ResourceManager() },
+    );
+
+    return effectManager;
+  };
+
+  it("offers the standard actions to every character", () => {
+    const ids = buildSheet(halfElfFighter()).actions.map((a) => a.id);
+
+    expect(ids).toContain("action_dodge");
+    expect(ids).toContain("action_disengage");
+  });
+
+  it("does not offer them twice", () => {
+    const ids = buildSheet(halfElfFighter())
+      .actions.map((a) => a.id)
+      .filter((id) => id === "action_dash");
+
+    expect(ids).toHaveLength(1);
+  });
+
+  it("doubles speed once Dash has been taken", () => {
+    const before = buildSheet(halfElfFighter()).speed.total;
+
+    const after = CharacterEngine.buildLiveSheet(
+      halfElfFighter(),
+      [],
+      afterTaking("action_dash"),
+      new ResourceManager(),
+    ).speed.total;
+
+    expect(after).toBe(before * 2);
+  });
+
+  it("names Dash in the speed breakdown", () => {
+    const sheet = CharacterEngine.buildLiveSheet(
+      halfElfFighter(),
+      [],
+      afterTaking("action_dash"),
+      new ResourceManager(),
+    );
+
+    expect(JSON.stringify(sheet.speed.breakdown)).toContain("Dash");
+  });
+
+  it("grants advantage on Dexterity saves once Dodge has been taken", () => {
+    const sheet = CharacterEngine.buildLiveSheet(
+      halfElfFighter(),
+      [],
+      afterTaking("action_dodge"),
+      new ResourceManager(),
+    );
+
+    expect(sheet.saves.DEX?.rollState).toBe("advantage");
+  });
+
+  it("flags that attacks against a dodging character are at disadvantage", () => {
+    const sheet = CharacterEngine.buildLiveSheet(
+      halfElfFighter(),
+      [],
+      afterTaking("action_dodge"),
+      new ResourceManager(),
+    );
+
+    expect(sheet.activeStates).toContain(
+      "status_attacks_against_have_disadvantage",
+    );
+  });
+
+  it("leaves speed alone for a character who has not dashed", () => {
+    const sheet = buildSheet(halfElfFighter());
+
+    expect(sheet.speed.total).toBe(30);
   });
 });

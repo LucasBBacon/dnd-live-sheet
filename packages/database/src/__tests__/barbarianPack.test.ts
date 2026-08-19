@@ -14,6 +14,10 @@ const SEGMENT_PATH = path.join(
 
 const segment = JSON.parse(readFileSync(SEGMENT_PATH, "utf8")) as {
   traits: unknown[];
+  classes: Array<{
+    id: string;
+    progression: Array<{ level: number; grants: string[] }>;
+  }>;
 };
 
 const findTrait = (id: string): TraitDefinition => {
@@ -170,6 +174,56 @@ describe("trait_danger_sense", () => {
       "deafened",
       "incapacitated",
     ]);
+  });
+
+  it("needs no action, because the benefit is passive", () => {
+    expect(trait.actions).toEqual([]);
+  });
+});
+
+describe("trait_extra_attack", () => {
+  const trait = findTrait("trait_extra_attack");
+  const modifier = trait.modifiers.fixed[0];
+
+  it("is authored as an engine-backed rule", () => {
+    expect(trait.implementation?.mode).toBe("engine");
+  });
+
+  it("carries real rule text rather than a placeholder", () => {
+    expect(trait.lore?.shortDescription).not.toBe("placeholder");
+    expect(trait.lore?.shortDescription.length).toBeGreaterThan(20);
+  });
+
+  it("competes for the attack count rather than adding to it", () => {
+    expect(trait.modifiers.fixed).toHaveLength(1);
+    expect(modifier?.target).toBe("ATTACKS_PER_ACTION");
+    expect(modifier?.type).toBe("set_base");
+  });
+
+  it("grants a second attack from barbarian level five", () => {
+    expect(modifier?.scalingFactor).toBe("class_level_thresholds");
+    expect(modifier?.scalingClassId).toBe("class_barbarian");
+    expect(modifier?.scalingThresholds).toEqual([
+      { minimumLevel: 5, value: 2 },
+    ]);
+  });
+
+  it("scales against a class the same pack actually defines", () => {
+    const classIds = segment.classes.map((entry) => entry.id);
+
+    expect(classIds).toContain(modifier?.scalingClassId);
+  });
+
+  it("is granted at the level its own threshold names", () => {
+    const barbarian = segment.classes.find(
+      (entry) => entry.id === "class_barbarian",
+    );
+
+    const grantLevel = barbarian?.progression.find((entry) =>
+      entry.grants.includes("trait_extra_attack"),
+    )?.level;
+
+    expect(grantLevel).toBe(modifier?.scalingThresholds?.[0]?.minimumLevel);
   });
 
   it("needs no action, because the benefit is passive", () => {

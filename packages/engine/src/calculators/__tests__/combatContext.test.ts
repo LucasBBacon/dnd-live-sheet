@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it } from "vitest";
 import { CombatContextManager } from "../combatContext.js";
 
 describe("CombatContextManager", () => {
@@ -18,6 +18,8 @@ describe("CombatContextManager", () => {
       actionAvailable: true,
       bonusActionAvailable: true,
       reactionAvailable: true,
+      // the Attack action has not been taken on this fresh turn
+      attacksRemaining: null,
     });
   });
 
@@ -94,5 +96,91 @@ describe("CombatContextManager", () => {
     const state = manager.getContext();
     expect(state.economy.reactionAvailable).toBe(true);
     expect(state.economy.spentReactionSourceId).toBeUndefined();
+  });
+});
+
+describe("CombatContextManager attack allowance", () => {
+  let manager: CombatContextManager;
+
+  beforeEach(() => {
+    manager = new CombatContextManager();
+    manager.beginCombat();
+    manager.beginTurn({ kind: "player" });
+  });
+
+  it("starts a turn with no Attack action taken", () => {
+    expect(manager.getContext().economy.attacksRemaining).toBeNull();
+  });
+
+  it("opens an allowance when the Attack action is declared", () => {
+    manager.declareAttackAction("action_attack", 2);
+
+    expect(manager.getContext().economy.attacksRemaining).toBe(2);
+  });
+
+  it("spends the action to declare the Attack action", () => {
+    manager.declareAttackAction("action_attack", 2);
+
+    expect(manager.getContext().economy.actionAvailable).toBe(false);
+  });
+
+  it("names what opened the allowance", () => {
+    manager.declareAttackAction("action_attack", 2);
+
+    expect(manager.getContext().economy.attackActionSourceId).toBe(
+      "action_attack",
+    );
+  });
+
+  it("refuses to declare when the action is already spent", () => {
+    manager.spendAction("action_dash");
+
+    expect(manager.declareAttackAction("action_attack", 2)).toBe(false);
+  });
+
+  it("draws down the allowance one attack at a time", () => {
+    manager.declareAttackAction("action_attack", 2);
+
+    expect(manager.spendAttack()).toBe(true);
+    expect(manager.getContext().economy.attacksRemaining).toBe(1);
+  });
+
+  it("refuses an attack once the allowance is exhausted", () => {
+    manager.declareAttackAction("action_attack", 1);
+    manager.spendAttack();
+
+    expect(manager.spendAttack()).toBe(false);
+    expect(manager.getContext().economy.attacksRemaining).toBe(0);
+  });
+
+  it("refuses an attack when no Attack action has been declared", () => {
+    expect(manager.spendAttack()).toBe(false);
+  });
+
+  it("clears the allowance when the next turn begins", () => {
+    manager.declareAttackAction("action_attack", 2);
+    manager.spendAttack();
+
+    manager.beginTurn({ kind: "player" });
+
+    expect(manager.getContext().economy.attacksRemaining).toBeNull();
+  });
+
+  it("forgets what opened the allowance when the next turn begins", () => {
+    manager.declareAttackAction("action_attack", 2);
+
+    manager.beginTurn({ kind: "player" });
+
+    expect(
+      manager.getContext().economy.attackActionSourceId,
+    ).toBeUndefined();
+  });
+
+  it("clears the allowance when combat ends", () => {
+    manager.declareAttackAction("action_attack", 2);
+
+    manager.endCombat();
+
+    expect(manager.getContext().economy.attacksRemaining).toBeNull();
   });
 });

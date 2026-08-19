@@ -119,11 +119,10 @@ export class CombatContextManager {
     // If the owner is a player, increment the round number and reset the action economy
     if (owner.kind === "player") {
       this.context.roundNumber = (this.context.roundNumber ?? 0) + 1;
-      this.context.economy = {
-        actionAvailable: true,
-        bonusActionAvailable: true,
-        reactionAvailable: true,
-      };
+      // rebuilt from the schema rather than an object literal: a literal here
+      // silently drops any field added to the economy later, which is exactly
+      // how an attack allowance would fail to reset
+      this.context.economy = CombatContextSchema.parse({}).economy;
     }
 
     return this.getContext();
@@ -229,6 +228,59 @@ export class CombatContextManager {
   public refundReaction(): void {
     this.context.economy.reactionAvailable = true;
     this.context.economy.spentReactionSourceId = undefined;
+  }
+
+  /**
+   * Takes the Attack action, spending the action and opening its allowance.
+   *
+   * The allowance is what Extra Attack raises. Declaring is separate from
+   * attacking because one Attack action grants several attacks, and the sheet
+   * needs somewhere to hold "how many are left".
+   * @param sourceId What declared the Attack action
+   * @param attackCount How many attacks the Attack action grants
+   * @returns True if the action was available to spend; false if it was not
+   */
+  public declareAttackAction(sourceId: string, attackCount: number): boolean {
+    if (!this.spendAction(sourceId)) return false;
+
+    this.context.economy.attacksRemaining = attackCount;
+    this.context.economy.attackActionSourceId = sourceId;
+    return true;
+  }
+
+  /**
+   * Draws one attack from the current Attack action's allowance.
+   * @returns True if an attack was available; false if none remained or the Attack action was never declared
+   */
+  public spendAttack(): boolean {
+    const remaining = this.context.economy.attacksRemaining;
+    if (remaining === null || remaining <= 0) return false;
+
+    this.context.economy.attacksRemaining = remaining - 1;
+    return true;
+  }
+
+  /**
+   * Puts one attack back, for a swing that was settled and then aborted.
+   */
+  public refundAttack(): void {
+    const remaining = this.context.economy.attacksRemaining;
+    if (remaining === null) return;
+
+    this.context.economy.attacksRemaining = remaining + 1;
+  }
+
+  /**
+   * Untakes the Attack action, as though it had never been declared.
+   *
+   * Used when the swing that implicitly declared it turns out to be
+   * unaffordable: the allowance has to go back to "not taken this turn" rather
+   * than to a full allowance, or the player would keep an Attack action they
+   * never managed to make.
+   */
+  public undoAttackAction(): void {
+    this.context.economy.attacksRemaining = null;
+    this.context.economy.attackActionSourceId = undefined;
   }
 
   // endregion

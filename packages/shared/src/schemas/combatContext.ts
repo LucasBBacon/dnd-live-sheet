@@ -38,6 +38,14 @@ export const CombatEconomySchema = z.object({
   spentActionSourceId: z.string().optional(),
   spentBonusActionSourceId: z.string().optional(),
   spentReactionSourceId: z.string().optional(),
+  /**
+   * Attacks left in the Attack action's allowance.
+   *
+   * `null` means the Attack action has not been taken this turn, which is a
+   * different thing from having taken it and used every attack (`0`).
+   */
+  attacksRemaining: z.number().int().min(0).nullable().default(null),
+  attackActionSourceId: z.string().optional(),
 });
 
 export const CombatTargetRelationshipSchema = z.enum([
@@ -106,11 +114,10 @@ export const CombatContextSchema = z.object({
   inCombat: z.boolean().default(false),
   roundNumber: z.number().int().min(1).nullable().default(null),
   activeTurnOwner: CombatTurnOwnerSchema.nullable().default(null),
-  economy: CombatEconomySchema.default({
-    actionAvailable: true,
-    bonusActionAvailable: true,
-    reactionAvailable: true,
-  }),
+  // derived from the schema rather than written out: a literal default is NOT
+  // re-parsed, so every field added to the economy later would be silently
+  // missing from a default-constructed context
+  economy: CombatEconomySchema.default(CombatEconomySchema.parse({})),
   turnFlags: z.record(z.string(), z.boolean()).default({}),
   pendingEvents: z.array(CombatEventSchema).default([]),
   recentEvents: z.array(CombatEventSchema).default([]),

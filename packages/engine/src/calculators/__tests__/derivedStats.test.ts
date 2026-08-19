@@ -748,3 +748,220 @@ describe("DerivedStatEngine.calculateInitiative", () => {
 });
 
 // #endregion
+
+// #region calculateAttacksPerAction
+
+describe("DerivedStatEngine.calculateAttacksPerAction", () => {
+  const extraAttack = (
+    classId: string,
+    thresholds: Array<{ minimumLevel: number; value: number }>,
+    overrides: Partial<RuntimeModifier> = {},
+  ): RuntimeModifier =>
+    makeMod({
+      target: "ATTACKS_PER_ACTION",
+      type: "set_base",
+      value: thresholds[0]?.value ?? 2,
+      scalingFactor: "class_level_thresholds",
+      scalingClassId: classId,
+      scalingThresholds: thresholds,
+      sourceName: "Extra Attack",
+      sourceOrigin: "trait:trait_extra_attack",
+      ...overrides,
+    });
+
+  it("grants one attack when nothing modifies the Attack action", () => {
+    const result = DerivedStatEngine.calculateAttacksPerAction(
+      [],
+      makeLevels(),
+    );
+
+    expect(result.total).toBe(1);
+  });
+
+  it("names the single attack in the breakdown so the panel can explain it", () => {
+    const result = DerivedStatEngine.calculateAttacksPerAction(
+      [],
+      makeLevels(),
+    );
+
+    expect(result.breakdown).toEqual([{ name: "Attack action", value: 1 }]);
+  });
+
+  it("raises the count to two for a fifth-level barbarian", () => {
+    const result = DerivedStatEngine.calculateAttacksPerAction(
+      [extraAttack("class_barbarian", [{ minimumLevel: 5, value: 2 }])],
+      makeLevels({ total: 5, classes: { class_barbarian: 5 } }),
+    );
+
+    expect(result.total).toBe(2);
+    expect(result.breakdown).toEqual([{ name: "Extra Attack", value: 2 }]);
+  });
+
+  it("leaves the count at one below the threshold level", () => {
+    const result = DerivedStatEngine.calculateAttacksPerAction(
+      [extraAttack("class_barbarian", [{ minimumLevel: 5, value: 2 }])],
+      makeLevels({ total: 4, classes: { class_barbarian: 4 } }),
+    );
+
+    expect(result.total).toBe(1);
+  });
+
+  it("follows a multi-step progression to its highest met threshold", () => {
+    const fighter = extraAttack("class_fighter", [
+      { minimumLevel: 5, value: 2 },
+      { minimumLevel: 11, value: 3 },
+      { minimumLevel: 20, value: 4 },
+    ]);
+
+    const eleven = DerivedStatEngine.calculateAttacksPerAction(
+      [fighter],
+      makeLevels({ total: 11, classes: { class_fighter: 11 } }),
+    );
+    const twenty = DerivedStatEngine.calculateAttacksPerAction(
+      [fighter],
+      makeLevels({ total: 20, classes: { class_fighter: 20 } }),
+    );
+
+    expect(eleven.total).toBe(3);
+    expect(twenty.total).toBe(4);
+  });
+
+  it("takes the highest candidate rather than summing, because Extra Attack does not stack", () => {
+    const result = DerivedStatEngine.calculateAttacksPerAction(
+      [
+        extraAttack("class_barbarian", [{ minimumLevel: 5, value: 2 }], {
+          id: "mod_barb",
+        }),
+        extraAttack(
+          "class_fighter",
+          [
+            { minimumLevel: 5, value: 2 },
+            { minimumLevel: 11, value: 3 },
+          ],
+          { id: "mod_fighter" },
+        ),
+      ],
+      makeLevels({
+        total: 16,
+        classes: { class_barbarian: 5, class_fighter: 11 },
+      }),
+    );
+
+    expect(result.total).toBe(3);
+  });
+
+  it("marks the losing candidate as ignored rather than hiding it", () => {
+    const result = DerivedStatEngine.calculateAttacksPerAction(
+      [
+        extraAttack("class_barbarian", [{ minimumLevel: 5, value: 2 }], {
+          id: "mod_barb",
+          sourceName: "Extra Attack (Barbarian)",
+        }),
+        extraAttack(
+          "class_fighter",
+          [
+            { minimumLevel: 5, value: 2 },
+            { minimumLevel: 11, value: 3 },
+          ],
+          { id: "mod_fighter", sourceName: "Extra Attack (Fighter)" },
+        ),
+      ],
+      makeLevels({
+        total: 16,
+        classes: { class_barbarian: 5, class_fighter: 11 },
+      }),
+    );
+
+    expect(result.breakdown).toEqual([
+      { name: "Extra Attack (Fighter)", value: 3 },
+      {
+        name: "Extra Attack (Barbarian)",
+        value: "Ignored (Does not stack)",
+        isIgnored: true,
+      },
+    ]);
+  });
+
+  it("never lets a candidate lower the count below one", () => {
+    const result = DerivedStatEngine.calculateAttacksPerAction(
+      [
+        makeMod({
+          target: "ATTACKS_PER_ACTION",
+          type: "set_base",
+          value: 0,
+          sourceName: "Broken Rule",
+        }),
+      ],
+      makeLevels(),
+    );
+
+    expect(result.total).toBe(1);
+  });
+
+  it("skips a candidate whose forbidden state is active", () => {
+    const result = DerivedStatEngine.calculateAttacksPerAction(
+      [
+        extraAttack("class_barbarian", [{ minimumLevel: 5, value: 2 }], {
+          forbiddenStates: ["incapacitated"],
+        }),
+      ],
+      makeLevels({ total: 5, classes: { class_barbarian: 5 } }),
+      ["incapacitated"],
+    );
+
+    expect(result.total).toBe(1);
+  });
+
+  it("skips a candidate whose required state is missing", () => {
+    const result = DerivedStatEngine.calculateAttacksPerAction(
+      [
+        extraAttack("class_barbarian", [{ minimumLevel: 5, value: 2 }], {
+          requiredStates: ["status_raging"],
+        }),
+      ],
+      makeLevels({ total: 5, classes: { class_barbarian: 5 } }),
+    );
+
+    expect(result.total).toBe(1);
+  });
+
+  it("skips an inactive candidate", () => {
+    const result = DerivedStatEngine.calculateAttacksPerAction(
+      [
+        extraAttack("class_barbarian", [{ minimumLevel: 5, value: 2 }], {
+          isActive: false,
+        }),
+      ],
+      makeLevels({ total: 5, classes: { class_barbarian: 5 } }),
+    );
+
+    expect(result.total).toBe(1);
+  });
+
+  it("ignores modifiers aimed at other targets", () => {
+    const result = DerivedStatEngine.calculateAttacksPerAction(
+      [makeMod({ target: "MAX_HP", type: "set_base", value: 9 })],
+      makeLevels(),
+    );
+
+    expect(result.total).toBe(1);
+  });
+
+  it("accepts an unscaled candidate at its face value", () => {
+    const result = DerivedStatEngine.calculateAttacksPerAction(
+      [
+        makeMod({
+          target: "ATTACKS_PER_ACTION",
+          type: "set_base",
+          value: 2,
+          sourceName: "Extra Attack",
+        }),
+      ],
+      makeLevels(),
+    );
+
+    expect(result.total).toBe(2);
+  });
+});
+
+// #endregion

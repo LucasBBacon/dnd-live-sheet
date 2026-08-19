@@ -54,6 +54,12 @@ vi.mock("@project/engine", async () => {
       calculateMaxHp: () => 10,
       calculateInitiative: () => 0,
       calculateAC: () => 10,
+      // deliberately the real implementation: the attack count is the thing
+      // under test, and a stub would only prove the stub works
+      calculateAttacksPerAction:
+        actual.DerivedStatEngine.calculateAttacksPerAction.bind(
+          actual.DerivedStatEngine,
+        ),
     },
     InventoryExtractor: {
       extractModifiers: () => [],
@@ -224,5 +230,70 @@ describe("useDerivedStats saving throws", () => {
     const { saves } = useDerivedStats();
 
     expect(saves.DEX.conditionalNotes).toEqual([]);
+  });
+});
+
+describe("useDerivedStats attacks per action", () => {
+  const extraAttackModifier = {
+    id: "mod_extra_attack",
+    target: "ATTACKS_PER_ACTION",
+    type: "set_base",
+    value: 2,
+    scalingFactor: "class_level_thresholds",
+    scalingClassId: "class_barbarian",
+    scalingThresholds: [{ minimumLevel: 5, value: 2 }],
+    requiredStates: [],
+    forbiddenStates: [],
+    sourceName: "Extra Attack",
+    sourceOrigin: "trait:trait_extra_attack",
+    isActive: true,
+  };
+
+  beforeEach(() => {
+    mockStoreState = {
+      baseScores: { STR: 16, DEX: 14, CON: 14, INT: 10, WIS: 10, CHA: 10 },
+      activeModifiers: [],
+      inventory: [],
+      activeStates: [],
+      ruleSnapshot: null,
+      level: 5,
+      classLevels: { class_barbarian: 5 },
+      proficiencies: {},
+      baseHpRolled: 1,
+    };
+  });
+
+  it("reports a single attack for a character without Extra Attack", () => {
+    const { attacksPerAction } = useDerivedStats();
+
+    expect(attacksPerAction.total).toBe(1);
+  });
+
+  it("reports two attacks for a fifth-level barbarian who has it", () => {
+    mockStoreState.activeModifiers = [extraAttackModifier];
+
+    const { attacksPerAction } = useDerivedStats();
+
+    expect(attacksPerAction.total).toBe(2);
+  });
+
+  it("still reports one attack at fourth level", () => {
+    mockStoreState.activeModifiers = [extraAttackModifier];
+    mockStoreState.level = 4;
+    mockStoreState.classLevels = { class_barbarian: 4 };
+
+    const { attacksPerAction } = useDerivedStats();
+
+    expect(attacksPerAction.total).toBe(1);
+  });
+
+  it("names the source so the panel can explain where the attack came from", () => {
+    mockStoreState.activeModifiers = [extraAttackModifier];
+
+    const { attacksPerAction } = useDerivedStats();
+
+    expect(attacksPerAction.breakdown).toEqual([
+      { name: "Extra Attack", value: 2 },
+    ]);
   });
 });

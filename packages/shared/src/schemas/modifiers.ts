@@ -11,6 +11,10 @@ export const ModifierTargetSchema = z.enum([
   "SPEED",
   "ATTACK_BONUS",
   "DAMAGE_BONUS",
+  // how many attacks one Attack action grants. Extra Attack does not stack
+  // across classes, so candidates compete rather than sum - see
+  // DerivedStatEngine.calculateAttacksPerAction
+  "ATTACKS_PER_ACTION",
   "STR_SAVE",
   "DEX_SAVE",
   "CON_SAVE",

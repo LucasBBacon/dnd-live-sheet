@@ -6,6 +6,12 @@ import { CombatWidget } from "../CombatWidget";
 
 const mocks = vi.hoisted(() => ({
   rollState: { current: "normal" as "advantage" | "disadvantage" | "normal" },
+  attacksPerAction: {
+    current: {
+      total: 1,
+      breakdown: [{ name: "Attack action", value: 1 }],
+    } as { total: number; breakdown: Array<{ name: string; value: number | string }> },
+  },
   consumeItem: vi.fn(),
   executeActorAction: vi.fn(),
   executeCharacterAction: vi.fn(),
@@ -48,6 +54,10 @@ vi.mock("../../../hooks/useCombat", () => ({
       },
     ],
   }),
+}));
+
+vi.mock("../../../hooks/useCharacterStats", () => ({
+  useDerivedStats: () => ({ attacksPerAction: mocks.attacksPerAction.current }),
 }));
 
 vi.mock("../../../store/rollStore", () => ({
@@ -112,6 +122,7 @@ const storeState = {
       actionAvailable: true,
       bonusActionAvailable: true,
       reactionAvailable: true,
+      attacksRemaining: null as number | null,
     },
     recentEvents: [],
   },
@@ -358,5 +369,122 @@ describe("CombatWidget roll state", () => {
 
     expect(container.textContent).not.toContain("ADV");
     expect(container.textContent).not.toContain("DIS");
+  });
+});
+
+describe("CombatWidget attacks per action", () => {
+  const renderWidget = async () => {
+    const container = document.createElement("div");
+    document.body.appendChild(container);
+    const root = createRoot(container);
+
+    await act(async () => {
+      root.render(<CombatWidget />);
+    });
+
+    return container;
+  };
+
+  it("states how many attacks the Attack action grants once it is more than one", async () => {
+    mocks.attacksPerAction.current = {
+      total: 2,
+      breakdown: [{ name: "Extra Attack", value: 2 }],
+    };
+
+    const container = await renderWidget();
+
+    expect(container.textContent).toContain("Attack action");
+    expect(container.textContent).toContain("2 attacks");
+  });
+
+  it("names the source of the extra attacks", async () => {
+    mocks.attacksPerAction.current = {
+      total: 2,
+      breakdown: [{ name: "Extra Attack", value: 2 }],
+    };
+
+    const container = await renderWidget();
+
+    expect(container.textContent).toContain("Extra Attack");
+  });
+
+  it("scales the wording with the count", async () => {
+    mocks.attacksPerAction.current = {
+      total: 3,
+      breakdown: [{ name: "Extra Attack", value: 3 }],
+    };
+
+    const container = await renderWidget();
+
+    expect(container.textContent).toContain("3 attacks");
+  });
+
+  it("says nothing at all when the character attacks only once", async () => {
+    mocks.attacksPerAction.current = {
+      total: 1,
+      breakdown: [{ name: "Attack action", value: 1 }],
+    };
+
+    const container = await renderWidget();
+
+    expect(container.textContent).not.toContain("Attack action");
+  });
+});
+
+describe("CombatWidget attack allowance", () => {
+  const renderWidget = async () => {
+    const container = document.createElement("div");
+    document.body.appendChild(container);
+    const root = createRoot(container);
+
+    await act(async () => {
+      root.render(<CombatWidget />);
+    });
+
+    return container;
+  };
+
+  const withAllowance = (attacksRemaining: number | null) => {
+    mocks.attacksPerAction.current = {
+      total: 2,
+      breakdown: [{ name: "Extra Attack", value: 2 }],
+    };
+    storeState.combatContext.economy.attacksRemaining = attacksRemaining;
+  };
+
+  it("offers the attack count before the Attack action has been taken", async () => {
+    withAllowance(null);
+
+    const container = await renderWidget();
+
+    expect(container.textContent).toContain("2 attacks");
+  });
+
+  it("reports how many attacks have been used once the Attack action is taken", async () => {
+    withAllowance(1);
+
+    const container = await renderWidget();
+
+    expect(container.textContent).toContain("1 of 2 used");
+  });
+
+  it("reports a fully spent allowance", async () => {
+    withAllowance(0);
+
+    const container = await renderWidget();
+
+    expect(container.textContent).toContain("2 of 2 used");
+  });
+
+  it("never disables the strike button, even with the allowance spent", async () => {
+    withAllowance(0);
+
+    const container = await renderWidget();
+
+    const strike = Array.from(container.querySelectorAll("button")).find(
+      (button) => button.textContent === "STRIKE",
+    );
+
+    expect(strike?.disabled).toBe(false);
   });
 });

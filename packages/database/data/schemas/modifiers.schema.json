@@ -31,7 +31,8 @@
                 "CHA",
                 "STEALTH_CHECK",
                 "SENSE_DARKVISION",
-                "SPELLCASTING_MOD"
+                "SPELLCASTING_MOD",
+                "ATTACKS_PER_ACTION"
             ]
         },
         "modifierType": {

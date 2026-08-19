@@ -100,3 +100,32 @@ describe("BaseModifierSchema appliesWhen", () => {
     ).toThrow();
   });
 });
+
+describe("ModifierTargetSchema ATTACKS_PER_ACTION", () => {
+  it("accepts a set_base candidate for the number of attacks the Attack action grants", () => {
+    const parsed = TraitDefinitionSchema.parse({
+      id: "trait_extra_attack",
+      name: "Extra Attack",
+      modifiers: {
+        fixed: [
+          {
+            target: "ATTACKS_PER_ACTION",
+            type: "set_base",
+            value: 2,
+            scalingFactor: "class_level_thresholds",
+            scalingClassId: "class_barbarian",
+            scalingThresholds: [{ minimumLevel: 5, value: 2 }],
+            requiredStates: [],
+            forbiddenStates: [],
+          },
+        ],
+        choices: [],
+      },
+    });
+
+    expect(parsed.modifiers.fixed[0]?.target).toBe("ATTACKS_PER_ACTION");
+    expect(parsed.modifiers.fixed[0]?.scalingThresholds).toEqual([
+      { minimumLevel: 5, value: 2 },
+    ]);
+  });
+});

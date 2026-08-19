@@ -530,11 +530,33 @@
             "id": "trait_extra_attack",
             "name": "Extra Attack",
             "lore": {
-                "shortDescription": "placeholder",
-                "fullText": "placeholder"
+                "shortDescription": "You attack twice, rather than once, whenever you take the Attack action on your turn.",
+                "fullText": "Beginning at 5th level, you can attack twice, instead of once, whenever you take the Attack action on your turn."
+            },
+            "isStartingProficiency": false,
+            "implementation": {
+                "mode": "engine",
+                "summary": "Raises the number of attacks one Attack action grants from one to two at barbarian level 5. Authored as a competing set_base candidate because Extra Attack does not stack across classes: a character with it from two classes attacks the higher of the two counts, not the sum. The sheet reports the count; it does not track how many attacks have been used, since there is no turn lifecycle to reset such a counter against.",
+                "blockedBy": []
             },
             "modifiers": {
-                "fixed": [],
+                "fixed": [
+                    {
+                        "target": "ATTACKS_PER_ACTION",
+                        "type": "set_base",
+                        "value": 2,
+                        "scalingFactor": "class_level_thresholds",
+                        "scalingClassId": "class_barbarian",
+                        "scalingThresholds": [
+                            {
+                                "minimumLevel": 5,
+                                "value": 2
+                            }
+                        ],
+                        "requiredStates": [],
+                        "forbiddenStates": []
+                    }
+                ],
                 "choices": []
             },
             "resources": [],

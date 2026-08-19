@@ -159,6 +159,54 @@ being trusted as a hard gate.
 
 ---
 
+## Open — action economy, deferred items
+
+The three action-economy phases are complete (see
+`docs/superpowers/plans/2026-08-19-action-economy-phase-{1,2,3}.md`). These were
+deliberately left out and are listed so the absence stays deliberate.
+
+| # | Item | Why it was deferred |
+| --- | --- | --- |
+| A1 | Ready's trigger is not modelled | Needs a player-authored trigger contract; none exists |
+| A2 | Hide does not roll Stealth; Search does not roll Perception | No roll-initiating UI for skills anywhere on the sheet |
+| A3 | `status_hidden` never clears on its own | Being found is not a turn boundary; only a manual "Stop Hiding" ends it |
+| A4 | Dodge's `status_attacks_against_have_disadvantage` is not displayed | The AC widget shows Reckless Attack's advantage mirror but was not extended; small follow-up |
+| A5 | No opportunity-attack model | Disengage is therefore `no_effect`; it becomes expressible if they are ever modelled |
+| A6 | Two-weapon fighting's main-hand requirement unenforced | Nothing checks that the Attack action was taken with a light weapon |
+| A7 | No way to take the Attack action without swinging | Declaration is implicit only |
+
+---
+
+## Open — socket gateway has no test coverage
+
+`apps/server/src/gateway/socket.ts` is the one substantial file in the repo with no
+tests at all. There is no socket harness, so every handler in it is unverified
+wire code. Nothing in it *decides* anything — the logic it calls out to is unit
+tested — but the wiring itself is not: that events are bound to the right names,
+that the campaign room is resolved before emitting, that the reply payload is
+shaped as the client expects, and that the authoritative runtime is reused rather
+than rebuilt per call.
+
+Handlers currently uncovered:
+
+| Handler | Added |
+| --- | --- |
+| `ROOM_JOIN`, `HP_MODIFIED`, `ITEM_EQUIPPED`, `ITEM_ATTUNED`, `ITEM_CONSUMED`, `INVENTORY_SYNC`, `RESOURCE_CONSUMED`, `REST_COMPLETED`, `ROLL_RESULTS` | pre-existing |
+| `ACTION_INTENT` / `ACTION_RESOLVED` | pre-existing, extended in action-economy phase 1 (combat context, `economyPolicy`) and phase 2 (`attacksPerAction`) |
+| `TURN_STARTED` / `TURN_ENDED` / `TURN_RESOLVED` | action-economy phase 1 |
+
+Doing this properly means one harness — a fake `Server`/`Socket` pair plus a mocked
+`db` — after which each handler is a small test. Worth doing as a single dedicated
+pass rather than piecemeal, since the harness is most of the work and every handler
+then costs a few lines.
+
+Related: `apps/server/vitest.config.ts` carries `testTimeout: 20000` because these
+suites build a real Express app through dynamic imports and the default 5s sat on
+the boundary. A harness that avoids the full app import would likely let that go
+back down.
+
+---
+
 ## Resolved
 
 Item numbers are stable ids — gaps below are intentional, not renumbered.

@@ -1,9 +1,11 @@
-import type {
-  ActionGrant,
-  DamageType,
-  DiceRule,
-  EngineEvent,
-  TriggerGrant,
+import {
+  costsAttack,
+  costsCombatEconomy,
+  type ActionGrant,
+  type DamageType,
+  type DiceRule,
+  type EngineEvent,
+  type TriggerGrant,
 } from "@project/shared";
 import type { ActiveEffect, EffectManager } from "../calculators/effects.js";
 import type { CombatContextManager } from "../calculators/combatContext.js";
@@ -51,7 +53,27 @@ export interface ActionResult {
   /** Which cost failed, for a message the player can act on. */
   offendingId?: string;
   rollResults?: ActionRollResult[];
+  /**
+   * Set when the action ran despite its activation already being spent.
+   *
+   * Only possible under economyPolicy "track". The action still happened - the
+   * flag exists so the sheet can say so rather than pretend the turn was legal.
+   */
+  economyOverdrawn?: boolean;
 }
+
+/**
+ * What to do when an action costs an activation the character has already used.
+ *
+ * "enforce" refuses it. "track" runs it anyway and reports the overdraft, which
+ * is what a live sheet wants: tables bend the economy constantly - a DM grants
+ * a free action, a reaction is retconned - and a sheet that refuses becomes
+ * something the player fights rather than uses.
+ *
+ * Policy belongs to the caller. The resolver reports; it does not decide how
+ * strict the table is.
+ */
+export type EconomyPolicy = "enforce" | "track";
 
 export interface ActionExecutionContext {
   effectManager: EffectManager;
@@ -62,6 +84,13 @@ export interface ActionExecutionContext {
   snapshot?: RuleSnapshotLookup;
   activeStates?: string[];
   diceRules?: DiceRule[];
+  /** Defaults to "enforce", preserving strict behaviour for existing callers. */
+  economyPolicy?: EconomyPolicy;
+  /**
+   * How many attacks one Attack action grants, from
+   * DerivedStatEngine.calculateAttacksPerAction. Defaults to one.
+   */
+  attacksPerAction?: number;
 }
 
 const ok: ActionResult = { executed: true };
@@ -134,7 +163,10 @@ const activationFailureReason = (
   activation: ActionGrant["activation"],
 ): ActionFailureReason | null => {
   switch (activation) {
+    // an attack that cannot be made is an Attack action that could not be
+    // afforded, so it reports as the action it would have cost
     case "action":
+    case "attack":
       return "action_unavailable";
     case "bonus_action":
       return "bonus_action_unavailable";
@@ -144,11 +176,6 @@ const activationFailureReason = (
       return null;
   }
 };
-
-const spendsCombatEconomy = (activation: ActionGrant["activation"]): boolean =>
-  activation === "action" ||
-  activation === "bonus_action" ||
-  activation === "reaction";
 
 /**
  * ActionResolver handles the execution of proactive abilities, translating
@@ -191,12 +218,18 @@ export class ActionResolver {
     if (!settlement.executed) return settlement;
 
     // 2 - route the effect to correct handler
-    return this.executeEffect(
+    const outcome = this.executeEffect(
       action.effect,
       action,
       context,
       payload.activeStates,
     );
+
+    // an overdraft is settled at cost time but only meaningful once the action
+    // has actually happened, so it rides out on the effect's result
+    return settlement.economyOverdrawn
+      ? { ...outcome, economyOverdrawn: true }
+      : outcome;
   }
 
   public static dispatchEvent(
@@ -538,6 +571,38 @@ export class ActionResolver {
    * can fire. Otherwise a crafted payload could shoot for free, or spend a
    * healing potion as an arrow.
    */
+  /**
+   * Draws one attack, taking the Attack action first if it has not been taken.
+   *
+   * Swinging is how a player says "I take the Attack action" - nobody declares
+   * it separately at the table - so the first swing of a turn opens the
+   * allowance and immediately spends one of it. Later swings only draw down.
+   * @param action The attack being made, which is also what took the Attack action
+   * @param context The execution context, carrying the combat context and attack count
+   * @returns True if an attack was available to spend
+   */
+  private static settleAttack(
+    action: ActionGrant,
+    context: ActionExecutionContext,
+  ): { spent: boolean; declared: boolean } {
+    const combatContext = context.combatContext;
+    if (!combatContext) return { spent: false, declared: false };
+
+    if (combatContext.getContext().economy.attacksRemaining === null) {
+      const declared = combatContext.declareAttackAction(
+        action.id,
+        context.attacksPerAction ?? 1,
+      );
+
+      return {
+        spent: declared && combatContext.spendAttack(),
+        declared,
+      };
+    }
+
+    return { spent: combatContext.spendAttack(), declared: false };
+  }
+
   private static settleCosts(
     action: ActionGrant,
     requested: ConsumedResource[],
@@ -609,9 +674,14 @@ export class ActionResolver {
 
     const spentPools: ConsumedResource[] = [];
     let spentActivation: ActionGrant["activation"] | null = null;
+    let economyOverdrawn = false;
+    // whether this swing was the one that took the Attack action, which decides
+    // how far an abort has to unwind
+    let attackDeclared = false;
 
     if (
-      spendsCombatEconomy(action.activation) &&
+      (costsCombatEconomy(action.activation) ||
+        costsAttack(action.activation)) &&
       context.combatContext?.getContext().inCombat
     ) {
       let activationSpent = false;
@@ -626,16 +696,29 @@ export class ActionResolver {
         case "reaction":
           activationSpent = context.combatContext.spendReaction(action.id);
           break;
+        case "attack": {
+          const outcome = this.settleAttack(action, context);
+          activationSpent = outcome.spent;
+          attackDeclared = outcome.declared;
+          break;
+        }
       }
 
       if (!activationSpent) {
-        return fail(
-          activationFailureReason(action.activation) ?? "unrequested_cost",
-          action.id,
-        );
-      }
+        if ((context.economyPolicy ?? "enforce") === "enforce") {
+          return fail(
+            activationFailureReason(action.activation) ?? "unrequested_cost",
+            action.id,
+          );
+        }
 
-      spentActivation = action.activation;
+        // tracking: the action goes ahead and the sheet is told it went over.
+        // spentActivation stays null deliberately - nothing was taken, so a
+        // later abort has nothing to refund
+        economyOverdrawn = true;
+      } else {
+        spentActivation = action.activation;
+      }
     }
 
     for (const cost of pools) {
@@ -655,6 +738,17 @@ export class ActionResolver {
           case "reaction":
             context.combatContext.refundReaction();
             break;
+          case "attack":
+            // a swing that took the Attack action has to untake it, not just
+            // hand back the one attack, or the player keeps an Attack action
+            // they never managed to make
+            if (attackDeclared) {
+              context.combatContext.undoAttackAction();
+              context.combatContext.refundAction();
+            } else {
+              context.combatContext.refundAttack();
+            }
+            break;
         }
       }
 
@@ -672,6 +766,6 @@ export class ActionResolver {
 
     // endregion
 
-    return ok;
+    return economyOverdrawn ? { ...ok, economyOverdrawn: true } : ok;
   }
 }

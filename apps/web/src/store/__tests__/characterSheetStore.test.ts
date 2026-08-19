@@ -302,7 +302,10 @@ describe("useCharacterSheetStore hp trigger handling", () => {
     compileSpy.mockRestore();
   });
 
-  it("dispatches turn and save-failure authored events through the runtime path", () => {
+  // Narrowed when turn transitions moved to the server. The turn events this
+  // used to assert are now dispatched by TurnLifecycle, covered in the engine
+  // and again in resolvePlayerTurn's suite; a save failure is still local.
+  it("dispatches the save-failure authored event through the runtime path", () => {
     const compileSpy = vi
       .spyOn(CharacterBootstrapper, "compileActiveTraits")
       .mockReturnValue([
@@ -380,16 +383,6 @@ describe("useCharacterSheetStore hp trigger handling", () => {
 
     const store = useCharacterSheetStore.getState();
 
-    store.beginTurn();
-    expect(useCharacterSheetStore.getState().activeStates).toContain(
-      "turn_started",
-    );
-
-    store.endTurn();
-    expect(useCharacterSheetStore.getState().activeStates).toContain(
-      "turn_ended",
-    );
-
     store.handleSaveOutcome(false);
     expect(useCharacterSheetStore.getState().activeStates).toContain(
       "save_failed",
@@ -398,7 +391,10 @@ describe("useCharacterSheetStore hp trigger handling", () => {
     compileSpy.mockRestore();
   });
 
-  it("refreshes the player's reaction economy on turn start and tracks pending combat events", () => {
+  // The turn-start economy refresh that used to be asserted here moved to the
+  // server: see resolvePlayerTurn's suite for the refresh itself, and
+  // "server-owned turns" below for the sheet adopting it.
+  it("spends a reaction once and tracks pending combat events", () => {
     const store = useCharacterSheetStore.getState();
 
     store.beginCombat();
@@ -426,12 +422,6 @@ describe("useCharacterSheetStore hp trigger handling", () => {
     let state = useCharacterSheetStore.getState();
     expect(state.combatContext.pendingEvents).toHaveLength(1);
     expect(state.combatContext.economy.reactionAvailable).toBe(false);
-
-    store.beginTurn();
-
-    state = useCharacterSheetStore.getState();
-    expect(state.combatContext.economy.reactionAvailable).toBe(true);
-    expect(state.combatContext.roundNumber).toBe(2);
 
     store.resolveCombatEvent("evt_protection", {
       status: "resolved",
@@ -678,188 +668,13 @@ describe("useCharacterSheetStore hp trigger handling", () => {
           ],
         },
       ],
+      combatContext: CombatContextSchema.parse({}),
       timestamp: Date.now(),
     });
 
     const state = useCharacterSheetStore.getState();
     expect(state.selectedActorInstanceId).toBe(actor.instanceId);
     expect(state.activeStates).toContain("actor_clockwork_toy_scuttling");
-  });
-});
-
-describe("useCharacterSheetStore turn lifecycle", () => {
-  beforeEach(() => {
-    vi.restoreAllMocks();
-
-    useCharacterSheetStore.setState({
-      ...useCharacterSheetStore.getState(),
-      id: "char_turns",
-      campaignId: null,
-      level: 2,
-      classLevels: { class_barbarian: 2 },
-      raceId: "race_human",
-      subraceId: null,
-      currentHp: 20,
-      maxHp: 20,
-      baseHpRolled: 1,
-      baseScores: { STR: 16, DEX: 10, CON: 14, INT: 10, WIS: 10, CHA: 10 },
-      proficiencies: {},
-      traits: [],
-      traitGrants: [],
-      inventory: [],
-      inventoryError: null,
-      activeModifiers: [],
-      resources: [],
-      ruleSnapshot: null,
-      baseStates: [],
-      activeStates: [],
-      latestRollResults: [],
-      runtimeEffects: null,
-      runtimeResources: null,
-      combatContext: CombatContextSchema.parse({}),
-      runtimeCombat: null,
-    });
-
-    vi.spyOn(socketService, "emitActionIntent").mockImplementation(() => {});
-  });
-
-  /** Seeds the store with one live effect, the way an executed action would. */
-  const seedEffect = (
-    durationType: "turn_start" | "turn_end" | "manual",
-    state: string,
-    baseStates: string[] = [],
-  ) => {
-    const runtimeEffects = new EffectManager();
-    runtimeEffects.addEffect({
-      instanceId: `effect_${state}`,
-      sourceName: "Reckless Attack",
-      durationType,
-      isSelfConcentration: false,
-      modifiers: [],
-      grantedStates: [state],
-    });
-
-    useCharacterSheetStore.setState({
-      runtimeEffects,
-      runtimeResources: new ResourceManager(),
-      baseStates,
-      activeStates: [...baseStates, state],
-    });
-  };
-
-  it("clears a turn_end effect when the turn ends", () => {
-    seedEffect("turn_end", "status_reckless_attack");
-
-    useCharacterSheetStore.getState().endTurn();
-
-    expect(useCharacterSheetStore.getState().activeStates).not.toContain(
-      "status_reckless_attack",
-    );
-  });
-
-  it("keeps a turn_end effect alive until the turn actually ends", () => {
-    seedEffect("turn_end", "status_reckless_attack");
-
-    useCharacterSheetStore.getState().beginTurn();
-
-    expect(useCharacterSheetStore.getState().activeStates).toContain(
-      "status_reckless_attack",
-    );
-  });
-
-  it("clears a turn_start effect when the next turn begins", () => {
-    seedEffect("turn_start", "status_attacks_against_have_advantage");
-
-    useCharacterSheetStore.getState().beginTurn();
-
-    expect(useCharacterSheetStore.getState().activeStates).not.toContain(
-      "status_attacks_against_have_advantage",
-    );
-  });
-
-  it("carries a turn_start effect through the end of the turn it was declared on", () => {
-    seedEffect("turn_start", "status_attacks_against_have_advantage");
-
-    useCharacterSheetStore.getState().endTurn();
-
-    expect(useCharacterSheetStore.getState().activeStates).toContain(
-      "status_attacks_against_have_advantage",
-    );
-  });
-
-  it("leaves a manual effect such as Rage untouched by a full turn cycle", () => {
-    seedEffect("manual", "status_raging");
-
-    useCharacterSheetStore.getState().endTurn();
-    useCharacterSheetStore.getState().beginTurn();
-
-    expect(useCharacterSheetStore.getState().activeStates).toContain(
-      "status_raging",
-    );
-  });
-
-  it("preserves states that do not come from effects across a turn cycle", () => {
-    seedEffect("turn_end", "status_reckless_attack", ["status_wearing_armor"]);
-
-    useCharacterSheetStore.getState().endTurn();
-    useCharacterSheetStore.getState().beginTurn();
-
-    expect(useCharacterSheetStore.getState().activeStates).toContain(
-      "status_wearing_armor",
-    );
-  });
-
-  it("expires effects before dispatching, so a start-of-turn trigger's own effect survives", () => {
-    const compileSpy = vi
-      .spyOn(CharacterBootstrapper, "compileActiveTraits")
-      .mockReturnValue([
-        {
-          id: "trait_regenerating_ward",
-          name: "Regenerating Ward",
-          modifiers: { fixed: [], choices: [] },
-          resources: [],
-          diceRules: [],
-          criticalHitModifiers: [],
-          triggers: [
-            {
-              listenFor: "ON_START_OF_TURN",
-              executeAction: "action_raise_ward",
-            },
-          ],
-          actions: [
-            {
-              id: "action_raise_ward",
-              name: "Raise Ward",
-              activation: "special",
-              effect: {
-                type: "apply_effect",
-                effectName: "Ward",
-                durationType: "turn_start",
-                states: ["status_warded"],
-                modifiers: [],
-                isSelfConcentration: false,
-                requiredStates: [],
-                forbiddenStates: [],
-              },
-            },
-          ],
-        },
-      ] as never);
-
-    useCharacterSheetStore.setState({
-      runtimeEffects: new EffectManager(),
-      runtimeResources: new ResourceManager(),
-      baseStates: [],
-      activeStates: [],
-    });
-
-    useCharacterSheetStore.getState().beginTurn();
-
-    expect(useCharacterSheetStore.getState().activeStates).toContain(
-      "status_warded",
-    );
-
-    compileSpy.mockRestore();
   });
 });
 
@@ -1028,5 +843,194 @@ describe("useCharacterSheetStore conditions", () => {
     const states = useCharacterSheetStore.getState().activeStates;
     expect(states).toContain("prone");
     expect(states).toContain("status_raging");
+  });
+});
+
+describe("useCharacterSheetStore server-owned turns", () => {
+  beforeEach(() => {
+    vi.restoreAllMocks();
+
+    useCharacterSheetStore.setState({
+      ...useCharacterSheetStore.getState(),
+      id: "char_turns_remote",
+      campaignId: null,
+      level: 5,
+      classLevels: { class_barbarian: 5 },
+      raceId: "race_human",
+      subraceId: null,
+      currentHp: 20,
+      maxHp: 20,
+      baseHpRolled: 1,
+      baseScores: { STR: 16, DEX: 14, CON: 14, INT: 10, WIS: 10, CHA: 10 },
+      proficiencies: {},
+      traits: [],
+      traitGrants: [],
+      inventory: [],
+      activeModifiers: [],
+      resources: [],
+      ruleSnapshot: null,
+      baseStates: [],
+      activeConditions: [],
+      activeStates: [],
+      runtimeEffects: null,
+      runtimeResources: null,
+      combatContext: CombatContextSchema.parse({}),
+      runtimeCombat: null,
+    });
+
+    vi.spyOn(socketService, "emitTurnIntent").mockImplementation(() => {});
+  });
+
+  it("asks the server to start the turn rather than deciding locally", () => {
+    useCharacterSheetStore.getState().beginTurn();
+
+    expect(socketService.emitTurnIntent).toHaveBeenCalledWith(
+      "started",
+      expect.objectContaining({ characterId: "char_turns_remote" }),
+    );
+  });
+
+  it("asks the server to end the turn", () => {
+    useCharacterSheetStore.getState().endTurn();
+
+    expect(socketService.emitTurnIntent).toHaveBeenCalledWith(
+      "ended",
+      expect.objectContaining({ characterId: "char_turns_remote" }),
+    );
+  });
+
+  it("does not expire effects locally, since the server owns them now", () => {
+    const runtimeEffects = new EffectManager();
+    runtimeEffects.addEffect({
+      instanceId: "effect_reckless",
+      sourceName: "Reckless Attack",
+      durationType: "turn_end",
+      isSelfConcentration: false,
+      modifiers: [],
+      grantedStates: ["status_reckless_attack"],
+    });
+    useCharacterSheetStore.setState({
+      runtimeEffects,
+      runtimeResources: new ResourceManager(),
+    });
+
+    useCharacterSheetStore.getState().endTurn();
+
+    // a local tick here is exactly what the next server sync would undo
+    expect(runtimeEffects.getActiveStates()).toContain(
+      "status_reckless_attack",
+    );
+  });
+
+  it("adopts the effects the server reports after a turn transition", () => {
+    useCharacterSheetStore.getState().syncRemoteTurnResolution({
+      characterId: "char_turns_remote",
+      requestId: "req_1",
+      transition: "ended",
+      rollResults: [],
+      activeStates: [],
+      resources: [],
+      effects: [],
+      actors: [],
+      combatContext: CombatContextSchema.parse({}),
+      timestamp: Date.now(),
+    } as never);
+
+    expect(
+      useCharacterSheetStore.getState().runtimeEffects?.getActiveStates(),
+    ).toEqual([]);
+  });
+
+  it("adopts the refreshed economy the server reports", () => {
+    useCharacterSheetStore.setState({
+      combatContext: CombatContextSchema.parse({
+        economy: {
+          actionAvailable: false,
+          bonusActionAvailable: false,
+          reactionAvailable: false,
+        },
+      }),
+    });
+
+    useCharacterSheetStore.getState().syncRemoteTurnResolution({
+      characterId: "char_turns_remote",
+      requestId: "req_1",
+      transition: "started",
+      rollResults: [],
+      activeStates: [],
+      resources: [],
+      effects: [],
+      actors: [],
+      combatContext: CombatContextSchema.parse({}),
+      timestamp: Date.now(),
+    } as never);
+
+    expect(
+      useCharacterSheetStore.getState().combatContext.economy.actionAvailable,
+    ).toBe(true);
+  });
+
+  it("keeps player-declared conditions across a server turn sync", () => {
+    useCharacterSheetStore.getState().toggleCondition("prone");
+
+    useCharacterSheetStore.getState().syncRemoteTurnResolution({
+      characterId: "char_turns_remote",
+      requestId: "req_1",
+      transition: "started",
+      rollResults: [],
+      activeStates: [],
+      resources: [],
+      effects: [],
+      actors: [],
+      combatContext: CombatContextSchema.parse({}),
+      timestamp: Date.now(),
+    } as never);
+
+    expect(useCharacterSheetStore.getState().activeStates).toContain("prone");
+  });
+});
+
+describe("useCharacterSheetStore standard actions", () => {
+  beforeEach(() => {
+    vi.restoreAllMocks();
+
+    useCharacterSheetStore.setState({
+      ...useCharacterSheetStore.getState(),
+      id: "char_actions",
+      level: 1,
+      classLevels: {},
+      raceId: "race_human",
+      subraceId: null,
+      baseScores: { STR: 10, DEX: 10, CON: 10, INT: 10, WIS: 10, CHA: 10 },
+      traits: [],
+      traitGrants: [],
+      inventory: [],
+      activeModifiers: [],
+      resources: [],
+      baseStates: [],
+      activeConditions: [],
+      activeStates: [],
+      runtimeEffects: null,
+      runtimeResources: null,
+    });
+  });
+
+  it("offers the standard actions every character can take", () => {
+    const ids = useCharacterSheetStore
+      .getState()
+      .getCharacterActions()
+      .map((action) => action.id);
+
+    expect(ids).toContain("action_dodge");
+    expect(ids).toContain("action_dash");
+  });
+
+  it("offers each standard action only once", () => {
+    const ids = useCharacterSheetStore
+      .getState()
+      .getCharacterActions()
+      .map((action) => action.id);
+
+    expect(ids.filter((id) => id === "action_dodge")).toHaveLength(1);
   });
 });

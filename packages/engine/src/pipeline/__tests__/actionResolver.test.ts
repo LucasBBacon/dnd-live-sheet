@@ -1361,3 +1361,369 @@ describe("ActionResolver apply_effect modifier metadata", () => {
     expect(authored).not.toHaveProperty("sourceName");
   });
 });
+
+describe("ActionResolver economy policy", () => {
+  let effectManager: EffectManager;
+  let resourceManager: ResourceManager;
+  let combatContext: CombatContextManager;
+
+  const parry: ActionGrant = {
+    ...bowShot,
+    id: "action_reactive_parry",
+    name: "Reactive Parry",
+    activation: "reaction",
+    consumesAmmo: undefined,
+  };
+
+  beforeEach(() => {
+    effectManager = new EffectManager();
+    resourceManager = new ResourceManager();
+    combatContext = new CombatContextManager();
+    combatContext.beginCombat();
+    combatContext.beginTurn({ kind: "player" });
+  });
+
+  const run = (policy?: "enforce" | "track") =>
+    ActionResolver.execute(parry, payload(), {
+      effectManager,
+      resourceManager,
+      combatContext,
+      ...(policy && { economyPolicy: policy }),
+    });
+
+  it("refuses an already-spent reaction by default, leaving strict behaviour intact", () => {
+    run();
+    const second = run();
+
+    expect(second.executed).toBe(false);
+    expect(second.reason).toBe("reaction_unavailable");
+  });
+
+  it("lets a second reaction through when the caller only wants tracking", () => {
+    run("track");
+    const second = run("track");
+
+    expect(second.executed).toBe(true);
+  });
+
+  it("reports the overdraft so the sheet can warn rather than stay silent", () => {
+    run("track");
+    const second = run("track");
+
+    expect(second.economyOverdrawn).toBe(true);
+  });
+
+  it("does not flag an overdraft on the first, affordable use", () => {
+    const first = run("track");
+
+    expect(first.executed).toBe(true);
+    expect(first.economyOverdrawn).toBeUndefined();
+  });
+
+  it("still records the reaction as spent while tracking", () => {
+    run("track");
+
+    expect(combatContext.getContext().economy.reactionAvailable).toBe(false);
+  });
+
+  it("keeps the original spender named when a later action overdraws", () => {
+    run("track");
+    const laterAction: ActionGrant = { ...parry, id: "action_second_parry" };
+
+    ActionResolver.execute(laterAction, payload(), {
+      effectManager,
+      resourceManager,
+      combatContext,
+      economyPolicy: "track",
+    });
+
+    expect(combatContext.getContext().economy.spentReactionSourceId).toBe(
+      "action_reactive_parry",
+    );
+  });
+
+  it("still refuses an unaffordable resource cost while tracking economy", () => {
+    const kiParry: ActionGrant = { ...parry, consumesResource: "pool_ki" };
+
+    const result = ActionResolver.execute(kiParry, payload(), {
+      effectManager,
+      resourceManager,
+      combatContext,
+      economyPolicy: "track",
+    });
+
+    // tracking relaxes the action economy only; a pool that is genuinely
+    // empty is still a hard stop
+    expect(result.executed).toBe(false);
+    expect(result.reason).toBe("insufficient_resource");
+  });
+});
+
+describe("ActionResolver attack allowance", () => {
+  let effectManager: EffectManager;
+  let resourceManager: ResourceManager;
+  let combatContext: CombatContextManager;
+
+  const swing: ActionGrant = {
+    ...bowShot,
+    id: "action_weapon_longsword",
+    name: "Longsword",
+    activation: "attack",
+    consumesAmmo: undefined,
+  };
+
+  beforeEach(() => {
+    effectManager = new EffectManager();
+    resourceManager = new ResourceManager();
+    combatContext = new CombatContextManager();
+    combatContext.beginCombat();
+    combatContext.beginTurn({ kind: "player" });
+  });
+
+  const strike = (attacksPerAction = 2, policy: "enforce" | "track" = "track") =>
+    ActionResolver.execute(swing, payload(), {
+      effectManager,
+      resourceManager,
+      combatContext,
+      attacksPerAction,
+      economyPolicy: policy,
+    });
+
+  it("takes the Attack action on the first swing, without being asked", () => {
+    strike();
+
+    expect(combatContext.getContext().economy.actionAvailable).toBe(false);
+  });
+
+  it("names the swing as what took the Attack action", () => {
+    strike();
+
+    expect(combatContext.getContext().economy.attackActionSourceId).toBe(
+      "action_weapon_longsword",
+    );
+  });
+
+  it("opens the allowance and immediately spends one of it", () => {
+    strike(2);
+
+    expect(combatContext.getContext().economy.attacksRemaining).toBe(1);
+  });
+
+  it("lets a second swing draw the second attack", () => {
+    strike(2);
+    const second = strike(2);
+
+    expect(second.executed).toBe(true);
+    expect(combatContext.getContext().economy.attacksRemaining).toBe(0);
+  });
+
+  it("does not spend a second action for the second swing", () => {
+    strike(2);
+    combatContext.refundAction();
+
+    strike(2);
+
+    expect(combatContext.getContext().economy.actionAvailable).toBe(true);
+  });
+
+  it("flags a swing beyond the allowance as an overdraft while tracking", () => {
+    strike(2);
+    strike(2);
+    const third = strike(2);
+
+    expect(third.executed).toBe(true);
+    expect(third.economyOverdrawn).toBe(true);
+  });
+
+  it("refuses a swing beyond the allowance when enforcing", () => {
+    strike(2, "enforce");
+    strike(2, "enforce");
+    const third = strike(2, "enforce");
+
+    expect(third.executed).toBe(false);
+    expect(third.reason).toBe("action_unavailable");
+  });
+
+  it("grants a single attack when nothing says otherwise", () => {
+    ActionResolver.execute(swing, payload(), {
+      effectManager,
+      resourceManager,
+      combatContext,
+      economyPolicy: "track",
+    });
+
+    expect(combatContext.getContext().economy.attacksRemaining).toBe(0);
+  });
+
+  it("still lets an off-hand swing cost a bonus action", () => {
+    const offHand: ActionGrant = {
+      ...swing,
+      id: "action_weapon_longsword_off_hand",
+      activation: "bonus_action",
+    };
+
+    ActionResolver.execute(offHand, payload(), {
+      effectManager,
+      resourceManager,
+      combatContext,
+      attacksPerAction: 2,
+      economyPolicy: "track",
+    });
+
+    expect(combatContext.getContext().economy.bonusActionAvailable).toBe(false);
+    // a two-weapon bonus attack is its own action, not one of the Attack
+    // action's swings, so it must not touch the allowance
+    expect(combatContext.getContext().economy.attacksRemaining).toBeNull();
+  });
+
+  it("spends nothing at all outside combat", () => {
+    const idle = new CombatContextManager();
+
+    ActionResolver.execute(swing, payload(), {
+      effectManager,
+      resourceManager,
+      combatContext: idle,
+      attacksPerAction: 2,
+      economyPolicy: "track",
+    });
+
+    expect(idle.getContext().economy.actionAvailable).toBe(true);
+    expect(idle.getContext().economy.attacksRemaining).toBeNull();
+  });
+
+  it("starts a fresh allowance on the next turn", () => {
+    strike(2);
+    strike(2);
+
+    combatContext.beginTurn({ kind: "player" });
+    strike(2);
+
+    expect(combatContext.getContext().economy.attacksRemaining).toBe(1);
+  });
+});
+
+describe("ActionResolver attack allowance refunds", () => {
+  let effectManager: EffectManager;
+  let resourceManager: ResourceManager;
+  let combatContext: CombatContextManager;
+
+  const swing: ActionGrant = {
+    ...bowShot,
+    id: "action_weapon_longsword",
+    name: "Longsword",
+    activation: "attack",
+    consumesAmmo: undefined,
+  };
+
+  /** A swing that also costs a pool, the way a ki-fuelled strike would. */
+  const costlySwing: ActionGrant = {
+    ...swing,
+    id: "action_weapon_ki_strike",
+    consumesResource: "pool_ki",
+  };
+
+  beforeEach(() => {
+    effectManager = new EffectManager();
+    resourceManager = new ResourceManager();
+    combatContext = new CombatContextManager();
+    combatContext.beginCombat();
+    combatContext.beginTurn({ kind: "player" });
+  });
+
+  const run = (action: ActionGrant) =>
+    ActionResolver.execute(action, payload(), {
+      effectManager,
+      resourceManager,
+      combatContext,
+      attacksPerAction: 2,
+      economyPolicy: "track",
+    });
+
+  it("gives the attack back when a later cost aborts the swing", () => {
+    run(swing);
+    const aborted = run(costlySwing);
+
+    expect(aborted.executed).toBe(false);
+    expect(aborted.reason).toBe("insufficient_resource");
+    expect(combatContext.getContext().economy.attacksRemaining).toBe(1);
+  });
+
+  it("undoes the Attack action entirely when the very first swing aborts", () => {
+    const aborted = run(costlySwing);
+
+    expect(aborted.executed).toBe(false);
+    expect(combatContext.getContext().economy.attacksRemaining).toBeNull();
+  });
+
+  it("gives the action back when the first swing aborts", () => {
+    run(costlySwing);
+
+    expect(combatContext.getContext().economy.actionAvailable).toBe(true);
+  });
+
+  it("forgets what took the Attack action when the first swing aborts", () => {
+    run(costlySwing);
+
+    expect(
+      combatContext.getContext().economy.attackActionSourceId,
+    ).toBeUndefined();
+  });
+});
+
+describe("ActionResolver no_effect", () => {
+  let effectManager: EffectManager;
+  let resourceManager: ResourceManager;
+  let combatContext: CombatContextManager;
+
+  const disengage: ActionGrant = {
+    id: "action_disengage",
+    name: "Disengage",
+    activation: "action",
+    effect: { type: "no_effect" },
+  };
+
+  beforeEach(() => {
+    effectManager = new EffectManager();
+    resourceManager = new ResourceManager();
+    combatContext = new CombatContextManager();
+    combatContext.beginCombat();
+    combatContext.beginTurn({ kind: "player" });
+  });
+
+  const run = () =>
+    ActionResolver.execute(disengage, payload(), {
+      effectManager,
+      resourceManager,
+      combatContext,
+      economyPolicy: "track",
+    });
+
+  it("executes without complaint", () => {
+    expect(run().executed).toBe(true);
+  });
+
+  it("rolls nothing, because there is nothing to roll", () => {
+    // an ability_check here would produce a meaningless bare d20
+    expect(run().rollResults).toBeUndefined();
+  });
+
+  it("raises no effect", () => {
+    run();
+
+    expect(effectManager.getActiveEffects()).toEqual([]);
+  });
+
+  it("still costs the action it claims to cost", () => {
+    run();
+
+    expect(combatContext.getContext().economy.actionAvailable).toBe(false);
+  });
+
+  it("records itself as what spent the action", () => {
+    run();
+
+    expect(combatContext.getContext().economy.spentActionSourceId).toBe(
+      "action_disengage",
+    );
+  });
+});

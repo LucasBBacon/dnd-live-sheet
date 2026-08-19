@@ -8,3 +8,4 @@ export * from "./weaponSynthesizer.js";
 export * from "./modifierExtractor.js";
 export * from "./proficiencyExtractor.js";
 export * from "./stateExtractor.js";
+export * from "./turnLifecycle.js";

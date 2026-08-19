@@ -1,3 +1,4 @@
+import { STANDARD_ACTIONS } from "@project/shared";
 import type {
   ActorInstance,
   ActionGrant,
@@ -98,6 +99,8 @@ export interface LiveCharacterSheet {
   armorClass: CalculationResult;
   initiative: CalculationResult;
   speed: CalculationResult;
+  /** How many attacks one Attack action grants. Base one, raised by Extra Attack. */
+  attacksPerAction: CalculationResult;
 
   // skills and saves
   skills: Record<string, DerivedSkill>; // keyed by skillId
@@ -362,13 +365,35 @@ export class CharacterEngine {
       encumbrance.tier,
     );
 
+    // reads only modifiers and levels, so it has no stake in the two-stage
+    // seam; it sits here because this is where the turn's shape is reasoned about
+    const attacksPerAction = DerivedStatEngine.calculateAttacksPerAction(
+      allModifiers,
+      {
+        total: totalLevel,
+        classes: save.classes.reduce(
+          (levelsByClass, classState) => {
+            levelsByClass[classState.classId] = classState.level;
+            return levelsByClass;
+          },
+          {} as Record<string, number>,
+        ),
+      },
+      activeStates,
+    );
+
     // endregion
 
     // region State Synthesis
 
     // 1 - synthesize actions
     // aggregate static actions from traits
-    const actions: ActionGrant[] = activeTraits.flatMap((t) => t.actions || []);
+    // the standard actions come first because everyone has them, and they are
+    // not granted by anything - Dodge is not a trait, it is a rule
+    const actions: ActionGrant[] = [
+      ...STANDARD_ACTIONS,
+      ...activeTraits.flatMap((t) => t.actions || []),
+    ];
 
     for (const instance of inventory) {
       if (!instance.slot || instance.slot === "backpack") continue;
@@ -456,6 +481,7 @@ export class CharacterEngine {
       armorClass,
       initiative,
       speed,
+      attacksPerAction,
 
       skills,
       encumbrance,

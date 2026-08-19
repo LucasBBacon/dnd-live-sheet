@@ -15,6 +15,9 @@ export const SOCKET_EVENTS = {
   ACTION_EXECUTED: "character:action_executed",
   ACTION_INTENT: "character:action_intent",
   ACTION_RESOLVED: "character:action_resolved",
+  TURN_STARTED: "character:turn_started",
+  TURN_ENDED: "character:turn_ended",
+  TURN_RESOLVED: "character:turn_resolved",
 } as const;
 
 // #endregion
@@ -160,11 +163,40 @@ export interface ActionResolvedPayload {
   actorInstanceId?: string;
   executed: boolean;
   reason?: string;
+  /** True when the action ran despite its activation already being spent. */
+  economyOverdrawn?: boolean;
   rollResults: RollResultPayload[];
   activeStates: string[];
   resources: RuntimeResourceSyncPayload[];
   effects: RuntimeEffectSyncPayload[];
   actors: import("../schemas/actors.js").ActorInstance[];
+  /**
+   * The server's turn state after this action. Sent for the same reason
+   * effects and resources are: the server owns it, so the sheet mirrors rather
+   * than maintains it.
+   */
+  combatContext: import("../schemas/combatContext.js").CombatContext;
+  timestamp: number;
+}
+
+/** Asks the server to start or end the player's turn. */
+export interface TurnIntentPayload {
+  characterId: string;
+  requestId: string;
+  timestamp: number;
+}
+
+/** The state the sheet adopts once the server has applied a turn transition. */
+export interface TurnResolvedPayload {
+  characterId: string;
+  requestId: string;
+  transition: "started" | "ended";
+  rollResults: RollResultPayload[];
+  activeStates: string[];
+  resources: RuntimeResourceSyncPayload[];
+  effects: RuntimeEffectSyncPayload[];
+  actors: import("../schemas/actors.js").ActorInstance[];
+  combatContext: import("../schemas/combatContext.js").CombatContext;
   timestamp: number;
 }
 

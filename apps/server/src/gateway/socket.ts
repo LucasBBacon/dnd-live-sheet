@@ -22,6 +22,7 @@ import {
   type ResourceConsumedPayload,
   type RuntimeEffectSyncPayload,
   type RollResultsBroadcastPayload,
+  type TurnIntentPayload,
 } from "@project/shared";
 import { Server, Socket } from "socket.io";
 import { and, eq, not, sql } from "drizzle-orm";
@@ -29,10 +30,12 @@ import {
   CharacterEngine,
   ActionResolver,
   CharacterBootstrapper,
+  CombatContextManager,
   EffectManager,
   ResourceManager,
   RestEngine,
 } from "@project/engine";
+import { resolvePlayerTurn } from "../services/turnResolution.js";
 import {
   getCampaignMembershipRole,
   getUserIdFromSocket,
@@ -113,6 +116,12 @@ interface AuthoritativeRuntimeContext {
   save: CharacterSave;
   effectManager: EffectManager;
   resourceManager: ResourceManager;
+  /**
+   * Turn state joins effects and resources here so a single owner expires
+   * effects and refreshes the economy. A client-side copy would be overwritten
+   * by the next sync from this one.
+   */
+  combatContext: CombatContextManager;
   responseByRequestId: Map<string, ActionResolvedPayload>;
   lastTouchedAt: number;
 }
@@ -257,6 +266,7 @@ const getAuthoritativeRuntimeContext = async (
     save: nextSave,
     effectManager,
     resourceManager,
+    combatContext: new CombatContextManager(),
     responseByRequestId: new Map(),
     lastTouchedAt: Date.now(),
   };
@@ -269,7 +279,11 @@ const resolveCharacterAction = async (
   runtime: AuthoritativeRuntimeContext,
   characterId: string,
   actionId: string,
-): Promise<{ action: ActionGrant | null; diceRules: Array<any> }> => {
+): Promise<{
+  action: ActionGrant | null;
+  diceRules: Array<any>;
+  attacksPerAction: number;
+}> => {
   const inventoryRows = await db
     .select({
       id: characterInventory.id,
@@ -295,7 +309,11 @@ const resolveCharacterAction = async (
   const action =
     liveSheet.actions.find((entry) => entry.id === actionId) ?? null;
 
-  return { action, diceRules };
+  return {
+    action,
+    diceRules,
+    attacksPerAction: liveSheet.attacksPerAction.total,
+  };
 };
 
 export function initializeWebSocketGateway(httpServer: any) {
@@ -465,6 +483,9 @@ export function initializeWebSocketGateway(httpServer: any) {
 
           let action: ActionGrant | null = null;
           let diceRules: Array<unknown> = [];
+          // one, unless the character has Extra Attack; the resolver needs it
+          // to size the Attack action's allowance on the first swing
+          let attacksPerAction = 1;
           let actorInstanceId: string | undefined = payload.actorInstanceId;
           let actionStates = runtime.effectManager.getActiveStates();
 
@@ -476,6 +497,7 @@ export function initializeWebSocketGateway(httpServer: any) {
             );
             action = resolved.action;
             diceRules = resolved.diceRules;
+            attacksPerAction = resolved.attacksPerAction;
           } else {
             if (!payload.actorInstanceId) {
               throw new Error("Actor action intent missing actorInstanceId.");
@@ -508,6 +530,12 @@ export function initializeWebSocketGateway(httpServer: any) {
                   {
                     effectManager: runtime.effectManager,
                     resourceManager: runtime.resourceManager,
+                    combatContext: runtime.combatContext,
+                    attacksPerAction,
+                    // the sheet tracks the economy rather than policing it:
+                    // tables bend it constantly, and a refusal here would be
+                    // something the player fights instead of uses
+                    economyPolicy: "track",
                     activeStates: runtime.effectManager.getActiveStates(),
                     diceRules: diceRules as any,
                   },
@@ -525,6 +553,10 @@ export function initializeWebSocketGateway(httpServer: any) {
             ...(actorInstanceId !== undefined && { actorInstanceId }),
             executed: execution.executed,
             ...(execution.reason !== undefined && { reason: execution.reason }),
+            ...("economyOverdrawn" in execution &&
+              execution.economyOverdrawn === true && {
+                economyOverdrawn: true,
+              }),
             rollResults: executionRollResults.map((result) => ({
               total: result.total,
               rolls: result.rolls,
@@ -546,6 +578,7 @@ export function initializeWebSocketGateway(httpServer: any) {
               })),
             effects: toRuntimeEffectsPayload(runtime.effectManager),
             actors: runtime.effectManager.getActiveActors(),
+            combatContext: runtime.combatContext.getContext(),
             timestamp: Date.now(),
           };
 
@@ -575,6 +608,55 @@ export function initializeWebSocketGateway(httpServer: any) {
           });
         }
       },
+    );
+
+    // #endregion
+
+    // #region TURN LIFECYCLE
+    //
+    // Thin adapters. Everything that decides what a turn transition means lives
+    // in resolvePlayerTurn and TurnLifecycle, both of which are unit tested
+    // without a socket.
+
+    const handleTurnIntent = async (
+      payload: TurnIntentPayload,
+      transition: "started" | "ended",
+      event: string,
+    ) => {
+      try {
+        pruneAuthoritativeRuntime();
+
+        const campaignId = await ensureCharacterInSocketCampaign(
+          socket,
+          payload.characterId,
+        );
+
+        const runtime = await getAuthoritativeRuntimeContext(
+          payload.characterId,
+        );
+        runtime.lastTouchedAt = Date.now();
+
+        const resolved = resolvePlayerTurn(runtime, transition, {
+          characterId: payload.characterId,
+          requestId: payload.requestId,
+        });
+
+        io.to(`campaign_${campaignId}`).emit(SOCKET_EVENTS.TURN_RESOLVED, {
+          actorId: socket.id,
+          data: resolved,
+        });
+      } catch (error) {
+        console.error(`Failed to process turn ${transition}:`, error);
+        socket.emit("error:rollback", { event, payload });
+      }
+    };
+
+    socket.on(SOCKET_EVENTS.TURN_STARTED, (payload: TurnIntentPayload) =>
+      handleTurnIntent(payload, "started", SOCKET_EVENTS.TURN_STARTED),
+    );
+
+    socket.on(SOCKET_EVENTS.TURN_ENDED, (payload: TurnIntentPayload) =>
+      handleTurnIntent(payload, "ended", SOCKET_EVENTS.TURN_ENDED),
     );
 
     // #endregion

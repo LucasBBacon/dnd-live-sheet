@@ -19,6 +19,7 @@ import {
 import {
   CombatContextSchema,
   CONDITION_MAP,
+  STANDARD_ACTIONS,
   type CombatContext,
   type CombatEventInput,
   type CombatRollSnapshotInput,
@@ -37,6 +38,7 @@ import {
   type RuntimeModifier,
   // TraitDefinition moved to the shared schemas when traits were extracted
   type TraitDefinition,
+  type TurnResolvedPayload,
 } from "@project/shared";
 import { create } from "zustand";
 import { socketService } from "../services/socketService";
@@ -175,8 +177,14 @@ const ensureCombatManager = (
   state: Pick<CharacterSheetState, "runtimeCombat" | "combatContext">,
 ) => state.runtimeCombat ?? createCombatManager(state.combatContext);
 
+/**
+ * Rebuilds the local effect mirror from whatever the server just reported.
+ *
+ * Typed on the two fields it reads rather than on a whole payload, so both the
+ * action and turn replies can use it.
+ */
 const hydrateRuntimeEffectsFromResolved = (
-  payload: ActionResolvedPayload,
+  payload: Pick<ActionResolvedPayload, "effects" | "actors">,
 ): EffectManager => {
   const manager = new EffectManager();
 
@@ -614,6 +622,7 @@ export interface CharacterSheetState {
   spendReaction: (sourceId: string) => boolean;
   beginTurn: () => void;
   endTurn: () => void;
+  syncRemoteTurnResolution: (payload: TurnResolvedPayload) => void;
   toggleCondition: (conditionId: string) => void;
   handleSaveOutcome: (succeeded: boolean) => void;
 
@@ -1030,7 +1039,12 @@ export const useCharacterSheetStore = create<CharacterSheetState>(
       );
 
       const activeTraits = CharacterBootstrapper.compileActiveTraits(nextSave);
-      return activeTraits.flatMap((trait) => trait.actions ?? []);
+      // the standard actions are not granted by anything - Dodge is a rule, not
+      // a trait - so they are always present, ahead of what traits add
+      return [
+        ...STANDARD_ACTIONS,
+        ...activeTraits.flatMap((trait) => trait.actions ?? []),
+      ];
     },
 
     executeCharacterAction: (actionId) => {
@@ -1192,48 +1206,59 @@ export const useCharacterSheetStore = create<CharacterSheetState>(
       return spent;
     },
 
+    // Turn transitions are requested, not performed. The server owns effect
+    // expiry and the action economy; a local tick here would be undone by the
+    // very next sync from it, which is the bug this replaced.
     beginTurn: () => {
-      const state = get();
-      const runtimeCombat = ensureCombatManager(state);
-      const combatContext = runtimeCombat.beginTurn({ kind: "player" });
-
-      // expire first, dispatch second: an ON_START_OF_TURN trigger can raise a
-      // fresh effect, and ticking afterwards would sweep away the very thing it
-      // just created
-      state.runtimeEffects?.tickTurnStart();
-
-      const dispatched = dispatchAuthoredEvent(state, "ON_START_OF_TURN");
-
-      set({
-        activeStates: dispatched.activeStates,
-        latestRollResults: dispatched.rollResults,
-        resources: dispatched.resources,
-        runtimeEffects: dispatched.runtimeEffects,
-        runtimeResources: dispatched.runtimeResources,
-        runtimeCombat,
-        combatContext,
+      socketService.emitTurnIntent("started", {
+        characterId: get().id,
+        requestId: crypto.randomUUID(),
+        timestamp: Date.now(),
       });
     },
 
     endTurn: () => {
-      const state = get();
-      const runtimeCombat = ensureCombatManager(state);
-      const combatContext = runtimeCombat.endTurn({ kind: "player" });
-
-      // same ordering as beginTurn, for the same reason
-      state.runtimeEffects?.tickTurnEnd();
-
-      const dispatched = dispatchAuthoredEvent(state, "ON_END_OF_TURN");
-
-      set({
-        activeStates: dispatched.activeStates,
-        latestRollResults: dispatched.rollResults,
-        resources: dispatched.resources,
-        runtimeEffects: dispatched.runtimeEffects,
-        runtimeResources: dispatched.runtimeResources,
-        runtimeCombat,
-        combatContext,
+      socketService.emitTurnIntent("ended", {
+        characterId: get().id,
+        requestId: crypto.randomUUID(),
+        timestamp: Date.now(),
       });
+    },
+
+    syncRemoteTurnResolution: (payload) => {
+      const state = get();
+      const runtimeEffects = hydrateRuntimeEffectsFromResolved(payload);
+      const runtimeResources = state.runtimeResources ?? new ResourceManager();
+
+      CharacterBootstrapper.hydrateRuntimeManagers(
+        toCharacterSave(state),
+        runtimeEffects,
+        runtimeResources,
+      );
+
+      alignRuntimeResources(runtimeResources, payload.resources);
+
+      set((previous) => ({
+        // conditions and base states are the player's, not the server's, so
+        // they are composed back in rather than taken from the payload
+        activeStates: composeActiveStates(
+          previous.baseStates,
+          previous.activeConditions,
+          runtimeEffects,
+        ),
+        resources: payload.resources,
+        latestRollResults:
+          payload.rollResults.length > 0
+            ? appendRollResults(
+                previous,
+                payload.rollResults.map(toActionRollResult),
+              )
+            : previous.latestRollResults,
+        runtimeEffects,
+        runtimeResources,
+        runtimeCombat: createCombatManager(payload.combatContext),
+        combatContext: payload.combatContext,
+      }));
     },
 
     toggleCondition: (conditionId) => {

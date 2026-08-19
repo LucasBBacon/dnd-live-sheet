@@ -47,7 +47,11 @@ export class WeaponSynthesizer {
     const isOffHandAttack = attackContext.hand === "off_hand";
     const isTwoWeaponBonusAttack =
       attackContext.attackUsage === "two_weapon_bonus";
-    const activation = isTwoWeaponBonusAttack ? "bonus_action" : "action";
+    // a standard swing draws one attack from the Attack action rather than
+    // costing an action outright - otherwise Extra Attack would have nothing to
+    // raise, and a second swing would need a second action. Two-weapon fighting
+    // is the exception: that really is its own bonus action.
+    const activation = isTwoWeaponBonusAttack ? "bonus_action" : "attack";
     const idSuffix = isOffHandAttack ? "_off_hand" : "";
     const labelSuffix = isOffHandAttack ? " (Off-Hand)" : "";
     const gripSuffix =

@@ -1,8 +1,11 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { TRAIT_DICTIONARY, resolveItemDefinition } from "@project/engine";
+import { costsAttack } from "@project/shared";
 import { useEffect, useMemo, useState, type MouseEvent } from "react";
 import { useCombat } from "../../hooks/useCombat";
+import { useDerivedStats } from "../../hooks/useCharacterStats";
 import { useCharacterSheetStore } from "../../store/characterSheetStore";
+import { TurnControlsWidget } from "./TurnControlsWidget";
 import { useRollStore } from "../../store/rollStore";
 
 const PROTECTION_TRAIT_ID = "trait_fs_protection";
@@ -19,6 +22,7 @@ const hasProtectionTrait = (
 
 export const CombatWidget = () => {
   const { attacks } = useCombat();
+  const { attacksPerAction } = useDerivedStats();
   const requestRoll = useRollStore((state) => state.requestRoll);
 
   const consumeItem = useCharacterSheetStore((state) => state.consumeItem);
@@ -27,6 +31,7 @@ export const CombatWidget = () => {
   const inventory = useCharacterSheetStore((state) => state.inventory);
   const ruleSnapshot = useCharacterSheetStore((state) => state.ruleSnapshot);
   const combatContext = useCharacterSheetStore((state) => state.combatContext);
+  const attacksRemaining = combatContext.economy.attacksRemaining;
   const latestRollResults = useCharacterSheetStore(
     (state) => state.latestRollResults,
   );
@@ -62,8 +67,11 @@ export const CombatWidget = () => {
     () => runtimeEffects?.getActiveActors() ?? [],
     [runtimeEffects],
   );
+  // classified by what the action costs rather than by how its id is spelled.
+  // Swings are rendered as attack cards below, so they do not belong in the
+  // character-action list.
   const characterActions = getCharacterActions().filter(
-    (action) => !action.id.startsWith("action_weapon_"),
+    (action) => !costsAttack(action.activation),
   );
   const protectionTrait = TRAIT_DICTIONARY[PROTECTION_TRAIT_ID];
   const protectionAvailable = hasProtectionTrait(traits, traitGrants);
@@ -236,6 +244,38 @@ export const CombatWidget = () => {
 
   return (
     <div className="flex flex-col gap-3">
+      <TurnControlsWidget />
+
+      {/*
+        Stated once for the Attack action rather than per weapon card: the
+        extra attacks are yours to split across your weapons, so a badge on
+        each card would read as "two swings with this one".
+
+        Reads as an offer before the Attack action is taken and as a tally
+        after, which is what makes the implicit declaration visible - the
+        player never clicks "Attack", so the state has to say it happened.
+      */}
+      {attacksPerAction.total > 1 && (
+        <div className="flex items-center justify-between gap-3 rounded-xl border border-slate-300 bg-slate-50 px-3 py-2">
+          <span className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500">
+            Attack action
+          </span>
+          <span className="text-sm text-slate-800">
+            <span className="font-bold">
+              {attacksRemaining === null || attacksRemaining === undefined
+                ? `${attacksPerAction.total} attacks`
+                : `${attacksPerAction.total - attacksRemaining} of ${attacksPerAction.total} used`}
+            </span>
+            {attacksPerAction.breakdown[0] && (
+              <span className="text-slate-500">
+                {" "}
+                — {attacksPerAction.breakdown[0].name}
+              </span>
+            )}
+          </span>
+        </div>
+      )}
+
       {protectionAvailable && (
         <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-3">
           <div className="mb-2 text-[11px] font-semibold uppercase tracking-[0.2em] text-emerald-700">

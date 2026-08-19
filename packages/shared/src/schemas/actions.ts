@@ -8,15 +8,53 @@ import {
 import { DamageTypeSchema } from "./affinities.js";
 import { TargetFilterSchema } from "./creatures.js";
 
+/**
+ * What performing an action costs.
+ *
+ * The members span three unrelated axes, which is why nothing should switch on
+ * this enum directly - use the classifiers below:
+ *
+ * - combat economy: `action`, `bonus_action`, `reaction`
+ * - the Attack action's allowance: `attack`
+ * - nothing at all: `special`
+ * - wall-clock time, outside combat: `minute`, `hour`, `eight_hours`
+ *
+ * `attack` is the odd one worth stating plainly: taking the Attack action
+ * costs your action, and it grants one or more attacks. Each of those attacks
+ * is an `attack`, and costs no further economy of its own.
+ */
 export const ActionActivationSchema = z.enum([
   "action",
   "bonus_action",
   "reaction",
+  "attack",
   "special",
   "minute",
   "hour",
   "eight_hours",
 ]);
+
+export type ActionActivation = z.infer<typeof ActionActivationSchema>;
+
+/** Spends one of the character's action, bonus action, or reaction. */
+export const costsCombatEconomy = (activation: ActionActivation): boolean =>
+  activation === "action" ||
+  activation === "bonus_action" ||
+  activation === "reaction";
+
+/** Draws one attack from an Attack action's allowance. */
+export const costsAttack = (activation: ActionActivation): boolean =>
+  activation === "attack";
+
+/** Costs nothing: a decision or a switch flipped, not an action taken. */
+export const isFree = (activation: ActionActivation): boolean =>
+  activation === "special";
+
+/** Measured in wall-clock time, so the combat economy does not apply. */
+export const isDowntime = (activation: ActionActivation): boolean =>
+  activation === "minute" ||
+  activation === "hour" ||
+  activation === "eight_hours";
 
 export const AreaOfEffectSchema = z.object({
   shape: z.enum([
@@ -85,6 +123,19 @@ export const AbilityCheckEffectSchema = z.object({
   type: z.literal("ability_check"),
 });
 
+/**
+ * An action that costs its activation and nothing else.
+ *
+ * Disengage, Help and Ready all spend your action, but what they *do* happens
+ * between the player and the table: they change someone else's roll, or set up
+ * a trigger this engine does not model. Saying so explicitly beats the
+ * alternatives - an `ability_check` would roll a meaningless d20, and an
+ * `apply_effect` would mint a state nothing reads.
+ */
+export const NoEffectSchema = z.object({
+  type: z.literal("no_effect"),
+});
+
 export const AttackEffectSchema = z.object({
   type: z.literal("attack"),
   attackType: AttackTypeSchema,
@@ -149,6 +200,7 @@ export const DynamicWeaponAttackSchema = z.object({
 export const CoreEffectUnion = z.discriminatedUnion("type", [
   SaveEffectSchema,
   AbilityCheckEffectSchema,
+  NoEffectSchema,
   AttackEffectSchema,
   DamageRiderEffectSchema,
   SummonEffectSchema,
