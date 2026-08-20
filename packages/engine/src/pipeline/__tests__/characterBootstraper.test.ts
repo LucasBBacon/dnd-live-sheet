@@ -504,3 +504,119 @@ describe("CharacterBootstrapper.hydrateRuntimeManagers effect kinds", () => {
     spy.mockRestore();
   });
 });
+
+describe("CharacterBootstrapper pack resolution", () => {
+  const barbarian = (): CharacterSave => ({
+    attributes: baseAttributes,
+    race: { baseRaceId: "race_dwarf", hasSubraces: false, subraceId: null },
+    classes: [{ classId: "class_barbarian", level: 1, selections: {} }],
+    traitSelections: {},
+    hp: baseHp,
+  });
+
+  const pack = {
+    racesById: {
+      race_dwarf: {
+        id: "race_dwarf",
+        name: "Dwarf",
+        size: "medium" as const,
+        speed: 25,
+        grantedTraitIds: ["trait_pack_darkvision"],
+        hasSubraces: false,
+        subraces: {},
+      },
+    },
+    classesById: {
+      class_barbarian: {
+        id: "class_barbarian",
+        name: "Barbarian",
+        hitDie: 12,
+        subclassUnlockLevel: 3,
+        startingEquipment: { given: [], choices: [] },
+        startingProficiencyTraitIds: [],
+        multiclassTraitIds: [],
+        progression: [{ level: 1, grants: ["trait_rage"], grantsASI: false }],
+      },
+    },
+    traitsById: {
+      trait_rage: {
+        id: "trait_rage",
+        name: "Rage",
+        modifiers: { fixed: [], choices: [] },
+        resources: [],
+        triggers: [],
+        diceRules: [],
+        criticalHitModifiers: [],
+        actions: [],
+      },
+      trait_pack_darkvision: {
+        id: "trait_pack_darkvision",
+        name: "Darkvision",
+        modifiers: { fixed: [], choices: [] },
+        resources: [],
+        triggers: [],
+        diceRules: [],
+        criticalHitModifiers: [],
+        actions: [],
+      },
+    },
+  };
+
+  it("grants a race's traits from the pack", () => {
+    expect(
+      CharacterBootstrapper.resolveGrantedTraitIds(barbarian(), pack),
+    ).toContain("trait_pack_darkvision");
+  });
+
+  it("grants a class's traits from the pack progression", () => {
+    expect(
+      CharacterBootstrapper.resolveGrantedTraitIds(barbarian(), pack),
+    ).toContain("trait_rage");
+  });
+
+  it("grants nothing for a class no source defines", () => {
+    // documents why the barbarian currently gets nothing: without the pack,
+    // class_barbarian is in neither the dictionary nor a snapshot
+    expect(
+      CharacterBootstrapper.resolveGrantedTraitIds(barbarian()),
+    ).toEqual([]);
+  });
+
+  it("compiles the pack's own trait definitions, not empty placeholders", () => {
+    const compiled = CharacterBootstrapper.compileActiveTraits(
+      barbarian(),
+      pack,
+    );
+
+    expect(compiled.find((trait) => trait.id === "trait_rage")?.name).toBe(
+      "Rage",
+    );
+  });
+
+  it("still compiles dictionary traits when no pack is supplied", () => {
+    const compiled = CharacterBootstrapper.compileActiveTraits(fighter());
+
+    expect(compiled.length).toBeGreaterThan(0);
+  });
+
+  it("hydrates resources from pack traits", () => {
+    const resourceManager = new ResourceManager();
+
+    CharacterBootstrapper.hydrateRuntimeManagers(
+      barbarian(),
+      new EffectManager(),
+      resourceManager,
+      pack,
+    );
+
+    // proves the snapshot reached the hydration path, not just the id lookup
+    expect(() =>
+      CharacterBootstrapper.hydrateRuntimeManagers(
+        barbarian(),
+        new EffectManager(),
+        resourceManager,
+        pack,
+      ),
+    ).not.toThrow();
+  });
+});

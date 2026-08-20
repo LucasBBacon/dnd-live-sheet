@@ -36,9 +36,8 @@ export interface RaceDefinition {
 
 export const RACE_DICTIONARY: Record<string, RaceDefinition> = {};
 
-export const resolveRaceDefinition = (
-  raceId: string,
-): RaceDefinition | undefined => RACE_DICTIONARY[raceId];
+// resolveRaceDefinition now lives in ruleLookup, where it can consult a loaded
+// rule pack before falling back to this dictionary.
 
 export const resolveSubraceDefinition = (
   raceId: string,

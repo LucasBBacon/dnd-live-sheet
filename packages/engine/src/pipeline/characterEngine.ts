@@ -41,11 +41,9 @@ import {
   ContainerEngine,
   type ContainerReport,
 } from "../calculators/containers.js";
+import { DEFAULT_WALKING_SPEED } from "../rules/raceDictionary.js";
 import {
-  DEFAULT_WALKING_SPEED,
-  RACE_DICTIONARY,
-} from "../rules/raceDictionary.js";
-import {
+  resolveRaceDefinition,
   resolveWeaponDefinition,
   type RuleSnapshotLookup,
 } from "../rules/ruleLookup.js";
@@ -226,11 +224,12 @@ export class CharacterEngine {
   ): LiveCharacterSheet {
     // region Aggregation and Extraction
 
-    // 1- compile active traits from blueprints
+    // 1- compile active traits from blueprints, preferring the loaded rule pack
     const activeTraits = CharacterBootstrapper.hydrateRuntimeManagers(
       save,
       effectManager,
       resourceManager,
+      options.snapshot,
     );
     const criticalHitModifiers = activeTraits.flatMap(
       (trait) => trait.criticalHitModifiers ?? [],
@@ -328,7 +327,7 @@ export class CharacterEngine {
     // The invariant, stated once because everything here rests on it: nothing
     // above this line may read activeStates.
 
-    const race = RACE_DICTIONARY[save.race.baseRaceId];
+    const race = resolveRaceDefinition(save.race.baseRaceId, options.snapshot);
 
     const encumbrance = EncumbranceEngine.calculate({
       totalHundredths: InventoryWeightCalculator.totalHundredths(

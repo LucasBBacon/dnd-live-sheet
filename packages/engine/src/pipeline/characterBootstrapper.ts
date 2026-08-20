@@ -13,6 +13,12 @@ import { CLASS_DICTIONARY } from "../rules/classDictionary.js";
 import { SUBCLASS_DICTIONARY } from "../rules/subclassDictionary.js";
 import { RACE_DICTIONARY } from "../rules/raceDictionary.js";
 import { TRAIT_DICTIONARY } from "../rules/traitDictionary.js";
+import {
+  resolveClassDefinition,
+  resolveRaceDefinition,
+  resolveTraitDefinition,
+  type RuleSnapshotLookup,
+} from "../rules/ruleLookup.js";
 import { ModifierExtractor } from "./modifierExtractor.js";
 import { ProficiencyExtractor } from "./proficiencyExtractor.js";
 import type {
@@ -119,10 +125,13 @@ const isSpellChoice = (grant: FeatureGrant): grant is SpellChoiceNode =>
  * Every grant a class state has unlocked: the class track plus, once a subclass
  * is chosen, its track too. Levels above the character's are ignored.
  */
-const unlockedGrants = (classState: ClassState): FeatureGrant[] => {
+const unlockedGrants = (
+  classState: ClassState,
+  snapshot?: RuleSnapshotLookup,
+): FeatureGrant[] => {
   const grants: FeatureGrant[] = [];
 
-  const blueprint = CLASS_DICTIONARY[classState.classId];
+  const blueprint = resolveClassDefinition(classState.classId, snapshot);
   if (blueprint) {
     for (const level of blueprint.progression) {
       if (level.level <= classState.level) grants.push(...level.grants);
@@ -149,8 +158,9 @@ const unlockedGrants = (classState: ClassState): FeatureGrant[] => {
 const classTraitIds = (
   classState: ClassState,
   isPrimary: boolean,
+  snapshot?: RuleSnapshotLookup,
 ): string[] => {
-  const blueprint = CLASS_DICTIONARY[classState.classId];
+  const blueprint = resolveClassDefinition(classState.classId, snapshot);
   const ids: string[] = blueprint
     ? [
         ...(isPrimary
@@ -159,7 +169,7 @@ const classTraitIds = (
       ]
     : [];
 
-  for (const grant of unlockedGrants(classState)) {
+  for (const grant of unlockedGrants(classState, snapshot)) {
     if (typeof grant === "string") ids.push(grant);
     else if (isTraitChoice(grant)) {
       ids.push(...(classState.selections[grant.nodeId] ?? []));
@@ -169,8 +179,11 @@ const classTraitIds = (
   return ids;
 };
 
-const raceTraitIds = (race: CharacterSave["race"]): string[] => {
-  const definition = RACE_DICTIONARY[race.baseRaceId];
+const raceTraitIds = (
+  race: CharacterSave["race"],
+  snapshot?: RuleSnapshotLookup,
+): string[] => {
+  const definition = resolveRaceDefinition(race.baseRaceId, snapshot);
   if (!definition) return [];
 
   const ids = [...definition.grantedTraitIds];
@@ -238,11 +251,14 @@ export class CharacterBootstrapper {
    * proficiencies, the features unlocked at its level, and whatever was picked
    * at each trait_choice node.
    */
-  public static resolveGrantedTraitIds(save: CharacterSave): string[] {
+  public static resolveGrantedTraitIds(
+    save: CharacterSave,
+    snapshot?: RuleSnapshotLookup,
+  ): string[] {
     const ids = [
-      ...raceTraitIds(save.race),
+      ...raceTraitIds(save.race, snapshot),
       ...save.classes.flatMap((classState, index) =>
-        classTraitIds(classState, index === 0),
+        classTraitIds(classState, index === 0, snapshot),
       ),
     ];
 
@@ -545,8 +561,12 @@ export class CharacterBootstrapper {
     save: CharacterSave,
     effectManager: EffectManager,
     resourceManager: ResourceManager,
+    snapshot?: RuleSnapshotLookup,
   ): TraitDefinition[] {
-    const activeTraits = CharacterBootstrapper.compileActiveTraits(save);
+    const activeTraits = CharacterBootstrapper.compileActiveTraits(
+      save,
+      snapshot,
+    );
 
     for (const effect of [...effectManager.getActiveEffects()]) {
       if (effect.instanceId.startsWith("trait_state_")) {
@@ -588,9 +608,12 @@ export class CharacterBootstrapper {
    * blueprint referencing a trait that has not been authored yet is a rulebook
    * gap, not a broken save, and validateSave is where saves get judged.
    */
-  public static compileActiveTraits(save: CharacterSave): TraitDefinition[] {
-    return CharacterBootstrapper.resolveGrantedTraitIds(save)
-      .map((traitId) => TRAIT_DICTIONARY[traitId])
+  public static compileActiveTraits(
+    save: CharacterSave,
+    snapshot?: RuleSnapshotLookup,
+  ): TraitDefinition[] {
+    return CharacterBootstrapper.resolveGrantedTraitIds(save, snapshot)
+      .map((traitId) => resolveTraitDefinition(traitId, snapshot))
       .filter((trait): trait is TraitDefinition => trait !== undefined);
   }
 

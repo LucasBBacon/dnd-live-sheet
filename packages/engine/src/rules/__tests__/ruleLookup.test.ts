@@ -5,6 +5,9 @@ import {
   resolveResourceRule,
   resolveResourceRules,
   resolveWeaponDefinition,
+  resolveRaceDefinition,
+  resolveTraitDefinition,
+  resolveClassDefinition,
 } from "../ruleLookup.js";
 
 const acBonusModifier = {
@@ -227,5 +230,109 @@ describe("ruleLookup", () => {
     });
 
     expect(rules.trait_custom_rule?.name).toBe("Custom Rule");
+  });
+});
+
+describe("ruleLookup pack resolution", () => {
+  const packRace = {
+    id: "race_dwarf",
+    name: "Dwarf",
+    size: "medium" as const,
+    speed: 25,
+    grantedTraitIds: ["trait_darkvision"],
+    hasSubraces: true,
+    subraces: {},
+  };
+
+  const packTrait = {
+    id: "trait_rage",
+    name: "Rage",
+    modifiers: { fixed: [], choices: [] },
+    resources: [],
+    triggers: [],
+    diceRules: [],
+    criticalHitModifiers: [],
+    actions: [],
+  };
+
+  const packClass = {
+    id: "class_barbarian",
+    name: "Barbarian",
+    hitDie: 12,
+    subclassUnlockLevel: 3,
+    startingEquipment: { given: [], choices: [] },
+    startingProficiencyTraitIds: [],
+    multiclassTraitIds: [],
+    progression: [{ level: 1, grants: ["trait_rage"], grantsASI: false }],
+  };
+
+  describe("races", () => {
+    it("finds a race the pack defines but the dictionary does not", () => {
+      expect(
+        resolveRaceDefinition("race_dwarf", {
+          racesById: { race_dwarf: packRace },
+        })?.name,
+      ).toBe("Dwarf");
+    });
+
+    it("returns nothing when neither source has the race", () => {
+      expect(resolveRaceDefinition("race_dwarf")).toBeUndefined();
+    });
+
+    it("prefers the pack over the dictionary for the same id", () => {
+      // the snapshot is the newer authority; a stale dictionary entry must not
+      // shadow content the rulebook was updated with
+      expect(
+        resolveRaceDefinition("race_dwarf", {
+          racesById: { race_dwarf: { ...packRace, speed: 30 } },
+        })?.speed,
+      ).toBe(30);
+    });
+  });
+
+  describe("traits", () => {
+    it("finds a trait the pack defines", () => {
+      expect(
+        resolveTraitDefinition("trait_rage", {
+          traitsById: { trait_rage: packTrait },
+        })?.name,
+      ).toBe("Rage");
+    });
+
+    it("still finds a trait only the dictionary defines", () => {
+      // fighting styles, metamagic and maneuvers are dictionary-only while the
+      // pack is filled in, so the fallback is the architecture, not a stopgap
+      expect(resolveTraitDefinition("trait_fs_defense")).toBeDefined();
+    });
+
+    it("keeps the dictionary reachable even when a snapshot is supplied", () => {
+      expect(
+        resolveTraitDefinition("trait_fs_defense", {
+          traitsById: { trait_rage: packTrait },
+        }),
+      ).toBeDefined();
+    });
+
+    it("returns nothing for a trait neither source defines", () => {
+      expect(resolveTraitDefinition("trait_invented")).toBeUndefined();
+    });
+  });
+
+  describe("classes", () => {
+    it("finds a class the pack defines but the dictionary does not", () => {
+      expect(
+        resolveClassDefinition("class_barbarian", {
+          classesById: { class_barbarian: packClass },
+        })?.name,
+      ).toBe("Barbarian");
+    });
+
+    it("still finds a class only the dictionary defines", () => {
+      expect(resolveClassDefinition("class_fighter")).toBeDefined();
+    });
+
+    it("returns nothing for a class neither source defines", () => {
+      expect(resolveClassDefinition("class_barbarian")).toBeUndefined();
+    });
   });
 });

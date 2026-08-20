@@ -1142,3 +1142,100 @@ describe("CharacterEngine.buildLiveSheet: standard actions", () => {
     expect(sheet.speed.total).toBe(30);
   });
 });
+
+describe("CharacterEngine.buildLiveSheet: pack content", () => {
+  const dwarfBarbarian = (): CharacterSave => ({
+    attributes: { str: 16, dex: 12, con: 14, int: 10, wis: 10, cha: 8 },
+    race: { baseRaceId: "race_dwarf", hasSubraces: false, subraceId: null },
+    classes: [{ classId: "class_barbarian", level: 1, selections: {} }],
+    traitSelections: {},
+    hp: { current: 12, temporary: 0, baseRolledHp: 12, hitDiceSpent: {} },
+  });
+
+  const pack = {
+    racesById: {
+      race_dwarf: {
+        id: "race_dwarf",
+        name: "Dwarf",
+        size: "medium" as const,
+        speed: 25,
+        grantedTraitIds: [],
+        hasSubraces: false,
+        subraces: {},
+      },
+    },
+    classesById: {
+      class_barbarian: {
+        id: "class_barbarian",
+        name: "Barbarian",
+        hitDie: 12,
+        subclassUnlockLevel: 3,
+        startingEquipment: { given: [], choices: [] },
+        startingProficiencyTraitIds: [],
+        multiclassTraitIds: [],
+        progression: [{ level: 1, grants: ["trait_rage"], grantsASI: false }],
+      },
+    },
+    traitsById: {
+      trait_rage: {
+        id: "trait_rage",
+        name: "Rage",
+        modifiers: { fixed: [], choices: [] },
+        resources: [],
+        triggers: [],
+        diceRules: [],
+        criticalHitModifiers: [],
+        actions: [
+          {
+            id: "action_rage",
+            name: "Rage",
+            activation: "bonus_action" as const,
+            effect: {
+              type: "apply_effect" as const,
+              effectName: "Rage",
+              effectTag: "rage",
+              durationType: "manual" as const,
+              isSelfConcentration: false,
+              modifiers: [],
+              states: ["status_raging"],
+              requiredStates: [],
+              forbiddenStates: [],
+            },
+          },
+        ],
+      },
+    },
+  };
+
+  it("takes the dwarf's own speed from the pack rather than defaulting", () => {
+    const sheet = CharacterEngine.buildLiveSheet(
+      dwarfBarbarian(),
+      [],
+      new EffectManager(),
+      new ResourceManager(),
+      { snapshot: pack },
+    );
+
+    expect(sheet.speed.total).toBe(25);
+  });
+
+  it("falls back to the default walking speed with no pack loaded", () => {
+    // documents the current state: RACE_DICTIONARY is empty, so every race
+    // walks at the default until a pack is supplied
+    const sheet = buildSheet(dwarfBarbarian());
+
+    expect(sheet.speed.total).toBe(DEFAULT_WALKING_SPEED);
+  });
+
+  it("offers a pack trait's action on the live sheet", () => {
+    const sheet = CharacterEngine.buildLiveSheet(
+      dwarfBarbarian(),
+      [],
+      new EffectManager(),
+      new ResourceManager(),
+      { snapshot: pack },
+    );
+
+    expect(sheet.actions.map((action) => action.id)).toContain("action_rage");
+  });
+});

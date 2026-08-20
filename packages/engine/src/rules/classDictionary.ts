@@ -44,7 +44,3 @@ export const CLASS_DICTIONARY: Record<string, ClassDefinition> = {
   class_warlock: WARLOCK_CLASS,
   class_wizard: WIZARD_CLASS,
 };
-
-export const resolveClassDefinition = (
-  classId: string,
-): ClassDefinition | undefined => CLASS_DICTIONARY[classId];
