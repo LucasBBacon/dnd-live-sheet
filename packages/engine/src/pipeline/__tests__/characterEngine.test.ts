@@ -18,6 +18,7 @@ import { ModifierExtractor } from "../modifierExtractor.js";
 import { ProficiencyExtractor } from "../proficiencyExtractor.js";
 import { EffectManager } from "../../calculators/effects.js";
 import { ResourceManager } from "../../calculators/resources.js";
+import { corePackSnapshot } from "./corePackFixture.js";
 
 /**
  * A half-elf fighter is the useful fixture here: the race carries both a
@@ -45,6 +46,13 @@ const halfElfFighter = (
   ...overrides,
 });
 
+/**
+ * Builds a sheet the way production does: with the shipped rule pack loaded.
+ *
+ * The static dictionaries are a bridge for definitions not yet authored into a
+ * pack, not a source these tests should lean on. Passing the pack here is what
+ * makes these suites describe the real system.
+ */
 const buildSheet = (
   save: CharacterSave,
   inventory: InventoryInstance[] = [],
@@ -55,7 +63,7 @@ const buildSheet = (
     inventory,
     new EffectManager(),
     new ResourceManager(),
-    options,
+    { snapshot: corePackSnapshot(), ...options },
   );
 
 const carried = (itemId: string, quantity = 1): InventoryInstance => ({
@@ -109,7 +117,7 @@ const effectWith = (
 
 describe("CharacterBootstrapper.compileActiveTraits", () => {
   it("resolves race, subrace, class and chosen traits into definitions", () => {
-    const ids = CharacterBootstrapper.compileActiveTraits(halfElfFighter()).map(
+    const ids = CharacterBootstrapper.compileActiveTraits(halfElfFighter(), corePackSnapshot()).map(
       (trait) => trait.id,
     );
 
@@ -120,13 +128,13 @@ describe("CharacterBootstrapper.compileActiveTraits", () => {
   });
 
   it("skips ids that have no definition authored yet", () => {
-    const ids = CharacterBootstrapper.compileActiveTraits(halfElfFighter()).map(
+    const ids = CharacterBootstrapper.compileActiveTraits(halfElfFighter(), corePackSnapshot()).map(
       (trait) => trait.id,
     );
 
     // granted by the fighter blueprint, but absent from TRAIT_DICTIONARY
     expect(
-      CharacterBootstrapper.resolveGrantedTraitIds(halfElfFighter()),
+      CharacterBootstrapper.resolveGrantedTraitIds(halfElfFighter(), corePackSnapshot()),
     ).toContain("trait_second_wind");
     expect(ids).not.toContain("trait_second_wind");
   });
@@ -138,7 +146,7 @@ describe("CharacterBootstrapper.compileActiveTraits", () => {
         { classId: "class_fighter", level: 1, selections: {} },
       ],
     });
-    const ids = CharacterBootstrapper.resolveGrantedTraitIds(dip);
+    const ids = CharacterBootstrapper.resolveGrantedTraitIds(dip, corePackSnapshot());
 
     expect(ids).toContain("trait_fighter_mult_prof_armor");
     expect(ids).not.toContain("trait_fighter_prof_saving_throw");
@@ -148,7 +156,7 @@ describe("CharacterBootstrapper.compileActiveTraits", () => {
 describe("ModifierExtractor.extractModifiers", () => {
   const extract = (save: CharacterSave) =>
     ModifierExtractor.extractModifiers(
-      CharacterBootstrapper.compileActiveTraits(save),
+      CharacterBootstrapper.compileActiveTraits(save, corePackSnapshot()),
       CharacterBootstrapper.resolveSelections(save),
     );
 
@@ -196,7 +204,7 @@ describe("ModifierExtractor.extractModifiers", () => {
 describe("ProficiencyExtractor.extractProficiencies", () => {
   const extract = (save: CharacterSave) =>
     ProficiencyExtractor.extractProficiencies(
-      CharacterBootstrapper.compileActiveTraits(save),
+      CharacterBootstrapper.compileActiveTraits(save, corePackSnapshot()),
       CharacterBootstrapper.resolveSelections(save),
     );
 
@@ -244,7 +252,7 @@ describe("ProficiencyExtractor.extractProficiencies", () => {
   it("reports blocks the player has not answered", () => {
     const save = halfElfFighter({ traitSelections: {} });
     const pending = ProficiencyExtractor.listPendingChoices(
-      CharacterBootstrapper.compileActiveTraits(save),
+      CharacterBootstrapper.compileActiveTraits(save, corePackSnapshot()),
       CharacterBootstrapper.resolveSelections(save),
     );
 
@@ -261,13 +269,13 @@ describe("ProficiencyExtractor.extractProficiencies", () => {
 describe("open proficiency choices", () => {
   const pendingChoice = (save: CharacterSave, choiceId: string) =>
     ProficiencyExtractor.listPendingChoices(
-      CharacterBootstrapper.compileActiveTraits(save),
+      CharacterBootstrapper.compileActiveTraits(save, corePackSnapshot()),
       CharacterBootstrapper.resolveSelections(save),
     ).find((choice) => choice.choiceId === choiceId);
 
   const extract = (save: CharacterSave) =>
     ProficiencyExtractor.extractProficiencies(
-      CharacterBootstrapper.compileActiveTraits(save),
+      CharacterBootstrapper.compileActiveTraits(save, corePackSnapshot()),
       CharacterBootstrapper.resolveSelections(save),
     );
 
@@ -322,8 +330,12 @@ describe("open proficiency choices", () => {
   it("stops two open blocks landing on the same language", () => {
     // a half-elf who also took the high-elf extra language block
     const traits = [
-      ...CharacterBootstrapper.compileActiveTraits(halfElfFighter()),
-      TRAIT_DICTIONARY["subrace_elf_high_extra_language"]!,
+      ...CharacterBootstrapper.compileActiveTraits(
+        halfElfFighter(),
+        corePackSnapshot(),
+      ),
+      // a race trait, so the pack owns it now rather than the dictionary
+      corePackSnapshot().traitsById["subrace_elf_high_extra_language"]!,
     ];
     const grants = ProficiencyExtractor.extractProficiencies(traits, {
       half_elf_language_choice: ["dwarvish"],
@@ -355,7 +367,7 @@ describe("open proficiency choices", () => {
     };
 
     const traits = [
-      ...CharacterBootstrapper.compileActiveTraits(halfElfFighter()),
+      ...CharacterBootstrapper.compileActiveTraits(halfElfFighter(), corePackSnapshot()),
       proficientInStealth,
     ];
     const grants = ProficiencyExtractor.extractProficiencies(traits, {
@@ -401,6 +413,7 @@ describe("CharacterEngine.dispatchTraitEvent", () => {
       save,
       effectManager,
       resourceManager,
+      corePackSnapshot(),
     );
 
     expect(results).toHaveLength(1);
@@ -1220,9 +1233,14 @@ describe("CharacterEngine.buildLiveSheet: pack content", () => {
   });
 
   it("falls back to the default walking speed with no pack loaded", () => {
-    // documents the current state: RACE_DICTIONARY is empty, so every race
-    // walks at the default until a pack is supplied
-    const sheet = buildSheet(dwarfBarbarian());
+    // explicitly pack-less: RACE_DICTIONARY is empty, so with no snapshot every
+    // race walks at the default. This is the bridge state, not the target one.
+    const sheet = CharacterEngine.buildLiveSheet(
+      dwarfBarbarian(),
+      [],
+      new EffectManager(),
+      new ResourceManager(),
+    );
 
     expect(sheet.speed.total).toBe(DEFAULT_WALKING_SPEED);
   });

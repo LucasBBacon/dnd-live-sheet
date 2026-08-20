@@ -2,11 +2,12 @@ import { describe, expect, it, vi } from "vitest";
 import type { CharacterSave } from "@project/shared";
 import { CharacterBootstrapper } from "../characterBootstrapper.js";
 import { ProficiencyExtractor } from "../proficiencyExtractor.js";
+import { corePackSnapshot } from "./corePackFixture.js";
 import { EffectManager } from "../../calculators/effects.js";
 import { ResourceManager } from "../../calculators/resources.js";
 
 const codes = (save: CharacterSave) =>
-  CharacterBootstrapper.collectSaveIssues(save).map((issue) => issue.code);
+  CharacterBootstrapper.collectSaveIssues(save, corePackSnapshot()).map((issue) => issue.code);
 
 const baseAttributes = {
   str: 10,
@@ -252,7 +253,7 @@ describe("CharacterBootstrapper.collectSaveIssues", () => {
       // thirsting blade also needs warlock 5
       expect(codes(save)).toEqual(["unmet_prerequisite"]);
       expect(
-        CharacterBootstrapper.collectSaveIssues(save)[0]!.message,
+        CharacterBootstrapper.collectSaveIssues(save, corePackSnapshot())[0]!.message,
       ).toContain("level 5");
     });
 
@@ -261,7 +262,7 @@ describe("CharacterBootstrapper.collectSaveIssues", () => {
         ["trait_invocation_book_of_ancient_secrets", "trait_invocation_devils_sight"],
         "trait_pact_of_the_blade",
       );
-      const issue = CharacterBootstrapper.collectSaveIssues(save)[0]!;
+      const issue = CharacterBootstrapper.collectSaveIssues(save, corePackSnapshot())[0]!;
       expect(issue.code).toBe("unmet_prerequisite");
       expect(issue.message).toContain("trait_pact_of_the_tome");
     });
@@ -283,7 +284,7 @@ describe("CharacterBootstrapper.collectSaveIssues", () => {
         "spell_chill_touch",
         "spell_prestidigitation",
       ];
-      const issue = CharacterBootstrapper.collectSaveIssues(save)[0]!;
+      const issue = CharacterBootstrapper.collectSaveIssues(save, corePackSnapshot())[0]!;
       expect(issue.code).toBe("unmet_prerequisite");
       expect(issue.message).toContain("spell_eldritch_blast");
     });
@@ -292,12 +293,12 @@ describe("CharacterBootstrapper.collectSaveIssues", () => {
 
 describe("CharacterBootstrapper.validateSave", () => {
   it("does not throw on a valid save", () => {
-    expect(() => CharacterBootstrapper.validateSave(fighter())).not.toThrow();
+    expect(() => CharacterBootstrapper.validateSave(fighter(), corePackSnapshot())).not.toThrow();
   });
 
   it("throws a single message for a single problem", () => {
     expect(() =>
-      CharacterBootstrapper.validateSave(fighter({ level: 3 })),
+      CharacterBootstrapper.validateSave(fighter({ level: 3 }), corePackSnapshot()),
     ).toThrow(/requires a subclass selection at level 3/);
   });
 
@@ -308,7 +309,7 @@ describe("CharacterBootstrapper.validateSave", () => {
       hasSubraces: false,
       subraceId: null,
     };
-    expect(() => CharacterBootstrapper.validateSave(save)).toThrow(
+    expect(() => CharacterBootstrapper.validateSave(save, corePackSnapshot())).toThrow(
       /Invalid character save:[\s\S]*Unknown race[\s\S]*subclass/,
     );
   });
@@ -343,7 +344,7 @@ describe("CharacterBootstrapper.collectSaveIssues - trait choice blocks", () => 
   });
 
   it("requires a selection for a block the character has unlocked", () => {
-    const issues = CharacterBootstrapper.collectSaveIssues(halfElf({}));
+    const issues = CharacterBootstrapper.collectSaveIssues(halfElf({}), corePackSnapshot());
 
     expect(issues.map((i) => i.code)).toEqual([
       "missing_selection",
@@ -356,6 +357,7 @@ describe("CharacterBootstrapper.collectSaveIssues - trait choice blocks", () => 
   it("rejects a pick the block does not offer", () => {
     const issues = CharacterBootstrapper.collectSaveIssues(
       halfElf({ ...answered, half_elf_asi_choice: ["DEX", "CHA"] }),
+      corePackSnapshot(),
     );
 
     // CHA is off the half-elf block: it already gets the fixed +2
@@ -366,6 +368,7 @@ describe("CharacterBootstrapper.collectSaveIssues - trait choice blocks", () => 
   it("rejects a language the character is already given for free", () => {
     const issues = CharacterBootstrapper.collectSaveIssues(
       halfElf({ ...answered, half_elf_language_choice: ["elvish"] }),
+      corePackSnapshot(),
     );
 
     expect(issues.map((i) => i.code)).toEqual(["redundant_selection"]);
@@ -375,6 +378,7 @@ describe("CharacterBootstrapper.collectSaveIssues - trait choice blocks", () => 
   it("flags the wrong number of picks", () => {
     const issues = CharacterBootstrapper.collectSaveIssues(
       halfElf({ ...answered, half_elf_asi_choice: ["DEX"] }),
+      corePackSnapshot(),
     );
 
     expect(issues.map((i) => i.code)).toEqual(["wrong_selection_count"]);
@@ -383,6 +387,7 @@ describe("CharacterBootstrapper.collectSaveIssues - trait choice blocks", () => 
   it("reports a repeated pick once, without also calling it over the limit", () => {
     const issues = CharacterBootstrapper.collectSaveIssues(
       halfElf({ ...answered, half_elf_asi_choice: ["DEX", "DEX"] }),
+      corePackSnapshot(),
     );
 
     expect(issues.map((i) => i.code)).toEqual(["duplicate_selection"]);
@@ -391,6 +396,7 @@ describe("CharacterBootstrapper.collectSaveIssues - trait choice blocks", () => 
   it("flags picks stored against a block no trait offers", () => {
     const issues = CharacterBootstrapper.collectSaveIssues(
       halfElf({ ...answered, dwarf_artisan_tools: ["smiths_tools"] }),
+      corePackSnapshot(),
     );
 
     expect(issues.map((i) => i.code)).toEqual(["orphan_selection"]);
@@ -408,7 +414,7 @@ describe("CharacterBootstrapper.collectSaveIssues - trait choice blocks", () => 
 
   it("agrees with what the extractors actually applied", () => {
     const save = halfElf({ ...answered, half_elf_language_choice: ["elvish"] });
-    const traits = CharacterBootstrapper.compileActiveTraits(save);
+    const traits = CharacterBootstrapper.compileActiveTraits(save, corePackSnapshot());
     const selections = CharacterBootstrapper.resolveSelections(save);
 
     // validation says the pick is wasted, and the sheet agrees it was ignored
@@ -423,7 +429,7 @@ describe("CharacterBootstrapper.collectSaveIssues - trait choice blocks", () => 
 
 describe("CharacterBootstrapper.resolveGrantedTraitIds", () => {
   it("includes race, subrace, starting proficiencies and selections", () => {
-    const ids = CharacterBootstrapper.resolveGrantedTraitIds(fighter());
+    const ids = CharacterBootstrapper.resolveGrantedTraitIds(fighter(), corePackSnapshot());
 
     expect(ids).toContain("race_dwarf_darkvision"); // race
     expect(ids).toContain("dwarven_toughness"); // subrace
@@ -434,7 +440,7 @@ describe("CharacterBootstrapper.resolveGrantedTraitIds", () => {
   });
 
   it("does not include features from levels the character has not reached", () => {
-    const ids = CharacterBootstrapper.resolveGrantedTraitIds(fighter());
+    const ids = CharacterBootstrapper.resolveGrantedTraitIds(fighter(), corePackSnapshot());
     expect(ids).not.toContain("trait_action_surge"); // level 2
   });
 
@@ -444,6 +450,7 @@ describe("CharacterBootstrapper.resolveGrantedTraitIds", () => {
         level: 3,
         subclassId: "subclass_fighter_champion",
       }),
+      corePackSnapshot(),
     );
     expect(ids).toContain("trait_improved_critical");
   });
@@ -575,11 +582,12 @@ describe("CharacterBootstrapper pack resolution", () => {
   });
 
   it("grants nothing for a class no source defines", () => {
-    // documents why the barbarian currently gets nothing: without the pack,
-    // class_barbarian is in neither the dictionary nor a snapshot
-    expect(
-      CharacterBootstrapper.resolveGrantedTraitIds(barbarian()),
-    ).toEqual([]);
+    // deliberately pack-less: class_barbarian exists only in the pack, so with
+    // no snapshot there is nothing to grant. This is what the bridge state
+    // looks like, and why the pack has to be supplied.
+    expect(CharacterBootstrapper.resolveGrantedTraitIds(barbarian())).toEqual(
+      [],
+    );
   });
 
   it("compiles the pack's own trait definitions, not empty placeholders", () => {
@@ -594,7 +602,7 @@ describe("CharacterBootstrapper pack resolution", () => {
   });
 
   it("still compiles dictionary traits when no pack is supplied", () => {
-    const compiled = CharacterBootstrapper.compileActiveTraits(fighter());
+    const compiled = CharacterBootstrapper.compileActiveTraits(fighter(), corePackSnapshot());
 
     expect(compiled.length).toBeGreaterThan(0);
   });

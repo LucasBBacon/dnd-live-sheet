@@ -18,13 +18,17 @@ type CorePackItemRow = {
 
 type Lore = { shortDescription: string; fullText?: string };
 
-const toLore = (lore: {
-  shortDescription: string;
-  fullText?: string | undefined;
-}): Lore =>
-  lore.fullText === undefined
+const toLore = (
+  // races and subraces carry lore optionally while the packs are being filled
+  // in, so the projection has to survive its absence rather than assume it
+  lore: { shortDescription: string; fullText?: string | undefined } | undefined,
+): Lore => {
+  if (lore === undefined) return { shortDescription: "" };
+
+  return lore.fullText === undefined
     ? { shortDescription: lore.shortDescription }
     : { shortDescription: lore.shortDescription, fullText: lore.fullText };
+};
 
 export type CoreRulePackProjection = {
   corePack: CoreRulePack;
@@ -166,7 +170,7 @@ export const projectCoreRulePack = (
     race.grantedTraitIds.map((traitId) => ({ raceId: race.id, traitId })),
   ),
   subraces: corePack.races.flatMap((race) =>
-    race.subraces.map((subrace) => ({
+    Object.values(race.subraces).map((subrace) => ({
       id: subrace.id,
       parentRaceId: race.id,
       name: subrace.name,
@@ -174,7 +178,7 @@ export const projectCoreRulePack = (
     })),
   ),
   subraceTraits: corePack.races.flatMap((race) =>
-    race.subraces.flatMap((subrace) =>
+    Object.values(race.subraces).flatMap((subrace) =>
       subrace.grantedTraitIds.map((traitId) => ({
         subraceId: subrace.id,
         traitId,

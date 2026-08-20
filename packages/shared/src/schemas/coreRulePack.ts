@@ -23,7 +23,10 @@ const CoreSubraceSchema = z
   .object({
     id: CoreRuleIdSchema,
     name: z.string().min(1).max(255),
-    lore: LoreSchema,
+    // Descriptive, not mechanical. Optional because the packs are being filled
+    // in incrementally and no rule depends on it - tighten this once the PHB
+    // content is complete.
+    lore: LoreSchema.optional(),
     grantedTraitIds: z.array(CoreRuleIdSchema).default([]),
   })
   .strict();
@@ -34,10 +37,14 @@ const CoreRaceSchema = z
     name: z.string().min(1).max(255),
     size: z.enum(["tiny", "small", "medium", "large", "huge", "gargantuan"]),
     speed: z.number().int().min(0).max(120),
-    lore: LoreSchema,
+    // see CoreSubraceSchema - descriptive, and the packs are incomplete
+    lore: LoreSchema.optional(),
     grantedTraitIds: z.array(CoreRuleIdSchema).default([]),
     hasSubraces: z.boolean(),
-    subraces: z.array(CoreSubraceSchema).default([]),
+    // Keyed by subrace id, matching both the authored packs and the engine's
+    // RaceDefinition. This was declared as an array and never agreed with
+    // either, which is why no pack has ever validated.
+    subraces: z.record(z.string(), CoreSubraceSchema).default({}),
   })
   .strict();
 
@@ -345,8 +352,8 @@ export const validateCoreRulePack = (
   pack.resources.forEach((entry, index) => registerId(entry.id, ["resources", index, "id"]));
   pack.races.forEach((entry, index) => {
     registerId(entry.id, ["races", index, "id"]);
-    entry.subraces.forEach((subrace, subraceIndex) =>
-      registerId(subrace.id, ["races", index, "subraces", subraceIndex, "id"]),
+    Object.entries(entry.subraces).forEach(([key, subrace]) =>
+      registerId(subrace.id, ["races", index, "subraces", key, "id"]),
     );
   });
   pack.classes.forEach((entry, index) => registerId(entry.id, ["classes", index, "id"]));
@@ -364,7 +371,9 @@ export const validateCoreRulePack = (
   ]);
   const raceIds = new Set(pack.races.map((entry) => entry.id));
   const subraceIds = new Set(
-    pack.races.flatMap((entry) => entry.subraces.map((subrace) => subrace.id)),
+    pack.races.flatMap((entry) =>
+      Object.values(entry.subraces).map((subrace) => subrace.id),
+    ),
   );
   const classIds = new Set(pack.classes.map((entry) => entry.id));
   const subclassIds = new Set(pack.subclasses.map((entry) => entry.id));
@@ -373,21 +382,21 @@ export const validateCoreRulePack = (
   const spellIds = new Set(pack.spells.map((entry) => entry.id));
 
   pack.races.forEach((race, raceIndex) => {
-    if (race.hasSubraces && race.subraces.length === 0) {
+    if (race.hasSubraces && Object.keys(race.subraces).length === 0) {
       issues.push({
         code: "missing_subrace",
         path: ["races", raceIndex, "subraces"],
         message: "A race that has subraces must declare at least one subrace.",
       });
     }
-    if (!race.hasSubraces && race.subraces.length > 0) {
+    if (!race.hasSubraces && Object.keys(race.subraces).length > 0) {
       issues.push({
         code: "unexpected_subrace",
         path: ["races", raceIndex, "subraces"],
         message: "A race without subraces cannot declare subrace records.",
       });
     }
-    [race, ...race.subraces].forEach((record, recordIndex) => {
+    [race, ...Object.values(race.subraces)].forEach((record, recordIndex) => {
       record.grantedTraitIds.forEach((traitId, traitIndex) => {
         if (!traitIds.has(traitId)) {
           pushReferenceIssue(
@@ -514,3 +523,34 @@ export const validateCoreRulePack = (
 
   return { ok: issues.length === 0, issues };
 };
+/**
+ * The rulebook content a loaded pack contributes to the engine's lookups.
+ *
+ * Deliberately only the three the engine resolves by id. Everything else in a
+ * pack - feats, backgrounds, spells, proficiencies - reaches the runtime by
+ * other routes, and adding them here before anything reads them would be the
+ * dead-data pattern this project keeps having to unpick.
+ */
+export interface CoreRulePackSnapshot {
+  traitsById: Record<string, CoreRulePack["traits"][number]>;
+  racesById: Record<string, CoreRulePack["races"][number]>;
+  classesById: Record<string, CoreRulePack["classes"][number]>;
+}
+
+const byId = <T extends { id: string }>(entries: T[]): Record<string, T> =>
+  Object.fromEntries(entries.map((entry) => [entry.id, entry]));
+
+/**
+ * Reshapes a validated pack into the maps the engine's resolvers read.
+ *
+ * Pure: no file access and no validation, because the pack arrived through
+ * CoreRulePackSchema already. No reshaping either - packs already author
+ * subraces keyed by id, exactly as the engine reads them.
+ * @param pack A pack that has already passed schema and semantic validation
+ * @returns Content keyed by id, ready to hand to a RuleSnapshotLookup
+ */
+export const toRuleSnapshot = (pack: CoreRulePack): CoreRulePackSnapshot => ({
+  traitsById: byId(pack.traits),
+  racesById: byId(pack.races),
+  classesById: byId(pack.classes),
+});

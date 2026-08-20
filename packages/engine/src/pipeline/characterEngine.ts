@@ -190,11 +190,13 @@ export class CharacterEngine {
     save: CharacterSave,
     effectManager: EffectManager,
     resourceManager: ResourceManager,
+    snapshot?: RuleSnapshotLookup,
   ) {
     const activeTraits = CharacterBootstrapper.hydrateRuntimeManagers(
       save,
       effectManager,
       resourceManager,
+      snapshot,
     );
     const actionLookup = Object.fromEntries(
       activeTraits.flatMap((trait) =>

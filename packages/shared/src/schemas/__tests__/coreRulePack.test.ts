@@ -41,7 +41,7 @@ const createValidPack = (): CoreRulePack => {
       lore,
       grantedTraitIds: ["trait_test_training"],
       hasSubraces: false,
-      subraces: [],
+      subraces: {},
     },
   ],
   classes: [

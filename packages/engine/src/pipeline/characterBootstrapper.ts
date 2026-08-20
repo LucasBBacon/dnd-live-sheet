@@ -9,10 +9,10 @@ import type {
 import { traitIdOfOption } from "@project/shared";
 import { EffectManager } from "../calculators/effects.js";
 import { ResourceManager } from "../calculators/resources.js";
-import { CLASS_DICTIONARY } from "../rules/classDictionary.js";
+// Classes, races and traits are reached through ruleLookup so a loaded pack
+// takes precedence. Subclasses have no pack representation yet, so they are
+// still read straight from their dictionary.
 import { SUBCLASS_DICTIONARY } from "../rules/subclassDictionary.js";
-import { RACE_DICTIONARY } from "../rules/raceDictionary.js";
-import { TRAIT_DICTIONARY } from "../rules/traitDictionary.js";
 import {
   resolveClassDefinition,
   resolveRaceDefinition,
@@ -198,15 +198,17 @@ const raceTraitIds = (
 const knownSpellIds = (
   classState: ClassState,
   traitIds: Iterable<string>,
+  snapshot?: RuleSnapshotLookup,
 ): Set<string> => {
   const ids = new Set<string>();
 
   for (const traitId of traitIds) {
-    for (const spell of TRAIT_DICTIONARY[traitId]?.spells?.fixed ?? []) {
+    for (const spell of resolveTraitDefinition(traitId, snapshot)?.spells
+      ?.fixed ?? []) {
       ids.add(spell.spellId);
     }
   }
-  for (const grant of unlockedGrants(classState)) {
+  for (const grant of unlockedGrants(classState, snapshot)) {
     if (!isSpellChoice(grant)) continue;
     for (const id of classState.selections[grant.nodeId] ?? []) ids.add(id);
   }
@@ -269,12 +271,15 @@ export class CharacterBootstrapper {
    * Checks a save against the static rulebook without throwing, so callers can
    * surface every problem at once instead of one per round trip.
    */
-  public static collectSaveIssues(save: CharacterSave): SaveValidationIssue[] {
+  public static collectSaveIssues(
+    save: CharacterSave,
+    snapshot?: RuleSnapshotLookup,
+  ): SaveValidationIssue[] {
     const issues: SaveValidationIssue[] = [];
     const add = (issue: SaveValidationIssue) => issues.push(issue);
 
     // #region race
-    const race = RACE_DICTIONARY[save.race.baseRaceId];
+    const race = resolveRaceDefinition(save.race.baseRaceId, snapshot);
     if (!race) {
       add({
         code: "unknown_race",
@@ -314,7 +319,7 @@ export class CharacterBootstrapper {
     for (const [classIndex, classState] of save.classes.entries()) {
       totalLevel += classState.level;
 
-      const blueprint = CLASS_DICTIONARY[classState.classId];
+      const blueprint = resolveClassDefinition(classState.classId, snapshot);
       if (!blueprint) {
         add({
           code: "unknown_class",
@@ -363,12 +368,12 @@ export class CharacterBootstrapper {
       // #endregion
 
       // #region choice nodes
-      const grants = unlockedGrants(classState);
+      const grants = unlockedGrants(classState, snapshot);
       const traitIds = new Set([
         ...raceTraitIds(save.race),
         ...classTraitIds(classState, classIndex === 0),
       ]);
-      const spellIds = knownSpellIds(classState, traitIds);
+      const spellIds = knownSpellIds(classState, traitIds, snapshot);
       const knownNodeIds = new Set<string>();
 
       for (const grant of grants) {
@@ -455,7 +460,7 @@ export class CharacterBootstrapper {
     // whole branches, and every pick into one of them would be reported as an
     // orphan. The real problem is already in the list; this would only bury it
     if (!issues.some((issue) => FOUNDATION_CODES.has(issue.code))) {
-      issues.push(...CharacterBootstrapper.collectTraitChoiceIssues(save));
+      issues.push(...CharacterBootstrapper.collectTraitChoiceIssues(save, snapshot));
     }
 
     if (totalLevel > MAX_TOTAL_LEVEL) {
@@ -480,10 +485,11 @@ export class CharacterBootstrapper {
    */
   private static collectTraitChoiceIssues(
     save: CharacterSave,
+    snapshot?: RuleSnapshotLookup,
   ): SaveValidationIssue[] {
     const issues: SaveValidationIssue[] = [];
 
-    const activeTraits = CharacterBootstrapper.compileActiveTraits(save);
+    const activeTraits = CharacterBootstrapper.compileActiveTraits(save, snapshot);
     const selections = CharacterBootstrapper.resolveSelections(save);
     const resolutions: ChoiceResolution[] = [
       ...ModifierExtractor.resolveChoices(activeTraits, selections),
@@ -546,8 +552,11 @@ export class CharacterBootstrapper {
    * @param save The character save file to validate.
    * @throws if the save breaks any rulebook constraint, listing every problem.
    */
-  public static validateSave(save: CharacterSave): void {
-    const issues = CharacterBootstrapper.collectSaveIssues(save);
+  public static validateSave(
+    save: CharacterSave,
+    snapshot?: RuleSnapshotLookup,
+  ): void {
+    const issues = CharacterBootstrapper.collectSaveIssues(save, snapshot);
     if (issues.length === 0) return;
 
     throw new Error(
