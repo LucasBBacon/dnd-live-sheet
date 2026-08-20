@@ -605,11 +605,31 @@
             "id": "trait_feral_instinct",
             "name": "Feral Instinct",
             "lore": {
-                "shortDescription": "placeholder",
-                "fullText": "placeholder"
+                "shortDescription": "Advantage on initiative rolls. If you are surprised and not incapacitated, you can act normally on your first turn provided you rage before doing anything else.",
+                "fullText": "By 7th level, your instincts are so honed that you have advantage on initiative rolls. Additionally, if you are surprised at the beginning of combat and aren't incapacitated, you can act normally on your first turn, but only if you enter your rage before doing anything else on that turn."
             },
+            "isStartingProficiency": false,
+            "implementation": {
+                "mode": "engine",
+                "summary": "The initiative advantage is a plain INITIATIVE advantage modifier, ungated: RAW attaches 'aren't incapacitated' to the surprise sentence only, so the initiative half applies unconditionally. The surprise clause is reported rather than enforced, matching the economy's track policy: the trait grants status_feral_instinct, and SurpriseEngine turns that plus the surprise flag and the raging state into a line on the sheet. 'Before doing anything else on that turn' is carried as guidance and deliberately not policed - the player is never blocked from acting first, so the ordering is unobservable. Movement, which surprise also forbids, is not tracked for anyone and stays the table's business.",
+                "blockedBy": [
+                    "incapacitated"
+                ]
+            },
+            "grantedStates": [
+                "status_feral_instinct"
+            ],
             "modifiers": {
-                "fixed": [],
+                "fixed": [
+                    {
+                        "target": "INITIATIVE",
+                        "type": "advantage",
+                        "value": 0,
+                        "scalingFactor": "none",
+                        "requiredStates": [],
+                        "forbiddenStates": []
+                    }
+                ],
                 "choices": []
             },
             "resources": [],

@@ -8,8 +8,12 @@ const mocks = vi.hoisted(() => ({
   combatContext: {
     current: undefined as unknown,
   },
+  activeStates: {
+    current: [] as string[],
+  },
   beginTurn: vi.fn(),
   endTurn: vi.fn(),
+  setSurprised: vi.fn(),
   // what the character can actually do, standard and trait actions alike --
   // the widget names a spender by looking it up here
   getCharacterActions: () => [
@@ -22,15 +26,19 @@ vi.mock("../../../store/characterSheetStore", () => ({
   useCharacterSheetStore: (
     selector: (state: {
       combatContext: unknown;
+      activeStates: string[];
       beginTurn: typeof mocks.beginTurn;
       endTurn: typeof mocks.endTurn;
+      setSurprised: typeof mocks.setSurprised;
       getCharacterActions: typeof mocks.getCharacterActions;
     }) => unknown,
   ) =>
     selector({
       combatContext: mocks.combatContext.current,
+      activeStates: mocks.activeStates.current,
       beginTurn: mocks.beginTurn,
       endTurn: mocks.endTurn,
+      setSurprised: mocks.setSurprised,
       getCharacterActions: mocks.getCharacterActions,
     }),
 }));
@@ -210,5 +218,101 @@ describe("TurnControlsWidget spender", () => {
     const container = await renderWidget();
 
     expect(container.textContent).not.toContain("Dodge");
+  });
+});
+
+/**
+ * Surprise is shown, never enforced: the turn buttons and the economy pills
+ * stay exactly as live as they were. The widget only says what the rule costs.
+ */
+describe("TurnControlsWidget surprise", () => {
+  const render = async (surprised: boolean, activeStates: string[] = []) => {
+    mocks.combatContext.current = context({ inCombat: true, surprised });
+    mocks.activeStates.current = activeStates;
+    return renderWidget();
+  };
+
+  it("shows no banner when the character was not surprised", async () => {
+    const container = await render(false, ["status_feral_instinct"]);
+
+    // the toggle's own label always reads "Surprised", so this asserts on the
+    // banner element rather than on the word appearing anywhere
+    expect(container.querySelector("[data-surprise]")).toBeNull();
+  });
+
+  it("reports the lost action and reaction when surprised", async () => {
+    const container = await render(true);
+
+    expect(container.textContent).toMatch(/no action or reaction/i);
+  });
+
+  it("tells a barbarian with Feral Instinct to rage first", async () => {
+    const container = await render(true, ["status_feral_instinct"]);
+
+    expect(container.textContent).toMatch(/enter your rage/i);
+  });
+
+  it("confirms the turn is free once raging", async () => {
+    const container = await render(true, [
+      "status_feral_instinct",
+      "status_raging",
+    ]);
+
+    expect(container.textContent).toMatch(/act normally/i);
+  });
+
+  it("leaves the turn buttons live while surprised", async () => {
+    const container = await render(true);
+
+    const buttons = Array.from(container.querySelectorAll("button"));
+    expect(buttons.every((button) => !button.disabled)).toBe(true);
+  });
+});
+
+/**
+ * Surprise has to be declared, not derived: the DM settles it by comparing
+ * Stealth against passive Perception across the whole table, which a
+ * single-character sheet can never work out for itself.
+ */
+describe("TurnControlsWidget surprise toggle", () => {
+  const surpriseToggle = (container: HTMLElement) =>
+    container.querySelector<HTMLInputElement>('input[type="checkbox"]');
+
+  it("offers a way to declare surprise", async () => {
+    mocks.combatContext.current = context({ inCombat: true });
+    mocks.activeStates.current = [];
+
+    const container = await renderWidget();
+
+    expect(surpriseToggle(container)).not.toBeNull();
+    expect(container.textContent).toMatch(/surprised/i);
+  });
+
+  it("records surprise when the player ticks it", async () => {
+    mocks.combatContext.current = context({ inCombat: true });
+    mocks.activeStates.current = [];
+    mocks.setSurprised.mockClear();
+
+    const container = await renderWidget();
+
+    await act(async () => {
+      surpriseToggle(container)?.click();
+    });
+
+    expect(mocks.setSurprised).toHaveBeenCalledWith(true);
+  });
+
+  it("takes it back when the player unticks it", async () => {
+    mocks.combatContext.current = context({ inCombat: true, surprised: true });
+    mocks.activeStates.current = [];
+    mocks.setSurprised.mockClear();
+
+    const container = await renderWidget();
+
+    await act(async () => {
+      surpriseToggle(container)?.click();
+    });
+
+    expect(mocks.setSurprised).toHaveBeenCalledWith(false);
   });
 });

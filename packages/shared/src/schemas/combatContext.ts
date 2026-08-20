@@ -112,6 +112,18 @@ export const CombatEventSchema = z.object({
 
 export const CombatContextSchema = z.object({
   inCombat: z.boolean().default(false),
+  /**
+   * Whether the character was surprised at the start of this combat.
+   *
+   * A property of the encounter rather than a condition, which is why it is
+   * here and not in CONDITION_MAP: the player never clears it by hand, it
+   * expires the moment their first turn ends. Surprise costs the action and
+   * the reaction, but not the bonus action - which is the whole reason Feral
+   * Instinct works, Rage being a bonus action.
+   *
+   * Reported, never enforced, matching the economy's "track" policy.
+   */
+  surprised: z.boolean().default(false),
   roundNumber: z.number().int().min(1).nullable().default(null),
   activeTurnOwner: CombatTurnOwnerSchema.nullable().default(null),
   // derived from the schema rather than written out: a literal default is NOT

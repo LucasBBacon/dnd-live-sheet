@@ -24,6 +24,7 @@ export * from "./calculators/weight.js";
 export * from "./calculators/combat.js";
 export * from "./calculators/containers.js";
 export * from "./calculators/combatContext.js";
+export * from "./calculators/surprise.js";
 export * from "./calculators/rests.js";
 export * from "./calculators/skills.js";
 export * from "./calculators/saves.js";

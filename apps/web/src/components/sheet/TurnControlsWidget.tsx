@@ -1,3 +1,4 @@
+import { SurpriseEngine } from "@project/engine";
 import { useCharacterSheetStore } from "../../store/characterSheetStore";
 
 /**
@@ -11,8 +12,10 @@ import { useCharacterSheetStore } from "../../store/characterSheetStore";
  */
 export const TurnControlsWidget = () => {
   const combatContext = useCharacterSheetStore((state) => state.combatContext);
+  const activeStates = useCharacterSheetStore((state) => state.activeStates);
   const beginTurn = useCharacterSheetStore((state) => state.beginTurn);
   const endTurn = useCharacterSheetStore((state) => state.endTurn);
+  const setSurprised = useCharacterSheetStore((state) => state.setSurprised);
   const getCharacterActions = useCharacterSheetStore(
     (state) => state.getCharacterActions,
   );
@@ -31,6 +34,16 @@ export const TurnControlsWidget = () => {
       sourceId
     );
   };
+
+  /**
+   * Surprise costs the action and the reaction, and Feral Instinct can give
+   * them back. Shown as a banner rather than by dimming the pills: the pills
+   * mean "you spent this", and a surprised character has spent nothing.
+   */
+  const surprise = SurpriseEngine.describe({
+    surprised: combatContext.surprised,
+    activeStates,
+  });
 
   const parts = [
     {
@@ -64,7 +77,16 @@ export const TurnControlsWidget = () => {
           )}
         </div>
 
-        <div className="flex gap-2">
+        <div className="flex items-center gap-2">
+          <label className="flex cursor-pointer items-center gap-1.5 rounded border border-slate-300 bg-white px-2 py-1 text-[11px] font-semibold uppercase tracking-wide text-slate-700">
+            <input
+              type="checkbox"
+              checked={combatContext.surprised}
+              onChange={(event) => setSurprised(event.target.checked)}
+              className="h-3 w-3 accent-amber-600"
+            />
+            Surprised
+          </label>
           <button
             type="button"
             onClick={beginTurn}
@@ -81,6 +103,19 @@ export const TurnControlsWidget = () => {
           </button>
         </div>
       </div>
+
+      {surprise.outcome !== "not_surprised" && (
+        <p
+          data-surprise={surprise.outcome}
+          className={`mt-3 rounded-lg border px-3 py-2 text-xs font-medium ${
+            surprise.outcome === "released"
+              ? "border-emerald-300 bg-emerald-50 text-emerald-900"
+              : "border-amber-300 bg-amber-50 text-amber-900"
+          }`}
+        >
+          {surprise.summary}
+        </p>
+      )}
 
       <div className="mt-3 flex flex-wrap gap-2">
         {parts.map((part) => (

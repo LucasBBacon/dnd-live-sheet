@@ -184,3 +184,56 @@ describe("CombatContextManager attack allowance", () => {
     expect(manager.getContext().economy.attacksRemaining).toBeNull();
   });
 });
+
+/**
+ * Surprise is a property of the encounter, not a condition: the player never
+ * clears it by hand, it expires when their first turn ends. That lifetime is
+ * why it lives here rather than in CONDITION_MAP.
+ */
+describe("CombatContextManager surprise", () => {
+  it("is not surprised by default", () => {
+    expect(new CombatContextManager().getContext().surprised).toBe(false);
+  });
+
+  it("records that the character was surprised", () => {
+    const manager = new CombatContextManager();
+
+    manager.beginCombat();
+    manager.setSurprised(true);
+
+    expect(manager.getContext().surprised).toBe(true);
+  });
+
+  it("clears surprise when the player's turn ends", () => {
+    const manager = new CombatContextManager();
+
+    manager.beginCombat();
+    manager.setSurprised(true);
+    manager.beginTurn({ kind: "player" });
+    manager.endTurn({ kind: "player" });
+
+    expect(manager.getContext().surprised).toBe(false);
+  });
+
+  it("keeps surprise while another combatant's turn ends", () => {
+    const manager = new CombatContextManager();
+
+    manager.beginCombat();
+    manager.setSurprised(true);
+    manager.beginTurn({ kind: "external", label: "Orc" });
+    manager.endTurn({ kind: "external", label: "Orc" });
+
+    // the player has not had their first turn yet, so the restriction stands
+    expect(manager.getContext().surprised).toBe(true);
+  });
+
+  it("clears surprise when combat ends", () => {
+    const manager = new CombatContextManager();
+
+    manager.beginCombat();
+    manager.setSurprised(true);
+    manager.endCombat();
+
+    expect(manager.getContext().surprised).toBe(false);
+  });
+});

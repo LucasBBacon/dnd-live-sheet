@@ -18,6 +18,7 @@ import { ModifierExtractor } from "../modifierExtractor.js";
 import { ProficiencyExtractor } from "../proficiencyExtractor.js";
 import { EffectManager } from "../../calculators/effects.js";
 import { ResourceManager } from "../../calculators/resources.js";
+import { FERAL_INSTINCT_STATE } from "../../calculators/surprise.js";
 import { corePackSnapshot } from "./corePackFixture.js";
 
 /**
@@ -73,6 +74,18 @@ const carried = (itemId: string, quantity = 1): InventoryInstance => ({
   slot: "backpack",
   isAttuned: false,
 });
+
+/**
+ * A barbarian of the given level, for the class-progression traits.
+ *
+ * race_half_elf is 30ft, and its ASI choice leaves STR at 15, so a 65lb suit
+ * of plate stays well inside carrying capacity - encumbrance contributes
+ * nothing to any speed these suites assert on.
+ */
+const halfElfBarbarian = (level: number): CharacterSave =>
+  halfElfFighter({
+    classes: [{ classId: "class_barbarian", level, selections: {} }],
+  });
 
 /**
  * An EffectManager carrying exactly one modifier, so a test can aim a bonus at
@@ -1264,14 +1277,6 @@ describe("CharacterEngine.buildLiveSheet: pack content", () => {
  * category, the emitted state and the speed calculator agree with each other.
  */
 describe("CharacterEngine.buildLiveSheet: Fast Movement", () => {
-  // race_half_elf is 30ft, and its ASI choice leaves STR at 15, so a 65lb
-  // suit of plate stays well inside carrying capacity and encumbrance
-  // contributes nothing to any of these numbers
-  const halfElfBarbarian = (level: number): CharacterSave =>
-    halfElfFighter({
-      classes: [{ classId: "class_barbarian", level, selections: {} }],
-    });
-
   const worn = (itemId: string): InventoryInstance => ({
     id: `inv_${itemId}`,
     itemId,
@@ -1300,5 +1305,57 @@ describe("CharacterEngine.buildLiveSheet: Fast Movement", () => {
 
   it("does not grant it before 5th level", () => {
     expect(buildSheet(halfElfBarbarian(4)).speed.total).toBe(30);
+  });
+});
+
+/**
+ * Feral Instinct's first half. The second - acting normally while surprised -
+ * needs surprise to exist as a concept first, and lands separately.
+ */
+describe("CharacterEngine.buildLiveSheet: Feral Instinct", () => {
+  const advantageEntries = (save: CharacterSave) =>
+    buildSheet(save).initiative.breakdown.filter(
+      (entry) => entry.name === "Advantage",
+    );
+
+  it("grants advantage on initiative at 7th level", () => {
+    expect(advantageEntries(halfElfBarbarian(7))).toEqual([
+      { name: "Advantage", value: "Granted by Feral Instinct" },
+    ]);
+  });
+
+  it("does not grant it before 7th level", () => {
+    expect(advantageEntries(halfElfBarbarian(6))).toEqual([]);
+  });
+
+  it("puts the trait on the sheet as a state the surprise reporter can read", () => {
+    expect(buildSheet(halfElfBarbarian(7)).baseStates).toContain(
+      FERAL_INSTINCT_STATE,
+    );
+  });
+
+  it("does not grant that state before 7th level", () => {
+    expect(buildSheet(halfElfBarbarian(6)).baseStates).not.toContain(
+      FERAL_INSTINCT_STATE,
+    );
+  });
+
+  it("keeps the advantage while incapacitated", () => {
+    // RAW attaches "aren't incapacitated" to the surprise sentence only, so
+    // the initiative half is deliberately ungated
+    const sheet = CharacterEngine.buildLiveSheet(
+      halfElfBarbarian(7),
+      [],
+      effectWith("MAX_HP", 0, [], ["incapacitated"]),
+      new ResourceManager(),
+      { snapshot: corePackSnapshot() },
+    );
+
+    // proves the condition really reached the sheet, so the assertion below
+    // cannot pass merely because nothing was incapacitated
+    expect(sheet.baseStates).toContain("incapacitated");
+    expect(
+      sheet.initiative.breakdown.some((entry) => entry.name === "Advantage"),
+    ).toBe(true);
   });
 });

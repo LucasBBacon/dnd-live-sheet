@@ -85,8 +85,22 @@ export class CombatContextManager {
    * Ends combat, resetting the inCombat flag, round number, active turn owner, and economy to their default states.
    * @returns The updated CombatContext after ending combat.
    */
+  /**
+   * Records whether the character was surprised at the start of this combat.
+   *
+   * Declared rather than derived: surprise is settled by the DM comparing
+   * Stealth against passive Perception across the whole table, which is not
+   * something a single-character sheet can ever work out for itself.
+   * @param surprised True if the character was surprised.
+   */
+  public setSurprised(surprised: boolean): CombatContext {
+    this.context.surprised = surprised;
+    return this.getContext();
+  }
+
   public endCombat(): CombatContext {
     this.context.inCombat = false;
+    this.context.surprised = false;
     this.context.roundNumber = null;
     this.context.activeTurnOwner = null;
     this.context.economy = CombatContextSchema.parse({}).economy;
@@ -150,6 +164,13 @@ export class CombatContextManager {
       owner.actorInstanceId !== this.context.activeTurnOwner.actorInstanceId
     ) {
       return this.getContext();
+    }
+
+    // surprise lasts exactly "until that turn ends", so the player's own turn
+    // ending is what retires it. another combatant's turn ending must not,
+    // or the restriction would lapse before the player ever acted
+    if (this.context.activeTurnOwner?.kind === "player") {
+      this.context.surprised = false;
     }
 
     // reset the active turn owner to null, effectively ending the turn

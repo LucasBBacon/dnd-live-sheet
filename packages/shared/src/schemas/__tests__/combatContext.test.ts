@@ -48,6 +48,9 @@ describe("CombatContextSchema", () => {
 
     expect(parsed).toEqual({
       inCombat: false,
+      // a character is unsurprised until told otherwise: the DM settles
+      // surprise, so the sheet never assumes it
+      surprised: false,
       roundNumber: null,
       activeTurnOwner: null,
       economy: {
