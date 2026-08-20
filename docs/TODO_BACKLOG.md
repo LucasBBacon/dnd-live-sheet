@@ -185,7 +185,7 @@ to flip rather than a test to write.
 
 | # | Item | Location | Effect |
 | --- | --- | --- | --- |
-| S1 | Rest zeroes short-rest resources | [socket.ts:894](apps/server/src/gateway/socket.ts:894) | `RestEngine.applyRest(res, type, 1, {})` passes an empty class ledger, so every `class_level_thresholds` resource resolves to max 0. A short rest **drains** Second Wind and Action Surge instead of restoring them. The ledger is already read a few lines away in `getAuthoritativeRuntimeContext`. |
+| ~~S1~~ | ~~Rest zeroes short-rest resources~~ | — | **Fixed 2026-08-19.** The handler now reads `character_classes` inside its own transaction and passes the real ledger and total level to `RestEngine.applyRest`. Investigation found the defect was wider than first recorded: `restedCharges` returns `maxUses` for a `short_rest` resource on *either* kind of rest, so long rests drained them too, and `total_level_thresholds` resources were pinned to their level-1 value rather than zeroed. Four tests replace the characterisation test. |
 | S2 | Replayed actions arrive in a different shape | [socket.ts:480](apps/server/src/gateway/socket.ts:480) | The fresh path emits `{ actorId, data }` via `io.to(room)`; the `requestId` replay path emits the bare payload via `socket.emit`. Both land on `character:action_resolved`, so a client reading `msg.data` gets `undefined` for every retried request. |
 | S3 | ROOM_JOIN has no error path | [socket.ts:329](apps/server/src/gateway/socket.ts:329) | The handler has no try/catch, so a `characterId` from another campaign rejects the handler promise. socket.io drops it: the client gets no inventory snapshot and no error. Every other handler emits `action_error` or `error:rollback`. |
 

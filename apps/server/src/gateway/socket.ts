@@ -890,15 +890,35 @@ export function initializeWebSocketGateway(httpServer: any) {
               .from(characterResources)
               .where(eq(characterResources.characterId, payload.characterId));
 
-            // 2 - calculate the swept state
+            // 2 - read the class ledger the resource maximums size themselves
+            // against. Without it every class_level_thresholds resource
+            // resolves its maximum to 0, and "restore to max" writes 0 -
+            // draining Second Wind and Action Surge instead of refilling them.
+            const classRows = await tx
+              .select({
+                classId: characterClasses.classId,
+                classLevel: characterClasses.classLevel,
+              })
+              .from(characterClasses)
+              .where(eq(characterClasses.characterId, payload.characterId));
+
+            const classLevels = Object.fromEntries(
+              classRows.map((row) => [row.classId, row.classLevel]),
+            );
+            const totalLevel = classRows.reduce(
+              (sum, row) => sum + row.classLevel,
+              0,
+            );
+
+            // 3 - calculate the swept state
             const updatedResources = RestEngine.applyRest(
               currentResources,
               payload.restType,
-              1,
-              {},
+              totalLevel,
+              classLevels,
             );
 
-            // 3 - batch update the changed resources
+            // 4 - batch update the changed resources
             for (const res of updatedResources) {
               const original = currentResources.find((r) => r.id === res.id);
               // only update if value changed to save db cycles

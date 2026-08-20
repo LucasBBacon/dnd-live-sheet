@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it } from "vitest";
 import { SOCKET_EVENTS } from "@project/shared";
 import {
+  characterClasses,
   characterInventory,
   characterResources,
   characters,
@@ -443,24 +444,25 @@ describe("socket gateway - REST_COMPLETED", () => {
   });
 
   /**
-   * DEFECT, characterised rather than endorsed.
+   * A fighter whose resources size themselves off the class ledger.
    *
-   * socket.ts calls RestEngine.applyRest(resources, restType, 1, {}) - the
-   * total level is hardcoded to 1 and the class ledger is passed empty. Every
-   * resource in RESOURCE_DICTIONARY sizes itself with class_level_thresholds,
-   * so an empty ledger resolves their maximum to 0, and a "restore to max"
-   * reset writes 0.
-   *
-   * The player-visible effect is that a short rest *drains* Second Wind and
-   * Action Surge instead of restoring them.
-   *
-   * The data to fix it is already at hand: getAuthoritativeRuntimeContext
-   * reads character_classes a few lines away. Until that is threaded through,
-   * this test pins the broken behaviour so the fix has something to flip.
+   * Second Wind is class_level_thresholds on class_fighter, so it needs the
+   * ledger to resolve a maximum at all - which is exactly what the handler
+   * used to leave out.
    */
-  it("zeroes a fighter's short-rest resources because class levels are hardcoded empty", async () => {
-    await ready([
-      { id: "trait_second_wind", current: 1, characterId: "char-1" },
+  const readyFighter = async (resources: Record<string, unknown>[]) => {
+    harness = await setupGateway();
+    await joinCampaign(harness);
+    harness.db.seed(characters, [characterRow()]);
+    harness.db.seed(characterClasses, [
+      { classId: "class_fighter", classLevel: 3 },
+    ]);
+    harness.db.seed(characterResources, resources);
+  };
+
+  it("restores a fighter's spent short-rest resource on a short rest", async () => {
+    await readyFighter([
+      { id: "trait_second_wind", current: 0, characterId: "char-1" },
     ]);
 
     await harness.emit(SOCKET_EVENTS.REST_COMPLETED, {
@@ -470,7 +472,54 @@ describe("socket gateway - REST_COMPLETED", () => {
 
     const updates = harness.db.opsFor(characterResources, "update");
     expect(updates).toHaveLength(1);
-    expect(updates[0]?.set).toEqual({ current: 0 });
+    expect(updates[0]?.set).toEqual({ current: 1 });
+  });
+
+  it("restores it on a long rest too, since a short-rest resource returns on both", async () => {
+    await readyFighter([
+      { id: "trait_second_wind", current: 0, characterId: "char-1" },
+    ]);
+
+    await harness.emit(SOCKET_EVENTS.REST_COMPLETED, {
+      characterId: "char-1",
+      restType: "long",
+    });
+
+    const updates = harness.db.opsFor(characterResources, "update");
+    expect(updates).toHaveLength(1);
+    expect(updates[0]?.set).toEqual({ current: 1 });
+  });
+
+  it("never writes a resource down to zero on a rest", async () => {
+    // the original defect: an empty class ledger resolved every maximum to 0,
+    // so "restore to max" drained the resource instead of refilling it
+    await readyFighter([
+      { id: "trait_second_wind", current: 1, characterId: "char-1" },
+    ]);
+
+    await harness.emit(SOCKET_EVENTS.REST_COMPLETED, {
+      characterId: "char-1",
+      restType: "short",
+    });
+
+    for (const update of harness.db.opsFor(characterResources, "update")) {
+      expect(update.set).not.toEqual({ current: 0 });
+    }
+  });
+
+  it("reads the class ledger it needs to size the resource", async () => {
+    await readyFighter([
+      { id: "trait_second_wind", current: 0, characterId: "char-1" },
+    ]);
+
+    await harness.emit(SOCKET_EVENTS.REST_COMPLETED, {
+      characterId: "char-1",
+      restType: "short",
+    });
+
+    expect(
+      harness.db.opsFor(characterClasses, "select").length,
+    ).toBeGreaterThan(0);
   });
 
   it("reports an error and does not broadcast when the rest transaction fails", async () => {
