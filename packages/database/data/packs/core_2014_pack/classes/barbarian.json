@@ -569,11 +569,30 @@
             "id": "trait_fast_movement",
             "name": "Fast Movement",
             "lore": {
-                "shortDescription": "placeholder",
-                "fullText": "placeholder"
+                "shortDescription": "Your speed increases by 10 feet while you aren't wearing heavy armour.",
+                "fullText": "Starting at 5th level, your speed increases by 10 feet while you aren't wearing heavy armor."
+            },
+            "isStartingProficiency": false,
+            "implementation": {
+                "mode": "engine",
+                "summary": "A flat SPEED bonus gated on the armour category of whatever occupies the body slot. The 5th-level gate is the progression grant rather than a scaling threshold, matching Danger Sense: a Barbarian 4 / Fighter 4 never receives the trait, so a threshold would restate what the grant already settles.",
+                "blockedBy": [
+                    "status_wearing_heavy_armor"
+                ]
             },
             "modifiers": {
-                "fixed": [],
+                "fixed": [
+                    {
+                        "target": "SPEED",
+                        "type": "add",
+                        "value": 10,
+                        "scalingFactor": "none",
+                        "requiredStates": [],
+                        "forbiddenStates": [
+                            "status_wearing_heavy_armor"
+                        ]
+                    }
+                ],
                 "choices": []
             },
             "resources": [],

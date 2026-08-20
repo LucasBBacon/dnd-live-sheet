@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { BaseModifierSchema } from "./modifiers.js";
 import {
+  ArmorCategorySchema,
   ContainerCapacitySchema,
   EquipSlotSchema,
   StartingEquipmentCategoryTagSchema,
@@ -42,6 +43,7 @@ export const EquipmentDefinitionSchema = z
     // source ItemDefinition is projected from, so the fields have to live here
     // or they can never be authored
     weight: z.number().default(0),
+    armorCategory: ArmorCategorySchema.optional(),
     equipSlot: EquipSlotSchema.optional(),
     requiresAttunement: z.boolean().default(false),
     ammoTag: z.string().optional(),

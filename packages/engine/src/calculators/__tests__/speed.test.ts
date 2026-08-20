@@ -90,11 +90,18 @@ describe("SpeedEngine.calculateSpeed", () => {
     expect(SpeedEngine.calculateSpeed(30, [gated], ["raging"]).total).toBe(40);
   });
 
+  // the shape of Fast Movement, using the state the pipeline really emits:
+  // the id used to be invented here, which documented a gate that existed
+  // nowhere and would have gone on passing if the real one were misspelt
   it("honours a modifier's forbidden state", () => {
-    const gated = mod({ value: 10, forbiddenStates: ["wearing_heavy_armor"] });
+    const gated = mod({
+      value: 10,
+      forbiddenStates: ["status_wearing_heavy_armor"],
+    });
 
     expect(
-      SpeedEngine.calculateSpeed(30, [gated], ["wearing_heavy_armor"]).total,
+      SpeedEngine.calculateSpeed(30, [gated], ["status_wearing_heavy_armor"])
+        .total,
     ).toBe(30);
     // the other direction matters just as much: a filter that dropped every
     // modifier *carrying* a forbidden state, rather than one whose forbidden

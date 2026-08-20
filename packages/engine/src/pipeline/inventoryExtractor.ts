@@ -58,6 +58,41 @@ export class InventoryExtractor {
   }
 
   /**
+   * The persistent states a character's worn items put on the sheet.
+   *
+   * Kept apart from extract() because a state is about what is *worn*, not
+   * about what math it contributes: a robe carries no modifiers at all, and a
+   * suit of armor whose modifiers have not been authored yet is still armor.
+   * Reading the type is the whole point - occupying the body slot is not the
+   * same fact as wearing armor, and Unarmored Defense turns on the difference.
+   */
+  public static extractStates(
+    items: InventoryInstance[],
+    snapshot?: RuleSnapshotLookup,
+  ): string[] {
+    const states = new Set<string>();
+
+    for (const instance of items) {
+      // body armor only. a shield is worn in a hand and answers a different
+      // question, so it deliberately emits nothing here
+      if (instance.slot !== "body") continue;
+
+      const definition = resolveItemDefinition(instance.itemId, snapshot);
+      if (definition?.type !== "armor") continue;
+
+      states.add("status_wearing_armor");
+
+      // armor whose category has not been authored yet still counts as armor,
+      // it just cannot answer a category-gated rule either way
+      if (definition.armorCategory) {
+        states.add(`status_wearing_${definition.armorCategory}_armor`);
+      }
+    }
+
+    return Array.from(states);
+  }
+
+  /**
    * The same pass, reported rather than reduced, so the inventory screen can
    * explain why a worn item is contributing nothing.
    *

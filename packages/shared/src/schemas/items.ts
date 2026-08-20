@@ -14,6 +14,21 @@ export const ItemTypeSchema = z.enum([
 ]);
 
 /**
+ * Which armour table a suit of armour belongs to.
+ *
+ * Declared, never inferred. "Heavy" is not the same fact as "ignores
+ * Dexterity": `maxDexCap: 0` is a *consequence* of the category, so reading it
+ * backwards misclassifies any armour whose AC modifiers are not yet authored.
+ * Rules that gate on the category — Fast Movement, armour proficiency — need
+ * the fact itself.
+ *
+ * Shields are absent on purpose. A shield is not body armour, and the rules
+ * that care about shields ask a different question ("are you wielding one")
+ * answered from a different slot.
+ */
+export const ArmorCategorySchema = z.enum(["light", "medium", "heavy"]);
+
+/**
  * The kind of slot an item occupies — a property of the *definition*.
  * A ring goes in "a ring slot"; it has no opinion about which finger.
  */
@@ -81,6 +96,8 @@ export const ItemDefinitionSchema = z.object({
   name: z.string(),
   type: ItemTypeSchema.default("gear"),
   weight: z.number().default(0),
+  // meaningful only on type: "armor". absent means the item is not body armour
+  armorCategory: ArmorCategorySchema.optional(),
   // equipment mechanics
   equipSlot: EquipSlotSchema.optional(),
   requiresAttunement: z.boolean().default(false),
@@ -159,6 +176,7 @@ export const InventoryInstanceSchema = z.object({
 // #region Type Exports
 
 export type ItemType = z.infer<typeof ItemTypeSchema>;
+export type ArmorCategory = z.infer<typeof ArmorCategorySchema>;
 export type EquipSlot = z.infer<typeof EquipSlotSchema>;
 export type CharacterSlot = z.infer<typeof CharacterSlotSchema>;
 export type ContainerCapacity = z.infer<typeof ContainerCapacitySchema>;

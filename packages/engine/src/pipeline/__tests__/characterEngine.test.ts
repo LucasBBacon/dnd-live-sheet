@@ -1257,3 +1257,48 @@ describe("CharacterEngine.buildLiveSheet: pack content", () => {
     expect(sheet.actions.map((action) => action.id)).toContain("action_rage");
   });
 });
+
+/**
+ * The end-to-end check on Fast Movement, run against the shipped pack rather
+ * than a stub: it is the only thing that proves the authored trait, the armor
+ * category, the emitted state and the speed calculator agree with each other.
+ */
+describe("CharacterEngine.buildLiveSheet: Fast Movement", () => {
+  // race_half_elf is 30ft, and its ASI choice leaves STR at 15, so a 65lb
+  // suit of plate stays well inside carrying capacity and encumbrance
+  // contributes nothing to any of these numbers
+  const halfElfBarbarian = (level: number): CharacterSave =>
+    halfElfFighter({
+      classes: [{ classId: "class_barbarian", level, selections: {} }],
+    });
+
+  const worn = (itemId: string): InventoryInstance => ({
+    id: `inv_${itemId}`,
+    itemId,
+    quantity: 1,
+    slot: "body",
+    isAttuned: false,
+  });
+
+  it("adds ten feet at 5th level out of heavy armor", () => {
+    const sheet = buildSheet(halfElfBarbarian(5), [worn("item_armor_leather")]);
+
+    expect(sheet.baseStates).toContain("status_wearing_light_armor");
+    expect(sheet.speed.total).toBe(40);
+  });
+
+  it("withholds it while wearing heavy armor", () => {
+    const sheet = buildSheet(halfElfBarbarian(5), [worn("item_armor_plate")]);
+
+    expect(sheet.baseStates).toContain("status_wearing_heavy_armor");
+    expect(sheet.speed.total).toBe(30);
+  });
+
+  it("adds ten feet at 5th level wearing nothing at all", () => {
+    expect(buildSheet(halfElfBarbarian(5)).speed.total).toBe(40);
+  });
+
+  it("does not grant it before 5th level", () => {
+    expect(buildSheet(halfElfBarbarian(4)).speed.total).toBe(30);
+  });
+});

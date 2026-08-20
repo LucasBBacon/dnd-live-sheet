@@ -220,6 +220,7 @@ const RAW_EQUIPMENT_DICTIONARY: Record<string, EquipmentDefinitionSeed> = {
     id: "item_armor_padded",
     name: "Padded Armor",
     type: "armor",
+    armorCategory: "light",
     weight: 8,
     equipSlot: "body",
     requiresAttunement: false,
@@ -248,6 +249,7 @@ const RAW_EQUIPMENT_DICTIONARY: Record<string, EquipmentDefinitionSeed> = {
     id: "item_armor_leather",
     name: "Leather Armor",
     type: "armor",
+    armorCategory: "light",
     weight: 10,
     equipSlot: "body",
     requiresAttunement: false,
@@ -267,6 +269,7 @@ const RAW_EQUIPMENT_DICTIONARY: Record<string, EquipmentDefinitionSeed> = {
     id: "item_armor_studded_leather",
     name: "Studded Leather Armor",
     type: "armor",
+    armorCategory: "light",
     weight: 13,
     equipSlot: "body",
     requiresAttunement: false,
@@ -286,6 +289,7 @@ const RAW_EQUIPMENT_DICTIONARY: Record<string, EquipmentDefinitionSeed> = {
     id: "item_armor_plate",
     name: "Plate Armor",
     type: "armor",
+    armorCategory: "heavy",
     weight: 65,
     equipSlot: "body",
     requiresAttunement: false,
@@ -455,6 +459,19 @@ const RAW_EQUIPMENT_DICTIONARY: Record<string, EquipmentDefinitionSeed> = {
     ],
   },
 
+  // worn on the body without being armor - wondrous for the same reason the
+  // ring is: worn, but not armor. the distinction matters, because rules that
+  // ask "are you wearing armor" - Unarmored Defense, Fast Movement - must read
+  // the item's type, not merely that the body slot is occupied
+  item_robe: {
+    id: "item_robe",
+    name: "Robe",
+    type: "wondrous",
+    weight: 4,
+    equipSlot: "body",
+    requiresAttunement: false,
+  },
+
   // PHB containers. capacity is pounds of gear only: the book also gives each
   // a volume, and gives quivers and cases an item count instead, but neither
   // is a weight limit and neither has a rule here yet
@@ -528,6 +545,7 @@ export const toItemDefinition = (
     categoryTags: equipment.categoryTags,
     // these stay absent rather than undefined so the projection keeps matching
     // the exact-shape assertions the dictionary tests make
+    ...(equipment.armorCategory && { armorCategory: equipment.armorCategory }),
     ...(equipment.equipSlot && { equipSlot: equipment.equipSlot }),
     ...(equipment.ammoTag && { ammoTag: equipment.ammoTag }),
     ...(equipment.container && { container: equipment.container }),

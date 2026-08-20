@@ -257,9 +257,7 @@ export class CharacterEngine {
       new Set([
         ...StateExtractor.extractStates(activeTraits),
         ...effectManager.getActiveStates(),
-        ...(inventory.some((item) => item.slot === "body")
-          ? ["status_wearing_armor"]
-          : []),
+        ...InventoryExtractor.extractStates(inventory, options.snapshot),
       ]),
     );
     const summons = effectManager

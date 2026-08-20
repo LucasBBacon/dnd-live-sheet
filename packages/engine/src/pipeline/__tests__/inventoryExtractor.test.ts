@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { CharacterSlot, InventoryInstance } from "@project/shared";
 import { InventoryExtractor } from "../inventoryExtractor.js";
+import { resolveItemDefinition } from "../../rules/ruleLookup.js";
 
 /**
  * Fixtures use real dictionary ids: rule resolution runs in "static-only" mode,
@@ -9,6 +10,9 @@ import { InventoryExtractor } from "../inventoryExtractor.js";
 const SHIELD = "item_armor_shield";
 const RING = "item_ring_of_protection";
 const PLATE = "item_armor_plate";
+const LEATHER = "item_armor_leather";
+/** Worn on the body, but not armor - the distinction the states turn on. */
+const ROBE = "item_robe";
 
 const instance = (
   id: string,
@@ -138,10 +142,55 @@ describe("InventoryExtractor.extract", () => {
   it("keeps ids unique so competing set_base entries stay distinguishable", () => {
     const result = InventoryExtractor.extract([
       instance("inv_1", PLATE, "body"),
-      instance("inv_2", "item_armor_leather", "body"),
+      instance("inv_2", LEATHER, "body"),
     ]);
 
     const ids = result.modifiers.map((mod) => mod.id);
     expect(new Set(ids).size).toBe(ids.length);
+  });
+});
+
+describe("InventoryExtractor.extractStates", () => {
+  it("emits nothing for an empty bag", () => {
+    expect(InventoryExtractor.extractStates([])).toEqual([]);
+  });
+
+  it("emits status_wearing_armor for armor worn on the body", () => {
+    expect(
+      InventoryExtractor.extractStates([instance("inv_1", PLATE, "body")]),
+    ).toContain("status_wearing_armor");
+  });
+
+  it("emits the heavy category state for plate", () => {
+    expect(
+      InventoryExtractor.extractStates([instance("inv_1", PLATE, "body")]),
+    ).toContain("status_wearing_heavy_armor");
+  });
+
+  it("emits the light category state for leather", () => {
+    const states = InventoryExtractor.extractStates([
+      instance("inv_1", LEATHER, "body"),
+    ]);
+
+    expect(states).toContain("status_wearing_light_armor");
+    expect(states).not.toContain("status_wearing_heavy_armor");
+  });
+
+  it("emits nothing for armor left in the pack", () => {
+    expect(
+      InventoryExtractor.extractStates([instance("inv_1", PLATE, "backpack")]),
+    ).toEqual([]);
+  });
+
+  it("emits nothing for a non-armor item worn in the body slot", () => {
+    // guards the guard: if item_robe ever stops resolving as a body-slot
+    // non-armor item, this test would pass by resolving to nothing at all
+    const robe = resolveItemDefinition(ROBE);
+    expect(robe?.equipSlot).toBe("body");
+    expect(robe?.type).not.toBe("armor");
+
+    expect(
+      InventoryExtractor.extractStates([instance("inv_1", ROBE, "body")]),
+    ).toEqual([]);
   });
 });
