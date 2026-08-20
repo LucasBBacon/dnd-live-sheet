@@ -165,15 +165,45 @@ The three action-economy phases are complete (see
 `docs/superpowers/plans/2026-08-19-action-economy-phase-{1,2,3}.md`). These were
 deliberately left out and are listed so the absence stays deliberate.
 
-| # | Item | Why it was deferred |
+| # | Item | Status |
 | --- | --- | --- |
-| A1 | Ready's trigger is not modelled | Needs a player-authored trigger contract; none exists |
-| A2 | Hide does not roll Stealth; Search does not roll Perception | No roll-initiating UI for skills anywhere on the sheet |
-| A3 | `status_hidden` never clears on its own | Being found is not a turn boundary; only a manual "Stop Hiding" ends it |
-| A4 | Dodge's `status_attacks_against_have_disadvantage` is not displayed | The AC widget shows Reckless Attack's advantage mirror but was not extended; small follow-up |
-| A5 | No opportunity-attack model | Disengage is therefore `no_effect`; it becomes expressible if they are ever modelled |
-| A6 | Two-weapon fighting's main-hand requirement unenforced | Nothing checks that the Attack action was taken with a light weapon |
-| A7 | No way to take the Attack action without swinging | Declaration is implicit only |
+| A1 | Ready's trigger is not modelled | **Open** — see "reactions and external events" below |
+| ~~A2~~ | ~~No roll-initiating UI for skills~~ | **Closed 2026-08-19.** `useCheckRoll` asks for a d20 through the existing roll interceptor and files the result; `SkillsWidget` (extracted from `DashboardLayout`) and `SavingThrowsWidget` both use it. Hide and Search still do not *prompt* their own check — see A2b. |
+| ~~A3~~ | ~~`status_hidden` never clears~~ | **Closed 2026-08-19** by the active-effects panel: dismissal runs the authored "end" action, so Stop Hiding is a button. |
+| ~~A4~~ | ~~Dodge's disadvantage not displayed~~ | **Closed 2026-08-19.** The AC widget now reports both mirrors, and shows both at once when both apply rather than resolving a rule the DM owns. |
+| A5 | No opportunity-attack model | **Open** — see "reactions and external events" below |
+| ~~A6~~ | ~~Two-weapon fighting's main-hand requirement~~ | **Closed 2026-08-19** as a warning, not enforcement: the off-hand attack card says it needs the Attack action first while `attacksRemaining` is null. Consistent with track-never-block. |
+| A7 | No way to take the Attack action without swinging | **Recommend closing as won't-fix** — see below |
+
+### A2b — actions do not prompt their own check
+
+Now that skills are rollable, Hide could prompt a Stealth roll and Search a
+Perception roll instead of leaving the player to click twice.
+`AbilityCheckEffectSchema` is `{ type: "ability_check" }` with no fields; giving
+it an optional `skillId` and having the resolver surface which check to roll
+would close it. Small, and only worth doing if the two-click flow proves
+annoying in play.
+
+### A7 — recommend closing as won't-fix
+
+Taking the Attack action *without* attacking has no representation, and giving
+it one costs more than it returns. It needs either a new effect type
+(`declare_attack_action`) or a special case in the resolver, and the only
+scenario it serves is a character with no weapon who wants to open an allowance
+they cannot spend — unarmed strikes already work, and they are `attack`
+activations like any other. Reopen if a real trait ever keys off "you took the
+Attack action" rather than off an attack landing.
+
+### Reactions and external events (A1, A5)
+
+These two share one root and should be designed together rather than
+piecemeal. `EngineEventSchema` models seven things that happen *to you on your
+own turn*; neither "a creature left my reach" nor "the condition I readied for
+occurred" can be expressed. The groundwork is better than it looks —
+`CombatEvent`, `reaction_window_opened` and `spendReaction` already exist and
+Protection uses them end to end — so the work is extending the event
+vocabulary and letting a player author a trigger, not building a reaction
+system from nothing. Worth its own design pass.
 
 ---
 

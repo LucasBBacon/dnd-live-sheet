@@ -6,6 +6,11 @@ import { SavingThrowsWidget } from "../SavingThrowsWidget";
 
 const mocks = vi.hoisted(() => ({
   saves: { current: {} as Record<string, unknown> },
+  rollCheck: vi.fn(),
+}));
+
+vi.mock("../../../hooks/useCheckRoll", () => ({
+  useCheckRoll: () => mocks.rollCheck,
 }));
 
 vi.mock("../../../hooks/useCharacterStats", () => ({
@@ -131,5 +136,35 @@ describe("SavingThrowsWidget", () => {
     const container = await renderWidget();
 
     expect(container.textContent).not.toContain("Danger Sense");
+  });
+});
+
+describe("SavingThrowsWidget rolling", () => {
+  it("offers a roll for each ability", async () => {
+    mocks.saves.current = allSaves();
+
+    const container = await renderWidget();
+
+    expect(container.querySelectorAll("button")).toHaveLength(6);
+  });
+
+  it("rolls the save with its own modifier", async () => {
+    mocks.saves.current = allSaves({ DEX: { totalModifier: 4 } });
+    mocks.rollCheck.mockClear();
+
+    const container = await renderWidget();
+    const dexButton = Array.from(container.querySelectorAll("button")).find(
+      (button) => button.getAttribute("data-ability") === "DEX",
+    );
+
+    await act(async () => {
+      dexButton?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    });
+
+    expect(mocks.rollCheck).toHaveBeenCalledWith({
+      label: "Dexterity save",
+      modifier: 4,
+      target: "SAVING_THROW",
+    });
   });
 });

@@ -150,7 +150,12 @@ export interface RuntimeEffectSyncPayload {
   isSelfConcentration: boolean;
   modifiers: import("../schemas/modifiers.js").RuntimeModifier[];
   grantedStates: string[];
-  kind?: "summon" | "effect";
+  /**
+   * Mirrors the engine's ActiveEffect["kind"]. "trait_state" has to cross the
+   * wire so the sheet can keep telling permanent trait facts apart from
+   * effects that expire.
+   */
+  kind?: "summon" | "effect" | "trait_state";
   durationHours?: number;
   summonEntities?: RuntimeSummonEntitySyncPayload[];
 }

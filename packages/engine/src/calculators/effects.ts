@@ -22,7 +22,13 @@ export interface ActiveEffect {
   isSelfConcentration: boolean; // if true, drops on failed CON save
   modifiers: RuntimeModifier[]; // e.g., [{target: "ARMOR_CLASS", type: "add", value: 5}]
   grantedStates: string[]; // e.g., ["shield_spell_active", "immune_to_magic_missile"]
-  kind?: "summon" | "effect";
+  /**
+   * "trait_state" marks a permanent fact the bootstrapper injected for a
+   * trait's grantedStates. It rides in the effect manager because that is
+   * where the calculators read states from, but it is not something that
+   * expires, and a UI listing active effects should leave it out.
+   */
+  kind?: "summon" | "effect" | "trait_state";
   durationHours?: number;
   summonEntities?: SummonEntity[];
 }

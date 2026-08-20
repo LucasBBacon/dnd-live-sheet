@@ -11,9 +11,11 @@ import { useLevelUpStore } from "../../store/levelUpStore";
 import { CombatWidget } from "./CombatWidget";
 import { RestModal } from "./modals/RestModal";
 import { LevelUpWizard } from "../wizard/LevelUpWizard";
+import { ActiveEffectsWidget } from "./ActiveEffectsWidget";
 import { ArmorClassWidget } from "./ArmorClassWidget";
 import { ConditionsWidget } from "./ConditionsWidget";
 import { SavingThrowsWidget } from "./SavingThrowsWidget";
+import { SkillsWidget } from "./SkillsWidget";
 
 export const DashboardLayout = () => {
   const character = useCharacterSheetStore();
@@ -31,7 +33,7 @@ export const DashboardLayout = () => {
   );
   const beginLevelUp = useLevelUpStore((state) => state.beginLevelUp);
 
-  const { skills, initiative } = useDerivedStats();
+  const { initiative } = useDerivedStats();
   const { finalAbilities } = useAbilities();
 
   const activeClassId = useMemo(() => {
@@ -193,6 +195,7 @@ export const DashboardLayout = () => {
           </div>
 
           <ConditionsWidget />
+          <ActiveEffectsWidget />
         </section>
 
         {/* ACTION ECONOMY */}
@@ -233,31 +236,7 @@ export const DashboardLayout = () => {
 
           <SavingThrowsWidget />
 
-          <div className="bg-white border-2 border-gray-300 p-4 rounded flex-grow overflow-y-auto">
-            <h2 className="font-bold border-b-2 border-gray-800 pb-1 mb-2 uppercase">
-              Skills
-            </h2>
-            <ul className="text-xs flex-col gap-1">
-              {skills.map((skill) => (
-                <li
-                  key={skill.id}
-                  className="flex justify-between border-b border-gray-100 py-1"
-                >
-                  <span
-                    className={
-                      skill.multiplier > 0 ? "font-bold" : "text-gray-600"
-                    }
-                  >
-                    {skill.name}
-                  </span>
-                  <span>
-                    {skill.totalModifier >= 0 ? "+" : ""}
-                    {skill.totalModifier}
-                  </span>
-                </li>
-              ))}
-            </ul>
-          </div>
+          <SkillsWidget />
         </section>
       </div>
 

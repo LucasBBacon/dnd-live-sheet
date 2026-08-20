@@ -1,4 +1,5 @@
 import type { DerivedSave } from "@project/engine";
+import { useCheckRoll } from "../../hooks/useCheckRoll";
 import { useDerivedStats } from "../../hooks/useCharacterStats";
 
 const ABILITY_ORDER = ["STR", "DEX", "CON", "INT", "WIS", "CHA"] as const;
@@ -34,6 +35,7 @@ const RollStateBadge = ({ rollState }: { rollState: DerivedSave["rollState"] }) 
 
 export const SavingThrowsWidget = () => {
   const { saves } = useDerivedStats();
+  const rollCheck = useCheckRoll();
 
   const rows = ABILITY_ORDER.map((ability) => saves[ability]).filter(
     (save): save is DerivedSave => Boolean(save),
@@ -77,12 +79,25 @@ export const SavingThrowsWidget = () => {
 
             <span className="flex items-center gap-1.5">
               <RollStateBadge rollState={save.rollState} />
-              <span className="font-mono">{signed(save.totalModifier)}</span>
               {save.conditionalNotes.length > 0 && (
                 <span aria-hidden="true" className="text-gray-400">
                   *
                 </span>
               )}
+              <button
+                type="button"
+                data-ability={save.ability}
+                onClick={() =>
+                  void rollCheck({
+                    label: `${ABILITY_NAMES[save.ability] ?? save.ability} save`,
+                    modifier: save.totalModifier,
+                    target: "SAVING_THROW",
+                  })
+                }
+                className="rounded border border-gray-300 px-1.5 py-0.5 font-mono hover:bg-gray-100"
+              >
+                {signed(save.totalModifier)}
+              </button>
             </span>
           </li>
         ))}

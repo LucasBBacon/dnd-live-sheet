@@ -10,11 +10,15 @@ import { useCharacterSheetStore } from "../../store/characterSheetStore";
  * cost they accepted, and can tell the table about it.
  */
 const EXPOSURE_STATE = "status_attacks_against_have_advantage";
+const GUARDED_STATE = "status_attacks_against_have_disadvantage";
 
 export const ArmorClassWidget = () => {
   const { armorClass } = useDerivedStats();
   const isExposed = useCharacterSheetStore((state) =>
     state.activeStates.includes(EXPOSURE_STATE),
+  );
+  const isGuarded = useCharacterSheetStore((state) =>
+    state.activeStates.includes(GUARDED_STATE),
   );
 
   return (
@@ -43,6 +47,30 @@ export const ArmorClassWidget = () => {
           </div>
         </div>
       </div>
+
+      {/*
+        Both are reported when both apply. They cancel at the table, but
+        resolving that here would hide one of the two sources from a player who
+        needs to explain the roll to their DM.
+      */}
+      {isGuarded && (
+        <div
+          role="status"
+          className="mt-4 flex items-start gap-2 rounded-xl border border-emerald-300/40 bg-emerald-400/15 p-3"
+        >
+          <span aria-hidden="true" className="text-base leading-none">
+            🛡️
+          </span>
+          <div>
+            <p className="text-sm font-semibold text-emerald-100">
+              Attacks against you have disadvantage
+            </p>
+            <p className="mt-0.5 text-xs text-emerald-100/80">
+              Until the start of your next turn.
+            </p>
+          </div>
+        </div>
+      )}
 
       {isExposed && (
         <div

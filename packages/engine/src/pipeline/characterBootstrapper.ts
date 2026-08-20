@@ -564,6 +564,7 @@ export class CharacterBootstrapper {
         isSelfConcentration: false,
         modifiers: [],
         grantedStates: trait.grantedStates ?? [],
+        kind: "trait_state",
       });
     }
 

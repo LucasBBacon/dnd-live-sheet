@@ -1,7 +1,9 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import type { CharacterSave } from "@project/shared";
 import { CharacterBootstrapper } from "../characterBootstrapper.js";
 import { ProficiencyExtractor } from "../proficiencyExtractor.js";
+import { EffectManager } from "../../calculators/effects.js";
+import { ResourceManager } from "../../calculators/resources.js";
 
 const codes = (save: CharacterSave) =>
   CharacterBootstrapper.collectSaveIssues(save).map((issue) => issue.code);
@@ -444,5 +446,61 @@ describe("CharacterBootstrapper.resolveGrantedTraitIds", () => {
       }),
     );
     expect(ids).toContain("trait_improved_critical");
+  });
+});
+
+describe("CharacterBootstrapper.hydrateRuntimeManagers effect kinds", () => {
+  /** A trait whose only contribution is a permanent state. */
+  const statefulTrait = () =>
+    vi.spyOn(CharacterBootstrapper, "compileActiveTraits").mockReturnValue([
+      {
+        id: "trait_powerful_build",
+        name: "Powerful Build",
+        modifiers: { fixed: [], choices: [] },
+        resources: [],
+        diceRules: [],
+        criticalHitModifiers: [],
+        grantedStates: ["powerful_build"],
+        triggers: [],
+        actions: [],
+      },
+    ] as never);
+
+  it("marks a trait-granted state as trait_state rather than as an effect", () => {
+    const spy = statefulTrait();
+    const effectManager = new EffectManager();
+
+    CharacterBootstrapper.hydrateRuntimeManagers(
+      fighter(),
+      effectManager,
+      new ResourceManager(),
+    );
+
+    // a permanent fact about the character, not an effect that expires. An
+    // effects panel has to tell them apart, and matching on the instanceId
+    // prefix would be the string hack removed elsewhere.
+    const injected = effectManager
+      .getActiveEffects()
+      .find((effect) => effect.instanceId === "trait_state_trait_powerful_build");
+
+    expect(injected).toBeDefined();
+    expect(injected?.kind).toBe("trait_state");
+
+    spy.mockRestore();
+  });
+
+  it("still grants the state itself", () => {
+    const spy = statefulTrait();
+    const effectManager = new EffectManager();
+
+    CharacterBootstrapper.hydrateRuntimeManagers(
+      fighter(),
+      effectManager,
+      new ResourceManager(),
+    );
+
+    expect(effectManager.getActiveStates()).toContain("powerful_build");
+
+    spy.mockRestore();
   });
 });

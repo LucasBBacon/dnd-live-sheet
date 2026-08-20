@@ -475,6 +475,19 @@ export const CombatWidget = () => {
                     {outOfAmmo ? "Needs ammo" : "Ready"}
                   </div>
                 </div>
+                {/*
+                  Two-weapon fighting is a bonus attack you only get after
+                  taking the Attack action with a light weapon. Stated, not
+                  enforced: the sheet tracks the economy rather than policing
+                  it, and the DM may well have said otherwise.
+                */}
+                {attack.context.attackUsage === "two_weapon_bonus" &&
+                  attacksRemaining === null && (
+                    <div className="border-b border-amber-200 bg-amber-50 px-3 py-1.5 text-[11px] text-amber-800">
+                      Requires the Attack action with a light weapon first
+                    </div>
+                  )}
+
                 <div className="flex flex-wrap gap-4 p-3">
                   <div
                     className="cursor-help"

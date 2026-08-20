@@ -12,6 +12,7 @@ const mocks = vi.hoisted(() => ({
       breakdown: [{ name: "Attack action", value: 1 }],
     } as { total: number; breakdown: Array<{ name: string; value: number | string }> },
   },
+  attacks: { current: null as unknown },
   consumeItem: vi.fn(),
   executeActorAction: vi.fn(),
   executeCharacterAction: vi.fn(),
@@ -25,7 +26,7 @@ const mocks = vi.hoisted(() => ({
 
 vi.mock("../../../hooks/useCombat", () => ({
   useCombat: () => ({
-    attacks: [
+    attacks: (mocks.attacks.current as unknown[] | null) ?? [
       {
         weaponId: "item_weapon_longsword",
         name: "Longsword",
@@ -486,5 +487,73 @@ describe("CombatWidget attack allowance", () => {
     );
 
     expect(strike?.disabled).toBe(false);
+  });
+});
+
+describe("CombatWidget two-weapon fighting", () => {
+  const renderWidget = async () => {
+    const container = document.createElement("div");
+    document.body.appendChild(container);
+    const root = createRoot(container);
+
+    await act(async () => {
+      root.render(<CombatWidget />);
+    });
+
+    return container;
+  };
+
+  const offHandAttack = () => {
+    mocks.attacks.current = [
+      {
+        weaponId: "item_weapon_shortsword",
+        name: "Shortsword (Off-Hand)",
+        attackBonus: 3,
+        rollState: "normal",
+        damageBonus: 0,
+        damageExpression: "1d6 piercing",
+        criticalDamageExpression: "2d6 piercing",
+        isProficient: true,
+        context: {
+          hand: "off_hand",
+          attackUsage: "two_weapon_bonus",
+          isTwoHandedGrip: false,
+        },
+        breakdown: { governingStat: "STR", attack: [], damage: [] },
+        slot: "off_hand",
+        activation: "bonus_action",
+        actionId: "action_weapon_item_weapon_shortsword_off_hand",
+        requiresAmmo: false,
+        currentAmmo: 0,
+        ammoInventoryId: null,
+      },
+    ];
+  };
+
+  it("warns that an off-hand swing needs the Attack action first", async () => {
+    offHandAttack();
+    storeState.combatContext.economy.attacksRemaining = null;
+
+    const container = await renderWidget();
+
+    expect(container.textContent).toContain("Attack action");
+  });
+
+  it("drops the warning once the Attack action has been taken", async () => {
+    offHandAttack();
+    storeState.combatContext.economy.attacksRemaining = 1;
+
+    const container = await renderWidget();
+
+    expect(container.textContent).not.toContain("Requires");
+  });
+
+  it("never warns on a main-hand swing", async () => {
+    mocks.attacks.current = null;
+    storeState.combatContext.economy.attacksRemaining = null;
+
+    const container = await renderWidget();
+
+    expect(container.textContent).not.toContain("Requires");
   });
 });
