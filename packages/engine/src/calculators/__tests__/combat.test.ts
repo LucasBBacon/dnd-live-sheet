@@ -207,8 +207,8 @@ describe("CombatEngine.calculateWeaponAttack - governing stat", () => {
       "melee_weapon",
     );
 
-    expect(inactive.criticalDamageExpression).toBe("1d6 piercing");
-    expect(active.criticalDamageExpression).toBe("2d6 piercing");
+    expect(inactive.criticalDamageExpression).toBe("2d6 piercing");
+    expect(active.criticalDamageExpression).toBe("3d6 piercing");
   });
 
   it("ignores a critical-hit modifier while one of its forbidden states is active", () => {
@@ -230,7 +230,7 @@ describe("CombatEngine.calculateWeaponAttack - governing stat", () => {
       "melee_weapon",
     );
 
-    expect(result.criticalDamageExpression).toBe("1d6 piercing");
+    expect(result.criticalDamageExpression).toBe("2d6 piercing");
   });
 });
 
@@ -789,7 +789,7 @@ describe("CombatEngine.calculateWeaponAttack - critical hit modifiers", () => {
       true,
     );
 
-    expect(result.damageExpression).toBe("2d6 piercing");
+    expect(result.damageExpression).toBe("3d6 piercing");
   });
 
   it("ignores critical hit modifiers whose required attack types do not match", () => {
@@ -811,7 +811,7 @@ describe("CombatEngine.calculateWeaponAttack - critical hit modifiers", () => {
       true,
     );
 
-    expect(result.damageExpression).toBe("1d6 piercing");
+    expect(result.damageExpression).toBe("2d6 piercing");
   });
 
   it("marks critical damage as maximized when the modifier matches", () => {
@@ -833,7 +833,7 @@ describe("CombatEngine.calculateWeaponAttack - critical hit modifiers", () => {
       true,
     );
 
-    expect(result.criticalDamageExpression).toBe("1d6 piercing");
+    expect(result.criticalDamageExpression).toBe("2d6 piercing");
     expect(result.criticalDamageMaximized).toBe(true);
   });
 });
@@ -1143,19 +1143,19 @@ describe("CombatEngine.calculateWeaponAttack - scaled critical dice", () => {
     ).criticalDamageExpression;
 
   it("adds nothing below the first threshold", () => {
-    expect(critAt(8, [brutalCritical()])).toBe("1d6 piercing");
+    expect(critAt(8, [brutalCritical()])).toBe("2d6 piercing");
   });
 
   it("adds one die at the first threshold", () => {
-    expect(critAt(9, [brutalCritical()])).toBe("2d6 piercing");
+    expect(critAt(9, [brutalCritical()])).toBe("3d6 piercing");
   });
 
   it("adds two dice at the second threshold", () => {
-    expect(critAt(13, [brutalCritical()])).toBe("3d6 piercing");
+    expect(critAt(13, [brutalCritical()])).toBe("4d6 piercing");
   });
 
   it("adds three dice at the third threshold", () => {
-    expect(critAt(17, [brutalCritical()])).toBe("4d6 piercing");
+    expect(critAt(17, [brutalCritical()])).toBe("5d6 piercing");
   });
 
   it("stacks with an unscaled one-die modifier", () => {
@@ -1165,12 +1165,12 @@ describe("CombatEngine.calculateWeaponAttack - scaled critical dice", () => {
       requiredAttackTypes: ["melee_weapon"],
     };
 
-    expect(critAt(17, [savageAttacks, brutalCritical()])).toBe("5d6 piercing");
+    expect(critAt(17, [savageAttacks, brutalCritical()])).toBe("6d6 piercing");
   });
 
   it("honours an explicit dieCount with no scaling at all", () => {
     const flatPair = { type: "add_base_die", dieCount: 2 };
 
-    expect(critAt(1, [flatPair])).toBe("3d6 piercing");
+    expect(critAt(1, [flatPair])).toBe("4d6 piercing");
   });
 });

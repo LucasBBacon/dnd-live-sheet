@@ -63,6 +63,20 @@ export const CriticalHitModifierSchema = z.object({
   scalingClassId: z.string().optional(),
   scalingThresholds: z.array(ModifierScalingThresholdSchema).min(1).optional(),
   damageType: DamageTypeSchema.optional(),
+  /**
+   * The trait this modifier came from, for the damage breakdown.
+   *
+   * `compileActiveTraits` flattens `criticalHitModifiers` off their traits, so
+   * by the time the calculator sees one the trait identity is gone. The
+   * pipeline stamps this at that flat-map, the same way `actionResolver` stamps
+   * `sourceName` onto a blueprint's modifiers.
+   *
+   * Optional rather than defaulted, for the reason recorded on `dieCount`: a
+   * `.default()` makes the field required on the inferred output type, which
+   * would force every hand-built literal in the dictionaries and tests to
+   * restate a value it does not care about.
+   */
+  sourceName: z.string().optional(),
   requiredAttackTypes: z.array(AttackTypeSchema).default([]),
   requiredStates: z.array(z.string()).default([]),
   forbiddenStates: z.array(z.string()).default([]),

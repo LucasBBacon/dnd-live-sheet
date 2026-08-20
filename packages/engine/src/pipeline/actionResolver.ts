@@ -377,7 +377,16 @@ export class ActionResolver {
           target: "ATTACK_ROLL",
         });
 
-        for (const [index, segment] of damageSegments.entries()) {
+        // a critical hit rolls its own pool - already doubled, and already
+        // carrying whatever critical-hit modifiers matched - which CombatEngine
+        // resolved ahead of the roll. An action authored before critical
+        // segments existed has none, and falls back to its base dice.
+        const resolvedSegments =
+          isCriticalHit && effect.criticalDamage?.length
+            ? effect.criticalDamage
+            : damageSegments;
+
+        for (const [index, segment] of resolvedSegments.entries()) {
           const baseDice = segment.baseDice;
           const roll =
             segment.maximized ||

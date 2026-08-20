@@ -1,5 +1,7 @@
 import type {
   CriticalHitModifier,
+  DamageSegment,
+  DamageType,
   FixedProficiencyGrant,
   RuntimeModifier,
   WeaponDefinition,
@@ -55,7 +57,20 @@ export interface DerivedAttack {
   damageBonus: number;
   damageExpression: string; // e.g., '1d8 + 4'
   criticalDamageExpression: string; // e.g., '2d8 + 4'
+  /**
+   * The pools behind the two expressions above.
+   *
+   * The strings are what the sheet and the socket contract display; these are
+   * what gets rolled. Segments keep each die's own damage type and source,
+   * which a flattened `NdX` string cannot - so a mixed-type critical, a rider
+   * with its own die size, or a breakdown that names the trait that granted a
+   * die, all need these rather than the text.
+   */
+  damageSegments: DamageSegment[];
+  criticalDamage: DamageSegment[];
   criticalDamageMaximized: boolean;
+  /** The classification the critical-hit modifiers were matched against. */
+  attackType: "melee_weapon" | "ranged_weapon" | "melee_spell" | "ranged_spell";
   isProficient: boolean;
   context: WeaponAttackContext;
   breakdown: {
@@ -245,16 +260,48 @@ export class CombatEngine {
   }
 
   /**
-   * Applies a critical hit modifier to the base damage dice expression based on the modifier's type and properties.
-   * @param baseDice The base damage dice expression (e.g., "1d8")
+   * Doubles a segment's dice count, which is what a critical hit does to every
+   * damage die the attack was already rolling - the weapon's and any rider's.
+   *
+   * A segment whose `baseDice` will not parse is passed through untouched
+   * rather than dropped: authored data that the dice engine cannot read is
+   * still damage someone meant to deal.
+   * @param segment The damage segment to double
+   * @returns The segment with twice as many dice
+   */
+  private static doubleSegment(segment: DamageSegment): DamageSegment {
+    try {
+      const { count, sides } = DiceEngine.parse(segment.baseDice);
+      return { ...segment, baseDice: `${count * 2}d${sides}` };
+    } catch {
+      return segment;
+    }
+  }
+
+  /**
+   * Applies one critical hit modifier to the critical damage pool.
+   *
+   * `add_base_die` grows the weapon's own die, which is segment zero -
+   * `WeaponSynthesizer` always emits the weapon ahead of any rider, the same
+   * invariant `ActionResolver` leans on when it attaches the flat damage bonus
+   * to `index === 0`.
+   *
+   * `add_specific_die` appends a *new* segment. It is not doubled: it is
+   * already extra damage that only exists because the attack crit. Appending
+   * rather than substituting is the fix for the backlog entry that named this
+   * method - the old code returned `diceToAdd` alone and discarded the weapon.
+   * @param segments The critical damage pool so far
    * @param modifier The critical hit modifier being applied
-   * @returns A new damage dice expression reflecting the applied critical hit modifier
+   * @param classLevels Levels per class, for a `class_level_thresholds` count
+   * @param fallbackDamageType The weapon's damage type, for an untyped rider
+   * @returns A new pool reflecting the applied modifier
    */
   private static applyCriticalHitModifier(
-    baseDice: string,
+    segments: DamageSegment[],
     modifier: CriticalHitModifier,
     classLevels: Record<string, number> = {},
-  ): string {
+    fallbackDamageType?: DamageType,
+  ): DamageSegment[] {
     if (modifier.type === "add_base_die") {
       // `?? 1` rather than trusting the schema default: a modifier can reach
       // here from a static dictionary literal that was never parsed, and an
@@ -265,43 +312,94 @@ export class CombatEngine {
           : (modifier.dieCount ?? 1);
 
       // a threshold rule the character has not reached yet resolves to zero,
-      // which must leave the expression alone rather than reformat it
-      if (extraDice <= 0) return baseDice;
+      // which must leave the pool alone rather than reformat it
+      if (extraDice <= 0) return segments;
 
-      // if the base dice is a valid dice expression, parse it and add that many
-      // more dice of the same type
+      const weaponSegment = segments[0];
+      if (!weaponSegment) return segments;
+
       try {
-        const { count, sides } = DiceEngine.parse(baseDice);
-        return `${count + extraDice}d${sides}`;
+        const { count, sides } = DiceEngine.parse(weaponSegment.baseDice);
+        return [
+          { ...weaponSegment, baseDice: `${count + extraDice}d${sides}` },
+          ...segments.slice(1),
+        ];
       } catch {
-        return baseDice;
+        return segments;
       }
     }
 
     if (modifier.type === "add_specific_die" && modifier.diceToAdd) {
-      // if the modifier specifies a specific die to add, append it to the base dice expression
-      return modifier.diceToAdd;
+      return [
+        ...segments,
+        {
+          sourceName: modifier.sourceName ?? "Critical Hit",
+          baseDice: modifier.diceToAdd,
+          damageType:
+            modifier.damageType ?? fallbackDamageType ?? "bludgeoning",
+          scalingMode: "none",
+          levelScaling: [],
+        },
+      ];
     }
 
-    // if the modifier type is unrecognized, return the base dice expression unchanged
-    return baseDice;
+    // if the modifier type is unrecognized, return the pool unchanged
+    return segments;
   }
 
   /**
-   * Formats the final damage expression by combining the base dice expression, total damage bonus, and damage type into a single string.
-   * @param damageDiceExpression The base damage dice expression (e.g., "1d8")
-   * @param totalDamageBonus The total damage bonus to be added to the base damage
-   * @param damageType The type of damage being dealt (e.g., "slashing", "fire")
-   * @returns A formatted string representing the complete damage expression (e.g., "1d8 + 4 slashing")
+   * Formats a damage pool into the single string the sheet and the socket
+   * contract still speak.
+   *
+   * Segments are grouped by damage type in first-appearance order, and dice of
+   * the same size within a type are merged, so a weapon die and a rider that
+   * happens to match it read as one pool rather than as two terms. The flat
+   * damage bonus attaches to the first group only - the weapon's - matching how
+   * `ActionResolver` applies it to `index === 0` when the dice are actually
+   * rolled.
+   * @param segments The damage pool to render
+   * @param totalDamageBonus The flat bonus to attach to the weapon's group
+   * @returns A formatted expression (e.g., "3d12 +4 slashing + 1d6 fire")
    */
   private static formatDamageExpression(
-    damageDiceExpression: string,
+    segments: DamageSegment[],
     totalDamageBonus: number,
-    damageType: string,
   ): string {
-    return totalDamageBonus === 0
-      ? `${damageDiceExpression} ${damageType}`
-      : `${damageDiceExpression} ${totalDamageBonus > 0 ? "+" : ""}${totalDamageBonus} ${damageType}`;
+    const groups = new Map<string, Map<number, number>>();
+
+    for (const segment of segments) {
+      let diceBySides = groups.get(segment.damageType);
+      if (!diceBySides) {
+        diceBySides = new Map<number, number>();
+        groups.set(segment.damageType, diceBySides);
+      }
+
+      try {
+        const { count, sides } = DiceEngine.parse(segment.baseDice);
+        diceBySides.set(sides, (diceBySides.get(sides) ?? 0) + count);
+      } catch {
+        // an unparseable segment contributes no dice rather than corrupting the
+        // whole expression
+      }
+    }
+
+    const rendered = [...groups.entries()]
+      .map(([damageType, diceBySides], index) => {
+        const dice = [...diceBySides.entries()]
+          .map(([sides, count]) => `${count}d${sides}`)
+          .join(" + ");
+
+        // only the weapon's group carries the flat bonus
+        const bonus =
+          index === 0 && totalDamageBonus !== 0
+            ? ` ${totalDamageBonus > 0 ? "+" : ""}${totalDamageBonus}`
+            : "";
+
+        return `${dice}${bonus} ${damageType}`;
+      })
+      .filter((group) => !group.startsWith(" "));
+
+    return rendered.join(" + ");
   }
 
   /**
@@ -544,11 +642,24 @@ export class CombatEngine {
         ? weapon.versatileDamageDice
         : weapon.damageDice;
 
-    let damageDiceExpression = finalDice ?? weapon.damageDice;
-    let criticalDamageDiceExpression = damageDiceExpression;
+    // the weapon's own dice, and the only segment CombatEngine authors: riders
+    // reach the roll as their own actions, and join the pool downstream
+    const damageSegments: DamageSegment[] = [
+      {
+        sourceName: weapon.name,
+        baseDice: finalDice ?? weapon.damageDice,
+        damageType: weapon.damageType,
+        scalingMode: "none",
+        levelScaling: [],
+      },
+    ];
+
+    // a critical hit rolls every damage die twice before any modifier speaks
+    let criticalDamage = damageSegments.map((segment) =>
+      this.doubleSegment(segment),
+    );
     let criticalDamageMaximized = false;
 
-    // apply critical hit modifiers if this is a critical hit
     for (const modifier of criticalHitModifiers) {
       if (
         !this.matchesCriticalHitModifier(
@@ -560,35 +671,39 @@ export class CombatEngine {
         continue;
       }
 
-      // if the modifier is of type 'maximize_dice', set the criticalDamageMaximized flag to true
       if (modifier.type === "maximize_dice") {
         criticalDamageMaximized = true;
         continue;
       }
 
-      // if the modifier is of type 'add_base_die' or 'add_specific_die', apply it to the critical damage dice expression
-      criticalDamageDiceExpression = this.applyCriticalHitModifier(
-        criticalDamageDiceExpression,
+      criticalDamage = this.applyCriticalHitModifier(
+        criticalDamage,
         modifier,
         classLevels,
+        weapon.damageType,
       );
     }
 
-    // if this is a critical hit and the critical damage is maximized, override the damage dice expression to reflect maximized damage
-    if (isCriticalHit) {
-      damageDiceExpression = criticalDamageDiceExpression;
+    // carried on the segments themselves so a maximized rider can sit beside
+    // ordinary weapon dice; the flag stays on the return value for the sheet
+    if (criticalDamageMaximized) {
+      criticalDamage = criticalDamage.map((segment) => ({
+        ...segment,
+        maximized: true,
+      }));
     }
+
+    // a known critical resolves its damage from the critical pool
+    const resolvedDamage = isCriticalHit ? criticalDamage : damageSegments;
 
     // format the final damage expressions for both normal and critical hits
     const damageExpression = this.formatDamageExpression(
-      damageDiceExpression,
+      resolvedDamage,
       totalDamageBonus,
-      weapon.damageType,
     );
     const criticalDamageExpression = this.formatDamageExpression(
-      criticalDamageDiceExpression,
+      criticalDamage,
       totalDamageBonus,
-      weapon.damageType,
     );
 
     return {
@@ -599,7 +714,13 @@ export class CombatEngine {
       damageBonus: totalDamageBonus,
       damageExpression,
       criticalDamageExpression,
+      damageSegments,
+      criticalDamage,
       criticalDamageMaximized,
+      // the classification the critical-hit modifiers were matched against, so
+      // a caller holding several actions for one weapon - a thrown dagger's
+      // melee and ranged swings - can tell which of them this pool describes
+      attackType: resolvedAttackType,
       isProficient,
       context: resolvedContext,
       breakdown: {

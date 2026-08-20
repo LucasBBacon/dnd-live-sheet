@@ -1408,12 +1408,85 @@ describe("CharacterEngine: Brutal Critical", () => {
   });
 
   it("reaches a 9th-level barbarian as one extra longsword die", () => {
-    expect(critDice(8)).toBe("1d8 +3 slashing");
-    expect(critDice(9)).toBe("2d8 +3 slashing");
+    expect(critDice(8)).toBe("2d8 +3 slashing");
+    expect(critDice(9)).toBe("3d8 +3 slashing");
   });
 
   it("grows to three extra dice by 17th level", () => {
-    expect(critDice(13)).toBe("3d8 +3 slashing");
-    expect(critDice(17)).toBe("4d8 +3 slashing");
+    expect(critDice(13)).toBe("4d8 +3 slashing");
+    expect(critDice(17)).toBe("5d8 +3 slashing");
+  });
+});
+
+/**
+ * Critical damage from the pack to the action the resolver will roll.
+ *
+ * The calculator suite covers the arithmetic; what only this suite can prove is
+ * that the resolved critical pool is stamped onto the synthesized action, so
+ * the dice a trait grants actually reach a roll rather than only the sheet's
+ * display string.
+ */
+describe("CharacterEngine: critical damage reaches the action", () => {
+  const attackEffect = (sheet: ReturnType<typeof buildSheet>, id: string) => {
+    const action = sheet.actions.find((entry) => entry.id === id);
+    if (action?.effect.type !== "attack") {
+      throw new Error(`Expected ${id} to be a synthesized attack action`);
+    }
+    return action.effect;
+  };
+
+  it("stamps the doubled weapon dice on a character with no critical traits", () => {
+    const sheet = buildSheet(halfElfFighter(), [
+      { ...carried("item_weapon_longsword"), slot: "main_hand" },
+    ]);
+
+    expect(
+      attackEffect(sheet, "action_weapon_item_weapon_longsword")
+        .criticalDamage,
+    ).toEqual([
+      expect.objectContaining({ baseDice: "2d8", damageType: "slashing" }),
+    ]);
+  });
+
+  it("stamps Brutal Critical's extra die on a 9th-level barbarian", () => {
+    const sheet = buildSheet(halfElfBarbarian(9), [
+      { ...carried("item_weapon_longsword"), slot: "main_hand" },
+    ]);
+
+    expect(
+      attackEffect(sheet, "action_weapon_item_weapon_longsword")
+        .criticalDamage,
+    ).toEqual([
+      expect.objectContaining({ baseDice: "3d8", damageType: "slashing" }),
+    ]);
+  });
+
+  it("leaves the base damage undoubled", () => {
+    const sheet = buildSheet(halfElfBarbarian(9), [
+      { ...carried("item_weapon_longsword"), slot: "main_hand" },
+    ]);
+
+    expect(
+      attackEffect(sheet, "action_weapon_item_weapon_longsword").damage,
+    ).toEqual([expect.objectContaining({ baseDice: "1d8" })]);
+  });
+
+  it("does not give a thrown weapon's ranged attack its melee critical dice", () => {
+    const sheet = buildSheet(halfElfBarbarian(9), [
+      { ...carried("item_weapon_dagger"), slot: "main_hand" },
+    ]);
+
+    const thrown = sheet.actions.find(
+      (entry) =>
+        entry.id.startsWith("action_weapon_item_weapon_dagger") &&
+        entry.effect.type === "attack" &&
+        entry.effect.attackType === "ranged_weapon",
+    );
+
+    if (thrown && thrown.effect.type === "attack") {
+      // Brutal Critical is melee-only, so the ranged swing must not inherit the
+      // melee analysis's pool
+      expect(thrown.effect.criticalDamage).toBeUndefined();
+    }
   });
 });

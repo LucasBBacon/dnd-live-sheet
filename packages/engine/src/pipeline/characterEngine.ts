@@ -233,8 +233,16 @@ export class CharacterEngine {
       resourceManager,
       options.snapshot,
     );
-    const criticalHitModifiers = activeTraits.flatMap(
-      (trait) => trait.criticalHitModifiers ?? [],
+    // flattening loses which trait each modifier came from, and an appended
+    // critical die wants to name itself in the damage breakdown - so stamp the
+    // trait's name on the way past, the way actionResolver stamps sourceName
+    // onto a blueprint's modifiers. An authored sourceName wins, since only the
+    // pack knows when a modifier should credit something other than its trait.
+    const criticalHitModifiers = activeTraits.flatMap((trait) =>
+      (trait.criticalHitModifiers ?? []).map((modifier) => ({
+        ...modifier,
+        sourceName: modifier.sourceName ?? trait.name,
+      })),
     );
 
     // 2 - extract static math and proficiencies
@@ -461,6 +469,14 @@ export class CharacterEngine {
 
         action.effect.attackBonus = attackAnalysis.attackBonus;
         action.effect.damageBonus = attackAnalysis.damageBonus;
+
+        // the critical pool was matched against one attack classification, and
+        // a thrown weapon yields two actions from this single analysis. Stamping
+        // it on the swing it does not describe would give a melee-only rule -
+        // Brutal Critical, Savage Attacks - to the ranged throw as well.
+        if (action.effect.attackType === attackAnalysis.attackType) {
+          action.effect.criticalDamage = attackAnalysis.criticalDamage;
+        }
       }
 
       actions.push(...synthesizedActions);

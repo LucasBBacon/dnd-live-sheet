@@ -147,6 +147,19 @@ export const AttackEffectSchema = z.object({
   damageBonus: z.number().optional(),
   criticalDamageMaximized: z.boolean().optional(),
   damage: z.array(DamageSegmentSchema),
+  /**
+   * The damage pool to roll when this attack crits, already doubled and with
+   * every matching critical-hit modifier applied.
+   *
+   * Resolved ahead of the roll rather than at roll time because the matching
+   * needs the attack type, gating states and class levels that `CombatEngine`
+   * has and `ActionResolver` does not - the same reason
+   * `criticalDamageMaximized` is a resolved boolean here rather than a rule.
+   *
+   * Optional: absent means fall back to `damage`, which is what every action
+   * authored before critical segments existed wants.
+   */
+  criticalDamage: z.array(DamageSegmentSchema).optional(),
 });
 
 export const SummonEffectSchema = z.object({

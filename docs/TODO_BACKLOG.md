@@ -230,32 +230,37 @@ Two smaller findings, recorded but lower value:
 
 ---
 
-## Open — `add_specific_die` replaces the damage dice instead of adding to them
+## Resolved — `add_specific_die` replaces the damage dice instead of adding to them
 
-Found 2026-08-20 while implementing Brutal Critical.
+Found 2026-08-20 while implementing Brutal Critical. **Fixed 2026-08-20**; see
+[the design](superpowers/specs/2026-08-20-critical-damage-segments-design.md).
 
-[combat.ts:235](packages/engine/src/calculators/combat.ts:235) reads:
+The original entry judged this a representation problem — `1d12 + 1d6` could not
+be written as one `NdX` string, so "the expression type has to grow." It did not
+have to grow: `DamageSegment[]`, the shape spells already use and
+`ActionResolver` already rolls, expresses a mixed-size *and* mixed-type pool with
+per-segment source attribution. `DiceEngine.parse` was left untouched.
 
-```ts
-if (modifier.type === "add_specific_die" && modifier.diceToAdd) {
-  return modifier.diceToAdd;   // discards baseDice entirely
-}
-```
+Investigation found the defect was wider than recorded. Two further gaps, both
+fixed here:
 
-A critical-hit modifier authored as `add_specific_die` with `diceToAdd: "1d6"`
-therefore turns a greataxe's `1d12` critical into `1d6`, rather than into
-`1d12 + 1d6`. The name says "add"; the code substitutes.
+- **Critical dice never reached a roll.** `applyCriticalHitModifier` fed only
+  `damageExpression` / `criticalDamageExpression`, which are display strings.
+  `AttackEffectSchema` carried no critical dice at all, so on a natural 20 the
+  resolver rolled the weapon's base dice once, unmodified. Brutal Critical
+  existed on the sheet and nowhere in the live roll.
+- **Base crit doubling was absent.** A critical hit meant "normal dice plus
+  whatever modifiers add". Damage dice now double, RAW, before any modifier
+  applies; the 8 crit assertions that pinned the old values were updated.
 
-**Unreachable today.** Nothing authors `add_specific_die` — it appears only in
-the enum in `dice.ts` and in the two JSON schema files. The first pack trait to
-use it would hit this.
+`CombatEngine` now resolves a `criticalDamage` pool ahead of the roll and
+`CharacterEngine` stamps it on the synthesized action, guarded so a thrown
+weapon's ranged swing does not inherit a melee-only rule's dice.
 
-Fixing it needs a decision this trait did not require: what an appended die of a
-*different* size should produce. `criticalDamageDiceExpression` is a single
-`NdX` string that `DiceEngine.parse` round-trips, so `1d12 + 1d6` is not
-currently representable — the expression type has to grow before the behaviour
-can be corrected. Worth doing alongside any rule that mixes die sizes (Divine
-Smite, Hex, elemental riders), not before.
+**One load-bearing assumption**, documented rather than enforced: `add_base_die`
+grows segment zero, which `WeaponSynthesizer` guarantees is the weapon. If pack
+content ever puts a rider ahead of the weapon, that inflates the wrong die and
+`DamageSegment` needs a role discriminator.
 
 ---
 
