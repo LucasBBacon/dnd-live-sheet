@@ -1104,3 +1104,73 @@ describe("CombatEngine.calculateWeaponAttack - roll state", () => {
     expect(result.rollState).toBe("normal");
   });
 });
+
+/**
+ * Brutal Critical's shape: one extra die at 9th, two at 13th, three at 17th.
+ *
+ * The count scales rather than the trait being granted three times - the pack
+ * re-grants trait_brutal_critical at each threshold, which dedupes to one
+ * instance, exactly as trait_rage does while carrying its real progression in
+ * scalingThresholds.
+ */
+describe("CombatEngine.calculateWeaponAttack - scaled critical dice", () => {
+  const brutalCritical = () =>
+    ({
+      type: "add_base_die",
+      scalingFactor: "class_level_thresholds",
+      scalingClassId: "class_barbarian",
+      scalingThresholds: [
+        { minimumLevel: 9, value: 1 },
+        { minimumLevel: 13, value: 2 },
+        { minimumLevel: 17, value: 3 },
+      ],
+      requiredAttackTypes: ["melee_weapon"],
+    }) as any;
+
+  const critAt = (classLevel: number, modifiers: unknown[]) =>
+    CombatEngine.calculateWeaponAttack(
+      makeWeapon({ category: "martial_melee" }),
+      makeScores(),
+      0,
+      [],
+      [],
+      [],
+      modifiers as any,
+      true,
+      "melee_weapon",
+      undefined,
+      { class_barbarian: classLevel },
+    ).criticalDamageExpression;
+
+  it("adds nothing below the first threshold", () => {
+    expect(critAt(8, [brutalCritical()])).toBe("1d6 piercing");
+  });
+
+  it("adds one die at the first threshold", () => {
+    expect(critAt(9, [brutalCritical()])).toBe("2d6 piercing");
+  });
+
+  it("adds two dice at the second threshold", () => {
+    expect(critAt(13, [brutalCritical()])).toBe("3d6 piercing");
+  });
+
+  it("adds three dice at the third threshold", () => {
+    expect(critAt(17, [brutalCritical()])).toBe("4d6 piercing");
+  });
+
+  it("stacks with an unscaled one-die modifier", () => {
+    // a half-orc barbarian 17: Savage Attacks' die plus Brutal Critical's three
+    const savageAttacks = {
+      type: "add_base_die",
+      requiredAttackTypes: ["melee_weapon"],
+    };
+
+    expect(critAt(17, [savageAttacks, brutalCritical()])).toBe("5d6 piercing");
+  });
+
+  it("honours an explicit dieCount with no scaling at all", () => {
+    const flatPair = { type: "add_base_die", dieCount: 2 };
+
+    expect(critAt(1, [flatPair])).toBe("3d6 piercing");
+  });
+});

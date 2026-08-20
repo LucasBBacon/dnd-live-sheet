@@ -642,8 +642,14 @@
             "id": "trait_brutal_critical",
             "name": "Brutal Critical",
             "lore": {
-                "shortDescription": "placeholder",
-                "fullText": "placeholder"
+                "shortDescription": "Roll one additional weapon damage die on a critical hit with a melee attack, rising to two dice at 13th level and three at 17th.",
+                "fullText": "Beginning at 9th level, you can roll one additional weapon damage die when determining the extra damage for a critical hit with a melee attack. This increases to two additional dice at 13th level and three additional dice at 17th level."
+            },
+            "isStartingProficiency": false,
+            "implementation": {
+                "mode": "engine",
+                "summary": "One critical-hit modifier whose die count scales on class_level_thresholds, rather than three traits granted at 9, 13 and 17. The progression re-grants trait_brutal_critical at each threshold, which dedupes to a single instance - the same convention trait_rage uses while carrying its real progression in scalingThresholds. Stacks with Savage Attacks, which the engine gets for free by applying each matching modifier in turn.",
+                "blockedBy": []
             },
             "modifiers": {
                 "fixed": [],
@@ -652,7 +658,32 @@
             "resources": [],
             "triggers": [],
             "diceRules": [],
-            "criticalHitModifiers": [],
+            "criticalHitModifiers": [
+                {
+                    "type": "add_base_die",
+                    "scalingFactor": "class_level_thresholds",
+                    "scalingClassId": "class_barbarian",
+                    "scalingThresholds": [
+                        {
+                            "minimumLevel": 9,
+                            "value": 1
+                        },
+                        {
+                            "minimumLevel": 13,
+                            "value": 2
+                        },
+                        {
+                            "minimumLevel": 17,
+                            "value": 3
+                        }
+                    ],
+                    "requiredAttackTypes": [
+                        "melee_weapon"
+                    ],
+                    "requiredStates": [],
+                    "forbiddenStates": []
+                }
+            ],
             "actions": []
         },
         {

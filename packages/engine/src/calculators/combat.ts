@@ -18,6 +18,35 @@ import { DiceEngine } from "../utils/diceParser.js";
  */
 export type AttackRollState = "advantage" | "disadvantage" | "normal";
 
+/**
+ * The value a `class_level_thresholds` block resolves to at a given level.
+ *
+ * Shared by the damage-bonus path and the critical-dice path, which want the
+ * same answer from the same authored shape; two copies in one file would drift.
+ * Resolves to zero below the first threshold - a rule that has not come online
+ * yet contributes nothing rather than its lowest tier.
+ *
+ * (`DerivedStatEngine.resolveScaledValue` still carries its own copy of this
+ * reduce; unifying the three is a separate tidy-up.)
+ */
+interface ClassLevelScaling {
+  scalingClassId?: string | undefined;
+  scalingThresholds?: RuntimeModifier["scalingThresholds"];
+}
+
+const resolveClassLevelThresholds = (
+  scaling: ClassLevelScaling,
+  classLevels: Record<string, number>,
+): number => {
+  const classLevel = classLevels[scaling.scalingClassId ?? ""] ?? 0;
+
+  return (scaling.scalingThresholds ?? []).reduce(
+    (resolved, threshold) =>
+      classLevel >= threshold.minimumLevel ? threshold.value : resolved,
+    0,
+  );
+};
+
 export interface DerivedAttack {
   weaponId: string;
   name: string;
@@ -204,7 +233,10 @@ export class CombatEngine {
       return false; // forbidden states present
     }
 
-    if (modifier.requiredAttackTypes.length === 0) {
+    // optional-chained like requiredStates and forbiddenStates above: the
+    // schema defaults this to [], but a dictionary literal that was never
+    // parsed can still reach here without it
+    if (!modifier.requiredAttackTypes?.length) {
       return true; // no specific attack type required
     }
 
@@ -221,12 +253,26 @@ export class CombatEngine {
   private static applyCriticalHitModifier(
     baseDice: string,
     modifier: CriticalHitModifier,
+    classLevels: Record<string, number> = {},
   ): string {
     if (modifier.type === "add_base_die") {
-      // if the base dice is a valid dice expression, parse it and add one more die of the same type
+      // `?? 1` rather than trusting the schema default: a modifier can reach
+      // here from a static dictionary literal that was never parsed, and an
+      // undefined count would put NaN into the damage expression
+      const extraDice =
+        modifier.scalingFactor === "class_level_thresholds"
+          ? resolveClassLevelThresholds(modifier, classLevels)
+          : (modifier.dieCount ?? 1);
+
+      // a threshold rule the character has not reached yet resolves to zero,
+      // which must leave the expression alone rather than reformat it
+      if (extraDice <= 0) return baseDice;
+
+      // if the base dice is a valid dice expression, parse it and add that many
+      // more dice of the same type
       try {
         const { count, sides } = DiceEngine.parse(baseDice);
-        return `${count + 1}d${sides}`;
+        return `${count + extraDice}d${sides}`;
       } catch {
         return baseDice;
       }
@@ -316,12 +362,7 @@ export class CombatEngine {
       modifier.scalingFactor === "class_level_thresholds" &&
       modifier.scalingClassId
     ) {
-      const classLevel = classLevels[modifier.scalingClassId] ?? 0;
-      return (modifier.scalingThresholds ?? []).reduce(
-        (resolved, threshold) =>
-          classLevel >= threshold.minimumLevel ? threshold.value : resolved,
-        0,
-      );
+      return resolveClassLevelThresholds(modifier, classLevels);
     }
 
     return modifier.value; // otherwise, return the static value defined in the modifier
@@ -529,6 +570,7 @@ export class CombatEngine {
       criticalDamageDiceExpression = this.applyCriticalHitModifier(
         criticalDamageDiceExpression,
         modifier,
+        classLevels,
       );
     }
 

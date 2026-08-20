@@ -19,6 +19,8 @@ import { ProficiencyExtractor } from "../proficiencyExtractor.js";
 import { EffectManager } from "../../calculators/effects.js";
 import { ResourceManager } from "../../calculators/resources.js";
 import { FERAL_INSTINCT_STATE } from "../../calculators/surprise.js";
+import { CombatEngine } from "../../calculators/combat.js";
+import { resolveWeaponDefinition } from "../../rules/ruleLookup.js";
 import { corePackSnapshot } from "./corePackFixture.js";
 
 /**
@@ -1357,5 +1359,61 @@ describe("CharacterEngine.buildLiveSheet: Feral Instinct", () => {
     expect(
       sheet.initiative.breakdown.some((entry) => entry.name === "Advantage"),
     ).toBe(true);
+  });
+});
+
+/**
+ * Brutal Critical, from the pack to the dice.
+ *
+ * The arithmetic is covered next door in the calculator suite; what only this
+ * suite can prove is that the authored trait reaches a character and that the
+ * calculator agrees with what was authored.
+ */
+describe("CharacterEngine: Brutal Critical", () => {
+  const critModifiers = (level: number) =>
+    CharacterBootstrapper.compileActiveTraits(
+      halfElfBarbarian(level),
+      corePackSnapshot(),
+    ).flatMap((trait) => trait.criticalHitModifiers ?? []);
+
+  const critDice = (level: number) =>
+    CombatEngine.calculateWeaponAttack(
+      resolveWeaponDefinition("item_weapon_longsword")!,
+      { STR: 16, DEX: 10, CON: 14, INT: 10, WIS: 10, CHA: 10 },
+      3,
+      [],
+      [],
+      [],
+      critModifiers(level),
+      true,
+      "melee_weapon",
+      undefined,
+      { class_barbarian: level },
+    ).criticalDamageExpression;
+
+  it("authors one melee-only critical die that scales at 9, 13 and 17", () => {
+    expect(critModifiers(9)).toEqual([
+      expect.objectContaining({
+        type: "add_base_die",
+        requiredAttackTypes: ["melee_weapon"],
+        scalingFactor: "class_level_thresholds",
+        scalingClassId: "class_barbarian",
+        scalingThresholds: [
+          { minimumLevel: 9, value: 1 },
+          { minimumLevel: 13, value: 2 },
+          { minimumLevel: 17, value: 3 },
+        ],
+      }),
+    ]);
+  });
+
+  it("reaches a 9th-level barbarian as one extra longsword die", () => {
+    expect(critDice(8)).toBe("1d8 +3 slashing");
+    expect(critDice(9)).toBe("2d8 +3 slashing");
+  });
+
+  it("grows to three extra dice by 17th level", () => {
+    expect(critDice(13)).toBe("3d8 +3 slashing");
+    expect(critDice(17)).toBe("4d8 +3 slashing");
   });
 });

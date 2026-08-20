@@ -230,6 +230,35 @@ Two smaller findings, recorded but lower value:
 
 ---
 
+## Open — `add_specific_die` replaces the damage dice instead of adding to them
+
+Found 2026-08-20 while implementing Brutal Critical.
+
+[combat.ts:235](packages/engine/src/calculators/combat.ts:235) reads:
+
+```ts
+if (modifier.type === "add_specific_die" && modifier.diceToAdd) {
+  return modifier.diceToAdd;   // discards baseDice entirely
+}
+```
+
+A critical-hit modifier authored as `add_specific_die` with `diceToAdd: "1d6"`
+therefore turns a greataxe's `1d12` critical into `1d6`, rather than into
+`1d12 + 1d6`. The name says "add"; the code substitutes.
+
+**Unreachable today.** Nothing authors `add_specific_die` — it appears only in
+the enum in `dice.ts` and in the two JSON schema files. The first pack trait to
+use it would hit this.
+
+Fixing it needs a decision this trait did not require: what an appended die of a
+*different* size should produce. `criticalDamageDiceExpression` is a single
+`NdX` string that `DiceEngine.parse` round-trips, so `1d12 + 1d6` is not
+currently representable — the expression type has to grow before the behaviour
+can be corrected. Worth doing alongside any rule that mixes die sizes (Divine
+Smite, Hex, elemental riders), not before.
+
+---
+
 ## Resolved — socket gateway test coverage
 
 Done on 2026-08-19. `apps/server/src/gateway/socket.ts` went from no tests at
