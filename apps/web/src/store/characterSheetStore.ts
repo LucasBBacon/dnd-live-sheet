@@ -39,6 +39,7 @@ import {
   // TraitDefinition moved to the shared schemas when traits were extracted
   type TraitDefinition,
   type TurnResolvedPayload,
+  type SurpriseResolvedPayload,
 } from "@project/shared";
 import { create } from "zustand";
 import { socketService } from "../services/socketService";
@@ -596,6 +597,7 @@ export interface CharacterSheetState {
   beginCombat: () => void;
   endCombat: () => void;
   setSurprised: (surprised: boolean) => void;
+  syncRemoteSurprise: (payload: SurpriseResolvedPayload) => void;
   triggerRest: (restType: "short" | "long") => void;
   dispatchAuthoredEvent: (eventName: EngineEvent) => void;
   getCharacterActions: () => ActionGrant[];
@@ -979,20 +981,25 @@ export const useCharacterSheetStore = create<CharacterSheetState>(
     },
 
     /**
-     * Declares whether the character was surprised as combat began.
+     * Asks the server to record whether the character was surprised.
      *
-     * Local rather than emitted, matching beginCombat and endCombat: surprise
-     * costs the action and the reaction but the sheet only reports that, so
-     * there is no authoritative outcome for the server to arbitrate. It clears
-     * itself when the player's turn ends.
+     * Emitted rather than set locally, unlike beginCombat and endCombat: the
+     * server owns turn state, and two clients on one character have to agree
+     * about it. Nothing changes here until the broadcast comes back, for the
+     * same reason an action's outcome is not guessed at locally.
      */
     setSurprised: (surprised: boolean) => {
-      const state = get();
-      const runtimeCombat = ensureCombatManager(state);
+      socketService.emitSurpriseDeclared({
+        characterId: get().id,
+        surprised,
+        timestamp: Date.now(),
+      });
+    },
 
+    syncRemoteSurprise: (payload) => {
       set({
-        runtimeCombat,
-        combatContext: runtimeCombat.setSurprised(surprised),
+        runtimeCombat: createCombatManager(payload.combatContext),
+        combatContext: payload.combatContext,
       });
     },
 
@@ -1242,19 +1249,6 @@ export const useCharacterSheetStore = create<CharacterSheetState>(
         requestId: crypto.randomUUID(),
         timestamp: Date.now(),
       });
-
-      // surprise lasts exactly "until that turn ends", and the server never
-      // learns about it, so retiring it is the client's job
-      const state = get();
-
-      if (state.combatContext.surprised) {
-        const runtimeCombat = ensureCombatManager(state);
-
-        set({
-          runtimeCombat,
-          combatContext: runtimeCombat.setSurprised(false),
-        });
-      }
     },
 
     syncRemoteTurnResolution: (payload) => {
@@ -1288,18 +1282,8 @@ export const useCharacterSheetStore = create<CharacterSheetState>(
             : previous.latestRollResults,
         runtimeEffects,
         runtimeResources,
-        // surprise belongs with conditions above, not with the economy: the
-        // player declares it, the server is never told, so the server's copy
-        // is always false and adopting it would wipe the declaration on the
-        // first turn the player takes
-        runtimeCombat: createCombatManager({
-          ...payload.combatContext,
-          surprised: previous.combatContext.surprised,
-        }),
-        combatContext: {
-          ...payload.combatContext,
-          surprised: previous.combatContext.surprised,
-        },
+        runtimeCombat: createCombatManager(payload.combatContext),
+        combatContext: payload.combatContext,
       }));
     },
 

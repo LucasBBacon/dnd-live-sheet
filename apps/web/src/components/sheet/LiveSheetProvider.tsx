@@ -41,6 +41,9 @@ export const LiveSheetProvider = ({
   const syncRemoteTurnResolution = useCharacterSheetStore(
     (state) => state.syncRemoteTurnResolution,
   );
+  const syncRemoteSurprise = useCharacterSheetStore(
+    (state) => state.syncRemoteSurprise,
+  );
 
   useEffect(() => {
     // 1 - establish connection and join room
@@ -80,6 +83,10 @@ export const LiveSheetProvider = ({
       syncRemoteTurnResolution(broadcast);
     });
 
+    socketService.subscribeToSurpriseResolved((broadcast) => {
+      syncRemoteSurprise(broadcast);
+    });
+
     socketService.subscribeToActionErrors((payload) => {
       if (
         payload.event === "character:item_equipped" ||
@@ -107,6 +114,7 @@ export const LiveSheetProvider = ({
     recordRollResult,
     syncRemoteActionExecution,
     syncRemoteTurnResolution,
+    syncRemoteSurprise,
   ]);
 
   return <>{children}</>;

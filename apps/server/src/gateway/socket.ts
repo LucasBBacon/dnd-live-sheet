@@ -23,6 +23,8 @@ import {
   type RuntimeEffectSyncPayload,
   type RollResultsBroadcastPayload,
   type TurnIntentPayload,
+  type SurpriseDeclaredPayload,
+  type SurpriseResolvedPayload,
 } from "@project/shared";
 import { Server, Socket } from "socket.io";
 import { and, eq, not, sql } from "drizzle-orm";
@@ -657,6 +659,53 @@ export function initializeWebSocketGateway(httpServer: any) {
 
     socket.on(SOCKET_EVENTS.TURN_ENDED, (payload: TurnIntentPayload) =>
       handleTurnIntent(payload, "ended", SOCKET_EVENTS.TURN_ENDED),
+    );
+
+    /**
+     * Records whether the character was surprised as combat began.
+     *
+     * The server can never derive this - the DM settles surprise by comparing
+     * Stealth against passive Perception across the whole table - but it has to
+     * own it, or two clients on the same character disagree. It expires on the
+     * same runtime the turn handler mutates, so TurnLifecycle retires it with
+     * no help from here.
+     */
+    socket.on(
+      SOCKET_EVENTS.SURPRISE_DECLARED,
+      async (payload: SurpriseDeclaredPayload) => {
+        try {
+          pruneAuthoritativeRuntime();
+
+          const campaignId = await ensureCharacterInSocketCampaign(
+            socket,
+            payload.characterId,
+          );
+
+          const runtime = await getAuthoritativeRuntimeContext(
+            payload.characterId,
+          );
+          runtime.lastTouchedAt = Date.now();
+
+          const resolved: SurpriseResolvedPayload = {
+            characterId: payload.characterId,
+            combatContext: runtime.combatContext.setSurprised(
+              payload.surprised,
+            ),
+            timestamp: Date.now(),
+          };
+
+          io.to(`campaign_${campaignId}`).emit(
+            SOCKET_EVENTS.SURPRISE_RESOLVED,
+            { actorId: socket.id, data: resolved },
+          );
+        } catch (error) {
+          console.error("Failed to record surprise:", error);
+          socket.emit("error:rollback", {
+            event: SOCKET_EVENTS.SURPRISE_DECLARED,
+            payload,
+          });
+        }
+      },
     );
 
     // #endregion

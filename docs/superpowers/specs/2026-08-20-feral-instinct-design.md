@@ -1,7 +1,7 @@
 # Feral Instinct, and Modelling Surprise
 
 Date: 2026-08-20
-Status: Implemented (both slices)
+Status: Implemented (all three slices)
 Owner: Claude pair session
 
 ## Goal
@@ -120,19 +120,53 @@ Two failing tests pin both halves.
 | `@project/shared` | 187 passed | 187 passed |
 | `@project/engine` | 690 passed | **702 passed** |
 | `@project/database` | 89 passed | 89 passed |
-| `@project/server` | 1 failed / 302 | 1 failed / 302 |
-| `@project/web` | 3 failed / 264 | 3 failed / **277** |
+| `@project/server` | 1 failed / 302 | 1 failed / **307** |
+| `@project/web` | 3 failed / 264 | 3 failed / **278** |
 
 Typecheck passes across all five packages, hygiene passes, eslint is clean. The
 four remaining failures are the pre-existing ones awaiting the server and web
 pack wiring; none are new.
 
+## Slice 3: Making Surprise Authoritative
+
+Landed immediately after, on request. Most of it already existed:
+
+- **The read path was free.** `handleTurnIntent` already broadcasts to the whole
+  campaign room, and `combatContext` rides along in `TurnResolvedPayload`.
+- **The expiry was free.** `TurnLifecycle.endPlayerTurn` calls
+  `combatContext.endTurn({ kind: "player" })`, which retires surprise on
+  whichever manager it is given - the server's included.
+
+Only the write path was missing: `SURPRISE_DECLARED` (client to server) and
+`SURPRISE_RESOLVED` (server to room), mirroring the `TURN_STARTED` /
+`TURN_RESOLVED` split. The resolution carries the whole context rather than the
+boolean, for the same reason the turn resolution does.
+
+No `requestId` on the declaration, unlike the turn and action intents: a
+declaration is idempotent, so a replay cache would have nothing to protect.
+
+**The slice 2 workarounds were deleted, not extended.** Preserving
+`previous.combatContext.surprised` through `syncRemoteTurnResolution`, and
+clearing the flag locally in `endTurn`, both existed only because the server did
+not know about surprise. Left in place they would have fought the server -
+holding a stale local `true` over an authoritative `false`. Making a thing
+authoritative is mostly subtraction.
+
+Two exact-set guards caught the change and forced a deliberate acknowledgement,
+which is what they are for: the `CombatContextSchema` default-shape assertion,
+and `socket.bindings.test.ts`, which pins the exact list of bound handlers.
+
 ## Follow-Ups
 
-- **Surprise is client-only.** If a second client ever attaches to the same
-  character, they will not see the declaration. Making it authoritative means a
-  socket event and a gateway handler - deferred rather than smuggled into this
-  slice, and worth folding into the gateway pass.
+- **No combat context on room join.** A client attaching mid-combat sees
+  `surprised: false` until the next broadcast. The same is true of the round
+  number and the whole economy, so this is a pre-existing uniform gap rather
+  than one surprise introduced - it wants a join-time state sync, not a
+  surprise-specific fix.
+- **The provider subscription is untested.** `subscribeToSurpriseResolved` is
+  wired in `LiveSheetProvider` beside eight identical siblings, none of which
+  have a test either; there is no provider harness. Worth building one pass,
+  for all nine rather than for this one.
 - **Movement is still unmodelled**, so the third of surprise's three
   restrictions stays the table's business.
 - **`beginCombat` and `endCombat` have no UI caller.** Combat starts implicitly

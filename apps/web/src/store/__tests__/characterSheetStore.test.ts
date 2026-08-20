@@ -1035,6 +1035,13 @@ describe("useCharacterSheetStore standard actions", () => {
   });
 });
 
+
+/**
+ * Surprise is server-authoritative, like effects, resources and the economy:
+ * the player declares it, the server records it, and every client on the
+ * character mirrors what comes back. The sheet never sets it locally, because
+ * a local guess would be overwritten by the next broadcast anyway.
+ */
 describe("useCharacterSheetStore surprise", () => {
   beforeEach(() => {
     vi.restoreAllMocks();
@@ -1042,47 +1049,6 @@ describe("useCharacterSheetStore surprise", () => {
     useCharacterSheetStore.setState({
       ...useCharacterSheetStore.getState(),
       id: "char_surprise",
-      combatContext: CombatContextSchema.parse({}),
-      runtimeCombat: null,
-    });
-
-    vi.spyOn(socketService, "emitActionIntent").mockImplementation(() => {});
-  });
-
-  it("starts a character unsurprised", () => {
-    expect(useCharacterSheetStore.getState().combatContext.surprised).toBe(
-      false,
-    );
-  });
-
-  it("records that the character was surprised", () => {
-    useCharacterSheetStore.getState().setSurprised(true);
-
-    expect(useCharacterSheetStore.getState().combatContext.surprised).toBe(true);
-  });
-
-  it("takes it back when the player corrects themselves", () => {
-    useCharacterSheetStore.getState().setSurprised(true);
-    useCharacterSheetStore.getState().setSurprised(false);
-
-    expect(useCharacterSheetStore.getState().combatContext.surprised).toBe(
-      false,
-    );
-  });
-});
-
-/**
- * Surprise is the player's declaration, like a condition: the DM settles it at
- * the table and the server has no opinion on it. A server sync must therefore
- * not overwrite it, and the player's own turn ending is what retires it.
- */
-describe("useCharacterSheetStore surprise across a server sync", () => {
-  beforeEach(() => {
-    vi.restoreAllMocks();
-
-    useCharacterSheetStore.setState({
-      ...useCharacterSheetStore.getState(),
-      id: "char_surprise_sync",
       baseStates: [],
       activeConditions: [],
       combatContext: CombatContextSchema.parse({}),
@@ -1094,32 +1060,81 @@ describe("useCharacterSheetStore surprise across a server sync", () => {
     vi.spyOn(socketService, "emitTurnIntent").mockImplementation(() => {});
   });
 
-  const syncFromServer = () =>
+  it("starts a character unsurprised", () => {
+    expect(useCharacterSheetStore.getState().combatContext.surprised).toBe(
+      false,
+    );
+  });
+
+  it("asks the server to record the declaration", () => {
+    const emit = vi
+      .spyOn(socketService, "emitSurpriseDeclared")
+      .mockImplementation(() => {});
+
+    useCharacterSheetStore.getState().setSurprised(true);
+
+    expect(emit).toHaveBeenCalledWith(
+      expect.objectContaining({ characterId: "char_surprise", surprised: true }),
+    );
+  });
+
+  it("does not set the flag locally, since the server owns it", () => {
+    vi.spyOn(socketService, "emitSurpriseDeclared").mockImplementation(() => {});
+
+    useCharacterSheetStore.getState().setSurprised(true);
+
+    expect(useCharacterSheetStore.getState().combatContext.surprised).toBe(
+      false,
+    );
+  });
+
+  it("adopts the declaration the server broadcasts", () => {
+    useCharacterSheetStore.getState().syncRemoteSurprise({
+      characterId: "char_surprise",
+      combatContext: CombatContextSchema.parse({ surprised: true }),
+      timestamp: Date.now(),
+    });
+
+    expect(useCharacterSheetStore.getState().combatContext.surprised).toBe(true);
+  });
+
+  it("adopts a broadcast that takes the declaration back", () => {
+    useCharacterSheetStore.getState().syncRemoteSurprise({
+      characterId: "char_surprise",
+      combatContext: CombatContextSchema.parse({ surprised: true }),
+      timestamp: Date.now(),
+    });
+    useCharacterSheetStore.getState().syncRemoteSurprise({
+      characterId: "char_surprise",
+      combatContext: CombatContextSchema.parse({ surprised: false }),
+      timestamp: Date.now(),
+    });
+
+    expect(useCharacterSheetStore.getState().combatContext.surprised).toBe(
+      false,
+    );
+  });
+
+  it("takes the server's turn state wholesale, surprise included", () => {
+    useCharacterSheetStore.getState().syncRemoteSurprise({
+      characterId: "char_surprise",
+      combatContext: CombatContextSchema.parse({ surprised: true }),
+      timestamp: Date.now(),
+    });
+
+    // the server retires surprise when the player's turn ends, so the sync
+    // must not preserve the local copy over it
     useCharacterSheetStore.getState().syncRemoteTurnResolution({
-      characterId: "char_surprise_sync",
+      characterId: "char_surprise",
       requestId: "req_1",
       rollResults: [],
       activeStates: [],
       resources: [],
       effects: [],
       actors: [],
-      // the server never learns about surprise, so its copy is always false
       combatContext: CombatContextSchema.parse({}),
       timestamp: Date.now(),
     } as never);
-
-  it("keeps the declaration when the server reports a turn", () => {
-    useCharacterSheetStore.getState().setSurprised(true);
-
-    syncFromServer();
-
-    expect(useCharacterSheetStore.getState().combatContext.surprised).toBe(true);
-  });
-
-  it("retires it once the player ends their own turn", () => {
-    useCharacterSheetStore.getState().setSurprised(true);
-
-    useCharacterSheetStore.getState().endTurn();
 
     expect(useCharacterSheetStore.getState().combatContext.surprised).toBe(
       false,

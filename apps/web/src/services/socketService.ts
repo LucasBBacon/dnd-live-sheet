@@ -13,6 +13,8 @@ import {
   type RollResultsBroadcastPayload,
   type TurnIntentPayload,
   type TurnResolvedPayload,
+  type SurpriseDeclaredPayload,
+  type SurpriseResolvedPayload,
   unwrapServerBroadcastPayload,
 } from "@project/shared";
 import { io, type Socket } from "socket.io-client";
@@ -160,6 +162,21 @@ class SocketManager {
     this.socket?.on(
       SOCKET_EVENTS.TURN_RESOLVED,
       (payload: MaybeServerBroadcastPayload<TurnResolvedPayload>) => {
+        callback(unwrapServerBroadcastPayload(payload));
+      },
+    );
+  }
+
+  public emitSurpriseDeclared(payload: SurpriseDeclaredPayload) {
+    this.socket?.emit(SOCKET_EVENTS.SURPRISE_DECLARED, payload);
+  }
+
+  public subscribeToSurpriseResolved(
+    callback: (payload: SurpriseResolvedPayload) => void,
+  ) {
+    this.socket?.on(
+      SOCKET_EVENTS.SURPRISE_RESOLVED,
+      (payload: MaybeServerBroadcastPayload<SurpriseResolvedPayload>) => {
         callback(unwrapServerBroadcastPayload(payload));
       },
     );

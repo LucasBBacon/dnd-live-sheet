@@ -18,6 +18,8 @@ export const SOCKET_EVENTS = {
   TURN_STARTED: "character:turn_started",
   TURN_ENDED: "character:turn_ended",
   TURN_RESOLVED: "character:turn_resolved",
+  SURPRISE_DECLARED: "character:surprise_declared",
+  SURPRISE_RESOLVED: "character:surprise_resolved",
 } as const;
 
 // #endregion
@@ -201,6 +203,31 @@ export interface TurnResolvedPayload {
   resources: RuntimeResourceSyncPayload[];
   effects: RuntimeEffectSyncPayload[];
   actors: import("../schemas/actors.js").ActorInstance[];
+  combatContext: import("../schemas/combatContext.js").CombatContext;
+  timestamp: number;
+}
+
+/**
+ * Tells the server whether the character was surprised as combat began.
+ *
+ * No requestId, unlike the turn and action intents: a declaration is
+ * idempotent, so setting it twice is indistinguishable from setting it once
+ * and there is nothing for a replay cache to protect.
+ */
+export interface SurpriseDeclaredPayload {
+  characterId: string;
+  surprised: boolean;
+  timestamp: number;
+}
+
+/** The turn state after the server recorded a surprise declaration. */
+export interface SurpriseResolvedPayload {
+  characterId: string;
+  /**
+   * The whole context rather than the boolean, for the same reason
+   * TurnResolvedPayload carries it: the sheet mirrors the server's turn state
+   * rather than maintaining its own copy of it.
+   */
   combatContext: import("../schemas/combatContext.js").CombatContext;
   timestamp: number;
 }
