@@ -133,6 +133,40 @@ write("equipment/core.json", {
   equipment: Object.values(EQUIPMENT_DICTIONARY).map(withLore),
 });
 
+/**
+ * The gear legacy items.json carries that EQUIPMENT_DICTIONARY never did.
+ *
+ * 57 of items.json's 93 rows - torches, rations, bedrolls, the martial weapons
+ * and the mid-tier armours. They are real authored rows rather than
+ * placeholders, so they port; they simply live in the JSON the dictionary was
+ * never extended to cover.
+ *
+ * A row typed "weapon" here carries no `weapon` block, so it equips and
+ * weighs but rolls no attack. That is the same mechanical gap the trait stubs
+ * carry, and CoreEquipmentSchema has nowhere to mark it - but the item
+ * existing is what keeps every character's inventory resolvable, and
+ * `owns: ["equipment"]` honest.
+ */
+const dictionaryItemIds = new Set(Object.keys(EQUIPMENT_DICTIONARY));
+const legacyItems: Array<Record<string, unknown>> = JSON.parse(
+  readFileSync(path.join(process.cwd(), "data/items.json"), "utf8"),
+);
+const portedLegacyItems = legacyItems
+  .filter((item) => !dictionaryItemIds.has(item.id as string))
+  .map((item) => ({
+    id: item.id,
+    name: item.name,
+    type: item.type,
+    weight: item.weight ?? 0,
+    requiresAttunement: false,
+    categoryTags: [],
+    lore: item.lore ?? { shortDescription: item.name },
+    isBundle: false,
+    bundleContents: [],
+  }));
+
+write("equipment/legacy.json", { equipment: portedLegacyItems });
+
 write("feats/core.json", {
   feats: Object.values(FEAT_DICTIONARY).map(withLore),
 });

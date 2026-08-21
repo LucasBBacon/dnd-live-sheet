@@ -41,6 +41,7 @@
         "traits/ported.json",
         "traits/unimplemented.json",
         "equipment/core.json",
+        "equipment/legacy.json",
         "feats/core.json",
         "feats/unimplemented.json",
         "backgrounds/core.json",
