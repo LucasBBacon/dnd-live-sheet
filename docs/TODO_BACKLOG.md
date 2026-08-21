@@ -116,8 +116,11 @@ Neither is a small fix — they change what a `RuntimeModifier` can address.
 
 | # | Item | Location | Missing concept |
 | --- | --- | --- | --- |
-| 23 | Fighting Style: Protection | [fightingStyleDictionary.ts:114](packages/engine/src/rules/traits/fightingStyleDictionary.ts:114) | Reactions targeting *another creature's* roll |
-| 24 | ✅ Resolved | [fightingStyleDictionary.ts:128](packages/engine/src/rules/traits/fightingStyleDictionary.ts:128) | Implemented via hand-aware damage modifiers and a governing-stat modifier source |
+| 23 | Fighting Style: Protection | `trait_fs_protection` in [traits/ported.json](packages/database/data/packs/core_2014_pack/traits/ported.json) | Reactions targeting *another creature's* roll |
+| 24 | ✅ Resolved | `trait_fs_dueling` in the same segment | Implemented via hand-aware damage modifiers and a governing-stat modifier source |
+
+Both locations moved: `fightingStyleDictionary.ts` was deleted in the pack
+cutover (P4 below) and the fighting styles are pack content now.
 
 ---
 
@@ -326,3 +329,87 @@ Item numbers are stable ids — gaps below are intentional, not renumbered.
   (`hydrateCharacterSheet` → `initialize` → `state.classLevels`); the hook was the
   only consumer still carrying a `|| { class_fighter: totalLevel }` fallback. Removed,
   so it now reads the store directly like every other consumer.
+
+---
+
+## P4 — Core rule pack cutover fallout (opened 2026-08-21)
+
+The pack is now the only source of rules content: the static dictionaries and
+`packages/database/data/*.json` are deleted, and reference data reaches the
+database only through `pnpm --filter @project/database db:import-pack`. See
+`docs/superpowers/plans/2026-08-20-core-pack-load-path.md`.
+
+The workspace is green (1597 tests, 0 failures; typecheck and lint clean), so
+nothing below is breaking a build. These are content gaps and loose ends the
+cutover either created or made visible.
+
+### 4a. Authoring burndown — the headline number
+
+| # | Item | Scale | Notes |
+| --- | --- | --- | --- |
+| 30 | Traits marked `implementation.mode: "unimplemented"` | **456 of 700 (65%)** | They exist so progressions resolve and carry no rules. Fighters, wizards, monks and the rest have structure and no mechanics. Query the pack for the marker to get the current list. |
+| 31 | Spells marked `unimplemented` | **111 of 111** | Every spell in the pack is a stub with a `no_effect` action; `level` and `school` are placeholders, which the marker's summary says outright. |
+
+This is the deliberate, accepted trade recorded in the design doc — a marked
+stub is honest, a half-faithful transform is not. The marker is what makes it a
+measurable burndown rather than the silent `effects: []` placeholders it
+replaced.
+
+### 4b. Content the port could not carry
+
+`items.json` authored only `id`, `name`, `type`, `weight`, `lore` and `cpCost`,
+so the 57 items ported out of it arrived without their mechanics. Equip slots
+and bundle contents were recovered during the cutover; these two were not,
+because the data to recover them never existed in that file.
+
+| # | Item | Scale | Notes |
+| --- | --- | --- | --- |
+| 32 | Ported weapons carry no `weapon` block | **23** | `item_weapon_battleaxe`, `_blowgun`, `_club`, `_crossbow_hand`, `_crossbow_heavy`, `_flail`, `_glaive`, `_greatclub` and 15 more. They equip and weigh correctly and roll no attack. `CoreEquipmentSchema` has nowhere to mark this, unlike traits and spells. |
+| 33 | Ported armour carries no AC modifier | **6** | `item_armor_breastplate`, `_chain_shirt`, `_half_plate`, `_hide`, `_ring_mail`, `_splint`. They are wearable and grant nothing. |
+
+Both live in
+[equipment/legacy.json](packages/database/data/packs/core_2014_pack/equipment/legacy.json).
+Authoring them is the same per-item work as #30, and cheaper — the PHB values
+are well known and the schema already expresses them.
+
+### 4c. Rules content still outside the pack
+
+"Packs are the only source" is true for traits, races, classes, subclasses,
+feats, backgrounds, equipment, spells and resources. Three files in
+`packages/engine/src/rules/` were not part of the migration.
+
+| # | Item | Location | Status |
+| --- | --- | --- | --- |
+| 34 | `SPELL_DICTIONARY` — 3 spells | [spellDictionary.ts](packages/engine/src/rules/spellDictionary.ts) | **Dead.** Nothing reads it, and the pack carries 111 spell ids it duplicates three of. Delete it, or fold its three authored spells into the pack as the first non-stub spells and then delete it. |
+| 35 | `CLASS_STARTING_EQUIPMENT` / `BACKGROUND_STARTING_EQUIPMENT` — 802 lines | [startingEquipmentDictionary.ts](packages/engine/src/rules/startingEquipmentDictionary.ts) | **Dead.** Neither export has a reader anywhere in the workspace. Pack classes and backgrounds carry their own `startingEquipment`, which is what validation checks. |
+| 36 | `SUMMON_ACTOR_DICTIONARY` | [summonActorDictionary.ts](packages/engine/src/rules/summonActorDictionary.ts) | **Live** — `characterEngine` and `actionResolver` both resolve blueprints from it. Genuine rules content sitting outside the pack; needs a pack section before the claim is unqualified. |
+
+`proficiencyDictionary.ts` is deliberately excluded: it is a roster of valid
+proficiency ids consumed by the extractors and calculators, not authored rules.
+
+### 4d. Loose ends
+
+| # | Item | Notes |
+| --- | --- | --- |
+| 37 | `toRuleSnapshot` carries only the four id-keyed rulebook maps | Equipment and resources are rebuilt by hand in three places — `ruleSnapshotCache`, the engine's `corePackLookup()` and the web `packFixture`. Three copies of the same projection will drift. Either widen `toRuleSnapshot` or export one shared builder. |
+| 38 | `db:push` cannot run non-interactively | drizzle-kit demands a TTY for its data-loss prompt, so the cutover import skipped it. Fine while the schema is stable; a blocker the first time a migration is actually needed in CI. |
+| 39 | `client.test.ts` fails on a cold run | The dynamic `import("../client.js")` exceeds the 5s default while vitest transforms it for the first time; the second assertion cascades from it. Passes warm. Raise that test's timeout. |
+| 40 | `apps/web/tsconfig.app.json` now includes `node` types | Added for the test fixtures that read the pack off disk. It weakens the guard that kept node APIs out of browser code. A separate tsconfig for `src/**/__tests__` would restore it. |
+
+### 4e. Deferred by the plan, still deferred
+
+| # | Item | Notes |
+| --- | --- | --- |
+| 41 | Two-mode import | Wholesale replacement for owned sections, entity-scoped for the rest. The importer's `TRUNCATE ... CASCADE` is correct while one pack owns everything; a second pack needs this first. `class_progressions` is keyed `(classId, level, traitId)`, so the unit of replacement is the parent entity, not the row. |
+| 42 | Nothing reads `extends`, `owns` or `ruleset` | The declarations landed so packs are authored correctly from the start and the contract is fixed. Composition honours none of them yet. |
+| 43 | No `resources` reference table | `pack.resources` reaches the runtime through the payload. Only needed when a browse endpoint wants to query resources. |
+| 44 | Relentless Rage | Parked in `docs/superpowers/specs/2026-08-20-relentless-rage-design.md`. Unblocked by the cutover. |
+
+### 4f. Note on the destructive import
+
+`persistCoreRulePack` truncates the reference tables `CASCADE`, which reaches
+character data — the cutover removed 12 characters, 184 `character_traits`, 104
+inventory rows and 2 `character_custom_traits`. `db:seed:samples` restores the
+ten fixture characters; anything hand-made is not recoverable. Worth a
+confirmation prompt, or a documented warning on the script, before anyone runs
+it against data they care about.
