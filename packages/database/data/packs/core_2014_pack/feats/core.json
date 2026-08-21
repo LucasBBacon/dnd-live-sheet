@@ -1,0 +1,69 @@
+{
+    "feats": [
+        {
+            "id": "feat_alert",
+            "name": "Alert",
+            "category": "general",
+            "source": "phb",
+            "repeatable": false,
+            "grantedTraitIds": [
+                "feat_alert"
+            ],
+            "lore": {
+                "shortDescription": "You gain a +5 bonus to initiative."
+            },
+            "tags": [
+                "initiative"
+            ]
+        },
+        {
+            "id": "feat_tough",
+            "name": "Tough",
+            "category": "general",
+            "source": "phb",
+            "repeatable": false,
+            "grantedTraitIds": [
+                "feat_tough"
+            ],
+            "lore": {
+                "shortDescription": "Your hit point maximum increases by an amount that scales with your total level."
+            },
+            "tags": [
+                "durability",
+                "max_hp"
+            ]
+        },
+        {
+            "id": "feat_mobile",
+            "name": "Mobile",
+            "category": "general",
+            "source": "phb",
+            "repeatable": false,
+            "grantedTraitIds": [
+                "trait_feat_mobile"
+            ],
+            "lore": {
+                "shortDescription": "Your speed increases and you are harder to pin down."
+            },
+            "tags": [
+                "speed"
+            ]
+        },
+        {
+            "id": "feat_skilled",
+            "name": "Skilled",
+            "category": "general",
+            "source": "phb",
+            "repeatable": false,
+            "grantedTraitIds": [
+                "trait_feat_skilled"
+            ],
+            "lore": {
+                "shortDescription": "Gain proficiency in any combination of three skills of your choice."
+            },
+            "tags": [
+                "skills"
+            ]
+        }
+    ]
+}

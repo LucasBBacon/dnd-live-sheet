@@ -29,6 +29,7 @@
     "postgres": "^3.4.9"
   },
   "devDependencies": {
+    "@project/engine": "workspace:^",
     "@types/node": "^26.0.0",
     "@vitest/coverage-v8": "^4.1.9",
     "drizzle-kit": "^0.31.10",

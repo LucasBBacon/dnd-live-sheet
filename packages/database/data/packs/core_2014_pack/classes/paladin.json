@@ -1,0 +1,373 @@
+{
+    "classes": [
+        {
+            "id": "class_paladin",
+            "name": "Paladin",
+            "hitDie": 10,
+            "subclassUnlockLevel": 3,
+            "startingEquipment": {
+                "given": [
+                    {
+                        "kind": "item",
+                        "refId": "item_armor_chain_mail",
+                        "quantity": 1
+                    },
+                    {
+                        "kind": "category",
+                        "refId": "category_holy_symbol",
+                        "quantity": 1
+                    }
+                ],
+                "choices": [
+                    {
+                        "choose": 1,
+                        "options": [
+                            {
+                                "equipmentBundle": [
+                                    {
+                                        "kind": "category",
+                                        "refId": "category_weapon_martial",
+                                        "quantity": 1
+                                    },
+                                    {
+                                        "kind": "category",
+                                        "refId": "category_armor_shield",
+                                        "quantity": 1
+                                    }
+                                ]
+                            },
+                            {
+                                "equipmentBundle": [
+                                    {
+                                        "kind": "category",
+                                        "refId": "category_weapon_martial",
+                                        "quantity": 2
+                                    }
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        "choose": 1,
+                        "options": [
+                            {
+                                "equipmentBundle": [
+                                    {
+                                        "kind": "item",
+                                        "refId": "item_weapon_javelin",
+                                        "quantity": 5
+                                    }
+                                ]
+                            },
+                            {
+                                "equipmentBundle": [
+                                    {
+                                        "kind": "category",
+                                        "refId": "category_weapon_simple_melee",
+                                        "quantity": 1
+                                    }
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        "choose": 1,
+                        "options": [
+                            {
+                                "equipmentBundle": [
+                                    {
+                                        "kind": "item",
+                                        "refId": "item_pack_priests",
+                                        "quantity": 1
+                                    }
+                                ]
+                            },
+                            {
+                                "equipmentBundle": [
+                                    {
+                                        "kind": "item",
+                                        "refId": "item_pack_explorers",
+                                        "quantity": 1
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                ]
+            },
+            "multiclassTraitIds": [
+                "trait_paladin_mult_prof_armor",
+                "trait_paladin_mult_prof_weapons"
+            ],
+            "multiclassPrerequisites": {
+                "abilityMinimums": {
+                    "str": 13,
+                    "cha": 13
+                }
+            },
+            "startingProficiencyTraitIds": [
+                "trait_paladin_prof_saving_throw",
+                "trait_paladin_prof_armor",
+                "trait_paladin_prof_weapons",
+                "trait_paladin_prof_skills"
+            ],
+            "progression": [
+                {
+                    "level": 1,
+                    "grants": [
+                        "trait_divine_sense",
+                        "trait_lay_on_hands"
+                    ],
+                    "grantsASI": false
+                },
+                {
+                    "level": 2,
+                    "grants": [
+                        {
+                            "type": "trait_choice",
+                            "nodeId": "paladin_level_2_fighting_style",
+                            "options": [
+                                "trait_fs_defense",
+                                "trait_fs_dueling",
+                                "trait_fs_great_weapon_fighting",
+                                "trait_fs_protection"
+                            ],
+                            "pickCount": 1
+                        },
+                        "trait_divine_smite",
+                        "trait_spellcasting_paladin"
+                    ],
+                    "grantsASI": false
+                },
+                {
+                    "level": 3,
+                    "grants": [
+                        "trait_divine_health",
+                        "trait_sacred_oath"
+                    ],
+                    "grantsASI": false
+                },
+                {
+                    "level": 4,
+                    "grants": [],
+                    "grantsASI": true
+                },
+                {
+                    "level": 5,
+                    "grants": [
+                        "trait_extra_attack"
+                    ],
+                    "grantsASI": false
+                },
+                {
+                    "level": 6,
+                    "grants": [
+                        "trait_aura_of_protection"
+                    ],
+                    "grantsASI": false
+                },
+                {
+                    "level": 7,
+                    "grants": [
+                        "trait_sacred_oath_feature"
+                    ],
+                    "grantsASI": false
+                },
+                {
+                    "level": 8,
+                    "grants": [],
+                    "grantsASI": true
+                },
+                {
+                    "level": 9,
+                    "grants": [],
+                    "grantsASI": false
+                },
+                {
+                    "level": 10,
+                    "grants": [
+                        "trait_aura_of_courage"
+                    ],
+                    "grantsASI": false
+                },
+                {
+                    "level": 11,
+                    "grants": [
+                        "trait_improved_divine_strike"
+                    ],
+                    "grantsASI": false
+                },
+                {
+                    "level": 12,
+                    "grants": [],
+                    "grantsASI": true
+                },
+                {
+                    "level": 13,
+                    "grants": [],
+                    "grantsASI": false
+                },
+                {
+                    "level": 14,
+                    "grants": [
+                        "trait_cleansing_touch"
+                    ],
+                    "grantsASI": false
+                },
+                {
+                    "level": 15,
+                    "grants": [
+                        "trait_sacred_oath_feature"
+                    ],
+                    "grantsASI": false
+                },
+                {
+                    "level": 16,
+                    "grants": [],
+                    "grantsASI": true
+                },
+                {
+                    "level": 17,
+                    "grants": [],
+                    "grantsASI": false
+                },
+                {
+                    "level": 18,
+                    "grants": [
+                        "trait_aura_improvements"
+                    ],
+                    "grantsASI": false
+                },
+                {
+                    "level": 19,
+                    "grants": [],
+                    "grantsASI": true
+                },
+                {
+                    "level": 20,
+                    "grants": [
+                        "trait_sacred_oath_feature"
+                    ],
+                    "grantsASI": false
+                }
+            ],
+            "lore": {
+                "shortDescription": "Paladin",
+                "fullText": "Paladin"
+            }
+        }
+    ],
+    "subclasses": [
+        {
+            "id": "subclass_paladin_ancients",
+            "classId": "class_paladin",
+            "name": "Oath of the Ancients",
+            "progression": [
+                {
+                    "level": 3,
+                    "grants": [
+                        "trait_ancients_oath_spells",
+                        "trait_cd_natures_wrath",
+                        "trait_cd_turn_the_faithless"
+                    ]
+                },
+                {
+                    "level": 7,
+                    "grants": [
+                        "trait_aura_of_warding"
+                    ]
+                },
+                {
+                    "level": 15,
+                    "grants": [
+                        "trait_undying_sentinel"
+                    ]
+                },
+                {
+                    "level": 20,
+                    "grants": [
+                        "trait_elder_champion"
+                    ]
+                }
+            ],
+            "lore": {
+                "shortDescription": "Oath of the Ancients",
+                "fullText": "Oath of the Ancients"
+            }
+        },
+        {
+            "id": "subclass_paladin_devotion",
+            "classId": "class_paladin",
+            "name": "Oath of Devotion",
+            "progression": [
+                {
+                    "level": 3,
+                    "grants": [
+                        "trait_devotion_oath_spells",
+                        "trait_cd_sacred_weapon",
+                        "trait_cd_turn_the_unholy"
+                    ]
+                },
+                {
+                    "level": 7,
+                    "grants": [
+                        "trait_aura_of_devotion"
+                    ]
+                },
+                {
+                    "level": 15,
+                    "grants": [
+                        "trait_purity_of_spirit"
+                    ]
+                },
+                {
+                    "level": 20,
+                    "grants": [
+                        "trait_holy_nimbus"
+                    ]
+                }
+            ],
+            "lore": {
+                "shortDescription": "Oath of Devotion",
+                "fullText": "Oath of Devotion"
+            }
+        },
+        {
+            "id": "subclass_paladin_vengeance",
+            "classId": "class_paladin",
+            "name": "Oath of Vengeance",
+            "progression": [
+                {
+                    "level": 3,
+                    "grants": [
+                        "trait_vengeance_oath_spells",
+                        "trait_cd_abjure_enemy",
+                        "trait_cd_vow_of_enmity"
+                    ]
+                },
+                {
+                    "level": 7,
+                    "grants": [
+                        "trait_relentless_avenger"
+                    ]
+                },
+                {
+                    "level": 15,
+                    "grants": [
+                        "trait_soul_of_vengeance"
+                    ]
+                },
+                {
+                    "level": 20,
+                    "grants": [
+                        "trait_avenging_angel"
+                    ]
+                }
+            ],
+            "lore": {
+                "shortDescription": "Oath of Vengeance",
+                "fullText": "Oath of Vengeance"
+            }
+        }
+    ]
+}

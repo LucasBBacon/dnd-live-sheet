@@ -1,0 +1,209 @@
+{
+    "backgrounds": [
+        {
+            "id": "background_acolyte",
+            "name": "Acolyte",
+            "featureName": "Shelter of the Faithful",
+            "featureDescription": "Your temple and your faith's followers can provide healing, shelter, and social access when your requests are reasonable and non-hazardous.",
+            "ideals": [
+                "Tradition. Preserve sacred rites and ancient doctrine.",
+                "Charity. Aid people in need whatever the personal cost.",
+                "Faith. Trust in divine guidance through hardship."
+            ],
+            "bonds": [
+                "I owe my life to the clergy who raised me.",
+                "I will protect my temple from corruption and ruin.",
+                "I seek to recover a relic of my faith."
+            ],
+            "flaws": [
+                "I am rigid in doctrine and slow to reconsider.",
+                "I can be judgemental toward people outside my faith.",
+                "I become obsessive once I commit to a holy goal."
+            ],
+            "personalityTraits": [
+                "I quote scripture in almost every conversation.",
+                "I look for omens in everyday events.",
+                "I try to calm conflict before it becomes violence."
+            ],
+            "backgroundTraitIds": [
+                "trait_acolyte_prof_skills",
+                "trait_acolyte_languages"
+            ],
+            "startingEquipment": {
+                "given": [
+                    {
+                        "kind": "category",
+                        "refId": "category_holy_symbol",
+                        "quantity": 1
+                    },
+                    {
+                        "kind": "item",
+                        "refId": "item_pack_priests",
+                        "quantity": 1
+                    },
+                    {
+                        "kind": "item",
+                        "refId": "item_incense_stick",
+                        "quantity": 5
+                    },
+                    {
+                        "kind": "item",
+                        "refId": "item_clothes_vestments",
+                        "quantity": 1
+                    },
+                    {
+                        "kind": "item",
+                        "refId": "item_clothes_common",
+                        "quantity": 1
+                    },
+                    {
+                        "kind": "money",
+                        "refId": "money_gp",
+                        "quantity": 15
+                    }
+                ],
+                "choices": []
+            },
+            "lore": {
+                "shortDescription": "A servant of a temple or sacred order who carries rituals and teachings into the wider world.",
+                "fullText": "You were trained within a religious institution and now operate beyond its walls as a mediator, guide, or missionary."
+            }
+        },
+        {
+            "id": "background_noble",
+            "name": "Noble",
+            "featureName": "Position of Privilege",
+            "featureDescription": "High society recognises your station. You can secure audiences and social access that common travellers cannot.",
+            "ideals": [
+                "Leadership. My station obliges me to protect others.",
+                "Power. Influence exists to be used decisively.",
+                "Responsibility. Nobility without duty is rot."
+            ],
+            "bonds": [
+                "My house's name must be restored.",
+                "I will not let rivals humiliate my family.",
+                "I owe loyalty to retainers who stood by me."
+            ],
+            "flaws": [
+                "I can be arrogant with people beneath my station.",
+                "I overvalue appearances and protocol.",
+                "I am slow to trust those outside elite circles."
+            ],
+            "personalityTraits": [
+                "I speak with practiced poise, even under pressure.",
+                "I notice breaches of etiquette immediately.",
+                "I offer generosity publicly and strategically."
+            ],
+            "backgroundTraitIds": [
+                "trait_noble_prof_skills",
+                "trait_noble_prof_tools",
+                "trait_noble_languages"
+            ],
+            "startingEquipment": {
+                "given": [
+                    {
+                        "kind": "item",
+                        "refId": "item_clothes_fine",
+                        "quantity": 5
+                    },
+                    {
+                        "kind": "item",
+                        "refId": "item_ring_signet",
+                        "quantity": 1
+                    },
+                    {
+                        "kind": "item",
+                        "refId": "item_scroll_pedigree",
+                        "quantity": 5
+                    },
+                    {
+                        "kind": "money",
+                        "refId": "money_gp",
+                        "quantity": 25
+                    }
+                ],
+                "choices": []
+            },
+            "lore": {
+                "shortDescription": "A person of title, wealth, or inherited influence, trained to navigate status and power.",
+                "fullText": "You grew up around courts, obligations, and political leverage. Your social access often opens doors before force does."
+            }
+        },
+        {
+            "id": "background_soldier",
+            "name": "Soldier",
+            "featureName": "Military Rank",
+            "featureDescription": "Soldiers loyal to your former organisation recognise your rank and can offer practical assistance in military contexts.",
+            "ideals": [
+                "Duty. Orders exist for a reason.",
+                "Nation. I fight to defend my people.",
+                "Glory. Great deeds are remembered."
+            ],
+            "bonds": [
+                "I protect comrades who survived my old campaign.",
+                "I must honour the fallen who trained me.",
+                "I carry a debt to my old commanding officer."
+            ],
+            "flaws": [
+                "I default to violence too quickly.",
+                "I can become reckless when challenged.",
+                "I have little patience for civilian caution."
+            ],
+            "personalityTraits": [
+                "I keep my kit immaculate and ready.",
+                "I evaluate every room as a battlefield.",
+                "I rely on clear chains of command."
+            ],
+            "backgroundTraitIds": [
+                "trait_soldier_prof_skills",
+                "trait_soldier_prof_tools"
+            ],
+            "startingEquipment": {
+                "given": [],
+                "choices": []
+            },
+            "lore": {
+                "shortDescription": "A veteran of organised warfare who understands discipline, logistics, and command structures.",
+                "fullText": "You served in a formal military force and learned to survive under pressure, obey orders, and maintain cohesion in chaos."
+            }
+        },
+        {
+            "id": "background_criminal",
+            "name": "Criminal",
+            "featureName": "Criminal Contact",
+            "featureDescription": "You have a trusted underworld contact who can pass messages and rumours through illicit networks.",
+            "ideals": [
+                "Freedom. No authority should own my choices.",
+                "Loyalty. My crew comes first.",
+                "Survival. I do what keeps me alive."
+            ],
+            "bonds": [
+                "I protect the person who taught me the trade.",
+                "I owe a dangerous debt from a failed job.",
+                "I want to dismantle the gang that betrayed me."
+            ],
+            "flaws": [
+                "I distrust almost everyone by default.",
+                "I keep secrets even when honesty is safer.",
+                "I chase high-risk scores when I should walk away."
+            ],
+            "personalityTraits": [
+                "I always identify exits and blind spots first.",
+                "I bargain hard and never reveal my full hand.",
+                "I use humour to deflect suspicion."
+            ],
+            "backgroundTraitIds": [
+                "trait_criminal_prof_skills",
+                "trait_criminal_prof_tools"
+            ],
+            "startingEquipment": {
+                "given": [],
+                "choices": []
+            },
+            "lore": {
+                "shortDescription": "A former lawbreaker accustomed to covert networks, coded communication, and operating outside institutions.",
+                "fullText": "You learned to exploit social and physical gaps in the law, and you still carry contacts and instincts from that world."
+            }
+        }
+    ]
+}

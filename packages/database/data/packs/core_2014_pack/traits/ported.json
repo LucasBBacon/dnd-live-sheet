@@ -1,0 +1,4097 @@
+{
+    "traits": [
+        {
+            "id": "feat_tough",
+            "name": "Tough",
+            "modifiers": {
+                "fixed": [
+                    {
+                        "target": "MAX_HP",
+                        "type": "add",
+                        "value": 2,
+                        "scalingFactor": "total_level",
+                        "requiredStates": [],
+                        "forbiddenStates": []
+                    }
+                ],
+                "choices": []
+            },
+            "resources": [],
+            "triggers": [],
+            "diceRules": [],
+            "criticalHitModifiers": [],
+            "actions": [],
+            "lore": {
+                "shortDescription": "Tough",
+                "fullText": "Tough"
+            }
+        },
+        {
+            "id": "feat_alert",
+            "name": "Alert",
+            "modifiers": {
+                "fixed": [
+                    {
+                        "target": "INITIATIVE",
+                        "type": "add",
+                        "value": 5,
+                        "scalingFactor": "none",
+                        "requiredStates": [],
+                        "forbiddenStates": []
+                    }
+                ],
+                "choices": []
+            },
+            "resources": [],
+            "triggers": [],
+            "diceRules": [],
+            "criticalHitModifiers": [],
+            "actions": [],
+            "lore": {
+                "shortDescription": "Alert",
+                "fullText": "Alert"
+            }
+        },
+        {
+            "id": "trait_feat_mobile",
+            "name": "Mobile",
+            "lore": {
+                "shortDescription": "Placeholder trait for the Mobile feat."
+            },
+            "modifiers": {
+                "fixed": [],
+                "choices": []
+            },
+            "resources": [],
+            "triggers": [],
+            "diceRules": [],
+            "criticalHitModifiers": [],
+            "actions": []
+        },
+        {
+            "id": "trait_feat_skilled",
+            "name": "Skilled",
+            "lore": {
+                "shortDescription": "Placeholder trait for the Skilled feat."
+            },
+            "modifiers": {
+                "fixed": [],
+                "choices": []
+            },
+            "resources": [],
+            "triggers": [],
+            "diceRules": [],
+            "criticalHitModifiers": [],
+            "actions": []
+        },
+        {
+            "id": "trait_powerful_build",
+            "name": "Powerful Build",
+            "lore": {
+                "shortDescription": "You count as one size larger when determining your carrying capacity and the weight you can push, drag, or lift."
+            },
+            "modifiers": {
+                "fixed": [],
+                "choices": []
+            },
+            "grantedStates": [
+                "powerful_build"
+            ],
+            "resources": [],
+            "triggers": [],
+            "diceRules": [],
+            "criticalHitModifiers": [],
+            "actions": []
+        },
+        {
+            "id": "trait_draconic_resilience",
+            "name": "Draconic Resilience",
+            "modifiers": {
+                "fixed": [
+                    {
+                        "target": "MAX_HP",
+                        "type": "add",
+                        "value": 1,
+                        "scalingFactor": "class_level",
+                        "requiredStates": [],
+                        "forbiddenStates": []
+                    },
+                    {
+                        "target": "ARMOR_CLASS",
+                        "type": "set_base",
+                        "value": 13,
+                        "scalingFactor": "none",
+                        "requiredStates": [],
+                        "forbiddenStates": []
+                    }
+                ],
+                "choices": []
+            },
+            "resources": [],
+            "triggers": [],
+            "diceRules": [],
+            "criticalHitModifiers": [],
+            "actions": [],
+            "lore": {
+                "shortDescription": "Draconic Resilience",
+                "fullText": "Draconic Resilience"
+            }
+        },
+        {
+            "id": "trait_knowledge_domain_spells",
+            "name": "Knowledge Domain Spells",
+            "lore": {
+                "shortDescription": "You gain domain spells at the cleric levels listed in the Knowledge Domain table. Once you gain a domain spell, you always have it prepared, and it doesn't count against the number of spells you can prepare each day."
+            },
+            "modifiers": {
+                "fixed": [],
+                "choices": []
+            },
+            "spells": {
+                "fixed": [
+                    {
+                        "type": "fixed_spell",
+                        "spellId": "spell_command",
+                        "unlockScaling": "class_level",
+                        "usage": {
+                            "kind": "always_prepared"
+                        }
+                    },
+                    {
+                        "type": "fixed_spell",
+                        "spellId": "spell_identify",
+                        "unlockScaling": "class_level",
+                        "usage": {
+                            "kind": "always_prepared"
+                        }
+                    },
+                    {
+                        "type": "fixed_spell",
+                        "spellId": "spell_augury",
+                        "unlockLevel": 3,
+                        "unlockScaling": "class_level",
+                        "usage": {
+                            "kind": "always_prepared"
+                        }
+                    },
+                    {
+                        "type": "fixed_spell",
+                        "spellId": "spell_suggestion",
+                        "unlockLevel": 3,
+                        "unlockScaling": "class_level",
+                        "usage": {
+                            "kind": "always_prepared"
+                        }
+                    },
+                    {
+                        "type": "fixed_spell",
+                        "spellId": "spell_nondetection",
+                        "unlockLevel": 5,
+                        "unlockScaling": "class_level",
+                        "usage": {
+                            "kind": "always_prepared"
+                        }
+                    },
+                    {
+                        "type": "fixed_spell",
+                        "spellId": "spell_speak_with_dead",
+                        "unlockLevel": 5,
+                        "unlockScaling": "class_level",
+                        "usage": {
+                            "kind": "always_prepared"
+                        }
+                    },
+                    {
+                        "type": "fixed_spell",
+                        "spellId": "spell_arcane_eye",
+                        "unlockLevel": 7,
+                        "unlockScaling": "class_level",
+                        "usage": {
+                            "kind": "always_prepared"
+                        }
+                    },
+                    {
+                        "type": "fixed_spell",
+                        "spellId": "spell_confusion",
+                        "unlockLevel": 7,
+                        "unlockScaling": "class_level",
+                        "usage": {
+                            "kind": "always_prepared"
+                        }
+                    },
+                    {
+                        "type": "fixed_spell",
+                        "spellId": "spell_legend_lore",
+                        "unlockLevel": 9,
+                        "unlockScaling": "class_level",
+                        "usage": {
+                            "kind": "always_prepared"
+                        }
+                    },
+                    {
+                        "type": "fixed_spell",
+                        "spellId": "spell_scrying",
+                        "unlockLevel": 9,
+                        "unlockScaling": "class_level",
+                        "usage": {
+                            "kind": "always_prepared"
+                        }
+                    }
+                ],
+                "choices": []
+            },
+            "resources": [],
+            "triggers": [],
+            "diceRules": [],
+            "criticalHitModifiers": [],
+            "actions": []
+        },
+        {
+            "id": "trait_cleric_life_domain_spells",
+            "name": "Life Domain Spells",
+            "lore": {
+                "shortDescription": "You gain domain spells at the cleric levels listed in the Life Domain table. Once you gain a domain spell, you always have it prepared, and it doesn't count against the number of spells you can prepare each day."
+            },
+            "modifiers": {
+                "fixed": [],
+                "choices": []
+            },
+            "spells": {
+                "fixed": [
+                    {
+                        "type": "fixed_spell",
+                        "spellId": "spell_bless",
+                        "unlockScaling": "class_level",
+                        "usage": {
+                            "kind": "always_prepared"
+                        }
+                    },
+                    {
+                        "type": "fixed_spell",
+                        "spellId": "spell_cure_wounds",
+                        "unlockScaling": "class_level",
+                        "usage": {
+                            "kind": "always_prepared"
+                        }
+                    },
+                    {
+                        "type": "fixed_spell",
+                        "spellId": "spell_lesser_restoration",
+                        "unlockLevel": 3,
+                        "unlockScaling": "class_level",
+                        "usage": {
+                            "kind": "always_prepared"
+                        }
+                    },
+                    {
+                        "type": "fixed_spell",
+                        "spellId": "spell_spiritual_weapon",
+                        "unlockLevel": 3,
+                        "unlockScaling": "class_level",
+                        "usage": {
+                            "kind": "always_prepared"
+                        }
+                    },
+                    {
+                        "type": "fixed_spell",
+                        "spellId": "spell_beacon_of_hope",
+                        "unlockLevel": 5,
+                        "unlockScaling": "class_level",
+                        "usage": {
+                            "kind": "always_prepared"
+                        }
+                    },
+                    {
+                        "type": "fixed_spell",
+                        "spellId": "spell_revivify",
+                        "unlockLevel": 5,
+                        "unlockScaling": "class_level",
+                        "usage": {
+                            "kind": "always_prepared"
+                        }
+                    },
+                    {
+                        "type": "fixed_spell",
+                        "spellId": "spell_death_ward",
+                        "unlockLevel": 7,
+                        "unlockScaling": "class_level",
+                        "usage": {
+                            "kind": "always_prepared"
+                        }
+                    },
+                    {
+                        "type": "fixed_spell",
+                        "spellId": "spell_guardian_of_faith",
+                        "unlockLevel": 7,
+                        "unlockScaling": "class_level",
+                        "usage": {
+                            "kind": "always_prepared"
+                        }
+                    },
+                    {
+                        "type": "fixed_spell",
+                        "spellId": "spell_mass_cure_wounds",
+                        "unlockLevel": 9,
+                        "unlockScaling": "class_level",
+                        "usage": {
+                            "kind": "always_prepared"
+                        }
+                    },
+                    {
+                        "type": "fixed_spell",
+                        "spellId": "spell_raise_dead",
+                        "unlockLevel": 9,
+                        "unlockScaling": "class_level",
+                        "usage": {
+                            "kind": "always_prepared"
+                        }
+                    }
+                ],
+                "choices": []
+            },
+            "resources": [],
+            "triggers": [],
+            "diceRules": [],
+            "criticalHitModifiers": [],
+            "actions": []
+        },
+        {
+            "id": "trait_light_domain_spells",
+            "name": "Light Domain Spells",
+            "lore": {
+                "shortDescription": "You gain domain spells at the cleric levels listed in the Light Domain table. Once you gain a domain spell, you always have it prepared, and it doesn't count against the number of spells you can prepare each day."
+            },
+            "modifiers": {
+                "fixed": [],
+                "choices": []
+            },
+            "spells": {
+                "fixed": [
+                    {
+                        "type": "fixed_spell",
+                        "spellId": "spell_burning_hands",
+                        "unlockScaling": "class_level",
+                        "usage": {
+                            "kind": "always_prepared"
+                        }
+                    },
+                    {
+                        "type": "fixed_spell",
+                        "spellId": "spell_faerie_fire",
+                        "unlockScaling": "class_level",
+                        "usage": {
+                            "kind": "always_prepared"
+                        }
+                    },
+                    {
+                        "type": "fixed_spell",
+                        "spellId": "spell_flaming_sphere",
+                        "unlockLevel": 3,
+                        "unlockScaling": "class_level",
+                        "usage": {
+                            "kind": "always_prepared"
+                        }
+                    },
+                    {
+                        "type": "fixed_spell",
+                        "spellId": "spell_scorching_ray",
+                        "unlockLevel": 3,
+                        "unlockScaling": "class_level",
+                        "usage": {
+                            "kind": "always_prepared"
+                        }
+                    },
+                    {
+                        "type": "fixed_spell",
+                        "spellId": "spell_daylight",
+                        "unlockLevel": 5,
+                        "unlockScaling": "class_level",
+                        "usage": {
+                            "kind": "always_prepared"
+                        }
+                    },
+                    {
+                        "type": "fixed_spell",
+                        "spellId": "spell_fireball",
+                        "unlockLevel": 5,
+                        "unlockScaling": "class_level",
+                        "usage": {
+                            "kind": "always_prepared"
+                        }
+                    },
+                    {
+                        "type": "fixed_spell",
+                        "spellId": "spell_guardian_of_faith",
+                        "unlockLevel": 7,
+                        "unlockScaling": "class_level",
+                        "usage": {
+                            "kind": "always_prepared"
+                        }
+                    },
+                    {
+                        "type": "fixed_spell",
+                        "spellId": "spell_wall_of_fire",
+                        "unlockLevel": 7,
+                        "unlockScaling": "class_level",
+                        "usage": {
+                            "kind": "always_prepared"
+                        }
+                    },
+                    {
+                        "type": "fixed_spell",
+                        "spellId": "spell_flame_strike",
+                        "unlockLevel": 9,
+                        "unlockScaling": "class_level",
+                        "usage": {
+                            "kind": "always_prepared"
+                        }
+                    },
+                    {
+                        "type": "fixed_spell",
+                        "spellId": "spell_scrying",
+                        "unlockLevel": 9,
+                        "unlockScaling": "class_level",
+                        "usage": {
+                            "kind": "always_prepared"
+                        }
+                    }
+                ],
+                "choices": []
+            },
+            "resources": [],
+            "triggers": [],
+            "diceRules": [],
+            "criticalHitModifiers": [],
+            "actions": []
+        },
+        {
+            "id": "trait_nature_domain_spells",
+            "name": "Nature Domain Spells",
+            "lore": {
+                "shortDescription": "You gain domain spells at the cleric levels listed in the Nature Domain table. Once you gain a domain spell, you always have it prepared, and it doesn't count against the number of spells you can prepare each day."
+            },
+            "modifiers": {
+                "fixed": [],
+                "choices": []
+            },
+            "spells": {
+                "fixed": [
+                    {
+                        "type": "fixed_spell",
+                        "spellId": "spell_animal_friendship",
+                        "unlockScaling": "class_level",
+                        "usage": {
+                            "kind": "always_prepared"
+                        }
+                    },
+                    {
+                        "type": "fixed_spell",
+                        "spellId": "spell_speak_with_animals",
+                        "unlockScaling": "class_level",
+                        "usage": {
+                            "kind": "always_prepared"
+                        }
+                    },
+                    {
+                        "type": "fixed_spell",
+                        "spellId": "spell_barkskin",
+                        "unlockLevel": 3,
+                        "unlockScaling": "class_level",
+                        "usage": {
+                            "kind": "always_prepared"
+                        }
+                    },
+                    {
+                        "type": "fixed_spell",
+                        "spellId": "spell_spike_growth",
+                        "unlockLevel": 3,
+                        "unlockScaling": "class_level",
+                        "usage": {
+                            "kind": "always_prepared"
+                        }
+                    },
+                    {
+                        "type": "fixed_spell",
+                        "spellId": "spell_plant_growth",
+                        "unlockLevel": 5,
+                        "unlockScaling": "class_level",
+                        "usage": {
+                            "kind": "always_prepared"
+                        }
+                    },
+                    {
+                        "type": "fixed_spell",
+                        "spellId": "spell_wind_wall",
+                        "unlockLevel": 5,
+                        "unlockScaling": "class_level",
+                        "usage": {
+                            "kind": "always_prepared"
+                        }
+                    },
+                    {
+                        "type": "fixed_spell",
+                        "spellId": "spell_dominate_beast",
+                        "unlockLevel": 7,
+                        "unlockScaling": "class_level",
+                        "usage": {
+                            "kind": "always_prepared"
+                        }
+                    },
+                    {
+                        "type": "fixed_spell",
+                        "spellId": "spell_grasping_vine",
+                        "unlockLevel": 7,
+                        "unlockScaling": "class_level",
+                        "usage": {
+                            "kind": "always_prepared"
+                        }
+                    },
+                    {
+                        "type": "fixed_spell",
+                        "spellId": "spell_insect_plague",
+                        "unlockLevel": 9,
+                        "unlockScaling": "class_level",
+                        "usage": {
+                            "kind": "always_prepared"
+                        }
+                    },
+                    {
+                        "type": "fixed_spell",
+                        "spellId": "spell_tree_stride",
+                        "unlockLevel": 9,
+                        "unlockScaling": "class_level",
+                        "usage": {
+                            "kind": "always_prepared"
+                        }
+                    }
+                ],
+                "choices": []
+            },
+            "resources": [],
+            "triggers": [],
+            "diceRules": [],
+            "criticalHitModifiers": [],
+            "actions": []
+        },
+        {
+            "id": "trait_tempest_domain_spells",
+            "name": "Tempest Domain Spells",
+            "lore": {
+                "shortDescription": "You gain domain spells at the cleric levels listed in the Tempest Domain table. Once you gain a domain spell, you always have it prepared, and it doesn't count against the number of spells you can prepare each day."
+            },
+            "modifiers": {
+                "fixed": [],
+                "choices": []
+            },
+            "spells": {
+                "fixed": [
+                    {
+                        "type": "fixed_spell",
+                        "spellId": "spell_fog_cloud",
+                        "unlockScaling": "class_level",
+                        "usage": {
+                            "kind": "always_prepared"
+                        }
+                    },
+                    {
+                        "type": "fixed_spell",
+                        "spellId": "spell_thunderwave",
+                        "unlockScaling": "class_level",
+                        "usage": {
+                            "kind": "always_prepared"
+                        }
+                    },
+                    {
+                        "type": "fixed_spell",
+                        "spellId": "spell_gust_of_wind",
+                        "unlockLevel": 3,
+                        "unlockScaling": "class_level",
+                        "usage": {
+                            "kind": "always_prepared"
+                        }
+                    },
+                    {
+                        "type": "fixed_spell",
+                        "spellId": "spell_shatter",
+                        "unlockLevel": 3,
+                        "unlockScaling": "class_level",
+                        "usage": {
+                            "kind": "always_prepared"
+                        }
+                    },
+                    {
+                        "type": "fixed_spell",
+                        "spellId": "spell_call_lightning",
+                        "unlockLevel": 5,
+                        "unlockScaling": "class_level",
+                        "usage": {
+                            "kind": "always_prepared"
+                        }
+                    },
+                    {
+                        "type": "fixed_spell",
+                        "spellId": "spell_sleet_storm",
+                        "unlockLevel": 5,
+                        "unlockScaling": "class_level",
+                        "usage": {
+                            "kind": "always_prepared"
+                        }
+                    },
+                    {
+                        "type": "fixed_spell",
+                        "spellId": "spell_control_water",
+                        "unlockLevel": 7,
+                        "unlockScaling": "class_level",
+                        "usage": {
+                            "kind": "always_prepared"
+                        }
+                    },
+                    {
+                        "type": "fixed_spell",
+                        "spellId": "spell_ice_storm",
+                        "unlockLevel": 7,
+                        "unlockScaling": "class_level",
+                        "usage": {
+                            "kind": "always_prepared"
+                        }
+                    },
+                    {
+                        "type": "fixed_spell",
+                        "spellId": "spell_destructive_wave",
+                        "unlockLevel": 9,
+                        "unlockScaling": "class_level",
+                        "usage": {
+                            "kind": "always_prepared"
+                        }
+                    },
+                    {
+                        "type": "fixed_spell",
+                        "spellId": "spell_insect_plague",
+                        "unlockLevel": 9,
+                        "unlockScaling": "class_level",
+                        "usage": {
+                            "kind": "always_prepared"
+                        }
+                    }
+                ],
+                "choices": []
+            },
+            "resources": [],
+            "triggers": [],
+            "diceRules": [],
+            "criticalHitModifiers": [],
+            "actions": []
+        },
+        {
+            "id": "trait_trickery_domain_spells",
+            "name": "Trickery Domain Spells",
+            "lore": {
+                "shortDescription": "You gain domain spells at the cleric levels listed in the Trickery Domain table. Once you gain a domain spell, you always have it prepared, and it doesn't count against the number of spells you can prepare each day."
+            },
+            "modifiers": {
+                "fixed": [],
+                "choices": []
+            },
+            "spells": {
+                "fixed": [
+                    {
+                        "type": "fixed_spell",
+                        "spellId": "spell_charm_person",
+                        "unlockScaling": "class_level",
+                        "usage": {
+                            "kind": "always_prepared"
+                        }
+                    },
+                    {
+                        "type": "fixed_spell",
+                        "spellId": "spell_disguise_self",
+                        "unlockScaling": "class_level",
+                        "usage": {
+                            "kind": "always_prepared"
+                        }
+                    },
+                    {
+                        "type": "fixed_spell",
+                        "spellId": "spell_mirror_image",
+                        "unlockLevel": 3,
+                        "unlockScaling": "class_level",
+                        "usage": {
+                            "kind": "always_prepared"
+                        }
+                    },
+                    {
+                        "type": "fixed_spell",
+                        "spellId": "spell_pass_without_trace",
+                        "unlockLevel": 3,
+                        "unlockScaling": "class_level",
+                        "usage": {
+                            "kind": "always_prepared"
+                        }
+                    },
+                    {
+                        "type": "fixed_spell",
+                        "spellId": "spell_blink",
+                        "unlockLevel": 5,
+                        "unlockScaling": "class_level",
+                        "usage": {
+                            "kind": "always_prepared"
+                        }
+                    },
+                    {
+                        "type": "fixed_spell",
+                        "spellId": "spell_dispel_magic",
+                        "unlockLevel": 5,
+                        "unlockScaling": "class_level",
+                        "usage": {
+                            "kind": "always_prepared"
+                        }
+                    },
+                    {
+                        "type": "fixed_spell",
+                        "spellId": "spell_dimension_door",
+                        "unlockLevel": 7,
+                        "unlockScaling": "class_level",
+                        "usage": {
+                            "kind": "always_prepared"
+                        }
+                    },
+                    {
+                        "type": "fixed_spell",
+                        "spellId": "spell_polymorph",
+                        "unlockLevel": 7,
+                        "unlockScaling": "class_level",
+                        "usage": {
+                            "kind": "always_prepared"
+                        }
+                    },
+                    {
+                        "type": "fixed_spell",
+                        "spellId": "spell_dominate_person",
+                        "unlockLevel": 9,
+                        "unlockScaling": "class_level",
+                        "usage": {
+                            "kind": "always_prepared"
+                        }
+                    },
+                    {
+                        "type": "fixed_spell",
+                        "spellId": "spell_modify_memory",
+                        "unlockLevel": 9,
+                        "unlockScaling": "class_level",
+                        "usage": {
+                            "kind": "always_prepared"
+                        }
+                    }
+                ],
+                "choices": []
+            },
+            "resources": [],
+            "triggers": [],
+            "diceRules": [],
+            "criticalHitModifiers": [],
+            "actions": []
+        },
+        {
+            "id": "trait_war_domain_spells",
+            "name": "War Domain Spells",
+            "lore": {
+                "shortDescription": "You gain domain spells at the cleric levels listed in the War Domain table. Once you gain a domain spell, you always have it prepared, and it doesn't count against the number of spells you can prepare each day."
+            },
+            "modifiers": {
+                "fixed": [],
+                "choices": []
+            },
+            "spells": {
+                "fixed": [
+                    {
+                        "type": "fixed_spell",
+                        "spellId": "spell_divine_favor",
+                        "unlockScaling": "class_level",
+                        "usage": {
+                            "kind": "always_prepared"
+                        }
+                    },
+                    {
+                        "type": "fixed_spell",
+                        "spellId": "spell_shield_of_faith",
+                        "unlockScaling": "class_level",
+                        "usage": {
+                            "kind": "always_prepared"
+                        }
+                    },
+                    {
+                        "type": "fixed_spell",
+                        "spellId": "spell_magic_weapon",
+                        "unlockLevel": 3,
+                        "unlockScaling": "class_level",
+                        "usage": {
+                            "kind": "always_prepared"
+                        }
+                    },
+                    {
+                        "type": "fixed_spell",
+                        "spellId": "spell_spiritual_weapon",
+                        "unlockLevel": 3,
+                        "unlockScaling": "class_level",
+                        "usage": {
+                            "kind": "always_prepared"
+                        }
+                    },
+                    {
+                        "type": "fixed_spell",
+                        "spellId": "spell_crusaders_mantle",
+                        "unlockLevel": 5,
+                        "unlockScaling": "class_level",
+                        "usage": {
+                            "kind": "always_prepared"
+                        }
+                    },
+                    {
+                        "type": "fixed_spell",
+                        "spellId": "spell_spirit_guardians",
+                        "unlockLevel": 5,
+                        "unlockScaling": "class_level",
+                        "usage": {
+                            "kind": "always_prepared"
+                        }
+                    },
+                    {
+                        "type": "fixed_spell",
+                        "spellId": "spell_freedom_of_movement",
+                        "unlockLevel": 7,
+                        "unlockScaling": "class_level",
+                        "usage": {
+                            "kind": "always_prepared"
+                        }
+                    },
+                    {
+                        "type": "fixed_spell",
+                        "spellId": "spell_stoneskin",
+                        "unlockLevel": 7,
+                        "unlockScaling": "class_level",
+                        "usage": {
+                            "kind": "always_prepared"
+                        }
+                    },
+                    {
+                        "type": "fixed_spell",
+                        "spellId": "spell_flame_strike",
+                        "unlockLevel": 9,
+                        "unlockScaling": "class_level",
+                        "usage": {
+                            "kind": "always_prepared"
+                        }
+                    },
+                    {
+                        "type": "fixed_spell",
+                        "spellId": "spell_hold_monster",
+                        "unlockLevel": 9,
+                        "unlockScaling": "class_level",
+                        "usage": {
+                            "kind": "always_prepared"
+                        }
+                    }
+                ],
+                "choices": []
+            },
+            "resources": [],
+            "triggers": [],
+            "diceRules": [],
+            "criticalHitModifiers": [],
+            "actions": []
+        },
+        {
+            "id": "trait_devotion_oath_spells",
+            "name": "Oath of Devotion Spells",
+            "lore": {
+                "shortDescription": "You gain oath spells at the paladin levels listed in the Oath of Devotion table. They count as paladin spells for you, but they don't count against the number of spells you can prepare each day."
+            },
+            "modifiers": {
+                "fixed": [],
+                "choices": []
+            },
+            "spells": {
+                "fixed": [
+                    {
+                        "type": "fixed_spell",
+                        "spellId": "spell_protection_from_evil_and_good",
+                        "unlockScaling": "class_level",
+                        "usage": {
+                            "kind": "always_prepared"
+                        }
+                    },
+                    {
+                        "type": "fixed_spell",
+                        "spellId": "spell_sanctuary",
+                        "unlockScaling": "class_level",
+                        "usage": {
+                            "kind": "always_prepared"
+                        }
+                    },
+                    {
+                        "type": "fixed_spell",
+                        "spellId": "spell_lesser_restoration",
+                        "unlockLevel": 5,
+                        "unlockScaling": "class_level",
+                        "usage": {
+                            "kind": "always_prepared"
+                        }
+                    },
+                    {
+                        "type": "fixed_spell",
+                        "spellId": "spell_zone_of_truth",
+                        "unlockLevel": 5,
+                        "unlockScaling": "class_level",
+                        "usage": {
+                            "kind": "always_prepared"
+                        }
+                    },
+                    {
+                        "type": "fixed_spell",
+                        "spellId": "spell_beacon_of_hope",
+                        "unlockLevel": 9,
+                        "unlockScaling": "class_level",
+                        "usage": {
+                            "kind": "always_prepared"
+                        }
+                    },
+                    {
+                        "type": "fixed_spell",
+                        "spellId": "spell_dispel_magic",
+                        "unlockLevel": 9,
+                        "unlockScaling": "class_level",
+                        "usage": {
+                            "kind": "always_prepared"
+                        }
+                    },
+                    {
+                        "type": "fixed_spell",
+                        "spellId": "spell_freedom_of_movement",
+                        "unlockLevel": 13,
+                        "unlockScaling": "class_level",
+                        "usage": {
+                            "kind": "always_prepared"
+                        }
+                    },
+                    {
+                        "type": "fixed_spell",
+                        "spellId": "spell_guardian_of_faith",
+                        "unlockLevel": 13,
+                        "unlockScaling": "class_level",
+                        "usage": {
+                            "kind": "always_prepared"
+                        }
+                    },
+                    {
+                        "type": "fixed_spell",
+                        "spellId": "spell_commune",
+                        "unlockLevel": 17,
+                        "unlockScaling": "class_level",
+                        "usage": {
+                            "kind": "always_prepared"
+                        }
+                    },
+                    {
+                        "type": "fixed_spell",
+                        "spellId": "spell_flame_strike",
+                        "unlockLevel": 17,
+                        "unlockScaling": "class_level",
+                        "usage": {
+                            "kind": "always_prepared"
+                        }
+                    }
+                ],
+                "choices": []
+            },
+            "resources": [],
+            "triggers": [],
+            "diceRules": [],
+            "criticalHitModifiers": [],
+            "actions": []
+        },
+        {
+            "id": "trait_ancients_oath_spells",
+            "name": "Oath of the Ancients Spells",
+            "lore": {
+                "shortDescription": "You gain oath spells at the paladin levels listed in the Oath of the Ancients table. They count as paladin spells for you, but they don't count against the number of spells you can prepare each day."
+            },
+            "modifiers": {
+                "fixed": [],
+                "choices": []
+            },
+            "spells": {
+                "fixed": [
+                    {
+                        "type": "fixed_spell",
+                        "spellId": "spell_ensnaring_strike",
+                        "unlockScaling": "class_level",
+                        "usage": {
+                            "kind": "always_prepared"
+                        }
+                    },
+                    {
+                        "type": "fixed_spell",
+                        "spellId": "spell_speak_with_animals",
+                        "unlockScaling": "class_level",
+                        "usage": {
+                            "kind": "always_prepared"
+                        }
+                    },
+                    {
+                        "type": "fixed_spell",
+                        "spellId": "spell_moonbeam",
+                        "unlockLevel": 5,
+                        "unlockScaling": "class_level",
+                        "usage": {
+                            "kind": "always_prepared"
+                        }
+                    },
+                    {
+                        "type": "fixed_spell",
+                        "spellId": "spell_misty_step",
+                        "unlockLevel": 5,
+                        "unlockScaling": "class_level",
+                        "usage": {
+                            "kind": "always_prepared"
+                        }
+                    },
+                    {
+                        "type": "fixed_spell",
+                        "spellId": "spell_plant_growth",
+                        "unlockLevel": 9,
+                        "unlockScaling": "class_level",
+                        "usage": {
+                            "kind": "always_prepared"
+                        }
+                    },
+                    {
+                        "type": "fixed_spell",
+                        "spellId": "spell_protection_from_energy",
+                        "unlockLevel": 9,
+                        "unlockScaling": "class_level",
+                        "usage": {
+                            "kind": "always_prepared"
+                        }
+                    },
+                    {
+                        "type": "fixed_spell",
+                        "spellId": "spell_ice_storm",
+                        "unlockLevel": 13,
+                        "unlockScaling": "class_level",
+                        "usage": {
+                            "kind": "always_prepared"
+                        }
+                    },
+                    {
+                        "type": "fixed_spell",
+                        "spellId": "spell_stoneskin",
+                        "unlockLevel": 13,
+                        "unlockScaling": "class_level",
+                        "usage": {
+                            "kind": "always_prepared"
+                        }
+                    },
+                    {
+                        "type": "fixed_spell",
+                        "spellId": "spell_commune_with_nature",
+                        "unlockLevel": 17,
+                        "unlockScaling": "class_level",
+                        "usage": {
+                            "kind": "always_prepared"
+                        }
+                    },
+                    {
+                        "type": "fixed_spell",
+                        "spellId": "spell_tree_stride",
+                        "unlockLevel": 17,
+                        "unlockScaling": "class_level",
+                        "usage": {
+                            "kind": "always_prepared"
+                        }
+                    }
+                ],
+                "choices": []
+            },
+            "resources": [],
+            "triggers": [],
+            "diceRules": [],
+            "criticalHitModifiers": [],
+            "actions": []
+        },
+        {
+            "id": "trait_vengeance_oath_spells",
+            "name": "Oath of Vengeance Spells",
+            "lore": {
+                "shortDescription": "You gain oath spells at the paladin levels listed in the Oath of Vengeance table. They count as paladin spells for you, but they don't count against the number of spells you can prepare each day."
+            },
+            "modifiers": {
+                "fixed": [],
+                "choices": []
+            },
+            "spells": {
+                "fixed": [
+                    {
+                        "type": "fixed_spell",
+                        "spellId": "spell_bane",
+                        "unlockScaling": "class_level",
+                        "usage": {
+                            "kind": "always_prepared"
+                        }
+                    },
+                    {
+                        "type": "fixed_spell",
+                        "spellId": "spell_hunters_mark",
+                        "unlockScaling": "class_level",
+                        "usage": {
+                            "kind": "always_prepared"
+                        }
+                    },
+                    {
+                        "type": "fixed_spell",
+                        "spellId": "spell_hold_person",
+                        "unlockLevel": 5,
+                        "unlockScaling": "class_level",
+                        "usage": {
+                            "kind": "always_prepared"
+                        }
+                    },
+                    {
+                        "type": "fixed_spell",
+                        "spellId": "spell_misty_step",
+                        "unlockLevel": 5,
+                        "unlockScaling": "class_level",
+                        "usage": {
+                            "kind": "always_prepared"
+                        }
+                    },
+                    {
+                        "type": "fixed_spell",
+                        "spellId": "spell_haste",
+                        "unlockLevel": 9,
+                        "unlockScaling": "class_level",
+                        "usage": {
+                            "kind": "always_prepared"
+                        }
+                    },
+                    {
+                        "type": "fixed_spell",
+                        "spellId": "spell_protection_from_energy",
+                        "unlockLevel": 9,
+                        "unlockScaling": "class_level",
+                        "usage": {
+                            "kind": "always_prepared"
+                        }
+                    },
+                    {
+                        "type": "fixed_spell",
+                        "spellId": "spell_banishment",
+                        "unlockLevel": 13,
+                        "unlockScaling": "class_level",
+                        "usage": {
+                            "kind": "always_prepared"
+                        }
+                    },
+                    {
+                        "type": "fixed_spell",
+                        "spellId": "spell_dimension_door",
+                        "unlockLevel": 13,
+                        "unlockScaling": "class_level",
+                        "usage": {
+                            "kind": "always_prepared"
+                        }
+                    },
+                    {
+                        "type": "fixed_spell",
+                        "spellId": "spell_hold_monster",
+                        "unlockLevel": 17,
+                        "unlockScaling": "class_level",
+                        "usage": {
+                            "kind": "always_prepared"
+                        }
+                    },
+                    {
+                        "type": "fixed_spell",
+                        "spellId": "spell_scrying",
+                        "unlockLevel": 17,
+                        "unlockScaling": "class_level",
+                        "usage": {
+                            "kind": "always_prepared"
+                        }
+                    }
+                ],
+                "choices": []
+            },
+            "resources": [],
+            "triggers": [],
+            "diceRules": [],
+            "criticalHitModifiers": [],
+            "actions": []
+        },
+        {
+            "id": "trait_land_circle_spells_arctic",
+            "name": "Circle Spells (Arctic)",
+            "lore": {
+                "shortDescription": "Your mystical connection to the arctic infuses you with the ability to cast certain spells. At 3rd, 5th, 7th, and 9th level you gain access to circle spells connected to the land where you became a druid. Once you gain access to a circle spell, you always have it prepared, and…",
+                "fullText": "Your mystical connection to the arctic infuses you with the ability to cast certain spells. At 3rd, 5th, 7th, and 9th level you gain access to circle spells connected to the land where you became a druid. Once you gain access to a circle spell, you always have it prepared, and it doesn't count against the number of spells you can prepare each day."
+            },
+            "modifiers": {
+                "fixed": [],
+                "choices": []
+            },
+            "spells": {
+                "fixed": [
+                    {
+                        "type": "fixed_spell",
+                        "spellId": "spell_hold_person",
+                        "unlockScaling": "class_level",
+                        "usage": {
+                            "kind": "always_prepared"
+                        }
+                    },
+                    {
+                        "type": "fixed_spell",
+                        "spellId": "spell_spike_growth",
+                        "unlockScaling": "class_level",
+                        "usage": {
+                            "kind": "always_prepared"
+                        }
+                    },
+                    {
+                        "type": "fixed_spell",
+                        "spellId": "spell_sleet_storm",
+                        "unlockLevel": 5,
+                        "unlockScaling": "class_level",
+                        "usage": {
+                            "kind": "always_prepared"
+                        }
+                    },
+                    {
+                        "type": "fixed_spell",
+                        "spellId": "spell_slow",
+                        "unlockLevel": 5,
+                        "unlockScaling": "class_level",
+                        "usage": {
+                            "kind": "always_prepared"
+                        }
+                    },
+                    {
+                        "type": "fixed_spell",
+                        "spellId": "spell_freedom_of_movement",
+                        "unlockLevel": 7,
+                        "unlockScaling": "class_level",
+                        "usage": {
+                            "kind": "always_prepared"
+                        }
+                    },
+                    {
+                        "type": "fixed_spell",
+                        "spellId": "spell_ice_storm",
+                        "unlockLevel": 7,
+                        "unlockScaling": "class_level",
+                        "usage": {
+                            "kind": "always_prepared"
+                        }
+                    },
+                    {
+                        "type": "fixed_spell",
+                        "spellId": "spell_commune_with_nature",
+                        "unlockLevel": 9,
+                        "unlockScaling": "class_level",
+                        "usage": {
+                            "kind": "always_prepared"
+                        }
+                    },
+                    {
+                        "type": "fixed_spell",
+                        "spellId": "spell_cone_of_cold",
+                        "unlockLevel": 9,
+                        "unlockScaling": "class_level",
+                        "usage": {
+                            "kind": "always_prepared"
+                        }
+                    }
+                ],
+                "choices": []
+            },
+            "resources": [],
+            "triggers": [],
+            "diceRules": [],
+            "criticalHitModifiers": [],
+            "actions": []
+        },
+        {
+            "id": "trait_land_circle_spells_coast",
+            "name": "Circle Spells (Coast)",
+            "lore": {
+                "shortDescription": "Your mystical connection to the coast infuses you with the ability to cast certain spells. At 3rd, 5th, 7th, and 9th level you gain access to circle spells connected to the land where you became a druid. Once you gain access to a circle spell, you always have it prepared, and…",
+                "fullText": "Your mystical connection to the coast infuses you with the ability to cast certain spells. At 3rd, 5th, 7th, and 9th level you gain access to circle spells connected to the land where you became a druid. Once you gain access to a circle spell, you always have it prepared, and it doesn't count against the number of spells you can prepare each day."
+            },
+            "modifiers": {
+                "fixed": [],
+                "choices": []
+            },
+            "spells": {
+                "fixed": [
+                    {
+                        "type": "fixed_spell",
+                        "spellId": "spell_mirror_image",
+                        "unlockScaling": "class_level",
+                        "usage": {
+                            "kind": "always_prepared"
+                        }
+                    },
+                    {
+                        "type": "fixed_spell",
+                        "spellId": "spell_misty_step",
+                        "unlockScaling": "class_level",
+                        "usage": {
+                            "kind": "always_prepared"
+                        }
+                    },
+                    {
+                        "type": "fixed_spell",
+                        "spellId": "spell_water_breathing",
+                        "unlockLevel": 5,
+                        "unlockScaling": "class_level",
+                        "usage": {
+                            "kind": "always_prepared"
+                        }
+                    },
+                    {
+                        "type": "fixed_spell",
+                        "spellId": "spell_water_walk",
+                        "unlockLevel": 5,
+                        "unlockScaling": "class_level",
+                        "usage": {
+                            "kind": "always_prepared"
+                        }
+                    },
+                    {
+                        "type": "fixed_spell",
+                        "spellId": "spell_control_water",
+                        "unlockLevel": 7,
+                        "unlockScaling": "class_level",
+                        "usage": {
+                            "kind": "always_prepared"
+                        }
+                    },
+                    {
+                        "type": "fixed_spell",
+                        "spellId": "spell_freedom_of_movement",
+                        "unlockLevel": 7,
+                        "unlockScaling": "class_level",
+                        "usage": {
+                            "kind": "always_prepared"
+                        }
+                    },
+                    {
+                        "type": "fixed_spell",
+                        "spellId": "spell_conjure_elemental",
+                        "unlockLevel": 9,
+                        "unlockScaling": "class_level",
+                        "usage": {
+                            "kind": "always_prepared"
+                        }
+                    },
+                    {
+                        "type": "fixed_spell",
+                        "spellId": "spell_scrying",
+                        "unlockLevel": 9,
+                        "unlockScaling": "class_level",
+                        "usage": {
+                            "kind": "always_prepared"
+                        }
+                    }
+                ],
+                "choices": []
+            },
+            "resources": [],
+            "triggers": [],
+            "diceRules": [],
+            "criticalHitModifiers": [],
+            "actions": []
+        },
+        {
+            "id": "trait_land_circle_spells_desert",
+            "name": "Circle Spells (Desert)",
+            "lore": {
+                "shortDescription": "Your mystical connection to the desert infuses you with the ability to cast certain spells. At 3rd, 5th, 7th, and 9th level you gain access to circle spells connected to the land where you became a druid. Once you gain access to a circle spell, you always have it prepared, and…",
+                "fullText": "Your mystical connection to the desert infuses you with the ability to cast certain spells. At 3rd, 5th, 7th, and 9th level you gain access to circle spells connected to the land where you became a druid. Once you gain access to a circle spell, you always have it prepared, and it doesn't count against the number of spells you can prepare each day."
+            },
+            "modifiers": {
+                "fixed": [],
+                "choices": []
+            },
+            "spells": {
+                "fixed": [
+                    {
+                        "type": "fixed_spell",
+                        "spellId": "spell_blur",
+                        "unlockScaling": "class_level",
+                        "usage": {
+                            "kind": "always_prepared"
+                        }
+                    },
+                    {
+                        "type": "fixed_spell",
+                        "spellId": "spell_silence",
+                        "unlockScaling": "class_level",
+                        "usage": {
+                            "kind": "always_prepared"
+                        }
+                    },
+                    {
+                        "type": "fixed_spell",
+                        "spellId": "spell_create_food_and_water",
+                        "unlockLevel": 5,
+                        "unlockScaling": "class_level",
+                        "usage": {
+                            "kind": "always_prepared"
+                        }
+                    },
+                    {
+                        "type": "fixed_spell",
+                        "spellId": "spell_protection_from_energy",
+                        "unlockLevel": 5,
+                        "unlockScaling": "class_level",
+                        "usage": {
+                            "kind": "always_prepared"
+                        }
+                    },
+                    {
+                        "type": "fixed_spell",
+                        "spellId": "spell_blight",
+                        "unlockLevel": 7,
+                        "unlockScaling": "class_level",
+                        "usage": {
+                            "kind": "always_prepared"
+                        }
+                    },
+                    {
+                        "type": "fixed_spell",
+                        "spellId": "spell_hallucinatory_terrain",
+                        "unlockLevel": 7,
+                        "unlockScaling": "class_level",
+                        "usage": {
+                            "kind": "always_prepared"
+                        }
+                    },
+                    {
+                        "type": "fixed_spell",
+                        "spellId": "spell_insect_plague",
+                        "unlockLevel": 9,
+                        "unlockScaling": "class_level",
+                        "usage": {
+                            "kind": "always_prepared"
+                        }
+                    },
+                    {
+                        "type": "fixed_spell",
+                        "spellId": "spell_wall_of_stone",
+                        "unlockLevel": 9,
+                        "unlockScaling": "class_level",
+                        "usage": {
+                            "kind": "always_prepared"
+                        }
+                    }
+                ],
+                "choices": []
+            },
+            "resources": [],
+            "triggers": [],
+            "diceRules": [],
+            "criticalHitModifiers": [],
+            "actions": []
+        },
+        {
+            "id": "trait_land_circle_spells_forest",
+            "name": "Circle Spells (Forest)",
+            "lore": {
+                "shortDescription": "Your mystical connection to the forest infuses you with the ability to cast certain spells. At 3rd, 5th, 7th, and 9th level you gain access to circle spells connected to the land where you became a druid. Once you gain access to a circle spell, you always have it prepared, and…",
+                "fullText": "Your mystical connection to the forest infuses you with the ability to cast certain spells. At 3rd, 5th, 7th, and 9th level you gain access to circle spells connected to the land where you became a druid. Once you gain access to a circle spell, you always have it prepared, and it doesn't count against the number of spells you can prepare each day."
+            },
+            "modifiers": {
+                "fixed": [],
+                "choices": []
+            },
+            "spells": {
+                "fixed": [
+                    {
+                        "type": "fixed_spell",
+                        "spellId": "spell_barkskin",
+                        "unlockScaling": "class_level",
+                        "usage": {
+                            "kind": "always_prepared"
+                        }
+                    },
+                    {
+                        "type": "fixed_spell",
+                        "spellId": "spell_spider_climb",
+                        "unlockScaling": "class_level",
+                        "usage": {
+                            "kind": "always_prepared"
+                        }
+                    },
+                    {
+                        "type": "fixed_spell",
+                        "spellId": "spell_call_lightning",
+                        "unlockLevel": 5,
+                        "unlockScaling": "class_level",
+                        "usage": {
+                            "kind": "always_prepared"
+                        }
+                    },
+                    {
+                        "type": "fixed_spell",
+                        "spellId": "spell_plant_growth",
+                        "unlockLevel": 5,
+                        "unlockScaling": "class_level",
+                        "usage": {
+                            "kind": "always_prepared"
+                        }
+                    },
+                    {
+                        "type": "fixed_spell",
+                        "spellId": "spell_divination",
+                        "unlockLevel": 7,
+                        "unlockScaling": "class_level",
+                        "usage": {
+                            "kind": "always_prepared"
+                        }
+                    },
+                    {
+                        "type": "fixed_spell",
+                        "spellId": "spell_freedom_of_movement",
+                        "unlockLevel": 7,
+                        "unlockScaling": "class_level",
+                        "usage": {
+                            "kind": "always_prepared"
+                        }
+                    },
+                    {
+                        "type": "fixed_spell",
+                        "spellId": "spell_commune_with_nature",
+                        "unlockLevel": 9,
+                        "unlockScaling": "class_level",
+                        "usage": {
+                            "kind": "always_prepared"
+                        }
+                    },
+                    {
+                        "type": "fixed_spell",
+                        "spellId": "spell_tree_stride",
+                        "unlockLevel": 9,
+                        "unlockScaling": "class_level",
+                        "usage": {
+                            "kind": "always_prepared"
+                        }
+                    }
+                ],
+                "choices": []
+            },
+            "resources": [],
+            "triggers": [],
+            "diceRules": [],
+            "criticalHitModifiers": [],
+            "actions": []
+        },
+        {
+            "id": "trait_land_circle_spells_grassland",
+            "name": "Circle Spells (Grassland)",
+            "lore": {
+                "shortDescription": "Your mystical connection to the grassland infuses you with the ability to cast certain spells. At 3rd, 5th, 7th, and 9th level you gain access to circle spells connected to the land where you became a druid. Once you gain access to a circle spell, you always have it prepared…",
+                "fullText": "Your mystical connection to the grassland infuses you with the ability to cast certain spells. At 3rd, 5th, 7th, and 9th level you gain access to circle spells connected to the land where you became a druid. Once you gain access to a circle spell, you always have it prepared, and it doesn't count against the number of spells you can prepare each day."
+            },
+            "modifiers": {
+                "fixed": [],
+                "choices": []
+            },
+            "spells": {
+                "fixed": [
+                    {
+                        "type": "fixed_spell",
+                        "spellId": "spell_invisibility",
+                        "unlockScaling": "class_level",
+                        "usage": {
+                            "kind": "always_prepared"
+                        }
+                    },
+                    {
+                        "type": "fixed_spell",
+                        "spellId": "spell_pass_without_trace",
+                        "unlockScaling": "class_level",
+                        "usage": {
+                            "kind": "always_prepared"
+                        }
+                    },
+                    {
+                        "type": "fixed_spell",
+                        "spellId": "spell_daylight",
+                        "unlockLevel": 5,
+                        "unlockScaling": "class_level",
+                        "usage": {
+                            "kind": "always_prepared"
+                        }
+                    },
+                    {
+                        "type": "fixed_spell",
+                        "spellId": "spell_haste",
+                        "unlockLevel": 5,
+                        "unlockScaling": "class_level",
+                        "usage": {
+                            "kind": "always_prepared"
+                        }
+                    },
+                    {
+                        "type": "fixed_spell",
+                        "spellId": "spell_divination",
+                        "unlockLevel": 7,
+                        "unlockScaling": "class_level",
+                        "usage": {
+                            "kind": "always_prepared"
+                        }
+                    },
+                    {
+                        "type": "fixed_spell",
+                        "spellId": "spell_freedom_of_movement",
+                        "unlockLevel": 7,
+                        "unlockScaling": "class_level",
+                        "usage": {
+                            "kind": "always_prepared"
+                        }
+                    },
+                    {
+                        "type": "fixed_spell",
+                        "spellId": "spell_dream",
+                        "unlockLevel": 9,
+                        "unlockScaling": "class_level",
+                        "usage": {
+                            "kind": "always_prepared"
+                        }
+                    },
+                    {
+                        "type": "fixed_spell",
+                        "spellId": "spell_insect_plague",
+                        "unlockLevel": 9,
+                        "unlockScaling": "class_level",
+                        "usage": {
+                            "kind": "always_prepared"
+                        }
+                    }
+                ],
+                "choices": []
+            },
+            "resources": [],
+            "triggers": [],
+            "diceRules": [],
+            "criticalHitModifiers": [],
+            "actions": []
+        },
+        {
+            "id": "trait_land_circle_spells_mountain",
+            "name": "Circle Spells (Mountain)",
+            "lore": {
+                "shortDescription": "Your mystical connection to the mountain infuses you with the ability to cast certain spells. At 3rd, 5th, 7th, and 9th level you gain access to circle spells connected to the land where you became a druid. Once you gain access to a circle spell, you always have it prepared…",
+                "fullText": "Your mystical connection to the mountain infuses you with the ability to cast certain spells. At 3rd, 5th, 7th, and 9th level you gain access to circle spells connected to the land where you became a druid. Once you gain access to a circle spell, you always have it prepared, and it doesn't count against the number of spells you can prepare each day."
+            },
+            "modifiers": {
+                "fixed": [],
+                "choices": []
+            },
+            "spells": {
+                "fixed": [
+                    {
+                        "type": "fixed_spell",
+                        "spellId": "spell_spider_climb",
+                        "unlockScaling": "class_level",
+                        "usage": {
+                            "kind": "always_prepared"
+                        }
+                    },
+                    {
+                        "type": "fixed_spell",
+                        "spellId": "spell_spike_growth",
+                        "unlockScaling": "class_level",
+                        "usage": {
+                            "kind": "always_prepared"
+                        }
+                    },
+                    {
+                        "type": "fixed_spell",
+                        "spellId": "spell_lightning_bolt",
+                        "unlockLevel": 5,
+                        "unlockScaling": "class_level",
+                        "usage": {
+                            "kind": "always_prepared"
+                        }
+                    },
+                    {
+                        "type": "fixed_spell",
+                        "spellId": "spell_meld_into_stone",
+                        "unlockLevel": 5,
+                        "unlockScaling": "class_level",
+                        "usage": {
+                            "kind": "always_prepared"
+                        }
+                    },
+                    {
+                        "type": "fixed_spell",
+                        "spellId": "spell_stone_shape",
+                        "unlockLevel": 7,
+                        "unlockScaling": "class_level",
+                        "usage": {
+                            "kind": "always_prepared"
+                        }
+                    },
+                    {
+                        "type": "fixed_spell",
+                        "spellId": "spell_stoneskin",
+                        "unlockLevel": 7,
+                        "unlockScaling": "class_level",
+                        "usage": {
+                            "kind": "always_prepared"
+                        }
+                    },
+                    {
+                        "type": "fixed_spell",
+                        "spellId": "spell_passwall",
+                        "unlockLevel": 9,
+                        "unlockScaling": "class_level",
+                        "usage": {
+                            "kind": "always_prepared"
+                        }
+                    },
+                    {
+                        "type": "fixed_spell",
+                        "spellId": "spell_wall_of_stone",
+                        "unlockLevel": 9,
+                        "unlockScaling": "class_level",
+                        "usage": {
+                            "kind": "always_prepared"
+                        }
+                    }
+                ],
+                "choices": []
+            },
+            "resources": [],
+            "triggers": [],
+            "diceRules": [],
+            "criticalHitModifiers": [],
+            "actions": []
+        },
+        {
+            "id": "trait_land_circle_spells_swamp",
+            "name": "Circle Spells (Swamp)",
+            "lore": {
+                "shortDescription": "Your mystical connection to the swamp infuses you with the ability to cast certain spells. At 3rd, 5th, 7th, and 9th level you gain access to circle spells connected to the land where you became a druid. Once you gain access to a circle spell, you always have it prepared, and…",
+                "fullText": "Your mystical connection to the swamp infuses you with the ability to cast certain spells. At 3rd, 5th, 7th, and 9th level you gain access to circle spells connected to the land where you became a druid. Once you gain access to a circle spell, you always have it prepared, and it doesn't count against the number of spells you can prepare each day."
+            },
+            "modifiers": {
+                "fixed": [],
+                "choices": []
+            },
+            "spells": {
+                "fixed": [
+                    {
+                        "type": "fixed_spell",
+                        "spellId": "spell_darkness",
+                        "unlockScaling": "class_level",
+                        "usage": {
+                            "kind": "always_prepared"
+                        }
+                    },
+                    {
+                        "type": "fixed_spell",
+                        "spellId": "spell_melfs_acid_arrow",
+                        "unlockScaling": "class_level",
+                        "usage": {
+                            "kind": "always_prepared"
+                        }
+                    },
+                    {
+                        "type": "fixed_spell",
+                        "spellId": "spell_water_walk",
+                        "unlockLevel": 5,
+                        "unlockScaling": "class_level",
+                        "usage": {
+                            "kind": "always_prepared"
+                        }
+                    },
+                    {
+                        "type": "fixed_spell",
+                        "spellId": "spell_stinking_cloud",
+                        "unlockLevel": 5,
+                        "unlockScaling": "class_level",
+                        "usage": {
+                            "kind": "always_prepared"
+                        }
+                    },
+                    {
+                        "type": "fixed_spell",
+                        "spellId": "spell_freedom_of_movement",
+                        "unlockLevel": 7,
+                        "unlockScaling": "class_level",
+                        "usage": {
+                            "kind": "always_prepared"
+                        }
+                    },
+                    {
+                        "type": "fixed_spell",
+                        "spellId": "spell_locate_creature",
+                        "unlockLevel": 7,
+                        "unlockScaling": "class_level",
+                        "usage": {
+                            "kind": "always_prepared"
+                        }
+                    },
+                    {
+                        "type": "fixed_spell",
+                        "spellId": "spell_insect_plague",
+                        "unlockLevel": 9,
+                        "unlockScaling": "class_level",
+                        "usage": {
+                            "kind": "always_prepared"
+                        }
+                    },
+                    {
+                        "type": "fixed_spell",
+                        "spellId": "spell_scrying",
+                        "unlockLevel": 9,
+                        "unlockScaling": "class_level",
+                        "usage": {
+                            "kind": "always_prepared"
+                        }
+                    }
+                ],
+                "choices": []
+            },
+            "resources": [],
+            "triggers": [],
+            "diceRules": [],
+            "criticalHitModifiers": [],
+            "actions": []
+        },
+        {
+            "id": "trait_land_circle_spells_underdark",
+            "name": "Circle Spells (Underdark)",
+            "lore": {
+                "shortDescription": "Your mystical connection to the underdark infuses you with the ability to cast certain spells. At 3rd, 5th, 7th, and 9th level you gain access to circle spells connected to the land where you became a druid. Once you gain access to a circle spell, you always have it prepared…",
+                "fullText": "Your mystical connection to the underdark infuses you with the ability to cast certain spells. At 3rd, 5th, 7th, and 9th level you gain access to circle spells connected to the land where you became a druid. Once you gain access to a circle spell, you always have it prepared, and it doesn't count against the number of spells you can prepare each day."
+            },
+            "modifiers": {
+                "fixed": [],
+                "choices": []
+            },
+            "spells": {
+                "fixed": [
+                    {
+                        "type": "fixed_spell",
+                        "spellId": "spell_spider_climb",
+                        "unlockScaling": "class_level",
+                        "usage": {
+                            "kind": "always_prepared"
+                        }
+                    },
+                    {
+                        "type": "fixed_spell",
+                        "spellId": "spell_web",
+                        "unlockScaling": "class_level",
+                        "usage": {
+                            "kind": "always_prepared"
+                        }
+                    },
+                    {
+                        "type": "fixed_spell",
+                        "spellId": "spell_gaseous_form",
+                        "unlockLevel": 5,
+                        "unlockScaling": "class_level",
+                        "usage": {
+                            "kind": "always_prepared"
+                        }
+                    },
+                    {
+                        "type": "fixed_spell",
+                        "spellId": "spell_stinking_cloud",
+                        "unlockLevel": 5,
+                        "unlockScaling": "class_level",
+                        "usage": {
+                            "kind": "always_prepared"
+                        }
+                    },
+                    {
+                        "type": "fixed_spell",
+                        "spellId": "spell_greater_invisibility",
+                        "unlockLevel": 7,
+                        "unlockScaling": "class_level",
+                        "usage": {
+                            "kind": "always_prepared"
+                        }
+                    },
+                    {
+                        "type": "fixed_spell",
+                        "spellId": "spell_stone_shape",
+                        "unlockLevel": 7,
+                        "unlockScaling": "class_level",
+                        "usage": {
+                            "kind": "always_prepared"
+                        }
+                    },
+                    {
+                        "type": "fixed_spell",
+                        "spellId": "spell_cloudkill",
+                        "unlockLevel": 9,
+                        "unlockScaling": "class_level",
+                        "usage": {
+                            "kind": "always_prepared"
+                        }
+                    },
+                    {
+                        "type": "fixed_spell",
+                        "spellId": "spell_insect_plague",
+                        "unlockLevel": 9,
+                        "unlockScaling": "class_level",
+                        "usage": {
+                            "kind": "always_prepared"
+                        }
+                    }
+                ],
+                "choices": []
+            },
+            "resources": [],
+            "triggers": [],
+            "diceRules": [],
+            "criticalHitModifiers": [],
+            "actions": []
+        },
+        {
+            "id": "trait_fs_archery",
+            "name": "Fighting Style: Archery",
+            "lore": {
+                "shortDescription": "You gain a +2 bonus to attack rolls you make with ranged weapons."
+            },
+            "modifiers": {
+                "fixed": [
+                    {
+                        "target": "ATTACK_BONUS",
+                        "type": "add",
+                        "value": 2,
+                        "scalingFactor": "none",
+                        "requiredStates": [
+                            "action_ranged_attack"
+                        ],
+                        "forbiddenStates": []
+                    }
+                ],
+                "choices": []
+            },
+            "resources": [],
+            "triggers": [],
+            "diceRules": [],
+            "criticalHitModifiers": [],
+            "actions": []
+        },
+        {
+            "id": "trait_fs_defense",
+            "name": "Fighting Style: Defense",
+            "lore": {
+                "shortDescription": "While you are wearing armor, you gain a +1 bonus to AC."
+            },
+            "modifiers": {
+                "fixed": [
+                    {
+                        "target": "ARMOR_CLASS",
+                        "type": "add",
+                        "value": 1,
+                        "scalingFactor": "none",
+                        "requiredStates": [
+                            "status_wearing_armor"
+                        ],
+                        "forbiddenStates": []
+                    }
+                ],
+                "choices": []
+            },
+            "resources": [],
+            "triggers": [],
+            "diceRules": [],
+            "criticalHitModifiers": [],
+            "actions": []
+        },
+        {
+            "id": "trait_fs_dueling",
+            "name": "Fighting Style: Dueling",
+            "lore": {
+                "shortDescription": "When you are wielding a melee weapon in one hand and no other weapons, you gain a +2 bonus to damage rolls with that weapon."
+            },
+            "modifiers": {
+                "fixed": [
+                    {
+                        "target": "DAMAGE_BONUS",
+                        "type": "add",
+                        "value": 2,
+                        "scalingFactor": "none",
+                        "requiredStates": [
+                            "action_melee_attack",
+                            "status_wielding_one_handed_only"
+                        ],
+                        "forbiddenStates": []
+                    }
+                ],
+                "choices": []
+            },
+            "resources": [],
+            "triggers": [],
+            "diceRules": [],
+            "criticalHitModifiers": [],
+            "actions": []
+        },
+        {
+            "id": "trait_fs_great_weapon_fighting",
+            "name": "Fighting Style: Great Weapon Fighting",
+            "lore": {
+                "shortDescription": "When you roll a 1 or 2 on a damage die for an attack you make with a melee weapon that you are wielding with two hands, you can reroll the die and must use the new roll, even if the new roll is a 1 or a 2. The weapon must have the two-handed or versatile property for you to…",
+                "fullText": "When you roll a 1 or 2 on a damage die for an attack you make with a melee weapon that you are wielding with two hands, you can reroll the die and must use the new roll, even if the new roll is a 1 or a 2. The weapon must have the two-handed or versatile property for you to gain this benefit."
+            },
+            "modifiers": {
+                "fixed": [],
+                "choices": []
+            },
+            "resources": [],
+            "triggers": [],
+            "diceRules": [
+                {
+                    "target": "DAMAGE_ROLL",
+                    "requiredStates": [
+                        "action_melee_attack",
+                        "status_wielding_two_handed"
+                    ],
+                    "mutator": {
+                        "type": "reroll_once",
+                        "triggerOn": [
+                            1,
+                            2
+                        ]
+                    }
+                }
+            ],
+            "criticalHitModifiers": [],
+            "actions": []
+        },
+        {
+            "id": "trait_fs_protection",
+            "name": "Fighting Style: Protection",
+            "lore": {
+                "shortDescription": "When a creature you can see attacks a target other than you that is within 5 feet of you, you can use your reaction to impose disadvantage on the attack roll. You must be wielding a shield."
+            },
+            "implementation": {
+                "mode": "manual_sheet_helper",
+                "summary": "Phase 1 keeps Protection as a sheet-level reaction helper for tabletop play rather than forcing a target-aware enemy model into the engine.",
+                "blockedBy": [
+                    "other_creature_attack_roll_targeting"
+                ]
+            },
+            "modifiers": {
+                "fixed": [],
+                "choices": []
+            },
+            "resources": [],
+            "triggers": [],
+            "diceRules": [],
+            "criticalHitModifiers": [],
+            "actions": []
+        },
+        {
+            "id": "trait_fs_two_weapon_fighting",
+            "name": "Fighting Style: Two-Weapon Fighting",
+            "lore": {
+                "shortDescription": "When you engage in two-weapon fighting, you can add your ability modifier to the damage of the second attack."
+            },
+            "modifiers": {
+                "fixed": [
+                    {
+                        "target": "DAMAGE_BONUS",
+                        "type": "add",
+                        "value": 0,
+                        "valueSource": "attack_ability_modifier",
+                        "scalingFactor": "none",
+                        "requiredStates": [
+                            "offhand_attack",
+                            "two_weapon_fighting_style"
+                        ],
+                        "forbiddenStates": [],
+                        "attackContext": "off_hand"
+                    }
+                ],
+                "choices": []
+            },
+            "grantedStates": [
+                "two_weapon_fighting_style"
+            ],
+            "resources": [],
+            "triggers": [],
+            "diceRules": [],
+            "criticalHitModifiers": [],
+            "actions": []
+        },
+        {
+            "id": "trait_metamagic_careful_spell",
+            "name": "Careful Spell",
+            "lore": {
+                "shortDescription": "Spend 1 sorcery point to shield chosen creatures from your spell's effect on a successful save."
+            },
+            "modifiers": {
+                "fixed": [],
+                "choices": []
+            },
+            "resources": [],
+            "triggers": [],
+            "diceRules": [],
+            "criticalHitModifiers": [],
+            "actions": []
+        },
+        {
+            "id": "trait_metamagic_distant_spell",
+            "name": "Distant Spell",
+            "lore": {
+                "shortDescription": "Spend 1 sorcery point to double a spell's range, or to give a touch spell 30 feet of range."
+            },
+            "modifiers": {
+                "fixed": [],
+                "choices": []
+            },
+            "resources": [],
+            "triggers": [],
+            "diceRules": [],
+            "criticalHitModifiers": [],
+            "actions": []
+        },
+        {
+            "id": "trait_metamagic_empowered_spell",
+            "name": "Empowered Spell",
+            "lore": {
+                "shortDescription": "Spend 1 sorcery point to reroll damage dice up to your Charisma modifier."
+            },
+            "modifiers": {
+                "fixed": [],
+                "choices": []
+            },
+            "resources": [],
+            "triggers": [],
+            "diceRules": [],
+            "criticalHitModifiers": [],
+            "actions": []
+        },
+        {
+            "id": "trait_metamagic_extended_spell",
+            "name": "Extended Spell",
+            "lore": {
+                "shortDescription": "Spend 1 sorcery point to double a spell's duration, up to 24 hours."
+            },
+            "modifiers": {
+                "fixed": [],
+                "choices": []
+            },
+            "resources": [],
+            "triggers": [],
+            "diceRules": [],
+            "criticalHitModifiers": [],
+            "actions": []
+        },
+        {
+            "id": "trait_metamagic_heightened_spell",
+            "name": "Heightened Spell",
+            "lore": {
+                "shortDescription": "Spend 3 sorcery points to give one target disadvantage on its first save against the spell."
+            },
+            "modifiers": {
+                "fixed": [],
+                "choices": []
+            },
+            "resources": [],
+            "triggers": [],
+            "diceRules": [],
+            "criticalHitModifiers": [],
+            "actions": []
+        },
+        {
+            "id": "trait_metamagic_quickened_spell",
+            "name": "Quickened Spell",
+            "lore": {
+                "shortDescription": "Spend 2 sorcery points to cast a 1-action spell as a bonus action."
+            },
+            "modifiers": {
+                "fixed": [],
+                "choices": []
+            },
+            "resources": [],
+            "triggers": [],
+            "diceRules": [],
+            "criticalHitModifiers": [],
+            "actions": []
+        },
+        {
+            "id": "trait_metamagic_subtle_spell",
+            "name": "Subtle Spell",
+            "lore": {
+                "shortDescription": "Spend 1 sorcery point to cast without verbal or somatic components."
+            },
+            "modifiers": {
+                "fixed": [],
+                "choices": []
+            },
+            "resources": [],
+            "triggers": [],
+            "diceRules": [],
+            "criticalHitModifiers": [],
+            "actions": []
+        },
+        {
+            "id": "trait_metamagic_twinned_spell",
+            "name": "Twinned Spell",
+            "lore": {
+                "shortDescription": "Spend sorcery points equal to the spell's level to target a second creature."
+            },
+            "modifiers": {
+                "fixed": [],
+                "choices": []
+            },
+            "resources": [],
+            "triggers": [],
+            "diceRules": [],
+            "criticalHitModifiers": [],
+            "actions": []
+        },
+        {
+            "id": "trait_pact_of_the_chain",
+            "name": "Pact of the Chain",
+            "lore": {
+                "shortDescription": "You learn find familiar and can take special forms; your familiar can attack with your bonus action."
+            },
+            "modifiers": {
+                "fixed": [],
+                "choices": []
+            },
+            "resources": [],
+            "triggers": [],
+            "diceRules": [],
+            "criticalHitModifiers": [],
+            "actions": []
+        },
+        {
+            "id": "trait_pact_of_the_blade",
+            "name": "Pact of the Blade",
+            "lore": {
+                "shortDescription": "You can conjure a pact weapon you are proficient with and which counts as magical."
+            },
+            "modifiers": {
+                "fixed": [],
+                "choices": []
+            },
+            "resources": [],
+            "triggers": [],
+            "diceRules": [],
+            "criticalHitModifiers": [],
+            "actions": []
+        },
+        {
+            "id": "trait_pact_of_the_tome",
+            "name": "Pact of the Tome",
+            "lore": {
+                "shortDescription": "You gain a Book of Shadows holding three cantrips from any class's spell list."
+            },
+            "modifiers": {
+                "fixed": [],
+                "choices": []
+            },
+            "resources": [],
+            "triggers": [],
+            "diceRules": [],
+            "criticalHitModifiers": [],
+            "actions": []
+        },
+        {
+            "id": "trait_invocation_agonizing_blast",
+            "name": "Agonizing Blast",
+            "lore": {
+                "shortDescription": "Add your Charisma modifier to eldritch blast damage."
+            },
+            "modifiers": {
+                "fixed": [],
+                "choices": []
+            },
+            "resources": [],
+            "triggers": [],
+            "diceRules": [],
+            "criticalHitModifiers": [],
+            "actions": []
+        },
+        {
+            "id": "trait_invocation_armor_of_shadows",
+            "name": "Armor of Shadows",
+            "lore": {
+                "shortDescription": "Cast mage armor on yourself at will, without a slot."
+            },
+            "modifiers": {
+                "fixed": [],
+                "choices": []
+            },
+            "resources": [],
+            "triggers": [],
+            "diceRules": [],
+            "criticalHitModifiers": [],
+            "actions": []
+        },
+        {
+            "id": "trait_invocation_ascendant_step",
+            "name": "Ascendant Step",
+            "lore": {
+                "shortDescription": "Cast levitate on yourself at will, without a slot."
+            },
+            "modifiers": {
+                "fixed": [],
+                "choices": []
+            },
+            "resources": [],
+            "triggers": [],
+            "diceRules": [],
+            "criticalHitModifiers": [],
+            "actions": []
+        },
+        {
+            "id": "trait_invocation_beast_speech",
+            "name": "Beast Speech",
+            "lore": {
+                "shortDescription": "Cast speak with animals at will."
+            },
+            "modifiers": {
+                "fixed": [],
+                "choices": []
+            },
+            "resources": [],
+            "triggers": [],
+            "diceRules": [],
+            "criticalHitModifiers": [],
+            "actions": []
+        },
+        {
+            "id": "trait_invocation_beguiling_influence",
+            "name": "Beguiling Influence",
+            "lore": {
+                "shortDescription": "Gain proficiency in Deception and Persuasion."
+            },
+            "modifiers": {
+                "fixed": [],
+                "choices": []
+            },
+            "resources": [],
+            "triggers": [],
+            "diceRules": [],
+            "criticalHitModifiers": [],
+            "actions": []
+        },
+        {
+            "id": "trait_invocation_bewitching_whispers",
+            "name": "Bewitching Whispers",
+            "lore": {
+                "shortDescription": "Cast compulsion once per long rest using a warlock slot."
+            },
+            "modifiers": {
+                "fixed": [],
+                "choices": []
+            },
+            "resources": [],
+            "triggers": [],
+            "diceRules": [],
+            "criticalHitModifiers": [],
+            "actions": []
+        },
+        {
+            "id": "trait_invocation_book_of_ancient_secrets",
+            "name": "Book of Ancient Secrets",
+            "lore": {
+                "shortDescription": "Inscribe and cast ritual spells from your Book of Shadows."
+            },
+            "modifiers": {
+                "fixed": [],
+                "choices": []
+            },
+            "resources": [],
+            "triggers": [],
+            "diceRules": [],
+            "criticalHitModifiers": [],
+            "actions": []
+        },
+        {
+            "id": "trait_invocation_chains_of_carceri",
+            "name": "Chains of Carceri",
+            "lore": {
+                "shortDescription": "Cast hold monster at will on a celestial, fiend, or elemental."
+            },
+            "modifiers": {
+                "fixed": [],
+                "choices": []
+            },
+            "resources": [],
+            "triggers": [],
+            "diceRules": [],
+            "criticalHitModifiers": [],
+            "actions": []
+        },
+        {
+            "id": "trait_invocation_devils_sight",
+            "name": "Devil's Sight",
+            "lore": {
+                "shortDescription": "See normally in darkness, magical or not, out to 120 feet."
+            },
+            "modifiers": {
+                "fixed": [],
+                "choices": []
+            },
+            "resources": [],
+            "triggers": [],
+            "diceRules": [],
+            "criticalHitModifiers": [],
+            "actions": []
+        },
+        {
+            "id": "trait_invocation_dreadful_word",
+            "name": "Dreadful Word",
+            "lore": {
+                "shortDescription": "Cast confusion once per long rest using a warlock slot."
+            },
+            "modifiers": {
+                "fixed": [],
+                "choices": []
+            },
+            "resources": [],
+            "triggers": [],
+            "diceRules": [],
+            "criticalHitModifiers": [],
+            "actions": []
+        },
+        {
+            "id": "trait_invocation_eldritch_sight",
+            "name": "Eldritch Sight",
+            "lore": {
+                "shortDescription": "Cast detect magic at will."
+            },
+            "modifiers": {
+                "fixed": [],
+                "choices": []
+            },
+            "resources": [],
+            "triggers": [],
+            "diceRules": [],
+            "criticalHitModifiers": [],
+            "actions": []
+        },
+        {
+            "id": "trait_invocation_eldritch_spear",
+            "name": "Eldritch Spear",
+            "lore": {
+                "shortDescription": "Eldritch blast gains 300 feet of range."
+            },
+            "modifiers": {
+                "fixed": [],
+                "choices": []
+            },
+            "resources": [],
+            "triggers": [],
+            "diceRules": [],
+            "criticalHitModifiers": [],
+            "actions": []
+        },
+        {
+            "id": "trait_invocation_eyes_of_the_rune_keeper",
+            "name": "Eyes of the Rune Keeper",
+            "lore": {
+                "shortDescription": "You can read all writing."
+            },
+            "modifiers": {
+                "fixed": [],
+                "choices": []
+            },
+            "resources": [],
+            "triggers": [],
+            "diceRules": [],
+            "criticalHitModifiers": [],
+            "actions": []
+        },
+        {
+            "id": "trait_invocation_fiendish_vigor",
+            "name": "Fiendish Vigor",
+            "lore": {
+                "shortDescription": "Cast false life on yourself at will as a 1st-level spell."
+            },
+            "modifiers": {
+                "fixed": [],
+                "choices": []
+            },
+            "resources": [],
+            "triggers": [],
+            "diceRules": [],
+            "criticalHitModifiers": [],
+            "actions": []
+        },
+        {
+            "id": "trait_invocation_gaze_of_two_minds",
+            "name": "Gaze of Two Minds",
+            "lore": {
+                "shortDescription": "Perceive through a willing humanoid's senses until the end of your next turn."
+            },
+            "modifiers": {
+                "fixed": [],
+                "choices": []
+            },
+            "resources": [],
+            "triggers": [],
+            "diceRules": [],
+            "criticalHitModifiers": [],
+            "actions": []
+        },
+        {
+            "id": "trait_invocation_lifedrinker",
+            "name": "Lifedrinker",
+            "lore": {
+                "shortDescription": "Your pact weapon deals extra necrotic damage equal to your Charisma modifier."
+            },
+            "modifiers": {
+                "fixed": [],
+                "choices": []
+            },
+            "resources": [],
+            "triggers": [],
+            "diceRules": [],
+            "criticalHitModifiers": [],
+            "actions": []
+        },
+        {
+            "id": "trait_invocation_mask_of_many_faces",
+            "name": "Mask of Many Faces",
+            "lore": {
+                "shortDescription": "Cast disguise self at will."
+            },
+            "modifiers": {
+                "fixed": [],
+                "choices": []
+            },
+            "resources": [],
+            "triggers": [],
+            "diceRules": [],
+            "criticalHitModifiers": [],
+            "actions": []
+        },
+        {
+            "id": "trait_invocation_master_of_myriad_forms",
+            "name": "Master of Myriad Forms",
+            "lore": {
+                "shortDescription": "Cast alter self at will."
+            },
+            "modifiers": {
+                "fixed": [],
+                "choices": []
+            },
+            "resources": [],
+            "triggers": [],
+            "diceRules": [],
+            "criticalHitModifiers": [],
+            "actions": []
+        },
+        {
+            "id": "trait_invocation_minions_of_chaos",
+            "name": "Minions of Chaos",
+            "lore": {
+                "shortDescription": "Cast conjure elemental once per long rest using a warlock slot."
+            },
+            "modifiers": {
+                "fixed": [],
+                "choices": []
+            },
+            "resources": [],
+            "triggers": [],
+            "diceRules": [],
+            "criticalHitModifiers": [],
+            "actions": []
+        },
+        {
+            "id": "trait_invocation_mire_the_mind",
+            "name": "Mire the Mind",
+            "lore": {
+                "shortDescription": "Cast slow once per long rest using a warlock slot."
+            },
+            "modifiers": {
+                "fixed": [],
+                "choices": []
+            },
+            "resources": [],
+            "triggers": [],
+            "diceRules": [],
+            "criticalHitModifiers": [],
+            "actions": []
+        },
+        {
+            "id": "trait_invocation_misty_visions",
+            "name": "Misty Visions",
+            "lore": {
+                "shortDescription": "Cast silent image at will."
+            },
+            "modifiers": {
+                "fixed": [],
+                "choices": []
+            },
+            "resources": [],
+            "triggers": [],
+            "diceRules": [],
+            "criticalHitModifiers": [],
+            "actions": []
+        },
+        {
+            "id": "trait_invocation_one_with_shadows",
+            "name": "One with Shadows",
+            "lore": {
+                "shortDescription": "Become invisible while in dim light or darkness until you move or act."
+            },
+            "modifiers": {
+                "fixed": [],
+                "choices": []
+            },
+            "resources": [],
+            "triggers": [],
+            "diceRules": [],
+            "criticalHitModifiers": [],
+            "actions": []
+        },
+        {
+            "id": "trait_invocation_otherworldly_leap",
+            "name": "Otherworldly Leap",
+            "lore": {
+                "shortDescription": "Cast jump on yourself at will."
+            },
+            "modifiers": {
+                "fixed": [],
+                "choices": []
+            },
+            "resources": [],
+            "triggers": [],
+            "diceRules": [],
+            "criticalHitModifiers": [],
+            "actions": []
+        },
+        {
+            "id": "trait_invocation_repelling_blast",
+            "name": "Repelling Blast",
+            "lore": {
+                "shortDescription": "Push a creature 10 feet away when eldritch blast hits it."
+            },
+            "modifiers": {
+                "fixed": [],
+                "choices": []
+            },
+            "resources": [],
+            "triggers": [],
+            "diceRules": [],
+            "criticalHitModifiers": [],
+            "actions": []
+        },
+        {
+            "id": "trait_invocation_sculptor_of_flesh",
+            "name": "Sculptor of Flesh",
+            "lore": {
+                "shortDescription": "Cast polymorph once per long rest using a warlock slot."
+            },
+            "modifiers": {
+                "fixed": [],
+                "choices": []
+            },
+            "resources": [],
+            "triggers": [],
+            "diceRules": [],
+            "criticalHitModifiers": [],
+            "actions": []
+        },
+        {
+            "id": "trait_invocation_sign_of_ill_omen",
+            "name": "Sign of Ill Omen",
+            "lore": {
+                "shortDescription": "Cast bestow curse once per long rest using a warlock slot."
+            },
+            "modifiers": {
+                "fixed": [],
+                "choices": []
+            },
+            "resources": [],
+            "triggers": [],
+            "diceRules": [],
+            "criticalHitModifiers": [],
+            "actions": []
+        },
+        {
+            "id": "trait_invocation_thief_of_five_fates",
+            "name": "Thief of Five Fates",
+            "lore": {
+                "shortDescription": "Cast bane once per long rest using a warlock slot."
+            },
+            "modifiers": {
+                "fixed": [],
+                "choices": []
+            },
+            "resources": [],
+            "triggers": [],
+            "diceRules": [],
+            "criticalHitModifiers": [],
+            "actions": []
+        },
+        {
+            "id": "trait_invocation_thirsting_blade",
+            "name": "Thirsting Blade",
+            "lore": {
+                "shortDescription": "Attack twice with your pact weapon when you take the Attack action."
+            },
+            "modifiers": {
+                "fixed": [],
+                "choices": []
+            },
+            "resources": [],
+            "triggers": [],
+            "diceRules": [],
+            "criticalHitModifiers": [],
+            "actions": []
+        },
+        {
+            "id": "trait_invocation_visions_of_distant_realms",
+            "name": "Visions of Distant Realms",
+            "lore": {
+                "shortDescription": "Cast arcane eye at will."
+            },
+            "modifiers": {
+                "fixed": [],
+                "choices": []
+            },
+            "resources": [],
+            "triggers": [],
+            "diceRules": [],
+            "criticalHitModifiers": [],
+            "actions": []
+        },
+        {
+            "id": "trait_invocation_voice_of_the_chain_master",
+            "name": "Voice of the Chain Master",
+            "lore": {
+                "shortDescription": "Communicate telepathically with your familiar and perceive through its senses."
+            },
+            "modifiers": {
+                "fixed": [],
+                "choices": []
+            },
+            "resources": [],
+            "triggers": [],
+            "diceRules": [],
+            "criticalHitModifiers": [],
+            "actions": []
+        },
+        {
+            "id": "trait_invocation_whispers_of_the_grave",
+            "name": "Whispers of the Grave",
+            "lore": {
+                "shortDescription": "Cast speak with dead at will."
+            },
+            "modifiers": {
+                "fixed": [],
+                "choices": []
+            },
+            "resources": [],
+            "triggers": [],
+            "diceRules": [],
+            "criticalHitModifiers": [],
+            "actions": []
+        },
+        {
+            "id": "trait_invocation_witch_sight",
+            "name": "Witch Sight",
+            "lore": {
+                "shortDescription": "See the true form of shapechangers and creatures concealed by illusion within 30 feet."
+            },
+            "modifiers": {
+                "fixed": [],
+                "choices": []
+            },
+            "resources": [],
+            "triggers": [],
+            "diceRules": [],
+            "criticalHitModifiers": [],
+            "actions": []
+        },
+        {
+            "id": "trait_totem_spirit_bear",
+            "name": "Totem Spirit: Bear",
+            "lore": {
+                "shortDescription": "While raging you have resistance to all damage except psychic."
+            },
+            "modifiers": {
+                "fixed": [],
+                "choices": []
+            },
+            "resources": [],
+            "triggers": [],
+            "diceRules": [],
+            "criticalHitModifiers": [],
+            "actions": []
+        },
+        {
+            "id": "trait_totem_spirit_eagle",
+            "name": "Totem Spirit: Eagle",
+            "lore": {
+                "shortDescription": "While raging and unarmored, opportunity attacks against you have disadvantage and you can Dash as a bonus action."
+            },
+            "modifiers": {
+                "fixed": [],
+                "choices": []
+            },
+            "resources": [],
+            "triggers": [],
+            "diceRules": [],
+            "criticalHitModifiers": [],
+            "actions": []
+        },
+        {
+            "id": "trait_totem_spirit_wolf",
+            "name": "Totem Spirit: Wolf",
+            "lore": {
+                "shortDescription": "While raging, your allies have advantage on melee attacks against enemies within 5 feet of you."
+            },
+            "modifiers": {
+                "fixed": [],
+                "choices": []
+            },
+            "resources": [],
+            "triggers": [],
+            "diceRules": [],
+            "criticalHitModifiers": [],
+            "actions": []
+        },
+        {
+            "id": "trait_aspect_of_the_beast_bear",
+            "name": "Aspect of the Beast: Bear",
+            "lore": {
+                "shortDescription": "Your carrying capacity doubles and you have advantage on Strength checks to move objects."
+            },
+            "modifiers": {
+                "fixed": [],
+                "choices": []
+            },
+            "resources": [],
+            "triggers": [],
+            "diceRules": [],
+            "criticalHitModifiers": [],
+            "actions": []
+        },
+        {
+            "id": "trait_aspect_of_the_beast_eagle",
+            "name": "Aspect of the Beast: Eagle",
+            "lore": {
+                "shortDescription": "You can see up to a mile away with ease and dim light does not impose disadvantage on Perception."
+            },
+            "modifiers": {
+                "fixed": [],
+                "choices": []
+            },
+            "resources": [],
+            "triggers": [],
+            "diceRules": [],
+            "criticalHitModifiers": [],
+            "actions": []
+        },
+        {
+            "id": "trait_aspect_of_the_beast_wolf",
+            "name": "Aspect of the Beast: Wolf",
+            "lore": {
+                "shortDescription": "You can track at a fast pace and move stealthily at a normal pace."
+            },
+            "modifiers": {
+                "fixed": [],
+                "choices": []
+            },
+            "resources": [],
+            "triggers": [],
+            "diceRules": [],
+            "criticalHitModifiers": [],
+            "actions": []
+        },
+        {
+            "id": "trait_totemic_attunement_bear",
+            "name": "Totemic Attunement: Bear",
+            "lore": {
+                "shortDescription": "While raging, enemies within 5 feet have disadvantage attacking anyone but you."
+            },
+            "modifiers": {
+                "fixed": [],
+                "choices": []
+            },
+            "resources": [],
+            "triggers": [],
+            "diceRules": [],
+            "criticalHitModifiers": [],
+            "actions": []
+        },
+        {
+            "id": "trait_totemic_attunement_eagle",
+            "name": "Totemic Attunement: Eagle",
+            "lore": {
+                "shortDescription": "While raging, you gain a flying speed equal to your walking speed for one turn."
+            },
+            "modifiers": {
+                "fixed": [],
+                "choices": []
+            },
+            "resources": [],
+            "triggers": [],
+            "diceRules": [],
+            "criticalHitModifiers": [],
+            "actions": []
+        },
+        {
+            "id": "trait_totemic_attunement_wolf",
+            "name": "Totemic Attunement: Wolf",
+            "lore": {
+                "shortDescription": "While raging, you can knock a Large or smaller creature prone when you hit it."
+            },
+            "modifiers": {
+                "fixed": [],
+                "choices": []
+            },
+            "resources": [],
+            "triggers": [],
+            "diceRules": [],
+            "criticalHitModifiers": [],
+            "actions": []
+        },
+        {
+            "id": "trait_elemental_attunement",
+            "name": "Elemental Attunement",
+            "lore": {
+                "shortDescription": "Spend an action to briefly manipulate a Tiny elemental effect within 30 feet."
+            },
+            "modifiers": {
+                "fixed": [],
+                "choices": []
+            },
+            "resources": [],
+            "triggers": [],
+            "diceRules": [],
+            "criticalHitModifiers": [],
+            "actions": []
+        },
+        {
+            "id": "trait_discipline_fangs_of_the_fire_snake",
+            "name": "Fangs of the Fire Snake",
+            "lore": {
+                "shortDescription": "Spend 1 ki to extend your unarmed reach by 10 feet and deal fire damage."
+            },
+            "modifiers": {
+                "fixed": [],
+                "choices": []
+            },
+            "resources": [],
+            "triggers": [],
+            "diceRules": [],
+            "criticalHitModifiers": [],
+            "actions": []
+        },
+        {
+            "id": "trait_discipline_fist_of_four_thunders",
+            "name": "Fist of Four Thunders",
+            "lore": {
+                "shortDescription": "Spend 2 ki to cast thunderwave."
+            },
+            "modifiers": {
+                "fixed": [],
+                "choices": []
+            },
+            "resources": [],
+            "triggers": [],
+            "diceRules": [],
+            "criticalHitModifiers": [],
+            "actions": []
+        },
+        {
+            "id": "trait_discipline_fist_of_unbroken_air",
+            "name": "Fist of Unbroken Air",
+            "lore": {
+                "shortDescription": "Spend 2 ki to push and damage a creature within 30 feet."
+            },
+            "modifiers": {
+                "fixed": [],
+                "choices": []
+            },
+            "resources": [],
+            "triggers": [],
+            "diceRules": [],
+            "criticalHitModifiers": [],
+            "actions": []
+        },
+        {
+            "id": "trait_discipline_rush_of_the_gale_spirits",
+            "name": "Rush of the Gale Spirits",
+            "lore": {
+                "shortDescription": "Spend 2 ki to cast gust of wind."
+            },
+            "modifiers": {
+                "fixed": [],
+                "choices": []
+            },
+            "resources": [],
+            "triggers": [],
+            "diceRules": [],
+            "criticalHitModifiers": [],
+            "actions": []
+        },
+        {
+            "id": "trait_discipline_shape_the_flowing_river",
+            "name": "Shape the Flowing River",
+            "lore": {
+                "shortDescription": "Spend 1 ki to freeze, thaw, or reshape water within 120 feet."
+            },
+            "modifiers": {
+                "fixed": [],
+                "choices": []
+            },
+            "resources": [],
+            "triggers": [],
+            "diceRules": [],
+            "criticalHitModifiers": [],
+            "actions": []
+        },
+        {
+            "id": "trait_discipline_sweeping_cinder_strike",
+            "name": "Sweeping Cinder Strike",
+            "lore": {
+                "shortDescription": "Spend 2 ki to cast burning hands."
+            },
+            "modifiers": {
+                "fixed": [],
+                "choices": []
+            },
+            "resources": [],
+            "triggers": [],
+            "diceRules": [],
+            "criticalHitModifiers": [],
+            "actions": []
+        },
+        {
+            "id": "trait_discipline_water_whip",
+            "name": "Water Whip",
+            "lore": {
+                "shortDescription": "Spend 2 ki to pull, knock prone, and damage a creature within 30 feet."
+            },
+            "modifiers": {
+                "fixed": [],
+                "choices": []
+            },
+            "resources": [],
+            "triggers": [],
+            "diceRules": [],
+            "criticalHitModifiers": [],
+            "actions": []
+        },
+        {
+            "id": "trait_discipline_clench_of_the_north_wind",
+            "name": "Clench of the North Wind",
+            "lore": {
+                "shortDescription": "Spend 3 ki to cast hold person."
+            },
+            "modifiers": {
+                "fixed": [],
+                "choices": []
+            },
+            "resources": [],
+            "triggers": [],
+            "diceRules": [],
+            "criticalHitModifiers": [],
+            "actions": []
+        },
+        {
+            "id": "trait_discipline_gong_of_the_summit",
+            "name": "Gong of the Summit",
+            "lore": {
+                "shortDescription": "Spend 3 ki to cast shatter."
+            },
+            "modifiers": {
+                "fixed": [],
+                "choices": []
+            },
+            "resources": [],
+            "triggers": [],
+            "diceRules": [],
+            "criticalHitModifiers": [],
+            "actions": []
+        },
+        {
+            "id": "trait_discipline_flames_of_the_phoenix",
+            "name": "Flames of the Phoenix",
+            "lore": {
+                "shortDescription": "Spend 4 ki to cast fireball."
+            },
+            "modifiers": {
+                "fixed": [],
+                "choices": []
+            },
+            "resources": [],
+            "triggers": [],
+            "diceRules": [],
+            "criticalHitModifiers": [],
+            "actions": []
+        },
+        {
+            "id": "trait_discipline_mist_stance",
+            "name": "Mist Stance",
+            "lore": {
+                "shortDescription": "Spend 4 ki to cast gaseous form on yourself."
+            },
+            "modifiers": {
+                "fixed": [],
+                "choices": []
+            },
+            "resources": [],
+            "triggers": [],
+            "diceRules": [],
+            "criticalHitModifiers": [],
+            "actions": []
+        },
+        {
+            "id": "trait_discipline_ride_the_wind",
+            "name": "Ride the Wind",
+            "lore": {
+                "shortDescription": "Spend 4 ki to cast fly on yourself."
+            },
+            "modifiers": {
+                "fixed": [],
+                "choices": []
+            },
+            "resources": [],
+            "triggers": [],
+            "diceRules": [],
+            "criticalHitModifiers": [],
+            "actions": []
+        },
+        {
+            "id": "trait_discipline_breath_of_winter",
+            "name": "Breath of Winter",
+            "lore": {
+                "shortDescription": "Spend 6 ki to cast cone of cold."
+            },
+            "modifiers": {
+                "fixed": [],
+                "choices": []
+            },
+            "resources": [],
+            "triggers": [],
+            "diceRules": [],
+            "criticalHitModifiers": [],
+            "actions": []
+        },
+        {
+            "id": "trait_discipline_eternal_mountain_defense",
+            "name": "Eternal Mountain Defense",
+            "lore": {
+                "shortDescription": "Spend 5 ki to cast stoneskin on yourself."
+            },
+            "modifiers": {
+                "fixed": [],
+                "choices": []
+            },
+            "resources": [],
+            "triggers": [],
+            "diceRules": [],
+            "criticalHitModifiers": [],
+            "actions": []
+        },
+        {
+            "id": "trait_discipline_river_of_hungry_flame",
+            "name": "River of Hungry Flame",
+            "lore": {
+                "shortDescription": "Spend 5 ki to cast wall of fire."
+            },
+            "modifiers": {
+                "fixed": [],
+                "choices": []
+            },
+            "resources": [],
+            "triggers": [],
+            "diceRules": [],
+            "criticalHitModifiers": [],
+            "actions": []
+        },
+        {
+            "id": "trait_discipline_wave_of_rolling_earth",
+            "name": "Wave of Rolling Earth",
+            "lore": {
+                "shortDescription": "Spend 6 ki to cast wall of stone."
+            },
+            "modifiers": {
+                "fixed": [],
+                "choices": []
+            },
+            "resources": [],
+            "triggers": [],
+            "diceRules": [],
+            "criticalHitModifiers": [],
+            "actions": []
+        },
+        {
+            "id": "trait_hunters_prey_colossus_slayer",
+            "name": "Colossus Slayer",
+            "lore": {
+                "shortDescription": "Deal an extra 1d8 damage once per turn to a creature below its hit point maximum."
+            },
+            "modifiers": {
+                "fixed": [],
+                "choices": []
+            },
+            "resources": [],
+            "triggers": [],
+            "diceRules": [],
+            "criticalHitModifiers": [],
+            "actions": []
+        },
+        {
+            "id": "trait_hunters_prey_giant_killer",
+            "name": "Giant Killer",
+            "lore": {
+                "shortDescription": "React to attack a Large or larger creature that hits or misses you within 5 feet."
+            },
+            "modifiers": {
+                "fixed": [],
+                "choices": []
+            },
+            "resources": [],
+            "triggers": [],
+            "diceRules": [],
+            "criticalHitModifiers": [],
+            "actions": []
+        },
+        {
+            "id": "trait_hunters_prey_horde_breaker",
+            "name": "Horde Breaker",
+            "lore": {
+                "shortDescription": "Once per turn, attack a second creature adjacent to your first target."
+            },
+            "modifiers": {
+                "fixed": [],
+                "choices": []
+            },
+            "resources": [],
+            "triggers": [],
+            "diceRules": [],
+            "criticalHitModifiers": [],
+            "actions": []
+        },
+        {
+            "id": "trait_defensive_tactics_escape_the_horde",
+            "name": "Escape the Horde",
+            "lore": {
+                "shortDescription": "Opportunity attacks against you are made with disadvantage."
+            },
+            "modifiers": {
+                "fixed": [],
+                "choices": []
+            },
+            "resources": [],
+            "triggers": [],
+            "diceRules": [],
+            "criticalHitModifiers": [],
+            "actions": []
+        },
+        {
+            "id": "trait_defensive_tactics_multiattack_defense",
+            "name": "Multiattack Defense",
+            "lore": {
+                "shortDescription": "After a creature hits you, it takes -4 on its further attacks against you that turn."
+            },
+            "modifiers": {
+                "fixed": [],
+                "choices": []
+            },
+            "resources": [],
+            "triggers": [],
+            "diceRules": [],
+            "criticalHitModifiers": [],
+            "actions": []
+        },
+        {
+            "id": "trait_defensive_tactics_steel_will",
+            "name": "Steel Will",
+            "lore": {
+                "shortDescription": "You have advantage on saving throws against being frightened."
+            },
+            "modifiers": {
+                "fixed": [],
+                "choices": []
+            },
+            "resources": [],
+            "triggers": [],
+            "diceRules": [],
+            "criticalHitModifiers": [],
+            "actions": []
+        },
+        {
+            "id": "trait_multiattack_volley",
+            "name": "Volley",
+            "lore": {
+                "shortDescription": "Make a ranged attack against any number of creatures within 10 feet of a point."
+            },
+            "modifiers": {
+                "fixed": [],
+                "choices": []
+            },
+            "resources": [],
+            "triggers": [],
+            "diceRules": [],
+            "criticalHitModifiers": [],
+            "actions": []
+        },
+        {
+            "id": "trait_multiattack_whirlwind_attack",
+            "name": "Whirlwind Attack",
+            "lore": {
+                "shortDescription": "Make a melee attack against any number of creatures within 5 feet of you."
+            },
+            "modifiers": {
+                "fixed": [],
+                "choices": []
+            },
+            "resources": [],
+            "triggers": [],
+            "diceRules": [],
+            "criticalHitModifiers": [],
+            "actions": []
+        },
+        {
+            "id": "trait_superior_hunters_defense_evasion",
+            "name": "Evasion",
+            "lore": {
+                "shortDescription": "Take no damage on a successful Dexterity save, and half on a failure."
+            },
+            "modifiers": {
+                "fixed": [],
+                "choices": []
+            },
+            "resources": [],
+            "triggers": [],
+            "diceRules": [],
+            "criticalHitModifiers": [],
+            "actions": []
+        },
+        {
+            "id": "trait_superior_hunters_defense_stand_against_the_tide",
+            "name": "Stand Against the Tide",
+            "lore": {
+                "shortDescription": "Redirect a missed melee attack against another creature of your choice."
+            },
+            "modifiers": {
+                "fixed": [],
+                "choices": []
+            },
+            "resources": [],
+            "triggers": [],
+            "diceRules": [],
+            "criticalHitModifiers": [],
+            "actions": []
+        },
+        {
+            "id": "trait_superior_hunters_defense_uncanny_dodge",
+            "name": "Uncanny Dodge",
+            "lore": {
+                "shortDescription": "React to halve the damage of an attack you can see."
+            },
+            "modifiers": {
+                "fixed": [],
+                "choices": []
+            },
+            "resources": [],
+            "triggers": [],
+            "diceRules": [],
+            "criticalHitModifiers": [],
+            "actions": []
+        },
+        {
+            "id": "trait_maneuver_commanders_strike",
+            "name": "Commander's Strike",
+            "lore": {
+                "shortDescription": "Forgo an attack to let an ally strike, adding a superiority die to the damage."
+            },
+            "modifiers": {
+                "fixed": [],
+                "choices": []
+            },
+            "resources": [],
+            "triggers": [],
+            "diceRules": [],
+            "criticalHitModifiers": [],
+            "actions": []
+        },
+        {
+            "id": "trait_maneuver_disarming_attack",
+            "name": "Disarming Attack",
+            "lore": {
+                "shortDescription": "Force a target to drop an item on a failed Strength save."
+            },
+            "modifiers": {
+                "fixed": [],
+                "choices": []
+            },
+            "resources": [],
+            "triggers": [],
+            "diceRules": [],
+            "criticalHitModifiers": [],
+            "actions": []
+        },
+        {
+            "id": "trait_maneuver_distracting_strike",
+            "name": "Distracting Strike",
+            "lore": {
+                "shortDescription": "Give the next attacker advantage against your target."
+            },
+            "modifiers": {
+                "fixed": [],
+                "choices": []
+            },
+            "resources": [],
+            "triggers": [],
+            "diceRules": [],
+            "criticalHitModifiers": [],
+            "actions": []
+        },
+        {
+            "id": "trait_maneuver_evasive_footwork",
+            "name": "Evasive Footwork",
+            "lore": {
+                "shortDescription": "Add a superiority die to AC while you move."
+            },
+            "modifiers": {
+                "fixed": [],
+                "choices": []
+            },
+            "resources": [],
+            "triggers": [],
+            "diceRules": [],
+            "criticalHitModifiers": [],
+            "actions": []
+        },
+        {
+            "id": "trait_maneuver_feinting_attack",
+            "name": "Feinting Attack",
+            "lore": {
+                "shortDescription": "Gain advantage against a creature within 5 feet, plus bonus damage."
+            },
+            "modifiers": {
+                "fixed": [],
+                "choices": []
+            },
+            "resources": [],
+            "triggers": [],
+            "diceRules": [],
+            "criticalHitModifiers": [],
+            "actions": []
+        },
+        {
+            "id": "trait_maneuver_goading_attack",
+            "name": "Goading Attack",
+            "lore": {
+                "shortDescription": "The target has disadvantage attacking anyone but you on a failed Wisdom save."
+            },
+            "modifiers": {
+                "fixed": [],
+                "choices": []
+            },
+            "resources": [],
+            "triggers": [],
+            "diceRules": [],
+            "criticalHitModifiers": [],
+            "actions": []
+        },
+        {
+            "id": "trait_maneuver_lunging_attack",
+            "name": "Lunging Attack",
+            "lore": {
+                "shortDescription": "Extend your melee reach by 5 feet for one attack."
+            },
+            "modifiers": {
+                "fixed": [],
+                "choices": []
+            },
+            "resources": [],
+            "triggers": [],
+            "diceRules": [],
+            "criticalHitModifiers": [],
+            "actions": []
+        },
+        {
+            "id": "trait_maneuver_maneuvering_attack",
+            "name": "Maneuvering Attack",
+            "lore": {
+                "shortDescription": "Let an ally move half their speed without provoking from your target."
+            },
+            "modifiers": {
+                "fixed": [],
+                "choices": []
+            },
+            "resources": [],
+            "triggers": [],
+            "diceRules": [],
+            "criticalHitModifiers": [],
+            "actions": []
+        },
+        {
+            "id": "trait_maneuver_menacing_attack",
+            "name": "Menacing Attack",
+            "lore": {
+                "shortDescription": "Frighten the target until the end of your next turn on a failed Wisdom save."
+            },
+            "modifiers": {
+                "fixed": [],
+                "choices": []
+            },
+            "resources": [],
+            "triggers": [],
+            "diceRules": [],
+            "criticalHitModifiers": [],
+            "actions": []
+        },
+        {
+            "id": "trait_maneuver_parry",
+            "name": "Parry",
+            "lore": {
+                "shortDescription": "React to reduce melee damage by a superiority die plus your Dexterity modifier."
+            },
+            "modifiers": {
+                "fixed": [],
+                "choices": []
+            },
+            "resources": [],
+            "triggers": [],
+            "diceRules": [],
+            "criticalHitModifiers": [],
+            "actions": []
+        },
+        {
+            "id": "trait_maneuver_precision_attack",
+            "name": "Precision Attack",
+            "lore": {
+                "shortDescription": "Add a superiority die to an attack roll."
+            },
+            "modifiers": {
+                "fixed": [],
+                "choices": []
+            },
+            "resources": [],
+            "triggers": [],
+            "diceRules": [],
+            "criticalHitModifiers": [],
+            "actions": []
+        },
+        {
+            "id": "trait_maneuver_pushing_attack",
+            "name": "Pushing Attack",
+            "lore": {
+                "shortDescription": "Push a Large or smaller target 15 feet on a failed Strength save."
+            },
+            "modifiers": {
+                "fixed": [],
+                "choices": []
+            },
+            "resources": [],
+            "triggers": [],
+            "diceRules": [],
+            "criticalHitModifiers": [],
+            "actions": []
+        },
+        {
+            "id": "trait_maneuver_rally",
+            "name": "Rally",
+            "lore": {
+                "shortDescription": "Grant an ally temporary hit points equal to a superiority die plus your Charisma modifier."
+            },
+            "modifiers": {
+                "fixed": [],
+                "choices": []
+            },
+            "resources": [],
+            "triggers": [],
+            "diceRules": [],
+            "criticalHitModifiers": [],
+            "actions": []
+        },
+        {
+            "id": "trait_maneuver_riposte",
+            "name": "Riposte",
+            "lore": {
+                "shortDescription": "React to attack a creature that misses you with a melee attack."
+            },
+            "modifiers": {
+                "fixed": [],
+                "choices": []
+            },
+            "resources": [],
+            "triggers": [],
+            "diceRules": [],
+            "criticalHitModifiers": [],
+            "actions": []
+        },
+        {
+            "id": "trait_maneuver_sweeping_attack",
+            "name": "Sweeping Attack",
+            "lore": {
+                "shortDescription": "Deal superiority die damage to a second creature within 5 feet of your target."
+            },
+            "modifiers": {
+                "fixed": [],
+                "choices": []
+            },
+            "resources": [],
+            "triggers": [],
+            "diceRules": [],
+            "criticalHitModifiers": [],
+            "actions": []
+        },
+        {
+            "id": "trait_maneuver_trip_attack",
+            "name": "Trip Attack",
+            "lore": {
+                "shortDescription": "Knock a Large or smaller target prone on a failed Strength save."
+            },
+            "modifiers": {
+                "fixed": [],
+                "choices": []
+            },
+            "resources": [],
+            "triggers": [],
+            "diceRules": [],
+            "criticalHitModifiers": [],
+            "actions": []
+        },
+        {
+            "id": "trait_barbarian_prof_saving_throw",
+            "name": "Barbarian Saving Throw Proficiencies",
+            "lore": {
+                "shortDescription": "Proficiency in Strength and Constitution saving throws."
+            },
+            "modifiers": {
+                "fixed": [],
+                "choices": []
+            },
+            "proficiencies": {
+                "fixed": [
+                    {
+                        "category": "saving_throws",
+                        "proficiencyId": "STR",
+                        "level": "proficient",
+                        "requiredStates": []
+                    },
+                    {
+                        "category": "saving_throws",
+                        "proficiencyId": "CON",
+                        "level": "proficient",
+                        "requiredStates": []
+                    }
+                ],
+                "choices": []
+            },
+            "resources": [],
+            "triggers": [],
+            "diceRules": [],
+            "criticalHitModifiers": [],
+            "actions": []
+        },
+        {
+            "id": "trait_bard_prof_saving_throw",
+            "name": "Bard Saving Throw Proficiencies",
+            "lore": {
+                "shortDescription": "Proficiency in Dexterity and Charisma saving throws."
+            },
+            "modifiers": {
+                "fixed": [],
+                "choices": []
+            },
+            "proficiencies": {
+                "fixed": [
+                    {
+                        "category": "saving_throws",
+                        "proficiencyId": "DEX",
+                        "level": "proficient",
+                        "requiredStates": []
+                    },
+                    {
+                        "category": "saving_throws",
+                        "proficiencyId": "CHA",
+                        "level": "proficient",
+                        "requiredStates": []
+                    }
+                ],
+                "choices": []
+            },
+            "resources": [],
+            "triggers": [],
+            "diceRules": [],
+            "criticalHitModifiers": [],
+            "actions": []
+        },
+        {
+            "id": "trait_cleric_prof_saving_throw",
+            "name": "Cleric Saving Throw Proficiencies",
+            "lore": {
+                "shortDescription": "Proficiency in Wisdom and Charisma saving throws."
+            },
+            "modifiers": {
+                "fixed": [],
+                "choices": []
+            },
+            "proficiencies": {
+                "fixed": [
+                    {
+                        "category": "saving_throws",
+                        "proficiencyId": "WIS",
+                        "level": "proficient",
+                        "requiredStates": []
+                    },
+                    {
+                        "category": "saving_throws",
+                        "proficiencyId": "CHA",
+                        "level": "proficient",
+                        "requiredStates": []
+                    }
+                ],
+                "choices": []
+            },
+            "resources": [],
+            "triggers": [],
+            "diceRules": [],
+            "criticalHitModifiers": [],
+            "actions": []
+        },
+        {
+            "id": "trait_druid_prof_saving_throw",
+            "name": "Druid Saving Throw Proficiencies",
+            "lore": {
+                "shortDescription": "Proficiency in Intelligence and Wisdom saving throws."
+            },
+            "modifiers": {
+                "fixed": [],
+                "choices": []
+            },
+            "proficiencies": {
+                "fixed": [
+                    {
+                        "category": "saving_throws",
+                        "proficiencyId": "INT",
+                        "level": "proficient",
+                        "requiredStates": []
+                    },
+                    {
+                        "category": "saving_throws",
+                        "proficiencyId": "WIS",
+                        "level": "proficient",
+                        "requiredStates": []
+                    }
+                ],
+                "choices": []
+            },
+            "resources": [],
+            "triggers": [],
+            "diceRules": [],
+            "criticalHitModifiers": [],
+            "actions": []
+        },
+        {
+            "id": "trait_fighter_prof_saving_throw",
+            "name": "Fighter Saving Throw Proficiencies",
+            "lore": {
+                "shortDescription": "Proficiency in Strength and Constitution saving throws."
+            },
+            "modifiers": {
+                "fixed": [],
+                "choices": []
+            },
+            "proficiencies": {
+                "fixed": [
+                    {
+                        "category": "saving_throws",
+                        "proficiencyId": "STR",
+                        "level": "proficient",
+                        "requiredStates": []
+                    },
+                    {
+                        "category": "saving_throws",
+                        "proficiencyId": "CON",
+                        "level": "proficient",
+                        "requiredStates": []
+                    }
+                ],
+                "choices": []
+            },
+            "resources": [],
+            "triggers": [],
+            "diceRules": [],
+            "criticalHitModifiers": [],
+            "actions": []
+        },
+        {
+            "id": "trait_monk_prof_saving_throw",
+            "name": "Monk Saving Throw Proficiencies",
+            "lore": {
+                "shortDescription": "Proficiency in Strength and Dexterity saving throws."
+            },
+            "modifiers": {
+                "fixed": [],
+                "choices": []
+            },
+            "proficiencies": {
+                "fixed": [
+                    {
+                        "category": "saving_throws",
+                        "proficiencyId": "STR",
+                        "level": "proficient",
+                        "requiredStates": []
+                    },
+                    {
+                        "category": "saving_throws",
+                        "proficiencyId": "DEX",
+                        "level": "proficient",
+                        "requiredStates": []
+                    }
+                ],
+                "choices": []
+            },
+            "resources": [],
+            "triggers": [],
+            "diceRules": [],
+            "criticalHitModifiers": [],
+            "actions": []
+        },
+        {
+            "id": "trait_paladin_prof_saving_throw",
+            "name": "Paladin Saving Throw Proficiencies",
+            "lore": {
+                "shortDescription": "Proficiency in Wisdom and Charisma saving throws."
+            },
+            "modifiers": {
+                "fixed": [],
+                "choices": []
+            },
+            "proficiencies": {
+                "fixed": [
+                    {
+                        "category": "saving_throws",
+                        "proficiencyId": "WIS",
+                        "level": "proficient",
+                        "requiredStates": []
+                    },
+                    {
+                        "category": "saving_throws",
+                        "proficiencyId": "CHA",
+                        "level": "proficient",
+                        "requiredStates": []
+                    }
+                ],
+                "choices": []
+            },
+            "resources": [],
+            "triggers": [],
+            "diceRules": [],
+            "criticalHitModifiers": [],
+            "actions": []
+        },
+        {
+            "id": "trait_ranger_prof_saving_throw",
+            "name": "Ranger Saving Throw Proficiencies",
+            "lore": {
+                "shortDescription": "Proficiency in Strength and Dexterity saving throws."
+            },
+            "modifiers": {
+                "fixed": [],
+                "choices": []
+            },
+            "proficiencies": {
+                "fixed": [
+                    {
+                        "category": "saving_throws",
+                        "proficiencyId": "STR",
+                        "level": "proficient",
+                        "requiredStates": []
+                    },
+                    {
+                        "category": "saving_throws",
+                        "proficiencyId": "DEX",
+                        "level": "proficient",
+                        "requiredStates": []
+                    }
+                ],
+                "choices": []
+            },
+            "resources": [],
+            "triggers": [],
+            "diceRules": [],
+            "criticalHitModifiers": [],
+            "actions": []
+        },
+        {
+            "id": "trait_rogue_prof_saving_throw",
+            "name": "Rogue Saving Throw Proficiencies",
+            "lore": {
+                "shortDescription": "Proficiency in Dexterity and Intelligence saving throws."
+            },
+            "modifiers": {
+                "fixed": [],
+                "choices": []
+            },
+            "proficiencies": {
+                "fixed": [
+                    {
+                        "category": "saving_throws",
+                        "proficiencyId": "DEX",
+                        "level": "proficient",
+                        "requiredStates": []
+                    },
+                    {
+                        "category": "saving_throws",
+                        "proficiencyId": "INT",
+                        "level": "proficient",
+                        "requiredStates": []
+                    }
+                ],
+                "choices": []
+            },
+            "resources": [],
+            "triggers": [],
+            "diceRules": [],
+            "criticalHitModifiers": [],
+            "actions": []
+        },
+        {
+            "id": "trait_sorcerer_prof_saving_throw",
+            "name": "Sorcerer Saving Throw Proficiencies",
+            "lore": {
+                "shortDescription": "Proficiency in Constitution and Charisma saving throws."
+            },
+            "modifiers": {
+                "fixed": [],
+                "choices": []
+            },
+            "proficiencies": {
+                "fixed": [
+                    {
+                        "category": "saving_throws",
+                        "proficiencyId": "CON",
+                        "level": "proficient",
+                        "requiredStates": []
+                    },
+                    {
+                        "category": "saving_throws",
+                        "proficiencyId": "CHA",
+                        "level": "proficient",
+                        "requiredStates": []
+                    }
+                ],
+                "choices": []
+            },
+            "resources": [],
+            "triggers": [],
+            "diceRules": [],
+            "criticalHitModifiers": [],
+            "actions": []
+        },
+        {
+            "id": "trait_warlock_prof_saving_throw",
+            "name": "Warlock Saving Throw Proficiencies",
+            "lore": {
+                "shortDescription": "Proficiency in Wisdom and Charisma saving throws."
+            },
+            "modifiers": {
+                "fixed": [],
+                "choices": []
+            },
+            "proficiencies": {
+                "fixed": [
+                    {
+                        "category": "saving_throws",
+                        "proficiencyId": "WIS",
+                        "level": "proficient",
+                        "requiredStates": []
+                    },
+                    {
+                        "category": "saving_throws",
+                        "proficiencyId": "CHA",
+                        "level": "proficient",
+                        "requiredStates": []
+                    }
+                ],
+                "choices": []
+            },
+            "resources": [],
+            "triggers": [],
+            "diceRules": [],
+            "criticalHitModifiers": [],
+            "actions": []
+        },
+        {
+            "id": "trait_wizard_prof_saving_throw",
+            "name": "Wizard Saving Throw Proficiencies",
+            "lore": {
+                "shortDescription": "Proficiency in Intelligence and Wisdom saving throws."
+            },
+            "modifiers": {
+                "fixed": [],
+                "choices": []
+            },
+            "proficiencies": {
+                "fixed": [
+                    {
+                        "category": "saving_throws",
+                        "proficiencyId": "INT",
+                        "level": "proficient",
+                        "requiredStates": []
+                    },
+                    {
+                        "category": "saving_throws",
+                        "proficiencyId": "WIS",
+                        "level": "proficient",
+                        "requiredStates": []
+                    }
+                ],
+                "choices": []
+            },
+            "resources": [],
+            "triggers": [],
+            "diceRules": [],
+            "criticalHitModifiers": [],
+            "actions": []
+        },
+        {
+            "id": "trait_aura_of_protection",
+            "name": "Aura of Protection",
+            "lore": {
+                "shortDescription": "You and friendly creatures within 10 feet add your Charisma modifier to saving throws, as long as you are not incapacitated."
+            },
+            "modifiers": {
+                "fixed": [
+                    {
+                        "target": "ALL_SAVES",
+                        "type": "add",
+                        "value": 0,
+                        "valueSource": "cha_modifier",
+                        "scalingFactor": "none",
+                        "requiredStates": [],
+                        "forbiddenStates": [
+                            "incapacitated"
+                        ]
+                    }
+                ],
+                "choices": []
+            },
+            "resources": [],
+            "triggers": [],
+            "diceRules": [],
+            "criticalHitModifiers": [],
+            "actions": []
+        }
+    ]
+}

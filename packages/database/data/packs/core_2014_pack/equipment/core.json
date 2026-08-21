@@ -1,0 +1,930 @@
+{
+    "equipment": [
+        {
+            "id": "item_armor_padded",
+            "name": "Padded Armor",
+            "type": "armor",
+            "weight": 8,
+            "armorCategory": "light",
+            "equipSlot": "body",
+            "requiresAttunement": false,
+            "categoryTags": [],
+            "modifiers": [
+                {
+                    "target": "ARMOR_CLASS",
+                    "type": "set_base",
+                    "value": 11,
+                    "scalingFactor": "none",
+                    "requiredStates": [],
+                    "forbiddenStates": []
+                },
+                {
+                    "target": "STEALTH_CHECK",
+                    "type": "disadvantage",
+                    "value": 0,
+                    "scalingFactor": "none",
+                    "requiredStates": [],
+                    "forbiddenStates": []
+                }
+            ],
+            "lore": {
+                "shortDescription": "Padded Armor",
+                "fullText": "Padded Armor"
+            }
+        },
+        {
+            "id": "item_armor_leather",
+            "name": "Leather Armor",
+            "type": "armor",
+            "weight": 10,
+            "armorCategory": "light",
+            "equipSlot": "body",
+            "requiresAttunement": false,
+            "categoryTags": [],
+            "modifiers": [
+                {
+                    "target": "ARMOR_CLASS",
+                    "type": "set_base",
+                    "value": 11,
+                    "scalingFactor": "none",
+                    "requiredStates": [],
+                    "forbiddenStates": []
+                }
+            ],
+            "lore": {
+                "shortDescription": "Leather Armor",
+                "fullText": "Leather Armor"
+            }
+        },
+        {
+            "id": "item_armor_studded_leather",
+            "name": "Studded Leather Armor",
+            "type": "armor",
+            "weight": 13,
+            "armorCategory": "light",
+            "equipSlot": "body",
+            "requiresAttunement": false,
+            "categoryTags": [],
+            "modifiers": [
+                {
+                    "target": "ARMOR_CLASS",
+                    "type": "set_base",
+                    "value": 12,
+                    "scalingFactor": "none",
+                    "requiredStates": [],
+                    "forbiddenStates": []
+                }
+            ],
+            "lore": {
+                "shortDescription": "Studded Leather Armor",
+                "fullText": "Studded Leather Armor"
+            }
+        },
+        {
+            "id": "item_armor_plate",
+            "name": "Plate Armor",
+            "type": "armor",
+            "weight": 65,
+            "armorCategory": "heavy",
+            "equipSlot": "body",
+            "requiresAttunement": false,
+            "categoryTags": [],
+            "modifiers": [
+                {
+                    "target": "ARMOR_CLASS",
+                    "type": "set_base",
+                    "value": 18,
+                    "scalingFactor": "none",
+                    "maxDexCap": 0,
+                    "requiredStates": [],
+                    "forbiddenStates": []
+                },
+                {
+                    "target": "STEALTH_CHECK",
+                    "type": "disadvantage",
+                    "value": 0,
+                    "scalingFactor": "none",
+                    "requiredStates": [],
+                    "forbiddenStates": []
+                }
+            ],
+            "lore": {
+                "shortDescription": "Plate Armor",
+                "fullText": "Plate Armor"
+            }
+        },
+        {
+            "id": "item_armor_shield",
+            "name": "Shield",
+            "type": "armor",
+            "weight": 6,
+            "equipSlot": "off_hand",
+            "requiresAttunement": false,
+            "categoryTags": [
+                "category_armor_shield"
+            ],
+            "modifiers": [
+                {
+                    "target": "ARMOR_CLASS",
+                    "type": "add",
+                    "value": 2,
+                    "scalingFactor": "none",
+                    "requiredStates": [],
+                    "forbiddenStates": []
+                }
+            ],
+            "lore": {
+                "shortDescription": "Shield",
+                "fullText": "Shield"
+            }
+        },
+        {
+            "id": "item_ring_of_protection",
+            "name": "Ring of Protection",
+            "type": "wondrous",
+            "weight": 0,
+            "equipSlot": "ring",
+            "requiresAttunement": true,
+            "categoryTags": [],
+            "modifiers": [
+                {
+                    "target": "ARMOR_CLASS",
+                    "type": "add",
+                    "value": 1,
+                    "scalingFactor": "none",
+                    "requiredStates": [],
+                    "forbiddenStates": []
+                },
+                {
+                    "target": "ALL_SAVES",
+                    "type": "add",
+                    "value": 1,
+                    "scalingFactor": "none",
+                    "requiredStates": [],
+                    "forbiddenStates": []
+                }
+            ],
+            "lore": {
+                "shortDescription": "Ring of Protection",
+                "fullText": "Ring of Protection"
+            }
+        },
+        {
+            "id": "item_weapon_longsword",
+            "name": "Longsword",
+            "type": "weapon",
+            "weight": 3,
+            "equipSlot": "main_hand",
+            "requiresAttunement": false,
+            "categoryTags": [
+                "category_weapon_martial",
+                "category_weapon_martial_melee"
+            ],
+            "weapon": {
+                "category": "martial_melee",
+                "damageDice": "1d8",
+                "versatileDamageDice": "1d10",
+                "damageType": "slashing",
+                "properties": [
+                    "versatile"
+                ],
+                "range": 5
+            },
+            "lore": {
+                "shortDescription": "Longsword",
+                "fullText": "Longsword"
+            }
+        },
+        {
+            "id": "item_weapon_dagger",
+            "name": "Dagger",
+            "type": "weapon",
+            "weight": 1,
+            "equipSlot": "main_hand",
+            "requiresAttunement": false,
+            "categoryTags": [
+                "category_weapon_simple",
+                "category_weapon_simple_melee"
+            ],
+            "weapon": {
+                "category": "simple_melee",
+                "damageDice": "1d4",
+                "damageType": "piercing",
+                "properties": [
+                    "finesse",
+                    "light",
+                    "thrown"
+                ],
+                "range": 20,
+                "longRange": 60
+            },
+            "lore": {
+                "shortDescription": "Dagger",
+                "fullText": "Dagger"
+            }
+        },
+        {
+            "id": "item_weapon_longbow",
+            "name": "Longbow",
+            "type": "weapon",
+            "weight": 2,
+            "equipSlot": "main_hand",
+            "requiresAttunement": false,
+            "categoryTags": [
+                "category_weapon_martial",
+                "category_weapon_martial_ranged"
+            ],
+            "weapon": {
+                "category": "martial_ranged",
+                "damageDice": "1d8",
+                "damageType": "piercing",
+                "properties": [
+                    "ammunition",
+                    "heavy",
+                    "two_handed"
+                ],
+                "range": 150,
+                "longRange": 600,
+                "ammoItemId": "item_ammo_arrow",
+                "ammoTag": "arrow"
+            },
+            "lore": {
+                "shortDescription": "Longbow",
+                "fullText": "Longbow"
+            }
+        },
+        {
+            "id": "item_ammo_arrow",
+            "name": "Arrow",
+            "type": "consumable",
+            "weight": 0.05,
+            "requiresAttunement": false,
+            "ammoTag": "arrow",
+            "categoryTags": [],
+            "lore": {
+                "shortDescription": "Arrow",
+                "fullText": "Arrow"
+            }
+        },
+        {
+            "id": "item_ammo_arrow_plus_one",
+            "name": "+1 Arrow",
+            "type": "consumable",
+            "weight": 0.05,
+            "requiresAttunement": false,
+            "ammoTag": "arrow",
+            "categoryTags": [],
+            "modifiers": [
+                {
+                    "target": "ATTACK_BONUS",
+                    "type": "add",
+                    "value": 1,
+                    "scalingFactor": "none",
+                    "requiredStates": [],
+                    "forbiddenStates": []
+                },
+                {
+                    "target": "DAMAGE_BONUS",
+                    "type": "add",
+                    "value": 1,
+                    "scalingFactor": "none",
+                    "requiredStates": [],
+                    "forbiddenStates": []
+                }
+            ],
+            "lore": {
+                "shortDescription": "+1 Arrow",
+                "fullText": "+1 Arrow"
+            }
+        },
+        {
+            "id": "item_robe",
+            "name": "Robe",
+            "type": "wondrous",
+            "weight": 4,
+            "equipSlot": "body",
+            "requiresAttunement": false,
+            "categoryTags": [],
+            "lore": {
+                "shortDescription": "Robe",
+                "fullText": "Robe"
+            }
+        },
+        {
+            "id": "item_backpack",
+            "name": "Backpack",
+            "type": "gear",
+            "weight": 5,
+            "requiresAttunement": false,
+            "container": {
+                "capacityPounds": 30
+            },
+            "categoryTags": [],
+            "lore": {
+                "shortDescription": "Backpack",
+                "fullText": "Backpack"
+            }
+        },
+        {
+            "id": "item_sack",
+            "name": "Sack",
+            "type": "gear",
+            "weight": 0.5,
+            "requiresAttunement": false,
+            "container": {
+                "capacityPounds": 30
+            },
+            "categoryTags": [],
+            "lore": {
+                "shortDescription": "Sack",
+                "fullText": "Sack"
+            }
+        },
+        {
+            "id": "item_pouch",
+            "name": "Pouch",
+            "type": "gear",
+            "weight": 1,
+            "requiresAttunement": false,
+            "container": {
+                "capacityPounds": 6
+            },
+            "categoryTags": [],
+            "lore": {
+                "shortDescription": "Pouch",
+                "fullText": "Pouch"
+            }
+        },
+        {
+            "id": "item_basket",
+            "name": "Basket",
+            "type": "gear",
+            "weight": 2,
+            "requiresAttunement": false,
+            "container": {
+                "capacityPounds": 40
+            },
+            "categoryTags": [],
+            "lore": {
+                "shortDescription": "Basket",
+                "fullText": "Basket"
+            }
+        },
+        {
+            "id": "item_chest",
+            "name": "Chest",
+            "type": "gear",
+            "weight": 25,
+            "requiresAttunement": false,
+            "container": {
+                "capacityPounds": 300
+            },
+            "categoryTags": [],
+            "lore": {
+                "shortDescription": "Chest",
+                "fullText": "Chest"
+            }
+        },
+        {
+            "id": "item_pack_explorers",
+            "name": "Explorer's Pack",
+            "type": "gear",
+            "weight": 0,
+            "requiresAttunement": false,
+            "categoryTags": [],
+            "lore": {
+                "shortDescription": "Explorer's Pack",
+                "fullText": "Explorer's Pack"
+            }
+        },
+        {
+            "id": "item_weapon_javelin",
+            "name": "Javelin",
+            "type": "gear",
+            "weight": 0,
+            "requiresAttunement": false,
+            "categoryTags": [
+                "category_weapon_simple",
+                "category_weapon_simple_melee"
+            ],
+            "lore": {
+                "shortDescription": "Javelin",
+                "fullText": "Javelin"
+            }
+        },
+        {
+            "id": "item_weapon_greataxe",
+            "name": "Greataxe",
+            "type": "gear",
+            "weight": 0,
+            "requiresAttunement": false,
+            "categoryTags": [
+                "category_weapon_martial",
+                "category_weapon_martial_melee"
+            ],
+            "lore": {
+                "shortDescription": "Greataxe",
+                "fullText": "Greataxe"
+            }
+        },
+        {
+            "id": "item_weapon_handaxe",
+            "name": "Handaxe",
+            "type": "gear",
+            "weight": 0,
+            "requiresAttunement": false,
+            "categoryTags": [
+                "category_weapon_simple",
+                "category_weapon_simple_melee"
+            ],
+            "lore": {
+                "shortDescription": "Handaxe",
+                "fullText": "Handaxe"
+            }
+        },
+        {
+            "id": "item_weapon_rapier",
+            "name": "Rapier",
+            "type": "gear",
+            "weight": 0,
+            "requiresAttunement": false,
+            "categoryTags": [
+                "category_weapon_martial",
+                "category_weapon_martial_melee"
+            ],
+            "lore": {
+                "shortDescription": "Rapier",
+                "fullText": "Rapier"
+            }
+        },
+        {
+            "id": "item_pack_diplomats",
+            "name": "Diplomat's Pack",
+            "type": "gear",
+            "weight": 0,
+            "requiresAttunement": false,
+            "categoryTags": [],
+            "lore": {
+                "shortDescription": "Diplomat's Pack",
+                "fullText": "Diplomat's Pack"
+            }
+        },
+        {
+            "id": "item_pack_entertainers",
+            "name": "Entertainer's Pack",
+            "type": "gear",
+            "weight": 0,
+            "requiresAttunement": false,
+            "categoryTags": [],
+            "lore": {
+                "shortDescription": "Entertainer's Pack",
+                "fullText": "Entertainer's Pack"
+            }
+        },
+        {
+            "id": "item_musical_instrument_lute",
+            "name": "Lute",
+            "type": "gear",
+            "weight": 0,
+            "requiresAttunement": false,
+            "categoryTags": [
+                "category_musical_instrument"
+            ],
+            "lore": {
+                "shortDescription": "Lute",
+                "fullText": "Lute"
+            }
+        },
+        {
+            "id": "item_weapon_mace",
+            "name": "Mace",
+            "type": "gear",
+            "weight": 0,
+            "requiresAttunement": false,
+            "categoryTags": [
+                "category_weapon_simple",
+                "category_weapon_simple_melee"
+            ],
+            "lore": {
+                "shortDescription": "Mace",
+                "fullText": "Mace"
+            }
+        },
+        {
+            "id": "item_weapon_warhammer",
+            "name": "Warhammer",
+            "type": "gear",
+            "weight": 0,
+            "requiresAttunement": false,
+            "categoryTags": [
+                "category_weapon_martial",
+                "category_weapon_martial_melee"
+            ],
+            "lore": {
+                "shortDescription": "Warhammer",
+                "fullText": "Warhammer"
+            }
+        },
+        {
+            "id": "item_armor_scale_mail",
+            "name": "Scale Mail",
+            "type": "gear",
+            "weight": 0,
+            "requiresAttunement": false,
+            "categoryTags": [],
+            "lore": {
+                "shortDescription": "Scale Mail",
+                "fullText": "Scale Mail"
+            }
+        },
+        {
+            "id": "item_armor_chain_mail",
+            "name": "Chain Mail",
+            "type": "gear",
+            "weight": 0,
+            "requiresAttunement": false,
+            "categoryTags": [],
+            "lore": {
+                "shortDescription": "Chain Mail",
+                "fullText": "Chain Mail"
+            }
+        },
+        {
+            "id": "item_weapon_crossbow_light",
+            "name": "Light Crossbow",
+            "type": "gear",
+            "weight": 0,
+            "requiresAttunement": false,
+            "categoryTags": [
+                "category_weapon_simple",
+                "category_weapon_simple_ranged"
+            ],
+            "lore": {
+                "shortDescription": "Light Crossbow",
+                "fullText": "Light Crossbow"
+            }
+        },
+        {
+            "id": "item_ammo_bolt",
+            "name": "Bolts",
+            "type": "gear",
+            "weight": 0,
+            "requiresAttunement": false,
+            "categoryTags": [],
+            "lore": {
+                "shortDescription": "Bolts",
+                "fullText": "Bolts"
+            }
+        },
+        {
+            "id": "item_pack_priests",
+            "name": "Priest's Pack",
+            "type": "gear",
+            "weight": 0,
+            "requiresAttunement": false,
+            "categoryTags": [],
+            "lore": {
+                "shortDescription": "Priest's Pack",
+                "fullText": "Priest's Pack"
+            }
+        },
+        {
+            "id": "item_armor_shield_wooden",
+            "name": "Wooden Shield",
+            "type": "gear",
+            "weight": 0,
+            "requiresAttunement": false,
+            "categoryTags": [
+                "category_armor_shield"
+            ],
+            "lore": {
+                "shortDescription": "Wooden Shield",
+                "fullText": "Wooden Shield"
+            }
+        },
+        {
+            "id": "item_weapon_scimitar",
+            "name": "Scimitar",
+            "type": "gear",
+            "weight": 0,
+            "requiresAttunement": false,
+            "categoryTags": [
+                "category_weapon_martial",
+                "category_weapon_martial_melee"
+            ],
+            "lore": {
+                "shortDescription": "Scimitar",
+                "fullText": "Scimitar"
+            }
+        },
+        {
+            "id": "item_weapon_arrow",
+            "name": "Arrows",
+            "type": "gear",
+            "weight": 0,
+            "requiresAttunement": false,
+            "categoryTags": [],
+            "lore": {
+                "shortDescription": "Arrows",
+                "fullText": "Arrows"
+            }
+        },
+        {
+            "id": "item_weapon_light_crossbow",
+            "name": "Light Crossbow",
+            "type": "gear",
+            "weight": 0,
+            "requiresAttunement": false,
+            "categoryTags": [
+                "category_weapon_simple",
+                "category_weapon_simple_ranged"
+            ],
+            "lore": {
+                "shortDescription": "Light Crossbow",
+                "fullText": "Light Crossbow"
+            }
+        },
+        {
+            "id": "item_weapon_crossbow_bolt",
+            "name": "Crossbow Bolts",
+            "type": "gear",
+            "weight": 0,
+            "requiresAttunement": false,
+            "categoryTags": [],
+            "lore": {
+                "shortDescription": "Crossbow Bolts",
+                "fullText": "Crossbow Bolts"
+            }
+        },
+        {
+            "id": "item_pack_dungeoneers",
+            "name": "Dungeoneer's Pack",
+            "type": "gear",
+            "weight": 0,
+            "requiresAttunement": false,
+            "categoryTags": [],
+            "lore": {
+                "shortDescription": "Dungeoneer's Pack",
+                "fullText": "Dungeoneer's Pack"
+            }
+        },
+        {
+            "id": "item_weapon_dart",
+            "name": "Dart",
+            "type": "gear",
+            "weight": 0,
+            "requiresAttunement": false,
+            "categoryTags": [
+                "category_weapon_simple",
+                "category_weapon_simple_ranged"
+            ],
+            "lore": {
+                "shortDescription": "Dart",
+                "fullText": "Dart"
+            }
+        },
+        {
+            "id": "item_weapon_shortsword",
+            "name": "Shortsword",
+            "type": "gear",
+            "weight": 0,
+            "requiresAttunement": false,
+            "categoryTags": [
+                "category_weapon_martial",
+                "category_weapon_martial_melee"
+            ],
+            "lore": {
+                "shortDescription": "Shortsword",
+                "fullText": "Shortsword"
+            }
+        },
+        {
+            "id": "item_pack_quiver",
+            "name": "Quiver",
+            "type": "gear",
+            "weight": 0,
+            "requiresAttunement": false,
+            "categoryTags": [],
+            "lore": {
+                "shortDescription": "Quiver",
+                "fullText": "Quiver"
+            }
+        },
+        {
+            "id": "item_armor_scale",
+            "name": "Scale Armor",
+            "type": "gear",
+            "weight": 0,
+            "requiresAttunement": false,
+            "categoryTags": [],
+            "lore": {
+                "shortDescription": "Scale Armor",
+                "fullText": "Scale Armor"
+            }
+        },
+        {
+            "id": "item_tool_thieves_tools",
+            "name": "Thieves' Tools",
+            "type": "gear",
+            "weight": 0,
+            "requiresAttunement": false,
+            "categoryTags": [],
+            "lore": {
+                "shortDescription": "Thieves' Tools",
+                "fullText": "Thieves' Tools"
+            }
+        },
+        {
+            "id": "item_weapon_shortbow",
+            "name": "Shortbow",
+            "type": "gear",
+            "weight": 0,
+            "requiresAttunement": false,
+            "categoryTags": [
+                "category_weapon_simple",
+                "category_weapon_simple_ranged"
+            ],
+            "lore": {
+                "shortDescription": "Shortbow",
+                "fullText": "Shortbow"
+            }
+        },
+        {
+            "id": "item_pack_burglars",
+            "name": "Burglar's Pack",
+            "type": "gear",
+            "weight": 0,
+            "requiresAttunement": false,
+            "categoryTags": [],
+            "lore": {
+                "shortDescription": "Burglar's Pack",
+                "fullText": "Burglar's Pack"
+            }
+        },
+        {
+            "id": "item_gear_component_pouch",
+            "name": "Component Pouch",
+            "type": "gear",
+            "weight": 0,
+            "requiresAttunement": false,
+            "categoryTags": [],
+            "lore": {
+                "shortDescription": "Component Pouch",
+                "fullText": "Component Pouch"
+            }
+        },
+        {
+            "id": "item_pack_scholars",
+            "name": "Scholar's Pack",
+            "type": "gear",
+            "weight": 0,
+            "requiresAttunement": false,
+            "categoryTags": [],
+            "lore": {
+                "shortDescription": "Scholar's Pack",
+                "fullText": "Scholar's Pack"
+            }
+        },
+        {
+            "id": "item_magic_item_spellbook",
+            "name": "Spellbook",
+            "type": "gear",
+            "weight": 0,
+            "requiresAttunement": false,
+            "categoryTags": [],
+            "lore": {
+                "shortDescription": "Spellbook",
+                "fullText": "Spellbook"
+            }
+        },
+        {
+            "id": "item_weapon_quarterstaff",
+            "name": "Quarterstaff",
+            "type": "gear",
+            "weight": 0,
+            "requiresAttunement": false,
+            "categoryTags": [
+                "category_weapon_simple",
+                "category_weapon_simple_melee"
+            ],
+            "lore": {
+                "shortDescription": "Quarterstaff",
+                "fullText": "Quarterstaff"
+            }
+        },
+        {
+            "id": "item_incense_stick",
+            "name": "Incense Stick",
+            "type": "gear",
+            "weight": 0,
+            "requiresAttunement": false,
+            "categoryTags": [],
+            "lore": {
+                "shortDescription": "Incense Stick",
+                "fullText": "Incense Stick"
+            }
+        },
+        {
+            "id": "item_clothes_vestments",
+            "name": "Vestments",
+            "type": "gear",
+            "weight": 0,
+            "requiresAttunement": false,
+            "categoryTags": [],
+            "lore": {
+                "shortDescription": "Vestments",
+                "fullText": "Vestments"
+            }
+        },
+        {
+            "id": "item_clothes_common",
+            "name": "Common Clothes",
+            "type": "gear",
+            "weight": 0,
+            "requiresAttunement": false,
+            "categoryTags": [],
+            "lore": {
+                "shortDescription": "Common Clothes",
+                "fullText": "Common Clothes"
+            }
+        },
+        {
+            "id": "item_clothes_fine",
+            "name": "Fine Clothes",
+            "type": "gear",
+            "weight": 0,
+            "requiresAttunement": false,
+            "categoryTags": [],
+            "lore": {
+                "shortDescription": "Fine Clothes",
+                "fullText": "Fine Clothes"
+            }
+        },
+        {
+            "id": "item_ring_signet",
+            "name": "Signet Ring",
+            "type": "gear",
+            "weight": 0,
+            "requiresAttunement": false,
+            "categoryTags": [],
+            "lore": {
+                "shortDescription": "Signet Ring",
+                "fullText": "Signet Ring"
+            }
+        },
+        {
+            "id": "item_scroll_pedigree",
+            "name": "Scroll of Pedigree",
+            "type": "gear",
+            "weight": 0,
+            "requiresAttunement": false,
+            "categoryTags": [],
+            "lore": {
+                "shortDescription": "Scroll of Pedigree",
+                "fullText": "Scroll of Pedigree"
+            }
+        },
+        {
+            "id": "item_holy_symbol_amulet",
+            "name": "Holy Symbol (Amulet)",
+            "type": "gear",
+            "weight": 0,
+            "requiresAttunement": false,
+            "categoryTags": [
+                "category_holy_symbol"
+            ],
+            "lore": {
+                "shortDescription": "Holy Symbol (Amulet)",
+                "fullText": "Holy Symbol (Amulet)"
+            }
+        },
+        {
+            "id": "item_focus_wand",
+            "name": "Wand",
+            "type": "gear",
+            "weight": 0,
+            "requiresAttunement": false,
+            "categoryTags": [
+                "category_arcane_focus"
+            ],
+            "lore": {
+                "shortDescription": "Wand",
+                "fullText": "Wand"
+            }
+        },
+        {
+            "id": "item_focus_druidic_totem",
+            "name": "Druidic Totem",
+            "type": "gear",
+            "weight": 0,
+            "requiresAttunement": false,
+            "categoryTags": [
+                "category_druidic_focus"
+            ],
+            "lore": {
+                "shortDescription": "Druidic Totem",
+                "fullText": "Druidic Totem"
+            }
+        }
+    ]
+}
