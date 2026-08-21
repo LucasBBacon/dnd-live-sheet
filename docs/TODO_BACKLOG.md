@@ -162,9 +162,10 @@ so authoring first would mean authoring into a hole.
 | 4 | **#33** — 6 armours with no AC modifier | Unblocked: Tier 1 item 1 is closed, so an equipped suit now reaches the AC calculation. |
 | 5 | **#32** — 23 weapons with no `weapon` block | A battleaxe that cannot attack. PHB values are well known and the schema already expresses them. |
 
-Worth doing alongside these: give `CoreEquipmentSchema` an `implementation`
-marker like traits and spells have. Equipment is the only section that cannot
-declare its own gaps, which is precisely how #32 and #33 stayed invisible.
+~~Worth doing alongside these: give `CoreEquipmentSchema` an `implementation`
+marker.~~ **Done 2026-08-21, ahead of the content work** — see E3. Equipment can
+now declare its own gaps, and a cross-check test keeps the declarations honest,
+so #32 and #33 announce themselves instead of having to be gone looking for.
 
 ### Tier 3 — free wins
 
@@ -269,6 +270,33 @@ migrated and kept a private id-prefix copy.
   arrived. `placeItem` re-checks a broadcast slot and does *not* alias, so
   relaying a legacy name would have silently dropped the update on every other
   sheet.
+
+### E3 — equipment declares its own gaps ✅
+
+Done 2026-08-21. `CoreEquipmentSchema` now carries an optional
+`implementation: { gaps, summary }`, designed in
+[the spec](superpowers/specs/2026-08-21-equipment-implementation-marker-design.md).
+
+It deliberately **does not** copy the trait and spell `mode: "unimplemented"`
+shape. Those describe a rule that is wholly absent; equipment's gaps are
+partial — a battleaxe equips, weighs correctly and carries its proficiency tags,
+and only its attack is missing. Naming the missing facet describes that
+accurately, and is what makes the gaps countable and checkable.
+
+29 items marked: 23 weapons `["weapon"]`, 6 armours
+`["armor_class", "armor_category"]`. No gaps were filled.
+
+The guard is `packages/database/src/__tests__/equipmentGaps.test.ts`, which
+derives each item's real gaps from its data and requires them to equal what the
+item declares. Both directions fail: an undeclared gap, and a marker left behind
+after a gap is filled. Verified by sabotage in each direction rather than
+assumed — worth doing, because the comparison had a bug on first write that let
+six mismatches pass.
+
+**Follow-up worth having: nothing cross-checks the trait or spell markers.**
+Every existing assertion on them is a spot-check, so those markers can drift out
+of step with their data exactly the way the two slot vocabularies did before E1.
+Equipment now has the check the older sections do not.
 
 ### S5 — a failed room join reports itself on the inventory banner
 
@@ -531,8 +559,8 @@ because the data to recover them never existed in that file.
 
 | # | Item | Scale | Notes |
 | --- | --- | --- | --- |
-| 32 | Ported weapons carry no `weapon` block | **23** | `item_weapon_battleaxe`, `_blowgun`, `_club`, `_crossbow_hand`, `_crossbow_heavy`, `_flail`, `_glaive`, `_greatclub` and 15 more. They equip and weigh correctly and roll no attack. `CoreEquipmentSchema` has nowhere to mark this, unlike traits and spells. |
-| 33 | Ported armour carries no AC modifier | **6** | `item_armor_breastplate`, `_chain_shirt`, `_half_plate`, `_hide`, `_ring_mail`, `_splint`. They are wearable and grant nothing. |
+| 32 | Ported weapons carry no `weapon` block | **23** | `item_weapon_battleaxe`, `_blowgun`, `_club`, `_crossbow_hand`, `_crossbow_heavy`, `_flail`, `_glaive`, `_greatclub` and 15 more. They equip and weigh correctly and roll no attack. **Still open, but no longer invisible:** each now declares `implementation.gaps: ["weapon"]`, and `equipmentGaps.test.ts` fails if one stops. |
+| 33 | Ported armour carries no AC modifier **or category** | **6** | `item_armor_breastplate`, `_chain_shirt`, `_half_plate`, `_hide`, `_ring_mail`, `_splint`. They are wearable and grant nothing. **Wider than first recorded:** the same six also carry no `armorCategory`, so proficiency and the rules that gate on light/medium/heavy — Fast Movement among them — cannot see them either. Found 2026-08-21 while marking the gaps. Each declares `implementation.gaps: ["armor_class", "armor_category"]`, so filling only the AC half will not close the item. |
 
 Both live in
 [equipment/legacy.json](packages/database/data/packs/core_2014_pack/equipment/legacy.json).

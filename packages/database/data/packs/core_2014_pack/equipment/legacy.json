@@ -27,7 +27,14 @@
             },
             "isBundle": false,
             "bundleContents": [],
-            "equipSlot": "body"
+            "equipSlot": "body",
+            "implementation": {
+                "gaps": [
+                    "armor_class",
+                    "armor_category"
+                ],
+                "summary": "Can be worn but grants no AC, and declares no armour category, so proficiency and category-gated rules cannot see it."
+            }
         },
         {
             "id": "item_armor_chain_shirt",
@@ -42,7 +49,14 @@
             },
             "isBundle": false,
             "bundleContents": [],
-            "equipSlot": "body"
+            "equipSlot": "body",
+            "implementation": {
+                "gaps": [
+                    "armor_class",
+                    "armor_category"
+                ],
+                "summary": "Can be worn but grants no AC, and declares no armour category, so proficiency and category-gated rules cannot see it."
+            }
         },
         {
             "id": "item_armor_half_plate",
@@ -57,7 +71,14 @@
             },
             "isBundle": false,
             "bundleContents": [],
-            "equipSlot": "body"
+            "equipSlot": "body",
+            "implementation": {
+                "gaps": [
+                    "armor_class",
+                    "armor_category"
+                ],
+                "summary": "Can be worn but grants no AC, and declares no armour category, so proficiency and category-gated rules cannot see it."
+            }
         },
         {
             "id": "item_armor_hide",
@@ -72,7 +93,14 @@
             },
             "isBundle": false,
             "bundleContents": [],
-            "equipSlot": "body"
+            "equipSlot": "body",
+            "implementation": {
+                "gaps": [
+                    "armor_class",
+                    "armor_category"
+                ],
+                "summary": "Can be worn but grants no AC, and declares no armour category, so proficiency and category-gated rules cannot see it."
+            }
         },
         {
             "id": "item_armor_ring_mail",
@@ -87,7 +115,14 @@
             },
             "isBundle": false,
             "bundleContents": [],
-            "equipSlot": "body"
+            "equipSlot": "body",
+            "implementation": {
+                "gaps": [
+                    "armor_class",
+                    "armor_category"
+                ],
+                "summary": "Can be worn but grants no AC, and declares no armour category, so proficiency and category-gated rules cannot see it."
+            }
         },
         {
             "id": "item_armor_splint",
@@ -102,7 +137,14 @@
             },
             "isBundle": false,
             "bundleContents": [],
-            "equipSlot": "body"
+            "equipSlot": "body",
+            "implementation": {
+                "gaps": [
+                    "armor_class",
+                    "armor_category"
+                ],
+                "summary": "Can be worn but grants no AC, and declares no armour category, so proficiency and category-gated rules cannot see it."
+            }
         },
         {
             "id": "item_focus_amulet",
@@ -173,7 +215,13 @@
             },
             "isBundle": false,
             "bundleContents": [],
-            "equipSlot": "main_hand"
+            "equipSlot": "main_hand",
+            "implementation": {
+                "gaps": [
+                    "weapon"
+                ],
+                "summary": "Equips and weighs correctly but rolls no attack: no weapon block is authored for the Battleaxe."
+            }
         },
         {
             "id": "item_weapon_blowgun",
@@ -188,7 +236,13 @@
             },
             "isBundle": false,
             "bundleContents": [],
-            "equipSlot": "main_hand"
+            "equipSlot": "main_hand",
+            "implementation": {
+                "gaps": [
+                    "weapon"
+                ],
+                "summary": "Equips and weighs correctly but rolls no attack: no weapon block is authored for the Blowgun."
+            }
         },
         {
             "id": "item_weapon_club",
@@ -203,7 +257,13 @@
             },
             "isBundle": false,
             "bundleContents": [],
-            "equipSlot": "main_hand"
+            "equipSlot": "main_hand",
+            "implementation": {
+                "gaps": [
+                    "weapon"
+                ],
+                "summary": "Equips and weighs correctly but rolls no attack: no weapon block is authored for the Club."
+            }
         },
         {
             "id": "item_weapon_crossbow_hand",
@@ -218,7 +278,13 @@
             },
             "isBundle": false,
             "bundleContents": [],
-            "equipSlot": "main_hand"
+            "equipSlot": "main_hand",
+            "implementation": {
+                "gaps": [
+                    "weapon"
+                ],
+                "summary": "Equips and weighs correctly but rolls no attack: no weapon block is authored for the Hand Crossbow."
+            }
         },
         {
             "id": "item_weapon_crossbow_heavy",
@@ -233,7 +299,13 @@
             },
             "isBundle": false,
             "bundleContents": [],
-            "equipSlot": "main_hand"
+            "equipSlot": "main_hand",
+            "implementation": {
+                "gaps": [
+                    "weapon"
+                ],
+                "summary": "Equips and weighs correctly but rolls no attack: no weapon block is authored for the Heavy Crossbow."
+            }
         },
         {
             "id": "item_weapon_flail",
@@ -248,7 +320,13 @@
             },
             "isBundle": false,
             "bundleContents": [],
-            "equipSlot": "main_hand"
+            "equipSlot": "main_hand",
+            "implementation": {
+                "gaps": [
+                    "weapon"
+                ],
+                "summary": "Equips and weighs correctly but rolls no attack: no weapon block is authored for the Flail."
+            }
         },
         {
             "id": "item_weapon_glaive",
@@ -263,7 +341,13 @@
             },
             "isBundle": false,
             "bundleContents": [],
-            "equipSlot": "main_hand"
+            "equipSlot": "main_hand",
+            "implementation": {
+                "gaps": [
+                    "weapon"
+                ],
+                "summary": "Equips and weighs correctly but rolls no attack: no weapon block is authored for the Glaive."
+            }
         },
         {
             "id": "item_weapon_greatclub",
@@ -278,7 +362,13 @@
             },
             "isBundle": false,
             "bundleContents": [],
-            "equipSlot": "main_hand"
+            "equipSlot": "main_hand",
+            "implementation": {
+                "gaps": [
+                    "weapon"
+                ],
+                "summary": "Equips and weighs correctly but rolls no attack: no weapon block is authored for the Greatclub."
+            }
         },
         {
             "id": "item_weapon_greatsword",
@@ -293,7 +383,13 @@
             },
             "isBundle": false,
             "bundleContents": [],
-            "equipSlot": "main_hand"
+            "equipSlot": "main_hand",
+            "implementation": {
+                "gaps": [
+                    "weapon"
+                ],
+                "summary": "Equips and weighs correctly but rolls no attack: no weapon block is authored for the Greatsword."
+            }
         },
         {
             "id": "item_weapon_halberd",
@@ -308,7 +404,13 @@
             },
             "isBundle": false,
             "bundleContents": [],
-            "equipSlot": "main_hand"
+            "equipSlot": "main_hand",
+            "implementation": {
+                "gaps": [
+                    "weapon"
+                ],
+                "summary": "Equips and weighs correctly but rolls no attack: no weapon block is authored for the Halberd."
+            }
         },
         {
             "id": "item_weapon_lance",
@@ -323,7 +425,13 @@
             },
             "isBundle": false,
             "bundleContents": [],
-            "equipSlot": "main_hand"
+            "equipSlot": "main_hand",
+            "implementation": {
+                "gaps": [
+                    "weapon"
+                ],
+                "summary": "Equips and weighs correctly but rolls no attack: no weapon block is authored for the Lance."
+            }
         },
         {
             "id": "item_weapon_light_hammer",
@@ -338,7 +446,13 @@
             },
             "isBundle": false,
             "bundleContents": [],
-            "equipSlot": "main_hand"
+            "equipSlot": "main_hand",
+            "implementation": {
+                "gaps": [
+                    "weapon"
+                ],
+                "summary": "Equips and weighs correctly but rolls no attack: no weapon block is authored for the Light Hammer."
+            }
         },
         {
             "id": "item_weapon_maul",
@@ -353,7 +467,13 @@
             },
             "isBundle": false,
             "bundleContents": [],
-            "equipSlot": "main_hand"
+            "equipSlot": "main_hand",
+            "implementation": {
+                "gaps": [
+                    "weapon"
+                ],
+                "summary": "Equips and weighs correctly but rolls no attack: no weapon block is authored for the Maul."
+            }
         },
         {
             "id": "item_weapon_morningstar",
@@ -368,7 +488,13 @@
             },
             "isBundle": false,
             "bundleContents": [],
-            "equipSlot": "main_hand"
+            "equipSlot": "main_hand",
+            "implementation": {
+                "gaps": [
+                    "weapon"
+                ],
+                "summary": "Equips and weighs correctly but rolls no attack: no weapon block is authored for the Morningstar."
+            }
         },
         {
             "id": "item_weapon_net",
@@ -383,7 +509,13 @@
             },
             "isBundle": false,
             "bundleContents": [],
-            "equipSlot": "main_hand"
+            "equipSlot": "main_hand",
+            "implementation": {
+                "gaps": [
+                    "weapon"
+                ],
+                "summary": "Equips and weighs correctly but rolls no attack: no weapon block is authored for the Net."
+            }
         },
         {
             "id": "item_weapon_pike",
@@ -398,7 +530,13 @@
             },
             "isBundle": false,
             "bundleContents": [],
-            "equipSlot": "main_hand"
+            "equipSlot": "main_hand",
+            "implementation": {
+                "gaps": [
+                    "weapon"
+                ],
+                "summary": "Equips and weighs correctly but rolls no attack: no weapon block is authored for the Pike."
+            }
         },
         {
             "id": "item_weapon_sickle",
@@ -413,7 +551,13 @@
             },
             "isBundle": false,
             "bundleContents": [],
-            "equipSlot": "main_hand"
+            "equipSlot": "main_hand",
+            "implementation": {
+                "gaps": [
+                    "weapon"
+                ],
+                "summary": "Equips and weighs correctly but rolls no attack: no weapon block is authored for the Sickle."
+            }
         },
         {
             "id": "item_weapon_sling",
@@ -428,7 +572,13 @@
             },
             "isBundle": false,
             "bundleContents": [],
-            "equipSlot": "main_hand"
+            "equipSlot": "main_hand",
+            "implementation": {
+                "gaps": [
+                    "weapon"
+                ],
+                "summary": "Equips and weighs correctly but rolls no attack: no weapon block is authored for the Sling."
+            }
         },
         {
             "id": "item_weapon_spear",
@@ -443,7 +593,13 @@
             },
             "isBundle": false,
             "bundleContents": [],
-            "equipSlot": "main_hand"
+            "equipSlot": "main_hand",
+            "implementation": {
+                "gaps": [
+                    "weapon"
+                ],
+                "summary": "Equips and weighs correctly but rolls no attack: no weapon block is authored for the Spear."
+            }
         },
         {
             "id": "item_weapon_trident",
@@ -458,7 +614,13 @@
             },
             "isBundle": false,
             "bundleContents": [],
-            "equipSlot": "main_hand"
+            "equipSlot": "main_hand",
+            "implementation": {
+                "gaps": [
+                    "weapon"
+                ],
+                "summary": "Equips and weighs correctly but rolls no attack: no weapon block is authored for the Trident."
+            }
         },
         {
             "id": "item_weapon_unarmed_strike",
@@ -473,7 +635,13 @@
             },
             "isBundle": false,
             "bundleContents": [],
-            "equipSlot": "main_hand"
+            "equipSlot": "main_hand",
+            "implementation": {
+                "gaps": [
+                    "weapon"
+                ],
+                "summary": "Equips and weighs correctly but rolls no attack: no weapon block is authored for the Unarmed Strike."
+            }
         },
         {
             "id": "item_weapon_war_pick",
@@ -488,7 +656,13 @@
             },
             "isBundle": false,
             "bundleContents": [],
-            "equipSlot": "main_hand"
+            "equipSlot": "main_hand",
+            "implementation": {
+                "gaps": [
+                    "weapon"
+                ],
+                "summary": "Equips and weighs correctly but rolls no attack: no weapon block is authored for the War Pick."
+            }
         },
         {
             "id": "item_weapon_whip",
@@ -503,7 +677,13 @@
             },
             "isBundle": false,
             "bundleContents": [],
-            "equipSlot": "main_hand"
+            "equipSlot": "main_hand",
+            "implementation": {
+                "gaps": [
+                    "weapon"
+                ],
+                "summary": "Equips and weighs correctly but rolls no attack: no weapon block is authored for the Whip."
+            }
         },
         {
             "id": "item_bedroll",

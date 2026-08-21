@@ -83,6 +83,48 @@ const CoreTraitSchema = TraitDefinitionSchema.extend({
   isStartingProficiency: z.boolean().default(false),
 }).strict();
 
+/**
+ * A facet of an item's rules that is authored as absent.
+ *
+ * - `weapon`: type "weapon" with no weapon block. Equips and weighs correctly,
+ *   rolls no attack.
+ * - `armor_class`: type "armor" with no ARMOR_CLASS modifier. Can be worn and
+ *   grants nothing.
+ * - `armor_category`: body armour with no armorCategory, so the rules that gate
+ *   on light/medium/heavy - proficiency, Fast Movement - cannot see it.
+ */
+export const EquipmentGapSchema = z.enum([
+  "weapon",
+  "armor_class",
+  "armor_category",
+]);
+
+/**
+ * What an item is missing, declared by the item itself.
+ *
+ * Traits and spells carry a `mode` that says the rule is wholly absent. An
+ * item's gaps are not wholesale - a battleaxe equips, weighs correctly and
+ * carries its proficiency tags, and only its attack is missing - so this names
+ * the missing facet instead. That is also what makes the gaps countable and
+ * lets a test check the marker against the data rather than trusting it.
+ *
+ * Equipment was the only section that could not say any of this, which is how
+ * 23 weapons that roll no attack and 6 armours that grant no AC sat in the pack
+ * looking finished.
+ *
+ * Optional rather than defaulted, for the reason the trait and spell schemas
+ * already record: a `.default()` makes the field required on the inferred
+ * output type, so every authored equipment literal would have to restate it.
+ * `gaps` is non-empty because an empty array would be a second way of spelling
+ * "complete", and an absent marker already says that.
+ */
+export const EquipmentImplementationSchema = z
+  .object({
+    gaps: z.array(EquipmentGapSchema).min(1),
+    summary: z.string().min(1),
+  })
+  .strict();
+
 const CoreEquipmentSchema = EquipmentDefinitionSchema.extend({
   id: CoreRuleIdSchema,
   lore: LoreSchema,
@@ -97,6 +139,7 @@ const CoreEquipmentSchema = EquipmentDefinitionSchema.extend({
         .strict(),
     )
     .default([]),
+  implementation: EquipmentImplementationSchema.optional(),
 }).strict();
 
 const CoreProficiencySchema = z
@@ -188,6 +231,10 @@ export const CoreRulePackSchema = z
 
 export type CoreRulePack = z.infer<typeof CoreRulePackSchema>;
 export type CoreRulePackInput = z.input<typeof CoreRulePackSchema>;
+export type EquipmentGap = z.infer<typeof EquipmentGapSchema>;
+export type EquipmentImplementation = z.infer<
+  typeof EquipmentImplementationSchema
+>;
 export type PackSection = z.infer<typeof PackSectionSchema>;
 export type CoreRulePackIssueCode =
   | "duplicate_id"
