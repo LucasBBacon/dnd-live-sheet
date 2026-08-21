@@ -33,7 +33,7 @@ describe("socket gateway - ITEM_EQUIPPED", () => {
   const readyToEquip = async (
     itemRow: Record<string, unknown> = {
       itemId: "item_weapon_longsword",
-      itemRule: { type: "weapon" },
+      itemRule: { type: "weapon", equipSlot: "main_hand" },
     },
   ) => {
     harness = await setupGateway();
@@ -118,22 +118,22 @@ describe("socket gateway - ITEM_EQUIPPED", () => {
     expect(harness.roomEmits).toEqual([]);
   });
 
-  it("rejects a weapon aimed at the armor slot", async () => {
+  it("rejects a weapon aimed at the body slot", async () => {
     await readyToEquip();
 
     await harness.emit(
       SOCKET_EVENTS.ITEM_EQUIPPED,
-      equipPayload({ targetSlot: "armor" }),
+      equipPayload({ targetSlot: "body" }),
     );
 
     expect(harness.senderEmits[0]?.event).toBe("action_error");
     expect(harness.db.opsFor(characterInventory, "update")).toEqual([]);
   });
 
-  it("routes a shield to the off hand and refuses it in the armor slot", async () => {
+  it("routes a shield to the off hand and refuses it in the body slot", async () => {
     await readyToEquip({
       itemId: "item_armor_shield",
-      itemRule: { type: "armor" },
+      itemRule: { type: "armor", equipSlot: "off_hand" },
     });
 
     await harness.emit(
@@ -145,18 +145,9 @@ describe("socket gateway - ITEM_EQUIPPED", () => {
 
     await harness.emit(
       SOCKET_EVENTS.ITEM_EQUIPPED,
-      equipPayload({ targetSlot: "armor" }),
+      equipPayload({ targetSlot: "body" }),
     );
     expect(harness.senderEmits[0]?.event).toBe("action_error");
-  });
-
-  it("infers the item type from the id prefix when itemRule carries none", async () => {
-    await readyToEquip({ itemId: "item_weapon_dagger", itemRule: null });
-
-    await harness.emit(SOCKET_EVENTS.ITEM_EQUIPPED, equipPayload());
-
-    expect(harness.senderEmits).toEqual([]);
-    expect(harness.db.opsFor(characterInventory, "update")).toHaveLength(2);
   });
 
   it("rejects an inventory row that does not belong to the character", async () => {
@@ -170,25 +161,15 @@ describe("socket gateway - ITEM_EQUIPPED", () => {
   });
 
   /**
-   * Characterisation. EQUIPMENT_SLOTS advertises head/cloak/boots/gloves/rings
-   * and amulet, but isValidTargetSlotForItem only ever returns true for
-   * backpack, the two hands and armor - so those six slots are unreachable for
-   * every item type. Recorded so the limitation is visible rather than
-   * discovered by a player.
+   * These five were unreachable for every item type while legality was decided
+   * from the item's *type* rather than its authored slot: no type mapped to
+   * them, so they were advertised and never usable.
    */
-  it("cannot equip anything to head, cloak, boots, gloves, rings or amulet", async () => {
-    for (const slot of [
-      "head",
-      "cloak",
-      "boots",
-      "gloves",
-      "ring_1",
-      "ring_2",
-      "amulet",
-    ]) {
+  it("equips worn items to the slots their definitions name", async () => {
+    for (const slot of ["head", "cloak", "boots", "gloves", "amulet"]) {
       await readyToEquip({
-        itemId: "item_armor_helm",
-        itemRule: { type: "armor" },
+        itemId: `item_wondrous_${slot}`,
+        itemRule: { type: "wondrous", equipSlot: slot },
       });
 
       await harness.emit(
@@ -196,11 +177,26 @@ describe("socket gateway - ITEM_EQUIPPED", () => {
         equipPayload({ targetSlot: slot }),
       );
 
-      expect(harness.senderEmits[0]?.event, `slot ${slot}`).toBe(
-        "action_error",
-      );
+      expect(harness.senderEmits, `slot ${slot}`).toEqual([]);
+      const updates = harness.db.opsFor(characterInventory, "update");
+      expect(updates[1]?.set, `slot ${slot}`).toEqual({ slot });
       harness.restore();
     }
+  });
+
+  it("refuses a worn item aimed at a slot its definition does not name", async () => {
+    await readyToEquip({
+      itemId: "item_wondrous_helm",
+      itemRule: { type: "wondrous", equipSlot: "head" },
+    });
+
+    await harness.emit(
+      SOCKET_EVENTS.ITEM_EQUIPPED,
+      equipPayload({ targetSlot: "boots" }),
+    );
+
+    expect(harness.senderEmits[0]?.event).toBe("action_error");
+    expect(harness.db.opsFor(characterInventory, "update")).toEqual([]);
   });
 });
 
@@ -540,5 +536,135 @@ describe("socket gateway - REST_COMPLETED", () => {
         },
       },
     ]);
+  });
+});
+
+/**
+ * The equip-legality model moved to the item's authored `equipSlot`
+ * (`canEquipTo`), and shared, engine and the web client all adopted it. The
+ * gateway kept a private id-prefix copy and validated against a slot list that
+ * still called the body slot "armor", so armour could not be equipped at all
+ * and seven slots were unreachable. These cover the migrated path.
+ */
+describe("socket gateway - ITEM_EQUIPPED slot model", () => {
+  let harness: GatewayHarness;
+
+  afterEach(() => {
+    harness?.restore();
+  });
+
+  const equipPayload = (overrides: Record<string, unknown> = {}) => ({
+    characterId: "char-1",
+    inventoryId: "inv-1",
+    targetSlot: "main_hand",
+    ...overrides,
+  });
+
+  const readyToEquip = async (itemRow: Record<string, unknown>) => {
+    harness = await setupGateway();
+    await joinCampaign(harness);
+    harness.db.seed(characters, [characterRow()]);
+    harness.db.seed(characterInventory, [itemRow]);
+  };
+
+  const committedSlots = () =>
+    harness.db
+      .opsFor(characterInventory, "update")
+      .map((op) => (op.set as { slot?: string })?.slot);
+
+  it("equips body armour to the body slot", async () => {
+    await readyToEquip({
+      itemId: "item_armor_plate",
+      itemRule: { type: "armor", equipSlot: "body" },
+    });
+
+    await harness.emit(
+      SOCKET_EVENTS.ITEM_EQUIPPED,
+      equipPayload({ targetSlot: "body" }),
+    );
+
+    expect(harness.senderEmits).toEqual([]);
+    expect(committedSlots()).toEqual(["backpack", "body"]);
+  });
+
+  it("equips a ring to either finger", async () => {
+    for (const finger of ["ring_1", "ring_2"]) {
+      await readyToEquip({
+        itemId: "item_ring_of_protection",
+        itemRule: { type: "wondrous", equipSlot: "ring" },
+      });
+
+      await harness.emit(
+        SOCKET_EVENTS.ITEM_EQUIPPED,
+        equipPayload({ targetSlot: finger }),
+      );
+
+      expect(harness.senderEmits, `finger ${finger}`).toEqual([]);
+      expect(committedSlots(), `finger ${finger}`).toEqual([
+        "backpack",
+        finger,
+      ]);
+      harness.restore();
+    }
+  });
+
+  /**
+   * Migration 0008 renamed the stored slot, so "armor" is a slot name from a
+   * vocabulary nothing writes any more. It is rejected rather than translated:
+   * the payload is untrusted input, and quietly repairing it would hide a
+   * client that has genuinely drifted.
+   */
+  it("rejects the pre-migration 'armor' slot outright", async () => {
+    await readyToEquip({
+      itemId: "item_armor_plate",
+      itemRule: { type: "armor", equipSlot: "body" },
+    });
+
+    await harness.emit(
+      SOCKET_EVENTS.ITEM_EQUIPPED,
+      equipPayload({ targetSlot: "armor" }),
+    );
+
+    expect(harness.senderEmits[0]?.event).toBe("action_error");
+    expect(harness.db.opsFor(characterInventory, "update")).toEqual([]);
+  });
+
+  it("refuses to wear an item that declares no slot", async () => {
+    await readyToEquip({
+      itemId: "item_rope_hempen",
+      itemRule: { type: "gear" },
+    });
+
+    await harness.emit(
+      SOCKET_EVENTS.ITEM_EQUIPPED,
+      equipPayload({ targetSlot: "head" }),
+    );
+
+    expect(harness.senderEmits[0]?.event).toBe("action_error");
+    expect(harness.db.opsFor(characterInventory, "update")).toEqual([]);
+  });
+
+  it("refuses to wear an item with no rule attached at all", async () => {
+    await readyToEquip({ itemId: "item_weapon_dagger", itemRule: null });
+
+    await harness.emit(SOCKET_EVENTS.ITEM_EQUIPPED, equipPayload());
+
+    expect(harness.senderEmits[0]?.event).toBe("action_error");
+    expect(harness.db.opsFor(characterInventory, "update")).toEqual([]);
+  });
+
+  it("frees the off hand when a two-handed weapon takes the main hand", async () => {
+    await readyToEquip({
+      itemId: "item_weapon_longbow",
+      itemRule: { type: "weapon", equipSlot: "main_hand" },
+      weaponRule: { properties: ["two_handed"] },
+    });
+
+    await harness.emit(SOCKET_EVENTS.ITEM_EQUIPPED, equipPayload());
+
+    // a shield left in the off hand would otherwise ride along with a longbow
+    const sweep = harness.db.opsFor(characterInventory, "update")[0];
+    expect(renderSql(sweep?.where).params).toContain("off_hand");
+    expect(committedSlots()).toEqual(["backpack", "main_hand"]);
   });
 });

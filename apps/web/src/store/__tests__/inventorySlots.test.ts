@@ -458,30 +458,27 @@ describe("attunement wiring", () => {
 });
 
 describe("toInventoryInstance", () => {
-  it("translates the legacy armor slot to body", () => {
-    const migrated = toInventoryInstance({
-      id: "inv_1",
-      itemId: "item_armor_plate",
-      quantity: 1,
-      slot: "armor",
-      isAttuned: false,
-    });
+  /**
+   * Migration 0008 rewrote every stored "armor" and "ring" row, so these names
+   * no longer reach the store and are not translated any more. A row still
+   * carrying one is unrecognised data, and unrecognised data is carried rather
+   * than trusted into a worn slot.
+   */
+  it.each(["armor", "ring"])(
+    "no longer recognises the pre-migration slot %s",
+    (slot) => {
+      const migrated = toInventoryInstance({
+        id: "inv_1",
+        itemId: "item_armor_plate",
+        quantity: 1,
+        slot,
+        isAttuned: true,
+      });
 
-    expect(migrated.slot).toBe("body");
-  });
-
-  it("translates a legacy single ring slot to the first finger", () => {
-    const migrated = toInventoryInstance({
-      id: "inv_1",
-      itemId: "item_ring_of_protection",
-      quantity: 1,
-      slot: "ring",
-      isAttuned: true,
-    });
-
-    expect(migrated.slot).toBe("ring_1");
-    expect(migrated.isAttuned).toBe(true);
-  });
+      expect(migrated.slot).toBe("backpack");
+      expect(migrated.isAttuned).toBe(true);
+    },
+  );
 
   it("degrades an unrecognised slot to carried", () => {
     const migrated = toInventoryInstance({

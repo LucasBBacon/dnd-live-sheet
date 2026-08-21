@@ -151,7 +151,7 @@ so authoring first would mean authoring into a hole.
 
 | Order | Item | Why first |
 | --- | --- | --- |
-| 1 | **Equip slot validation** — see E1 below | No armour can be equipped at all, and rings, amulets and cloaks are backpack-only. Gates the value of #32 and #33. |
+| 1 | ✅ **Equip slot validation** — see E1 below | **Closed 2026-08-21.** The gateway now decides legality with the engine's `canEquipTo`. Unblocks #32 and #33. |
 | 2 | **S2** — replayed actions arrive in a different shape | Every retried request delivers `undefined` to the client. |
 | 3 | **S3** — `ROOM_JOIN` has no error path | A cross-campaign id yields no inventory snapshot and no error. Silent. |
 
@@ -159,7 +159,7 @@ so authoring first would mean authoring into a hole.
 
 | Order | Item | Why here |
 | --- | --- | --- |
-| 4 | **#33** — 6 armours with no AC modifier | Do after Tier 1 item 1, or the fix is unobservable. |
+| 4 | **#33** — 6 armours with no AC modifier | Unblocked: Tier 1 item 1 is closed, so an equipped suit now reaches the AC calculation. |
 | 5 | **#32** — 23 weapons with no `weapon` block | A battleaxe that cannot attack. PHB values are well known and the schema already expresses them. |
 
 Worth doing alongside these: give `CoreEquipmentSchema` an `implementation`
@@ -201,10 +201,11 @@ Tiers 1-3 are roughly a day's work and are what turn "structurally complete"
 into "actually playable". Tier 6 should not start until 1-4 are done —
 reactions are hard enough without a broken equip path underneath them.
 
-### E1 — armour cannot be equipped; seven slots are unreachable
+### E1 — armour cannot be equipped; seven slots are unreachable ✅
 
-Found 2026-08-21 while ordering this list. This is the "two equip bugs" the
-sample characters were already known to expose, with the cause identified.
+Found 2026-08-21 while ordering this list, **fixed the same day**. This is the
+"two equip bugs" the sample characters were already known to expose. The
+diagnosis below is kept, with two corrections found while fixing it.
 
 [`isValidTargetSlotForItem`](apps/server/src/gateway/socket.ts:57) returns
 `targetSlot === "armor"` for armour, but **`"armor"` is not a member of
@@ -221,6 +222,70 @@ item.
 The client does not share the restriction: `inventorySlots.test.ts` passes with
 `ring_1` and `body`. So the sheet shows a ring equipped and the server refuses
 the sync, which makes this a divergence rather than a shared limitation.
+
+**Corrections found while fixing.** The failure was two gates deep, not one:
+`EQUIPMENT_SLOTS` in [operational.ts](packages/database/src/schema/operational.ts:173)
+was a *second*, hand-maintained slot vocabulary that had drifted from
+`CharacterSlotSchema` — it named the body slot `armor` and had no `body` at
+all. A client sending `body` was rejected by that set with "Invalid equipment
+slot target." and never reached `isValidTargetSlotForItem`, so the error
+message quoted above is not the one players actually got. And `"wondrous"`
+falling through was not why the seven slots were unreachable: the type-driven
+check could not express `head`/`cloak`/`boots` for *any* type.
+
+**Root cause.** The equip-legality model had already moved to the item's
+authored `equipSlot` ([`canEquipTo`](packages/engine/src/rules/equipSlots.ts:44)),
+and shared, engine and the web store all adopted it. The gateway was never
+migrated and kept a private id-prefix copy.
+
+**Fix.**
+
+- `EQUIPMENT_SLOTS` is now `CharacterSlotSchema.options` — a projection, not a
+  restatement, so the two lists cannot drift again.
+- The gateway calls `canEquipTo`; `inferItemTypeFromId` and
+  `isValidTargetSlotForItem` are gone. An item whose `item_rule` is null can no
+  longer be worn on the strength of its id prefix, but can still be stowed,
+  since the backpack is the null slot.
+- The contention sweep uses `slotsConsumedBy`, so a two-handed weapon now frees
+  the off hand instead of leaving a shield equipped beside a longbow.
+- `ItemEquippedPayload.targetSlot` is typed `CharacterSlot` rather than
+  `string`. The bare string was the hole this class of bug flowed through: it
+  let a client author a slot the server had never heard of. The gateway still
+  validates it at runtime, because a socket payload is untrusted regardless of
+  what the type says.
+- Both `LEGACY_SLOT_ALIASES` tables are gone, and `seedDevInventory.ts` — the
+  last writer of `slot: "armor"`, months after migration
+  `0008_slot_body_rename.sql` renamed it — now seeds `body` and is typed
+  `CharacterSlot` so it cannot drift again. The pre-migration names are now
+  rejected on the wire and degrade to carried on the way into the store, rather
+  than being quietly translated.
+
+  Worth recording why the second alias was never legacy: `ring` is a live
+  `EquipSlot` — the *definition* kind, authored on real pack items — while
+  `ring_1`/`ring_2` are `CharacterSlot` instances. Aliasing one to the other
+  conflated the two vocabularies, and hardcoding `ring_1` ignored whether that
+  finger was already occupied, which is what `firstFreeSlot` exists for.
+- The broadcast now carries the slot that was stored rather than the one that
+  arrived. `placeItem` re-checks a broadcast slot and does *not* alias, so
+  relaying a legacy name would have silently dropped the update on every other
+  sheet.
+
+### E2 — no weapon can be held in the off hand, so two-weapon fighting is unreachable
+
+Found 2026-08-21 while fixing E1. All 26 pack weapons are authored
+`equipSlot: "main_hand"`, and `SLOT_INSTANCES.main_hand` is `["main_hand"]`, so
+`canEquipTo` refuses any weapon in `off_hand`. Only the shield reaches that slot.
+
+This is a **model gap, not a data gap** — a one-handed weapon can be held in
+either hand, so the off hand is a matter of the weapon's properties rather than
+a second authored slot. Marking every weapon `equipSlot: "off_hand"` as well
+would also let a greatsword be dual-wielded.
+
+Not urgent: the client has enforced this all along, so no character has ever
+had an off-hand weapon. Before the pre-fix gateway is missed, note that it
+accepted them without checking `light`, so it would have persisted a
+dual-wielded maul. Worth a design pass alongside the Tier 6 reaction work,
+since two-weapon fighting needs a bonus-action attack to be worth anything.
 
 ### Superseded — the previous sequence
 

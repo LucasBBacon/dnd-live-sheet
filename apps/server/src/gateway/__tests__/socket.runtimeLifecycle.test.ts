@@ -131,12 +131,12 @@ describe("socket gateway - runtime lifecycle", () => {
 });
 
 /**
- * Item type is normally carried on items.item_rule. When that column is null
- * the gateway falls back to reading the id prefix, which decides which slots
- * the item is allowed into - so the fallback is a permission check, not a
- * cosmetic default.
+ * Slot legality is read from the item's authored equipSlot on items.item_rule.
+ * When that column is null there is no slot to read, so the item cannot be
+ * worn at all - the gateway no longer guesses a type from the id prefix, which
+ * let an unauthored item into a slot on the strength of its name.
  */
-describe("socket gateway - item type inference fallback", () => {
+describe("socket gateway - items with no authored rule", () => {
   let harness: GatewayHarness;
 
   afterEach(() => {
@@ -161,11 +161,11 @@ describe("socket gateway - item type inference fallback", () => {
     return harness;
   };
 
-  it("treats an item_armor_ prefix as armor", async () => {
-    const h = await equip("item_armor_breastplate", "armor");
+  it("refuses to wear one however its id reads", async () => {
+    const h = await equip("item_armor_breastplate", "body");
 
-    expect(h.senderEmits).toEqual([]);
-    expect(h.db.opsFor(characterInventory, "update")).toHaveLength(2);
+    expect(h.senderEmits[0]?.event).toBe("action_error");
+    expect(h.db.opsFor(characterInventory, "update")).toEqual([]);
   });
 
   it("refuses armor in a weapon hand", async () => {
@@ -174,7 +174,7 @@ describe("socket gateway - item type inference fallback", () => {
     expect(h.senderEmits[0]?.event).toBe("action_error");
   });
 
-  it("treats an unprefixed id as gear, which only the backpack accepts", async () => {
+  it("still lets one be stowed, since the backpack is the null slot", async () => {
     const h = await equip("item_rope_hempen", "backpack");
 
     expect(h.senderEmits).toEqual([]);

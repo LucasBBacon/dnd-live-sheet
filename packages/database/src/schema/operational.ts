@@ -1,4 +1,4 @@
-import type { InventoryInstance } from "@project/shared";
+import { CharacterSlotSchema, type InventoryInstance } from "@project/shared";
 import {
   boolean,
   integer,
@@ -170,19 +170,15 @@ export const characterCustomTraits = pgTable("character_custom_traits", {
 
 // #region INVENTORY
 
-export const EQUIPMENT_SLOTS = [
-  "backpack",
-  "main_hand",
-  "off_hand",
-  "armor",
-  "head",
-  "cloak",
-  "ring_1",
-  "ring_2",
-  "amulet",
-  "boots",
-  "gloves",
-] as const;
+/**
+ * The slots a row in this table may sit in.
+ *
+ * Derived from `CharacterSlotSchema` rather than restated. The two lists were
+ * once maintained separately and drifted: this one called the body slot
+ * "armor" and had no "body" at all, so the gateway rejected every armour
+ * equip the client authored. A projection cannot drift from its source.
+ */
+export const EQUIPMENT_SLOTS = CharacterSlotSchema.options;
 
 export type EquipmentSlot = (typeof EQUIPMENT_SLOTS)[number];
 

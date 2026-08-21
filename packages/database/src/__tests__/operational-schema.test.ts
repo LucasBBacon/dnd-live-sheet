@@ -1,5 +1,5 @@
 import type { InferSelectModel } from "drizzle-orm";
-import type { InventoryInstance } from "@project/shared";
+import { CharacterSlotSchema, type InventoryInstance } from "@project/shared";
 import { describe, expect, expectTypeOf, it } from "vitest";
 import {
   EQUIPMENT_SLOTS,
@@ -90,16 +90,25 @@ describe("operational schema", () => {
   it("exposes all supported equipment slots", () => {
     expect(EQUIPMENT_SLOTS).toEqual([
       "backpack",
+      "head",
+      "amulet",
+      "cloak",
+      "body",
       "main_hand",
       "off_hand",
-      "armor",
-      "head",
-      "cloak",
+      "gloves",
       "ring_1",
       "ring_2",
-      "amulet",
       "boots",
-      "gloves",
     ]);
+  });
+
+  /**
+   * These were once two hand-maintained lists and they drifted: this one
+   * called the body slot "armor" and had no "body" at all, which is what made
+   * every armour equip fail server-side while the client considered it legal.
+   */
+  it("stays in step with the slot vocabulary the client authors against", () => {
+    expect(EQUIPMENT_SLOTS).toEqual(CharacterSlotSchema.options);
   });
 });

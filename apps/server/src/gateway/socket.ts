@@ -11,6 +11,7 @@ import {
   type ActionGrant,
   type ActionIntentPayload,
   type ActionResolvedPayload,
+  type CharacterSlot,
   type InventorySyncPayload,
   type InventoryInstance,
   type RoomJoinPayload,
@@ -27,7 +28,7 @@ import {
   type SurpriseResolvedPayload,
 } from "@project/shared";
 import { Server, Socket } from "socket.io";
-import { and, eq, not, sql } from "drizzle-orm";
+import { and, eq, inArray, not, sql } from "drizzle-orm";
 import {
   CharacterEngine,
   ActionResolver,
@@ -36,6 +37,8 @@ import {
   EffectManager,
   ResourceManager,
   RestEngine,
+  canEquipTo,
+  slotsConsumedBy,
 } from "@project/engine";
 import { resolvePlayerTurn } from "../services/turnResolution.js";
 import { getCachedRuleSnapshot } from "../services/ruleSnapshotCache.js";
@@ -44,36 +47,18 @@ import {
   getUserIdFromSocket,
 } from "../services/campaignAccess.js";
 
-const EQUIPMENT_SLOT_SET = new Set(EQUIPMENT_SLOTS);
+const EQUIPMENT_SLOT_SET = new Set<string>(EQUIPMENT_SLOTS);
 
-const inferItemTypeFromId = (
-  itemId: string,
-): "armor" | "weapon" | "consumable" | "gear" => {
-  if (itemId.startsWith("item_weapon_")) return "weapon";
-  if (itemId.startsWith("item_armor_")) return "armor";
-  return "gear";
-};
-
-const isValidTargetSlotForItem = (
-  itemId: string,
-  itemType: "armor" | "weapon" | "consumable" | "gear",
-  targetSlot: string,
-): boolean => {
-  if (targetSlot === "backpack") return true;
-
-  if (itemType === "weapon") {
-    return targetSlot === "main_hand" || targetSlot === "off_hand";
-  }
-
-  if (itemType === "armor") {
-    if (itemId === "item_armor_shield") {
-      return targetSlot === "off_hand";
-    }
-    return targetSlot === "armor";
-  }
-
-  return false;
-};
+/**
+ * Confirms a slot name off the wire is one this table can actually hold.
+ *
+ * `targetSlot` is typed `CharacterSlot`, but a socket payload is untrusted
+ * input that no runtime validation has been past, so the type is a statement
+ * about well-behaved clients rather than a guarantee. This is the boundary
+ * that makes it true.
+ */
+const resolveTargetSlot = (targetSlot: string): CharacterSlot | null =>
+  EQUIPMENT_SLOT_SET.has(targetSlot) ? (targetSlot as CharacterSlot) : null;
 
 type SocketDataContext = {
   campaignId?: string;
@@ -722,15 +707,18 @@ export function initializeWebSocketGateway(httpServer: any) {
             payload.characterId,
           );
 
-          await db.transaction(async (tx) => {
-            if (!EQUIPMENT_SLOT_SET.has(payload.targetSlot as any)) {
-              throw new Error("Invalid equipment slot target.");
-            }
+          const targetSlot = resolveTargetSlot(payload.targetSlot);
 
+          if (!targetSlot) {
+            throw new Error("Invalid equipment slot target.");
+          }
+
+          await db.transaction(async (tx) => {
             const [inventoryItem] = await tx
               .select({
                 itemId: characterInventory.itemId,
                 itemRule: items.itemRule,
+                weaponRule: items.weaponRule,
               })
               .from(characterInventory)
               .innerJoin(items, eq(characterInventory.itemId, items.id))
@@ -746,33 +734,35 @@ export function initializeWebSocketGateway(httpServer: any) {
               throw new Error("Inventory item not found for character.");
             }
 
-            const itemType =
-              (inventoryItem.itemRule as { type?: string } | null)?.type ??
-              inferItemTypeFromId(inventoryItem.itemId);
-
-            if (
-              !isValidTargetSlotForItem(
-                inventoryItem.itemId,
-                itemType as "armor" | "weapon" | "consumable" | "gear",
-                payload.targetSlot,
-              )
-            ) {
+            // Legality comes from the item's authored equipSlot, the same rule
+            // the client applies. An item with no rule attached has no slot to
+            // read, so it cannot be worn rather than being guessed at from its
+            // id - but the backpack is the null slot, so stowing one still
+            // works. Refusing that would strand an item in a slot forever.
+            if (!canEquipTo(inventoryItem.itemRule ?? {}, targetSlot)) {
               throw new Error(
-                `Invalid slot '${payload.targetSlot}' for item '${inventoryItem.itemId}'.`,
+                `Invalid slot '${targetSlot}' for item '${inventoryItem.itemId}'.`,
               );
             }
 
             // 1 - resolve contention
             // if equipping to an active body slot (not just unequip from backpack)
-            // automatically sweep any existing item in that slot back to the backpack
-            if (payload.targetSlot !== "backpack") {
+            // automatically sweep any existing item in those slots back to the
+            // backpack. A two-handed weapon covers the off hand as well, so the
+            // sweep clears every slot the item will actually occupy.
+            const occupiedSlots = slotsConsumedBy(
+              { weapon: inventoryItem.weaponRule ?? undefined },
+              targetSlot,
+            );
+
+            if (occupiedSlots.length > 0) {
               await tx
                 .update(characterInventory)
                 .set({ slot: "backpack" })
                 .where(
                   and(
                     eq(characterInventory.characterId, payload.characterId), // security boundary
-                    eq(characterInventory.slot, payload.targetSlot),
+                    inArray(characterInventory.slot, occupiedSlots),
                     not(eq(characterInventory.id, payload.inventoryId)), // don't unequip item trying to be equipped
                   ),
                 );
@@ -782,7 +772,7 @@ export function initializeWebSocketGateway(httpServer: any) {
             // move target item into newly cleared slot
             await tx
               .update(characterInventory)
-              .set({ slot: payload.targetSlot })
+              .set({ slot: targetSlot })
               .where(
                 and(
                   eq(characterInventory.id, payload.inventoryId),

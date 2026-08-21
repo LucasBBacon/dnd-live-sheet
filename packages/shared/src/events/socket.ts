@@ -1,3 +1,5 @@
+import type { CharacterSlot } from "../schemas/items.js";
+
 // #region Socket Events
 
 export const SOCKET_EVENTS = {
@@ -55,7 +57,11 @@ export interface InventorySyncPayload {
 export interface ItemEquippedPayload {
   characterId: string;
   inventoryId: string; // operational UUID of item instance being moved
-  targetSlot: string; // e.g., 'main_hand', 'backpack'
+  // The slot vocabulary itself, not a bare string. This was `string` while the
+  // server kept a second, drifted slot list, which is how a client could author
+  // a slot the server had never heard of and get a silent failure back.
+  // The gateway still validates it: a socket payload is untrusted at runtime.
+  targetSlot: CharacterSlot;
   movedQuantity?: number; // quantity peeled from a stack for a split move
   newInventoryId?: string; // id of the newly created row when a stack is split
   timestamp: number;

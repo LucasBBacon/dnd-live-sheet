@@ -1,3 +1,4 @@
+import type { CharacterSlot } from "@project/shared";
 import { db } from "@project/database";
 import {
   characterInventory,
@@ -9,11 +10,13 @@ import { eq } from "drizzle-orm";
 type DevLoadoutItem = {
   itemId: string;
   quantity: number;
-  slot: string;
+  // the slot vocabulary itself: this list seeded "armor" for months after
+  // migration 0008 renamed it, and a bare string had nothing to say about that
+  slot: CharacterSlot;
 };
 
 const DEV_LOADOUT: DevLoadoutItem[] = [
-  { itemId: "item_armor_leather", quantity: 1, slot: "armor" },
+  { itemId: "item_armor_leather", quantity: 1, slot: "body" },
   { itemId: "item_weapon_longsword", quantity: 1, slot: "main_hand" },
   { itemId: "item_weapon_longbow", quantity: 1, slot: "backpack" },
   { itemId: "item_torch", quantity: 1, slot: "backpack" },

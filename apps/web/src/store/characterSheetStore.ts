@@ -49,19 +49,14 @@ const isKnownSlot = (slot: string): slot is CharacterSlot =>
   CharacterSlotSchema.safeParse(slot).success;
 
 /**
- * Slot names that existed before the body/ring model. Persisted rows still
- * carry them, so they are translated on the way in rather than with a
- * migration that would break any client still on the old build.
- */
-const LEGACY_SLOT_ALIASES: Record<string, CharacterSlot> = {
-  armor: "body", // collided with the *type* value "armor"
-  ring: "ring_1", // a single ring slot became two
-};
-
-/**
  * Normalizes an inventory row arriving from the API or a socket broadcast.
  * The wire types slot as a bare string, so an unrecognized value degrades to
  * carried rather than corrupting the worn state.
+ *
+ * The pre-migration "armor" and "ring" names were once translated here.
+ * Migration 0008 rewrote every stored row, so a value still carrying one is
+ * not a slot from an older model but data from nowhere, and gets the same
+ * treatment as any other unrecognized slot.
  */
 export const toInventoryInstance = (item: {
   id: string;
@@ -71,13 +66,11 @@ export const toInventoryInstance = (item: {
   isAttuned: boolean;
   customName?: string;
 }): InventoryInstance => {
-  const aliased = LEGACY_SLOT_ALIASES[item.slot] ?? item.slot;
-
   return {
     id: item.id,
     itemId: item.itemId,
     quantity: item.quantity,
-    slot: isKnownSlot(aliased) ? aliased : CARRIED_SLOT,
+    slot: isKnownSlot(item.slot) ? item.slot : CARRIED_SLOT,
     isAttuned: item.isAttuned,
     ...(item.customName !== undefined && { customName: item.customName }),
   };
@@ -739,6 +732,12 @@ export const useCharacterSheetStore = create<CharacterSheetState>(
 
     equipItem: (inventoryId, targetSlot) => {
       const state = get();
+
+      // `placeItem` checks this too, but narrowing here is what lets the slot
+      // reach the socket payload as a CharacterSlot rather than a bare string.
+      // The UI sources it from a <select> value, so this is where it stops
+      // being arbitrary text.
+      if (!isKnownSlot(targetSlot)) return;
 
       // optimistically resolve slot contention locally
       const updatedInventory = placeItem(
