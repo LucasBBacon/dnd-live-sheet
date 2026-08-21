@@ -171,7 +171,7 @@ declare its own gaps, which is precisely how #32 and #33 stayed invisible.
 | Order | Item | Why here |
 | --- | --- | --- |
 | 6 | **#34, #35** — delete the two dead dictionaries | ~900 lines, zero readers, zero risk. |
-| 7 | **#39** — `client.test.ts` cold-import timeout | One line. Removes a misleading red. |
+| 7 | ✅ **#39** — `client.test.ts` cold-import timeout | **Closed 2026-08-21.** Was not a transform cost and did not want a raised timeout — see below. `pnpm test` is green again. |
 | 8 | **#4f** — guard the destructive import | It has already destroyed 12 characters once. |
 
 ### Tier 4 — debt, before it compounds
@@ -547,7 +547,7 @@ proficiency ids consumed by the extractors and calculators, not authored rules.
 | --- | --- | --- |
 | 37 | `toRuleSnapshot` carries only the four id-keyed rulebook maps | Equipment and resources are rebuilt by hand in three places — `ruleSnapshotCache`, the engine's `corePackLookup()` and the web `packFixture`. Three copies of the same projection will drift. Either widen `toRuleSnapshot` or export one shared builder. |
 | 38 | `db:push` cannot run non-interactively | drizzle-kit demands a TTY for its data-loss prompt, so the cutover import skipped it. Fine while the schema is stable; a blocker the first time a migration is actually needed in CI. |
-| 39 | `client.test.ts` fails on a cold run | The dynamic `import("../client.js")` exceeds the 5s default while vitest transforms it for the first time; the second assertion cascades from it. Passes warm. Raise that test's timeout. |
+| ~~39~~ | `client.test.ts` fails on a cold run | **Fixed 2026-08-21 by stubbing the schema graph, not by raising the timeout.** The recorded mechanism was wrong: transform was only 801ms of the 4.3s. The cost was module *evaluation* — `vi.resetModules()` plus the dynamic `import("../client.js")` force the real schema modules to be re-evaluated on every run, constructing ~40 drizzle tables and, through `operational.js`, all of `@project/shared`'s zod schemas. That left the first test at **3331ms against a 5s default even when run alone**, so it went red under `turbo`'s parallel load and green in isolation — which is exactly why it read as a cold/warm effect. Raising the timeout would have kept a 3.3s test one CPU spike from red. Neither assertion needs the schema's content (the second only asks that drizzle received *an object*), so both modules are now `vi.mock`ed: **3331ms → 49ms**. Verified the stubs did not neuter it by removing the `DATABASE_URL is missing` throw from `client.ts` and confirming the test still fails. |
 | 40 | `apps/web/tsconfig.app.json` now includes `node` types | Added for the test fixtures that read the pack off disk. It weakens the guard that kept node APIs out of browser code. A separate tsconfig for `src/**/__tests__` would restore it. |
 
 ### 4e. Deferred by the plan, still deferred

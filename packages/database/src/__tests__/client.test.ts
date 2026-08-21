@@ -16,6 +16,27 @@ vi.mock("drizzle-orm/postgres-js", () => ({
   drizzle: mockDrizzle,
 }));
 
+/**
+ * The schema graph is stubbed, not exercised.
+ *
+ * These tests are about the lazy proxy: when the connection is built, what
+ * happens without DATABASE_URL, and what gets handed to drizzle. None of that
+ * depends on the schema's *content* - the second test only asks that drizzle
+ * received an object.
+ *
+ * Importing it cost 3.3s a run. Not transform: `vi.resetModules()` and the
+ * dynamic import below force the real modules to be *evaluated* every time,
+ * which means constructing ~40 drizzle tables and, through operational.js, the
+ * whole of @project/shared's zod schemas. That put the first test within a CPU
+ * spike of the 5s default, so it went red whenever the suite ran in parallel
+ * and green whenever it was run alone. Stubbing them takes it to ~150ms.
+ *
+ * The real tables are covered by operational-schema.test.ts and reference's
+ * own tests, and every other test in this package imports them for real.
+ */
+vi.mock("../schema/operational.js", () => ({ stubbedOperationalTable: {} }));
+vi.mock("../schema/reference.js", () => ({ stubbedReferenceTable: {} }));
+
 describe("database client", () => {
   beforeEach(() => {
     vi.resetModules();
