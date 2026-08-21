@@ -9,13 +9,12 @@ import type {
 import { traitIdOfOption } from "@project/shared";
 import { EffectManager } from "../calculators/effects.js";
 import { ResourceManager } from "../calculators/resources.js";
-// Classes, races and traits are reached through ruleLookup so a loaded pack
-// takes precedence. Subclasses have no pack representation yet, so they are
-// still read straight from their dictionary.
-import { SUBCLASS_DICTIONARY } from "../rules/subclassDictionary.js";
+// Classes, races, subclasses and traits all come from the loaded pack, which
+// is the only source of rules content.
 import {
   resolveClassDefinition,
   resolveRaceDefinition,
+  resolveSubclassDefinition,
   resolveTraitDefinition,
   type RuleSnapshotLookup,
 } from "../rules/ruleLookup.js";
@@ -27,9 +26,8 @@ import type {
   ChoiceResolution,
 } from "./choiceResolution.js";
 
-// these now live with the data they describe
-export type { RaceDefinition } from "../rules/raceDictionary.js";
-export type { SubclassDefinition } from "../rules/subclassDictionary.js";
+// RaceDefinition is exported from rules/raceTypes.js, where it now lives.
+// Re-exporting it here as well made it ambiguous at the package root.
 
 const MAX_TOTAL_LEVEL = 20;
 
@@ -139,7 +137,7 @@ const unlockedGrants = (
   }
 
   const subclass = classState.subclassId
-    ? SUBCLASS_DICTIONARY[classState.subclassId]
+    ? resolveSubclassDefinition(classState.subclassId, snapshot)
     : undefined;
   if (subclass?.classId === classState.classId) {
     for (const level of subclass.progression) {
@@ -350,7 +348,10 @@ export class CharacterBootstrapper {
         });
       }
       if (classState.subclassId) {
-        const subclass = SUBCLASS_DICTIONARY[classState.subclassId];
+        const subclass = resolveSubclassDefinition(
+          classState.subclassId,
+          snapshot,
+        );
         if (!subclass) {
           add({
             code: "unknown_subclass",
@@ -370,8 +371,8 @@ export class CharacterBootstrapper {
       // #region choice nodes
       const grants = unlockedGrants(classState, snapshot);
       const traitIds = new Set([
-        ...raceTraitIds(save.race),
-        ...classTraitIds(classState, classIndex === 0),
+        ...raceTraitIds(save.race, snapshot),
+        ...classTraitIds(classState, classIndex === 0, snapshot),
       ]);
       const spellIds = knownSpellIds(classState, traitIds, snapshot);
       const knownNodeIds = new Set<string>();

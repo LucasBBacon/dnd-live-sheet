@@ -1,7 +1,9 @@
 import { describe, expect, it } from "vitest";
 import type { TraitDefinition } from "@project/shared";
 import { StateExtractor } from "../stateExtractor.js";
-import { TRAIT_DICTIONARY } from "../../rules/traitDictionary.js";
+import { corePackSnapshot } from "./corePackFixture.js";
+
+const TRAIT_DICTIONARY = corePackSnapshot().traitsById;
 
 const trait = (
   id: string,

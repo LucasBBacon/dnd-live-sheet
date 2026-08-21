@@ -1,7 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { FIGHTING_STYLE_TRAITS } from "../traits/fightingStyleDictionary.js";
+import { corePackSnapshot } from "../../pipeline/__tests__/corePackFixture.js";
 
-describe("FIGHTING_STYLE_TRAITS", () => {
+const FIGHTING_STYLE_TRAITS = corePackSnapshot().traitsById;
+
+describe("the pack's fighting styles", () => {
   it("classifies Protection as a manual sheet helper until target-aware reactions exist", () => {
     const protection = FIGHTING_STYLE_TRAITS.trait_fs_protection;
 

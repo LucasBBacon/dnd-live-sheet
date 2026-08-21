@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import { useAbilities } from "../../../hooks/useCharacterStats";
 import { useCharacterSheetStore } from "../../../store/characterSheetStore";
-import { TRAIT_DICTIONARY, type Ability } from "@project/engine";
+import { type Ability } from "@project/engine";
 import { useLevelUpStore } from "../../../store/levelUpStore";
 import { getProjectedConModifier } from "../../../utils/levelUpReview";
 
@@ -11,6 +11,8 @@ export const ReviewStep = () => {
   const currentTotalLevel = useCharacterSheetStore((state) => state.level);
   const currentMaxHp = useCharacterSheetStore((state) => state.maxHp);
   const classLevels = useCharacterSheetStore((state) => state.classLevels);
+  const ruleSnapshot = useCharacterSheetStore((state) => state.ruleSnapshot);
+  const traitsById = ruleSnapshot?.traitsById;
 
   const { finalAbilities } = useAbilities();
 
@@ -112,7 +114,7 @@ export const ReviewStep = () => {
         return {
           id,
           name:
-            TRAIT_DICTIONARY[id]?.name || id.replace(/_/g, " ").toUpperCase(),
+            traitsById?.[id]?.name || id.replace(/_/g, " ").toUpperCase(),
           sourceLabel: "Feat Selection",
         };
       }
@@ -127,11 +129,11 @@ export const ReviewStep = () => {
 
       return {
         id,
-        name: TRAIT_DICTIONARY[id]?.name || id.replace(/_/g, " ").toUpperCase(),
+        name: traitsById?.[id]?.name || id.replace(/_/g, " ").toUpperCase(),
         sourceLabel: "Granted",
       };
     });
-  }, [progressionContext, grantedTraitDetails, draftPayload]);
+  }, [progressionContext, grantedTraitDetails, draftPayload, traitsById]);
 
   return (
     <div className="flex flex-col h-full">

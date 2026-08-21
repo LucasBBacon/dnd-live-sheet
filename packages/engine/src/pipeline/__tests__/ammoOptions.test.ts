@@ -1,10 +1,20 @@
 import { describe, expect, it } from "vitest";
 import type { CharacterSlot, InventoryInstance } from "@project/shared";
 import { RollContextBuilder } from "../rollContextBuilder.js";
-import { WEAPON_DICTIONARY } from "../../rules/equipmentDictionary.js";
+import { corePackEquipment, corePackLookup } from "./corePackFixture.js";
 
-const longbow = WEAPON_DICTIONARY.item_weapon_longbow;
-if (!longbow) throw new Error("WEAPON_DICTIONARY is missing the longbow");
+const { weaponsById } = corePackEquipment();
+
+// ammunition is matched by resolving each inventory row against the pack
+const PACK = corePackLookup();
+
+const buildAmmoOptions = (
+  weapon: Parameters<typeof RollContextBuilder.buildAmmoOptions>[0],
+  inventory: InventoryInstance[],
+) => RollContextBuilder.buildAmmoOptions(weapon, inventory, PACK);
+
+const longbow = weaponsById.item_weapon_longbow;
+if (!longbow) throw new Error("the pack is missing the longbow");
 
 const row = (
   id: string,
@@ -22,7 +32,7 @@ const row = (
 
 describe("RollContextBuilder.buildAmmoOptions", () => {
   it("offers every kind of arrow the character carries", () => {
-    const options = RollContextBuilder.buildAmmoOptions(longbow, [
+    const options = buildAmmoOptions(longbow, [
       row("inv_123", "item_ammo_arrow", 20),
       row("inv_456", "item_ammo_arrow_plus_one", 5),
     ]);
@@ -44,7 +54,7 @@ describe("RollContextBuilder.buildAmmoOptions", () => {
   });
 
   it("leaves out anything the bow cannot fire", () => {
-    const options = RollContextBuilder.buildAmmoOptions(longbow, [
+    const options = buildAmmoOptions(longbow, [
       row("inv_1", "item_ammo_arrow", 20),
       row("inv_2", "item_armor_plate", 1),
       row("inv_3", "item_weapon_dagger", 2),
@@ -54,7 +64,7 @@ describe("RollContextBuilder.buildAmmoOptions", () => {
   });
 
   it("skips an exhausted stack", () => {
-    const options = RollContextBuilder.buildAmmoOptions(longbow, [
+    const options = buildAmmoOptions(longbow, [
       row("inv_empty", "item_ammo_arrow", 0),
     ]);
 
@@ -62,7 +72,7 @@ describe("RollContextBuilder.buildAmmoOptions", () => {
   });
 
   it("prefers a custom name so the player recognises their own quiver", () => {
-    const options = RollContextBuilder.buildAmmoOptions(longbow, [
+    const options = buildAmmoOptions(longbow, [
       row("inv_1", "item_ammo_arrow", 3, { customName: "Signal Arrows" }),
     ]);
 
@@ -70,7 +80,7 @@ describe("RollContextBuilder.buildAmmoOptions", () => {
   });
 
   it("ignores an unknown item id", () => {
-    const options = RollContextBuilder.buildAmmoOptions(longbow, [
+    const options = buildAmmoOptions(longbow, [
       row("inv_ghost", "item_from_a_deleted_pack", 10),
     ]);
 
@@ -78,10 +88,10 @@ describe("RollContextBuilder.buildAmmoOptions", () => {
   });
 
   it("returns nothing for a weapon that needs no ammunition", () => {
-    const dagger = WEAPON_DICTIONARY.item_weapon_dagger;
-    if (!dagger) throw new Error("WEAPON_DICTIONARY is missing the dagger");
+    const dagger = weaponsById.item_weapon_dagger;
+    if (!dagger) throw new Error("the pack is missing the dagger");
 
-    const options = RollContextBuilder.buildAmmoOptions(dagger, [
+    const options = buildAmmoOptions(dagger, [
       row("inv_1", "item_ammo_arrow", 20),
     ]);
 
@@ -89,7 +99,7 @@ describe("RollContextBuilder.buildAmmoOptions", () => {
   });
 
   it("still matches an untagged item the weapon names outright", () => {
-    const options = RollContextBuilder.buildAmmoOptions(
+    const options = buildAmmoOptions(
       // a weapon from older content: a default item id and no tag
       { ammoItemId: "item_weapon_dagger" },
       [row("inv_1", "item_weapon_dagger", 2)],
@@ -99,7 +109,7 @@ describe("RollContextBuilder.buildAmmoOptions", () => {
   });
 
   it("keeps inventory order so the list does not jump between rolls", () => {
-    const options = RollContextBuilder.buildAmmoOptions(longbow, [
+    const options = buildAmmoOptions(longbow, [
       row("inv_b", "item_ammo_arrow_plus_one", 5),
       row("inv_a", "item_ammo_arrow", 20),
     ]);

@@ -1,15 +1,17 @@
 import { describe, expect, it } from "vitest";
-import {
-  EQUIPMENT_DICTIONARY,
-  ITEM_DICTIONARY,
-  toItemDefinition,
-  WEAPON_DICTIONARY,
-} from "../equipmentDictionary.js";
+import { toItemDefinition } from "../equipmentProjection.js";
+import { corePackEquipment } from "../../pipeline/__tests__/corePackFixture.js";
 
-describe("equipmentDictionary projections", () => {
+const {
+  equipmentById: EQUIPMENT_BY_ID,
+  itemsById: ITEMS_BY_ID,
+  weaponsById: WEAPONS_BY_ID,
+} = corePackEquipment();
+
+describe("pack equipment projections", () => {
   it("keeps item projections aligned with canonical equipment entries", () => {
-    for (const [id, equipment] of Object.entries(EQUIPMENT_DICTIONARY)) {
-      const item = ITEM_DICTIONARY[id];
+    for (const [id, equipment] of Object.entries(EQUIPMENT_BY_ID)) {
+      const item = ITEMS_BY_ID[id];
       expect(item).toBeDefined();
       expect(item?.id).toBe(equipment.id);
       expect(item?.name).toBe(equipment.name);
@@ -18,8 +20,8 @@ describe("equipmentDictionary projections", () => {
   });
 
   it("includes only weapon-capable entries in weapon projection", () => {
-    for (const [id, equipment] of Object.entries(EQUIPMENT_DICTIONARY)) {
-      const weapon = WEAPON_DICTIONARY[id];
+    for (const [id, equipment] of Object.entries(EQUIPMENT_BY_ID)) {
+      const weapon = WEAPONS_BY_ID[id];
 
       if (!equipment.weapon) {
         expect(weapon).toBeUndefined();
@@ -40,7 +42,7 @@ describe("equipmentDictionary projections", () => {
   it("gives the longsword its two-handed damage die", () => {
     // combat.ts gates the versatile die on this field being present, so a
     // weapon flagged versatile without it silently deals its one-handed die
-    const longsword = EQUIPMENT_DICTIONARY.item_weapon_longsword;
+    const longsword = EQUIPMENT_BY_ID.item_weapon_longsword;
 
     expect(longsword?.weapon?.properties).toContain("versatile");
     expect(longsword?.weapon?.versatileDamageDice).toBe("1d10");

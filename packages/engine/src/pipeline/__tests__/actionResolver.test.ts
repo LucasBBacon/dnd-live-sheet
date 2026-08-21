@@ -6,6 +6,7 @@ import type { RollContextPayload } from "../rollContextBuilder.js";
 import { CombatContextManager } from "../../calculators/combatContext.js";
 import { EffectManager } from "../../calculators/effects.js";
 import { ResourceManager } from "../../calculators/resources.js";
+import { corePackLookup } from "./corePackFixture.js";
 
 const ARROW = "item_ammo_arrow";
 const MAGIC_ARROW = "item_ammo_arrow_plus_one";
@@ -75,6 +76,8 @@ describe("ActionResolver ammunition", () => {
     ActionResolver.execute(action, context, {
       effectManager,
       resourceManager,
+      // ammunition is matched by resolving each stack against the pack
+      snapshot: corePackLookup(),
       ...(ledger && { inventoryLedger: ledger }),
     });
 
@@ -1065,6 +1068,7 @@ describe("ActionResolver cost settlement", () => {
         resourceManager,
         inventoryLedger: ledger,
         combatContext,
+        snapshot: corePackLookup(),
       },
     );
 
@@ -1089,6 +1093,7 @@ describe("ActionResolver cost settlement", () => {
         resourceManager,
         inventoryLedger: ledger,
         combatContext,
+        snapshot: corePackLookup(),
       },
     );
 
@@ -1114,6 +1119,7 @@ describe("ActionResolver cost settlement", () => {
         resourceManager,
         inventoryLedger: ledger,
         combatContext,
+        snapshot: corePackLookup(),
       },
     );
 

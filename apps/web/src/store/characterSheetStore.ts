@@ -275,13 +275,21 @@ const dispatchAuthoredEvent = (
   const runtimeEffects = state.runtimeEffects ?? new EffectManager();
   const runtimeResources = state.runtimeResources ?? new ResourceManager();
 
+  // the pack is the only source a trait can resolve from; without it no trait
+  // compiles, so no trigger ever fires
+  const snapshot = state.ruleSnapshot ?? undefined;
+
   CharacterBootstrapper.hydrateRuntimeManagers(
     nextSave,
     runtimeEffects,
     runtimeResources,
+    snapshot,
   );
 
-  const activeTraits = CharacterBootstrapper.compileActiveTraits(nextSave);
+  const activeTraits = CharacterBootstrapper.compileActiveTraits(
+    nextSave,
+    snapshot,
+  );
   const actionLookup = Object.fromEntries(
     activeTraits.flatMap((trait) =>
       (trait.actions ?? []).map((action) => [action.id, action]),
@@ -358,6 +366,7 @@ const resolveHealthTransition = (
       nextSave,
       runtimeEffects,
       runtimeResources,
+      state.ruleSnapshot ?? undefined,
     );
   }
 
@@ -578,10 +587,7 @@ export interface CharacterSheetState {
   runtimeResources: ResourceManager | null;
   combatContext: CombatContext;
   runtimeCombat: CombatContextManager | null;
-  ruleSnapshot: Pick<
-    RuleSnapshot,
-    "equipmentById" | "itemsById" | "weaponsById" | "resourcesById"
-  > | null;
+  ruleSnapshot: SheetRuleSnapshot | null;
 
   // actions
   initialize: (payload: Partial<CharacterSheetState>) => void;
@@ -1072,9 +1078,13 @@ export const useCharacterSheetStore = create<CharacterSheetState>(
         nextSave,
         runtimeEffects,
         runtimeResources,
+        state.ruleSnapshot ?? undefined,
       );
 
-      const activeTraits = CharacterBootstrapper.compileActiveTraits(nextSave);
+      const activeTraits = CharacterBootstrapper.compileActiveTraits(
+        nextSave,
+        state.ruleSnapshot ?? undefined,
+      );
       // the standard actions are not granted by anything - Dodge is a rule, not
       // a trait - so they are always present, ahead of what traits add
       return [
@@ -1148,6 +1158,7 @@ export const useCharacterSheetStore = create<CharacterSheetState>(
         nextSave,
         runtimeEffects,
         runtimeResources,
+        state.ruleSnapshot ?? undefined,
       );
 
       alignRuntimeResources(runtimeResources, payload.resources);
@@ -1270,6 +1281,7 @@ export const useCharacterSheetStore = create<CharacterSheetState>(
         toCharacterSave(state),
         runtimeEffects,
         runtimeResources,
+        state.ruleSnapshot ?? undefined,
       );
 
       alignRuntimeResources(runtimeResources, payload.resources);

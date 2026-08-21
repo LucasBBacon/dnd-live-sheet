@@ -6,12 +6,20 @@ import type {
   TraitDefinition,
 } from "@project/shared";
 import { traitIdOfOption } from "@project/shared";
-import {
-  CLASS_DICTIONARY,
-  SUBCLASS_DICTIONARY,
-  TRAIT_DICTIONARY,
-  listSubclassesForClass,
-} from "@project/engine";
+import { getPackRulebook } from "./packRulebook.js";
+
+/**
+ * The subclasses a class offers, from the loaded pack.
+ *
+ * Replaces the engine helper of the same name, which read SUBCLASS_DICTIONARY.
+ * Rules content comes from packs and nothing else.
+ * @param classId The authored class id
+ * @returns Every subclass whose classId matches, in pack order
+ */
+const listSubclassesForClass = (classId: string) =>
+  Object.values(getPackRulebook().subclassesById).filter(
+    (subclass) => subclass.classId === classId,
+  );
 
 // #region Type Definitions
 
@@ -79,7 +87,7 @@ const MAX_CLASS_LEVEL = 20;
 // #region Internal Helper Functions
 
 const traitName = (traitId: string): string =>
-  TRAIT_DICTIONARY[traitId]?.name ?? traitId.replace(/_/g, " ").toUpperCase();
+  getPackRulebook().traitsById[traitId]?.name ?? traitId.replace(/_/g, " ").toUpperCase();
 
 /** the grants a class hands out at exactly this level */
 const classGrantsAtLevel = (
@@ -97,7 +105,7 @@ const subclassGrantsAtLevel = (
 ): FeatureGrant[] => {
   if (!subclassId) return [];
 
-  const subclass = SUBCLASS_DICTIONARY[subclassId];
+  const subclass = getPackRulebook().subclassesById[subclassId];
   if (subclass?.classId !== classId) return [];
 
   return (
@@ -115,7 +123,7 @@ const traitDrivenDecisions = (traitIds: string[]): ResolverDecision[] => {
   const decisions: ResolverDecision[] = [];
 
   for (const traitId of traitIds) {
-    const trait: TraitDefinition | undefined = TRAIT_DICTIONARY[traitId];
+    const trait: TraitDefinition | undefined = getPackRulebook().traitsById[traitId];
     if (!trait) continue;
 
     for (const choice of trait.proficiencies?.choices ?? []) {
@@ -203,7 +211,7 @@ export const assessMulticlassPrerequisites = ({
   classId: string;
   currentBaseScores: AbilityScoreRecord;
 }): { meetsPrerequisites: boolean; reason: string | null } => {
-  const blueprint = CLASS_DICTIONARY[classId];
+  const blueprint = getPackRulebook().classesById[classId];
   if (!blueprint?.multiclassPrerequisites) {
     return {
       meetsPrerequisites: false,
@@ -274,7 +282,7 @@ export const resolveNextLevelValidationContext = ({
   isMulticlassDip?: boolean;
 }): ResolverNextLevelContext => {
   const targetLevel = currentClassLevel + 1;
-  const blueprint = CLASS_DICTIONARY[classId];
+  const blueprint = getPackRulebook().classesById[classId];
 
   const notConfigured = (reason: string): ResolverNextLevelContext => ({
     targetLevel,
@@ -372,7 +380,7 @@ export const resolveNextLevelValidationContext = ({
     );
 
     const subclass = requestedSubclassId
-      ? SUBCLASS_DICTIONARY[requestedSubclassId]
+      ? getPackRulebook().subclassesById[requestedSubclassId]
       : undefined;
     if (subclass?.classId === classId) {
       decisions.push(
@@ -477,7 +485,7 @@ export const validateLevelUpPayloadFromResolver = ({
 
     // strict validation: the selected subclass has to belong to this class
     if (decision.type === "subclass" && payload.subclassId) {
-      const subclass = SUBCLASS_DICTIONARY[payload.subclassId];
+      const subclass = getPackRulebook().subclassesById[payload.subclassId];
       if (!subclass || subclass.classId !== payload.targetClassId) {
         throw new Error(
           `${payload.subclassId} is not a subclass of ${payload.targetClassId}`,

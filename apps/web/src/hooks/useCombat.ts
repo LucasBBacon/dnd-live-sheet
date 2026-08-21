@@ -5,7 +5,6 @@ import { useAbilities, useDerivedStats } from "./useCharacterStats";
 import {
   CombatEngine,
   resolveWeaponDefinition,
-  TRAIT_DICTIONARY,
   type Ability,
 } from "@project/engine";
 import type { FixedProficiencyGrant, TraitDefinition } from "@project/shared";
@@ -47,7 +46,7 @@ export const useCombat = () => {
       new Map<string, TraitDefinition>([
         ...(availableTraits ?? []).map((trait) => [trait.id, trait] as const),
         ...traitGrants.flatMap((grant) => {
-          const trait = TRAIT_DICTIONARY[grant.traitId];
+          const trait = ruleSnapshot?.traitsById?.[grant.traitId];
           return trait ? [[trait.id, trait] as const] : [];
         }),
       ]).values(),

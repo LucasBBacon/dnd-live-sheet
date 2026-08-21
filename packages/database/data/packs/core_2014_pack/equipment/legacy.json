@@ -26,7 +26,8 @@
                 "fullText": "This armor consists of a fitted metal chest piece worn with supple leather. Although it leaves the legs and arms relatively unprotected, this armor provides good protection for the wearer's vital organs while leaving the wearer relatively unencumbered."
             },
             "isBundle": false,
-            "bundleContents": []
+            "bundleContents": [],
+            "equipSlot": "body"
         },
         {
             "id": "item_armor_chain_shirt",
@@ -40,7 +41,8 @@
                 "fullText": "Made of interlocking metal rings, a chain shirt is worn between layers of clothing or leather. This armor offers modest protection to the wearer's upper body and allows the sound of the rings rubbing against one another to be muffled by outer layers."
             },
             "isBundle": false,
-            "bundleContents": []
+            "bundleContents": [],
+            "equipSlot": "body"
         },
         {
             "id": "item_armor_half_plate",
@@ -54,7 +56,8 @@
                 "fullText": "Half plate consists of shaped metal plates that cover most of the wearer's body. It does not include leg protection beyond simple greaves that are attached with leather straps."
             },
             "isBundle": false,
-            "bundleContents": []
+            "bundleContents": [],
+            "equipSlot": "body"
         },
         {
             "id": "item_armor_hide",
@@ -68,7 +71,8 @@
                 "fullText": "This crude armor consists of thick furs and pelts. It is commonly worn by barbarian tribes, evil humanoids, and other folk who lack access to the tools and materials needed to create better armor."
             },
             "isBundle": false,
-            "bundleContents": []
+            "bundleContents": [],
+            "equipSlot": "body"
         },
         {
             "id": "item_armor_ring_mail",
@@ -82,7 +86,8 @@
                 "fullText": "This armor is leather armor with heavy rings sewn into it. The rings help reinforce the armor against blows from swords and axes. Ring mail is inferior to chain mail, and it's usually worn only by those who can't afford better armor."
             },
             "isBundle": false,
-            "bundleContents": []
+            "bundleContents": [],
+            "equipSlot": "body"
         },
         {
             "id": "item_armor_splint",
@@ -96,7 +101,8 @@
                 "fullText": "This armor is made of narrow vertical strips of metal riveted to a backing of leather that is worn over cloth padding. Flexible chain mail protects the joints."
             },
             "isBundle": false,
-            "bundleContents": []
+            "bundleContents": [],
+            "equipSlot": "body"
         },
         {
             "id": "item_focus_amulet",
@@ -166,7 +172,8 @@
                 "fullText": "A battleaxe is a versatile weapon favored by warriors who prefer a balance of offense and defense. It features a broad, heavy blade that can deliver powerful slashing attacks, making it effective in close combat. The battleaxe's design allows for both one-handed and two-handed use, giving the wielder flexibility in combat situations. Whether used to cleave through armor or to strike with precision, the battleaxe is a formidable weapon on the battlefield."
             },
             "isBundle": false,
-            "bundleContents": []
+            "bundleContents": [],
+            "equipSlot": "main_hand"
         },
         {
             "id": "item_weapon_blowgun",
@@ -180,7 +187,8 @@
                 "fullText": "A blowgun is a martial ranged weapon that consists of a long, narrow tube through which small projectiles, such as darts or needles, are propelled by the force of the user's breath. Blowguns are often used for hunting small game or as a stealthy weapon in combat. They are typically lightweight and easy to conceal, making them ideal for surprise attacks. The blowgun's effectiveness relies on the user's ability to aim accurately and generate enough force to propel the projectile with sufficient velocity to cause damage."
             },
             "isBundle": false,
-            "bundleContents": []
+            "bundleContents": [],
+            "equipSlot": "main_hand"
         },
         {
             "id": "item_weapon_club",
@@ -194,7 +202,8 @@
                 "fullText": "A club is a basic one-handed melee weapon made from a sturdy length of wood. It deals bludgeoning damage and is light enough to be used with two-weapon fighting when paired with another light melee weapon."
             },
             "isBundle": false,
-            "bundleContents": []
+            "bundleContents": [],
+            "equipSlot": "main_hand"
         },
         {
             "id": "item_weapon_crossbow_hand",
@@ -208,7 +217,8 @@
                 "fullText": "A hand crossbow is a compact ranged weapon designed for one-handed use. It fires small bolts with precision and is favored by rogues and other characters who value stealth and mobility. The hand crossbow's lightweight design allows for quick and agile attacks, making it an ideal choice for those who prefer to strike from the shadows. Despite its size, the hand crossbow can still deliver a potent piercing attack, making it a formidable weapon in the right hands."
             },
             "isBundle": false,
-            "bundleContents": []
+            "bundleContents": [],
+            "equipSlot": "main_hand"
         },
         {
             "id": "item_weapon_crossbow_heavy",
@@ -222,7 +232,8 @@
                 "fullText": "The heavy crossbow is a powerful ranged weapon that requires significant strength to operate. It fires bolts with great force, making it effective against heavily armored targets. The heavy crossbow is a martial ranged weapon that uses ammunition and has the properties of being heavy, loading, and two-handed. It has a range of 100/400 feet and uses bolts as ammunition."
             },
             "isBundle": false,
-            "bundleContents": []
+            "bundleContents": [],
+            "equipSlot": "main_hand"
         },
         {
             "id": "item_weapon_flail",
@@ -236,7 +247,8 @@
                 "fullText": "A flail is a weapon consisting of a spiked ball attached to a handle by a chain. It is designed to deliver powerful bludgeoning attacks, making it effective against armored opponents. The flail's unique design allows it to bypass shields and other defenses, as the spiked ball can strike from unexpected angles. However, its use requires skill and precision, as the chain can be difficult to control in combat. Despite its challenges, the flail remains a popular choice for warriors seeking a weapon that combines reach and impact on the battlefield."
             },
             "isBundle": false,
-            "bundleContents": []
+            "bundleContents": [],
+            "equipSlot": "main_hand"
         },
         {
             "id": "item_weapon_glaive",
@@ -250,7 +262,8 @@
                 "fullText": "A glaive is a polearm weapon that features a long wooden shaft with a single-edged blade attached to the end. It is designed for sweeping attacks, allowing the wielder to strike multiple opponents in a wide arc. The glaive's reach makes it effective for keeping enemies at bay, while its heavy blade can deliver powerful slashing damage. However, its size and weight require strength and skill to wield effectively in combat."
             },
             "isBundle": false,
-            "bundleContents": []
+            "bundleContents": [],
+            "equipSlot": "main_hand"
         },
         {
             "id": "item_weapon_greatclub",
@@ -264,7 +277,8 @@
                 "fullText": "A greatclub is a large, heavy wooden weapon that is typically used with two hands. It deals bludgeoning damage and is often favored by characters who rely on brute strength. The greatclub's size and weight make it less versatile than smaller weapons, but it can deliver powerful blows to enemies."
             },
             "isBundle": false,
-            "bundleContents": []
+            "bundleContents": [],
+            "equipSlot": "main_hand"
         },
         {
             "id": "item_weapon_greatsword",
@@ -278,7 +292,8 @@
                 "fullText": "A greatsword is a large, two-handed melee weapon that delivers powerful slashing attacks. It features a broad blade that can cleave through armor and strike with devastating force. The greatsword's size and weight require strength and skill to wield effectively in combat, making it a favored choice for warriors who seek to dominate the battlefield with overwhelming power."
             },
             "isBundle": false,
-            "bundleContents": []
+            "bundleContents": [],
+            "equipSlot": "main_hand"
         },
         {
             "id": "item_weapon_halberd",
@@ -292,7 +307,8 @@
                 "fullText": "A halberd is a polearm weapon that combines the features of an axe, a spear, and a hook. It consists of a long wooden shaft with a blade on one end that can be used for slashing, thrusting, and hooking attacks. The halberd's versatility allows it to be effective against a variety of opponents, making it a popular choice for soldiers and guards throughout history."
             },
             "isBundle": false,
-            "bundleContents": []
+            "bundleContents": [],
+            "equipSlot": "main_hand"
         },
         {
             "id": "item_weapon_lance",
@@ -306,7 +322,8 @@
                 "fullText": "A lance is a long pole weapon designed for mounted combat. It features a sharp, pointed tip that can be used for thrusting attacks while the wielder is on horseback. The lance's reach allows the rider to strike enemies from a distance, making it an effective weapon for charging into battle. However, its specialized use and the need for a mount make it less versatile than other polearms."
             },
             "isBundle": false,
-            "bundleContents": []
+            "bundleContents": [],
+            "equipSlot": "main_hand"
         },
         {
             "id": "item_weapon_light_hammer",
@@ -320,7 +337,8 @@
                 "fullText": "A light hammer is a small, one-handed melee weapon that can be used for both close combat and throwing. It deals bludgeoning damage and is light enough to be used with two-weapon fighting when paired with another light melee weapon. The light hammer can also be thrown, making it a versatile option for characters who want to engage enemies at a distance."
             },
             "isBundle": false,
-            "bundleContents": []
+            "bundleContents": [],
+            "equipSlot": "main_hand"
         },
         {
             "id": "item_weapon_maul",
@@ -334,7 +352,8 @@
                 "fullText": "A maul is a large, two-handed melee weapon that delivers powerful bludgeoning attacks. It features a heavy head, often made of metal, attached to a long wooden handle. The maul's design allows it to strike with great force, making it effective for smashing through armor and dealing significant damage to opponents. However, its size and weight require strength and skill to wield effectively in combat, making it a favored choice for warriors who seek to dominate the battlefield with overwhelming power."
             },
             "isBundle": false,
-            "bundleContents": []
+            "bundleContents": [],
+            "equipSlot": "main_hand"
         },
         {
             "id": "item_weapon_morningstar",
@@ -348,7 +367,8 @@
                 "fullText": "A morningstar is a melee weapon that features a spiked ball attached to a wooden or metal shaft. It is designed to deliver powerful piercing attacks, making it effective against armored opponents. The morningstar's unique design allows it to bypass certain types of armor, making it a favored choice for warriors who seek to strike with precision and force on the battlefield."
             },
             "isBundle": false,
-            "bundleContents": []
+            "bundleContents": [],
+            "equipSlot": "main_hand"
         },
         {
             "id": "item_weapon_net",
@@ -362,7 +382,8 @@
                 "fullText": "A net is a weapon designed to entangle and restrain targets. It is typically made of strong, flexible material and can be thrown to capture creatures or opponents. The net's unique properties allow it to immobilize targets, making it a useful tool for hunters, trappers, and those who prefer non-lethal methods of subduing foes. When thrown, the net can cover a wide area, making it effective for capturing multiple targets at once or for ensnaring larger creatures."
             },
             "isBundle": false,
-            "bundleContents": []
+            "bundleContents": [],
+            "equipSlot": "main_hand"
         },
         {
             "id": "item_weapon_pike",
@@ -376,7 +397,8 @@
                 "fullText": "A pike is a long pole weapon that is designed for thrusting attacks. It features a sharp, pointed tip that can be used to strike enemies from a distance. The pike's reach allows the wielder to keep opponents at bay, making it an effective weapon for controlling the battlefield. However, its size and weight require strength and skill to wield effectively in combat, making it a favored choice for soldiers and warriors who seek to dominate the battlefield with reach and precision."
             },
             "isBundle": false,
-            "bundleContents": []
+            "bundleContents": [],
+            "equipSlot": "main_hand"
         },
         {
             "id": "item_weapon_sickle",
@@ -390,7 +412,8 @@
                 "fullText": "A sickle is a small, curved blade that is typically used for harvesting crops. In combat, it can be used as a light melee weapon that deals slashing damage. The sickle's unique shape allows it to be effective for hooking and pulling enemies, making it a versatile choice for characters who want to engage in close combat."
             },
             "isBundle": false,
-            "bundleContents": []
+            "bundleContents": [],
+            "equipSlot": "main_hand"
         },
         {
             "id": "item_weapon_sling",
@@ -404,7 +427,8 @@
                 "fullText": "A sling is a simple ranged weapon that consists of a small pouch attached to two lengths of cord. It is used to hurl small projectiles, such as bullets or stones, at targets. The sling is a basic weapon that deals bludgeoning damage and can be used with the ammunition property, requiring the use of bullets as ammunition. It has a range of 30 feet for normal attacks and up to 120 feet with disadvantage."
             },
             "isBundle": false,
-            "bundleContents": []
+            "bundleContents": [],
+            "equipSlot": "main_hand"
         },
         {
             "id": "item_weapon_spear",
@@ -418,7 +442,8 @@
                 "fullText": "A spear is a versatile melee weapon that can be used for both thrusting and throwing. It typically consists of a long wooden shaft with a pointed metal tip. In combat, a spear can be used to strike enemies from a distance or to engage in close-quarters combat. The spear's design allows it to be effective for both piercing and slashing attacks, making it a popular choice for characters who want a flexible weapon option."
             },
             "isBundle": false,
-            "bundleContents": []
+            "bundleContents": [],
+            "equipSlot": "main_hand"
         },
         {
             "id": "item_weapon_trident",
@@ -432,7 +457,8 @@
                 "fullText": "A trident is a three-pronged spear that is often associated with aquatic environments and is favored by warriors who seek versatility in combat. It can be used for both melee and ranged attacks, making it a versatile weapon for various combat situations. The trident's design allows it to be thrown with precision, making it effective for striking targets at a distance, while its sturdy construction allows for powerful melee strikes when used in close combat."
             },
             "isBundle": false,
-            "bundleContents": []
+            "bundleContents": [],
+            "equipSlot": "main_hand"
         },
         {
             "id": "item_weapon_unarmed_strike",
@@ -446,7 +472,8 @@
                 "fullText": "An unarmed strike is a basic attack that a character can make without using a weapon. It typically involves using a part of the body, such as a fist, foot, head, or other body part, to deliver a blow to an opponent. Unarmed strikes deal bludgeoning damage and are considered simple melee attacks. They can be used in combat when a character does not have a weapon available or chooses to fight without one."
             },
             "isBundle": false,
-            "bundleContents": []
+            "bundleContents": [],
+            "equipSlot": "main_hand"
         },
         {
             "id": "item_weapon_war_pick",
@@ -460,7 +487,8 @@
                 "fullText": "A war pick is a martial melee weapon that features a pointed head designed for piercing armor and delivering focused strikes. It is favored by warriors who seek to penetrate defenses and strike with precision on the battlefield."
             },
             "isBundle": false,
-            "bundleContents": []
+            "bundleContents": [],
+            "equipSlot": "main_hand"
         },
         {
             "id": "item_weapon_whip",
@@ -474,7 +502,8 @@
                 "fullText": "A whip is a martial melee weapon that consists of a long, flexible length of leather or similar material. It is designed for slashing attacks and has the unique property of being able to strike targets at a distance, making it an effective weapon for keeping enemies at bay. The whip's flexibility allows it to bypass certain types of armor and strike with precision, making it a favored choice for agile warriors who rely on speed and finesse in combat."
             },
             "isBundle": false,
-            "bundleContents": []
+            "bundleContents": [],
+            "equipSlot": "main_hand"
         },
         {
             "id": "item_bedroll",

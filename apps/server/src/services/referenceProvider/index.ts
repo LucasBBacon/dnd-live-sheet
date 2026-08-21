@@ -1,15 +1,22 @@
 import { DatabaseReferenceProvider } from "./databaseReferenceProvider.js";
-import { StaticReferenceProvider } from "./staticReferenceProvider.js";
 import type { ReferenceProvider } from "./types.js";
 
-export type ReferenceSource = "static" | "db";
+/**
+ * Kept as a union of one.
+ *
+ * "static" was the other member, backed by nine hand-maintained dictionaries
+ * that no longer exist: rules content comes from packs and nothing else. The
+ * type stays so REFERENCE_SOURCE keeps its shape, and so a second source - a
+ * cache, a remote catalogue - has somewhere to land.
+ */
+export type ReferenceSource = "db";
 
-const DEFAULT_SOURCE: ReferenceSource = "static";
+const DEFAULT_SOURCE: ReferenceSource = "db";
 
 let activeProvider: ReferenceProvider | null = null;
 
 const parseReferenceSource = (rawValue: string | undefined): ReferenceSource => {
-  if (rawValue === "db" || rawValue === "static") {
+  if (rawValue === "db") {
     return rawValue;
   }
 
@@ -22,19 +29,9 @@ const parseReferenceSource = (rawValue: string | undefined): ReferenceSource => 
   return DEFAULT_SOURCE;
 };
 
-const parseFallbackEnabled = (rawValue: string | undefined): boolean => {
-  if (!rawValue) return true;
-  const normalized = rawValue.trim().toLowerCase();
-  return normalized !== "0" && normalized !== "false" && normalized !== "no";
-};
 
-const createProviderForSource = (source: ReferenceSource): ReferenceProvider => {
-  if (source === "db") {
-    return new DatabaseReferenceProvider();
-  }
-
-  return new StaticReferenceProvider();
-};
+const createProviderForSource = (_source: ReferenceSource): ReferenceProvider =>
+  new DatabaseReferenceProvider();
 
 export const initialiseReferenceProvider = async (): Promise<ReferenceProvider> => {
   if (activeProvider) {
@@ -42,32 +39,15 @@ export const initialiseReferenceProvider = async (): Promise<ReferenceProvider> 
   }
 
   const configuredSource = parseReferenceSource(process.env.REFERENCE_SOURCE);
-  const fallbackEnabled = parseFallbackEnabled(
-    process.env.REFERENCE_SOURCE_FALLBACK_ENABLED,
-  );
 
-  try {
-    const provider = createProviderForSource(configuredSource);
-    await provider.warm();
-    activeProvider = provider;
-    console.log(`[referenceProvider] Using '${provider.source}' provider.`);
-    return provider;
-  } catch (error) {
-    if (configuredSource !== "static" || !fallbackEnabled) {
-      throw error;
-    }
-
-    console.warn(
-      "[referenceProvider] Static provider failed during initialisation, falling back to db provider.",
-      error,
-    );
-
-    const fallback = createProviderForSource("db");
-    await fallback.warm();
-    activeProvider = fallback;
-    console.log("[referenceProvider] Using 'db' fallback provider.");
-    return fallback;
-  }
+  // no fallback: the database is the only source. a failure here means the
+  // pack was never imported, and serving an empty rulebook instead of saying
+  // so is what made the previous gap so hard to see
+  const provider = createProviderForSource(configuredSource);
+  await provider.warm();
+  activeProvider = provider;
+  console.log(`[referenceProvider] Using '${provider.source}' provider.`);
+  return provider;
 };
 
 export const getReferenceProvider = (): ReferenceProvider => {

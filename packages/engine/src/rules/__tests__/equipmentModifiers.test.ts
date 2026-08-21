@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
 import type { ItemDefinition } from "@project/shared";
-import { ITEM_DICTIONARY, WEAPON_DICTIONARY } from "../equipmentDictionary.js";
+import { corePackEquipment } from "../../pipeline/__tests__/corePackFixture.js";
+
+const { itemsById: ITEM_DICTIONARY, weaponsById: WEAPON_DICTIONARY } =
+  corePackEquipment();
 
 /** Asserts the entry exists, so each assertion reads against a real item. */
 const entry = (id: string): ItemDefinition => {

@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { TRAIT_DICTIONARY } from "../traitDictionary.js";
+import { corePackSnapshot } from "../../pipeline/__tests__/corePackFixture.js";
+
+const TRAIT_DICTIONARY = corePackSnapshot().traitsById;
 import { listProficiencyOptions } from "../proficiencyDictionary.js";
 
 /**

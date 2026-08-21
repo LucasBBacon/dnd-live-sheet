@@ -4,7 +4,10 @@
     "target": "es2023",
     "lib": ["ES2023", "DOM"],
     "module": "esnext",
-    "types": ["vite/client"],
+    // "node" is here for the test fixtures under src/**/__tests__, which read
+    // the shipped rule pack off disk. Application code must not reach for node
+    // APIs - the bundler would reject it long before this config would.
+    "types": ["vite/client", "node"],
     "skipLibCheck": true,
 
     /* Bundler mode */

@@ -1,7 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { readFileSync } from "node:fs";
-import { createRequire } from "node:module";
-import { extractItemsForMigration } from "@project/database/src/itemsExtraction.js";
+import { assembleCoreRulePack } from "@project/database/src/corePackAssembler.js";
+import path from "node:path";
 import { resolveItemPayload } from "../inventory.js";
 
 /**
@@ -11,7 +10,15 @@ import { resolveItemPayload } from "../inventory.js";
  * inventory.test.ts already proves resolveItemPayload unpacks nested bundles;
  * what it cannot prove is that the shipped data reaches it in a shape it can
  * unpack. Until this file, no test connected the two.
+ *
+ * The catalogue is the assembled pack now rather than items.json projected
+ * through the seed: the pack is the only source, and these rows are what the
+ * importer writes into the tables this harness stands in for.
  */
+const PACK_DIR = path.join(
+  process.cwd(),
+  "../../packages/database/data/packs/core_2014_pack",
+);
 const { mockEq, mockItemsTable, mockBundleContentsTable } = vi.hoisted(() => ({
   mockEq: vi.fn((column: unknown, value: unknown) => ({ column, value })),
   mockItemsTable: { id: "items.id", isBundle: "items.isBundle" },
@@ -51,27 +58,26 @@ vi.mock("@project/database", () => ({
   },
 }));
 
-const resolve = createRequire(import.meta.url).resolve;
-
-const rawItems = JSON.parse(
-  readFileSync(resolve("@project/database/data/items.json"), "utf-8"),
-) as unknown[];
-
-beforeEach(() => {
-  const extracted = extractItemsForMigration(rawItems);
+beforeEach(async () => {
+  const pack = await assembleCoreRulePack(PACK_DIR);
 
   itemRowsById = new Map(
-    extracted.seedItems.map((item) => [
+    pack.equipment.map((item) => [
       item.id,
       { id: item.id, isBundle: item.isBundle },
     ]),
   );
 
   bundleRowsById = new Map();
-  for (const entry of extracted.bundleContents) {
-    const existing = bundleRowsById.get(entry.bundleId) ?? [];
-    existing.push({ itemId: entry.itemId, quantity: entry.quantity });
-    bundleRowsById.set(entry.bundleId, existing);
+  for (const item of pack.equipment) {
+    if (item.bundleContents.length === 0) continue;
+    bundleRowsById.set(
+      item.id,
+      item.bundleContents.map((line) => ({
+        itemId: line.itemId,
+        quantity: line.quantity,
+      })),
+    );
   }
 });
 

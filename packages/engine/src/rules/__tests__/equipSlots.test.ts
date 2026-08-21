@@ -1,9 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { CharacterSlot } from "@project/shared";
-import {
-  EQUIPMENT_DICTIONARY,
-  ITEM_DICTIONARY,
-} from "../equipmentDictionary.js";
+import { corePackEquipment } from "../../pipeline/__tests__/corePackFixture.js";
 import {
   SLOT_INSTANCES,
   canEquipTo,
@@ -13,15 +10,17 @@ import {
   slotsConsumedBy,
 } from "../equipSlots.js";
 
+const { equipmentById, itemsById } = corePackEquipment();
+
 const definition = (id: string) => {
-  const item = ITEM_DICTIONARY[id];
-  if (!item) throw new Error(`ITEM_DICTIONARY is missing ${id}`);
+  const item = itemsById[id];
+  if (!item) throw new Error(`the pack is missing ${id}`);
   return item;
 };
 
 const equipment = (id: string) => {
-  const item = EQUIPMENT_DICTIONARY[id];
-  if (!item) throw new Error(`EQUIPMENT_DICTIONARY is missing ${id}`);
+  const item = equipmentById[id];
+  if (!item) throw new Error(`the pack is missing ${id}`);
   return item;
 };
 

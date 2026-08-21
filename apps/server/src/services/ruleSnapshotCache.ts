@@ -1,6 +1,5 @@
 import { db } from "@project/database";
 import { coreRulePacks, items } from "@project/database/src/schema/reference.js";
-import { resolveResourceRules } from "@project/engine";
 import { RuleSnapshotSchema, toRuleSnapshot } from "@project/shared";
 import { and, desc, eq } from "drizzle-orm";
 import { getReferenceCacheVersion } from "./referenceCache.js";
@@ -54,11 +53,22 @@ const buildRuleSnapshot = async (): Promise<CachedRuleSnapshot> => {
 
   const packContent = packRow ? toRuleSnapshot(packRow.payload) : undefined;
 
+  // resources come from pack.resources, which toRuleSnapshot does not carry -
+  // it holds only what the engine resolves through the rulebook path. the
+  // static RESOURCE_DICTIONARY that used to fill this is gone, so without
+  // this a short rest would find no rule and restore nothing
+  const resourcesById = Object.fromEntries(
+    (packRow?.payload.resources ?? []).map((resource) => [
+      resource.id,
+      resource,
+    ]),
+  );
+
   const parsedSnapshot = RuleSnapshotSchema.parse({
     equipmentById,
     itemsById,
     weaponsById,
-    resourcesById: resolveResourceRules(),
+    resourcesById,
     traitsById: {},
   });
 

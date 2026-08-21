@@ -38,6 +38,7 @@ import {
   RestEngine,
 } from "@project/engine";
 import { resolvePlayerTurn } from "../services/turnResolution.js";
+import { getCachedRuleSnapshot } from "../services/ruleSnapshotCache.js";
 import {
   getCampaignMembershipRole,
   getUserIdFromSocket,
@@ -960,11 +961,16 @@ export function initializeWebSocketGateway(httpServer: any) {
             );
 
             // 3 - calculate the swept state
+            // the snapshot carries pack.resources; without it every resource
+            // resolves to no rule and applyRest returns it untouched, so a
+            // rest would silently restore nothing
+            const { snapshot } = await getCachedRuleSnapshot();
             const updatedResources = RestEngine.applyRest(
               currentResources,
               payload.restType,
               totalLevel,
               classLevels,
+              snapshot,
             );
 
             // 4 - batch update the changed resources

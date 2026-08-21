@@ -20,12 +20,15 @@ const acBonusModifier = {
 };
 
 describe("ruleLookup", () => {
-  it("resolves canonical item ids via static dictionary", () => {
-    const shield = resolveItemDefinition("item_armor_shield");
-    expect(shield?.name).toBe("Shield");
+  it("resolves nothing without a snapshot to read", () => {
+    // the static dictionaries are gone; an item the caller supplies no pack
+    // for does not exist, and undefined is the correct answer
+    expect(resolveItemDefinition("item_armor_shield")).toBeUndefined();
+    expect(resolveWeaponDefinition("item_weapon_longsword")).toBeUndefined();
+    expect(resolveEquipmentDefinition("item_weapon_longsword")).toBeUndefined();
   });
 
-  it("prefers snapshot item definitions over static dictionary entries", () => {
+  it("resolves item definitions from the snapshot", () => {
     const item = resolveItemDefinition("item_armor_shield", {
       itemsById: {
         item_armor_shield: {
@@ -40,8 +43,8 @@ describe("ruleLookup", () => {
       },
     });
 
-    expect(item?.name).toBe("Shield");
-    expect(item?.modifiers?.[0]?.value).toBe(2);
+    expect(item?.name).toBe("Snapshot Shield");
+    expect(item?.modifiers?.[0]?.value).toBe(3);
   });
 
   it("resolves item definition from equipmentById snapshot", () => {
@@ -59,8 +62,8 @@ describe("ruleLookup", () => {
       },
     });
 
-    expect(item?.name).toBe("Shield");
-    expect(item?.modifiers?.[0]?.value).toBe(2);
+    expect(item?.name).toBe("Canonical Shield");
+    expect(item?.modifiers?.[0]?.value).toBe(3);
   });
 
   it("itemsById snapshot takes priority over equipmentById snapshot", () => {
@@ -88,13 +91,7 @@ describe("ruleLookup", () => {
       },
     });
 
-    expect(item?.name).toBe("Shield");
-  });
-
-  it("resolves canonical weapon ids via static dictionary", () => {
-    const weapon = resolveWeaponDefinition("item_weapon_longsword");
-    expect(weapon?.name).toBe("Longsword");
-    expect(weapon?.category).toBe("martial_melee");
+    expect(item?.name).toBe("Compat Shield");
   });
 
   it("resolves canonical weapon ids via snapshot", () => {
@@ -112,7 +109,7 @@ describe("ruleLookup", () => {
       },
     });
 
-    expect(weapon?.name).toBe("Longsword");
+    expect(weapon?.name).toBe("Snapshot Longsword");
     expect(weapon?.damageDice).toBe("1d8");
   });
 
@@ -140,8 +137,8 @@ describe("ruleLookup", () => {
       },
     });
 
-    expect(weapon?.name).toBe("Longsword");
-    expect(weapon?.damageDice).toBe("1d8");
+    expect(weapon?.name).toBe("Canonical Longsword");
+    expect(weapon?.damageDice).toBe("1d10");
   });
 
   it("returns undefined for equipment without weapon capability when resolving weapon", () => {
@@ -160,12 +157,6 @@ describe("ruleLookup", () => {
     });
 
     expect(weapon).toBeUndefined();
-  });
-
-  it("resolves equipment definition via static dictionary", () => {
-    const equipment = resolveEquipmentDefinition("item_weapon_longsword");
-    expect(equipment?.name).toBe("Longsword");
-    expect(equipment?.weapon?.category).toBe("martial_melee");
   });
 
   it("resolves equipment definition via snapshot", () => {
@@ -192,11 +183,11 @@ describe("ruleLookup", () => {
       },
     });
 
-    expect(equipment?.name).toBe("Longsword");
-    expect(equipment?.weapon?.damageDice).toBe("1d8");
+    expect(equipment?.name).toBe("Snapshot Longsword");
+    expect(equipment?.weapon?.damageDice).toBe("1d12");
   });
 
-  it("prefers snapshot resource rules over static dictionary entries", () => {
+  it("resolves a resource rule from the snapshot", () => {
     const resource = resolveResourceRule("trait_action_surge", {
       resourcesById: {
         trait_action_surge: {
@@ -267,7 +258,7 @@ describe("ruleLookup pack resolution", () => {
   };
 
   describe("races", () => {
-    it("finds a race the pack defines but the dictionary does not", () => {
+    it("finds a race the pack defines", () => {
       expect(
         resolveRaceDefinition("race_dwarf", {
           racesById: { race_dwarf: packRace },
@@ -275,13 +266,11 @@ describe("ruleLookup pack resolution", () => {
       ).toBe("Dwarf");
     });
 
-    it("returns nothing when neither source has the race", () => {
+    it("returns nothing when the pack has no such race", () => {
       expect(resolveRaceDefinition("race_dwarf")).toBeUndefined();
     });
 
-    it("prefers the pack over the dictionary for the same id", () => {
-      // the snapshot is the newer authority; a stale dictionary entry must not
-      // shadow content the rulebook was updated with
+    it("reads the race's own speed from the pack", () => {
       expect(
         resolveRaceDefinition("race_dwarf", {
           racesById: { race_dwarf: { ...packRace, speed: 30 } },
@@ -299,21 +288,17 @@ describe("ruleLookup pack resolution", () => {
       ).toBe("Rage");
     });
 
-    it("still finds a trait only the dictionary defines", () => {
-      // fighting styles, metamagic and maneuvers are dictionary-only while the
-      // pack is filled in, so the fallback is the architecture, not a stopgap
-      expect(resolveTraitDefinition("trait_fs_defense")).toBeDefined();
-    });
-
-    it("keeps the dictionary reachable even when a snapshot is supplied", () => {
+    it("resolves nothing for a trait the snapshot omits", () => {
+      // fighting styles used to come from a dictionary the pack could not
+      // shadow. they are pack content now, so a snapshot without one has none
       expect(
         resolveTraitDefinition("trait_fs_defense", {
           traitsById: { trait_rage: packTrait },
         }),
-      ).toBeDefined();
+      ).toBeUndefined();
     });
 
-    it("returns nothing for a trait neither source defines", () => {
+    it("returns nothing for a trait the pack does not define", () => {
       expect(resolveTraitDefinition("trait_invented")).toBeUndefined();
     });
   });
@@ -327,11 +312,7 @@ describe("ruleLookup pack resolution", () => {
       ).toBe("Barbarian");
     });
 
-    it("still finds a class only the dictionary defines", () => {
-      expect(resolveClassDefinition("class_fighter")).toBeDefined();
-    });
-
-    it("returns nothing for a class neither source defines", () => {
+    it("returns nothing for a class the pack does not define", () => {
       expect(resolveClassDefinition("class_barbarian")).toBeUndefined();
     });
   });

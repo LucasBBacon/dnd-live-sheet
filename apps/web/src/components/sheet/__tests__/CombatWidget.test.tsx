@@ -3,6 +3,7 @@ import { createRoot } from "react-dom/client";
 import { act } from "react";
 import type { ActionGrant, ActorInstance } from "@project/shared";
 import { CombatWidget } from "../CombatWidget";
+import { packRuleSnapshot } from "../../../store/__tests__/packFixture";
 
 const mocks = vi.hoisted(() => ({
   rollState: { current: "normal" as "advantage" | "disadvantage" | "normal" },
@@ -130,7 +131,8 @@ const storeState = {
   openHostileAttackReactionWindow: mocks.openHostileAttackReactionWindow,
   recordRollResult: mocks.recordRollResult,
   resolveCombatEvent: mocks.resolveCombatEvent,
-  ruleSnapshot: null,
+  // the Protection helper's name comes off the trait, which the pack defines
+  ruleSnapshot: packRuleSnapshot(),
   runtimeEffects: {
     getActiveActors: () => [actor],
   },

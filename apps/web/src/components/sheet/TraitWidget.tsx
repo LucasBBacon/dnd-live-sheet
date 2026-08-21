@@ -1,6 +1,3 @@
-import {
-  TRAIT_DICTIONARY,
-} from "@project/engine";
 import type {
   ChoiceProficiencyGrant,
   FixedProficiencyGrant,
@@ -82,6 +79,11 @@ export const TraitWidget = () => {
   const campaignId = useCharacterSheetStore((state) => state.campaignId);
   const level = useCharacterSheetStore((state) => state.level);
   const classLevels = useCharacterSheetStore((state) => state.classLevels);
+  const ruleSnapshot = useCharacterSheetStore((state) => state.ruleSnapshot);
+  const traitsById = useMemo(
+    () => ruleSnapshot?.traitsById ?? {},
+    [ruleSnapshot?.traitsById],
+  );
   const raceId = useCharacterSheetStore((state) => state.raceId);
   const subraceId = useCharacterSheetStore((state) => state.subraceId);
   const currentHp = useCharacterSheetStore((state) => state.currentHp);
@@ -124,7 +126,7 @@ export const TraitWidget = () => {
 
   const traitRows = useMemo(
     () =>
-      Object.values(TRAIT_DICTIONARY)
+      Object.values(traitsById)
         .map((trait) => ({
           id: trait.id,
           uuid: toDebugUuid(trait.id),
@@ -134,15 +136,15 @@ export const TraitWidget = () => {
           proficiencyChoices: trait.proficiencies?.choices ?? [],
         }))
         .sort((left, right) => left.name.localeCompare(right.name)),
-    [],
+    [traitsById],
   );
 
   const selectedTraits = useMemo<TraitDefinition[]>(
     () =>
       selectedTraitIds
-        .map((id) => TRAIT_DICTIONARY[id])
-        .filter((trait): trait is TraitDefinition => Boolean(trait)),
-    [selectedTraitIds],
+        .map((id) => traitsById[id])
+        .filter((trait): trait is NonNullable<typeof trait> => Boolean(trait)),
+    [selectedTraitIds, traitsById],
   );
 
   const selectedTraitModifiers = useMemo<RuntimeModifier[]>(() => {
@@ -250,7 +252,7 @@ export const TraitWidget = () => {
         <header className="border-b border-gray-800 pb-4">
           <h2 className="text-2xl font-bold text-white">Trait Dictionary Debugger</h2>
           <p className="text-sm text-gray-400 mt-2">
-            Source: static TRAIT_DICTIONARY only. Click rows to toggle traits and stack
+            Source: the loaded rule pack. Click rows to toggle traits and stack
             modifiers through engine calculations.
           </p>
         </header>

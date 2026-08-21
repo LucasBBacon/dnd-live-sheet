@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { beforeAll, describe, expect, it } from "vitest";
 import type { LevelUpPayload } from "@project/shared";
 import {
   resolveNextLevelValidationContext,
@@ -7,6 +7,11 @@ import {
   assessMulticlassPrerequisites,
   validateLevelUpPayloadFromResolver,
 } from "../levelUpValidation.js";
+import { usePackRulebook } from "./packFixture.js";
+
+// classes, subclasses and traits are resolved from the loaded pack now, so
+// these pure functions need one primed before any of them can answer
+beforeAll(usePackRulebook);
 
 const basePayload: LevelUpPayload = {
   characterId: "char-1",

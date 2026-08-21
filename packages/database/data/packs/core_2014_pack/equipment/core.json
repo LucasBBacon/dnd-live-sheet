@@ -395,7 +395,42 @@
             "lore": {
                 "shortDescription": "Explorer's Pack",
                 "fullText": "Explorer's Pack"
-            }
+            },
+            "isBundle": true,
+            "bundleContents": [
+                {
+                    "itemId": "item_backpack",
+                    "quantity": 1
+                },
+                {
+                    "itemId": "item_bedroll",
+                    "quantity": 1
+                },
+                {
+                    "itemId": "item_mess_kit",
+                    "quantity": 1
+                },
+                {
+                    "itemId": "item_tinderbox",
+                    "quantity": 1
+                },
+                {
+                    "itemId": "item_torch",
+                    "quantity": 10
+                },
+                {
+                    "itemId": "item_rations",
+                    "quantity": 10
+                },
+                {
+                    "itemId": "item_waterskin",
+                    "quantity": 1
+                },
+                {
+                    "itemId": "item_rope_hempen",
+                    "quantity": 1
+                }
+            ]
         },
         {
             "id": "item_weapon_javelin",
@@ -467,7 +502,54 @@
             "lore": {
                 "shortDescription": "Diplomat's Pack",
                 "fullText": "Diplomat's Pack"
-            }
+            },
+            "isBundle": true,
+            "bundleContents": [
+                {
+                    "itemId": "item_chest",
+                    "quantity": 1
+                },
+                {
+                    "itemId": "item_case_map_or_scroll",
+                    "quantity": 2
+                },
+                {
+                    "itemId": "item_clothes_fine",
+                    "quantity": 1
+                },
+                {
+                    "itemId": "item_ink",
+                    "quantity": 1
+                },
+                {
+                    "itemId": "item_ink_pen",
+                    "quantity": 1
+                },
+                {
+                    "itemId": "item_lamp",
+                    "quantity": 1
+                },
+                {
+                    "itemId": "item_oil_flask",
+                    "quantity": 2
+                },
+                {
+                    "itemId": "item_paper",
+                    "quantity": 5
+                },
+                {
+                    "itemId": "item_perfume",
+                    "quantity": 1
+                },
+                {
+                    "itemId": "item_sealing_wax",
+                    "quantity": 1
+                },
+                {
+                    "itemId": "item_soap",
+                    "quantity": 1
+                }
+            ]
         },
         {
             "id": "item_pack_entertainers",
@@ -479,7 +561,38 @@
             "lore": {
                 "shortDescription": "Entertainer's Pack",
                 "fullText": "Entertainer's Pack"
-            }
+            },
+            "isBundle": true,
+            "bundleContents": [
+                {
+                    "itemId": "item_backpack",
+                    "quantity": 1
+                },
+                {
+                    "itemId": "item_bedroll",
+                    "quantity": 1
+                },
+                {
+                    "itemId": "item_clothes_costume",
+                    "quantity": 2
+                },
+                {
+                    "itemId": "item_candle",
+                    "quantity": 5
+                },
+                {
+                    "itemId": "item_rations",
+                    "quantity": 5
+                },
+                {
+                    "itemId": "item_waterskin",
+                    "quantity": 1
+                },
+                {
+                    "itemId": "item_disguise_kit",
+                    "quantity": 1
+                }
+            ]
         },
         {
             "id": "item_musical_instrument_lute",
@@ -586,7 +699,50 @@
             "lore": {
                 "shortDescription": "Priest's Pack",
                 "fullText": "Priest's Pack"
-            }
+            },
+            "isBundle": true,
+            "bundleContents": [
+                {
+                    "itemId": "item_backpack",
+                    "quantity": 1
+                },
+                {
+                    "itemId": "item_blanket",
+                    "quantity": 1
+                },
+                {
+                    "itemId": "item_candle",
+                    "quantity": 10
+                },
+                {
+                    "itemId": "item_tinderbox",
+                    "quantity": 1
+                },
+                {
+                    "itemId": "item_alms_box",
+                    "quantity": 1
+                },
+                {
+                    "itemId": "item_incense",
+                    "quantity": 2
+                },
+                {
+                    "itemId": "item_censer",
+                    "quantity": 1
+                },
+                {
+                    "itemId": "item_vestments",
+                    "quantity": 1
+                },
+                {
+                    "itemId": "item_rations",
+                    "quantity": 2
+                },
+                {
+                    "itemId": "item_waterskin",
+                    "quantity": 1
+                }
+            ]
         },
         {
             "id": "item_armor_shield_wooden",

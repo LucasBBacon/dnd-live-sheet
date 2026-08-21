@@ -1,14 +1,11 @@
-import { describe, expect, it } from "vitest";
-import { readFileSync } from "node:fs";
-import { createRequire } from "node:module";
-import { extractItemsForMigration } from "@project/database/src/itemsExtraction.js";
-import { EQUIPMENT_DICTIONARY } from "@project/engine";
+import { beforeAll, describe, expect, it } from "vitest";
+import path from "node:path";
+import { assembleCoreRulePack } from "@project/database/src/corePackAssembler.js";
+import { projectCoreRulePack } from "@project/database/src/corePackProjection.js";
 import {
   projectEquipmentRows,
   type EquipmentRuleRow,
 } from "../ruleSnapshotProjection.js";
-
-const resolve = createRequire(import.meta.url).resolve;
 
 /**
  * The real catalogue, not a fixture.
@@ -16,62 +13,63 @@ const resolve = createRequire(import.meta.url).resolve;
  * Every other test on this seam stops at a hand-written literal, which is how
  * a missing versatileDamageDice survived three reviews: when the fixture is
  * wrong, the input and the expectation are wrong together and the test passes
- * anyway. Reading the shipped file is the only thing that catches that.
+ * anyway. Reading the shipped pack is the only thing that catches that.
+ *
+ * The catalogue now travels pack -> importer projection -> items columns ->
+ * snapshot, rather than items.json -> seed -> columns -> snapshot. Same seam,
+ * one source.
  */
-const rawItems = JSON.parse(
-  readFileSync(resolve("@project/database/data/items.json"), "utf-8"),
-) as unknown[];
+const PACK_DIR = path.join(
+  process.cwd(),
+  "../../packages/database/data/packs/core_2014_pack",
+);
 
-/**
- * The columns the seed writes, in the shape the cache selects them back out.
- * Mapping here rather than mocking Drizzle keeps the test pure while still
- * crossing the boundary that actually loses fields.
- */
-const toRuleRows = (
-  seedItems: ReturnType<typeof extractItemsForMigration>["seedItems"],
-): EquipmentRuleRow[] =>
-  seedItems.map((item) => ({
+let itemRows: EquipmentRuleRow[];
+
+beforeAll(async () => {
+  const pack = await assembleCoreRulePack(PACK_DIR);
+  // the columns the importer writes, in the shape the cache selects them back
+  // out. mapping here rather than mocking Drizzle keeps the test pure while
+  // still crossing the boundary that actually loses fields
+  itemRows = projectCoreRulePack(pack).items.map((item) => ({
     id: item.id,
     name: item.name,
     weight: item.weight,
     itemRule: item.itemRule,
     weaponRule: item.weaponRule ?? null,
   }));
+});
 
-const project = () => {
-  const extracted = extractItemsForMigration(rawItems);
+const project = () => ({
+  projection: projectEquipmentRows(itemRows),
+});
 
-  return {
-    extracted,
-    projection: projectEquipmentRows(toRuleRows(extracted.seedItems)),
-  };
-};
-
-describe("the extractor and the rule snapshot projection agree", () => {
+describe("the importer and the rule snapshot projection agree", () => {
   it("carries every catalogue item through without a malformed row", () => {
-    const { extracted, projection } = project();
+    const { projection } = project();
 
     expect(projection.malformedItemIds).toEqual([]);
-    expect(Object.keys(projection.equipmentById)).toHaveLength(
-      extracted.seedItems.length,
-    );
-    // 92 unique ids across 93 entries: items.json has a known duplicate
-    // item_ammo_bolt, which the extractor drops and reports
-    expect(extracted.seedItems).toHaveLength(92);
+    expect(Object.keys(projection.equipmentById)).toHaveLength(itemRows.length);
+    // the pack carries every id exactly once; items.json's duplicate
+    // item_ammo_bolt could not survive the pack's duplicate_id validation
+    expect(itemRows.length).toBeGreaterThan(100);
   });
 
   it("keeps armour weight and its AC modifier across the whole path", () => {
     const plate = project().projection.equipmentById.item_armor_plate!;
 
     expect(plate.weight).toBe(65);
-    expect(plate.modifiers).toContainEqual({
-      target: "ARMOR_CLASS",
-      type: "set_base",
-      value: 18,
-      scalingFactor: "none",
-      requiredStates: [],
-      forbiddenStates: [],
-    });
+    // objectContaining rather than an exact literal: the pack's plate also
+    // carries maxDexCap, which items.json never did. the point of the
+    // assertion is that the AC rule survives the whole path, not that the
+    // modifier has exactly the fields the old catalogue happened to author
+    expect(plate.modifiers).toContainEqual(
+      expect.objectContaining({
+        target: "ARMOR_CLASS",
+        type: "set_base",
+        value: 18,
+      }),
+    );
   });
 
   it("keeps a versatile weapon's two-handed die", () => {
@@ -89,26 +87,10 @@ describe("the extractor and the rule snapshot projection agree", () => {
     );
   });
 
-  // item_backpack, item_sack, item_pouch, item_basket, item_chest are
-  // authored twice: once in items.json (what the database seeds) and once in
-  // EQUIPMENT_DICTIONARY (what the engine reads under static-only
-  // resolution). nothing but this test keeps their weights in agreement - the
-  // database suite only ever reads items.json, and the engine suite only ever
-  // reads the dictionary
-  it("agrees with EQUIPMENT_DICTIONARY on the weight of every duplicated container", () => {
-    const { projection } = project();
-    const duplicatedContainerIds = [
-      "item_backpack",
-      "item_sack",
-      "item_pouch",
-      "item_basket",
-      "item_chest",
-    ];
-
-    for (const id of duplicatedContainerIds) {
-      expect(projection.equipmentById[id]!.weight, id).toBe(
-        EQUIPMENT_DICTIONARY[id]!.weight,
-      );
-    }
-  });
+  // The container weights used to be authored twice - once in items.json,
+  // which the database seeded, and once in EQUIPMENT_DICTIONARY, which the
+  // engine read - and a test here was the only thing keeping the two in
+  // agreement. Both sources are gone: the pack is the single source, the
+  // database is projected from it, and the drift this guarded against can no
+  // longer happen.
 });

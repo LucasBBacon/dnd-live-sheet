@@ -20,6 +20,7 @@ import {
   warmReferenceCache,
 } from "../referenceCache.js";
 import { getCachedRuleSnapshot } from "../ruleSnapshotCache.js";
+import { primePackRulebook } from "../packRulebook.js";
 import type {
   LevelUpOptionsInput,
   ReferenceProvider,
@@ -255,6 +256,9 @@ export class DatabaseReferenceProvider implements ReferenceProvider {
 
   public async warm(): Promise<void> {
     await warmReferenceCache();
+    // the relation tables the cache above holds are a query model; the rule
+    // ASTs live in the pack payload, and levelUpValidation reads them
+    await primePackRulebook();
   }
 
   public async getRaces(scope: ScopedContext): Promise<unknown[]> {

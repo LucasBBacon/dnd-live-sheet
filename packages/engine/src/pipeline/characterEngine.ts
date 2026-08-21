@@ -41,7 +41,7 @@ import {
   ContainerEngine,
   type ContainerReport,
 } from "../calculators/containers.js";
-import { DEFAULT_WALKING_SPEED } from "../rules/raceDictionary.js";
+import { DEFAULT_WALKING_SPEED } from "../rules/raceTypes.js";
 import {
   resolveRaceDefinition,
   resolveWeaponDefinition,

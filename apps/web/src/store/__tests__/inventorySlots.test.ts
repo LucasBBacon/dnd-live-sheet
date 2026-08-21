@@ -4,6 +4,7 @@ import {
   toInventoryInstance,
   useCharacterSheetStore,
 } from "../characterSheetStore";
+import { packRuleSnapshot } from "./packFixture";
 
 vi.mock("../../services/socketService", () => ({
   socketService: {
@@ -35,7 +36,11 @@ const slotOf = (id: string) =>
   useCharacterSheetStore.getState().inventory.find((i) => i.id === id)?.slot;
 
 const seed = (inventory: InventoryInstance[]) =>
-  useCharacterSheetStore.setState({ inventory, ruleSnapshot: null });
+  // slot rules are read off the item definition, which only the pack carries
+  useCharacterSheetStore.setState({
+    inventory,
+    ruleSnapshot: packRuleSnapshot(),
+  });
 
 describe("equipItem slot rules", () => {
   beforeEach(() => {

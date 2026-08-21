@@ -1,7 +1,14 @@
 import { vi, type MockInstance } from "vitest";
-import { SOCKET_EVENTS } from "@project/shared";
+import path from "node:path";
+import { SOCKET_EVENTS, toRuleSnapshot } from "@project/shared";
 import { campaignMembers } from "@project/database/src/schema/operational.js";
+import { assembleCoreRulePack } from "@project/database/src/corePackAssembler.js";
 import { FakeDb } from "./fakeDb.js";
+
+const PACK_DIR = path.join(
+  process.cwd(),
+  "../../packages/database/data/packs/core_2014_pack",
+);
 
 /**
  * Drives the websocket gateway without a network.
@@ -190,6 +197,28 @@ export const setupGateway = async (
   }));
 
   vi.doMock("@project/database", () => ({ db }));
+
+  // The rest handler resolves resource rules through the snapshot cache, which
+  // reads core_rule_packs.payload - a table the fake db does not carry. Serve
+  // the real shipped pack instead, so a rest resolves against the same rules
+  // production would use rather than against nothing.
+  const pack = await assembleCoreRulePack(PACK_DIR);
+  vi.doMock("../../services/ruleSnapshotCache.js", () => ({
+    getCachedRuleSnapshot: async () => ({
+      cacheVersion: 1,
+      loadedAt: Date.now(),
+      snapshot: {
+        equipmentById: {},
+        itemsById: {},
+        weaponsById: {},
+        resourcesById: Object.fromEntries(
+          pack.resources.map((resource) => [resource.id, resource]),
+        ),
+        ...toRuleSnapshot(pack),
+      },
+    }),
+    invalidateRuleSnapshotCache: () => undefined,
+  }));
 
   const consoleLog = vi
     .spyOn(console, "log")

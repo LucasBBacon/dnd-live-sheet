@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { EQUIPMENT_DICTIONARY } from "@project/engine";
 import { useMemo } from "react";
+import { useCharacterSheetStore } from "../../store/characterSheetStore";
 
 interface WeaponData {
   category: string;
@@ -131,8 +131,10 @@ const ItemCard = ({ item }: { item: StaticItemView }) => {
 };
 
 export const ItemWidget = () => {
+  const ruleSnapshot = useCharacterSheetStore((state) => state.ruleSnapshot);
+
   const allStaticItems = useMemo<StaticItemView[]>(() => {
-    return Object.values(EQUIPMENT_DICTIONARY).map((item: any) => ({
+    return Object.values(ruleSnapshot?.equipmentById ?? {}).map((item: any) => ({
       id: item.id,
       name: item.name,
       type: item.type,
@@ -140,7 +142,7 @@ export const ItemWidget = () => {
       modifiers: item.modifiers,
       weapon: item.weapon,
     }));
-  }, []);
+  }, [ruleSnapshot?.equipmentById]);
 
   return (
     <div className="p-8 bg-black min-h-screen font-sans">

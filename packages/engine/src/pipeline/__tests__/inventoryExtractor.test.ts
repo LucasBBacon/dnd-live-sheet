@@ -3,10 +3,18 @@ import type { CharacterSlot, InventoryInstance } from "@project/shared";
 import { InventoryExtractor } from "../inventoryExtractor.js";
 import { resolveItemDefinition } from "../../rules/ruleLookup.js";
 
-/**
- * Fixtures use real dictionary ids: rule resolution runs in "static-only" mode,
- * so an injected snapshot would be ignored anyway.
- */
+import { corePackLookup } from "./corePackFixture.js";
+
+// Fixtures use real pack ids, and the pack is handed over on every call: it is
+// the only source an item can resolve from now.
+const PACK = corePackLookup();
+
+const extract = (items: InventoryInstance[]) =>
+  InventoryExtractor.extract(items, PACK);
+
+const extractStates = (items: InventoryInstance[]) =>
+  InventoryExtractor.extractStates(items, PACK);
+
 const SHIELD = "item_armor_shield";
 const RING = "item_ring_of_protection";
 const PLATE = "item_armor_plate";
@@ -30,13 +38,13 @@ const instance = (
 
 describe("InventoryExtractor.extract", () => {
   it("returns nothing for an empty bag", () => {
-    const result = InventoryExtractor.extract([]);
+    const result = extract([]);
     expect(result.modifiers).toEqual([]);
     expect(result.report).toEqual([]);
   });
 
   it("compiles modifiers from a worn item", () => {
-    const result = InventoryExtractor.extract([
+    const result = extract([
       instance("inv_1", SHIELD, "off_hand"),
     ]);
 
@@ -52,7 +60,7 @@ describe("InventoryExtractor.extract", () => {
   });
 
   it("ignores items sitting in the pack", () => {
-    const result = InventoryExtractor.extract([
+    const result = extract([
       instance("inv_1", SHIELD, "backpack"),
     ]);
 
@@ -61,7 +69,7 @@ describe("InventoryExtractor.extract", () => {
   });
 
   it("tolerates unknown items and items with no modifiers", () => {
-    const result = InventoryExtractor.extract([
+    const result = extract([
       instance("inv_1", "item_ghost", "body"),
       instance("inv_2", "item_weapon_dagger", "main_hand"),
     ]);
@@ -72,7 +80,7 @@ describe("InventoryExtractor.extract", () => {
   });
 
   it("prefers the player's custom name as the breakdown source", () => {
-    const result = InventoryExtractor.extract([
+    const result = extract([
       instance("inv_1", SHIELD, "off_hand", { customName: "Aegis" }),
     ]);
 
@@ -80,7 +88,7 @@ describe("InventoryExtractor.extract", () => {
   });
 
   it("keeps an unattuned item's modifiers but marks them inactive", () => {
-    const result = InventoryExtractor.extract([
+    const result = extract([
       instance("inv_1", RING, "ring_1"),
     ]);
 
@@ -91,7 +99,7 @@ describe("InventoryExtractor.extract", () => {
   });
 
   it("activates an item once it is both worn and attuned", () => {
-    const result = InventoryExtractor.extract([
+    const result = extract([
       instance("inv_1", RING, "ring_1", { isAttuned: true }),
     ]);
 
@@ -101,7 +109,7 @@ describe("InventoryExtractor.extract", () => {
   });
 
   it("does not require attunement for an item that never asked for it", () => {
-    const result = InventoryExtractor.extract([
+    const result = extract([
       instance("inv_1", PLATE, "body"),
     ]);
 
@@ -114,7 +122,7 @@ describe("InventoryExtractor.extract", () => {
       instance(id, RING, "ring_1", { isAttuned: true }),
     );
 
-    const result = InventoryExtractor.extract(items);
+    const result = extract(items);
 
     expect(result.attunedInstanceIds).toEqual(["inv_1", "inv_2", "inv_3"]);
     expect(result.overAttunedInstanceIds).toEqual(["inv_4"]);
@@ -131,7 +139,7 @@ describe("InventoryExtractor.extract", () => {
   });
 
   it("does not scale a modifier by stack quantity", () => {
-    const result = InventoryExtractor.extract([
+    const result = extract([
       instance("inv_1", SHIELD, "off_hand", { quantity: 5 }),
     ]);
 
@@ -140,7 +148,7 @@ describe("InventoryExtractor.extract", () => {
   });
 
   it("keeps ids unique so competing set_base entries stay distinguishable", () => {
-    const result = InventoryExtractor.extract([
+    const result = extract([
       instance("inv_1", PLATE, "body"),
       instance("inv_2", LEATHER, "body"),
     ]);
@@ -152,23 +160,23 @@ describe("InventoryExtractor.extract", () => {
 
 describe("InventoryExtractor.extractStates", () => {
   it("emits nothing for an empty bag", () => {
-    expect(InventoryExtractor.extractStates([])).toEqual([]);
+    expect(extractStates([])).toEqual([]);
   });
 
   it("emits status_wearing_armor for armor worn on the body", () => {
     expect(
-      InventoryExtractor.extractStates([instance("inv_1", PLATE, "body")]),
+      extractStates([instance("inv_1", PLATE, "body")]),
     ).toContain("status_wearing_armor");
   });
 
   it("emits the heavy category state for plate", () => {
     expect(
-      InventoryExtractor.extractStates([instance("inv_1", PLATE, "body")]),
+      extractStates([instance("inv_1", PLATE, "body")]),
     ).toContain("status_wearing_heavy_armor");
   });
 
   it("emits the light category state for leather", () => {
-    const states = InventoryExtractor.extractStates([
+    const states = extractStates([
       instance("inv_1", LEATHER, "body"),
     ]);
 
@@ -178,19 +186,19 @@ describe("InventoryExtractor.extractStates", () => {
 
   it("emits nothing for armor left in the pack", () => {
     expect(
-      InventoryExtractor.extractStates([instance("inv_1", PLATE, "backpack")]),
+      extractStates([instance("inv_1", PLATE, "backpack")]),
     ).toEqual([]);
   });
 
   it("emits nothing for a non-armor item worn in the body slot", () => {
     // guards the guard: if item_robe ever stops resolving as a body-slot
     // non-armor item, this test would pass by resolving to nothing at all
-    const robe = resolveItemDefinition(ROBE);
+    const robe = resolveItemDefinition(ROBE, PACK);
     expect(robe?.equipSlot).toBe("body");
     expect(robe?.type).not.toBe("armor");
 
     expect(
-      InventoryExtractor.extractStates([instance("inv_1", ROBE, "body")]),
+      extractStates([instance("inv_1", ROBE, "body")]),
     ).toEqual([]);
   });
 });

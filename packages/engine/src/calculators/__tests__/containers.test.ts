@@ -2,6 +2,13 @@ import { describe, expect, it } from "vitest";
 import type { InventoryInstance } from "@project/shared";
 import { ContainerEngine } from "../containers.js";
 import { poundsToHundredths } from "../weight.js";
+import { corePackLookup } from "../../pipeline/__tests__/corePackFixture.js";
+
+// container capacities come from the pack now, so every lookup needs it
+const PACK = corePackLookup();
+
+const buildReport = (items: InventoryInstance[]) =>
+  ContainerEngine.report(items, PACK);
 
 const row = (
   overrides: Partial<InventoryInstance> & Pick<InventoryInstance, "id" | "itemId">,
@@ -17,14 +24,14 @@ const backpack = () => row({ id: "inv_pack", itemId: "item_backpack" });
 
 describe("ContainerEngine.report", () => {
   it("reports nothing for an empty inventory", () => {
-    expect(ContainerEngine.report([])).toEqual({
+    expect(buildReport([])).toEqual({
       containers: [],
       unplacedInstanceIds: [],
     });
   });
 
   it("reports an empty container at its authored capacity", () => {
-    const report = ContainerEngine.report([backpack()]);
+    const report = buildReport([backpack()]);
 
     expect(report.containers).toHaveLength(1);
     expect(report.containers[0]).toEqual({
@@ -40,13 +47,13 @@ describe("ContainerEngine.report", () => {
   it("does not count a container's own weight against itself", () => {
     // the backpack's 5 lb is what the character carries, not what the backpack
     // holds. counting it would make every container start 5 lb down
-    const report = ContainerEngine.report([backpack()]);
+    const report = buildReport([backpack()]);
 
     expect(report.containers[0]!.carriedHundredths).toBe(0);
   });
 
   it("counts what is inside it", () => {
-    const report = ContainerEngine.report([
+    const report = buildReport([
       backpack(),
       row({ id: "inv_dagger", itemId: "item_weapon_dagger", containerId: "inv_pack" }),
     ]);
@@ -56,7 +63,7 @@ describe("ContainerEngine.report", () => {
   });
 
   it("scales by the quantity in the stack", () => {
-    const report = ContainerEngine.report([
+    const report = buildReport([
       backpack(),
       row({
         id: "inv_arrows",
@@ -72,7 +79,7 @@ describe("ContainerEngine.report", () => {
   });
 
   it("flags a container carrying more than it holds", () => {
-    const report = ContainerEngine.report([
+    const report = buildReport([
       backpack(),
       row({ id: "inv_plate", itemId: "item_armor_plate", containerId: "inv_pack" }),
     ]);
@@ -84,7 +91,7 @@ describe("ContainerEngine.report", () => {
   it("treats exactly full as not overloaded", () => {
     // the rule is "holds 30 pounds of gear", so 30 lb on the nose fits. without
     // this a >= regression passes every other test in this file
-    const report = ContainerEngine.report([
+    const report = buildReport([
       backpack(),
       row({
         id: "inv_daggers",
@@ -101,7 +108,7 @@ describe("ContainerEngine.report", () => {
   it("counts a nested container's own weight but not its contents", () => {
     // a deliberate one-level rule: summing the subtree is more correct and
     // needs cycle detection, and no 5e rule turns on the difference
-    const report = ContainerEngine.report([
+    const report = buildReport([
       backpack(),
       row({ id: "inv_pouch", itemId: "item_pouch", containerId: "inv_pack" }),
       row({
@@ -119,7 +126,7 @@ describe("ContainerEngine.report", () => {
   });
 
   it("reports a row pointing at a container that is not carried", () => {
-    const report = ContainerEngine.report([
+    const report = buildReport([
       row({ id: "inv_dagger", itemId: "item_weapon_dagger", containerId: "inv_gone" }),
     ]);
 
@@ -128,7 +135,7 @@ describe("ContainerEngine.report", () => {
   });
 
   it("reports a row pointing at something that is not a container", () => {
-    const report = ContainerEngine.report([
+    const report = buildReport([
       row({ id: "inv_sword", itemId: "item_weapon_longsword" }),
       row({ id: "inv_dagger", itemId: "item_weapon_dagger", containerId: "inv_sword" }),
     ]);
@@ -137,7 +144,7 @@ describe("ContainerEngine.report", () => {
   });
 
   it("reports a row that claims to be inside itself", () => {
-    const report = ContainerEngine.report([
+    const report = buildReport([
       row({ id: "inv_pack", itemId: "item_backpack", containerId: "inv_pack" }),
     ]);
 
@@ -149,7 +156,7 @@ describe("ContainerEngine.report", () => {
 
   it("ignores an item with no rule behind it", () => {
     // a save outlives the homebrew pack that authored its contents
-    const report = ContainerEngine.report([
+    const report = buildReport([
       backpack(),
       row({ id: "inv_ghost", itemId: "item_homebrew_gone", containerId: "inv_pack" }),
     ]);

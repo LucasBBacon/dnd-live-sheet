@@ -7,6 +7,7 @@ import {
 import { CombatContextSchema, type ActorInstance } from "@project/shared";
 import { socketService } from "../../services/socketService";
 import { useCharacterSheetStore } from "../characterSheetStore";
+import { packRuleSnapshot } from "./packFixture";
 
 describe("useCharacterSheetStore hp trigger handling", () => {
   beforeEach(() => {
@@ -33,7 +34,7 @@ describe("useCharacterSheetStore hp trigger handling", () => {
       inventoryError: null,
       activeModifiers: [],
       resources: [],
-      ruleSnapshot: null,
+      ruleSnapshot: packRuleSnapshot(),
       activeStates: [],
       latestRollResults: [],
       runtimeEffects: null,
@@ -700,7 +701,7 @@ describe("useCharacterSheetStore remote action state composition", () => {
       inventory: [],
       activeModifiers: [],
       resources: [],
-      ruleSnapshot: null,
+      ruleSnapshot: packRuleSnapshot(),
       baseStates: ["status_wearing_armor"],
       activeStates: ["status_wearing_armor"],
       runtimeEffects: null,
@@ -761,7 +762,7 @@ describe("useCharacterSheetStore conditions", () => {
       inventory: [],
       activeModifiers: [],
       resources: [],
-      ruleSnapshot: null,
+      ruleSnapshot: packRuleSnapshot(),
       baseStates: [],
       activeConditions: [],
       activeStates: [],
@@ -868,7 +869,7 @@ describe("useCharacterSheetStore server-owned turns", () => {
       inventory: [],
       activeModifiers: [],
       resources: [],
-      ruleSnapshot: null,
+      ruleSnapshot: packRuleSnapshot(),
       baseStates: [],
       activeConditions: [],
       activeStates: [],

@@ -1,6 +1,8 @@
 import { describe, expect, it, vi } from "vitest";
 import { DiceEngine } from "../diceParser.js";
-import { FIGHTING_STYLE_TRAITS } from "../../rules/traits/fightingStyleDictionary.js";
+import { corePackSnapshot } from "../../pipeline/__tests__/corePackFixture.js";
+
+const FIGHTING_STYLE_TRAITS = corePackSnapshot().traitsById;
 
 describe("DiceEngine dice-rule application", () => {
   it("maximizes every die while preserving the expression modifier", () => {

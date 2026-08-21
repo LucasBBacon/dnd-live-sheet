@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { packRuleSnapshot } from "../../store/__tests__/packFixture";
 
 let mockStoreState: {
   inventory: Array<{
@@ -64,7 +65,8 @@ describe("useCombat", () => {
       traitGrants: [],
       activeStates: [],
       classLevels: {},
-      ruleSnapshot: null,
+      // weapons resolve from the pack now; a null snapshot yields no attacks
+      ruleSnapshot: packRuleSnapshot(),
     };
     mockTotalMods = [];
   });
@@ -121,7 +123,11 @@ describe("useCombat", () => {
     const { attacks } = useCombat();
 
     expect(attacks).toHaveLength(1);
-    expect(attacks[0].criticalDamageExpression).toContain("2d8");
+    // 1d8 longsword, doubled to 2d8 by the crit, plus the one extra base die
+    // Savage Attacks adds. It used to read 2d8 because the half-orc trait
+    // dictionary was emptied by the race migration and the trait resolved to
+    // nothing - the pack defines it, so it finally contributes.
+    expect(attacks[0].criticalDamageExpression).toContain("3d8");
     expect(attacks[0].criticalDamageExpression).toContain("slashing");
   });
 

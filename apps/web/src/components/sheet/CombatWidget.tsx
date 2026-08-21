@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { TRAIT_DICTIONARY, resolveItemDefinition } from "@project/engine";
+import { resolveItemDefinition } from "@project/engine";
 import { costsAttack } from "@project/shared";
 import { useEffect, useMemo, useState, type MouseEvent } from "react";
 import { useCombat } from "../../hooks/useCombat";
@@ -73,7 +73,7 @@ export const CombatWidget = () => {
   const characterActions = getCharacterActions().filter(
     (action) => !costsAttack(action.activation),
   );
-  const protectionTrait = TRAIT_DICTIONARY[PROTECTION_TRAIT_ID];
+  const protectionTrait = ruleSnapshot?.traitsById?.[PROTECTION_TRAIT_ID];
   const protectionAvailable = hasProtectionTrait(traits, traitGrants);
   const reactionAvailable = combatContext.economy.reactionAvailable;
   const pendingProtectionWindow = combatContext.pendingEvents.find(

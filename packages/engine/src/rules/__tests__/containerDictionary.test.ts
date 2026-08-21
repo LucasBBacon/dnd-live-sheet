@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { EQUIPMENT_DICTIONARY } from "../equipmentDictionary.js";
+import { corePackEquipment } from "../../pipeline/__tests__/corePackFixture.js";
 import { resolveItemDefinition } from "../ruleLookup.js";
 
 /**
@@ -20,10 +20,12 @@ const PHB_CONTAINERS: Array<{
   { id: "item_chest", name: "Chest", weight: 25, capacityPounds: 300 },
 ];
 
+const { equipmentById } = corePackEquipment();
+
 describe("the authored PHB containers", () => {
   for (const { id, name, weight, capacityPounds } of PHB_CONTAINERS) {
     it(`authors ${name} at its printed weight and capacity`, () => {
-      const equipment = EQUIPMENT_DICTIONARY[id];
+      const equipment = equipmentById[id];
 
       expect(equipment).toBeDefined();
       expect(equipment!.name).toBe(name);
@@ -32,14 +34,18 @@ describe("the authored PHB containers", () => {
     });
 
     it(`resolves ${name}'s capacity through the lookup the engine uses`, () => {
-      // EQUIPMENT_RESOLUTION_MODE is "static-only", so this is the only path
-      // ContainerEngine has to a capacity. asserting the dictionary alone
-      // would not prove the projection carries it
-      expect(resolveItemDefinition(id)?.container).toEqual({ capacityPounds });
+      // the pack is the only source, so the snapshot is the only path
+      // ContainerEngine has to a capacity. asserting the pack's equipment
+      // alone would not prove the projection carries it
+      expect(
+        resolveItemDefinition(id, { equipmentById })?.container,
+      ).toEqual({ capacityPounds });
     });
   }
 
   it("gives a non-container no capacity at all", () => {
-    expect(resolveItemDefinition("item_weapon_dagger")?.container).toBeUndefined();
+    expect(
+      resolveItemDefinition("item_weapon_dagger", { equipmentById })?.container,
+    ).toBeUndefined();
   });
 });

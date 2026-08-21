@@ -605,6 +605,12 @@ export interface CoreRulePackSnapshot {
   traitsById: Record<string, CoreRulePack["traits"][number]>;
   racesById: Record<string, CoreRulePack["races"][number]>;
   classesById: Record<string, CoreRulePack["classes"][number]>;
+  /**
+   * Keyed separately from their parent class because a save stores classId
+   * and subclassId independently, so the bootstrapper resolves them as two
+   * lookups rather than walking into the class.
+   */
+  subclassesById: Record<string, CoreRulePack["subclasses"][number]>;
 }
 
 const byId = <T extends { id: string }>(entries: T[]): Record<string, T> =>
@@ -623,4 +629,5 @@ export const toRuleSnapshot = (pack: CoreRulePack): CoreRulePackSnapshot => ({
   traitsById: byId(pack.traits),
   racesById: byId(pack.races),
   classesById: byId(pack.classes),
+  subclassesById: byId(pack.subclasses),
 });

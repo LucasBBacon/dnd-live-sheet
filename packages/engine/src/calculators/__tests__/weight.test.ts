@@ -5,6 +5,16 @@ import {
   hundredthsToPounds,
   poundsToHundredths,
 } from "../weight.js";
+import { corePackLookup } from "../../pipeline/__tests__/corePackFixture.js";
+
+// item weights come from the pack now, so every lookup needs it handed over
+const PACK = corePackLookup();
+
+const totalHundredths = (items: InventoryInstance[]) =>
+  InventoryWeightCalculator.totalHundredths(items, PACK);
+
+const totalPounds = (items: InventoryInstance[]) =>
+  InventoryWeightCalculator.totalPounds(items, PACK);
 
 const row = (
   overrides: Partial<InventoryInstance> & Pick<InventoryInstance, "itemId">,
@@ -29,29 +39,29 @@ describe("pound and hundredth conversion", () => {
 
 describe("InventoryWeightCalculator.totalHundredths", () => {
   it("weighs an empty pack as nothing", () => {
-    expect(InventoryWeightCalculator.totalHundredths([])).toBe(0);
+    expect(totalHundredths([])).toBe(0);
   });
 
   it("reads the authored weight of a single item", () => {
     // plate armour is 65 lb in EQUIPMENT_DICTIONARY
     expect(
-      InventoryWeightCalculator.totalHundredths([row({ itemId: "item_armor_plate" })]),
+      totalHundredths([row({ itemId: "item_armor_plate" })]),
     ).toBe(6500);
   });
 
   it("scales by the quantity in the stack", () => {
     expect(
-      InventoryWeightCalculator.totalHundredths([
+      totalHundredths([
         row({ itemId: "item_armor_plate", quantity: 3 }),
       ]),
     ).toBe(19500);
   });
 
   it("counts worn items exactly like carried ones", () => {
-    const worn = InventoryWeightCalculator.totalHundredths([
+    const worn = totalHundredths([
       row({ itemId: "item_armor_plate", slot: "body" }),
     ]);
-    const carried = InventoryWeightCalculator.totalHundredths([
+    const carried = totalHundredths([
       row({ itemId: "item_armor_plate", slot: "backpack" }),
     ]);
 
@@ -60,13 +70,13 @@ describe("InventoryWeightCalculator.totalHundredths", () => {
 
   it("contributes nothing for an item with no rule behind it", () => {
     expect(
-      InventoryWeightCalculator.totalHundredths([row({ itemId: "item_homebrew_gone" })]),
+      totalHundredths([row({ itemId: "item_homebrew_gone" })]),
     ).toBe(0);
   });
 
   it("sums a mixed pack", () => {
     expect(
-      InventoryWeightCalculator.totalHundredths([
+      totalHundredths([
         row({ itemId: "item_armor_plate" }), // 65
         row({ itemId: "item_weapon_dagger" }), // 1
         row({ itemId: "item_ammo_arrow", quantity: 20 }), // 0.05 x 20
@@ -86,10 +96,10 @@ describe("InventoryWeightCalculator.totalPounds", () => {
 
     // asserted in hundredths, because dividing by 100 on the way back to
     // pounds would launder the error away and let a float implementation pass
-    const hundredths = InventoryWeightCalculator.totalHundredths(rows);
+    const hundredths = totalHundredths(rows);
 
     expect(hundredths).toBe(100);
     expect(Number.isInteger(hundredths)).toBe(true);
-    expect(InventoryWeightCalculator.totalPounds(rows)).toBe(1);
+    expect(totalPounds(rows)).toBe(1);
   });
 });

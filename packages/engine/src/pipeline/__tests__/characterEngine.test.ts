@@ -7,8 +7,7 @@ import {
   type RuntimeModifier,
 } from "@project/shared";
 import { ActionResolver } from "../actionResolver.js";
-import { TRAIT_DICTIONARY } from "../../rules/traitDictionary.js";
-import { DEFAULT_WALKING_SPEED } from "../../rules/raceDictionary.js";
+import { DEFAULT_WALKING_SPEED } from "../../rules/raceTypes.js";
 import {
   CharacterEngine,
   type LiveCharacterSheet,
@@ -21,7 +20,9 @@ import { ResourceManager } from "../../calculators/resources.js";
 import { FERAL_INSTINCT_STATE } from "../../calculators/surprise.js";
 import { CombatEngine } from "../../calculators/combat.js";
 import { resolveWeaponDefinition } from "../../rules/ruleLookup.js";
-import { corePackSnapshot } from "./corePackFixture.js";
+import { corePackLookup, corePackSnapshot } from "./corePackFixture.js";
+
+const TRAIT_DICTIONARY = corePackSnapshot().traitsById;
 
 /**
  * A half-elf fighter is the useful fixture here: the race carries both a
@@ -66,7 +67,7 @@ const buildSheet = (
     inventory,
     new EffectManager(),
     new ResourceManager(),
-    { snapshot: corePackSnapshot(), ...options },
+    { snapshot: corePackLookup(), ...options },
   );
 
 const carried = (itemId: string, quantity = 1): InventoryInstance => ({
@@ -518,6 +519,7 @@ describe("CharacterEngine.buildLiveSheet", () => {
       [],
       armoured,
       new ResourceManager(),
+      { snapshot: corePackLookup() },
     );
     expect(sheet.activeStates).toContain("status_wearing_armor");
     expect(sheet.armorClass.total).toBe(13); // Fighting Style: Defense now counts
@@ -824,7 +826,10 @@ describe("CharacterEngine.buildLiveSheet: speed and encumbrance", () => {
       [carried("item_armor_plate", 2)], // 130 lb, past the 75 lb threshold
       effectWith("SPEED", -10, ["encumbered"]),
       new ResourceManager(),
-      { encumbranceRules: { useVariantEncumbrance: true } },
+      {
+        snapshot: corePackLookup(),
+        encumbranceRules: { useVariantEncumbrance: true },
+      },
     );
 
     expect(sheet.encumbrance.tier).toBe("encumbered");
@@ -904,7 +909,10 @@ describe("CharacterEngine.buildLiveSheet: the stage-one seam", () => {
   ];
 
   const heavyLoad = () => [carried("item_armor_plate", 3)];
-  const variantRules = { encumbranceRules: { useVariantEncumbrance: true } };
+  const variantRules = {
+    snapshot: corePackLookup(),
+    encumbranceRules: { useVariantEncumbrance: true },
+  };
 
   const sheetWith = (effects: EffectManager): LiveCharacterSheet =>
     CharacterEngine.buildLiveSheet(
@@ -1400,7 +1408,7 @@ describe("CharacterEngine: Brutal Critical", () => {
 
   const critDice = (level: number) =>
     CombatEngine.calculateWeaponAttack(
-      resolveWeaponDefinition("item_weapon_longsword")!,
+      resolveWeaponDefinition("item_weapon_longsword", corePackLookup())!,
       { STR: 16, DEX: 10, CON: 14, INT: 10, WIS: 10, CHA: 10 },
       3,
       [],
