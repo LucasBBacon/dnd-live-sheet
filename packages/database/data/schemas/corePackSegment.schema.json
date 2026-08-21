@@ -15,6 +15,23 @@
             "items": {
                 "$ref": "./races.schema.json"
             }
-        }
+        },
+        "resources": {
+            "type": "array",
+            "items": {
+                "$ref": "./resources.schema.json"
+            }
+        },
+        "spells": {
+            "type": "array",
+            "items": {
+                "$ref": "./spells.schema.json"
+            }
+        },
+        "classes": { "type": "array" },
+        "subclasses": { "type": "array" },
+        "equipment": { "type": "array" },
+        "feats": { "type": "array" },
+        "backgrounds": { "type": "array" }
     }
 }

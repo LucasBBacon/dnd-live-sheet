@@ -66,7 +66,7 @@ const authoredIds = (section: string): Set<string> =>
 
 const titleFrom = (id: string): string =>
   id
-    .replace(/^(trait|subclass|feat|background)_/, "")
+    .replace(/^(trait|subclass|feat|background|spell)_/, "")
     .split("_")
     .filter(Boolean)
     .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
@@ -98,6 +98,32 @@ const stubFeat = (id: string) => ({
   },
   grantedTraitIds: [],
   tags: [],
+});
+
+/**
+ * A spell that exists only so references to it resolve.
+ *
+ * level and school are placeholders - nothing in the pack records them, and
+ * SpellDefinitionSchema requires both. The implementation marker is what says
+ * so; without it a no_effect action would read as an authored spell that
+ * deliberately does nothing.
+ */
+const stubSpell = (id: string) => ({
+  id,
+  name: titleFrom(id),
+  level: 0,
+  school: "evocation",
+  isRitual: false,
+  action: {
+    id: id.replace(/^spell_/, "action_spell_"),
+    name: titleFrom(id),
+    activation: "action",
+    effect: { type: "no_effect" },
+  },
+  implementation: {
+    mode: "unimplemented",
+    summary: "Awaiting authoring; level, school and action are placeholders.",
+  },
 });
 
 const write = (relativePath: string, body: unknown): void => {
@@ -192,6 +218,49 @@ write("traits/unimplemented.json", {
   traits: needTraits.map(stubTrait),
 });
 
+/**
+ * Every spell id anything in the pack points at.
+ *
+ * The two sites validateCoreRulePack resolves against pack.spells: a trait's
+ * fixed spell grants, and the requiredSpellIds gating a trait_choice option.
+ * A spell_choice node names a list source rather than ids, so it contributes
+ * nothing here.
+ */
+const referencedSpellIds = (): Set<string> => {
+  const ids = new Set<string>();
+
+  const fromProgression = (progression: any[] = []): void => {
+    for (const node of progression) {
+      for (const grant of node.grants ?? []) {
+        if (typeof grant === "string" || grant.type !== "trait_choice") continue;
+        for (const option of grant.options ?? []) {
+          if (typeof option === "string") continue;
+          for (const id of option.prerequisites?.requiredSpellIds ?? []) {
+            ids.add(id);
+          }
+        }
+      }
+    }
+  };
+
+  for (const segment of SEGMENTS) {
+    for (const cls of segment.classes ?? []) fromProgression(cls.progression);
+    for (const sub of segment.subclasses ?? []) fromProgression(sub.progression);
+    for (const trait of segment.traits ?? []) {
+      for (const grant of trait.spells?.fixed ?? []) ids.add(grant.spellId);
+    }
+  }
+
+  return ids;
+};
+
+const haveSpells = authoredIds("spells");
+const needSpells = [...referencedSpellIds()].filter((id) => !haveSpells.has(id));
+
+if (needSpells.length > 0) {
+  write("spells/unimplemented.json", { spells: needSpells.map(stubSpell) });
+}
+
 const haveFeats = authoredIds("feats");
 const legacyFeatIds: string[] = readJson(path.join(DATA, "feats.json")).map(
   (feat: { id: string }) => feat.id,
@@ -213,4 +282,5 @@ console.log(`legacy trait ids:   ${legacyTraitIds.length}`);
 console.log(`referenced by pack: ${referenced.size}`);
 console.log(`stubbed traits:     ${needTraits.length}`);
 console.log(`stubbed feats:      ${needFeats.length}`);
+console.log(`stubbed spells:     ${needSpells.length}`);
 console.log(`still dangling:     ${dangling.length}`);

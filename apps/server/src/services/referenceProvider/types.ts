@@ -1,4 +1,4 @@
-import type { RuleSnapshot } from "@project/shared";
+import type { CoreRulePackSnapshot, RuleSnapshot } from "@project/shared";
 
 export type ScopedContext = {
   campaignId?: string;
@@ -7,10 +7,19 @@ export type ScopedContext = {
 
 export type TraitCategory = "skills" | "tools_and_languages";
 
+/**
+ * What /rules/snapshot serves.
+ *
+ * Pack content is typed through CoreRulePackSnapshot rather than RuleSnapshot:
+ * RuleSnapshot.traitsById parses against a minimal trait schema whose
+ * `modifiers` is a flat array, which is not the shape a real authored trait
+ * has. Partial because a database with no imported pack serves neither.
+ */
 export type RulesSnapshotPayload = Pick<
   RuleSnapshot,
   "equipmentById" | "itemsById" | "weaponsById" | "resourcesById"
->;
+> &
+  Partial<CoreRulePackSnapshot>;
 
 export type LevelUpOptionsInput = {
   scope: ScopedContext;

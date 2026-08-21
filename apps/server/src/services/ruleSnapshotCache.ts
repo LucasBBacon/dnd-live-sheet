@@ -1,18 +1,16 @@
 import { db } from "@project/database";
-import { items } from "@project/database/src/schema/reference.js";
+import { coreRulePacks, items } from "@project/database/src/schema/reference.js";
 import { resolveResourceRules } from "@project/engine";
-import { RuleSnapshotSchema, type RuleSnapshot } from "@project/shared";
-import { and, eq } from "drizzle-orm";
+import { RuleSnapshotSchema, toRuleSnapshot } from "@project/shared";
+import { and, desc, eq } from "drizzle-orm";
 import { getReferenceCacheVersion } from "./referenceCache.js";
 import { projectEquipmentRows } from "./ruleSnapshotProjection.js";
+import type { RulesSnapshotPayload } from "./referenceProvider/types.js";
 
 type CachedRuleSnapshot = {
   cacheVersion: number;
   loadedAt: number;
-  snapshot: Pick<
-    RuleSnapshot,
-    "equipmentById" | "itemsById" | "weaponsById" | "resourcesById"
-  >;
+  snapshot: RulesSnapshotPayload;
 };
 
 let cached: CachedRuleSnapshot | null = null;
@@ -45,6 +43,17 @@ const buildRuleSnapshot = async (): Promise<CachedRuleSnapshot> => {
 
   const cacheVersion = getReferenceCacheVersion();
 
+  // the rule ASTs live in the pack payload. the relation tables are a query
+  // model for the browse endpoints and store effects: [] by design, so reading
+  // traits from there would yield definitions that do nothing
+  const [packRow] = await db
+    .select({ payload: coreRulePacks.payload })
+    .from(coreRulePacks)
+    .orderBy(desc(coreRulePacks.version))
+    .limit(1);
+
+  const packContent = packRow ? toRuleSnapshot(packRow.payload) : undefined;
+
   const parsedSnapshot = RuleSnapshotSchema.parse({
     equipmentById,
     itemsById,
@@ -61,6 +70,7 @@ const buildRuleSnapshot = async (): Promise<CachedRuleSnapshot> => {
       itemsById: parsedSnapshot.itemsById,
       weaponsById: parsedSnapshot.weaponsById,
       resourcesById: parsedSnapshot.resourcesById,
+      ...(packContent ?? {}),
     },
   };
 };

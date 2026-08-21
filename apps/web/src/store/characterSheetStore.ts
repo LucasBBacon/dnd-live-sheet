@@ -30,6 +30,7 @@ import {
   type ActionResolvedPayload,
   type CharacterSave,
   type CharacterSlot,
+  type CoreRulePackSnapshot,
   type DamageType,
   type EngineEvent,
   type InventoryInstance,
@@ -82,10 +83,19 @@ export const toInventoryInstance = (item: {
   };
 };
 
+/**
+ * The rule content the sheet hands to the engine.
+ *
+ * Pack content rides alongside the equipment maps rather than inside
+ * RuleSnapshot, because RuleSnapshot.traitsById parses against a minimal trait
+ * schema whose `modifiers` is a flat array - not the shape an authored trait
+ * has. Partial: a deployment with no imported pack serves none of it.
+ */
 type SheetRuleSnapshot = Pick<
   RuleSnapshot,
   "equipmentById" | "itemsById" | "weaponsById" | "resourcesById"
->;
+> &
+  Partial<CoreRulePackSnapshot>;
 
 /**
  * Every character slot an item actually covers where it currently sits.

@@ -142,16 +142,38 @@ describe("CharacterBootstrapper.compileActiveTraits", () => {
     expect(new Set(ids).size).toBe(ids.length);
   });
 
-  it("skips ids that have no definition authored yet", () => {
-    const ids = CharacterBootstrapper.compileActiveTraits(halfElfFighter(), corePackSnapshot()).map(
-      (trait) => trait.id,
-    );
+  it("skips ids the pack has no definition for at all", () => {
+    const bogus = halfElfFighter({
+      classes: [
+        {
+          classId: "class_fighter",
+          level: 1,
+          selections: { fighter_level_1_fighting_style: ["trait_not_a_thing"] },
+        },
+      ],
+    });
 
-    // granted by the fighter blueprint, but absent from TRAIT_DICTIONARY
     expect(
-      CharacterBootstrapper.resolveGrantedTraitIds(halfElfFighter(), corePackSnapshot()),
-    ).toContain("trait_second_wind");
-    expect(ids).not.toContain("trait_second_wind");
+      CharacterBootstrapper.resolveGrantedTraitIds(bogus, corePackSnapshot()),
+    ).toContain("trait_not_a_thing");
+    expect(
+      CharacterBootstrapper.compileActiveTraits(bogus, corePackSnapshot()).map(
+        (trait) => trait.id,
+      ),
+    ).not.toContain("trait_not_a_thing");
+  });
+
+  it("compiles a granted id the pack defines but has not authored rules for", () => {
+    // trait_second_wind used to vanish here: granted by the fighter
+    // progression and defined nowhere. the pack now carries it as a marked
+    // stub, so it resolves - and says plainly that it does nothing yet
+    const second = CharacterBootstrapper.compileActiveTraits(
+      halfElfFighter(),
+      corePackSnapshot(),
+    ).find((trait) => trait.id === "trait_second_wind");
+
+    expect(second).toBeDefined();
+    expect(second?.implementation?.mode).toBe("unimplemented");
   });
 
   it("gives a multiclassed class only its reduced dip proficiencies", () => {

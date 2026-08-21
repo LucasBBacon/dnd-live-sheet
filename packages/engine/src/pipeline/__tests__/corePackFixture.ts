@@ -1,4 +1,4 @@
-import { readFileSync, readdirSync } from "node:fs";
+import { readFileSync } from "node:fs";
 import path from "node:path";
 import {
   CoreRulePackSchema,
@@ -26,13 +26,6 @@ const PACK_ROOT = path.join(
 const readSegment = (relativePath: string): Record<string, unknown> =>
   JSON.parse(readFileSync(path.join(PACK_ROOT, relativePath), "utf8"));
 
-const segmentPaths = (): string[] =>
-  ["races", "classes"].flatMap((directory) =>
-    readdirSync(path.join(PACK_ROOT, directory)).map(
-      (file) => `${directory}/${file}`,
-    ),
-  );
-
 let cached: CoreRulePackSnapshot | undefined;
 
 /**
@@ -46,29 +39,40 @@ let cached: CoreRulePackSnapshot | undefined;
 export const corePackSnapshot = (): CoreRulePackSnapshot => {
   if (cached) return cached;
 
-  const manifest = readSegment("manifest.json");
-  const merged = segmentPaths().reduce<{
-    traits: unknown[];
-    races: unknown[];
-    classes: unknown[];
-    subclasses: unknown[];
-  }>(
+  // the manifest is the pack's identity block plus assembly metadata; only the
+  // identity half may reach the pack, whose meta schema is strict
+  const { segments, ...packMeta } = readSegment("manifest.json") as {
+    segments: string[];
+  };
+
+  const merged = segments.reduce<Record<string, unknown[]>>(
     (accumulator, segmentPath) => {
       const segment = readSegment(segmentPath);
 
-      for (const key of ["traits", "races", "classes", "subclasses"] as const) {
+      for (const key of [
+        "traits",
+        "races",
+        "classes",
+        "subclasses",
+        "resources",
+        "equipment",
+        "feats",
+        "backgrounds",
+        "spells",
+      ]) {
         const entries = segment[key];
-        if (Array.isArray(entries)) accumulator[key].push(...entries);
+        if (Array.isArray(entries)) {
+          accumulator[key] = [...(accumulator[key] ?? []), ...entries];
+        }
       }
 
       return accumulator;
     },
-    { traits: [], races: [], classes: [], subclasses: [] },
+    {},
   );
 
-  // the manifest is the pack's identity block, not part of its content
   cached = toRuleSnapshot(
-    CoreRulePackSchema.parse({ pack: manifest, ...merged }),
+    CoreRulePackSchema.parse({ pack: packMeta, ...merged }),
   );
   return cached;
 };

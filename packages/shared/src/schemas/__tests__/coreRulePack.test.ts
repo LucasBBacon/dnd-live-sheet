@@ -85,18 +85,29 @@ describe("CoreRulePackSchema", () => {
 });
 
 describe("validateCoreRulePack", () => {
-  it("reports duplicate ids across entity families", () => {
+  it("reports duplicate ids within an entity family", () => {
     const source = createValidPack();
-    source.equipment[0]!.id = "trait_test_training";
+    source.equipment.push({ ...source.equipment[0]! });
 
     const result = validateCoreRulePack(CoreRulePackSchema.parse(source));
 
     expect(result).toMatchObject({ ok: false });
     expect(result.issues).toContainEqual({
       code: "duplicate_id",
-      path: ["equipment", 0, "id"],
-      message: expect.stringContaining("trait_test_training"),
+      path: ["equipment", 1, "id"],
+      message: expect.stringContaining(source.equipment[0]!.id),
     });
+  });
+
+  it("allows an id to be reused by a different entity family", () => {
+    // see the note on registerId: an entity carrying the id of the trait it
+    // grants is this codebase's convention, not a collision
+    const source = createValidPack();
+    source.equipment[0]!.id = "trait_test_training";
+
+    const result = validateCoreRulePack(CoreRulePackSchema.parse(source));
+
+    expect(result).toMatchObject({ ok: true });
   });
 
   it("reports dangling trait and ammunition references", () => {
@@ -138,6 +149,82 @@ describe("validateCoreRulePack", () => {
       path: ["equipment", 1, "weapon", "ammoItemId"],
       message: expect.stringContaining("item_ammo_missing"),
     });
+  });
+});
+
+describe("id uniqueness is per section", () => {
+  const meta = {
+    packId: "core_2014",
+    version: 1,
+    ruleset: "dnd_5e_2014",
+    publishedAt: "2026-08-13T00:00:00.000Z",
+  };
+  const lore = { shortDescription: "Minimal authored lore." };
+
+  it("lets a resource carry the id of the trait that grants it", () => {
+    // the established convention: socket.ts documents resourceId as e.g.
+    // 'trait_action_surge', and the fighter progression grants a trait of
+    // that same id. one global id space would forbid the pair outright.
+    const result = validateCoreRulePack(
+      CoreRulePackSchema.parse({
+        pack: meta,
+        traits: [{ id: "trait_action_surge", name: "Action Surge", lore }],
+        resources: [
+          {
+            id: "trait_action_surge",
+            name: "Action Surge",
+            resetCondition: "short_rest",
+            maxRule: { kind: "fixed", value: 1 },
+          },
+        ],
+      }),
+    );
+
+    expect(result).toMatchObject({ ok: true });
+  });
+
+  it("still rejects two traits sharing an id", () => {
+    const result = validateCoreRulePack(
+      CoreRulePackSchema.parse({
+        pack: meta,
+        traits: [
+          { id: "trait_twin", name: "One", lore },
+          { id: "trait_twin", name: "Two", lore },
+        ],
+      }),
+    );
+
+    expect(result).toMatchObject({ ok: false });
+    expect(result.issues).toContainEqual({
+      code: "duplicate_id",
+      path: ["traits", 1, "id"],
+      message: expect.stringContaining("trait_twin"),
+    });
+  });
+
+  it("treats a race and its subraces as one section", () => {
+    // a subrace id must not collide with a race id or another subrace id:
+    // both are resolved through the same lookup
+    const result = validateCoreRulePack(
+      CoreRulePackSchema.parse({
+        pack: meta,
+        races: [
+          {
+            id: "race_twin",
+            name: "Twin",
+            size: "medium",
+            speed: 30,
+            hasSubraces: true,
+            subraces: {
+              race_twin: { id: "race_twin", name: "Collides With Its Race" },
+            },
+          },
+        ],
+      }),
+    );
+
+    expect(result).toMatchObject({ ok: false });
+    expect(result.issues[0]).toMatchObject({ code: "duplicate_id" });
   });
 });
 

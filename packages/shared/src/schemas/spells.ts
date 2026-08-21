@@ -30,6 +30,27 @@ export const SpellDefinitionSchema = z.object({
   isRitual: z.boolean().default(false),
   // a spell fundamentally grants an  action to the character
   action: ActionGrantSchema,
+
+  /**
+   * Declares a spell that exists only so references to it resolve.
+   *
+   * The same marker TraitImplementationMetadataSchema.mode carries, and for
+   * the same reason: a spell must exist for a domain list or an invocation
+   * prerequisite to validate, but its action has not been authored. Without
+   * the marker a placeholder action is indistinguishable from a real one, and
+   * a spell that silently does nothing is the exact failure this project keeps
+   * having to unpick.
+   *
+   * Optional rather than defaulted - a `.default()` would make the field
+   * required on the inferred output type and every authored spell literal
+   * would have to restate it.
+   */
+  implementation: z
+    .object({
+      mode: z.literal("unimplemented"),
+      summary: z.string(),
+    })
+    .optional(),
 });
 
 export type SpellDefinition = z.infer<typeof SpellDefinitionSchema>;

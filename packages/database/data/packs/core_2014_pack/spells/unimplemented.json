@@ -1,0 +1,2113 @@
+{
+    "spells": [
+        {
+            "id": "spell_eldritch_blast",
+            "name": "Eldritch Blast",
+            "level": 0,
+            "school": "evocation",
+            "isRitual": false,
+            "action": {
+                "id": "action_spell_eldritch_blast",
+                "name": "Eldritch Blast",
+                "activation": "action",
+                "effect": {
+                    "type": "no_effect"
+                }
+            },
+            "implementation": {
+                "mode": "unimplemented",
+                "summary": "Awaiting authoring; level, school and action are placeholders."
+            }
+        },
+        {
+            "id": "spell_dancing_lights",
+            "name": "Dancing Lights",
+            "level": 0,
+            "school": "evocation",
+            "isRitual": false,
+            "action": {
+                "id": "action_spell_dancing_lights",
+                "name": "Dancing Lights",
+                "activation": "action",
+                "effect": {
+                    "type": "no_effect"
+                }
+            },
+            "implementation": {
+                "mode": "unimplemented",
+                "summary": "Awaiting authoring; level, school and action are placeholders."
+            }
+        },
+        {
+            "id": "spell_faerie_fire",
+            "name": "Faerie Fire",
+            "level": 0,
+            "school": "evocation",
+            "isRitual": false,
+            "action": {
+                "id": "action_spell_faerie_fire",
+                "name": "Faerie Fire",
+                "activation": "action",
+                "effect": {
+                    "type": "no_effect"
+                }
+            },
+            "implementation": {
+                "mode": "unimplemented",
+                "summary": "Awaiting authoring; level, school and action are placeholders."
+            }
+        },
+        {
+            "id": "spell_darkness",
+            "name": "Darkness",
+            "level": 0,
+            "school": "evocation",
+            "isRitual": false,
+            "action": {
+                "id": "action_spell_darkness",
+                "name": "Darkness",
+                "activation": "action",
+                "effect": {
+                    "type": "no_effect"
+                }
+            },
+            "implementation": {
+                "mode": "unimplemented",
+                "summary": "Awaiting authoring; level, school and action are placeholders."
+            }
+        },
+        {
+            "id": "spell_minor_illusion",
+            "name": "Minor Illusion",
+            "level": 0,
+            "school": "evocation",
+            "isRitual": false,
+            "action": {
+                "id": "action_spell_minor_illusion",
+                "name": "Minor Illusion",
+                "activation": "action",
+                "effect": {
+                    "type": "no_effect"
+                }
+            },
+            "implementation": {
+                "mode": "unimplemented",
+                "summary": "Awaiting authoring; level, school and action are placeholders."
+            }
+        },
+        {
+            "id": "spell_thaumaturgy",
+            "name": "Thaumaturgy",
+            "level": 0,
+            "school": "evocation",
+            "isRitual": false,
+            "action": {
+                "id": "action_spell_thaumaturgy",
+                "name": "Thaumaturgy",
+                "activation": "action",
+                "effect": {
+                    "type": "no_effect"
+                }
+            },
+            "implementation": {
+                "mode": "unimplemented",
+                "summary": "Awaiting authoring; level, school and action are placeholders."
+            }
+        },
+        {
+            "id": "spell_hellish_rebuke",
+            "name": "Hellish Rebuke",
+            "level": 0,
+            "school": "evocation",
+            "isRitual": false,
+            "action": {
+                "id": "action_spell_hellish_rebuke",
+                "name": "Hellish Rebuke",
+                "activation": "action",
+                "effect": {
+                    "type": "no_effect"
+                }
+            },
+            "implementation": {
+                "mode": "unimplemented",
+                "summary": "Awaiting authoring; level, school and action are placeholders."
+            }
+        },
+        {
+            "id": "spell_command",
+            "name": "Command",
+            "level": 0,
+            "school": "evocation",
+            "isRitual": false,
+            "action": {
+                "id": "action_spell_command",
+                "name": "Command",
+                "activation": "action",
+                "effect": {
+                    "type": "no_effect"
+                }
+            },
+            "implementation": {
+                "mode": "unimplemented",
+                "summary": "Awaiting authoring; level, school and action are placeholders."
+            }
+        },
+        {
+            "id": "spell_identify",
+            "name": "Identify",
+            "level": 0,
+            "school": "evocation",
+            "isRitual": false,
+            "action": {
+                "id": "action_spell_identify",
+                "name": "Identify",
+                "activation": "action",
+                "effect": {
+                    "type": "no_effect"
+                }
+            },
+            "implementation": {
+                "mode": "unimplemented",
+                "summary": "Awaiting authoring; level, school and action are placeholders."
+            }
+        },
+        {
+            "id": "spell_augury",
+            "name": "Augury",
+            "level": 0,
+            "school": "evocation",
+            "isRitual": false,
+            "action": {
+                "id": "action_spell_augury",
+                "name": "Augury",
+                "activation": "action",
+                "effect": {
+                    "type": "no_effect"
+                }
+            },
+            "implementation": {
+                "mode": "unimplemented",
+                "summary": "Awaiting authoring; level, school and action are placeholders."
+            }
+        },
+        {
+            "id": "spell_suggestion",
+            "name": "Suggestion",
+            "level": 0,
+            "school": "evocation",
+            "isRitual": false,
+            "action": {
+                "id": "action_spell_suggestion",
+                "name": "Suggestion",
+                "activation": "action",
+                "effect": {
+                    "type": "no_effect"
+                }
+            },
+            "implementation": {
+                "mode": "unimplemented",
+                "summary": "Awaiting authoring; level, school and action are placeholders."
+            }
+        },
+        {
+            "id": "spell_nondetection",
+            "name": "Nondetection",
+            "level": 0,
+            "school": "evocation",
+            "isRitual": false,
+            "action": {
+                "id": "action_spell_nondetection",
+                "name": "Nondetection",
+                "activation": "action",
+                "effect": {
+                    "type": "no_effect"
+                }
+            },
+            "implementation": {
+                "mode": "unimplemented",
+                "summary": "Awaiting authoring; level, school and action are placeholders."
+            }
+        },
+        {
+            "id": "spell_speak_with_dead",
+            "name": "Speak With Dead",
+            "level": 0,
+            "school": "evocation",
+            "isRitual": false,
+            "action": {
+                "id": "action_spell_speak_with_dead",
+                "name": "Speak With Dead",
+                "activation": "action",
+                "effect": {
+                    "type": "no_effect"
+                }
+            },
+            "implementation": {
+                "mode": "unimplemented",
+                "summary": "Awaiting authoring; level, school and action are placeholders."
+            }
+        },
+        {
+            "id": "spell_arcane_eye",
+            "name": "Arcane Eye",
+            "level": 0,
+            "school": "evocation",
+            "isRitual": false,
+            "action": {
+                "id": "action_spell_arcane_eye",
+                "name": "Arcane Eye",
+                "activation": "action",
+                "effect": {
+                    "type": "no_effect"
+                }
+            },
+            "implementation": {
+                "mode": "unimplemented",
+                "summary": "Awaiting authoring; level, school and action are placeholders."
+            }
+        },
+        {
+            "id": "spell_confusion",
+            "name": "Confusion",
+            "level": 0,
+            "school": "evocation",
+            "isRitual": false,
+            "action": {
+                "id": "action_spell_confusion",
+                "name": "Confusion",
+                "activation": "action",
+                "effect": {
+                    "type": "no_effect"
+                }
+            },
+            "implementation": {
+                "mode": "unimplemented",
+                "summary": "Awaiting authoring; level, school and action are placeholders."
+            }
+        },
+        {
+            "id": "spell_legend_lore",
+            "name": "Legend Lore",
+            "level": 0,
+            "school": "evocation",
+            "isRitual": false,
+            "action": {
+                "id": "action_spell_legend_lore",
+                "name": "Legend Lore",
+                "activation": "action",
+                "effect": {
+                    "type": "no_effect"
+                }
+            },
+            "implementation": {
+                "mode": "unimplemented",
+                "summary": "Awaiting authoring; level, school and action are placeholders."
+            }
+        },
+        {
+            "id": "spell_scrying",
+            "name": "Scrying",
+            "level": 0,
+            "school": "evocation",
+            "isRitual": false,
+            "action": {
+                "id": "action_spell_scrying",
+                "name": "Scrying",
+                "activation": "action",
+                "effect": {
+                    "type": "no_effect"
+                }
+            },
+            "implementation": {
+                "mode": "unimplemented",
+                "summary": "Awaiting authoring; level, school and action are placeholders."
+            }
+        },
+        {
+            "id": "spell_bless",
+            "name": "Bless",
+            "level": 0,
+            "school": "evocation",
+            "isRitual": false,
+            "action": {
+                "id": "action_spell_bless",
+                "name": "Bless",
+                "activation": "action",
+                "effect": {
+                    "type": "no_effect"
+                }
+            },
+            "implementation": {
+                "mode": "unimplemented",
+                "summary": "Awaiting authoring; level, school and action are placeholders."
+            }
+        },
+        {
+            "id": "spell_cure_wounds",
+            "name": "Cure Wounds",
+            "level": 0,
+            "school": "evocation",
+            "isRitual": false,
+            "action": {
+                "id": "action_spell_cure_wounds",
+                "name": "Cure Wounds",
+                "activation": "action",
+                "effect": {
+                    "type": "no_effect"
+                }
+            },
+            "implementation": {
+                "mode": "unimplemented",
+                "summary": "Awaiting authoring; level, school and action are placeholders."
+            }
+        },
+        {
+            "id": "spell_lesser_restoration",
+            "name": "Lesser Restoration",
+            "level": 0,
+            "school": "evocation",
+            "isRitual": false,
+            "action": {
+                "id": "action_spell_lesser_restoration",
+                "name": "Lesser Restoration",
+                "activation": "action",
+                "effect": {
+                    "type": "no_effect"
+                }
+            },
+            "implementation": {
+                "mode": "unimplemented",
+                "summary": "Awaiting authoring; level, school and action are placeholders."
+            }
+        },
+        {
+            "id": "spell_spiritual_weapon",
+            "name": "Spiritual Weapon",
+            "level": 0,
+            "school": "evocation",
+            "isRitual": false,
+            "action": {
+                "id": "action_spell_spiritual_weapon",
+                "name": "Spiritual Weapon",
+                "activation": "action",
+                "effect": {
+                    "type": "no_effect"
+                }
+            },
+            "implementation": {
+                "mode": "unimplemented",
+                "summary": "Awaiting authoring; level, school and action are placeholders."
+            }
+        },
+        {
+            "id": "spell_beacon_of_hope",
+            "name": "Beacon Of Hope",
+            "level": 0,
+            "school": "evocation",
+            "isRitual": false,
+            "action": {
+                "id": "action_spell_beacon_of_hope",
+                "name": "Beacon Of Hope",
+                "activation": "action",
+                "effect": {
+                    "type": "no_effect"
+                }
+            },
+            "implementation": {
+                "mode": "unimplemented",
+                "summary": "Awaiting authoring; level, school and action are placeholders."
+            }
+        },
+        {
+            "id": "spell_revivify",
+            "name": "Revivify",
+            "level": 0,
+            "school": "evocation",
+            "isRitual": false,
+            "action": {
+                "id": "action_spell_revivify",
+                "name": "Revivify",
+                "activation": "action",
+                "effect": {
+                    "type": "no_effect"
+                }
+            },
+            "implementation": {
+                "mode": "unimplemented",
+                "summary": "Awaiting authoring; level, school and action are placeholders."
+            }
+        },
+        {
+            "id": "spell_death_ward",
+            "name": "Death Ward",
+            "level": 0,
+            "school": "evocation",
+            "isRitual": false,
+            "action": {
+                "id": "action_spell_death_ward",
+                "name": "Death Ward",
+                "activation": "action",
+                "effect": {
+                    "type": "no_effect"
+                }
+            },
+            "implementation": {
+                "mode": "unimplemented",
+                "summary": "Awaiting authoring; level, school and action are placeholders."
+            }
+        },
+        {
+            "id": "spell_guardian_of_faith",
+            "name": "Guardian Of Faith",
+            "level": 0,
+            "school": "evocation",
+            "isRitual": false,
+            "action": {
+                "id": "action_spell_guardian_of_faith",
+                "name": "Guardian Of Faith",
+                "activation": "action",
+                "effect": {
+                    "type": "no_effect"
+                }
+            },
+            "implementation": {
+                "mode": "unimplemented",
+                "summary": "Awaiting authoring; level, school and action are placeholders."
+            }
+        },
+        {
+            "id": "spell_mass_cure_wounds",
+            "name": "Mass Cure Wounds",
+            "level": 0,
+            "school": "evocation",
+            "isRitual": false,
+            "action": {
+                "id": "action_spell_mass_cure_wounds",
+                "name": "Mass Cure Wounds",
+                "activation": "action",
+                "effect": {
+                    "type": "no_effect"
+                }
+            },
+            "implementation": {
+                "mode": "unimplemented",
+                "summary": "Awaiting authoring; level, school and action are placeholders."
+            }
+        },
+        {
+            "id": "spell_raise_dead",
+            "name": "Raise Dead",
+            "level": 0,
+            "school": "evocation",
+            "isRitual": false,
+            "action": {
+                "id": "action_spell_raise_dead",
+                "name": "Raise Dead",
+                "activation": "action",
+                "effect": {
+                    "type": "no_effect"
+                }
+            },
+            "implementation": {
+                "mode": "unimplemented",
+                "summary": "Awaiting authoring; level, school and action are placeholders."
+            }
+        },
+        {
+            "id": "spell_burning_hands",
+            "name": "Burning Hands",
+            "level": 0,
+            "school": "evocation",
+            "isRitual": false,
+            "action": {
+                "id": "action_spell_burning_hands",
+                "name": "Burning Hands",
+                "activation": "action",
+                "effect": {
+                    "type": "no_effect"
+                }
+            },
+            "implementation": {
+                "mode": "unimplemented",
+                "summary": "Awaiting authoring; level, school and action are placeholders."
+            }
+        },
+        {
+            "id": "spell_flaming_sphere",
+            "name": "Flaming Sphere",
+            "level": 0,
+            "school": "evocation",
+            "isRitual": false,
+            "action": {
+                "id": "action_spell_flaming_sphere",
+                "name": "Flaming Sphere",
+                "activation": "action",
+                "effect": {
+                    "type": "no_effect"
+                }
+            },
+            "implementation": {
+                "mode": "unimplemented",
+                "summary": "Awaiting authoring; level, school and action are placeholders."
+            }
+        },
+        {
+            "id": "spell_scorching_ray",
+            "name": "Scorching Ray",
+            "level": 0,
+            "school": "evocation",
+            "isRitual": false,
+            "action": {
+                "id": "action_spell_scorching_ray",
+                "name": "Scorching Ray",
+                "activation": "action",
+                "effect": {
+                    "type": "no_effect"
+                }
+            },
+            "implementation": {
+                "mode": "unimplemented",
+                "summary": "Awaiting authoring; level, school and action are placeholders."
+            }
+        },
+        {
+            "id": "spell_daylight",
+            "name": "Daylight",
+            "level": 0,
+            "school": "evocation",
+            "isRitual": false,
+            "action": {
+                "id": "action_spell_daylight",
+                "name": "Daylight",
+                "activation": "action",
+                "effect": {
+                    "type": "no_effect"
+                }
+            },
+            "implementation": {
+                "mode": "unimplemented",
+                "summary": "Awaiting authoring; level, school and action are placeholders."
+            }
+        },
+        {
+            "id": "spell_fireball",
+            "name": "Fireball",
+            "level": 0,
+            "school": "evocation",
+            "isRitual": false,
+            "action": {
+                "id": "action_spell_fireball",
+                "name": "Fireball",
+                "activation": "action",
+                "effect": {
+                    "type": "no_effect"
+                }
+            },
+            "implementation": {
+                "mode": "unimplemented",
+                "summary": "Awaiting authoring; level, school and action are placeholders."
+            }
+        },
+        {
+            "id": "spell_wall_of_fire",
+            "name": "Wall Of Fire",
+            "level": 0,
+            "school": "evocation",
+            "isRitual": false,
+            "action": {
+                "id": "action_spell_wall_of_fire",
+                "name": "Wall Of Fire",
+                "activation": "action",
+                "effect": {
+                    "type": "no_effect"
+                }
+            },
+            "implementation": {
+                "mode": "unimplemented",
+                "summary": "Awaiting authoring; level, school and action are placeholders."
+            }
+        },
+        {
+            "id": "spell_flame_strike",
+            "name": "Flame Strike",
+            "level": 0,
+            "school": "evocation",
+            "isRitual": false,
+            "action": {
+                "id": "action_spell_flame_strike",
+                "name": "Flame Strike",
+                "activation": "action",
+                "effect": {
+                    "type": "no_effect"
+                }
+            },
+            "implementation": {
+                "mode": "unimplemented",
+                "summary": "Awaiting authoring; level, school and action are placeholders."
+            }
+        },
+        {
+            "id": "spell_animal_friendship",
+            "name": "Animal Friendship",
+            "level": 0,
+            "school": "evocation",
+            "isRitual": false,
+            "action": {
+                "id": "action_spell_animal_friendship",
+                "name": "Animal Friendship",
+                "activation": "action",
+                "effect": {
+                    "type": "no_effect"
+                }
+            },
+            "implementation": {
+                "mode": "unimplemented",
+                "summary": "Awaiting authoring; level, school and action are placeholders."
+            }
+        },
+        {
+            "id": "spell_speak_with_animals",
+            "name": "Speak With Animals",
+            "level": 0,
+            "school": "evocation",
+            "isRitual": false,
+            "action": {
+                "id": "action_spell_speak_with_animals",
+                "name": "Speak With Animals",
+                "activation": "action",
+                "effect": {
+                    "type": "no_effect"
+                }
+            },
+            "implementation": {
+                "mode": "unimplemented",
+                "summary": "Awaiting authoring; level, school and action are placeholders."
+            }
+        },
+        {
+            "id": "spell_barkskin",
+            "name": "Barkskin",
+            "level": 0,
+            "school": "evocation",
+            "isRitual": false,
+            "action": {
+                "id": "action_spell_barkskin",
+                "name": "Barkskin",
+                "activation": "action",
+                "effect": {
+                    "type": "no_effect"
+                }
+            },
+            "implementation": {
+                "mode": "unimplemented",
+                "summary": "Awaiting authoring; level, school and action are placeholders."
+            }
+        },
+        {
+            "id": "spell_spike_growth",
+            "name": "Spike Growth",
+            "level": 0,
+            "school": "evocation",
+            "isRitual": false,
+            "action": {
+                "id": "action_spell_spike_growth",
+                "name": "Spike Growth",
+                "activation": "action",
+                "effect": {
+                    "type": "no_effect"
+                }
+            },
+            "implementation": {
+                "mode": "unimplemented",
+                "summary": "Awaiting authoring; level, school and action are placeholders."
+            }
+        },
+        {
+            "id": "spell_plant_growth",
+            "name": "Plant Growth",
+            "level": 0,
+            "school": "evocation",
+            "isRitual": false,
+            "action": {
+                "id": "action_spell_plant_growth",
+                "name": "Plant Growth",
+                "activation": "action",
+                "effect": {
+                    "type": "no_effect"
+                }
+            },
+            "implementation": {
+                "mode": "unimplemented",
+                "summary": "Awaiting authoring; level, school and action are placeholders."
+            }
+        },
+        {
+            "id": "spell_wind_wall",
+            "name": "Wind Wall",
+            "level": 0,
+            "school": "evocation",
+            "isRitual": false,
+            "action": {
+                "id": "action_spell_wind_wall",
+                "name": "Wind Wall",
+                "activation": "action",
+                "effect": {
+                    "type": "no_effect"
+                }
+            },
+            "implementation": {
+                "mode": "unimplemented",
+                "summary": "Awaiting authoring; level, school and action are placeholders."
+            }
+        },
+        {
+            "id": "spell_dominate_beast",
+            "name": "Dominate Beast",
+            "level": 0,
+            "school": "evocation",
+            "isRitual": false,
+            "action": {
+                "id": "action_spell_dominate_beast",
+                "name": "Dominate Beast",
+                "activation": "action",
+                "effect": {
+                    "type": "no_effect"
+                }
+            },
+            "implementation": {
+                "mode": "unimplemented",
+                "summary": "Awaiting authoring; level, school and action are placeholders."
+            }
+        },
+        {
+            "id": "spell_grasping_vine",
+            "name": "Grasping Vine",
+            "level": 0,
+            "school": "evocation",
+            "isRitual": false,
+            "action": {
+                "id": "action_spell_grasping_vine",
+                "name": "Grasping Vine",
+                "activation": "action",
+                "effect": {
+                    "type": "no_effect"
+                }
+            },
+            "implementation": {
+                "mode": "unimplemented",
+                "summary": "Awaiting authoring; level, school and action are placeholders."
+            }
+        },
+        {
+            "id": "spell_insect_plague",
+            "name": "Insect Plague",
+            "level": 0,
+            "school": "evocation",
+            "isRitual": false,
+            "action": {
+                "id": "action_spell_insect_plague",
+                "name": "Insect Plague",
+                "activation": "action",
+                "effect": {
+                    "type": "no_effect"
+                }
+            },
+            "implementation": {
+                "mode": "unimplemented",
+                "summary": "Awaiting authoring; level, school and action are placeholders."
+            }
+        },
+        {
+            "id": "spell_tree_stride",
+            "name": "Tree Stride",
+            "level": 0,
+            "school": "evocation",
+            "isRitual": false,
+            "action": {
+                "id": "action_spell_tree_stride",
+                "name": "Tree Stride",
+                "activation": "action",
+                "effect": {
+                    "type": "no_effect"
+                }
+            },
+            "implementation": {
+                "mode": "unimplemented",
+                "summary": "Awaiting authoring; level, school and action are placeholders."
+            }
+        },
+        {
+            "id": "spell_fog_cloud",
+            "name": "Fog Cloud",
+            "level": 0,
+            "school": "evocation",
+            "isRitual": false,
+            "action": {
+                "id": "action_spell_fog_cloud",
+                "name": "Fog Cloud",
+                "activation": "action",
+                "effect": {
+                    "type": "no_effect"
+                }
+            },
+            "implementation": {
+                "mode": "unimplemented",
+                "summary": "Awaiting authoring; level, school and action are placeholders."
+            }
+        },
+        {
+            "id": "spell_thunderwave",
+            "name": "Thunderwave",
+            "level": 0,
+            "school": "evocation",
+            "isRitual": false,
+            "action": {
+                "id": "action_spell_thunderwave",
+                "name": "Thunderwave",
+                "activation": "action",
+                "effect": {
+                    "type": "no_effect"
+                }
+            },
+            "implementation": {
+                "mode": "unimplemented",
+                "summary": "Awaiting authoring; level, school and action are placeholders."
+            }
+        },
+        {
+            "id": "spell_gust_of_wind",
+            "name": "Gust Of Wind",
+            "level": 0,
+            "school": "evocation",
+            "isRitual": false,
+            "action": {
+                "id": "action_spell_gust_of_wind",
+                "name": "Gust Of Wind",
+                "activation": "action",
+                "effect": {
+                    "type": "no_effect"
+                }
+            },
+            "implementation": {
+                "mode": "unimplemented",
+                "summary": "Awaiting authoring; level, school and action are placeholders."
+            }
+        },
+        {
+            "id": "spell_shatter",
+            "name": "Shatter",
+            "level": 0,
+            "school": "evocation",
+            "isRitual": false,
+            "action": {
+                "id": "action_spell_shatter",
+                "name": "Shatter",
+                "activation": "action",
+                "effect": {
+                    "type": "no_effect"
+                }
+            },
+            "implementation": {
+                "mode": "unimplemented",
+                "summary": "Awaiting authoring; level, school and action are placeholders."
+            }
+        },
+        {
+            "id": "spell_call_lightning",
+            "name": "Call Lightning",
+            "level": 0,
+            "school": "evocation",
+            "isRitual": false,
+            "action": {
+                "id": "action_spell_call_lightning",
+                "name": "Call Lightning",
+                "activation": "action",
+                "effect": {
+                    "type": "no_effect"
+                }
+            },
+            "implementation": {
+                "mode": "unimplemented",
+                "summary": "Awaiting authoring; level, school and action are placeholders."
+            }
+        },
+        {
+            "id": "spell_sleet_storm",
+            "name": "Sleet Storm",
+            "level": 0,
+            "school": "evocation",
+            "isRitual": false,
+            "action": {
+                "id": "action_spell_sleet_storm",
+                "name": "Sleet Storm",
+                "activation": "action",
+                "effect": {
+                    "type": "no_effect"
+                }
+            },
+            "implementation": {
+                "mode": "unimplemented",
+                "summary": "Awaiting authoring; level, school and action are placeholders."
+            }
+        },
+        {
+            "id": "spell_control_water",
+            "name": "Control Water",
+            "level": 0,
+            "school": "evocation",
+            "isRitual": false,
+            "action": {
+                "id": "action_spell_control_water",
+                "name": "Control Water",
+                "activation": "action",
+                "effect": {
+                    "type": "no_effect"
+                }
+            },
+            "implementation": {
+                "mode": "unimplemented",
+                "summary": "Awaiting authoring; level, school and action are placeholders."
+            }
+        },
+        {
+            "id": "spell_ice_storm",
+            "name": "Ice Storm",
+            "level": 0,
+            "school": "evocation",
+            "isRitual": false,
+            "action": {
+                "id": "action_spell_ice_storm",
+                "name": "Ice Storm",
+                "activation": "action",
+                "effect": {
+                    "type": "no_effect"
+                }
+            },
+            "implementation": {
+                "mode": "unimplemented",
+                "summary": "Awaiting authoring; level, school and action are placeholders."
+            }
+        },
+        {
+            "id": "spell_destructive_wave",
+            "name": "Destructive Wave",
+            "level": 0,
+            "school": "evocation",
+            "isRitual": false,
+            "action": {
+                "id": "action_spell_destructive_wave",
+                "name": "Destructive Wave",
+                "activation": "action",
+                "effect": {
+                    "type": "no_effect"
+                }
+            },
+            "implementation": {
+                "mode": "unimplemented",
+                "summary": "Awaiting authoring; level, school and action are placeholders."
+            }
+        },
+        {
+            "id": "spell_charm_person",
+            "name": "Charm Person",
+            "level": 0,
+            "school": "evocation",
+            "isRitual": false,
+            "action": {
+                "id": "action_spell_charm_person",
+                "name": "Charm Person",
+                "activation": "action",
+                "effect": {
+                    "type": "no_effect"
+                }
+            },
+            "implementation": {
+                "mode": "unimplemented",
+                "summary": "Awaiting authoring; level, school and action are placeholders."
+            }
+        },
+        {
+            "id": "spell_disguise_self",
+            "name": "Disguise Self",
+            "level": 0,
+            "school": "evocation",
+            "isRitual": false,
+            "action": {
+                "id": "action_spell_disguise_self",
+                "name": "Disguise Self",
+                "activation": "action",
+                "effect": {
+                    "type": "no_effect"
+                }
+            },
+            "implementation": {
+                "mode": "unimplemented",
+                "summary": "Awaiting authoring; level, school and action are placeholders."
+            }
+        },
+        {
+            "id": "spell_mirror_image",
+            "name": "Mirror Image",
+            "level": 0,
+            "school": "evocation",
+            "isRitual": false,
+            "action": {
+                "id": "action_spell_mirror_image",
+                "name": "Mirror Image",
+                "activation": "action",
+                "effect": {
+                    "type": "no_effect"
+                }
+            },
+            "implementation": {
+                "mode": "unimplemented",
+                "summary": "Awaiting authoring; level, school and action are placeholders."
+            }
+        },
+        {
+            "id": "spell_pass_without_trace",
+            "name": "Pass Without Trace",
+            "level": 0,
+            "school": "evocation",
+            "isRitual": false,
+            "action": {
+                "id": "action_spell_pass_without_trace",
+                "name": "Pass Without Trace",
+                "activation": "action",
+                "effect": {
+                    "type": "no_effect"
+                }
+            },
+            "implementation": {
+                "mode": "unimplemented",
+                "summary": "Awaiting authoring; level, school and action are placeholders."
+            }
+        },
+        {
+            "id": "spell_blink",
+            "name": "Blink",
+            "level": 0,
+            "school": "evocation",
+            "isRitual": false,
+            "action": {
+                "id": "action_spell_blink",
+                "name": "Blink",
+                "activation": "action",
+                "effect": {
+                    "type": "no_effect"
+                }
+            },
+            "implementation": {
+                "mode": "unimplemented",
+                "summary": "Awaiting authoring; level, school and action are placeholders."
+            }
+        },
+        {
+            "id": "spell_dispel_magic",
+            "name": "Dispel Magic",
+            "level": 0,
+            "school": "evocation",
+            "isRitual": false,
+            "action": {
+                "id": "action_spell_dispel_magic",
+                "name": "Dispel Magic",
+                "activation": "action",
+                "effect": {
+                    "type": "no_effect"
+                }
+            },
+            "implementation": {
+                "mode": "unimplemented",
+                "summary": "Awaiting authoring; level, school and action are placeholders."
+            }
+        },
+        {
+            "id": "spell_dimension_door",
+            "name": "Dimension Door",
+            "level": 0,
+            "school": "evocation",
+            "isRitual": false,
+            "action": {
+                "id": "action_spell_dimension_door",
+                "name": "Dimension Door",
+                "activation": "action",
+                "effect": {
+                    "type": "no_effect"
+                }
+            },
+            "implementation": {
+                "mode": "unimplemented",
+                "summary": "Awaiting authoring; level, school and action are placeholders."
+            }
+        },
+        {
+            "id": "spell_polymorph",
+            "name": "Polymorph",
+            "level": 0,
+            "school": "evocation",
+            "isRitual": false,
+            "action": {
+                "id": "action_spell_polymorph",
+                "name": "Polymorph",
+                "activation": "action",
+                "effect": {
+                    "type": "no_effect"
+                }
+            },
+            "implementation": {
+                "mode": "unimplemented",
+                "summary": "Awaiting authoring; level, school and action are placeholders."
+            }
+        },
+        {
+            "id": "spell_dominate_person",
+            "name": "Dominate Person",
+            "level": 0,
+            "school": "evocation",
+            "isRitual": false,
+            "action": {
+                "id": "action_spell_dominate_person",
+                "name": "Dominate Person",
+                "activation": "action",
+                "effect": {
+                    "type": "no_effect"
+                }
+            },
+            "implementation": {
+                "mode": "unimplemented",
+                "summary": "Awaiting authoring; level, school and action are placeholders."
+            }
+        },
+        {
+            "id": "spell_modify_memory",
+            "name": "Modify Memory",
+            "level": 0,
+            "school": "evocation",
+            "isRitual": false,
+            "action": {
+                "id": "action_spell_modify_memory",
+                "name": "Modify Memory",
+                "activation": "action",
+                "effect": {
+                    "type": "no_effect"
+                }
+            },
+            "implementation": {
+                "mode": "unimplemented",
+                "summary": "Awaiting authoring; level, school and action are placeholders."
+            }
+        },
+        {
+            "id": "spell_divine_favor",
+            "name": "Divine Favor",
+            "level": 0,
+            "school": "evocation",
+            "isRitual": false,
+            "action": {
+                "id": "action_spell_divine_favor",
+                "name": "Divine Favor",
+                "activation": "action",
+                "effect": {
+                    "type": "no_effect"
+                }
+            },
+            "implementation": {
+                "mode": "unimplemented",
+                "summary": "Awaiting authoring; level, school and action are placeholders."
+            }
+        },
+        {
+            "id": "spell_shield_of_faith",
+            "name": "Shield Of Faith",
+            "level": 0,
+            "school": "evocation",
+            "isRitual": false,
+            "action": {
+                "id": "action_spell_shield_of_faith",
+                "name": "Shield Of Faith",
+                "activation": "action",
+                "effect": {
+                    "type": "no_effect"
+                }
+            },
+            "implementation": {
+                "mode": "unimplemented",
+                "summary": "Awaiting authoring; level, school and action are placeholders."
+            }
+        },
+        {
+            "id": "spell_magic_weapon",
+            "name": "Magic Weapon",
+            "level": 0,
+            "school": "evocation",
+            "isRitual": false,
+            "action": {
+                "id": "action_spell_magic_weapon",
+                "name": "Magic Weapon",
+                "activation": "action",
+                "effect": {
+                    "type": "no_effect"
+                }
+            },
+            "implementation": {
+                "mode": "unimplemented",
+                "summary": "Awaiting authoring; level, school and action are placeholders."
+            }
+        },
+        {
+            "id": "spell_crusaders_mantle",
+            "name": "Crusaders Mantle",
+            "level": 0,
+            "school": "evocation",
+            "isRitual": false,
+            "action": {
+                "id": "action_spell_crusaders_mantle",
+                "name": "Crusaders Mantle",
+                "activation": "action",
+                "effect": {
+                    "type": "no_effect"
+                }
+            },
+            "implementation": {
+                "mode": "unimplemented",
+                "summary": "Awaiting authoring; level, school and action are placeholders."
+            }
+        },
+        {
+            "id": "spell_spirit_guardians",
+            "name": "Spirit Guardians",
+            "level": 0,
+            "school": "evocation",
+            "isRitual": false,
+            "action": {
+                "id": "action_spell_spirit_guardians",
+                "name": "Spirit Guardians",
+                "activation": "action",
+                "effect": {
+                    "type": "no_effect"
+                }
+            },
+            "implementation": {
+                "mode": "unimplemented",
+                "summary": "Awaiting authoring; level, school and action are placeholders."
+            }
+        },
+        {
+            "id": "spell_freedom_of_movement",
+            "name": "Freedom Of Movement",
+            "level": 0,
+            "school": "evocation",
+            "isRitual": false,
+            "action": {
+                "id": "action_spell_freedom_of_movement",
+                "name": "Freedom Of Movement",
+                "activation": "action",
+                "effect": {
+                    "type": "no_effect"
+                }
+            },
+            "implementation": {
+                "mode": "unimplemented",
+                "summary": "Awaiting authoring; level, school and action are placeholders."
+            }
+        },
+        {
+            "id": "spell_stoneskin",
+            "name": "Stoneskin",
+            "level": 0,
+            "school": "evocation",
+            "isRitual": false,
+            "action": {
+                "id": "action_spell_stoneskin",
+                "name": "Stoneskin",
+                "activation": "action",
+                "effect": {
+                    "type": "no_effect"
+                }
+            },
+            "implementation": {
+                "mode": "unimplemented",
+                "summary": "Awaiting authoring; level, school and action are placeholders."
+            }
+        },
+        {
+            "id": "spell_hold_monster",
+            "name": "Hold Monster",
+            "level": 0,
+            "school": "evocation",
+            "isRitual": false,
+            "action": {
+                "id": "action_spell_hold_monster",
+                "name": "Hold Monster",
+                "activation": "action",
+                "effect": {
+                    "type": "no_effect"
+                }
+            },
+            "implementation": {
+                "mode": "unimplemented",
+                "summary": "Awaiting authoring; level, school and action are placeholders."
+            }
+        },
+        {
+            "id": "spell_protection_from_evil_and_good",
+            "name": "Protection From Evil And Good",
+            "level": 0,
+            "school": "evocation",
+            "isRitual": false,
+            "action": {
+                "id": "action_spell_protection_from_evil_and_good",
+                "name": "Protection From Evil And Good",
+                "activation": "action",
+                "effect": {
+                    "type": "no_effect"
+                }
+            },
+            "implementation": {
+                "mode": "unimplemented",
+                "summary": "Awaiting authoring; level, school and action are placeholders."
+            }
+        },
+        {
+            "id": "spell_sanctuary",
+            "name": "Sanctuary",
+            "level": 0,
+            "school": "evocation",
+            "isRitual": false,
+            "action": {
+                "id": "action_spell_sanctuary",
+                "name": "Sanctuary",
+                "activation": "action",
+                "effect": {
+                    "type": "no_effect"
+                }
+            },
+            "implementation": {
+                "mode": "unimplemented",
+                "summary": "Awaiting authoring; level, school and action are placeholders."
+            }
+        },
+        {
+            "id": "spell_zone_of_truth",
+            "name": "Zone Of Truth",
+            "level": 0,
+            "school": "evocation",
+            "isRitual": false,
+            "action": {
+                "id": "action_spell_zone_of_truth",
+                "name": "Zone Of Truth",
+                "activation": "action",
+                "effect": {
+                    "type": "no_effect"
+                }
+            },
+            "implementation": {
+                "mode": "unimplemented",
+                "summary": "Awaiting authoring; level, school and action are placeholders."
+            }
+        },
+        {
+            "id": "spell_commune",
+            "name": "Commune",
+            "level": 0,
+            "school": "evocation",
+            "isRitual": false,
+            "action": {
+                "id": "action_spell_commune",
+                "name": "Commune",
+                "activation": "action",
+                "effect": {
+                    "type": "no_effect"
+                }
+            },
+            "implementation": {
+                "mode": "unimplemented",
+                "summary": "Awaiting authoring; level, school and action are placeholders."
+            }
+        },
+        {
+            "id": "spell_ensnaring_strike",
+            "name": "Ensnaring Strike",
+            "level": 0,
+            "school": "evocation",
+            "isRitual": false,
+            "action": {
+                "id": "action_spell_ensnaring_strike",
+                "name": "Ensnaring Strike",
+                "activation": "action",
+                "effect": {
+                    "type": "no_effect"
+                }
+            },
+            "implementation": {
+                "mode": "unimplemented",
+                "summary": "Awaiting authoring; level, school and action are placeholders."
+            }
+        },
+        {
+            "id": "spell_moonbeam",
+            "name": "Moonbeam",
+            "level": 0,
+            "school": "evocation",
+            "isRitual": false,
+            "action": {
+                "id": "action_spell_moonbeam",
+                "name": "Moonbeam",
+                "activation": "action",
+                "effect": {
+                    "type": "no_effect"
+                }
+            },
+            "implementation": {
+                "mode": "unimplemented",
+                "summary": "Awaiting authoring; level, school and action are placeholders."
+            }
+        },
+        {
+            "id": "spell_misty_step",
+            "name": "Misty Step",
+            "level": 0,
+            "school": "evocation",
+            "isRitual": false,
+            "action": {
+                "id": "action_spell_misty_step",
+                "name": "Misty Step",
+                "activation": "action",
+                "effect": {
+                    "type": "no_effect"
+                }
+            },
+            "implementation": {
+                "mode": "unimplemented",
+                "summary": "Awaiting authoring; level, school and action are placeholders."
+            }
+        },
+        {
+            "id": "spell_protection_from_energy",
+            "name": "Protection From Energy",
+            "level": 0,
+            "school": "evocation",
+            "isRitual": false,
+            "action": {
+                "id": "action_spell_protection_from_energy",
+                "name": "Protection From Energy",
+                "activation": "action",
+                "effect": {
+                    "type": "no_effect"
+                }
+            },
+            "implementation": {
+                "mode": "unimplemented",
+                "summary": "Awaiting authoring; level, school and action are placeholders."
+            }
+        },
+        {
+            "id": "spell_commune_with_nature",
+            "name": "Commune With Nature",
+            "level": 0,
+            "school": "evocation",
+            "isRitual": false,
+            "action": {
+                "id": "action_spell_commune_with_nature",
+                "name": "Commune With Nature",
+                "activation": "action",
+                "effect": {
+                    "type": "no_effect"
+                }
+            },
+            "implementation": {
+                "mode": "unimplemented",
+                "summary": "Awaiting authoring; level, school and action are placeholders."
+            }
+        },
+        {
+            "id": "spell_bane",
+            "name": "Bane",
+            "level": 0,
+            "school": "evocation",
+            "isRitual": false,
+            "action": {
+                "id": "action_spell_bane",
+                "name": "Bane",
+                "activation": "action",
+                "effect": {
+                    "type": "no_effect"
+                }
+            },
+            "implementation": {
+                "mode": "unimplemented",
+                "summary": "Awaiting authoring; level, school and action are placeholders."
+            }
+        },
+        {
+            "id": "spell_hunters_mark",
+            "name": "Hunters Mark",
+            "level": 0,
+            "school": "evocation",
+            "isRitual": false,
+            "action": {
+                "id": "action_spell_hunters_mark",
+                "name": "Hunters Mark",
+                "activation": "action",
+                "effect": {
+                    "type": "no_effect"
+                }
+            },
+            "implementation": {
+                "mode": "unimplemented",
+                "summary": "Awaiting authoring; level, school and action are placeholders."
+            }
+        },
+        {
+            "id": "spell_hold_person",
+            "name": "Hold Person",
+            "level": 0,
+            "school": "evocation",
+            "isRitual": false,
+            "action": {
+                "id": "action_spell_hold_person",
+                "name": "Hold Person",
+                "activation": "action",
+                "effect": {
+                    "type": "no_effect"
+                }
+            },
+            "implementation": {
+                "mode": "unimplemented",
+                "summary": "Awaiting authoring; level, school and action are placeholders."
+            }
+        },
+        {
+            "id": "spell_haste",
+            "name": "Haste",
+            "level": 0,
+            "school": "evocation",
+            "isRitual": false,
+            "action": {
+                "id": "action_spell_haste",
+                "name": "Haste",
+                "activation": "action",
+                "effect": {
+                    "type": "no_effect"
+                }
+            },
+            "implementation": {
+                "mode": "unimplemented",
+                "summary": "Awaiting authoring; level, school and action are placeholders."
+            }
+        },
+        {
+            "id": "spell_banishment",
+            "name": "Banishment",
+            "level": 0,
+            "school": "evocation",
+            "isRitual": false,
+            "action": {
+                "id": "action_spell_banishment",
+                "name": "Banishment",
+                "activation": "action",
+                "effect": {
+                    "type": "no_effect"
+                }
+            },
+            "implementation": {
+                "mode": "unimplemented",
+                "summary": "Awaiting authoring; level, school and action are placeholders."
+            }
+        },
+        {
+            "id": "spell_slow",
+            "name": "Slow",
+            "level": 0,
+            "school": "evocation",
+            "isRitual": false,
+            "action": {
+                "id": "action_spell_slow",
+                "name": "Slow",
+                "activation": "action",
+                "effect": {
+                    "type": "no_effect"
+                }
+            },
+            "implementation": {
+                "mode": "unimplemented",
+                "summary": "Awaiting authoring; level, school and action are placeholders."
+            }
+        },
+        {
+            "id": "spell_cone_of_cold",
+            "name": "Cone Of Cold",
+            "level": 0,
+            "school": "evocation",
+            "isRitual": false,
+            "action": {
+                "id": "action_spell_cone_of_cold",
+                "name": "Cone Of Cold",
+                "activation": "action",
+                "effect": {
+                    "type": "no_effect"
+                }
+            },
+            "implementation": {
+                "mode": "unimplemented",
+                "summary": "Awaiting authoring; level, school and action are placeholders."
+            }
+        },
+        {
+            "id": "spell_water_breathing",
+            "name": "Water Breathing",
+            "level": 0,
+            "school": "evocation",
+            "isRitual": false,
+            "action": {
+                "id": "action_spell_water_breathing",
+                "name": "Water Breathing",
+                "activation": "action",
+                "effect": {
+                    "type": "no_effect"
+                }
+            },
+            "implementation": {
+                "mode": "unimplemented",
+                "summary": "Awaiting authoring; level, school and action are placeholders."
+            }
+        },
+        {
+            "id": "spell_water_walk",
+            "name": "Water Walk",
+            "level": 0,
+            "school": "evocation",
+            "isRitual": false,
+            "action": {
+                "id": "action_spell_water_walk",
+                "name": "Water Walk",
+                "activation": "action",
+                "effect": {
+                    "type": "no_effect"
+                }
+            },
+            "implementation": {
+                "mode": "unimplemented",
+                "summary": "Awaiting authoring; level, school and action are placeholders."
+            }
+        },
+        {
+            "id": "spell_conjure_elemental",
+            "name": "Conjure Elemental",
+            "level": 0,
+            "school": "evocation",
+            "isRitual": false,
+            "action": {
+                "id": "action_spell_conjure_elemental",
+                "name": "Conjure Elemental",
+                "activation": "action",
+                "effect": {
+                    "type": "no_effect"
+                }
+            },
+            "implementation": {
+                "mode": "unimplemented",
+                "summary": "Awaiting authoring; level, school and action are placeholders."
+            }
+        },
+        {
+            "id": "spell_blur",
+            "name": "Blur",
+            "level": 0,
+            "school": "evocation",
+            "isRitual": false,
+            "action": {
+                "id": "action_spell_blur",
+                "name": "Blur",
+                "activation": "action",
+                "effect": {
+                    "type": "no_effect"
+                }
+            },
+            "implementation": {
+                "mode": "unimplemented",
+                "summary": "Awaiting authoring; level, school and action are placeholders."
+            }
+        },
+        {
+            "id": "spell_silence",
+            "name": "Silence",
+            "level": 0,
+            "school": "evocation",
+            "isRitual": false,
+            "action": {
+                "id": "action_spell_silence",
+                "name": "Silence",
+                "activation": "action",
+                "effect": {
+                    "type": "no_effect"
+                }
+            },
+            "implementation": {
+                "mode": "unimplemented",
+                "summary": "Awaiting authoring; level, school and action are placeholders."
+            }
+        },
+        {
+            "id": "spell_create_food_and_water",
+            "name": "Create Food And Water",
+            "level": 0,
+            "school": "evocation",
+            "isRitual": false,
+            "action": {
+                "id": "action_spell_create_food_and_water",
+                "name": "Create Food And Water",
+                "activation": "action",
+                "effect": {
+                    "type": "no_effect"
+                }
+            },
+            "implementation": {
+                "mode": "unimplemented",
+                "summary": "Awaiting authoring; level, school and action are placeholders."
+            }
+        },
+        {
+            "id": "spell_blight",
+            "name": "Blight",
+            "level": 0,
+            "school": "evocation",
+            "isRitual": false,
+            "action": {
+                "id": "action_spell_blight",
+                "name": "Blight",
+                "activation": "action",
+                "effect": {
+                    "type": "no_effect"
+                }
+            },
+            "implementation": {
+                "mode": "unimplemented",
+                "summary": "Awaiting authoring; level, school and action are placeholders."
+            }
+        },
+        {
+            "id": "spell_hallucinatory_terrain",
+            "name": "Hallucinatory Terrain",
+            "level": 0,
+            "school": "evocation",
+            "isRitual": false,
+            "action": {
+                "id": "action_spell_hallucinatory_terrain",
+                "name": "Hallucinatory Terrain",
+                "activation": "action",
+                "effect": {
+                    "type": "no_effect"
+                }
+            },
+            "implementation": {
+                "mode": "unimplemented",
+                "summary": "Awaiting authoring; level, school and action are placeholders."
+            }
+        },
+        {
+            "id": "spell_wall_of_stone",
+            "name": "Wall Of Stone",
+            "level": 0,
+            "school": "evocation",
+            "isRitual": false,
+            "action": {
+                "id": "action_spell_wall_of_stone",
+                "name": "Wall Of Stone",
+                "activation": "action",
+                "effect": {
+                    "type": "no_effect"
+                }
+            },
+            "implementation": {
+                "mode": "unimplemented",
+                "summary": "Awaiting authoring; level, school and action are placeholders."
+            }
+        },
+        {
+            "id": "spell_spider_climb",
+            "name": "Spider Climb",
+            "level": 0,
+            "school": "evocation",
+            "isRitual": false,
+            "action": {
+                "id": "action_spell_spider_climb",
+                "name": "Spider Climb",
+                "activation": "action",
+                "effect": {
+                    "type": "no_effect"
+                }
+            },
+            "implementation": {
+                "mode": "unimplemented",
+                "summary": "Awaiting authoring; level, school and action are placeholders."
+            }
+        },
+        {
+            "id": "spell_divination",
+            "name": "Divination",
+            "level": 0,
+            "school": "evocation",
+            "isRitual": false,
+            "action": {
+                "id": "action_spell_divination",
+                "name": "Divination",
+                "activation": "action",
+                "effect": {
+                    "type": "no_effect"
+                }
+            },
+            "implementation": {
+                "mode": "unimplemented",
+                "summary": "Awaiting authoring; level, school and action are placeholders."
+            }
+        },
+        {
+            "id": "spell_invisibility",
+            "name": "Invisibility",
+            "level": 0,
+            "school": "evocation",
+            "isRitual": false,
+            "action": {
+                "id": "action_spell_invisibility",
+                "name": "Invisibility",
+                "activation": "action",
+                "effect": {
+                    "type": "no_effect"
+                }
+            },
+            "implementation": {
+                "mode": "unimplemented",
+                "summary": "Awaiting authoring; level, school and action are placeholders."
+            }
+        },
+        {
+            "id": "spell_dream",
+            "name": "Dream",
+            "level": 0,
+            "school": "evocation",
+            "isRitual": false,
+            "action": {
+                "id": "action_spell_dream",
+                "name": "Dream",
+                "activation": "action",
+                "effect": {
+                    "type": "no_effect"
+                }
+            },
+            "implementation": {
+                "mode": "unimplemented",
+                "summary": "Awaiting authoring; level, school and action are placeholders."
+            }
+        },
+        {
+            "id": "spell_lightning_bolt",
+            "name": "Lightning Bolt",
+            "level": 0,
+            "school": "evocation",
+            "isRitual": false,
+            "action": {
+                "id": "action_spell_lightning_bolt",
+                "name": "Lightning Bolt",
+                "activation": "action",
+                "effect": {
+                    "type": "no_effect"
+                }
+            },
+            "implementation": {
+                "mode": "unimplemented",
+                "summary": "Awaiting authoring; level, school and action are placeholders."
+            }
+        },
+        {
+            "id": "spell_meld_into_stone",
+            "name": "Meld Into Stone",
+            "level": 0,
+            "school": "evocation",
+            "isRitual": false,
+            "action": {
+                "id": "action_spell_meld_into_stone",
+                "name": "Meld Into Stone",
+                "activation": "action",
+                "effect": {
+                    "type": "no_effect"
+                }
+            },
+            "implementation": {
+                "mode": "unimplemented",
+                "summary": "Awaiting authoring; level, school and action are placeholders."
+            }
+        },
+        {
+            "id": "spell_stone_shape",
+            "name": "Stone Shape",
+            "level": 0,
+            "school": "evocation",
+            "isRitual": false,
+            "action": {
+                "id": "action_spell_stone_shape",
+                "name": "Stone Shape",
+                "activation": "action",
+                "effect": {
+                    "type": "no_effect"
+                }
+            },
+            "implementation": {
+                "mode": "unimplemented",
+                "summary": "Awaiting authoring; level, school and action are placeholders."
+            }
+        },
+        {
+            "id": "spell_passwall",
+            "name": "Passwall",
+            "level": 0,
+            "school": "evocation",
+            "isRitual": false,
+            "action": {
+                "id": "action_spell_passwall",
+                "name": "Passwall",
+                "activation": "action",
+                "effect": {
+                    "type": "no_effect"
+                }
+            },
+            "implementation": {
+                "mode": "unimplemented",
+                "summary": "Awaiting authoring; level, school and action are placeholders."
+            }
+        },
+        {
+            "id": "spell_melfs_acid_arrow",
+            "name": "Melfs Acid Arrow",
+            "level": 0,
+            "school": "evocation",
+            "isRitual": false,
+            "action": {
+                "id": "action_spell_melfs_acid_arrow",
+                "name": "Melfs Acid Arrow",
+                "activation": "action",
+                "effect": {
+                    "type": "no_effect"
+                }
+            },
+            "implementation": {
+                "mode": "unimplemented",
+                "summary": "Awaiting authoring; level, school and action are placeholders."
+            }
+        },
+        {
+            "id": "spell_stinking_cloud",
+            "name": "Stinking Cloud",
+            "level": 0,
+            "school": "evocation",
+            "isRitual": false,
+            "action": {
+                "id": "action_spell_stinking_cloud",
+                "name": "Stinking Cloud",
+                "activation": "action",
+                "effect": {
+                    "type": "no_effect"
+                }
+            },
+            "implementation": {
+                "mode": "unimplemented",
+                "summary": "Awaiting authoring; level, school and action are placeholders."
+            }
+        },
+        {
+            "id": "spell_locate_creature",
+            "name": "Locate Creature",
+            "level": 0,
+            "school": "evocation",
+            "isRitual": false,
+            "action": {
+                "id": "action_spell_locate_creature",
+                "name": "Locate Creature",
+                "activation": "action",
+                "effect": {
+                    "type": "no_effect"
+                }
+            },
+            "implementation": {
+                "mode": "unimplemented",
+                "summary": "Awaiting authoring; level, school and action are placeholders."
+            }
+        },
+        {
+            "id": "spell_web",
+            "name": "Web",
+            "level": 0,
+            "school": "evocation",
+            "isRitual": false,
+            "action": {
+                "id": "action_spell_web",
+                "name": "Web",
+                "activation": "action",
+                "effect": {
+                    "type": "no_effect"
+                }
+            },
+            "implementation": {
+                "mode": "unimplemented",
+                "summary": "Awaiting authoring; level, school and action are placeholders."
+            }
+        },
+        {
+            "id": "spell_gaseous_form",
+            "name": "Gaseous Form",
+            "level": 0,
+            "school": "evocation",
+            "isRitual": false,
+            "action": {
+                "id": "action_spell_gaseous_form",
+                "name": "Gaseous Form",
+                "activation": "action",
+                "effect": {
+                    "type": "no_effect"
+                }
+            },
+            "implementation": {
+                "mode": "unimplemented",
+                "summary": "Awaiting authoring; level, school and action are placeholders."
+            }
+        },
+        {
+            "id": "spell_greater_invisibility",
+            "name": "Greater Invisibility",
+            "level": 0,
+            "school": "evocation",
+            "isRitual": false,
+            "action": {
+                "id": "action_spell_greater_invisibility",
+                "name": "Greater Invisibility",
+                "activation": "action",
+                "effect": {
+                    "type": "no_effect"
+                }
+            },
+            "implementation": {
+                "mode": "unimplemented",
+                "summary": "Awaiting authoring; level, school and action are placeholders."
+            }
+        },
+        {
+            "id": "spell_cloudkill",
+            "name": "Cloudkill",
+            "level": 0,
+            "school": "evocation",
+            "isRitual": false,
+            "action": {
+                "id": "action_spell_cloudkill",
+                "name": "Cloudkill",
+                "activation": "action",
+                "effect": {
+                    "type": "no_effect"
+                }
+            },
+            "implementation": {
+                "mode": "unimplemented",
+                "summary": "Awaiting authoring; level, school and action are placeholders."
+            }
+        }
+    ]
+}

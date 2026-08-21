@@ -383,9 +383,31 @@ export const validateCoreRulePack = (
   pack: CoreRulePack,
 ): CoreRulePackValidationResult => {
   const issues: CoreRulePackValidationIssue[] = [];
-  const allIds = new Set<string>();
-  const registerId = (id: string, path: Array<string | number>) => {
-    if (allIds.has(id)) {
+  /**
+   * Ids are unique within a section, not across the pack.
+   *
+   * This codebase's settled convention is that an entity carries the id of
+   * the trait it grants: a resource is 'trait_action_surge' (documented on
+   * SocketEvent.resourceId and relied on by the sample-character seed), a
+   * dragonborn subrace grants a trait of its own id, and feat_alert grants
+   * trait feat_alert. One global id space forbids every one of those pairs,
+   * and nothing needs it to: each reference below resolves through a
+   * per-section set, so 'unknown trait' and 'unknown resource' are already
+   * separate questions.
+   *
+   * Races and subraces share a section because they resolve through one
+   * lookup, so a subrace may not take a race's id or another subrace's.
+   */
+  const idsBySection = new Map<string, Set<string>>();
+  const registerId = (
+    section: string,
+    id: string,
+    path: Array<string | number>,
+  ) => {
+    const seen = idsBySection.get(section) ?? new Set<string>();
+    idsBySection.set(section, seen);
+
+    if (seen.has(id)) {
       issues.push({
         code: "duplicate_id",
         path,
@@ -393,24 +415,24 @@ export const validateCoreRulePack = (
       });
       return;
     }
-    allIds.add(id);
+    seen.add(id);
   };
 
-  pack.traits.forEach((entry, index) => registerId(entry.id, ["traits", index, "id"]));
-  pack.resources.forEach((entry, index) => registerId(entry.id, ["resources", index, "id"]));
+  pack.traits.forEach((entry, index) => registerId("traits", entry.id, ["traits", index, "id"]));
+  pack.resources.forEach((entry, index) => registerId("resources", entry.id, ["resources", index, "id"]));
   pack.races.forEach((entry, index) => {
-    registerId(entry.id, ["races", index, "id"]);
+    registerId("races", entry.id, ["races", index, "id"]);
     Object.entries(entry.subraces).forEach(([key, subrace]) =>
-      registerId(subrace.id, ["races", index, "subraces", key, "id"]),
+      registerId("races", subrace.id, ["races", index, "subraces", key, "id"]),
     );
   });
-  pack.classes.forEach((entry, index) => registerId(entry.id, ["classes", index, "id"]));
-  pack.subclasses.forEach((entry, index) => registerId(entry.id, ["subclasses", index, "id"]));
-  pack.feats.forEach((entry, index) => registerId(entry.id, ["feats", index, "id"]));
-  pack.backgrounds.forEach((entry, index) => registerId(entry.id, ["backgrounds", index, "id"]));
-  pack.equipment.forEach((entry, index) => registerId(entry.id, ["equipment", index, "id"]));
-  pack.spells.forEach((entry, index) => registerId(entry.id, ["spells", index, "id"]));
-  pack.proficiencies.forEach((entry, index) => registerId(entry.id, ["proficiencies", index, "id"]));
+  pack.classes.forEach((entry, index) => registerId("classes", entry.id, ["classes", index, "id"]));
+  pack.subclasses.forEach((entry, index) => registerId("subclasses", entry.id, ["subclasses", index, "id"]));
+  pack.feats.forEach((entry, index) => registerId("feats", entry.id, ["feats", index, "id"]));
+  pack.backgrounds.forEach((entry, index) => registerId("backgrounds", entry.id, ["backgrounds", index, "id"]));
+  pack.equipment.forEach((entry, index) => registerId("equipment", entry.id, ["equipment", index, "id"]));
+  pack.spells.forEach((entry, index) => registerId("spells", entry.id, ["spells", index, "id"]));
+  pack.proficiencies.forEach((entry, index) => registerId("proficiencies", entry.id, ["proficiencies", index, "id"]));
 
   const traitIds = new Set(pack.traits.map((entry) => entry.id));
   const resourceIds = new Set([
