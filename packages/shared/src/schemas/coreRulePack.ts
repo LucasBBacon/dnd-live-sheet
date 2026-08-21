@@ -115,15 +115,62 @@ const CoreProficiencySchema = z
   })
   .strict();
 
+/**
+ * The content sections a pack can claim to be complete for.
+ *
+ * Wider than CoreRulePackSchema's array fields because ownership is about
+ * what a consumer may merge beneath this pack, not about pack arrays:
+ * subraces are authored inside their race but are owned on their own terms.
+ */
+export const PackSectionSchema = z.enum([
+  "traits",
+  "resources",
+  "races",
+  "subraces",
+  "classes",
+  "subclasses",
+  "feats",
+  "backgrounds",
+  "equipment",
+  "spells",
+  "proficiencies",
+]);
+
 export const CoreRulePackSchema = z
   .object({
     pack: z
       .object({
         packId: CoreRuleIdSchema,
         version: z.number().int().positive(),
-        ruleset: z.literal("dnd_5e_2014"),
+        /**
+         * The rules system this pack belongs to.
+         *
+         * No longer a literal: a pack may define an entirely different system,
+         * and the database column has always been varchar. Packs whose
+         * rulesets differ must never compose - that is what stops a homebrew
+         * system silently falling back on the standard rules.
+         */
+        ruleset: z.string().min(1).max(100),
         publishedAt: z.iso.datetime({ offset: true }),
         contentHash: z.string().regex(/^[a-f0-9]{64}$/).optional(),
+        /**
+         * Packs this one layers on top of, in precedence order.
+         *
+         * An empty list means the pack stands alone. Absent means the same,
+         * but says nothing deliberate about it.
+         */
+        extends: z.array(CoreRuleIdSchema).optional(),
+        /**
+         * Sections this pack is complete for, and therefore authoritative over.
+         *
+         * Nothing beneath an owned section merges into it. A supplement owns
+         * nothing; a standalone system owns everything.
+         *
+         * Optional rather than defaulted: a `.default()` would make the field
+         * required on the inferred output type, forcing every hand-written
+         * pack literal in the tests to restate it.
+         */
+        owns: z.array(PackSectionSchema).optional(),
       })
       .strict(),
     traits: z.array(CoreTraitSchema).default([]),
@@ -141,6 +188,7 @@ export const CoreRulePackSchema = z
 
 export type CoreRulePack = z.infer<typeof CoreRulePackSchema>;
 export type CoreRulePackInput = z.input<typeof CoreRulePackSchema>;
+export type PackSection = z.infer<typeof PackSectionSchema>;
 export type CoreRulePackIssueCode =
   | "duplicate_id"
   | "unknown_class_reference"

@@ -140,3 +140,44 @@ describe("validateCoreRulePack", () => {
     });
   });
 });
+
+describe("pack composition", () => {
+  const meta = {
+    packId: "core_2014",
+    version: 1,
+    ruleset: "dnd_5e_2014",
+    publishedAt: "2026-08-13T00:00:00.000Z",
+  };
+
+  it("accepts a supplement that names its base and owns nothing", () => {
+    const parsed = CoreRulePackSchema.parse({
+      pack: { ...meta, packId: "xanathars_2017", extends: ["core_2014"] },
+    });
+
+    expect(parsed.pack.extends).toEqual(["core_2014"]);
+    expect(parsed.pack.owns).toBeUndefined();
+  });
+
+  it("accepts a homebrew system declaring its own ruleset and no base", () => {
+    const parsed = CoreRulePackSchema.parse({
+      pack: { ...meta, packId: "grimdark_v1", ruleset: "grimdark", extends: [] },
+    });
+
+    expect(parsed.pack.ruleset).toBe("grimdark");
+    expect(parsed.pack.extends).toEqual([]);
+  });
+
+  it("accepts a base pack owning every section", () => {
+    const parsed = CoreRulePackSchema.parse({
+      pack: { ...meta, owns: ["traits", "classes", "races"] },
+    });
+
+    expect(parsed.pack.owns).toContain("classes");
+  });
+
+  it("rejects a section name that is not a pack section", () => {
+    expect(() =>
+      CoreRulePackSchema.parse({ pack: { ...meta, owns: ["monsters"] } }),
+    ).toThrow();
+  });
+});
