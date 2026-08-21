@@ -3670,39 +3670,6 @@
             "actions": []
         },
         {
-            "id": "trait_barbarian_prof_saving_throw",
-            "name": "Barbarian Saving Throw Proficiencies",
-            "lore": {
-                "shortDescription": "Proficiency in Strength and Constitution saving throws."
-            },
-            "modifiers": {
-                "fixed": [],
-                "choices": []
-            },
-            "proficiencies": {
-                "fixed": [
-                    {
-                        "category": "saving_throws",
-                        "proficiencyId": "STR",
-                        "level": "proficient",
-                        "requiredStates": []
-                    },
-                    {
-                        "category": "saving_throws",
-                        "proficiencyId": "CON",
-                        "level": "proficient",
-                        "requiredStates": []
-                    }
-                ],
-                "choices": []
-            },
-            "resources": [],
-            "triggers": [],
-            "diceRules": [],
-            "criticalHitModifiers": [],
-            "actions": []
-        },
-        {
             "id": "trait_bard_prof_saving_throw",
             "name": "Bard Saving Throw Proficiencies",
             "lore": {

@@ -1,0 +1,59 @@
+{
+    "feats": [
+        {
+            "id": "feat_battle_hardened",
+            "name": "Battle Hardened",
+            "category": "general",
+            "lore": {
+                "shortDescription": "Not yet authored in the pack.",
+                "fullText": "This feat exists so the pack is structurally complete. Its rules have not been authored yet."
+            },
+            "grantedTraitIds": [],
+            "tags": []
+        },
+        {
+            "id": "feat_fleet_footed",
+            "name": "Fleet Footed",
+            "category": "general",
+            "lore": {
+                "shortDescription": "Not yet authored in the pack.",
+                "fullText": "This feat exists so the pack is structurally complete. Its rules have not been authored yet."
+            },
+            "grantedTraitIds": [],
+            "tags": []
+        },
+        {
+            "id": "feat_gifted_mind",
+            "name": "Gifted Mind",
+            "category": "general",
+            "lore": {
+                "shortDescription": "Not yet authored in the pack.",
+                "fullText": "This feat exists so the pack is structurally complete. Its rules have not been authored yet."
+            },
+            "grantedTraitIds": [],
+            "tags": []
+        },
+        {
+            "id": "feat_spellbound",
+            "name": "Spellbound",
+            "category": "general",
+            "lore": {
+                "shortDescription": "Not yet authored in the pack.",
+                "fullText": "This feat exists so the pack is structurally complete. Its rules have not been authored yet."
+            },
+            "grantedTraitIds": [],
+            "tags": []
+        },
+        {
+            "id": "feat_starlit_bloodline",
+            "name": "Starlit Bloodline",
+            "category": "general",
+            "lore": {
+                "shortDescription": "Not yet authored in the pack.",
+                "fullText": "This feat exists so the pack is structurally complete. Its rules have not been authored yet."
+            },
+            "grantedTraitIds": [],
+            "tags": []
+        }
+    ]
+}
