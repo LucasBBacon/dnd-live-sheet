@@ -129,3 +129,28 @@ describe("ModifierTargetSchema ATTACKS_PER_ACTION", () => {
     ]);
   });
 });
+
+describe("unimplemented traits", () => {
+  it("accepts a trait that declares itself unauthored", () => {
+    const parsed = TraitDefinitionSchema.parse({
+      id: "trait_placeholder",
+      name: "Placeholder",
+      implementation: {
+        mode: "unimplemented",
+        summary: "Not yet authored.",
+      },
+    });
+
+    expect(parsed.implementation?.mode).toBe("unimplemented");
+  });
+
+  it("still distinguishes an unauthored trait from an authored one with no modifiers", () => {
+    const authored = TraitDefinitionSchema.parse({
+      id: "trait_real",
+      name: "Real",
+      implementation: { mode: "engine", summary: "Grants a state only." },
+    });
+
+    expect(authored.implementation?.mode).not.toBe("unimplemented");
+  });
+});

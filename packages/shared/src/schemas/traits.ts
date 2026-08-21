@@ -16,7 +16,17 @@ import { SpellGrantBlockSchema } from "./spells.js";
 import { LoreSchema } from "./lore.js";
 
 export const TraitImplementationMetadataSchema = z.object({
-  mode: z.enum(["engine", "manual_sheet_helper"]),
+  /**
+   * How this rule reaches the player.
+   *
+   * "unimplemented" is not a delivery mode but the absence of one: the trait
+   * exists so progressions can reference it and so the pack is structurally
+   * complete, and it carries no rules yet. It exists because a trait with no
+   * modifiers is otherwise indistinguishable from one that deliberately grants
+   * nothing - the silence that left five barbarian features looking
+   * implemented while they were dormant.
+   */
+  mode: z.enum(["engine", "manual_sheet_helper", "unimplemented"]),
   summary: z.string(),
   blockedBy: z.array(z.string()).default([]),
 });
