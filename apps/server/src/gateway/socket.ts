@@ -465,7 +465,17 @@ export function initializeWebSocketGateway(httpServer: any) {
 
           const cached = runtime.responseByRequestId.get(payload.requestId);
           if (cached) {
-            socket.emit(SOCKET_EVENTS.ACTION_RESOLVED, cached);
+            // Wrapped exactly like the fresh broadcast below. The cache holds
+            // the resolution itself, so the envelope is stamped per delivery
+            // rather than stored - a retry from a second socket on the same
+            // character then reports the socket that actually asked.
+            //
+            // Sender-only on purpose: the fresh path already reached the room,
+            // and re-broadcasting would apply the action to the table twice.
+            socket.emit(SOCKET_EVENTS.ACTION_RESOLVED, {
+              actorId: socket.id,
+              data: cached,
+            });
             return;
           }
 

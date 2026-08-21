@@ -189,24 +189,21 @@ describe("socket gateway - ACTION_INTENT", () => {
     const afterFirst = lastResolved(harness)["effects"] as unknown[];
     await harness.emit(SOCKET_EVENTS.ACTION_INTENT, intent());
 
-    const replayed = harness.senderEmits[0]?.payload as Record<string, unknown>;
+    const replayed = (harness.senderEmits[0]?.payload as { data: Record<string, unknown> }).data;
     // Same effects, not a second stacked Dodge.
     expect(replayed["effects"]).toEqual(afterFirst);
   });
 
   /**
-   * DEFECT, characterised rather than endorsed.
+   * One channel, one shape.
    *
-   * The fresh path emits `{ actorId, data: resolvedPayload }` through
-   * `io.to(room)`. The replay path emits the bare `resolvedPayload` through
-   * `socket.emit`. Both arrive on the same `character:action_resolved`
-   * channel, so a client with one listener reads `msg.data` and gets
-   * `undefined` for every retried request.
-   *
-   * Wrapping the cached value the same way the fresh one is wrapped would fix
-   * it; this test pins the current shape so that change has something to flip.
+   * The replay used to emit the bare `resolvedPayload` while the fresh path
+   * wrapped it, so `character:action_resolved` carried two shapes depending on
+   * whether the request was a retry. The client survived that on an unwrap
+   * helper, which made the divergence invisible until something read `.data`
+   * or `actorId` directly - and then only on a retry.
    */
-  it("replays an unwrapped payload, unlike the wrapped fresh broadcast", async () => {
+  it("replays the same shape the fresh broadcast uses", async () => {
     await ready();
 
     await harness.emit(SOCKET_EVENTS.ACTION_INTENT, intent());
@@ -217,9 +214,8 @@ describe("socket gateway - ACTION_INTENT", () => {
     expect(fresh).toHaveProperty("actorId");
     expect(fresh).toHaveProperty("data");
 
-    expect(replayed).not.toHaveProperty("actorId");
-    expect(replayed).not.toHaveProperty("data");
-    expect(replayed).toEqual(fresh["data"]);
+    expect(replayed).toHaveProperty("actorId", harness.socket.id);
+    expect(replayed["data"]).toEqual(fresh["data"]);
   });
 
   it("rolls back an actor intent that names no actor instance", async () => {

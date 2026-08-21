@@ -152,7 +152,7 @@ so authoring first would mean authoring into a hole.
 | Order | Item | Why first |
 | --- | --- | --- |
 | 1 | ✅ **Equip slot validation** — see E1 below | **Closed 2026-08-21.** The gateway now decides legality with the engine's `canEquipTo`. Unblocks #32 and #33. |
-| 2 | **S2** — replayed actions arrive in a different shape | Every retried request delivers `undefined` to the client. |
+| 2 | ✅ **S2** — replayed actions arrive in a different shape | **Closed 2026-08-21.** One channel, one shape. Severity was overstated — see the corrected note below. |
 | 3 | **S3** — `ROOM_JOIN` has no error path | A cross-campaign id yields no inventory snapshot and no error. Silent. |
 
 ### Tier 2 — cheap content that makes existing characters work
@@ -370,7 +370,7 @@ to flip rather than a test to write.
 | # | Item | Location | Effect |
 | --- | --- | --- | --- |
 | ~~S1~~ | ~~Rest zeroes short-rest resources~~ | — | **Fixed 2026-08-19.** The handler now reads `character_classes` inside its own transaction and passes the real ledger and total level to `RestEngine.applyRest`. Investigation found the defect was wider than first recorded: `restedCharges` returns `maxUses` for a `short_rest` resource on *either* kind of rest, so long rests drained them too, and `total_level_thresholds` resources were pinned to their level-1 value rather than zeroed. Four tests replace the characterisation test. |
-| S2 | Replayed actions arrive in a different shape | [socket.ts:480](apps/server/src/gateway/socket.ts:480) | The fresh path emits `{ actorId, data }` via `io.to(room)`; the `requestId` replay path emits the bare payload via `socket.emit`. Both land on `character:action_resolved`, so a client reading `msg.data` gets `undefined` for every retried request. |
+| ~~S2~~ | Replayed actions arrive in a different shape | [socket.ts](apps/server/src/gateway/socket.ts) | **Fixed 2026-08-21.** The replay path now wraps the cached resolution in `{ actorId, data }` exactly as the fresh broadcast does, so `character:action_resolved` carries one shape. It stays sender-only on purpose: the fresh path already reached the room, and re-broadcasting would apply the action to the table twice. **The recorded symptom was wrong** — the client never read `msg.data`. `subscribeToActionResolved` runs every payload through `unwrapServerBroadcastPayload`, whose guard tests for `actorId`, so both shapes already decoded correctly and retries worked. The real cost was a latent trap that fires *only on a retry*, for any future consumer reading `.data` or `actorId`. Note this does **not** retire `MaybeServerBroadcastPayload`: `INVENTORY_SYNC` is also emitted bare, and defensibly so — it answers `ROOM_JOIN` with a snapshot that has no triggering actor. |
 | S3 | ROOM_JOIN has no error path | [socket.ts:329](apps/server/src/gateway/socket.ts:329) | The handler has no try/catch, so a `characterId` from another campaign rejects the handler promise. socket.io drops it: the client gets no inventory snapshot and no error. Every other handler emits `action_error` or `error:rollback`. |
 
 Two smaller findings, recorded but lower value:
