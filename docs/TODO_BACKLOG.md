@@ -140,10 +140,96 @@ structural.
 
 ## Recommended sequence
 
-1. **2c inventory (#18, #19)** — completed; the remaining feature work now sits in the polish and modifier-system buckets.
-2. **P3 remainder (#26, #29)** — the remaining correctness and visual polish items.
-3. **2e (#23)** — the remaining deliberate modifier-system redesign, now that the core runtime is in place.
-4. **Typecheck / API drift cleanup** — keep this in parallel with the feature work, since it is the broadest remaining quality risk.
+Refreshed 2026-08-21, after the pack cutover. The previous list is preserved at
+the bottom of this section; every item on it is now either closed or superseded.
+
+The ordering principle is **fix the pipe before filling it**. Several content
+gaps below are invisible or worthless until a delivery path above them works,
+so authoring first would mean authoring into a hole.
+
+### Tier 1 — broken for players today
+
+| Order | Item | Why first |
+| --- | --- | --- |
+| 1 | **Equip slot validation** — see E1 below | No armour can be equipped at all, and rings, amulets and cloaks are backpack-only. Gates the value of #32 and #33. |
+| 2 | **S2** — replayed actions arrive in a different shape | Every retried request delivers `undefined` to the client. |
+| 3 | **S3** — `ROOM_JOIN` has no error path | A cross-campaign id yields no inventory snapshot and no error. Silent. |
+
+### Tier 2 — cheap content that makes existing characters work
+
+| Order | Item | Why here |
+| --- | --- | --- |
+| 4 | **#33** — 6 armours with no AC modifier | Do after Tier 1 item 1, or the fix is unobservable. |
+| 5 | **#32** — 23 weapons with no `weapon` block | A battleaxe that cannot attack. PHB values are well known and the schema already expresses them. |
+
+Worth doing alongside these: give `CoreEquipmentSchema` an `implementation`
+marker like traits and spells have. Equipment is the only section that cannot
+declare its own gaps, which is precisely how #32 and #33 stayed invisible.
+
+### Tier 3 — free wins
+
+| Order | Item | Why here |
+| --- | --- | --- |
+| 6 | **#34, #35** — delete the two dead dictionaries | ~900 lines, zero readers, zero risk. |
+| 7 | **#39** — `client.test.ts` cold-import timeout | One line. Removes a misleading red. |
+| 8 | **#4f** — guard the destructive import | It has already destroyed 12 characters once. |
+
+### Tier 4 — debt, before it compounds
+
+| Order | Item | Why here |
+| --- | --- | --- |
+| 9 | **#37** — three hand-built copies of the equipment/resource projection | They will drift. Cheapest to fix while all three are fresh. |
+| 10 | **#36** — `SUMMON_ACTOR_DICTIONARY` into the pack | The last live rules content outside it. |
+| 11 | **#40** — restore the node-types guard in web's tsconfig | Small, and it protects a boundary that is easy to erode quietly. |
+
+### Tier 5 — the burndown
+
+| Order | Item | Why here |
+| --- | --- | --- |
+| 12 | **#30** — 456 unimplemented traits | The largest item and fully parallel. Go class by class, in the order the table actually plays. Barbarian is the worked example to copy. |
+| 13 | **#31** — 111 unimplemented spells | Lower than the count suggests: `level` and `school` are placeholders too, so these need real data before they need rules. |
+
+### Tier 6 — design passes, not before Tiers 1-4
+
+| Order | Item | Why last |
+| --- | --- | --- |
+| 14 | **A1 + A5 + #23 together** | One root, not three items. `EngineEventSchema` cannot express "a creature left my reach", and Protection needs reactions targeting another creature's roll. Deserves its own design pass. |
+| 15 | **#41, #42** — two-mode import, honouring `extends` / `owns` | Genuinely blocked until a second pack exists. Building it now is composition machinery with nothing to compose. |
+| 16 | **A2b** polish, **A7** close as won't-fix, **#43** when a browse endpoint wants it | Optional or conditional. |
+
+Tiers 1-3 are roughly a day's work and are what turn "structurally complete"
+into "actually playable". Tier 6 should not start until 1-4 are done —
+reactions are hard enough without a broken equip path underneath them.
+
+### E1 — armour cannot be equipped; seven slots are unreachable
+
+Found 2026-08-21 while ordering this list. This is the "two equip bugs" the
+sample characters were already known to expose, with the cause identified.
+
+[`isValidTargetSlotForItem`](apps/server/src/gateway/socket.ts:57) returns
+`targetSlot === "armor"` for armour, but **`"armor"` is not a member of
+`CharacterSlotSchema`** ([items.ts:51](packages/shared/src/schemas/items.ts:51)),
+which authors the slot as `"body"`. `payload.targetSlot` reaches the validator
+unmapped, so every armour equip throws `Invalid slot 'body' for item '...'`.
+
+Its `itemType` parameter is also typed `"armor" | "weapon" | "consumable" |
+"gear"`, and the call site casts to that union. The pack's fifth type,
+`"wondrous"`, falls through to `return false` — which is why `head`, `amulet`,
+`cloak`, `gloves`, `ring_1`, `ring_2` and `boots` are unreachable for every
+item.
+
+The client does not share the restriction: `inventorySlots.test.ts` passes with
+`ring_1` and `body`. So the sheet shows a ring equipped and the server refuses
+the sync, which makes this a divergence rather than a shared limitation.
+
+### Superseded — the previous sequence
+
+Kept so the change of direction is visible rather than silent.
+
+1. ~~**2c inventory (#18, #19)**~~ — closed.
+2. ~~**P3 remainder (#26, #29)**~~ — both closed.
+3. **2e (#23)** — still open, now folded into Tier 6 item 14 with A1 and A5.
+4. ~~**Typecheck / API drift cleanup**~~ — the workspace reports 0 errors and lint is clean.
 
 
 ---
@@ -229,7 +315,10 @@ Two smaller findings, recorded but lower value:
 - `EQUIPMENT_SLOTS` advertises `head`, `cloak`, `boots`, `gloves`, `ring_1`,
   `ring_2` and `amulet`, but `isValidTargetSlotForItem` only ever returns true
   for `backpack`, the two hands and `armor`, so those seven slots are
-  unreachable for every item type.
+  unreachable for every item type. **Root cause found 2026-08-21 — see E1 in
+  the Recommended sequence.** It is worse than recorded here: `"armor"` is not
+  a `CharacterSlot` at all, so no armour can be equipped either. Promoted to
+  the top of the sequence; this is no longer a "smaller finding".
 
 ---
 
