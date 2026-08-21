@@ -331,15 +331,29 @@ export function initializeWebSocketGateway(httpServer: any) {
           return;
         }
 
-        const membershipRole = await getCampaignMembershipRole(
-          userId,
-          campaignId,
-        );
+        // Every await here was unguarded. A rejected async listener is
+        // invisible - socket.io never observes the promise - so a failed
+        // membership lookup used to leave the client waiting on a room it had
+        // silently not joined.
+        try {
+          const membershipRole = await getCampaignMembershipRole(
+            userId,
+            campaignId,
+          );
 
-        if (!membershipRole) {
+          if (!membershipRole) {
+            socket.emit("action_error", {
+              event: SOCKET_EVENTS.ROOM_JOIN,
+              error: "Not authorized for campaign room.",
+              payload: { campaignId },
+            });
+            return;
+          }
+        } catch (error) {
+          console.error("Failed to resolve campaign membership:", error);
           socket.emit("action_error", {
             event: SOCKET_EVENTS.ROOM_JOIN,
-            error: "Not authorized for campaign room.",
+            error: "Could not join the campaign room.",
             payload: { campaignId },
           });
           return;
@@ -352,32 +366,47 @@ export function initializeWebSocketGateway(httpServer: any) {
         // Emit an authoritative inventory snapshot to the joining client.
         // Runtime inventory source-of-truth is operational character_inventory.
         if (characterId) {
-          const scopedCampaignId = await ensureCharacterInSocketCampaign(
-            socket,
-            characterId,
-          );
-          const inventory = await db
-            .select({
-              id: characterInventory.id,
-              itemId: characterInventory.itemId,
-              quantity: characterInventory.quantity,
-              slot: characterInventory.slot,
-              isAttuned: characterInventory.isAttuned,
-              customName: characterInventory.customName,
-              containerId: characterInventory.containerId,
-            })
-            .from(characterInventory)
-            .where(eq(characterInventory.characterId, characterId));
+          try {
+            const scopedCampaignId = await ensureCharacterInSocketCampaign(
+              socket,
+              characterId,
+            );
+            const inventory = await db
+              .select({
+                id: characterInventory.id,
+                itemId: characterInventory.itemId,
+                quantity: characterInventory.quantity,
+                slot: characterInventory.slot,
+                isAttuned: characterInventory.isAttuned,
+                customName: characterInventory.customName,
+                containerId: characterInventory.containerId,
+              })
+              .from(characterInventory)
+              .where(eq(characterInventory.characterId, characterId));
 
-          const inventorySyncPayload: InventorySyncPayload = {
-            characterId,
-            inventory,
-          };
+            const inventorySyncPayload: InventorySyncPayload = {
+              characterId,
+              inventory,
+            };
 
-          socket.emit(SOCKET_EVENTS.INVENTORY_SYNC, inventorySyncPayload);
-          console.log(
-            `Socket ${socket.id} synced inventory for ${characterId} in campaign_${scopedCampaignId}`,
-          );
+            socket.emit(SOCKET_EVENTS.INVENTORY_SYNC, inventorySyncPayload);
+            console.log(
+              `Socket ${socket.id} synced inventory for ${characterId} in campaign_${scopedCampaignId}`,
+            );
+          } catch (error) {
+            console.error("Failed to sync inventory on room join:", error);
+            // The room join above stands: membership was verified, and only the
+            // character binding failed. Dropping a valid membership over it
+            // would put the player out of a campaign they belong to.
+            //
+            // One message for "another campaign" and for "no such character".
+            // Which of the two it was is not the client's business.
+            socket.emit("action_error", {
+              event: SOCKET_EVENTS.ROOM_JOIN,
+              error: "Character is not available in this campaign.",
+              payload: { campaignId, characterId },
+            });
+          }
         }
       },
     );

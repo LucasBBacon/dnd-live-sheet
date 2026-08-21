@@ -153,39 +153,76 @@ describe("socket gateway - ROOM_JOIN", () => {
   });
 
   /**
-   * Characterisation, not endorsement: ROOM_JOIN has no try/catch, so a
-   * character belonging to another campaign rejects the handler promise.
-   * socket.io drops that rejection, meaning the client is left with no
-   * inventory snapshot and no error to react to. Recorded here so the
-   * behaviour is visible and any future fix has a test to update.
+   * A rejected async listener is invisible: socket.io never observes the
+   * promise, so before this the client got no snapshot and no error at all.
+   * The same message covers a character in another campaign and one that does
+   * not exist - which of the two it was is not the client's business.
    */
-  it("rejects - unhandled - when the character belongs to another campaign", async () => {
+  it.each([
+    ["belongs to another campaign", [characterRow({ campaignId: "camp-other" })]],
+    ["does not exist", []],
+  ])("reports an error when the character %s", async (_case, seeded) => {
+    harness = await setupGateway();
+    asMember(harness.db);
+    harness.db.seed(characters, seeded as Record<string, unknown>[]);
+
+    await harness.emit(SOCKET_EVENTS.ROOM_JOIN, {
+      campaignId: "camp-1",
+      characterId: "char-1",
+    });
+
+    expect(harness.senderEmits).toEqual([
+      {
+        event: "action_error",
+        payload: {
+          event: SOCKET_EVENTS.ROOM_JOIN,
+          error: "Character is not available in this campaign.",
+          payload: { campaignId: "camp-1", characterId: "char-1" },
+        },
+      },
+    ]);
+    expect(harness.db.opsFor(characterInventory)).toEqual([]);
+  });
+
+  /**
+   * Membership was verified before the character was looked at, so the join
+   * itself is legitimate. Only the character binding failed, and tearing down
+   * a valid room membership over it would drop the player out of a campaign
+   * they are entitled to be in.
+   */
+  it("keeps the room join that already succeeded when the character fails", async () => {
     harness = await setupGateway();
     asMember(harness.db);
     harness.db.seed(characters, [characterRow({ campaignId: "camp-other" })]);
 
-    await expect(
-      harness.emit(SOCKET_EVENTS.ROOM_JOIN, {
-        campaignId: "camp-1",
-        characterId: "char-1",
-      }),
-    ).rejects.toThrow("Character does not belong to the joined campaign.");
+    await harness.emit(SOCKET_EVENTS.ROOM_JOIN, {
+      campaignId: "camp-1",
+      characterId: "char-1",
+    });
 
-    expect(harness.senderEmits).toEqual([]);
-    expect(harness.db.opsFor(characterInventory)).toEqual([]);
+    expect(harness.socket.join).toHaveBeenCalledWith("campaign_camp-1");
+    expect(harness.socket.data).toEqual({
+      campaignId: "camp-1",
+      userId: "user-1",
+    });
   });
 
-  it("rejects - unhandled - when the character does not exist", async () => {
+  /**
+   * The character lookup is not the only await that was unguarded - the
+   * inventory read can fail on its own, and did so just as silently.
+   */
+  it("reports an error when the inventory read fails", async () => {
     harness = await setupGateway();
     asMember(harness.db);
-    harness.db.seed(characters, []);
+    harness.db.seed(characters, [characterRow()]);
+    harness.db.failOn(characterInventory, "select", new Error("connection lost"));
 
-    await expect(
-      harness.emit(SOCKET_EVENTS.ROOM_JOIN, {
-        campaignId: "camp-1",
-        characterId: "missing",
-      }),
-    ).rejects.toThrow("Character does not belong to the joined campaign.");
+    await harness.emit(SOCKET_EVENTS.ROOM_JOIN, {
+      campaignId: "camp-1",
+      characterId: "char-1",
+    });
+
+    expect(harness.senderEmits[0]?.event).toBe("action_error");
   });
 
   it("keeps socket context isolated between two connections", async () => {

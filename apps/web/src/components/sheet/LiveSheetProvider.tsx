@@ -2,6 +2,7 @@ import type React from "react";
 import { useCharacterSheetStore } from "../../store/characterSheetStore";
 import { useEffect } from "react";
 import { socketService } from "../../services/socketService";
+import { SHEET_ERROR_EVENTS } from "./sheetErrorEvents";
 
 export const LiveSheetProvider = ({
   campaignId,
@@ -88,11 +89,9 @@ export const LiveSheetProvider = ({
     });
 
     socketService.subscribeToActionErrors((payload) => {
-      if (
-        payload.event === "character:item_equipped" ||
-        payload.event === "character:item_consumed" ||
-        payload.event === "character:item_attuned"
-      ) {
+      // `event` is optional on the wire, and an error that names no event
+      // cannot be matched against the list at all.
+      if (payload.event && SHEET_ERROR_EVENTS.includes(payload.event)) {
         setInventoryError(payload.error);
       }
     });

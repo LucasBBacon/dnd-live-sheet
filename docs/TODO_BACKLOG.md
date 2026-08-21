@@ -153,7 +153,7 @@ so authoring first would mean authoring into a hole.
 | --- | --- | --- |
 | 1 | ✅ **Equip slot validation** — see E1 below | **Closed 2026-08-21.** The gateway now decides legality with the engine's `canEquipTo`. Unblocks #32 and #33. |
 | 2 | ✅ **S2** — replayed actions arrive in a different shape | **Closed 2026-08-21.** One channel, one shape. Severity was overstated — see the corrected note below. |
-| 3 | **S3** — `ROOM_JOIN` has no error path | A cross-campaign id yields no inventory snapshot and no error. Silent. |
+| 3 | ✅ **S3** — `ROOM_JOIN` has no error path | **Closed 2026-08-21.** Reported on both sides: the gateway emits `action_error`, and the sheet now shows it. **Tier 1 is clear.** |
 
 ### Tier 2 — cheap content that makes existing characters work
 
@@ -270,6 +270,19 @@ migrated and kept a private id-prefix copy.
   relaying a legacy name would have silently dropped the update on every other
   sheet.
 
+### S5 — a failed room join reports itself on the inventory banner
+
+Found 2026-08-21 while closing S3. `ROOM_JOIN`'s `action_error` now reaches the
+sheet, but it arrives through `setInventoryError`, which renders an
+inventory-scoped banner. The actual condition is broader: the character could
+not be bound to the campaign at all, so the whole sheet is unbacked, not just
+the inventory list.
+
+Strictly better than the silence it replaces, and deliberately minimal. The
+right treatment is probably page-level — the route knows it asked for a
+character in a campaign and got refused — but that is a UI design decision
+rather than a defect, so it is recorded rather than guessed at.
+
 ### E2 — no weapon can be held in the off hand, so two-weapon fighting is unreachable
 
 Found 2026-08-21 while fixing E1. All 26 pack weapons are authored
@@ -371,7 +384,7 @@ to flip rather than a test to write.
 | --- | --- | --- | --- |
 | ~~S1~~ | ~~Rest zeroes short-rest resources~~ | — | **Fixed 2026-08-19.** The handler now reads `character_classes` inside its own transaction and passes the real ledger and total level to `RestEngine.applyRest`. Investigation found the defect was wider than first recorded: `restedCharges` returns `maxUses` for a `short_rest` resource on *either* kind of rest, so long rests drained them too, and `total_level_thresholds` resources were pinned to their level-1 value rather than zeroed. Four tests replace the characterisation test. |
 | ~~S2~~ | Replayed actions arrive in a different shape | [socket.ts](apps/server/src/gateway/socket.ts) | **Fixed 2026-08-21.** The replay path now wraps the cached resolution in `{ actorId, data }` exactly as the fresh broadcast does, so `character:action_resolved` carries one shape. It stays sender-only on purpose: the fresh path already reached the room, and re-broadcasting would apply the action to the table twice. **The recorded symptom was wrong** — the client never read `msg.data`. `subscribeToActionResolved` runs every payload through `unwrapServerBroadcastPayload`, whose guard tests for `actorId`, so both shapes already decoded correctly and retries worked. The real cost was a latent trap that fires *only on a retry*, for any future consumer reading `.data` or `actorId`. Note this does **not** retire `MaybeServerBroadcastPayload`: `INVENTORY_SYNC` is also emitted bare, and defensibly so — it answers `ROOM_JOIN` with a snapshot that has no triggering actor. |
-| S3 | ROOM_JOIN has no error path | [socket.ts:329](apps/server/src/gateway/socket.ts:329) | The handler has no try/catch, so a `characterId` from another campaign rejects the handler promise. socket.io drops it: the client gets no inventory snapshot and no error. Every other handler emits `action_error` or `error:rollback`. |
+| ~~S3~~ | ROOM_JOIN has no error path | [socket.ts](apps/server/src/gateway/socket.ts), [sheetErrorEvents.ts](apps/web/src/components/sheet/sheetErrorEvents.ts) | **Fixed 2026-08-21.** The handler now emits `action_error` like every other one. Three things the original note missed: (1) **the unguarded window was wider than the `characterId` branch** — `getCampaignMembershipRole` and the inventory `select` were also awaited outside any try/catch, so a DB fault there was equally silent; both are now covered, and a test drives the inventory read to fail on its own. (2) **State was already partially applied at the throw** — the socket had joined the room and set its context before the character was looked at. Membership was legitimately verified, so the fix reports the character failure and *keeps* the join; tearing it down would drop a player out of a campaign they belong to. A test pins that. (3) **The client filtered `action_error` by event** and listed only three inventory events, so a server-only fix would have stopped the error being silent on the wire while leaving it invisible to the player. The list is now `SHEET_ERROR_EVENTS` in its own module, includes `ROOM_JOIN`, and is named through `SOCKET_EVENTS` instead of loose strings (its own module because `react-refresh/only-export-components` rightly refuses a non-component export from a component file). One message covers "another campaign" and "no such character" — which of the two it was is not the client's business. |
 
 Two smaller findings, recorded but lower value:
 
