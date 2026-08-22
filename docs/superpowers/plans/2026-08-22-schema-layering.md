@@ -939,18 +939,44 @@ git commit -m "refactor: collapse ResourceGrant and ResourceRule into one schema
 
 Add to `packages/shared/src/schemas/__tests__/rules.test.ts`:
 
-```ts
-import { TraitDefinitionSchema } from "@project/shared";
+The behaviour that actually changes is what a `RuleSnapshot` can hold. Today
+`traitsById` uses the minimal schema, which is `.strict()` and whose `modifiers` is
+an *array* — so a real trait cannot go into a snapshot at all.
 
-describe("one TraitDefinitionSchema reaches consumers", () => {
-  it("is the full trait schema, not the minimal RuleSnapshot one", () => {
-    const parsed = TraitDefinitionSchema.parse({
-      id: "trait_test",
-      name: "Test",
-      implementation: { mode: "engine", summary: "Grants a state." },
-    });
-    // the minimal shape has no implementation field and requires modifiers
-    expect(parsed.implementation?.mode).toBe("engine");
+```ts
+import { RuleSnapshotSchema } from "../rules.js";
+
+describe("a RuleSnapshot holds real traits", () => {
+  const snapshotWith = (trait: unknown) => ({
+    itemsById: {},
+    resourcesById: {},
+    weaponsById: {},
+    traitsById: { trait_test: trait },
+  });
+
+  it("accepts a trait with the fixed/choices modifier block", () => {
+    const result = RuleSnapshotSchema.safeParse(
+      snapshotWith({
+        id: "trait_test",
+        name: "Test",
+        modifiers: {
+          fixed: [{ target: "MAX_HP", type: "add", value: 2 }],
+          choices: [],
+        },
+      }),
+    );
+    expect(result.success).toBe(true);
+  });
+
+  it("accepts a trait carrying resources and implementation metadata", () => {
+    const result = RuleSnapshotSchema.safeParse(
+      snapshotWith({
+        id: "trait_test",
+        name: "Test",
+        implementation: { mode: "engine", summary: "Grants a state." },
+      }),
+    );
+    expect(result.success).toBe(true);
   });
 });
 ```
@@ -958,7 +984,7 @@ describe("one TraitDefinitionSchema reaches consumers", () => {
 - [ ] **Step 2: Run test to verify it fails**
 
 Run: `pnpm --filter @project/shared test --run src/schemas/__tests__/rules.test.ts`
-Expected: FAIL — the barrel resolves `TraitDefinitionSchema` to the `traits.ts` one already (it is star-exported and `rules.ts` is not), but `RuleSnapshotSchema.traitsById` still uses the minimal one internally. If this test passes immediately, keep it as a regression guard and continue.
+Expected: FAIL on both — the minimal schema is `.strict()`, rejects `implementation`, and wants `modifiers` as an array rather than a `{fixed, choices}` block.
 
 - [ ] **Step 3: Point RuleSnapshot at the real schema**
 
@@ -1252,7 +1278,27 @@ Expected: PASS
 
 - [ ] **Step 5: Re-point consumers**
 
-Replace the three id regex copies with `CoreRuleIdSchema`. Re-export `DamageTypeSchema` from `affinities.ts` so its importers keep working. Leave the ~10 state-predicate sites alone for now — folding them in changes authored shapes and belongs with the content split in Task 10, where the regenerated diff can be reviewed section by section.
+Replace the three id regex copies (`coreRulePack.ts`, `importPack.ts`, `homebrew.ts`) with `CoreRuleIdSchema`. Re-export `DamageTypeSchema` from `affinities.ts` so its importers keep working.
+
+Apply `StatePredicateSchema` **only where both fields already exist**, by spreading its shape:
+
+```ts
+  ...StatePredicateSchema.shape,
+```
+
+| Site | Has | Action |
+|---|---|---|
+| `modifiers.ts` `BaseModifierSchema` | both | spread the primitive |
+| `dice.ts` `CriticalHitModifierSchema` | both | spread the primitive |
+| `actions.ts` `ApplyStateEffectSchema` | both | spread the primitive |
+| `actions.ts` `EffectStatePredicateSchema` | both | replace the whole local schema |
+| `affinities.ts` (fixed + choice) | `requiredStates` only | leave alone |
+| `proficiencies.ts` (fixed + choice) | `requiredStates` only | leave alone |
+| `dice.ts` `DiceRuleSchema` | `requiredStates` only | leave alone |
+
+The single-field sites are deliberately excluded: spreading the pair into them would *add* a `forbiddenStates` field, changing an authored shape for no reason. The no-diff test in Step 6 is what proves the both-field sites were shape-preserving.
+
+`effects.ts` also carries the pair, but Task 14 deletes that file — leave it.
 
 - [ ] **Step 6: Verify**
 
@@ -1793,9 +1839,34 @@ If no item authors them, delete both members. If any does, add them to `Equipmen
 Add to `packages/shared/src/schemas/__tests__/equipment.test.ts`:
 
 ```ts
-it("is the only authored item shape", async () => {
-  const module = await import("../content/items.js");
-  expect("ItemDefinitionSchema" in module).toBe(false);
+import { EquipmentDefinitionSchema } from "../content/equipment.js";
+
+it("carries everything ItemDefinition and WeaponDefinition did", () => {
+  const parsed = EquipmentDefinitionSchema.parse({
+    id: "item_longsword",
+    name: "Longsword",
+    type: "weapon",
+    weight: 3,
+    equipSlot: "main_hand",
+    weapon: {
+      category: "martial_melee",
+      damageDice: "1d8",
+      versatileDamageDice: "1d10",
+      damageType: "slashing",
+      properties: ["versatile"],
+    },
+  });
+  expect(parsed.weapon?.versatileDamageDice).toBe("1d10");
+  expect(parsed.equipSlot).toBe("main_hand");
+});
+
+it("no longer exports a second authored item shape", async () => {
+  // a regression guard: reintroducing either schema re-opens the drift this
+  // task closes, and nothing else would fail if one came back
+  const items = await import("../content/items.js");
+  const weapons = await import("../content/weapons.js");
+  expect("ItemDefinitionSchema" in items).toBe(false);
+  expect("WeaponDefinitionSchema" in weapons).toBe(false);
 });
 ```
 
