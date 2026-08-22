@@ -36,6 +36,54 @@
                 "huge",
                 "gargantuan"
             ]
+        },
+        "equipmentType": {
+            "type": "string",
+            "enum": [
+                "armor",
+                "weapon",
+                "consumable",
+                "gear",
+                "wondrous"
+            ]
+        },
+        "armorCategory": {
+            "type": "string",
+            "enum": [
+                "light",
+                "medium",
+                "heavy"
+            ]
+        },
+        "equipSlot": {
+            "type": "string",
+            "enum": [
+                "head",
+                "amulet",
+                "cloak",
+                "body",
+                "main_hand",
+                "off_hand",
+                "gloves",
+                "ring",
+                "boots"
+            ]
+        },
+        "startingEquipmentCategoryTag": {
+            "type": "string",
+            "enum": [
+                "category_weapon_simple",
+                "category_weapon_simple_melee",
+                "category_weapon_simple_ranged",
+                "category_weapon_martial",
+                "category_weapon_martial_melee",
+                "category_weapon_martial_ranged",
+                "category_armor_shield",
+                "category_holy_symbol",
+                "category_arcane_focus",
+                "category_druidic_focus",
+                "category_musical_instrument"
+            ]
         }
     }
 }

@@ -28,10 +28,23 @@
                 "$ref": "./spells.schema.json"
             }
         },
-        "classes": { "type": "array" },
-        "subclasses": { "type": "array" },
-        "equipment": { "type": "array" },
-        "feats": { "type": "array" },
-        "backgrounds": { "type": "array" }
+        "classes": {
+            "type": "array"
+        },
+        "subclasses": {
+            "type": "array"
+        },
+        "equipment": {
+            "type": "array",
+            "items": {
+                "$ref": "./equipment.schema.json"
+            }
+        },
+        "feats": {
+            "type": "array"
+        },
+        "backgrounds": {
+            "type": "array"
+        }
     }
 }
