@@ -1,4 +1,8 @@
 import z from "zod";
+import {
+  ModifierScalingSchema,
+  ModifierScalingThresholdSchema,
+} from "./primitives/scaling.js";
 
 const AbilitySchema = z.enum(["STR", "DEX", "CON", "INT", "WIS", "CHA"]);
 
@@ -44,19 +48,11 @@ export const ModifierTypeSchema = z.enum([
   "disadvantage",
 ]);
 
-export const ModifierScalingSchema = z.enum([
-  "total_level",
-  "class_level",
-  "class_level_thresholds",
-  "none",
-]);
-
-export const ModifierScalingThresholdSchema = z
-  .object({
-    minimumLevel: z.number().int().positive(),
-    value: z.number(),
-  })
-  .strict();
+export {
+  ModifierScalingSchema,
+  ModifierScalingThresholdSchema,
+  type ModifierScaling,
+} from "./primitives/scaling.js";
 
 export const ModifierAttackContextSchema = z.enum(["main_hand", "off_hand"]);
 export const ModifierValueSourceSchema = z.enum([
@@ -134,7 +130,6 @@ export const RuntimeModifiersListSchema = z
 
 export type ModifierTarget = z.infer<typeof ModifierTargetSchema>;
 export type ModifierType = z.infer<typeof ModifierTypeSchema>;
-export type ModifierScaling = z.infer<typeof ModifierScalingSchema>;
 export type ModifierAttackContext = z.infer<typeof ModifierAttackContextSchema>;
 export type ModifierValueSource = z.infer<typeof ModifierValueSourceSchema>;
 export type ACFormula = z.infer<typeof ACFormulaSchema>;

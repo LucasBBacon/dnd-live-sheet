@@ -2,6 +2,7 @@ import z from "zod";
 import { EquipmentDefinitionSchema } from "./equipment.js";
 import { ItemDefinitionSchema } from "./items.js";
 import { BaseModifierSchema } from "./modifiers.js";
+import { ResourceThresholdSchema } from "./primitives/scaling.js";
 import {
   WeaponCategorySchema,
   WeaponDefinitionSchema,
@@ -26,13 +27,6 @@ export const RestConditionSchema = z.enum([
   "dawn",
   "never",
 ]);
-
-export const ResourceThresholdSchema = z
-  .object({
-    minimumLevel: z.number().int().nonnegative(),
-    value: z.number().int().nonnegative(),
-  })
-  .strict();
 
 export const ResourceMaxRuleSchema = z.discriminatedUnion("kind", [
   z

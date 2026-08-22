@@ -1,4 +1,5 @@
 import z from "zod";
+import { ResourceThresholdSchema } from "./primitives/scaling.js";
 
 export const ResourceResetSchema = z.enum([
   "short_rest",
@@ -19,16 +20,7 @@ export const ResourceMaxRuleSchema = z.discriminatedUnion("kind", [
     .object({
       kind: z.literal("class_level_thresholds"),
       classId: z.string(),
-      thresholds: z
-        .array(
-          z
-            .object({
-              minimumLevel: z.number().int().positive(),
-              value: z.number().int().nonnegative(),
-            })
-            .strict(),
-        )
-        .min(1),
+      thresholds: z.array(ResourceThresholdSchema).min(1),
     })
     .strict(),
 ]);

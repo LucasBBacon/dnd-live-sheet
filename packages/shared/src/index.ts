@@ -15,6 +15,7 @@ export * from "./schemas/lore.js";
 export * from "./schemas/actors.js";
 export * from "./schemas/modifiers.js";
 export * from "./schemas/prerequisites.js";
+export * from "./schemas/primitives/scaling.js";
 export * from "./schemas/proficiencies.js";
 export * from "./schemas/resources.js";
 // Named rather than star-exported: rules.ts declares its own minimal
@@ -23,7 +24,6 @@ export * from "./schemas/resources.js";
 // ./schemas/weapons.js and silently resolve to the wrong shape.
 export {
   RestConditionSchema,
-  ResourceThresholdSchema,
   ResourceMaxRuleSchema,
   ResourceRuleSchema,
   RuleSnapshotSchema,
