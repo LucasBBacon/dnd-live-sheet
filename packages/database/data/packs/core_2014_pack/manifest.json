@@ -1,4 +1,5 @@
 {
+    "$schema": "../../schemas/manifest.schema.json",
     "packId": "core_2014",
     "version": 1,
     "ruleset": "dnd_5e_2014",

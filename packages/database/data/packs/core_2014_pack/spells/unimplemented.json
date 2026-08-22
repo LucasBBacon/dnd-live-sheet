@@ -1,4 +1,5 @@
 {
+    "$schema": "../../../schemas/segment.schema.json",
     "spells": [
         {
             "id": "spell_eldritch_blast",

@@ -1,4 +1,5 @@
 {
+    "$schema": "../../../schemas/segment.schema.json",
     "traits": [
         {
             "id": "trait_barbarian_mult_prof_armor",

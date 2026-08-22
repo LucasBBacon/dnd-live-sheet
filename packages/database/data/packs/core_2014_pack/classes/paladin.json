@@ -1,4 +1,5 @@
 {
+    "$schema": "../../../schemas/segment.schema.json",
     "classes": [
         {
             "id": "class_paladin",

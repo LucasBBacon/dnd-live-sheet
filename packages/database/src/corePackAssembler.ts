@@ -53,7 +53,9 @@ export const assembleCoreRulePack = async (
   const manifestPath = path.join(packDir, "manifest.json");
   const manifest = await readJson(manifestPath, "pack manifest");
 
-  const { segments, ...packMeta } = manifest;
+  // $schema is an editor pointer, not pack identity. CoreRulePackSchema.pack is
+  // strict, so it is stripped here alongside the assembly-only segment list.
+  const { segments, $schema: _schemaPointer, ...packMeta } = manifest;
 
   if (!Array.isArray(segments)) {
     throw new CoreRulePackLoadError(

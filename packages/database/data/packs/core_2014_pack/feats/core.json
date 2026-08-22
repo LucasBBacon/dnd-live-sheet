@@ -1,4 +1,5 @@
 {
+    "$schema": "../../../schemas/segment.schema.json",
     "feats": [
         {
             "id": "feat_alert",

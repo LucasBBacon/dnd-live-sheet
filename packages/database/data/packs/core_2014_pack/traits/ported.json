@@ -1,4 +1,5 @@
 {
+    "$schema": "../../../schemas/segment.schema.json",
     "traits": [
         {
             "id": "feat_tough",
