@@ -744,11 +744,27 @@ git commit -m "refactor: one threshold shape with per-use value constraints"
 ## Task 6: One resource schema
 
 **Files:**
-- Modify: `packages/shared/src/schemas/resources.ts`
+- Modify: `packages/shared/src/schemas/resources.ts` (rewrite)
 - Modify: `packages/shared/src/schemas/rules.ts:20-67`
-- Modify: `packages/shared/src/schemas/traits.ts:82`
+- Modify: `packages/shared/src/schemas/traits.ts:7,82`
 - Modify: `packages/shared/src/schemas/coreRulePack.ts:11,220`
+- Modify: `packages/shared/src/index.ts`
+- Modify: `packages/engine/src/calculators/resources.ts:1,13,32-40,59`
+- Modify: `packages/engine/src/utils/resourceRules.ts`
+- Modify (data): 16 trait-resource blocks across 6 pack files — see Step 5
 - Test: `packages/shared/src/schemas/__tests__/rules.test.ts`
+- Test: `packages/engine/src/calculators/__tests__/resources.test.ts` (the `makeGrant` helper and its call sites)
+
+**Scope containment — authored renames, runtime does not.**
+
+Only the *authored* schema renames to `resetCondition`. `RuntimeResource.resetOn` in
+`packages/engine/src/calculators/resources.ts:13` keeps its name — it is a runtime
+shape, which is precisely the layer distinction this plan exists to draw. So
+`resources.ts:59` becomes `resetOn: grant.resetCondition`, and the four reads at
+`resources.ts:142-156` are untouched, as are the `RuntimeResource` literals in
+`rests.test.ts` and `characterSheetStore.test.ts`. Only literals of the *authored*
+shape (`makeGrant` in `resources.test.ts`, the grant literals in
+`actionResolver.test.ts`) change.
 
 **Interfaces:**
 - Consumes: `ResourceThresholdSchema` from Task 5
@@ -893,17 +909,66 @@ import { ResourceSchema } from "./resources.js";
 
 In `packages/shared/src/schemas/rules.ts`, delete `RestConditionSchema`, `ResourceMaxRuleSchema`, `ResourceRuleSchema` and their type exports, and re-point `RuleSnapshotSchema.resourcesById` at `ResourceSchema`.
 
-- [ ] **Step 5: Run tests to verify they pass**
+- [ ] **Step 5: Migrate the authored pack data**
 
-Run: `pnpm --filter @project/shared test --run`
-Expected: PASS. Any test still referencing `resetOn` or `ResourceGrant` must be updated to `resetCondition` / `ResourceSchema`.
+The unified schema is `.strict()` and requires `maxRule`, so the 16 trait-embedded
+resources that author the old `maxCharges` + `resetOn` pair must be converted. Each
+looks like this:
+
+```json
+                {
+                    "id": "dragonborn_breath_charge",
+                    "name": "Breath Weapon",
+                    "maxCharges": 1,
+                    "resetOn": "short_rest"
+                }
+```
+
+and becomes:
+
+```json
+                {
+                    "id": "dragonborn_breath_charge",
+                    "name": "Breath Weapon",
+                    "maxRule": { "kind": "fixed", "value": 1 },
+                    "resetCondition": "short_rest"
+                }
+```
+
+The 16 sites, all inside `traits[].resources[]`:
+
+| File | Count | Reset values |
+|---|---|---|
+| `races/dragonborn.json` | 10 | `short_rest` |
+| `races/elf.json` | 2 | `dawn` |
+| `races/tiefling.json` | 2 | `long_rest` |
+| `races/half-orc.json` | 1 | `long_rest` |
+| `classes/barbarian.json` | 1 | `long_rest` |
+
+Every one currently has `maxCharges: 1`, so every `maxRule` is
+`{ "kind": "fixed", "value": 1 }` — but verify each rather than assuming.
+`resources/core.json` already authors `resetCondition` and `maxRule` and needs no change.
+
+Use the Edit tool for every one of these, and re-check the six files kept CRLF
+endings afterwards.
 
 - [ ] **Step 6: Fix the engine consumers**
 
-`packages/engine/src/calculators/resources.ts` reads `grant.resetOn` and takes `ResourceMaxRule`; `packages/engine/src/utils/resourceRules.ts` takes `ResourceRule`. Update both to `resetCondition` and `Resource`.
+In `packages/engine/src/calculators/resources.ts`:
+- line 1: import `Resource` instead of `ResourceGrant`
+- line 13: `resetOn: Resource["resetCondition"]` — the runtime field name stays
+- lines 32-40: `grants: Resource[]`, and drop the `grant.maxRule ?? { kind: "fixed", value: grant.maxCharges ?? 1 }` fallback, since `maxRule` is now required. Read `grant.maxRule` directly.
+- line 59: `resetOn: grant.resetCondition`
+
+In `packages/engine/src/utils/resourceRules.ts`, `ResourceRule` becomes `Resource` and `rule.resetCondition` replaces any `resetCondition`/`resetOn` reference.
+
+Update the authored-shape test literals: `makeGrant` in
+`packages/engine/src/calculators/__tests__/resources.test.ts:10` and its call sites,
+and the grant literals in `actionResolver.test.ts:989,1049`. Leave `RuntimeResource`
+literals alone.
 
 Run: `pnpm --filter @project/engine test --run && pnpm --filter @project/engine typecheck`
-Expected: PASS. The `total_level_thresholds` branch in `resolveMaxCharges` is now genuinely reachable.
+Expected: PASS (733 tests). The `total_level_thresholds` branch in `resolveMaxCharges` is now genuinely reachable.
 
 - [ ] **Step 7: Regenerate and review**
 
