@@ -91,18 +91,29 @@ not catch `import type`, which is how most of these schemas reference each other
 
 ## Generated schemas
 
-Three schemas are generated from Zod and committed. They are build outputs, never
+Two schemas are generated from Zod and committed. They are build outputs, never
 edited by hand.
 
 | Generated file | Source | Validates | Verified output |
 | --- | --- | --- | --- |
-| `pack.schema.json` | `CoreRulePackSchema` | An assembled pack | 69,705 bytes, 11 sections |
-| `segment.schema.json` | `CoreRulePackSchema.omit({ pack: true }).partial()` | One segment file | 68,619 bytes, `required: []` |
-| `manifest.schema.json` | `CoreRulePackSchema.shape.pack.extend({ segments: z.array(z.string()) })` | `manifest.json` | 1,180 bytes, 8 properties |
+| `segment.schema.json` | `CoreRulePackSchema.omit({ pack: true }).partial()` | The 30 segment files | 68,619 bytes, `required: []` |
+| `manifest.schema.json` | `CoreRulePackSchema.shape.pack.extend({ segments })` | `manifest.json` | 1,180 bytes, 8 properties |
 
-All three derivations were run against the current schemas before this design was
-written. None throws, and the segment schema was confirmed to accept `{"traits": []}`
-and reject a mistyped section key.
+Both derivations were run against the current schemas before this design was written.
+Neither throws, and the segment schema was confirmed to accept `{"traits": []}` and
+reject a mistyped section key.
+
+A whole-pack `pack.schema.json` is deliberately **not** emitted. Between them these
+two cover the entire `CoreRulePackSchema` surface — the segment schema every content
+section, the manifest schema the `pack` envelope — so a third file would add no
+validation reach and would have no consumer, packs being assembled from segments
+rather than loaded as one file. This codebase has repeatedly had to unpick dead data;
+a generated artifact nothing reads is exactly that.
+
+Generation uses `target: "draft-7"` rather than the zod default of draft 2020-12.
+Draft-07 is what `vscode-json-languageservice` supports fully, and editor
+autocomplete for pack authors is a main reason these files exist. It also lets the
+ajv test use ajv's default export with no dialect plugin.
 
 ### Why a segment schema is needed
 
@@ -138,10 +149,26 @@ Six steps. Each ends with the full suite green and is independently revertable.
 
 ### Step 1 — Generate the schemas, delete the hand-written ones
 
-Add a generation script, commit the three generated files, delete all 15 hand-written
-schemas, add `"$schema"` to the 32 pack files, and add `equipment/armor.json` to
-`manifest.json` — it was committed in `dac8728` but never listed, so the assembler
-has never read it.
+Add a generation script, commit the two generated files, delete all 15 hand-written
+schemas, and add `"$schema"` to the pack files.
+
+`equipment/armor.json` stays out of the manifest. The audit flagged it as committed
+but unlisted; on inspection it holds a single empty object, so it is an unfinished
+scaffold rather than orphaned content — adding it to the manifest would fail
+`CoreEquipmentSchema` on a missing id, name and lore. It is left exactly as it is,
+and gets no `$schema` key, since it does not yet match the segment schema.
+
+### `$schema` must be allowed, and stripped
+
+Adding a `"$schema"` key to pack files collides with strictness in two places, both
+of which the generation and load paths must handle:
+
+- The derived segment schema inherits `.strict()`, so it would reject `$schema` as
+  an unknown key. Each of the two generation sources is therefore extended with
+  `$schema: z.string().optional()` before emitting.
+- `assembleCoreRulePack` spreads the manifest's non-`segments` keys into `packMeta`,
+  which is parsed by the `.strict()` pack envelope. The assembler must strip
+  `$schema` alongside `segments`.
 
 Two new tests: every segment validates against `segment.schema.json` under ajv, and
 regenerating produces no diff.
@@ -244,7 +271,8 @@ losing the value of the rest.
 Applies whether or not step 6 is taken, since it is explicitly droppable:
 
 - No file under `packages/database/data/schemas/` is hand-written.
-- Every pack file declares a `$schema`, and every segment validates against it.
+- Every pack file the manifest lists declares a `$schema` and validates against it.
+  (`equipment/armor.json` is not listed and is excluded.)
 - Regeneration produces no diff.
 - `index.ts` star-exports every module, with no exception list.
 - The eslint layering rule passes.
