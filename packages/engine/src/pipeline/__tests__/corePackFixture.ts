@@ -51,8 +51,11 @@ export const corePack = (): CoreRulePack => {
 
   // the manifest is the pack's identity block plus assembly metadata; only the
   // identity half may reach the pack, whose meta schema is strict
-  const { segments, ...packMeta } = readSegment("manifest.json") as {
+  const { segments, $schema: _schemaPointer, ...packMeta } = readSegment(
+    "manifest.json",
+  ) as {
     segments: string[];
+    $schema?: string;
   };
 
   const merged = segments.reduce<Record<string, unknown[]>>(
