@@ -1,6 +1,6 @@
 import { readFileSync, readdirSync } from "node:fs";
 import path from "node:path";
-import Ajv from "ajv";
+import { Ajv } from "ajv";
 import { describe, expect, it } from "vitest";
 import {
   buildPackSchemas,
