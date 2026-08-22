@@ -1,0 +1,1145 @@
+<title>Schema Errata</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Literata:opsz,wght@7..72,400;7..72,600;7..72,700&display=swap">
+
+<style>
+  :root {
+    --ground: #ecebf0;
+    --surface: #f8f8fb;
+    --surface-sunk: #e2e1ea;
+    --ink: #17161d;
+    --ink-soft: #575467;
+    --ink-faint: #8b8797;
+    --rule: #d4d2de;
+    --rule-firm: #b9b6c6;
+    --accent: #0d6e75;
+    --accent-wash: #dceded;
+    --crit: #a32b23;
+    --crit-wash: #f4e0de;
+    --warn: #8a5a00;
+    --warn-wash: #f4e9d4;
+    --ok: #1b6b4c;
+    --ok-wash: #dcebe3;
+
+    --measure: 68ch;
+    --step--1: 0.815rem;
+    --step-0: 1rem;
+    --step-1: 1.2rem;
+    --step-2: 1.5rem;
+    --step-3: 2rem;
+    --step-4: 2.75rem;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ground: #131218;
+      --surface: #1c1b23;
+      --surface-sunk: #0e0d12;
+      --ink: #e9e8ef;
+      --ink-soft: #a6a3b3;
+      --ink-faint: #757181;
+      --rule: #2f2d3a;
+      --rule-firm: #423f50;
+      --accent: #52c5cb;
+      --accent-wash: #16383b;
+      --crit: #f0857c;
+      --crit-wash: #3a1e1c;
+      --warn: #e0a93f;
+      --warn-wash: #33280f;
+      --ok: #5fc79a;
+      --ok-wash: #14301f;
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --ground: #131218;
+    --surface: #1c1b23;
+    --surface-sunk: #0e0d12;
+    --ink: #e9e8ef;
+    --ink-soft: #a6a3b3;
+    --ink-faint: #757181;
+    --rule: #2f2d3a;
+    --rule-firm: #423f50;
+    --accent: #52c5cb;
+    --accent-wash: #16383b;
+    --crit: #f0857c;
+    --crit-wash: #3a1e1c;
+    --warn: #e0a93f;
+    --warn-wash: #33280f;
+    --ok: #5fc79a;
+    --ok-wash: #14301f;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--ground);
+    color: var(--ink);
+    font-family: "Archivo", system-ui, -apple-system, "Segoe UI", sans-serif;
+    font-size: var(--step-0);
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .wrap {
+    max-width: 1040px;
+    margin: 0 auto;
+    padding: 0 24px 96px;
+  }
+
+  /* ---------- masthead ---------- */
+
+  .masthead {
+    padding: 56px 0 32px;
+    border-bottom: 2px solid var(--ink);
+  }
+
+  .eyebrow {
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: var(--step--1);
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin: 0 0 14px;
+  }
+
+  h1 {
+    font-family: "Literata", Georgia, serif;
+    font-weight: 700;
+    font-size: var(--step-4);
+    line-height: 1.06;
+    letter-spacing: -0.02em;
+    text-wrap: balance;
+    margin: 0 0 18px;
+  }
+
+  .thesis {
+    max-width: var(--measure);
+    font-size: var(--step-1);
+    color: var(--ink-soft);
+    margin: 0;
+  }
+
+  .tally {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0;
+    margin: 36px 0 0;
+    border-top: 1px solid var(--rule);
+  }
+
+  .tally div {
+    flex: 1 1 180px;
+    padding: 16px 20px 16px 0;
+    border-right: 1px solid var(--rule);
+  }
+
+  .tally div:last-child { border-right: 0; }
+  .tally div + div { padding-left: 20px; }
+
+  .tally b {
+    display: block;
+    font-family: "Literata", Georgia, serif;
+    font-size: var(--step-3);
+    font-weight: 700;
+    line-height: 1.1;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .tally span {
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: var(--step--1);
+    color: var(--ink-soft);
+    letter-spacing: 0.02em;
+  }
+
+  /* ---------- sections ---------- */
+
+  section { padding-top: 64px; }
+
+  .part-head {
+    display: flex;
+    align-items: baseline;
+    gap: 16px;
+    border-bottom: 1px solid var(--ink);
+    padding-bottom: 10px;
+    margin-bottom: 28px;
+  }
+
+  .part-head .tag {
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: var(--step--1);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--accent);
+    white-space: nowrap;
+  }
+
+  h2 {
+    font-family: "Literata", Georgia, serif;
+    font-size: var(--step-3);
+    font-weight: 700;
+    line-height: 1.15;
+    letter-spacing: -0.015em;
+    text-wrap: balance;
+    margin: 0;
+  }
+
+  h3 {
+    font-family: "Literata", Georgia, serif;
+    font-size: var(--step-2);
+    font-weight: 600;
+    line-height: 1.25;
+    text-wrap: balance;
+    margin: 48px 0 12px;
+  }
+
+  h4 {
+    font-family: "Archivo", sans-serif;
+    font-size: var(--step-0);
+    font-weight: 700;
+    letter-spacing: -0.005em;
+    margin: 32px 0 8px;
+  }
+
+  p { max-width: var(--measure); margin: 0 0 16px; }
+  p.wide { max-width: none; }
+
+  ul, ol { max-width: var(--measure); padding-left: 22px; margin: 0 0 16px; }
+  li { margin-bottom: 8px; }
+  li::marker { color: var(--ink-faint); }
+
+  code {
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: 0.88em;
+    background: var(--surface-sunk);
+    border: 1px solid var(--rule);
+    border-radius: 3px;
+    padding: 0.08em 0.34em;
+    white-space: nowrap;
+  }
+
+  strong { font-weight: 600; }
+
+  .lede {
+    font-size: var(--step-1);
+    color: var(--ink-soft);
+    max-width: var(--measure);
+    margin: 0 0 24px;
+  }
+
+  /* ---------- callout ---------- */
+
+  .callout {
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-left: 3px solid var(--accent);
+    padding: 20px 24px;
+    margin: 28px 0;
+  }
+
+  .callout.crit { border-left-color: var(--crit); }
+  .callout p:last-child { margin-bottom: 0; }
+
+  .callout .kicker {
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: var(--step--1);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    display: block;
+    margin-bottom: 8px;
+  }
+
+  /* ---------- tables ---------- */
+
+  .scroller {
+    overflow-x: auto;
+    margin: 24px 0 28px;
+    border: 1px solid var(--rule);
+    background: var(--surface);
+  }
+
+  table {
+    border-collapse: collapse;
+    width: 100%;
+    min-width: 640px;
+    font-size: var(--step--1);
+  }
+
+  caption {
+    caption-side: top;
+    text-align: left;
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: var(--step--1);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--rule);
+  }
+
+  th {
+    text-align: left;
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-weight: 600;
+    font-size: 0.78rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    padding: 10px 16px;
+    border-bottom: 1px solid var(--rule-firm);
+    vertical-align: bottom;
+  }
+
+  td {
+    padding: 11px 16px;
+    border-bottom: 1px solid var(--rule);
+    vertical-align: top;
+    line-height: 1.5;
+  }
+
+  tbody tr:last-child td { border-bottom: 0; }
+
+  td.num {
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-variant-numeric: tabular-nums;
+    text-align: right;
+    white-space: nowrap;
+  }
+
+  td code, th code { white-space: nowrap; }
+
+  /* ---------- chips ---------- */
+
+  .chip {
+    display: inline-block;
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: 0.72rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    padding: 2px 7px;
+    border-radius: 2px;
+    border: 1px solid currentColor;
+    white-space: nowrap;
+    font-weight: 500;
+  }
+
+  .chip.crit { color: var(--crit); background: var(--crit-wash); }
+  .chip.warn { color: var(--warn); background: var(--warn-wash); }
+  .chip.ok   { color: var(--ok);   background: var(--ok-wash); }
+  .chip.flat { color: var(--ink-faint); background: transparent; }
+
+  /* ---------- figures ---------- */
+
+  figure {
+    margin: 32px 0;
+    padding: 28px 24px 20px;
+    background: var(--surface);
+    border: 1px solid var(--rule);
+  }
+
+  figure .scroller {
+    margin: 0;
+    border: 0;
+    background: transparent;
+  }
+
+  figure svg {
+    display: block;
+    width: 100%;
+    max-width: 100%;
+    height: auto;
+    min-width: 620px;
+    color: var(--ink);
+  }
+
+  figcaption {
+    margin-top: 18px;
+    padding-top: 14px;
+    border-top: 1px solid var(--rule);
+    font-size: var(--step--1);
+    color: var(--ink-soft);
+    max-width: var(--measure);
+  }
+
+  .dg-box { fill: var(--surface-sunk); stroke: var(--rule-firm); stroke-width: 1; }
+  .dg-box-accent { fill: var(--accent-wash); stroke: var(--accent); stroke-width: 1.5; }
+  .dg-line { stroke: var(--ink-faint); stroke-width: 1.4; fill: none; }
+  .dg-line-accent { stroke: var(--accent); stroke-width: 1.8; fill: none; }
+  .dg-dash { stroke: var(--ink-faint); stroke-width: 1.4; fill: none; stroke-dasharray: 5 4; }
+  .dg-crit-line { stroke: var(--crit); stroke-width: 1.8; fill: none; }
+  .dg-head { fill: var(--ink-faint); }
+  .dg-head-accent { fill: var(--accent); }
+  .dg-t {
+    fill: var(--ink);
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: 12.5px;
+  }
+  .dg-t-sm {
+    fill: var(--ink-soft);
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: 11px;
+  }
+  .dg-t-panel {
+    fill: var(--ink);
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+  }
+  .dg-t-accent { fill: var(--accent); }
+  .dg-t-crit { fill: var(--crit); }
+  .dg-divider { stroke: var(--rule-firm); stroke-width: 1; stroke-dasharray: 3 4; }
+
+  /* ---------- proposal tree ---------- */
+
+  pre.tree {
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: var(--step--1);
+    line-height: 1.75;
+    background: var(--surface-sunk);
+    border: 1px solid var(--rule);
+    padding: 20px 22px;
+    overflow-x: auto;
+    margin: 24px 0 28px;
+    color: var(--ink);
+  }
+
+  pre.tree b { color: var(--accent); font-weight: 600; }
+  pre.tree i { color: var(--ink-faint); font-style: normal; }
+
+  /* ---------- ordered plan ---------- */
+
+  .plan { counter-reset: step; list-style: none; padding: 0; max-width: none; }
+
+  .plan > li {
+    counter-increment: step;
+    display: grid;
+    grid-template-columns: 44px 1fr;
+    gap: 18px;
+    padding: 20px 0;
+    border-bottom: 1px solid var(--rule);
+    margin: 0;
+  }
+
+  .plan > li::before {
+    content: counter(step, decimal-leading-zero);
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: var(--step-0);
+    font-weight: 600;
+    color: var(--accent);
+    font-variant-numeric: tabular-nums;
+    padding-top: 1px;
+  }
+
+  .plan h4 { margin: 0 0 6px; }
+  .plan p { margin: 0 0 8px; }
+  .plan p:last-child { margin-bottom: 0; }
+
+  .footnote {
+    margin-top: 64px;
+    padding-top: 20px;
+    border-top: 1px solid var(--rule);
+    font-size: var(--step--1);
+    color: var(--ink-faint);
+    max-width: var(--measure);
+  }
+
+  @media (max-width: 640px) {
+    :root { --step-4: 2.1rem; --step-3: 1.6rem; --step-2: 1.3rem; }
+    .wrap { padding: 0 18px 64px; }
+    .tally div { border-right: 0; border-bottom: 1px solid var(--rule); flex-basis: 100%; padding-left: 0 !important; }
+    .plan > li { grid-template-columns: 32px 1fr; gap: 12px; }
+  }
+</style>
+
+<div class="wrap">
+
+  <header class="masthead">
+    <p class="eyebrow">packages/shared · packages/database</p>
+    <h1>Schema Errata</h1>
+    <p class="thesis">
+      Two schema systems describe the same rulebook. The Zod side is correct but unlayered;
+      the JSON side is layered after the Zod side and is simply wrong — and nothing loads it,
+      so it has never once said so.
+    </p>
+
+    <div class="tally">
+      <div>
+        <b>12 / 30</b>
+        <span>pack segments fail their own JSON schema</span>
+      </div>
+      <div>
+        <b>0</b>
+        <span>files that load the JSON schemas</span>
+      </div>
+      <div>
+        <b>3&times;</b>
+        <span>schemas for one equipment concept</span>
+      </div>
+      <div>
+        <b>7&times;</b>
+        <span>places an ability score is defined</span>
+      </div>
+    </div>
+  </header>
+
+  <section>
+    <div class="part-head">
+      <span class="tag">Verdict</span>
+      <h2>The two halves have opposite problems</h2>
+    </div>
+
+    <p class="lede">
+      Your instinct is right, but the two halves are not sick in the same way, and
+      reorganising them together would repeat the mistake that produced the drift.
+    </p>
+
+    <p>
+      The <strong>Zod schemas are load-bearing and correct.</strong> The core pack assembles,
+      validates, and 84 database tests pass. What is wrong there is structural: 22 files sit
+      flat in one directory with no separation between authored content, engine runtime state,
+      and wire payloads, so a single concept is defined in whichever file first needed it — and
+      then again in the next.
+    </p>
+
+    <p>
+      The <strong>JSON schemas are inert and factually wrong.</strong> No pack file declares a
+      <code>$schema</code>, no TypeScript imports them, no test asserts them. I validated the real
+      pack against them with ajv and 12 of 30 segments fail — every failure is a defect in the
+      JSON schema, not the data. They have been silently rotting since they were written, because
+      hand-mirroring a schema is a job with no feedback loop.
+    </p>
+
+    <div class="callout crit">
+      <span class="kicker">The load-bearing conclusion</span>
+      <p>
+        Do not reorganise the JSON schemas by hand. Every one of the six drift classes below
+        exists because a human had to remember to mirror a Zod change. Generate them from the
+        Zod authored-content layer instead, and the mirroring problem stops existing. That
+        reframes the refactor: the JSON layout is an <em>output</em>, so the only structural
+        decision that matters is how the Zod side is layered.
+      </p>
+    </div>
+  </section>
+
+  <section>
+    <div class="part-head">
+      <span class="tag">Part A</span>
+      <h2>The JSON schemas do not validate anything</h2>
+    </div>
+
+    <p>
+      I registered all 15 schemas in ajv, resolved the cross-file <code>$ref</code>s, and ran every
+      segment the manifest lists through <code>corePackSegment.schema.json</code>. Six distinct
+      drift classes, all verified:
+    </p>
+
+    <div class="scroller">
+      <table>
+        <caption>Verified drift — real pack data against the committed JSON schemas</caption>
+        <thead>
+          <tr>
+            <th>Path</th>
+            <th class="num">Hits</th>
+            <th>What the JSON schema says</th>
+            <th>What Zod and the data say</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>traits[].implementation.mode</code></td>
+            <td class="num">456</td>
+            <td><code>engine | manual_sheet_helper</code></td>
+            <td>Gained <code>unimplemented</code>; the mirror never followed</td>
+          </tr>
+          <tr>
+            <td><code>traits[].actions[].effect</code></td>
+            <td class="num">70</td>
+            <td><code>areaOfEffect</code> and <code>abilityCheckEffect</code> hold each other's bodies</td>
+            <td>Every Dragonborn breath action is unauthorable</td>
+          </tr>
+          <tr>
+            <td><code>races[].subraces</code></td>
+            <td class="num">9</td>
+            <td><code>type: "array"</code></td>
+            <td>A record keyed by subrace id</td>
+          </tr>
+          <tr>
+            <td><code>races[].lore</code></td>
+            <td class="num">9</td>
+            <td>Required</td>
+            <td><code>.optional()</code> — and no race authors it</td>
+          </tr>
+          <tr>
+            <td><code>resources[]</code></td>
+            <td class="num">2</td>
+            <td>Requires <code>resetOn</code></td>
+            <td>Packs author <code>resetCondition</code></td>
+          </tr>
+          <tr>
+            <td><code>diceRules[].requiredStates[]</code></td>
+            <td class="num">2</td>
+            <td>An array of arrays of strings</td>
+            <td><code>z.array(z.string())</code></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p>
+      The <code>subraces</code> one is worth dwelling on. <code>coreRulePack.ts</code> carries a
+      comment saying the array shape "never agreed with either, which is why no pack has ever
+      validated" — the Zod side was fixed, the JSON side still holds the exact bug the comment
+      describes.
+    </p>
+
+    <h3>Defects the pack data happens not to reach</h3>
+
+    <p>Reading the schemas turns up four more that no current segment exercises:</p>
+
+    <div class="scroller">
+      <table>
+        <caption>Latent defects</caption>
+        <thead>
+          <tr>
+            <th>File</th>
+            <th>Defect</th>
+            <th>Effect</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>resources.schema.json</code></td>
+            <td>The <code>fixed</code> branch sets <code>required: ["type"]</code> on an object whose property is <code>kind</code>, under <code>additionalProperties: false</code></td>
+            <td><span class="chip crit">Unsatisfiable</span> No object can ever match it</td>
+          </tr>
+          <tr>
+            <td><code>equipment.schema.json</code></td>
+            <td>Declares <code>$id: "equipments.schema.json"</code> — filename is <code>equipment</code></td>
+            <td><span class="chip crit">Ref break</span> Resolvers keying on <code>$id</code> cannot find it</td>
+          </tr>
+          <tr>
+            <td><code>actions.schema.json</code></td>
+            <td><code>actionActivation</code> omits <code>attack</code>; <code>actionEffect</code> omits <code>no_effect</code>; <code>macro</code> may nest into itself where Zod forbids it</td>
+            <td><span class="chip warn">Drift</span> Valid content rejected, invalid content accepted</td>
+          </tr>
+          <tr>
+            <td><code>spells.schema.json</code>, <code>modifiers.schema.json</code></td>
+            <td><code>resourceId</code> not required on the <code>resource</code> branch; <code>appliesWhen</code> absent from <code>baseModifier</code></td>
+            <td><span class="chip warn">Drift</span> Zod's <code>superRefine</code> rules have no mirror</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>The structural fault underneath all of it</h3>
+
+    <p>
+      Individually these are typos. Together they say something sharper: the JSON schemas were
+      organised by <em>mirroring the Zod filenames</em>, which is the wrong organising principle,
+      because the Zod filenames are not organised around what a pack author writes.
+    </p>
+
+    <p>Three symptoms of that single mistake:</p>
+
+    <ul>
+      <li>
+        <strong>The file names lie about which shape they hold.</strong>
+        <code>spells.schema.json</code> models the trait-embedded <em>grant block</em>, but
+        <code>corePackSegment</code> wires it to the pack's <code>spells</code> array, which is a
+        <em>spell definition</em> — a completely different object. Same mistake in
+        <code>resources.schema.json</code>. Both pass anyway, because neither sets
+        <code>additionalProperties: false</code> or any <code>required</code> that bites, so they
+        validate vacuously.
+      </li>
+      <li>
+        <strong>They model no consistent layer.</strong> <code>traits.schema.json</code> includes
+        <code>isStartingProficiency</code>, so it models <code>CoreTraitSchema</code>.
+        <code>equipment.schema.json</code> omits <code>lore</code>, <code>isBundle</code>,
+        <code>bundleContents</code> and <code>implementation</code>, so it models the base
+        <code>EquipmentDefinitionSchema</code>. A pack author cannot tell which layer they are
+        writing against.
+      </li>
+      <li>
+        <strong><code>common.schema.json</code> is a grab-bag, not a layer.</strong> It holds
+        <code>equipmentType</code>, <code>armorCategory</code>, <code>equipSlot</code> and
+        <code>startingEquipmentCategoryTag</code> — all equipment concepts — while
+        <code>weaponCategory</code> lives in <code>weapons</code> and <code>damageType</code> in
+        <code>affinities</code>. It also holds <code>creatureSize</code> while
+        <code>creatureType</code> lives elsewhere. "Common" here means "whatever needed two
+        referrers first".
+      </li>
+    </ul>
+
+    <p>
+      <code>corePackSegment.schema.json</code> itself declares <code>classes</code>,
+      <code>subclasses</code>, <code>feats</code> and <code>backgrounds</code> as bare
+      <code>{"type": "array"}</code>, and omits <code>proficiencies</code> entirely.
+      Roughly half the pack has no schema at all.
+    </p>
+  </section>
+
+  <section>
+    <div class="part-head">
+      <span class="tag">Part B</span>
+      <h2>The Zod schemas: correct, and completely unlayered</h2>
+    </div>
+
+    <p class="lede">
+      This is where your "concepts spread throughout the files" instinct is exactly right — and
+      it is worse than scatter. Several concepts are not merely spread, they are
+      <em>independently redefined</em>, with the copies already drifted apart.
+    </p>
+
+    <h3>One concept, several schemas</h3>
+
+    <div class="scroller">
+      <table>
+        <caption>Duplicated definitions</caption>
+        <thead>
+          <tr>
+            <th>Concept</th>
+            <th>Defined in</th>
+            <th>How the copies disagree</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>An item</strong></td>
+            <td>
+              <code>items.ts</code> · <code>equipment.ts</code> · <code>weapons.ts</code>
+              <br><span class="chip flat">+ equipmentProjection.ts adapter</span>
+            </td>
+            <td>
+              <code>EquipmentDefinition</code> is the authored source and re-declares every
+              <code>ItemDefinition</code> field; <code>WeaponCapability</code> re-declares every
+              <code>WeaponDefinition</code> field minus id and name.
+              <code>ItemType</code> carries <code>tool</code> and <code>loot</code> that
+              <code>EquipmentType</code> lacks, so they are <strong>unauthorable</strong>.
+            </td>
+          </tr>
+          <tr>
+            <td><strong>A resource</strong></td>
+            <td><code>resources.ts</code> · <code>rules.ts</code></td>
+            <td>
+              <code>ResourceGrant</code> (on traits) uses <code>resetOn</code>;
+              <code>ResourceRule</code> (on packs) uses <code>resetCondition</code>. The reset
+              enums <strong>overlap but neither contains the other</strong> — trait resources can
+              reset on <code>initiative_roll</code>, pack resources on <code>long_rest_half</code>,
+              and neither can do the other's.
+            </td>
+          </tr>
+          <tr>
+            <td><strong>A trait</strong></td>
+            <td><code>traits.ts</code> · <code>rules.ts</code> · <code>effects.ts</code></td>
+            <td>
+              Two exports literally named <code>TraitDefinitionSchema</code> (full vs.
+              <code>{id, name, modifiers}</code>). Meanwhile <code>TraitEffect</code> is a third,
+              incompatible vocabulary for "what a trait grants" — it is the database column type
+              and the homebrew/import payload shape, so <strong>homebrew traits and pack traits
+              cannot express the same rules</strong>.
+            </td>
+          </tr>
+          <tr>
+            <td><strong>A level threshold</strong></td>
+            <td><code>modifiers.ts</code> · <code>rules.ts</code> · <code>resources.ts</code></td>
+            <td>
+              Three <code>{minimumLevel, value}</code> objects that have already drifted:
+              <code>positive</code> vs <code>nonnegative</code>, <code>number</code> vs
+              <code>int</code>.
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="callout crit">
+      <span class="kicker">Live consequence of the name collision</span>
+      <p>
+        <code>index.ts</code> star-exports <code>resources.js</code> <em>and</em> named-exports
+        <code>ResourceMaxRuleSchema</code> from <code>rules.js</code>. An explicit export beats a
+        star export, so <code>ResourceMaxRule</code> from <code>@project/shared</code> is always
+        the three-kind version and <code>resources.ts</code>'s two-kind version is
+        <strong>unreachable through the barrel</strong>.
+      </p>
+      <p>
+        The visible result: <code>ResourceManager.resolveMaxCharges</code> handles
+        <code>total_level_thresholds</code>, but it is only ever called with a
+        <code>ResourceGrant.maxRule</code>, whose union does not contain that member. An author who
+        writes it on a trait gets a parse error from a schema sitting next to a calculator that
+        looks like it supports them. The barrel already carries a hand-written comment explaining
+        the collision — a note where a fix belongs.
+      </p>
+    </div>
+
+    <h3>Primitives with no home, so redefined at each use</h3>
+
+    <div class="scroller">
+      <table>
+        <caption>Repeated inline definitions</caption>
+        <thead>
+          <tr>
+            <th>Primitive</th>
+            <th class="num">Sites</th>
+            <th>The damage</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Ability score</strong></td>
+            <td class="num">7</td>
+            <td>
+              Two casings, no shared export. <code>modifiers.ts</code> has a private uppercase
+              <code>AbilitySchema</code>; <code>effects.ts</code> and
+              <code>prerequisites.ts</code> use lowercase enums; <code>character.ts</code> inlines
+              the six keys twice, with different bounds (1–30 vs 3–18).
+            </td>
+          </tr>
+          <tr>
+            <td><strong>State predicate</strong></td>
+            <td class="num">~10</td>
+            <td>
+              <code>requiredStates</code>/<code>forbiddenStates</code> re-declared across
+              modifiers, dice, affinities, proficiencies, effects and actions. Both
+              <code>effects.ts</code> and <code>actions.ts</code> carry the pair
+              <em>and</em> a nested <code>predicates</code> object holding the same two fields —
+              two ways to say one thing inside one schema.
+            </td>
+          </tr>
+          <tr>
+            <td><strong>Choice block</strong></td>
+            <td class="num">6</td>
+            <td>
+              Three names for the count (<code>chooseAmount</code>, <code>pickCount</code>,
+              <code>choose</code>) and two for identity (<code>id</code>, <code>nodeId</code>).
+              An author has to know which spelling this particular block wants.
+            </td>
+          </tr>
+          <tr>
+            <td><strong>Level scaling</strong></td>
+            <td class="num">4</td>
+            <td>
+              <code>scalingFactor</code> (modifiers, dice), <code>scalingMode</code> (damage
+              segments), <code>unlockScaling</code> (spell grants) — plus
+              <code>levelScaling: [{levelRequired, newDice}]</code>, a fourth shape for the same
+              idea.
+            </td>
+          </tr>
+          <tr>
+            <td><strong>Proficiency category</strong></td>
+            <td class="num">3</td>
+            <td>
+              <code>proficiencies.ts</code> and <code>coreRulePack.ts</code> list seven values;
+              <code>effects.ts</code> lists six, silently omitting <code>ability_check</code>.
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>Concepts filed under the wrong heading</h3>
+
+    <ul>
+      <li>
+        <code>TargetFilterSchema</code> lives in <code>creatures.ts</code>. It is an
+        <em>action targeting</em> concept that happens to reference creature types — which is why
+        <code>actions.ts</code> imports <code>creatures.ts</code> to get it.
+      </li>
+      <li>
+        <code>DamageTypeSchema</code> lives in <code>affinities.ts</code>. Damage type is a
+        primitive of the whole rules system; weapons, actions and dice all reach into the
+        resistance module to get it.
+      </li>
+      <li>
+        <code>dice.ts</code> imports <code>AttackTypeSchema</code> from <code>actions.ts</code>
+        <em>and</em> scaling from <code>modifiers.ts</code>, then re-declares the four scaling
+        fields by hand with a comment explaining they are copied to match. Three modules to
+        express one critical-hit rule.
+      </li>
+      <li>
+        <code>rules.ts</code> is a junk drawer: it re-exports weapons, redefines resources and
+        traits, and holds <code>RuleSnapshot</code>. It is the single reason the barrel needs a
+        hand-maintained exception list.
+      </li>
+      <li>
+        <code>coreRulePack.ts</code> is 680 lines doing three jobs — schema definitions, a
+        ~350-line hand-written semantic validator, and the <code>toRuleSnapshot</code> projection.
+        The validator is good code in the wrong file.
+      </li>
+    </ul>
+
+    <h3>The missing axis</h3>
+
+    <p>
+      Underneath every one of these is one absence: <strong>nothing in the directory records
+      whether a schema describes authored content, live runtime state, or a wire payload.</strong>
+      All three are mixed inside single files. <code>items.ts</code> holds
+      <code>ItemDefinition</code> (authored) beside <code>InventoryInstance</code> (runtime).
+      <code>modifiers.ts</code> holds <code>BaseModifier</code> (authored) beside
+      <code>RuntimeModifier</code> (runtime) beside a <code>CalculationResult</code> interface that
+      is neither. <code>character.ts</code> holds <code>ClassDefinition</code> (authored),
+      <code>CharacterSave</code> (runtime) and <code>CreateCharacterPayload</code> (transport).
+    </p>
+
+    <p>
+      That is the thing to fix. It also answers your engine-vs-data question — but the split you
+      guessed at is one axis short.
+    </p>
+  </section>
+
+  <section>
+    <div class="part-head">
+      <span class="tag">Part C</span>
+      <h2>What I would do instead</h2>
+    </div>
+
+    <h3>Split on three axes, not two</h3>
+
+    <p>
+      "Engine vs data" is the right instinct but collapses two different things into "engine".
+      A <code>RuntimeModifier</code> and a socket payload are both non-authored, but they change
+      for opposite reasons: one changes when the rules engine changes, the other when the wire
+      format does. Four layers, each importing only downward:
+    </p>
+
+    <figure>
+      <div class="scroller">
+        <svg viewBox="0 0 900 386" role="img" aria-label="Four-layer schema stack: primitives at the base, authored content above it, then runtime and transport at the top, with imports flowing only downward and the JSON pack schema generated from the content layer.">
+          <defs>
+            <marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+              <polygon class="dg-head" points="0,1 10,5 0,9" />
+            </marker>
+            <marker id="ah-a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+              <polygon class="dg-head-accent" points="0,1 10,5 0,9" />
+            </marker>
+          </defs>
+
+          <!-- downward dependency rail -->
+          <line class="dg-line" x1="46" y1="40" x2="46" y2="332" marker-end="url(#ah)" />
+          <text class="dg-t-sm" x="30" y="190" text-anchor="middle" transform="rotate(-90 30 190)">imports only downward</text>
+
+          <!-- transport -->
+          <rect class="dg-box" x="74" y="24" width="330" height="62" />
+          <text class="dg-t" x="92" y="48">transport/</text>
+          <text class="dg-t-sm" x="92" y="70">socket events · importPack · homebrew · payloads</text>
+
+          <!-- runtime -->
+          <rect class="dg-box" x="424" y="24" width="330" height="62" />
+          <text class="dg-t" x="442" y="48">runtime/</text>
+          <text class="dg-t-sm" x="442" y="70">characterSave · inventory · actors · combat</text>
+
+          <!-- content -->
+          <rect class="dg-box-accent" x="74" y="122" width="680" height="76" />
+          <text class="dg-t dg-t-accent" x="92" y="148">content/</text>
+          <text class="dg-t-sm" x="92" y="170">traits · spells · equipment · classes · races · feats</text>
+          <text class="dg-t-sm" x="92" y="188">backgrounds · resources · proficiencies · pack envelope</text>
+
+          <!-- primitives -->
+          <rect class="dg-box" x="74" y="234" width="680" height="76" />
+          <text class="dg-t" x="92" y="260">primitives/</text>
+          <text class="dg-t-sm" x="92" y="282">ability · damageType · diceNotation · coreRuleId · lore</text>
+          <text class="dg-t-sm" x="92" y="300">statePredicate · scalingRule · choiceBlock</text>
+
+          <!-- transport/runtime -> content -->
+          <line class="dg-line" x1="239" y1="86" x2="239" y2="118" marker-end="url(#ah)" />
+          <line class="dg-line" x1="589" y1="86" x2="589" y2="118" marker-end="url(#ah)" />
+
+          <!-- content -> primitives -->
+          <line class="dg-line" x1="414" y1="198" x2="414" y2="230" marker-end="url(#ah)" />
+
+          <!-- generation branch -->
+          <path class="dg-line-accent" d="M754 160 H 826" marker-end="url(#ah-a)" />
+          <text class="dg-t-sm dg-t-accent" x="790" y="150" text-anchor="middle">generates</text>
+          <rect class="dg-box-accent" x="796" y="122" width="86" height="76" />
+          <text class="dg-t-sm dg-t-accent" x="839" y="152" text-anchor="middle">pack</text>
+          <text class="dg-t-sm dg-t-accent" x="839" y="168" text-anchor="middle">.schema</text>
+          <text class="dg-t-sm dg-t-accent" x="839" y="184" text-anchor="middle">.json</text>
+
+          <!-- packs -->
+          <rect class="dg-box" x="74" y="340" width="330" height="38" />
+          <text class="dg-t-sm" x="92" y="364">data/packs/**/*.json</text>
+          <path class="dg-line-accent" d="M404 359 H 839 V 202" marker-end="url(#ah-a)" />
+          <text class="dg-t-sm dg-t-accent" x="620" y="352" text-anchor="middle">$schema — editor hints + CI gate</text>
+          <line class="dg-divider" x1="239" y1="340" x2="239" y2="202" />
+          <text class="dg-t-sm" x="248" y="330">parsed by</text>
+        </svg>
+      </div>
+      <figcaption>
+        The proposal in one picture: <code>content/</code> is the only layer a pack author writes
+        against, it is the only layer the JSON schema is generated from, and the generated schema
+        is what the pack files point back at. Runtime and transport shapes sit above content and
+        never appear in a pack.
+      </figcaption>
+    </figure>
+
+    <p>
+      The layering is not bureaucracy — it answers real questions that are currently unanswerable.
+      Where does <code>InventoryInstance</code> go? Runtime; it never appears in a pack.
+      <code>ItemDefinition</code>? It disappears — see below. Does the wire format changing force a
+      pack version bump? Only if <code>content/</code> changed, which the directory now tells you.
+    </p>
+
+    <pre class="tree">packages/shared/src/schemas/
+├── <b>primitives/</b>          <i>no imports; the vocabulary everything shares</i>
+│     ability.ts          <i>one AbilitySchema, one casing, one bounds pair</i>
+│     damageType.ts       <i>out of affinities.ts</i>
+│     ids.ts              <i>coreRuleId, the regex now copied 3×</i>
+│     lore.ts
+│     statePredicate.ts   <i>required/forbidden states, defined once</i>
+│     scaling.ts          <i>one scaling rule + one threshold shape</i>
+│     choice.ts           <i>one choice block: id + count + options</i>
+│
+├── <b>content/</b>             <i>what a pack author writes. imports primitives only</i>
+│     trait.ts   spell.ts   equipment.ts   proficiency.ts
+│     class.ts   race.ts    feat.ts        background.ts
+│     resource.ts          <i>ONE resource schema, not two</i>
+│     action.ts  modifier.ts  affinity.ts  dice.ts  trigger.ts
+│     pack.ts              <i>the envelope + Core* extensions</i>
+│     validate.ts          <i>the 350-line semantic validator, on its own</i>
+│
+├── <b>runtime/</b>             <i>engine state. imports content + primitives</i>
+│     runtimeModifier.ts  inventory.ts  actor.ts
+│     combat.ts           characterSave.ts  snapshot.ts
+│
+└── <b>transport/</b>           <i>wire + API payloads. imports content + primitives</i>
+      socket.ts  importPack.ts  homebrew.ts  createCharacter.ts</pre>
+
+    <h4>Two collapses this makes obvious</h4>
+
+    <p>
+      <strong><code>ItemDefinition</code> and <code>WeaponDefinition</code> should not survive the
+      move.</strong> <code>EquipmentDefinition</code> is already the authored source and already
+      carries every field of both; <code>equipmentProjection.ts</code> exists purely to convert
+      between them. Once <code>content/equipment.ts</code> is the single authored shape, the two
+      legacy types become runtime projections at most — and the <code>tool</code>/<code>loot</code>
+      enum members either get authored properly or get deleted.
+    </p>
+
+    <p>
+      <strong><code>TraitEffect</code> and <code>TraitDefinition</code> need to be reconciled, not
+      relocated.</strong> Homebrew and import payloads speak <code>TraitEffect</code>; packs speak
+      <code>TraitDefinition</code>. That is a genuine product problem hiding as a schema problem —
+      homebrew content cannot express what core content can. Worth deciding deliberately rather
+      than carrying both into the new layout.
+    </p>
+
+    <h3>Generate the JSON schemas; never write them</h3>
+
+    <p>
+      Once <code>content/</code> exists, <code>zod-to-json-schema</code> over the pack envelope
+      emits one <code>pack.schema.json</code> as a build step. That single change:
+    </p>
+
+    <ul>
+      <li>Kills all six drift classes permanently — the mirror cannot lag a source it is derived from.</li>
+      <li>Covers <code>classes</code>, <code>subclasses</code>, <code>feats</code>, <code>backgrounds</code> and <code>proficiencies</code>, which have no schema today, for free.</li>
+      <li>Ends the "which layer is this modelling" ambiguity — it models the layer it was generated from, by construction.</li>
+      <li>
+        Gives pack authors real editor autocomplete the moment a <code>"$schema"</code> key is
+        added to the segment files. None of the 32 pack files has one today, which is why nobody
+        noticed the schemas were broken.
+      </li>
+      <li>Turns drift into a CI failure: regenerate, then <code>git diff --exit-code</code>.</li>
+    </ul>
+
+    <p>
+      What generation cannot carry is the cross-reference checking — unknown trait ids, ammunition
+      compatibility, progression ordering. That is what <code>validateCoreRulePack</code> already
+      does well, and giving it its own file in <code>content/</code> makes the division of labour
+      explicit: JSON Schema for shape, the validator for meaning.
+    </p>
+
+    <h3>Sequence</h3>
+
+    <p>
+      Ordered so each step is independently shippable and the highest-risk items land while the
+      test suite is green.
+    </p>
+
+    <ol class="plan">
+      <li>
+        <div>
+          <h4>Delete the JSON schemas</h4>
+          <p>
+            All 15. They validate nothing, they are wrong in six verified ways, and keeping them
+            through the refactor means porting bugs. This is reversible in one
+            <code>git revert</code> and removes the temptation to hand-fix them.
+          </p>
+        </div>
+      </li>
+      <li>
+        <div>
+          <h4>Resolve the two hard collisions first</h4>
+          <p>
+            Pick one <code>ResourceMaxRule</code> and one <code>ResourceReset</code> (the union of
+            both enums looks right), collapse <code>ResourceGrant</code> and
+            <code>ResourceRule</code> into one schema, and delete the minimal
+            <code>TraitDefinitionSchema</code> from <code>rules.ts</code>. The barrel's exception
+            list then disappears, which is the signal it worked.
+          </p>
+        </div>
+      </li>
+      <li>
+        <div>
+          <h4>Extract <code>primitives/</code></h4>
+          <p>
+            Pure moves with re-exports left behind, so nothing downstream breaks. The ability
+            score and state predicate are the highest-value two — they touch the most files and
+            have already drifted.
+          </p>
+        </div>
+      </li>
+      <li>
+        <div>
+          <h4>Split <code>content/</code>, <code>runtime/</code>, <code>transport/</code></h4>
+          <p>
+            Mechanical once primitives exist. Break <code>coreRulePack.ts</code> into its three
+            jobs here. Keep <code>index.ts</code> flat-exporting everything so no consumer changes
+            in this step.
+          </p>
+        </div>
+      </li>
+      <li>
+        <div>
+          <h4>Generate <code>pack.schema.json</code> and wire it up</h4>
+          <p>
+            Build step, <code>"$schema"</code> key in all 32 segment files, and the
+            <code>git diff --exit-code</code> check in CI. The pack becomes self-describing for the
+            first time.
+          </p>
+        </div>
+      </li>
+      <li>
+        <div>
+          <h4>Retire <code>ItemDefinition</code> and <code>WeaponDefinition</code></h4>
+          <p>
+            Last, because it touches close to 100 non-test references. Safe to defer indefinitely
+            — the layering delivers most of its value without it.
+          </p>
+        </div>
+      </li>
+    </ol>
+
+    <div class="callout">
+      <span class="kicker">Unrelated, but found on the way</span>
+      <p>
+        <code>equipment/armor.json</code> was committed in <code>dac8728</code> but is not listed
+        in <code>manifest.json</code>, so the assembler never reads it. Since the manifest drives
+        the read deliberately — a misnamed file fails loudly rather than going missing — this one
+        is silently absent instead. Probably just unfinished, but worth catching now.
+      </p>
+    </div>
+  </section>
+
+  <p class="footnote">
+    Drift figures come from running every segment in <code>manifest.json</code> through
+    <code>corePackSegment.schema.json</code> under ajv 6 with cross-file refs resolved. The pack
+    itself is valid: <code>pnpm --filter @project/database test</code> passes 84/84, so in every
+    disagreement above the JSON schema is the wrong side.
+  </p>
+
+</div>
