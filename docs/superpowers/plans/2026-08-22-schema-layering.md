@@ -1660,18 +1660,33 @@ git commit -m "chore: enforce schema layer direction with eslint"
 
 ---
 
-## Task 14: Homebrew and import author TraitDefinition
+## Task 14: Retire TraitEffect end to end
+
+> **Merged with the former Task 15**, during execution. `TraitEffect` cannot be
+> deleted independently of the database column that uses it:
+> `packages/database/src/schema/reference.ts:7,139` types the `traits.effects` jsonb
+> column as `TraitEffect[]`, and `corePackProjection.ts` writes to it. Deleting the
+> type in one task and repairing the column in the next leaves the branch failing
+> typecheck in between, which violates this plan's own rule that every task ends
+> green. It is one change: delete the vocabulary, and move everything that spoke it
+> onto `TraitDefinition`.
 
 **Files:**
 - Modify: `packages/shared/src/schemas/transport/homebrew.ts`
-- Modify: `packages/shared/src/schemas/transport/importPack.ts:116`
+- Modify: `packages/shared/src/schemas/transport/importPack.ts`
 - Delete: `packages/shared/src/schemas/effects.ts`
-- Modify: `packages/shared/src/schemas/__tests__/homebrew.test.ts`, `effects.test.ts`, `importPack.test.ts`
+- Modify: `packages/shared/src/index.ts` (drop the `effects.js` line)
+- Modify: `packages/shared/src/schemas/__tests__/homebrew.test.ts`, `importPack.test.ts`
+- Delete: `packages/shared/src/schemas/__tests__/effects.test.ts`
 - Modify: `apps/server/src/routes/homebrew.ts`, `apps/server/src/services/importPipeline.ts`
+- Modify: `packages/database/src/schema/reference.ts:7,139`
+- Modify: `packages/database/src/corePackProjection.ts:35-41,134-140`
+- Modify: `apps/server/src/services/referenceProvider/databaseReferenceProvider.ts:31-75`
+- Test: `packages/database/src/__tests__/corePackProjection.test.ts`
 
 **Interfaces:**
 - Consumes: `TraitDefinitionSchema` from `content/traits.js`
-- Produces: `CreateHomebrewTraitSchema` and `TraitImportDataSchema` carrying a full `TraitDefinition` instead of `TraitEffect[]`. Task 15 relies on this shape reaching the database.
+- Produces: `CreateHomebrewTraitSchema` and `TraitImportDataSchema` carrying a full `TraitDefinition`; a `traits.definition` column holding the whole authored trait.
 
 `TraitEffect` is a third trait vocabulary that no pack content uses — `corePackProjection.ts:138` writes `effects: []` for every pack trait. Deleting it makes homebrew as capable as core content.
 
@@ -1752,42 +1767,25 @@ git rm packages/shared/src/schemas/effects.ts packages/shared/src/schemas/__test
 
 Remove the `effects.js` line from `index.ts`.
 
-- [ ] **Step 5: Update the server**
+- [ ] **Step 5: Update the server payload readers**
 
 `apps/server/src/routes/homebrew.ts` and `apps/server/src/services/importPipeline.ts` pass the payload through; change the field they read from `effects` to `definition`.
 
-- [ ] **Step 6: Verify**
+- [ ] **Step 6: Change the database column**
 
-Run: `pnpm --filter @project/shared test --run && pnpm --filter @project/server test --run && pnpm --filter @project/server typecheck`
-Expected: PASS
+In `packages/database/src/schema/reference.ts`, replace the `effects` column and its import:
 
-- [ ] **Step 7: Commit**
-
-```bash
-git add -A packages/shared apps/server
-git commit -m "feat: homebrew and imported traits use the core trait schema"
+```ts
+    // the whole authored trait, so a homebrew trait can say everything a core
+    // trait can. Previously an `effects` column in a vocabulary no pack used.
+    definition: jsonb("definition").$type<TraitDefinition>().notNull(),
 ```
 
----
+This is the step that makes deleting `effects.ts` possible — the column was its last type-level consumer.
 
-## Task 15: Migrate the traits table and drop the string-matching
+- [ ] **Step 7: Write the failing projection test**
 
-**Files:**
-- Modify: `packages/database/src/schema/reference.ts:139`
-- Modify: `packages/database/src/corePackProjection.ts:35-41,134-140`
-- Modify: `apps/server/src/services/referenceProvider/databaseReferenceProvider.ts:31-75`
-- Test: `packages/database/src/__tests__/corePackProjection.test.ts`
-
-**Interfaces:**
-- Consumes: Task 14's `definition` field
-- Produces: `traits.definition` column holding a full `TraitDefinition`.
-
-- [ ] **Step 1: Write the failing test**
-
-Add to `packages/database/src/__tests__/corePackProjection.test.ts`:
-
-This file already has a `createPack()` helper that builds a pack through
-`CoreRulePackSchema.parse`, and imports `projectCoreRulePack`. Follow both.
+`corePackProjection.test.ts` already has a `createPack()` helper that builds a pack through `CoreRulePackSchema.parse`, and imports `projectCoreRulePack`. Follow both conventions:
 
 ```ts
 it("carries the whole trait into the database row", () => {
@@ -1820,33 +1818,16 @@ it("carries the whole trait into the database row", () => {
 });
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
-
 Run: `pnpm --filter @project/database test --run src/__tests__/corePackProjection.test.ts`
-Expected: FAIL — `definition` does not exist on the projected row
+Expected: FAIL — `definition` does not exist on the projected row.
 
-- [ ] **Step 3: Change the column**
+- [ ] **Step 8: Change the projection**
 
-In `packages/database/src/schema/reference.ts`, replace the `effects` column:
+In `corePackProjection.ts`, replace `effects: never[]` with `definition: TraitDefinition` in the row type, and `effects: []` in the `traits.map` with `definition: trait`. That one line is why every core trait looked empty in the database.
 
-```ts
-    // the whole authored trait, so a homebrew trait can say everything a core
-    // trait can. Previously an `effects` column in a vocabulary no pack used.
-    definition: jsonb("definition").$type<TraitDefinition>().notNull(),
-```
+Re-run the test: expected PASS.
 
-Update the import from `TraitEffect` to `TraitDefinition`.
-
-- [ ] **Step 4: Change the projection**
-
-In `corePackProjection.ts`, replace `effects: never[]` with `definition: TraitDefinition` in the type, and `effects: []` at line 138 with `definition: trait`.
-
-- [ ] **Step 5: Run tests to verify they pass**
-
-Run: `pnpm --filter @project/database test --run`
-Expected: PASS
-
-- [ ] **Step 6: Replace the string-matching**
+- [ ] **Step 9: Replace the string-matching in the reference provider**
 
 In `databaseReferenceProvider.ts`, delete `TraitEffectLike` and `hasEffectCategory` — including its dead `"proficiency_choice"` branch, a type `TraitEffectSchema` never defined — and read the real grants:
 
@@ -1863,9 +1844,9 @@ const hasProficiencyCategory = (
   );
 ```
 
-`matchesTraitCategory` calls this and drops the `id.includes(...)` / `name.includes(...)` fallbacks.
+`matchesTraitCategory` calls this and drops its `id.includes("_prof_skills")` / `name.includes("skill")` fallbacks, which only existed because the column it read was always empty.
 
-- [ ] **Step 7: Migrate and reimport**
+- [ ] **Step 10: Migrate and reimport**
 
 ```bash
 pnpm --filter @project/database db:generate
@@ -1873,18 +1854,23 @@ pnpm --filter @project/database db:migrate
 pnpm --filter @project/database db:import-pack
 ```
 
-Expected: migration applies, pack reimports, traits carry full definitions.
+The database is expendable and running. Note `persistCoreRulePack` truncates the reference tables `CASCADE`, which reaches character data — run `pnpm --filter @project/database db:seed:samples` afterwards to restore the ten fixture characters.
 
-- [ ] **Step 8: Verify**
-
-Run: `pnpm --filter @project/database test --run && pnpm --filter @project/server test --run && pnpm --filter @project/server typecheck`
-Expected: PASS
-
-- [ ] **Step 9: Commit**
+- [ ] **Step 11: Verify everything**
 
 ```bash
-git add -A packages/database apps/server
-git commit -m "feat: store the whole trait definition and drop the name-matching fallback"
+pnpm --filter @project/shared test --run && pnpm --filter @project/engine test --run && pnpm --filter @project/database test --run && pnpm --filter @project/server test --run && pnpm --filter @project/web test --run
+pnpm -r typecheck
+pnpm lint
+```
+
+Expected: all green. `pnpm lint` is a required CI gate and has already been broken once on this branch by an unused destructuring binding — do not skip it.
+
+- [ ] **Step 12: Commit**
+
+```bash
+git add -A packages apps
+git commit -m "feat: retire TraitEffect; traits carry their whole definition"
 ```
 
 ---
