@@ -3,6 +3,7 @@ import {
   WeaponDefinitionSchema,
   type CoreRulePack,
   type ItemDefinition,
+  type TraitDefinition,
   type WeaponDefinition,
 } from "@project/shared";
 
@@ -36,7 +37,7 @@ export type CoreRulePackProjection = {
     id: string;
     name: string;
     lore: Lore;
-    effects: never[];
+    definition: TraitDefinition;
     isStartingProficiency: boolean;
   }>;
   feats: Array<{
@@ -133,9 +134,10 @@ export const projectCoreRulePack = (
     id: trait.id,
     name: trait.name,
     lore: toLore(trait.lore),
-    // The complete trait AST stays in corePack. The legacy relation table only
-    // has an effects column until the Phase 3 snapshot reader consumes it.
-    effects: [],
+    // The complete trait AST stays in corePack, and the relational row now
+    // carries it too - there is no separate effects vocabulary to fall out of
+    // sync with it.
+    definition: trait,
     isStartingProficiency: trait.isStartingProficiency,
   })),
   feats: corePack.feats.map((feat) => ({

@@ -8,28 +8,12 @@ import {
 } from "../transport/homebrew.js";
 
 describe("homebrew schemas", () => {
-  it("accepts valid trait creation payload", () => {
-    const payload = {
-      campaignId: "7a0c5bb8-0dc5-4c39-a58f-8f7baae6f27f",
-      id: "trait_my_custom_trait",
-      name: "My Custom Trait",
-      lore: {
-        shortDescription: "A short summary.",
-      },
-      effects: [],
-      isStartingProficiency: false,
-    };
-
-    expect(CreateHomebrewTraitSchema.parse(payload)).toEqual(payload);
-  });
-
   it("rejects non snake_case ids for homebrew trait creation", () => {
     const payload = {
       campaignId: "7a0c5bb8-0dc5-4c39-a58f-8f7baae6f27f",
       id: "Trait-Custom",
       name: "Invalid Trait",
       lore: { shortDescription: "x" },
-      effects: [],
     };
 
     expect(() => CreateHomebrewTraitSchema.parse(payload)).toThrow();
@@ -82,5 +66,48 @@ describe("homebrew schemas", () => {
       campaignId: "7a0c5bb8-0dc5-4c39-a58f-8f7baae6f27f",
     };
     expect(HomebrewLifecycleActionSchema.parse(payload)).toEqual(payload);
+  });
+});
+
+describe("homebrew traits speak the core trait vocabulary", () => {
+  it("accepts a modifier a core trait could carry", () => {
+    const parsed = CreateHomebrewTraitSchema.parse({
+      campaignId: "00000000-0000-0000-0000-000000000000",
+      id: "hb_stone_skin",
+      name: "Stone Skin",
+      lore: { shortDescription: "Your hide hardens." },
+      definition: {
+        id: "hb_stone_skin",
+        name: "Stone Skin",
+        modifiers: {
+          fixed: [{ target: "ARMOR_CLASS", type: "add", value: 1 }],
+          choices: [],
+        },
+      },
+    });
+    expect(parsed.definition.modifiers.fixed[0]?.target).toBe("ARMOR_CLASS");
+  });
+
+  it("accepts a resource, which TraitEffect could never express", () => {
+    expect(
+      CreateHomebrewTraitSchema.safeParse({
+        campaignId: "00000000-0000-0000-0000-000000000000",
+        id: "hb_second_breath",
+        name: "Second Breath",
+        lore: { shortDescription: "Catch your breath." },
+        definition: {
+          id: "hb_second_breath",
+          name: "Second Breath",
+          resources: [
+            {
+              id: "hb_second_breath",
+              name: "Second Breath",
+              resetCondition: "short_rest",
+              maxRule: { kind: "fixed", value: 1 },
+            },
+          ],
+        },
+      }).success,
+    ).toBe(true);
   });
 });

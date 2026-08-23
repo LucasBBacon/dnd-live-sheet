@@ -97,4 +97,33 @@ describe("projectCoreRulePack", () => {
       { classId: "class_test", level: 1, traitId: "trait_test" },
     ]);
   });
+
+  it("carries the whole trait into the database row", () => {
+    const pack = CoreRulePackSchema.parse({
+      pack: {
+        packId: "core_test",
+        version: 7,
+        ruleset: "dnd_5e_2014",
+        publishedAt: "2026-08-13T00:00:00.000Z",
+      },
+      traits: [
+        {
+          id: "trait_test",
+          name: "Test Trait",
+          lore: { shortDescription: "Test trait lore." },
+          modifiers: {
+            fixed: [{ target: "MAX_HP", type: "add", value: 2 }],
+            choices: [],
+          },
+        },
+      ],
+    });
+
+    const projection = projectCoreRulePack(pack);
+
+    // effects: [] was a placeholder that made every core trait look empty
+    expect(projection.traits[0]?.definition.modifiers.fixed[0]?.target).toBe(
+      "MAX_HP",
+    );
+  });
 });

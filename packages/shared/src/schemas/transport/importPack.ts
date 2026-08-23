@@ -1,5 +1,4 @@
 import { z } from "zod";
-import { TraitEffectSchema } from "../effects.js";
 import {
   ClassMulticlassPrerequisitesSchema,
   FeatPrerequisitesSchema,
@@ -8,6 +7,7 @@ import {
   ItemDefinitionSchema,
   StartingEquipmentDefinitionSchema,
 } from "../content/items.js";
+import { TraitDefinitionSchema } from "../content/traits.js";
 import { WeaponDefinitionSchema } from "../content/weapons.js";
 import { LoreSchema } from "../primitives/lore.js";
 import { CoreRuleIdSchema as ImportIdSchema } from "../primitives/ids.js";
@@ -108,7 +108,7 @@ export const ImportRelationOperationSchema = z.enum(["add", "remove"]);
 const TraitImportDataSchema = z.object({
   name: z.string().min(1).max(255),
   lore: LoreSchema,
-  effects: z.array(TraitEffectSchema),
+  definition: TraitDefinitionSchema,
   isStartingProficiency: z.boolean().default(false),
 });
 

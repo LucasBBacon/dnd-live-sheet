@@ -4,7 +4,7 @@ import type {
   FeatPrerequisites,
   ItemDefinition,
   StartingEquipmentDefinition,
-  TraitEffect,
+  TraitDefinition,
   WeaponDefinition,
 } from "@project/shared";
 import { sql } from "drizzle-orm";
@@ -134,9 +134,9 @@ export const traits = pgTable(
       .$type<{ shortDescription: string; fullText?: string }>()
       .notNull(), // keep lore as JSONB, strictly UI
 
-    // effects are kept as JSONB because structure is highly variable
-    // it's evaluated entirely in memory during math calcs
-    effects: jsonb("effects").$type<TraitEffect[]>().notNull(),
+    // the whole authored trait, so a homebrew trait can say everything a core
+    // trait can. Previously an `effects` column in a vocabulary no pack used.
+    definition: jsonb("definition").$type<TraitDefinition>().notNull(),
 
     isStartingProficiency: boolean("is_starting_proficiency")
       .default(false)

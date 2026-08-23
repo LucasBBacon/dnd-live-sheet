@@ -3,6 +3,7 @@ import {
   characterClasses,
   characters,
 } from "@project/database/src/schema/operational.js";
+import type { TraitDefinition } from "@project/shared";
 import { and, eq } from "drizzle-orm";
 import {
   getEffectiveReferenceSnapshot,
@@ -28,54 +29,26 @@ import type {
   TraitCategory,
 } from "./types.js";
 
-type TraitEffectLike = {
-  type?: string;
-  category?: string;
-};
-
-const hasEffectCategory = (effects: unknown, categories: string[]): boolean => {
-  if (!Array.isArray(effects)) return false;
-
-  return effects.some((effect) => {
-    if (!effect || typeof effect !== "object") return false;
-    const typedEffect = effect as TraitEffectLike;
-
-    if (
-      typedEffect.type !== "proficiency" &&
-      typedEffect.type !== "proficiency_choice"
-    ) {
-      return false;
-    }
-
-    return (
-      typeof typedEffect.category === "string" &&
-      categories.includes(typedEffect.category)
-    );
-  });
-};
+const hasProficiencyCategory = (
+  definition: TraitDefinition,
+  categories: string[],
+): boolean =>
+  (definition.proficiencies?.fixed ?? []).some((grant) =>
+    categories.includes(grant.category),
+  ) ||
+  (definition.proficiencies?.choices ?? []).some((choice) =>
+    categories.includes(choice.category),
+  );
 
 const matchesTraitCategory = (
-  trait: { id: string; name: string; effects: unknown },
+  trait: { definition: TraitDefinition },
   category: TraitCategory,
 ): boolean => {
-  const id = trait.id.toLowerCase();
-  const name = trait.name.toLowerCase();
-
   if (category === "skills") {
-    return (
-      hasEffectCategory(trait.effects, ["skills"]) ||
-      id.includes("_prof_skills") ||
-      name.includes("skill")
-    );
+    return hasProficiencyCategory(trait.definition, ["skills"]);
   }
 
-  return (
-    hasEffectCategory(trait.effects, ["tools", "languages"]) ||
-    id.includes("_prof_tools") ||
-    id.includes("_languages") ||
-    name.includes("tool") ||
-    name.includes("language")
-  );
+  return hasProficiencyCategory(trait.definition, ["tools", "languages"]);
 };
 
 const buildClassTimeline = ({
@@ -445,10 +418,7 @@ export class DatabaseReferenceProvider implements ReferenceProvider {
     }
 
     return allTraits.filter((trait) =>
-      matchesTraitCategory(
-        trait as { id: string; name: string; effects: unknown },
-        category,
-      ),
+      matchesTraitCategory(trait as { definition: TraitDefinition }, category),
     );
   }
 

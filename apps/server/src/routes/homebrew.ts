@@ -215,7 +215,7 @@ router.post("/traits", requireCampaignAuthorRole, async (req, res, next) => {
       id: payload.id,
       name: payload.name,
       lore: normalizeLore(payload.lore),
-      effects: payload.effects,
+      definition: payload.definition,
       isStartingProficiency: payload.isStartingProficiency ?? false,
       sourceType: "homebrew",
       ownerCampaignId: payload.campaignId,
@@ -267,7 +267,8 @@ router.patch(
       if (payload.name !== undefined) updates.name = payload.name;
       if (payload.lore !== undefined)
         updates.lore = normalizeLore(payload.lore);
-      if (payload.effects !== undefined) updates.effects = payload.effects;
+      if (payload.definition !== undefined)
+        updates.definition = payload.definition;
       if (payload.isStartingProficiency !== undefined) {
         updates.isStartingProficiency = payload.isStartingProficiency;
       }

@@ -33,7 +33,7 @@ describe("rollback pipeline planning", () => {
           data: {
             name: "Darkvision",
             lore: { shortDescription: "See in dim light." },
-            effects: [],
+            definition: { id: "trait_darkvision", name: "Darkvision" },
             isStartingProficiency: false,
           },
         },
@@ -76,7 +76,7 @@ describe("rollback pipeline planning", () => {
           data: {
             name: "Trait A",
             lore: { shortDescription: "A" },
-            effects: [],
+            definition: { id: "trait_a", name: "Trait A" },
             isStartingProficiency: false,
           },
         },

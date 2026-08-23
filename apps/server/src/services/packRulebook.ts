@@ -29,8 +29,9 @@ let rulebook: CoreRulePackSnapshot = EMPTY;
  * Reads the newest pack payload and holds it for synchronous lookups.
  *
  * Read from core_rule_packs.payload rather than the relation tables: those
- * store `effects: []` by design and are a query model for the browse
- * endpoints, so a rulebook built from them would carry traits that do nothing.
+ * are a query model for the browse endpoints, and a rulebook built from them
+ * would mean reassembling this shape row by row instead of reading the one
+ * JSONB blob that already matches it.
  * @returns Nothing; the rulebook is module state
  */
 export const primePackRulebook = async (): Promise<void> => {

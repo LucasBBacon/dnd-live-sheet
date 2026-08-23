@@ -85,6 +85,13 @@
       "when": 1786612457748,
       "tag": "0011_easy_naoko",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1787516770428,
+      "tag": "0012_trait_definition_column",
+      "breakpoints": true
     }
   ]
 }

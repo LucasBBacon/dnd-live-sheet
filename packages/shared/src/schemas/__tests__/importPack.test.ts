@@ -21,7 +21,10 @@ describe("ImportPackSchema", () => {
           data: {
             name: "Test Feature",
             lore: { shortDescription: "Trait test." },
-            effects: [],
+            definition: {
+              id: "trait_test_feature",
+              name: "Test Feature",
+            },
             isStartingProficiency: false,
           },
         },

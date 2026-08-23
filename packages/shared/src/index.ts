@@ -6,7 +6,6 @@ export * from "./schemas/content/coreRulePack.js";
 export * from "./schemas/content/corePackSegment.js";
 export * from "./schemas/content/creatures.js";
 export * from "./schemas/content/dice.js";
-export * from "./schemas/effects.js";
 export * from "./schemas/content/equipment.js";
 export * from "./schemas/transport/homebrew.js";
 export * from "./schemas/transport/importPack.js";

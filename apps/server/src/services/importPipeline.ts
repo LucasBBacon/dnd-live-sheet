@@ -830,7 +830,7 @@ const applyEntityEntry = async (
         id: entry.id,
         name: entry.data.name,
         lore: normalizeLore(entry.data.lore),
-        effects: entry.data.effects,
+        definition: entry.data.definition,
         isStartingProficiency: entry.data.isStartingProficiency,
         supersedesId: entry.supersedesId,
         ...scoped,
@@ -843,7 +843,7 @@ const applyEntityEntry = async (
           set: {
             name: sql`excluded.name`,
             lore: sql`excluded.lore`,
-            effects: sql`excluded.effects`,
+            definition: sql`excluded.definition`,
             isStartingProficiency: sql`excluded.is_starting_proficiency`,
             sourceType: sql`excluded.source_type`,
             ownerCampaignId: sql`excluded.owner_campaign_id`,

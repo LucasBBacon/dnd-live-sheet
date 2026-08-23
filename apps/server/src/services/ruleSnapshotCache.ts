@@ -43,8 +43,9 @@ const buildRuleSnapshot = async (): Promise<CachedRuleSnapshot> => {
   const cacheVersion = getReferenceCacheVersion();
 
   // the rule ASTs live in the pack payload. the relation tables are a query
-  // model for the browse endpoints and store effects: [] by design, so reading
-  // traits from there would yield definitions that do nothing
+  // model for the browse endpoints; reading traits from there would mean
+  // reassembling this shape row by row instead of reading the one JSONB blob
+  // that already matches it
   const [packRow] = await db
     .select({ payload: coreRulePacks.payload })
     .from(coreRulePacks)

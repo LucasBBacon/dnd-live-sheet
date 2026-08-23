@@ -7,7 +7,10 @@ interface TraitPayload {
   name: string;
   sourceOrigin: string;
   lore: { shortDescription: string; fullText?: string };
-  effects: any[];
+  // Trait rows no longer carry a separate effects list (see TraitDefinition
+  // in @project/shared) - kept optional so older/loosely-typed API payloads
+  // don't force a crash here.
+  effects?: any[];
 }
 
 interface RaceDetailViewProps {
@@ -190,7 +193,7 @@ export const RaceDetailView = ({ races }: RaceDetailViewProps) => {
               </div>
 
               {/* technical mechanics badge bar */}
-              {trait.effects.length > 0 && (
+              {Array.isArray(trait.effects) && trait.effects.length > 0 && (
                 <div
                   style={{
                     marginTop: "0.5rem",

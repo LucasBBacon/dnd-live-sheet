@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { TraitEffectSchema } from "../effects.js";
+import { TraitDefinitionSchema } from "../content/traits.js";
 import { LoreSchema } from "../primitives/lore.js";
 import { CoreRuleIdSchema as HomebrewIdSchema } from "../primitives/ids.js";
 
@@ -15,23 +15,23 @@ export const HomebrewContextSchema = z.object({
 });
 
 /**
- * Schema for creating a new homebrew trait, including its ID, name, lore, effects, and optional starting proficiency flag.
+ * Schema for creating a new homebrew trait, including its ID, name, lore, full trait definition, and optional starting proficiency flag.
  */
 export const CreateHomebrewTraitSchema = HomebrewContextSchema.extend({
   id: HomebrewIdSchema,
   name: z.string().min(1).max(255),
   lore: LoreSchema,
-  effects: z.array(TraitEffectSchema),
+  definition: TraitDefinitionSchema,
   isStartingProficiency: z.boolean().optional(),
 });
 
 /**
- * Schema for updating an existing homebrew trait, allowing optional updates to its name, lore, effects, and starting proficiency flag.
+ * Schema for updating an existing homebrew trait, allowing optional updates to its name, lore, full trait definition, and starting proficiency flag.
  */
 export const UpdateHomebrewTraitSchema = HomebrewContextSchema.extend({
   name: z.string().min(1).max(255).optional(),
   lore: LoreSchema.optional(),
-  effects: z.array(TraitEffectSchema).optional(),
+  definition: TraitDefinitionSchema.optional(),
   isStartingProficiency: z.boolean().optional(),
 });
 

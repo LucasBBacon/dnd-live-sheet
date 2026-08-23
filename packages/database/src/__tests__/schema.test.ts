@@ -19,7 +19,7 @@ describe("database schema", () => {
   it("defines traits and feats with expected core fields", () => {
     expect(traits.id.primary).toBe(true);
     expect(traits.name.notNull).toBe(true);
-    expect(traits.effects.dataType).toBe("json");
+    expect(traits.definition.dataType).toBe("json");
     expect(traits.sourceType.notNull).toBe(true);
     expect(traits.ownerCampaignId.notNull).toBe(false);
     expect(traits.ownerCharacterId.notNull).toBe(false);
