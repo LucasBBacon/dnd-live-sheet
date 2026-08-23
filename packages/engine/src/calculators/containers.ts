@@ -1,6 +1,6 @@
 import type { InventoryInstance } from "@project/shared";
 import {
-  resolveItemDefinition,
+  resolveEquipmentDefinition,
   type RuleSnapshotLookup,
 } from "../rules/ruleLookup.js";
 import { poundsToHundredths } from "./weight.js";
@@ -55,7 +55,7 @@ export class ContainerEngine {
     // pass one: every row that is itself a container. done first so pass two
     // can tell an unknown parent from one that appears later in the list
     for (const instance of items) {
-      const definition = resolveItemDefinition(instance.itemId, snapshot);
+      const definition = resolveEquipmentDefinition(instance.itemId, snapshot);
       if (!definition?.container) continue;
 
       loads.set(instance.id, {
@@ -88,7 +88,7 @@ export class ContainerEngine {
         continue;
       }
 
-      const definition = resolveItemDefinition(instance.itemId, snapshot);
+      const definition = resolveEquipmentDefinition(instance.itemId, snapshot);
       // an item with no rule behind it contributes nothing rather than
       // throwing - InventoryExtractor already owns reporting unknown ids
       if (!definition) continue;

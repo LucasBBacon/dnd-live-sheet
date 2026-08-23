@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { corePackEquipment } from "../../pipeline/__tests__/corePackFixture.js";
-import { resolveItemDefinition } from "../ruleLookup.js";
+import { resolveEquipmentDefinition } from "../ruleLookup.js";
 
 /**
  * The PHB states a pounds-of-gear capacity for exactly these five. Barrels and
@@ -38,14 +38,15 @@ describe("the authored PHB containers", () => {
       // ContainerEngine has to a capacity. asserting the pack's equipment
       // alone would not prove the projection carries it
       expect(
-        resolveItemDefinition(id, { equipmentById })?.container,
+        resolveEquipmentDefinition(id, { equipmentById })?.container,
       ).toEqual({ capacityPounds });
     });
   }
 
   it("gives a non-container no capacity at all", () => {
     expect(
-      resolveItemDefinition("item_weapon_dagger", { equipmentById })?.container,
+      resolveEquipmentDefinition("item_weapon_dagger", { equipmentById })
+        ?.container,
     ).toBeUndefined();
   });
 });

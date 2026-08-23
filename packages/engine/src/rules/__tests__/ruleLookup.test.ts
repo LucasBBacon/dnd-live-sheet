@@ -1,7 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
   resolveEquipmentDefinition,
-  resolveItemDefinition,
   resolveResourceRule,
   resolveResourceRules,
   resolveWeaponDefinition,
@@ -23,94 +22,8 @@ describe("ruleLookup", () => {
   it("resolves nothing without a snapshot to read", () => {
     // the static dictionaries are gone; an item the caller supplies no pack
     // for does not exist, and undefined is the correct answer
-    expect(resolveItemDefinition("item_armor_shield")).toBeUndefined();
     expect(resolveWeaponDefinition("item_weapon_longsword")).toBeUndefined();
     expect(resolveEquipmentDefinition("item_weapon_longsword")).toBeUndefined();
-  });
-
-  it("resolves item definitions from the snapshot", () => {
-    const item = resolveItemDefinition("item_armor_shield", {
-      itemsById: {
-        item_armor_shield: {
-          id: "item_armor_shield",
-          name: "Snapshot Shield",
-          type: "armor",
-          weight: 6,
-          requiresAttunement: false,
-          categoryTags: ["category_armor_shield"],
-          modifiers: [acBonusModifier],
-        },
-      },
-    });
-
-    expect(item?.name).toBe("Snapshot Shield");
-    expect(item?.modifiers?.[0]?.value).toBe(3);
-  });
-
-  it("resolves item definition from equipmentById snapshot", () => {
-    const item = resolveItemDefinition("item_armor_shield", {
-      equipmentById: {
-        item_armor_shield: {
-          id: "item_armor_shield",
-          name: "Canonical Shield",
-          type: "armor",
-          weight: 6,
-          requiresAttunement: false,
-          categoryTags: ["category_armor_shield"],
-          modifiers: [acBonusModifier],
-        },
-      },
-    });
-
-    expect(item?.name).toBe("Canonical Shield");
-    expect(item?.modifiers?.[0]?.value).toBe(3);
-  });
-
-  it("itemsById snapshot takes priority over equipmentById snapshot", () => {
-    const item = resolveItemDefinition("item_armor_shield", {
-      itemsById: {
-        item_armor_shield: {
-          id: "item_armor_shield",
-          name: "Compat Shield",
-          type: "armor",
-          weight: 6,
-          requiresAttunement: false,
-          categoryTags: ["category_armor_shield"],
-        },
-      },
-      equipmentById: {
-        item_armor_shield: {
-          id: "item_armor_shield",
-          name: "Canonical Shield",
-          type: "armor",
-          weight: 6,
-          requiresAttunement: false,
-          categoryTags: ["category_armor_shield"],
-          modifiers: [acBonusModifier],
-        },
-      },
-    });
-
-    expect(item?.name).toBe("Compat Shield");
-  });
-
-  it("resolves canonical weapon ids via snapshot", () => {
-    const weapon = resolveWeaponDefinition("item_weapon_longsword", {
-      weaponsById: {
-        item_weapon_longsword: {
-          id: "item_weapon_longsword",
-          name: "Snapshot Longsword",
-          category: "martial_melee",
-          damageDice: "1d8",
-          damageType: "slashing",
-          properties: ["versatile"],
-          range: 5,
-        },
-      },
-    });
-
-    expect(weapon?.name).toBe("Snapshot Longsword");
-    expect(weapon?.damageDice).toBe("1d8");
   });
 
   it("resolves weapon definition from equipmentById snapshot", () => {

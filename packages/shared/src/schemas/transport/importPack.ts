@@ -3,12 +3,12 @@ import {
   ClassMulticlassPrerequisitesSchema,
   FeatPrerequisitesSchema,
 } from "../content/prerequisites.js";
-import {
-  ItemDefinitionSchema,
-  StartingEquipmentDefinitionSchema,
-} from "../content/items.js";
+import { StartingEquipmentDefinitionSchema } from "../content/items.js";
 import { TraitDefinitionSchema } from "../content/traits.js";
-import { WeaponDefinitionSchema } from "../content/weapons.js";
+import {
+  EquipmentDefinitionSchema,
+  WeaponCapabilitySchema,
+} from "../content/equipment.js";
 import { LoreSchema } from "../primitives/lore.js";
 import { CoreRuleIdSchema as ImportIdSchema } from "../primitives/ids.js";
 
@@ -173,8 +173,10 @@ const ItemImportDataSchema = z.object({
   weight: z.number().int().min(0).max(100_000),
   description: z.string().min(1).max(8000),
   isBundle: z.boolean().default(false),
-  itemRule: ItemDefinitionSchema,
-  weaponRule: WeaponDefinitionSchema.optional(),
+  // split the way the items table stores it: the weapon block lives in
+  // weaponRule, so itemRule never carries one
+  itemRule: EquipmentDefinitionSchema.omit({ weapon: true }),
+  weaponRule: WeaponCapabilitySchema.optional(),
 });
 
 const ClassLevelImportDataSchema = z.object({

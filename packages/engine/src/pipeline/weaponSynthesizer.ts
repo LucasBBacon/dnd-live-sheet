@@ -1,9 +1,6 @@
-import type {
-  ActionGrant,
-  WeaponAttackContext,
-  WeaponDefinition,
-} from "@project/shared";
+import type { ActionGrant, WeaponAttackContext } from "@project/shared";
 import type { Ability } from "../types/core.js";
+import type { WeaponView } from "../rules/equipmentProjection.js";
 
 /**
  * WeaponSynthesizer bridges the Inventory system and the Action pipeline
@@ -18,7 +15,7 @@ export class WeaponSynthesizer {
    * @returns Granted action based on static weapon definition
    */
   public static generateWeaponAction(
-    weapon: WeaponDefinition,
+    weapon: WeaponView,
     governingStat: Ability,
     attackContext: WeaponAttackContext = {
       hand: "main_hand",
@@ -101,7 +98,7 @@ export class WeaponSynthesizer {
    * @returns Granted actions based on static thrown weapon definition
    */
   public static generateThrownWeaponActions(
-    weapon: WeaponDefinition,
+    weapon: WeaponView,
     governingStat: Ability,
     attackContext: WeaponAttackContext = {
       hand: "main_hand",

@@ -12,7 +12,7 @@ import type { CombatContextManager } from "../calculators/combatContext.js";
 import type { ResourceManager } from "../calculators/resources.js";
 import { DiceEngine } from "../utils/diceParser.js";
 import {
-  resolveItemDefinition,
+  resolveEquipmentDefinition,
   type RuleSnapshotLookup,
 } from "../rules/ruleLookup.js";
 import type { InventoryLedger } from "./inventoryLedger.js";
@@ -665,7 +665,10 @@ export class ActionResolver {
       }
 
       // the chosen stack has to actually be ammunition this weapon fires
-      const definition = resolveItemDefinition(stack.itemId, context.snapshot);
+      const definition = resolveEquipmentDefinition(
+        stack.itemId,
+        context.snapshot,
+      );
       if (!definition || definition.ammoTag !== action.consumesAmmo) {
         return fail("wrong_ammo", cost.id);
       }

@@ -1,17 +1,18 @@
 import { describe, expect, it } from "vitest";
-import type { ItemDefinition, WeaponDefinition } from "@project/shared";
+import type { EquipmentDefinition, WeaponCapability } from "@project/shared";
 import {
   projectEquipmentRows,
   type EquipmentRuleRow,
 } from "../ruleSnapshotProjection.js";
 
 /**
- * A rule payload using every field ItemDefinition has, as a fixture for the
- * round-trip tests below. This is a hand-written literal, so it does not
- * grow when ItemDefinition does - see the comment on "carries every
- * authored field" for why that test cannot catch schema drift either.
+ * A rule payload using every non-weapon field EquipmentDefinition has, as a
+ * fixture for the round-trip tests below. This is a hand-written literal, so
+ * it does not grow when EquipmentDefinition does - see the comment on
+ * "carries every authored field" for why that test cannot catch schema
+ * drift either.
  */
-const fullItemRule: ItemDefinition = {
+const fullItemRule: Omit<EquipmentDefinition, "weapon"> = {
   id: "item_armor_plate",
   name: "Plate Armor",
   type: "armor",
@@ -44,12 +45,10 @@ const row = (overrides: Partial<EquipmentRuleRow> = {}): EquipmentRuleRow => ({
 });
 
 describe("projectEquipmentRows", () => {
-  it("returns empty maps for no rows", () => {
+  it("returns an empty map for no rows", () => {
     const result = projectEquipmentRows([]);
 
     expect(result.equipmentById).toEqual({});
-    expect(result.itemsById).toEqual({});
-    expect(result.weaponsById).toEqual({});
     expect(result.malformedItemIds).toEqual([]);
   });
 
@@ -57,7 +56,7 @@ describe("projectEquipmentRows", () => {
     // a fixture round-trip, not a drift guard: it asserts the projection
     // doesn't drop any key already present on fullItemRule, but fullItemRule
     // is a hand-written literal and the assertion below is a subset check,
-    // so a new ItemDefinition field changes neither side and this stays
+    // so a new EquipmentDefinition field changes neither side and this stays
     // green. schema drift is caught by the complementary-schemas test in
     // packages/shared/src/schemas/__tests__/equipment.test.ts instead
     const equipment = projectEquipmentRows([row()]).equipmentById
@@ -97,19 +96,8 @@ describe("projectEquipmentRows", () => {
     expect(equipment.weight).toBe(65);
   });
 
-  it("mirrors the same fields into the compatibility item map", () => {
-    const item = projectEquipmentRows([row()]).itemsById.item_armor_plate!;
-
-    expect(item.weight).toBe(65);
-    expect(item.equipSlot).toBe("body");
-    expect(item.requiresAttunement).toBe(true);
-    expect(item.ammoTag).toBe("bolt");
-  });
-
   it("round-trips a versatile weapon without losing its two-handed die", () => {
-    const weaponRule: WeaponDefinition = {
-      id: "item_weapon_longsword",
-      name: "Longsword",
+    const weaponRule: WeaponCapability = {
       category: "martial_melee",
       damageDice: "1d8",
       versatileDamageDice: "1d10",
@@ -138,12 +126,16 @@ describe("projectEquipmentRows", () => {
       }),
     ]);
 
-    expect(result.weaponsById.item_weapon_longsword).toEqual(weaponRule);
+    expect(result.equipmentById.item_weapon_longsword?.weapon).toEqual(
+      weaponRule,
+    );
     expect(result.malformedItemIds).toEqual([]);
   });
 
-  it("leaves non-weapons out of the weapon map", () => {
-    expect(projectEquipmentRows([row()]).weaponsById).toEqual({});
+  it("leaves .weapon absent on equipment with no weapon rule", () => {
+    expect(
+      projectEquipmentRows([row()]).equipmentById.item_armor_plate?.weapon,
+    ).toBeUndefined();
   });
 
   it("falls back to bare gear when a row has no authored rule", () => {
@@ -174,7 +166,7 @@ describe("projectEquipmentRows", () => {
           ...fullItemRule,
           id: "item_broken",
           type: "nonsense",
-        } as unknown as ItemDefinition,
+        } as unknown as EquipmentRuleRow["itemRule"],
       }),
     ]);
 
@@ -196,7 +188,7 @@ describe("projectEquipmentRows", () => {
           ...fullItemRule,
           id,
           type: "nonsense",
-        } as unknown as ItemDefinition,
+        } as unknown as EquipmentRuleRow["itemRule"],
       });
 
     expect(() =>
@@ -204,7 +196,7 @@ describe("projectEquipmentRows", () => {
     ).toThrow(/every one of 2 item rows failed to parse/);
   });
 
-  it("still returns empty maps for no rows at all", () => {
+  it("still returns an empty map for no rows at all", () => {
     // the threshold must not fire on an empty catalogue: zero of zero rows
     // failing is not a contract break, it is an empty table
     expect(() => projectEquipmentRows([])).not.toThrow();
@@ -229,7 +221,6 @@ describe("projectEquipmentRows", () => {
     const equipment = result.equipmentById.item_armor_plate!;
     expect(equipment.id).toBe("item_armor_plate");
     expect(equipment.name).toBe("Plate Armor");
-    expect(result.itemsById.item_armor_plate!.id).toBe("item_armor_plate");
     expect(result.equipmentById.item_armour_plate_old_id).toBeUndefined();
   });
 });

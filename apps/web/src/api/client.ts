@@ -22,10 +22,7 @@ export type LevelUpOptionsParams = {
 export type RulesSnapshotResponse = {
   version: number;
   loadedAt: number;
-  snapshot: Pick<
-    RuleSnapshot,
-    "equipmentById" | "itemsById" | "weaponsById" | "resourcesById"
-  >;
+  snapshot: Pick<RuleSnapshot, "equipmentById" | "resourcesById">;
 };
 
 type QueryValue = string | number | boolean | null | undefined;

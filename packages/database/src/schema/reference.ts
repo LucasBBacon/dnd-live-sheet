@@ -1,11 +1,11 @@
 import type {
   ClassMulticlassPrerequisites,
   CoreRulePack,
+  EquipmentDefinition,
   FeatPrerequisites,
-  ItemDefinition,
   StartingEquipmentDefinition,
   TraitDefinition,
-  WeaponDefinition,
+  WeaponCapability,
 } from "@project/shared";
 import { sql } from "drizzle-orm";
 import { index } from "drizzle-orm/gel-core";
@@ -600,9 +600,12 @@ export const items = pgTable(
 
     description: text("description").notNull(),
 
-    // canonical rule payload used by runtime rule snapshots
-    itemRule: jsonb("item_rule").$type<ItemDefinition>(),
-    weaponRule: jsonb("weapon_rule").$type<WeaponDefinition>(),
+    // canonical rule payload used by runtime rule snapshots. Split the way
+    // EquipmentDefinition itself splits: itemRule never carries a weapon
+    // block, weaponRule is only ever the weapon capability, and the two
+    // recombine into one EquipmentDefinition when a snapshot is projected
+    itemRule: jsonb("item_rule").$type<Omit<EquipmentDefinition, "weapon">>(),
+    weaponRule: jsonb("weapon_rule").$type<WeaponCapability>(),
 
     // flag to tell API that this item contains other items
     isBundle: boolean("is_bundle").default(false).notNull(),

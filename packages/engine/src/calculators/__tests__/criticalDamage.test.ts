@@ -1,11 +1,11 @@
 import { describe, expect, it } from "vitest";
 import { CombatEngine } from "../combat.js";
 import type { Ability } from "../../types/core.js";
-import type { WeaponDefinition } from "@project/shared";
+import type { WeaponView } from "../../rules/equipmentProjection.js";
 
 const makeWeapon = (
-  overrides: Partial<WeaponDefinition> = {},
-): WeaponDefinition => ({
+  overrides: Partial<WeaponView> = {},
+): WeaponView => ({
   id: "weapon_greataxe",
   name: "Greataxe",
   category: "martial_melee",
@@ -31,7 +31,7 @@ const makeScores = (
 /** Calls calculateWeaponAttack with the crit-relevant arguments only. */
 const critFor = (
   criticalHitModifiers: unknown[],
-  weapon: WeaponDefinition = makeWeapon(),
+  weapon: WeaponView = makeWeapon(),
   classLevels: Record<string, number> = {},
 ) =>
   CombatEngine.calculateWeaponAttack(

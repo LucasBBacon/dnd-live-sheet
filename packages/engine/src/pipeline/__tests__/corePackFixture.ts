@@ -6,12 +6,10 @@ import {
   type CoreRulePack,
   type CoreRulePackSnapshot,
   type EquipmentDefinition,
-  type ItemDefinition,
-  type WeaponDefinition,
 } from "@project/shared";
 import {
-  toItemDefinition,
   toWeaponDefinition,
+  type WeaponView,
 } from "../../rules/equipmentProjection.js";
 import type { RuleSnapshotLookup } from "../../rules/ruleLookup.js";
 
@@ -98,29 +96,26 @@ export const corePackSnapshot = (): CoreRulePackSnapshot => {
 };
 
 /**
- * The pack's equipment, in the three shapes the engine resolves.
+ * The pack's equipment, keyed by id, plus the weapon view every
+ * weapon-capable entry projects.
  *
  * CoreRulePackSnapshot deliberately carries only what resolves by id through
- * ruleLookup's rulebook path; equipment reaches the runtime as its own maps.
- * These stand in for the EQUIPMENT/ITEM/WEAPON dictionaries the suites used to
- * read, now that the pack is the only source.
- * @returns equipmentById, itemsById and weaponsById built from the pack
+ * ruleLookup's rulebook path; equipment reaches the runtime as its own map.
+ * EquipmentDefinition is the single authored item shape, so equipmentById
+ * alone stands in for the ITEM dictionary the suites used to read.
+ * weaponsById is a convenience view for suites that only care about a
+ * weapon's attack-facing fields - equipmentById is the single source both
+ * are built from.
+ * @returns equipmentById and weaponsById built from the pack
  */
 export const corePackEquipment = (): {
   equipmentById: Record<string, EquipmentDefinition>;
-  itemsById: Record<string, ItemDefinition>;
-  weaponsById: Record<string, WeaponDefinition>;
+  weaponsById: Record<string, WeaponView>;
 } => {
   const equipment = corePack().equipment;
 
   const equipmentById = Object.fromEntries(
     equipment.map((entry) => [entry.id, entry as EquipmentDefinition]),
-  );
-  const itemsById = Object.fromEntries(
-    equipment.map((entry) => [
-      entry.id,
-      toItemDefinition(entry as EquipmentDefinition),
-    ]),
   );
   const weaponsById = Object.fromEntries(
     equipment.flatMap((entry) => {
@@ -129,7 +124,7 @@ export const corePackEquipment = (): {
     }),
   );
 
-  return { equipmentById, itemsById, weaponsById };
+  return { equipmentById, weaponsById };
 };
 
 /**

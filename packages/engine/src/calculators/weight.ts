@@ -1,6 +1,6 @@
 import type { InventoryInstance } from "@project/shared";
 import {
-  resolveItemDefinition,
+  resolveEquipmentDefinition,
   type RuleSnapshotLookup,
 } from "../rules/ruleLookup.js";
 
@@ -43,7 +43,7 @@ export class InventoryWeightCalculator {
     let total = 0;
 
     for (const instance of items) {
-      const definition = resolveItemDefinition(instance.itemId, snapshot);
+      const definition = resolveEquipmentDefinition(instance.itemId, snapshot);
       if (!definition) continue;
 
       total += poundsToHundredths(definition.weight) * instance.quantity;

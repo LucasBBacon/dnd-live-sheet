@@ -54,14 +54,14 @@ export const buildStartingEquipmentCategoryKey = (
 };
 
 export const buildCategoryItemOptions = (
-  snapshot: Pick<RuleSnapshot, "itemsById"> | undefined,
+  snapshot: Pick<RuleSnapshot, "equipmentById"> | undefined,
   categoryRefId: string,
 ): Array<{ id: string; name: string }> => {
   if (!snapshot) {
     return [];
   }
 
-  return Object.values(snapshot.itemsById)
+  return Object.values(snapshot.equipmentById)
     .filter((item) =>
       sharedMatchesStartingEquipmentCategory(
         {

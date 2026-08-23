@@ -4,9 +4,9 @@ export type {
   WeaponCategory,
   WeaponAttackContext,
   WeaponAttackUsage,
-  WeaponDefinition,
   WeaponProperty,
 } from "@project/shared";
+export type { WeaponView } from "../rules/equipmentProjection.js";
 
 export interface RuntimeHealthState {
   currentHp: number;

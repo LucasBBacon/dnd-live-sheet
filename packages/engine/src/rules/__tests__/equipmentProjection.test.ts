@@ -1,24 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { toItemDefinition } from "../equipmentProjection.js";
 import { corePackEquipment } from "../../pipeline/__tests__/corePackFixture.js";
 
-const {
-  equipmentById: EQUIPMENT_BY_ID,
-  itemsById: ITEMS_BY_ID,
-  weaponsById: WEAPONS_BY_ID,
-} = corePackEquipment();
+const { equipmentById: EQUIPMENT_BY_ID, weaponsById: WEAPONS_BY_ID } =
+  corePackEquipment();
 
 describe("pack equipment projections", () => {
-  it("keeps item projections aligned with canonical equipment entries", () => {
-    for (const [id, equipment] of Object.entries(EQUIPMENT_BY_ID)) {
-      const item = ITEMS_BY_ID[id];
-      expect(item).toBeDefined();
-      expect(item?.id).toBe(equipment.id);
-      expect(item?.name).toBe(equipment.name);
-      expect(item?.type).toBe(equipment.type);
-    }
-  });
-
   it("includes only weapon-capable entries in weapon projection", () => {
     for (const [id, equipment] of Object.entries(EQUIPMENT_BY_ID)) {
       const weapon = WEAPONS_BY_ID[id];
@@ -46,38 +32,5 @@ describe("pack equipment projections", () => {
 
     expect(longsword?.weapon?.properties).toContain("versatile");
     expect(longsword?.weapon?.versatileDamageDice).toBe("1d10");
-  });
-});
-
-describe("toItemDefinition and container capacity", () => {
-  it("carries a container's capacity into the item projection", () => {
-    // toItemDefinition enumerates fields rather than spreading, so a new one
-    // on EquipmentDefinition does not arrive here on its own
-    const item = toItemDefinition({
-      id: "item_backpack",
-      name: "Backpack",
-      type: "gear",
-      weight: 5,
-      requiresAttunement: false,
-      categoryTags: [],
-      container: { capacityPounds: 30 },
-    });
-
-    expect(item.container).toEqual({ capacityPounds: 30 });
-  });
-
-  it("leaves container off an item that has none", () => {
-    // absent rather than undefined, matching how equipSlot and ammoTag are
-    // handled - the dictionary tests assert exact object shapes
-    const item = toItemDefinition({
-      id: "item_weapon_dagger",
-      name: "Dagger",
-      type: "weapon",
-      weight: 1,
-      requiresAttunement: false,
-      categoryTags: [],
-    });
-
-    expect("container" in item).toBe(false);
   });
 });

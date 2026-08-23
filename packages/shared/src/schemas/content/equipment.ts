@@ -21,9 +21,9 @@ export const WeaponCapabilitySchema = z
   .object({
     category: WeaponCategorySchema,
     damageDice: z.string(),
-    // the two-handed die for a versatile weapon. WeaponDefinition has always
-    // had this; without it here, EquipmentDefinition cannot carry a versatile
-    // weapon and the projection back out silently downgrades it
+    // the two-handed die for a versatile weapon. Without it here,
+    // EquipmentDefinition cannot carry a versatile weapon and the engine's
+    // weapon view silently downgrades it
     versatileDamageDice: z.string().optional(),
     damageType: DamageTypeSchema,
     properties: z.array(WeaponPropertySchema),
@@ -39,9 +39,9 @@ export const EquipmentDefinitionSchema = z
     id: z.string(),
     name: z.string(),
     type: EquipmentTypeSchema.default("gear"),
-    // inventory mechanics, mirroring ItemDefinitionSchema: this is the authored
-    // source ItemDefinition is projected from, so the fields have to live here
-    // or they can never be authored
+    // inventory mechanics: EquipmentDefinition is the single authored item
+    // shape, so every field the inventory and encumbrance code reads has to
+    // live here or it can never be authored
     weight: z.number().default(0),
     armorCategory: ArmorCategorySchema.optional(),
     equipSlot: EquipSlotSchema.optional(),

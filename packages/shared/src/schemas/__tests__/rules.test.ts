@@ -1,37 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { RuleSnapshotSchema } from "../runtime/ruleSnapshot.js";
 import { ResourceResetSchema, ResourceSchema } from "../content/resources.js";
-import { WeaponDefinitionSchema } from "../content/weapons.js";
-
-describe("Weapon Definition Schema", () => {
-  it("accepts a valid weapon definition", () => {
-    const weapon = {
-      id: "item_weapon_longsword",
-      name: "Longsword",
-      category: "martial_melee",
-      damageDice: "1d8",
-      damageType: "slashing",
-      properties: ["versatile"],
-      range: 5,
-    };
-
-    expect(WeaponDefinitionSchema.parse(weapon)).toEqual(weapon);
-  });
-
-  it("accepts loading and special properties", () => {
-    const weapon = {
-      id: "item_weapon_crossbow_heavy",
-      name: "Heavy Crossbow",
-      category: "martial_ranged",
-      damageDice: "1d10",
-      damageType: "piercing",
-      properties: ["ammunition", "heavy", "loading", "two_handed", "special"],
-      range: 5,
-    };
-
-    expect(WeaponDefinitionSchema.parse(weapon)).toEqual(weapon);
-  });
-});
 
 describe("Resource Rule Schema", () => {
   it("accepts declarative class-threshold rules", () => {
@@ -67,7 +36,7 @@ describe("Resource Rule Schema", () => {
 describe("Rule Snapshot Schema", () => {
   it("accepts a transport-safe snapshot", () => {
     const snapshot = {
-      itemsById: {
+      equipmentById: {
         item_armor_shield: {
           id: "item_armor_shield",
           name: "Shield",
@@ -80,6 +49,17 @@ describe("Rule Snapshot Schema", () => {
               scalingFactor: "none",
             },
           ],
+        },
+        item_weapon_dagger: {
+          id: "item_weapon_dagger",
+          name: "Dagger",
+          type: "weapon",
+          weapon: {
+            category: "simple_melee",
+            damageDice: "1d4",
+            damageType: "piercing",
+            properties: ["finesse", "light", "thrown"],
+          },
         },
       },
       resourcesById: {
@@ -111,79 +91,35 @@ describe("Rule Snapshot Schema", () => {
           },
         },
       },
-      weaponsById: {
-        item_weapon_dagger: {
-          id: "item_weapon_dagger",
-          name: "Dagger",
-          category: "simple_melee",
-          damageDice: "1d4",
-          damageType: "piercing",
-          properties: ["finesse", "light", "thrown"],
-        },
-      },
     };
 
     const parsed = RuleSnapshotSchema.parse(snapshot);
 
     expect(parsed).toMatchObject(snapshot);
-    expect(parsed.itemsById.item_armor_shield).toMatchObject({
+    expect(parsed.equipmentById.item_armor_shield).toMatchObject({
       weight: 0,
       requiresAttunement: false,
     });
-    expect(parsed.itemsById.item_armor_shield?.modifiers?.[0]).toMatchObject({
+    expect(
+      parsed.equipmentById.item_armor_shield?.modifiers?.[0],
+    ).toMatchObject({
       requiredStates: [],
       forbiddenStates: [],
     });
+    expect(parsed.equipmentById.item_weapon_dagger?.weapon?.damageDice).toBe(
+      "1d4",
+    );
     expect(parsed.traitsById.feat_tough?.modifiers.fixed[0]).toMatchObject({
       requiredStates: [],
       forbiddenStates: [],
     });
   });
-
-  it("accepts snapshot with canonical equipmentById field", () => {
-    const snapshot = {
-      itemsById: {},
-      resourcesById: {},
-      traitsById: {},
-      weaponsById: {},
-      equipmentById: {
-        item_weapon_longsword: {
-          id: "item_weapon_longsword",
-          name: "Longsword",
-          type: "weapon",
-          weapon: {
-            category: "martial_melee",
-            damageDice: "1d8",
-            damageType: "slashing",
-            properties: ["versatile"],
-          },
-        },
-      },
-    };
-
-    const parsed = RuleSnapshotSchema.parse(snapshot);
-    expect(parsed.equipmentById?.item_weapon_longsword?.name).toBe("Longsword");
-    expect(parsed.equipmentById?.item_weapon_longsword?.weapon?.category).toBe("martial_melee");
-  });
-
-  it("accepts snapshot without optional equipmentById (backwards compatibility)", () => {
-    const snapshot = {
-      itemsById: {},
-      resourcesById: {},
-      traitsById: {},
-      weaponsById: {},
-    };
-
-    const parsed = RuleSnapshotSchema.parse(snapshot);
-    expect(parsed.equipmentById).toBeUndefined();
-  });
 });
 
 describe("a RuleSnapshot holds real traits", () => {
   const snapshotWith = (trait: unknown) => ({
-    itemsById: {},
+    equipmentById: {},
     resourcesById: {},
-    weaponsById: {},
     traitsById: { trait_test: trait },
   });
 

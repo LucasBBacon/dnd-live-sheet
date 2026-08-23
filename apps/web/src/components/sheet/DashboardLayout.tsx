@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import {
   CARRIED_SLOT,
   SLOT_INSTANCES,
-  resolveItemDefinition,
+  resolveEquipmentDefinition,
 } from "@project/engine";
 import type { CharacterSlot } from "@project/shared";
 import { useAbilities, useDerivedStats } from "../../hooks/useCharacterStats";
@@ -71,7 +71,7 @@ export const DashboardLayout = () => {
 
   const inventoryRows = useMemo(() => {
     return character.inventory.map((item) => {
-      const definition = resolveItemDefinition(
+      const definition = resolveEquipmentDefinition(
         item.itemId,
         character.ruleSnapshot ?? undefined,
       );

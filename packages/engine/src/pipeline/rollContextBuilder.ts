@@ -1,12 +1,9 @@
-import type {
-  ActionGrant,
-  InventoryInstance,
-  WeaponDefinition,
-} from "@project/shared";
+import type { ActionGrant, InventoryInstance } from "@project/shared";
 import {
-  resolveItemDefinition,
+  resolveEquipmentDefinition,
   type RuleSnapshotLookup,
 } from "../rules/ruleLookup.js";
+import type { WeaponView } from "../rules/equipmentProjection.js";
 
 export interface StateToggle {
   id: string; // activeState string (e.g., "two_handed_grip")
@@ -54,7 +51,7 @@ export interface RollContextPayload {
 
 export class RollContextBuilder {
   public static buildWeaponToggles(
-    weapon: WeaponDefinition,
+    weapon: WeaponView,
     hasSneakAttackTrait: boolean,
   ): StateToggle[] {
     const toggles: StateToggle[] = [];
@@ -118,7 +115,7 @@ export class RollContextBuilder {
    * Ordered by the inventory's own order so the list is stable between rolls.
    */
   public static buildAmmoOptions(
-    weapon: Pick<WeaponDefinition, "ammoItemId" | "ammoTag">,
+    weapon: Pick<WeaponView, "ammoItemId" | "ammoTag">,
     inventory: InventoryInstance[],
     snapshot?: RuleSnapshotLookup,
   ): AmmoOption[] {
@@ -130,7 +127,7 @@ export class RollContextBuilder {
     for (const row of inventory) {
       if (row.quantity <= 0) continue;
 
-      const definition = resolveItemDefinition(row.itemId, snapshot);
+      const definition = resolveEquipmentDefinition(row.itemId, snapshot);
       if (!definition) continue;
 
       const matchesTag =

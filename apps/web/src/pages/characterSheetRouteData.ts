@@ -44,10 +44,7 @@ export type CharacterSheetPayload = {
 
 export type CharacterSheetResponse = {
   character: CharacterSheetPayload;
-  ruleSnapshot: Pick<
-    RuleSnapshot,
-    "equipmentById" | "itemsById" | "weaponsById" | "resourcesById"
-  > | null;
+  ruleSnapshot: Pick<RuleSnapshot, "equipmentById" | "resourcesById"> | null;
 };
 
 export const fetchCharacterSheet = async (

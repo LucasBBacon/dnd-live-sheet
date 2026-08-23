@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { CharacterSlot, InventoryInstance } from "@project/shared";
 import { InventoryExtractor } from "../inventoryExtractor.js";
-import { resolveItemDefinition } from "../../rules/ruleLookup.js";
+import { resolveEquipmentDefinition } from "../../rules/ruleLookup.js";
 
 import { corePackLookup } from "./corePackFixture.js";
 
@@ -193,7 +193,7 @@ describe("InventoryExtractor.extractStates", () => {
   it("emits nothing for a non-armor item worn in the body slot", () => {
     // guards the guard: if item_robe ever stops resolving as a body-slot
     // non-armor item, this test would pass by resolving to nothing at all
-    const robe = resolveItemDefinition(ROBE, PACK);
+    const robe = resolveEquipmentDefinition(ROBE, PACK);
     expect(robe?.equipSlot).toBe("body");
     expect(robe?.type).not.toBe("armor");
 

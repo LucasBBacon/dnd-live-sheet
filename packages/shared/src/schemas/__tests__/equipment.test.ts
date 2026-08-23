@@ -3,51 +3,9 @@ import {
   EquipmentDefinitionSchema,
   WeaponCapabilitySchema,
 } from "../content/equipment.js";
-import {
-  ItemDefinitionSchema,
-  StartingEquipmentDefinitionSchema,
-} from "../content/items.js";
-import { WeaponDefinitionSchema } from "../content/weapons.js";
+import { StartingEquipmentDefinitionSchema } from "../content/items.js";
 
-/**
- * EquipmentDefinition carries a weapon as a WeaponCapability, and the engine
- * projects that back out as a WeaponDefinition by adding id and name. If the
- * two shapes ever stop being exact complements, that projection silently
- * loses whichever field drifted - which is how versatileDamageDice went
- * missing from every snapshot-resolved weapon.
- */
-describe("WeaponCapability and WeaponDefinition stay complementary", () => {
-  it("covers every WeaponDefinition field except id and name", () => {
-    const definitionKeys = Object.keys(WeaponDefinitionSchema.shape).sort();
-    const capabilityKeys = Object.keys(WeaponCapabilitySchema.shape).sort();
-
-    expect([...capabilityKeys, "id", "name"].sort()).toEqual(definitionKeys);
-  });
-
-  it("round-trips a fully-populated weapon through the capability shape", () => {
-    const definition = WeaponDefinitionSchema.parse({
-      id: "item_weapon_longsword",
-      name: "Longsword",
-      category: "martial_melee",
-      damageDice: "1d8",
-      versatileDamageDice: "1d10",
-      damageType: "slashing",
-      properties: ["versatile"],
-      range: 5,
-      longRange: 10,
-      ammoItemId: "item_ammo_arrow",
-      ammoTag: "arrow",
-    });
-
-    const { id, name, ...capability } = definition;
-
-    // the capability schema is strict, so an unrecognized key throws here
-    // rather than being quietly dropped
-    const parsed = WeaponCapabilitySchema.parse(capability);
-
-    expect({ id, name, ...parsed }).toEqual(definition);
-  });
-
+describe("WeaponCapabilitySchema", () => {
   it("keeps the versatile damage die a versatile weapon depends on", () => {
     // combat.ts and weaponSynthesizer.ts both branch on this to pick the
     // two-handed damage die, so losing it silently downgrades a longsword
@@ -77,21 +35,35 @@ describe("WeaponCapability and WeaponDefinition stay complementary", () => {
     expect(parsed.range).toBe(150);
     expect(parsed.longRange).toBe(600);
   });
+});
 
-  it("keeps the weapon definition shape aligned with the authored capability schema", () => {
-    const parsed = WeaponDefinitionSchema.parse({
-      id: "item_weapon_longbow",
-      name: "Longbow",
-      category: "martial_ranged",
-      damageDice: "1d8",
-      damageType: "piercing",
-      properties: ["ammunition"],
-      range: 150,
-      longRange: 600,
+describe("EquipmentDefinitionSchema is the single authored item shape", () => {
+  it("carries everything ItemDefinition and WeaponDefinition did", () => {
+    const parsed = EquipmentDefinitionSchema.parse({
+      id: "item_longsword",
+      name: "Longsword",
+      type: "weapon",
+      weight: 3,
+      equipSlot: "main_hand",
+      weapon: {
+        category: "martial_melee",
+        damageDice: "1d8",
+        versatileDamageDice: "1d10",
+        damageType: "slashing",
+        properties: ["versatile"],
+      },
     });
+    expect(parsed.weapon?.versatileDamageDice).toBe("1d10");
+    expect(parsed.equipSlot).toBe("main_hand");
+  });
 
-    expect(parsed.range).toBe(150);
-    expect(parsed.longRange).toBe(600);
+  it("no longer exports a second authored item shape", async () => {
+    // a regression guard: reintroducing either schema re-opens the drift this
+    // task closes, and nothing else would fail if one came back
+    const items = await import("../content/items.js");
+    const weapons = await import("../content/weapons.js");
+    expect("ItemDefinitionSchema" in items).toBe(false);
+    expect("WeaponDefinitionSchema" in weapons).toBe(false);
   });
 });
 
@@ -129,26 +101,8 @@ describe("StartingEquipmentDefinitionSchema", () => {
   });
 });
 
-describe("ItemDefinition and EquipmentDefinition stay complementary", () => {
-  it("covers every ItemDefinition field, plus weapon", () => {
-    // EquipmentDefinition is the authored source ItemDefinition is projected
-    // from, so it must be a strict superset by exactly one field. drift here
-    // means the snapshot projection starts rejecting rows wholesale, because
-    // EquipmentDefinitionSchema is strict
-    const itemKeys = Object.keys(ItemDefinitionSchema.shape).sort();
-    const equipmentKeys = Object.keys(EquipmentDefinitionSchema.shape).sort();
-
-    expect([...itemKeys, "weapon"].sort()).toEqual(equipmentKeys);
-  });
-});
-
-describe("a container carries its capacity through both shapes", () => {
+describe("a container carries its capacity on EquipmentDefinition", () => {
   it("round-trips a pounds-of-gear capacity", () => {
-    // if `container` were ever dropped from one of these schemas, the two
-    // parses below would not fail the same way. EquipmentDefinitionSchema is
-    // strict, so it would throw on the now-unrecognized key. ItemDefinitionSchema
-    // is not strict, so it would silently strip the key instead - only the
-    // toEqual assertions below would catch that, by finding container missing
     const equipment = EquipmentDefinitionSchema.parse({
       id: "item_backpack",
       name: "Backpack",
@@ -158,30 +112,20 @@ describe("a container carries its capacity through both shapes", () => {
     });
 
     expect(equipment.container).toEqual({ capacityPounds: 30 });
-
-    const item = ItemDefinitionSchema.parse({
-      id: "item_backpack",
-      name: "Backpack",
-      type: "gear",
-      weight: 5,
-      container: { capacityPounds: 30 },
-    });
-
-    expect(item.container).toEqual({ capacityPounds: 30 });
   });
 
-  it("leaves container absent on an item that is not one", () => {
-    const item = ItemDefinitionSchema.parse({
+  it("leaves container absent on equipment that is not one", () => {
+    const equipment = EquipmentDefinitionSchema.parse({
       id: "item_weapon_dagger",
       name: "Dagger",
       type: "weapon",
       weight: 1,
     });
 
-    expect(item.container).toBeUndefined();
+    expect(equipment.container).toBeUndefined();
   });
 
-  it("parses category tags on authored equipment and projected item shapes", () => {
+  it("parses category tags on authored equipment", () => {
     const equipment = EquipmentDefinitionSchema.parse({
       id: "item_holy_symbol_amulet",
       name: "Holy Symbol (Amulet)",
@@ -190,15 +134,6 @@ describe("a container carries its capacity through both shapes", () => {
     });
 
     expect(equipment.categoryTags).toEqual(["category_holy_symbol"]);
-
-    const item = ItemDefinitionSchema.parse({
-      id: "item_holy_symbol_amulet",
-      name: "Holy Symbol (Amulet)",
-      type: "gear",
-      categoryTags: ["category_holy_symbol"],
-    });
-
-    expect(item.categoryTags).toEqual(["category_holy_symbol"]);
   });
 
   it("defaults missing category tags to an empty array", () => {
@@ -208,13 +143,6 @@ describe("a container carries its capacity through both shapes", () => {
       type: "gear",
     });
 
-    const item = ItemDefinitionSchema.parse({
-      id: "item_pack_explorers",
-      name: "Explorer's Pack",
-      type: "gear",
-    });
-
     expect(equipment.categoryTags).toEqual([]);
-    expect(item.categoryTags).toEqual([]);
   });
 });

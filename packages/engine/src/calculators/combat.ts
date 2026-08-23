@@ -4,11 +4,11 @@ import type {
   DamageType,
   FixedProficiencyGrant,
   RuntimeModifier,
-  WeaponDefinition,
 } from "@project/shared";
 import { AbilityEngine } from "./abilities.js";
 import type { Ability } from "../types/core.js";
 import type { WeaponAttackContext } from "../types/combat.js";
+import type { WeaponView } from "../rules/equipmentProjection.js";
 import { DiceEngine } from "../utils/diceParser.js";
 
 /**
@@ -119,7 +119,7 @@ export class CombatEngine {
    * @returns An object containing the name of the governing ability score and its modifier
    */
   private static determineGoverningModifier(
-    weapon: WeaponDefinition,
+    weapon: WeaponView,
     abilityScores: Record<Ability, number>,
     activeStates: string[] = [],
   ): { statName: Ability; mod: number } {
@@ -178,7 +178,7 @@ export class CombatEngine {
    * @returns A string representing the inferred attack type: "melee_weapon", "ranged_weapon", "melee_spell", or "ranged_spell".
    */
   private static inferAttackType(
-    weapon: WeaponDefinition,
+    weapon: WeaponView,
   ): "melee_weapon" | "ranged_weapon" | "melee_spell" | "ranged_spell" {
     const isRangedCategory =
       weapon.category === "simple_ranged" ||
@@ -485,7 +485,7 @@ export class CombatEngine {
    * @returns A DerivedAttack object containing the calculated attack bonus, damage expression, and breakdown of contributing factors
    */
   public static calculateWeaponAttack(
-    weapon: WeaponDefinition,
+    weapon: WeaponView,
     abilityScores: Record<Ability, number>,
     profBonus: number,
     proficiencies: FixedProficiencyGrant[],

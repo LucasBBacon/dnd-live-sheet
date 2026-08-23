@@ -26,8 +26,7 @@ const setupReferenceApp = async (
       version: 1,
       loadedAt: 1,
       snapshot: {
-        itemsById: {},
-        weaponsById: {},
+        equipmentById: {},
         resourcesById: {},
         traitsById: {},
       },

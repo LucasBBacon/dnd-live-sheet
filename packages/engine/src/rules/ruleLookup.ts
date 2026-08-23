@@ -2,12 +2,10 @@ import type {
   ClassDefinition,
   CoreRulePackSnapshot,
   EquipmentDefinition,
-  ItemDefinition,
   Resource,
   TraitDefinition,
-  WeaponDefinition,
 } from "@project/shared";
-import { toItemDefinition, toWeaponDefinition } from "./equipmentProjection.js";
+import { toWeaponDefinition, type WeaponView } from "./equipmentProjection.js";
 import type { RaceDefinition } from "./raceTypes.js";
 
 /**
@@ -20,9 +18,6 @@ import type { RaceDefinition } from "./raceTypes.js";
  */
 type RuleSnapshotLookup = {
   equipmentById?: Record<string, EquipmentDefinition> | undefined;
-  // compatibility fields - still accepted while consumers migrate to equipmentById
-  itemsById?: Record<string, ItemDefinition> | undefined;
-  weaponsById?: Record<string, WeaponDefinition> | undefined;
   resourcesById?: Record<string, Resource> | undefined;
   /**
    * Rulebook content loaded from a core rule pack.
@@ -65,38 +60,15 @@ export const resolveEquipmentDefinition = (
   resolveFromMap(equipmentId, snapshot?.equipmentById);
 
 /**
- * The inventory view of a piece of equipment.
- *
- * itemsById is consulted first only as a compatibility path for callers still
- * handing over a pre-projected map; equipmentById is canonical.
- * @param itemId The authored equipment id
- * @param snapshot Pack content, when the caller has any loaded
- * @returns The item definition, or undefined
- */
-export const resolveItemDefinition = (
-  itemId: string,
-  snapshot?: RuleSnapshotLookup,
-): ItemDefinition | undefined => {
-  const fromItemSnapshot = resolveFromMap(itemId, snapshot?.itemsById);
-  if (fromItemSnapshot) return fromItemSnapshot;
-
-  const fromEquipment = resolveFromMap(itemId, snapshot?.equipmentById);
-  return fromEquipment ? toItemDefinition(fromEquipment) : undefined;
-};
-
-/**
  * The attack view of a piece of equipment.
  * @param weaponId The authored equipment id
  * @param snapshot Pack content, when the caller has any loaded
- * @returns The weapon definition, or undefined if it is not a weapon
+ * @returns The weapon view, or undefined if it is not a weapon
  */
 export const resolveWeaponDefinition = (
   weaponId: string,
   snapshot?: RuleSnapshotLookup,
-): WeaponDefinition | undefined => {
-  const fromWeaponSnapshot = resolveFromMap(weaponId, snapshot?.weaponsById);
-  if (fromWeaponSnapshot) return fromWeaponSnapshot;
-
+): WeaponView | undefined => {
   const fromEquipment = resolveFromMap(weaponId, snapshot?.equipmentById);
   return fromEquipment ? toWeaponDefinition(fromEquipment) : undefined;
 };

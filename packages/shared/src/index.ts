@@ -11,6 +11,7 @@ export * from "./schemas/transport/homebrew.js";
 export * from "./schemas/transport/importPack.js";
 export * from "./schemas/content/items.js";
 export * from "./schemas/runtime/actors.js";
+export * from "./schemas/runtime/inventory.js";
 export * from "./schemas/content/modifiers.js";
 export * from "./schemas/content/prerequisites.js";
 export * from "./schemas/primitives/ability.js";

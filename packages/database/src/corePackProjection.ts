@@ -1,10 +1,8 @@
-import {
-  ItemDefinitionSchema,
-  WeaponDefinitionSchema,
-  type CoreRulePack,
-  type ItemDefinition,
-  type TraitDefinition,
-  type WeaponDefinition,
+import type {
+  CoreRulePack,
+  EquipmentDefinition,
+  TraitDefinition,
+  WeaponCapability,
 } from "@project/shared";
 
 type CorePackItemRow = {
@@ -13,8 +11,8 @@ type CorePackItemRow = {
   weight: number;
   description: string;
   isBundle: boolean;
-  itemRule: ItemDefinition;
-  weaponRule?: WeaponDefinition | undefined;
+  itemRule: Omit<EquipmentDefinition, "weapon">;
+  weaponRule?: WeaponCapability | undefined;
 };
 
 type Lore = { shortDescription: string; fullText?: string };
@@ -99,27 +97,28 @@ export type CoreRulePackProjection = {
 
 const toItemRule = (
   equipment: CoreRulePack["equipment"][number],
-): ItemDefinition => {
+): Omit<EquipmentDefinition, "weapon"> => {
+  // CoreEquipmentSchema adds four fields on top of EquipmentDefinitionSchema
+  // (lore, isBundle, bundleContents, implementation); all four are
+  // pack-authoring metadata that does not belong in the runtime rule payload,
+  // so every one of them has to be named here or it leaks into item_rule.
+  // ItemDefinitionSchema.parse used to strip these implicitly (a non-strict
+  // schema drops unknown keys); EquipmentDefinitionSchema is strict, so the
+  // stripping has to happen explicitly instead.
   const {
     lore: _lore,
     isBundle: _isBundle,
     bundleContents: _bundleContents,
+    implementation: _implementation,
     weapon: _weapon,
     ...item
   } = equipment;
-  return ItemDefinitionSchema.parse(item);
+  return item;
 };
 
 const toWeaponRule = (
   equipment: CoreRulePack["equipment"][number],
-): WeaponDefinition | undefined =>
-  equipment.weapon
-    ? WeaponDefinitionSchema.parse({
-        id: equipment.id,
-        name: equipment.name,
-        ...equipment.weapon,
-      })
-    : undefined;
+): WeaponCapability | undefined => equipment.weapon;
 
 const traitGrantsAtLevel = (
   grants: CoreRulePack["classes"][number]["progression"][number]["grants"],

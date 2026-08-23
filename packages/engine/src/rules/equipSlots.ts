@@ -2,7 +2,6 @@ import type {
   CharacterSlot,
   EquipSlot,
   EquipmentDefinition,
-  ItemDefinition,
 } from "@project/shared";
 
 /**
@@ -42,7 +41,7 @@ export const slotCapacity = (equipSlot: EquipSlot): number =>
  * at all and can only go back in the pack.
  */
 export const canEquipTo = (
-  definition: Pick<ItemDefinition, "equipSlot">,
+  definition: Pick<EquipmentDefinition, "equipSlot">,
   target: CharacterSlot,
 ): boolean => {
   if (target === CARRIED_SLOT) return true;

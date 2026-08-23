@@ -10,13 +10,7 @@ import {
   slotsConsumedBy,
 } from "../equipSlots.js";
 
-const { equipmentById, itemsById } = corePackEquipment();
-
-const definition = (id: string) => {
-  const item = itemsById[id];
-  if (!item) throw new Error(`the pack is missing ${id}`);
-  return item;
-};
+const { equipmentById } = corePackEquipment();
 
 const equipment = (id: string) => {
   const item = equipmentById[id];
@@ -43,7 +37,7 @@ describe("slot capacity", () => {
 
 describe("canEquipTo", () => {
   it("lets a ring go on either finger but nowhere else", () => {
-    const ring = definition("item_ring_of_protection");
+    const ring = equipment("item_ring_of_protection");
 
     expect(canEquipTo(ring, "ring_1")).toBe(true);
     expect(canEquipTo(ring, "ring_2")).toBe(true);
@@ -53,21 +47,21 @@ describe("canEquipTo", () => {
   });
 
   it("routes a shield to the off hand without special-casing its id", () => {
-    const shield = definition("item_armor_shield");
+    const shield = equipment("item_armor_shield");
 
     expect(canEquipTo(shield, "off_hand")).toBe(true);
     expect(canEquipTo(shield, "body")).toBe(false);
   });
 
   it("routes body armor to the body slot", () => {
-    const plate = definition("item_armor_plate");
+    const plate = equipment("item_armor_plate");
 
     expect(canEquipTo(plate, "body")).toBe(true);
     expect(canEquipTo(plate, "off_hand")).toBe(false);
   });
 
   it("always allows returning an item to the pack", () => {
-    expect(canEquipTo(definition("item_armor_plate"), "backpack")).toBe(true);
+    expect(canEquipTo(equipment("item_armor_plate"), "backpack")).toBe(true);
     // even something with no slot at all can be carried
     expect(canEquipTo({ equipSlot: undefined }, "backpack")).toBe(true);
   });

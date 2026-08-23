@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { resolveItemDefinition } from "@project/engine";
+import { resolveEquipmentDefinition } from "@project/engine";
 import { costsAttack } from "@project/shared";
 import { useEffect, useMemo, useState, type MouseEvent } from "react";
 import { useCombat } from "../../hooks/useCombat";
@@ -85,7 +85,7 @@ export const CombatWidget = () => {
   const hasEquippedShield = inventory.some((item) => {
     if (item.slot !== "off_hand") return false;
 
-    const definition = resolveItemDefinition(
+    const definition = resolveEquipmentDefinition(
       item.itemId,
       ruleSnapshot ?? undefined,
     );

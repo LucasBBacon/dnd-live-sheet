@@ -74,7 +74,8 @@ describe("the importer and the rule snapshot projection agree", () => {
 
   it("keeps a versatile weapon's two-handed die", () => {
     // the exact field that went missing, asserted on real data this time
-    const longsword = project().projection.weaponsById.item_weapon_longsword!;
+    const longsword =
+      project().projection.equipmentById.item_weapon_longsword!.weapon!;
 
     expect(longsword.versatileDamageDice).toBe("1d10");
     expect(longsword.damageDice).toBe("1d8");

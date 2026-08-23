@@ -43,8 +43,6 @@ describe("ImportPackSchema", () => {
               type: "weapon",
             },
             weaponRule: {
-              id: "item_test_blade",
-              name: "Test Blade",
               category: "martial_melee",
               damageDice: "1d8",
               damageType: "slashing",

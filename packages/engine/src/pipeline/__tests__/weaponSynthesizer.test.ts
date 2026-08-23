@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
-import type { WeaponAttackContext, WeaponDefinition } from "@project/shared";
+import type { WeaponAttackContext } from "@project/shared";
 import { WeaponSynthesizer } from "../weaponSynthesizer.js";
+import type { WeaponView } from "../../rules/equipmentProjection.js";
 
 const makeAttackContext = (
   overrides: Partial<WeaponAttackContext> = {},
@@ -13,7 +14,7 @@ const makeAttackContext = (
 
 describe("WeaponSynthesizer", () => {
   it("uses authored weapon ranges for ranged and thrown attacks", () => {
-    const longbow: WeaponDefinition = {
+    const longbow: WeaponView = {
       id: "item_weapon_longbow",
       name: "Longbow",
       category: "martial_ranged",
@@ -34,7 +35,7 @@ describe("WeaponSynthesizer", () => {
     expect(rangedAction.effect.range).toBe(150);
     expect(rangedAction.effect.longRange).toBe(600);
 
-    const dagger: WeaponDefinition = {
+    const dagger: WeaponView = {
       id: "item_weapon_dagger",
       name: "Dagger",
       category: "simple_melee",
@@ -63,7 +64,7 @@ describe("WeaponSynthesizer", () => {
   });
 
   it("marks an off-hand two-weapon attack as a bonus action and carries its context", () => {
-    const shortsword: WeaponDefinition = {
+    const shortsword: WeaponView = {
       id: "item_weapon_shortsword",
       name: "Shortsword",
       category: "martial_melee",
@@ -98,7 +99,7 @@ describe("WeaponSynthesizer", () => {
 });
 
 describe("WeaponSynthesizer activation", () => {
-  const longsword: WeaponDefinition = {
+  const longsword: WeaponView = {
     id: "item_weapon_longsword",
     name: "Longsword",
     category: "martial_melee",
@@ -109,7 +110,7 @@ describe("WeaponSynthesizer activation", () => {
     range: 5,
   };
 
-  const handaxe: WeaponDefinition = {
+  const handaxe: WeaponView = {
     id: "item_weapon_handaxe",
     name: "Handaxe",
     category: "simple_melee",
@@ -128,7 +129,7 @@ describe("WeaponSynthesizer activation", () => {
   });
 
   it("costs an attack for a ranged weapon too", () => {
-    const longbow: WeaponDefinition = {
+    const longbow: WeaponView = {
       id: "item_weapon_longbow",
       name: "Longbow",
       category: "martial_ranged",

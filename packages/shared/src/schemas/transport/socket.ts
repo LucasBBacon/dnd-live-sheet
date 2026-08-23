@@ -1,4 +1,4 @@
-import type { CharacterSlot } from "../content/items.js";
+import type { CharacterSlot } from "../runtime/inventory.js";
 
 // #region Socket Events
 

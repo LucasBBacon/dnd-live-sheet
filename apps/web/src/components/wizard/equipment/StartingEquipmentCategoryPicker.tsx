@@ -5,7 +5,7 @@ import { apiClient, buildScopedReferenceEndpoint } from "../../../api/client";
 import { buildCategoryItemOptions } from "../../../utils/startingEquipment";
 
 type RulesSnapshotResponse = {
-  snapshot: Pick<RuleSnapshot, "itemsById">;
+  snapshot: Pick<RuleSnapshot, "equipmentById">;
 };
 
 export const StartingEquipmentCategoryPicker = ({

@@ -1,5 +1,4 @@
 import z from "zod";
-import { DamageTypeSchema } from "./affinities.js";
 
 export const WeaponCategorySchema = z.enum([
   "simple_melee",
@@ -22,25 +21,5 @@ export const WeaponPropertySchema = z.enum([
   "range",
 ]);
 
-export const WeaponDefinitionSchema = z
-  .object({
-    id: z.string(),
-    name: z.string(),
-    category: WeaponCategorySchema,
-    damageDice: z.string(), // e.g., "1d8"
-    versatileDamageDice: z.string().optional(),
-    damageType: DamageTypeSchema,
-    properties: z.array(WeaponPropertySchema),
-    range: z.number().default(5),
-    longRange: z.number().optional(),
-    // the default pick, when the character carries nothing better
-    ammoItemId: z.string().optional(),
-    // what the weapon fires, e.g. "arrow". Any item carrying the same tag is
-    // valid ammunition, which is what lets a +1 Arrow feed an ordinary bow
-    ammoTag: z.string().optional(),
-  })
-  .strict();
-
 export type WeaponCategory = z.infer<typeof WeaponCategorySchema>;
 export type WeaponProperty = z.infer<typeof WeaponPropertySchema>;
-export type WeaponDefinition = z.infer<typeof WeaponDefinitionSchema>;

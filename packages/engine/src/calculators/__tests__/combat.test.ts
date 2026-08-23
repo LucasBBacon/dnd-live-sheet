@@ -1,16 +1,13 @@
 import { describe, expect, it } from "vitest";
 import { CombatEngine } from "../combat.js";
 import type { Ability } from "../../types/core.js";
-import type {
-  FixedProficiencyGrant,
-  RuntimeModifier,
-  WeaponDefinition,
-} from "@project/shared";
+import type { FixedProficiencyGrant, RuntimeModifier } from "@project/shared";
 import type { WeaponAttackContext } from "../../types/combat.js";
+import type { WeaponView } from "../../rules/equipmentProjection.js";
 
 const makeWeapon = (
-  overrides: Partial<WeaponDefinition> = {},
-): WeaponDefinition => ({
+  overrides: Partial<WeaponView> = {},
+): WeaponView => ({
   id: "weapon_shortsword",
   name: "Shortsword",
   category: "martial_melee",

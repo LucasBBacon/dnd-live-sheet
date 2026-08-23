@@ -1,22 +1,23 @@
 import { z } from "zod";
 import type { CoreRulePack } from "../content/coreRulePack.js";
 import { EquipmentDefinitionSchema } from "../content/equipment.js";
-import { ItemDefinitionSchema } from "../content/items.js";
 import { ResourceSchema } from "../content/resources.js";
 import { TraitDefinitionSchema } from "../content/traits.js";
-import { WeaponDefinitionSchema } from "../content/weapons.js";
 
 // #region Resource Rules
 
+/**
+ * Equipment, keyed by id — the single authored item shape, both the item and
+ * weapon view the engine used to resolve separately now live on one entry.
+ * itemsById and weaponsById used to sit beside this as compatibility fields
+ * for phased migration; retiring ItemDefinition and WeaponDefinition is what
+ * that migration was waiting for.
+ */
 export const RuleSnapshotSchema = z
   .object({
-    // canonical equipment field - single source over time
-    equipmentById: z.record(z.string(), EquipmentDefinitionSchema).optional(),
-    // compatibility fields - kept for phased consumer migration
-    itemsById: z.record(z.string(), ItemDefinitionSchema),
+    equipmentById: z.record(z.string(), EquipmentDefinitionSchema),
     resourcesById: z.record(z.string(), ResourceSchema),
     traitsById: z.record(z.string(), TraitDefinitionSchema),
-    weaponsById: z.record(z.string(), WeaponDefinitionSchema),
   })
   .strict();
 

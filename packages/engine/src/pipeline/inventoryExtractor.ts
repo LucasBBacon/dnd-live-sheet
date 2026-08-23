@@ -1,7 +1,7 @@
 import type { InventoryInstance, RuntimeModifier } from "@project/shared";
 import { isEquipped } from "../rules/equipSlots.js";
 import {
-  resolveItemDefinition,
+  resolveEquipmentDefinition,
   type RuleSnapshotLookup,
 } from "../rules/ruleLookup.js";
 
@@ -77,7 +77,7 @@ export class InventoryExtractor {
       // question, so it deliberately emits nothing here
       if (instance.slot !== "body") continue;
 
-      const definition = resolveItemDefinition(instance.itemId, snapshot);
+      const definition = resolveEquipmentDefinition(instance.itemId, snapshot);
       if (definition?.type !== "armor") continue;
 
       states.add("status_wearing_armor");
@@ -110,7 +110,7 @@ export class InventoryExtractor {
     const unknownItemIds: string[] = [];
 
     for (const instance of items) {
-      const definition = resolveItemDefinition(instance.itemId, snapshot);
+      const definition = resolveEquipmentDefinition(instance.itemId, snapshot);
 
       // an id with no rule behind it is skipped rather than thrown on: a save
       // outlives the homebrew pack that authored it

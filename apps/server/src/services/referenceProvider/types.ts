@@ -18,7 +18,7 @@ export type TraitCategory = "skills" | "tools_and_languages";
  */
 export type RulesSnapshotPayload = Pick<
   RuleSnapshot,
-  "equipmentById" | "itemsById" | "weaponsById" | "resourcesById"
+  "equipmentById" | "resourcesById"
 > &
   Partial<CoreRulePackSnapshot>;
 

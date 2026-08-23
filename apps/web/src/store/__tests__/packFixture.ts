@@ -4,10 +4,8 @@ import {
   CoreRulePackSchema,
   toRuleSnapshot,
   type EquipmentDefinition,
-  type ItemDefinition,
-  type WeaponDefinition,
 } from "@project/shared";
-import { toItemDefinition, toWeaponDefinition } from "@project/engine";
+import { toWeaponDefinition, type WeaponView } from "@project/engine";
 
 /**
  * The shipped pack, for suites that drive the store's rule lookups.
@@ -66,20 +64,17 @@ const build = () => {
   const pack = CoreRulePackSchema.parse({ pack: packMeta, ...merged });
 
   const equipmentById: Record<string, EquipmentDefinition> = {};
-  const itemsById: Record<string, ItemDefinition> = {};
-  const weaponsById: Record<string, WeaponDefinition> = {};
+  const weaponsById: Record<string, WeaponView> = {};
 
   for (const entry of pack.equipment) {
     const equipment = entry as EquipmentDefinition;
     equipmentById[entry.id] = equipment;
-    itemsById[entry.id] = toItemDefinition(equipment);
     const weapon = toWeaponDefinition(equipment);
     if (weapon) weaponsById[entry.id] = weapon;
   }
 
   return {
     equipmentById,
-    itemsById,
     weaponsById,
     resourcesById: Object.fromEntries(
       pack.resources.map((resource) => [resource.id, resource]),

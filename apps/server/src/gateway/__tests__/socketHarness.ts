@@ -209,8 +209,6 @@ export const setupGateway = async (
       loadedAt: Date.now(),
       snapshot: {
         equipmentById: {},
-        itemsById: {},
-        weaponsById: {},
         resourcesById: Object.fromEntries(
           pack.resources.map((resource) => [resource.id, resource]),
         ),

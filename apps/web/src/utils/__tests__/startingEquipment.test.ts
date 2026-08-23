@@ -5,7 +5,7 @@ describe("buildCategoryItemOptions", () => {
   it("returns items with matching category tags only", () => {
     const options = buildCategoryItemOptions(
       {
-        itemsById: {
+        equipmentById: {
           item_weapon_dagger: {
             id: "item_weapon_dagger",
             name: "Dagger",
@@ -33,7 +33,7 @@ describe("buildCategoryItemOptions", () => {
   it("returns empty when tags are missing for the requested category", () => {
     const options = buildCategoryItemOptions(
       {
-        itemsById: {
+        equipmentById: {
           item_holy_symbol_amulet: {
             id: "item_holy_symbol_amulet",
             name: "Holy Symbol (Amulet)",
@@ -53,7 +53,7 @@ describe("buildCategoryItemOptions", () => {
   it("sorts matching options by item name", () => {
     const options = buildCategoryItemOptions(
       {
-        itemsById: {
+        equipmentById: {
           item_focus_wand: {
             id: "item_focus_wand",
             name: "Wand",

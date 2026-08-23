@@ -26,9 +26,9 @@ import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
 import { randomUUID } from "node:crypto";
 import type {
-  ItemDefinition,
+  EquipmentDefinition,
   StartingEquipmentDefinition,
-  WeaponDefinition,
+  WeaponCapability,
 } from "@project/shared";
 import { backgrounds, items, subclasses } from "./schema/reference.js";
 import {
@@ -179,7 +179,7 @@ const SAMPLE_BACKGROUNDS = [
 
 // #region Reference Stubs - Items
 
-type ItemModifier = NonNullable<ItemDefinition["modifiers"]>[number];
+type ItemModifier = NonNullable<EquipmentDefinition["modifiers"]>[number];
 
 /**
  * A modifier as authored below.
@@ -200,10 +200,13 @@ interface SampleItem {
   /** Pounds. Stored to the column in hundredths, as the projection expects. */
   pounds: number;
   description: string;
-  itemRule: Omit<ItemDefinition, "id" | "name" | "weight" | "modifiers"> & {
+  itemRule: Omit<
+    EquipmentDefinition,
+    "id" | "name" | "weight" | "modifiers" | "weapon"
+  > & {
     modifiers?: AuthoredModifier[];
   };
-  weaponRule?: Omit<WeaponDefinition, "id" | "name">;
+  weaponRule?: WeaponCapability;
 }
 
 /**
@@ -1494,7 +1497,9 @@ const packStamp = {
 };
 
 /** The authored item as the column stores it, with the state gates filled in. */
-const toItemRule = (item: SampleItem): ItemDefinition => {
+const toItemRule = (
+  item: SampleItem,
+): Omit<EquipmentDefinition, "weapon"> => {
   const { modifiers, ...rule } = item.itemRule;
 
   return {
@@ -1562,9 +1567,7 @@ const seedReferenceStubs = async () => {
         weight: Math.round(item.pounds * 100),
         description: item.description,
         itemRule: toItemRule(item),
-        weaponRule: item.weaponRule
-          ? ({ id: item.id, name: item.name, ...item.weaponRule } satisfies WeaponDefinition)
-          : null,
+        weaponRule: item.weaponRule ?? null,
         isBundle: false,
         ...packStamp,
       })),

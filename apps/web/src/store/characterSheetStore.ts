@@ -9,7 +9,6 @@ import {
   RestEngine,
   canEquipTo,
   resolveEquipmentDefinition,
-  resolveItemDefinition,
   slotsConsumedBy,
   type Ability,
   type ActionRollResult,
@@ -87,7 +86,7 @@ export const toInventoryInstance = (item: {
  */
 type SheetRuleSnapshot = Pick<
   RuleSnapshot,
-  "equipmentById" | "itemsById" | "weaponsById" | "resourcesById"
+  "equipmentById" | "resourcesById"
 > &
   Partial<CoreRulePackSnapshot>;
 
@@ -476,22 +475,14 @@ const placeItem = (
   // nothing to do, and returning null keeps a no-op from emitting a broadcast
   if (moving.slot === targetSlot) return null;
 
-  const definition = resolveItemDefinition(
-    moving.itemId,
-    snapshot ?? undefined,
-  );
-  if (!definition || !canEquipTo(definition, targetSlot)) return null;
-
   const equipment = resolveEquipmentDefinition(
     moving.itemId,
     snapshot ?? undefined,
   );
+  if (!equipment || !canEquipTo(equipment, targetSlot)) return null;
+
   const incoming = new Set(
-    targetSlot === CARRIED_SLOT
-      ? []
-      : equipment
-        ? slotsConsumedBy(equipment, targetSlot)
-        : [targetSlot],
+    targetSlot === CARRIED_SLOT ? [] : slotsConsumedBy(equipment, targetSlot),
   );
 
   const next: InventoryInstance[] = [];
@@ -786,7 +777,7 @@ export const useCharacterSheetStore = create<CharacterSheetState>(
       const item = state.inventory.find((row) => row.id === inventoryId);
       if (!item) return;
 
-      const definition = resolveItemDefinition(
+      const definition = resolveEquipmentDefinition(
         item.itemId,
         state.ruleSnapshot ?? undefined,
       );

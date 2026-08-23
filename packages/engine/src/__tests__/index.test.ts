@@ -6,7 +6,7 @@ describe("engine package entrypoint", () => {
     expect(engine.DerivedStatEngine).toBeDefined();
     expect(engine.AbilityEngine).toBeDefined();
     expect(engine.InventoryExtractor).toBeDefined();
-    expect(engine.resolveItemDefinition).toBeDefined();
+    expect(engine.resolveEquipmentDefinition).toBeDefined();
     expect(engine.resolveResourceRule).toBeDefined();
     expect(engine.resolveResourceRules).toBeDefined();
     expect(engine.resolveWeaponDefinition).toBeDefined();

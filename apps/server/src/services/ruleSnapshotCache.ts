@@ -29,8 +29,7 @@ const buildRuleSnapshot = async (): Promise<CachedRuleSnapshot> => {
     .from(items)
     .where(and(eq(items.sourceType, "core"), eq(items.isPublished, true)));
 
-  const { equipmentById, itemsById, weaponsById, malformedItemIds } =
-    projectEquipmentRows(ruleRows);
+  const { equipmentById, malformedItemIds } = projectEquipmentRows(ruleRows);
 
   // a row we could not parse is dropped rather than fatal, but it must not be
   // silent - an item missing from the snapshot resolves to nothing downstream
@@ -67,8 +66,6 @@ const buildRuleSnapshot = async (): Promise<CachedRuleSnapshot> => {
 
   const parsedSnapshot = RuleSnapshotSchema.parse({
     equipmentById,
-    itemsById,
-    weaponsById,
     resourcesById,
     traitsById: {},
   });
@@ -78,8 +75,6 @@ const buildRuleSnapshot = async (): Promise<CachedRuleSnapshot> => {
     loadedAt: Date.now(),
     snapshot: {
       equipmentById: parsedSnapshot.equipmentById,
-      itemsById: parsedSnapshot.itemsById,
-      weaponsById: parsedSnapshot.weaponsById,
       resourcesById: parsedSnapshot.resourcesById,
       ...(packContent ?? {}),
     },
