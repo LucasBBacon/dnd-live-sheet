@@ -13,7 +13,7 @@ import {
 import { CriticalHitModifierSchema, DiceRuleSchema } from "./dice.js";
 import { ActionGrantSchema } from "./actions.js";
 import { SpellGrantBlockSchema } from "./spells.js";
-import { LoreSchema } from "./lore.js";
+import { LoreSchema } from "./primitives/lore.js";
 
 export const TraitImplementationMetadataSchema = z.object({
   /**

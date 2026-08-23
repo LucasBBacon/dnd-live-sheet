@@ -11,13 +11,8 @@ import { FeatPrerequisitesSchema } from "./prerequisites.js";
 import { ResourceSchema } from "./resources.js";
 import { SpellDefinitionSchema } from "./spells.js";
 import { TraitDefinitionSchema } from "./traits.js";
-import { LoreSchema } from "./lore.js";
-
-const CoreRuleIdSchema = z
-  .string()
-  .min(3)
-  .max(100)
-  .regex(/^[a-z0-9_]+$/, "Use lowercase snake_case ids.");
+import { LoreSchema } from "./primitives/lore.js";
+import { CoreRuleIdSchema } from "./primitives/ids.js";
 
 const CoreSubraceSchema = z
   .object({

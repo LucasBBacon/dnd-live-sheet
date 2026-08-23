@@ -10,6 +10,10 @@ import {
   ResourceThresholdSchema,
   thresholdOf,
 } from "../primitives/scaling.js";
+import { CoreRuleIdSchema } from "../primitives/ids.js";
+import { StatePredicateSchema } from "../primitives/statePredicate.js";
+import { DamageTypeSchema } from "../primitives/damageType.js";
+import { choiceOf } from "../primitives/choice.js";
 import { z } from "zod";
 
 describe("thresholdOf", () => {
@@ -73,5 +77,56 @@ describe("ability primitive", () => {
   it("keeps every minimum optional", () => {
     expect(AbilityMinimumsSchema.parse({})).toEqual({});
     expect(AbilityMinimumsSchema.parse({ str: 13 }).str).toBe(13);
+  });
+});
+
+describe("id primitive", () => {
+  it("accepts snake_case ids and rejects other casings", () => {
+    expect(CoreRuleIdSchema.safeParse("trait_action_surge").success).toBe(true);
+    expect(CoreRuleIdSchema.safeParse("Trait-Action").success).toBe(false);
+    expect(CoreRuleIdSchema.safeParse("ab").success).toBe(false);
+  });
+});
+
+describe("state predicate primitive", () => {
+  it("defaults both lists to empty", () => {
+    expect(StatePredicateSchema.parse({})).toEqual({
+      requiredStates: [],
+      forbiddenStates: [],
+    });
+  });
+});
+
+describe("damage type primitive", () => {
+  it("still carries same_as_weapon", () => {
+    expect(DamageTypeSchema.safeParse("same_as_weapon").success).toBe(true);
+  });
+});
+
+describe("choiceOf", () => {
+  it("builds a choice block with a default pickCount of one", () => {
+    const schema = choiceOf(z.string());
+    expect(
+      schema.parse({ id: "trait_choice_skills", options: ["a", "b"] }),
+    ).toEqual({
+      id: "trait_choice_skills",
+      pickCount: 1,
+      options: ["a", "b"],
+    });
+  });
+
+  it("still enforces the id format on the block it wraps", () => {
+    const schema = choiceOf(z.string());
+    expect(
+      schema.safeParse({ id: "Not Snake Case", options: [] }).success,
+    ).toBe(false);
+  });
+
+  it("lets a caller override pickCount", () => {
+    const schema = choiceOf(z.number());
+    expect(
+      schema.parse({ id: "trait_choice_stats", pickCount: 2, options: [1, 2, 3] })
+        .pickCount,
+    ).toBe(2);
   });
 });

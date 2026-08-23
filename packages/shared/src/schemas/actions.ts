@@ -7,6 +7,7 @@ import {
 } from "./modifiers.js";
 import { DamageTypeSchema } from "./affinities.js";
 import { TargetFilterSchema } from "./creatures.js";
+import { StatePredicateSchema } from "./primitives/statePredicate.js";
 
 /**
  * What performing an action costs.
@@ -171,18 +172,12 @@ export const SummonEffectSchema = z.object({
   materialCostGP: z.number().optional(),
 });
 
-const EffectStatePredicateSchema = z.object({
-  requiredStates: z.array(z.string()).default([]),
-  forbiddenStates: z.array(z.string()).default([]),
-});
-
 export const ApplyStateEffectSchema = z.object({
   type: z.literal("apply_effect"),
   effectName: z.string().optional(), // defaults to the Action's name if omitted
   effectTag: z.string().optional(),
-  requiredStates: z.array(z.string()).default([]),
-  forbiddenStates: z.array(z.string()).default([]),
-  predicates: EffectStatePredicateSchema.optional(),
+  ...StatePredicateSchema.shape,
+  predicates: StatePredicateSchema.optional(),
   durationType: z.enum([
     "turn_start",
     "turn_end",

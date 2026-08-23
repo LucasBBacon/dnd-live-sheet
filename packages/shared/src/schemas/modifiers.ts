@@ -4,6 +4,7 @@ import {
   ModifierScalingSchema,
   ModifierScalingThresholdSchema,
 } from "./primitives/scaling.js";
+import { StatePredicateSchema } from "./primitives/statePredicate.js";
 
 // #region Modifier Schemas
 
@@ -94,8 +95,7 @@ export const BaseModifierSchema = z.object({
    * any other calculator would silently apply it unconditionally.
    */
   appliesWhen: z.string().min(1).max(120).optional(),
-  requiredStates: z.array(z.string()).default([]),
-  forbiddenStates: z.array(z.string()).default([]),
+  ...StatePredicateSchema.shape,
 });
 
 export const ChoiceModifierGrantSchema = z.object({

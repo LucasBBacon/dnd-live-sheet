@@ -1,21 +1,7 @@
 import z from "zod";
+import { DamageTypeSchema } from "./primitives/damageType.js";
 
-export const DamageTypeSchema = z.enum([
-  "acid",
-  "bludgeoning",
-  "cold",
-  "fire",
-  "force",
-  "lightning",
-  "necrotic",
-  "piercing",
-  "poison",
-  "psychic",
-  "radiant",
-  "slashing",
-  "thunder",
-  "same_as_weapon",
-]);
+export { DamageTypeSchema } from "./primitives/damageType.js";
 
 export const AffinityLevelSchema = z.enum([
   "vulnerability",
@@ -48,7 +34,6 @@ export const ChoiceAffinityGrantSchema = z.object({
   requiredStates: z.array(z.string()).default([]),
 });
 
-export type DamageType = z.infer<typeof DamageTypeSchema>;
 export type AffinityLevel = z.infer<typeof AffinityLevelSchema>;
 export type DamageBypass = z.infer<typeof DamageBypassSchema>;
 export type FixedAffinityGrant = z.infer<typeof FixedAffinityGrantSchema>;

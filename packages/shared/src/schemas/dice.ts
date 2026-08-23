@@ -5,6 +5,7 @@ import {
   ModifierScalingSchema,
   ModifierScalingThresholdSchema,
 } from "./modifiers.js";
+import { StatePredicateSchema } from "./primitives/statePredicate.js";
 
 export const DiceRuleTargetSchema = z.enum([
   "DAMAGE_ROLL",
@@ -78,8 +79,7 @@ export const CriticalHitModifierSchema = z.object({
    */
   sourceName: z.string().optional(),
   requiredAttackTypes: z.array(AttackTypeSchema).default([]),
-  requiredStates: z.array(z.string()).default([]),
-  forbiddenStates: z.array(z.string()).default([]),
+  ...StatePredicateSchema.shape,
 });
 
 export type CriticalHitModifier = z.infer<typeof CriticalHitModifierSchema>;

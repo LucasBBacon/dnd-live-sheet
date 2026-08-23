@@ -1,14 +1,9 @@
 import { z } from "zod";
 import { TraitEffectSchema } from "./effects.js";
-import { LoreSchema } from "./lore.js";
+import { LoreSchema } from "./primitives/lore.js";
+import { CoreRuleIdSchema as HomebrewIdSchema } from "./primitives/ids.js";
 
 // #region Homebrew Schemas
-
-const HomebrewIdSchema = z
-  .string()
-  .min(3)
-  .max(100)
-  .regex(/^[a-z0-9_]+$/, "Use lowercase snake_case ids.");
 
 /**
  * Schema for the context of a homebrew entity, including campaign and character information.

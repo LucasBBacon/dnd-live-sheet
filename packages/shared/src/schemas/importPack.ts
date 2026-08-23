@@ -9,15 +9,10 @@ import {
   StartingEquipmentDefinitionSchema,
 } from "./items.js";
 import { WeaponDefinitionSchema } from "./weapons.js";
-import { LoreSchema } from "./lore.js";
+import { LoreSchema } from "./primitives/lore.js";
+import { CoreRuleIdSchema as ImportIdSchema } from "./primitives/ids.js";
 
 // #region Import Pack Schemas
-
-const ImportIdSchema = z
-  .string()
-  .min(3)
-  .max(100)
-  .regex(/^[a-z0-9_]+$/, "Use lowercase snake_case ids.");
 
 export const ImportSourceTypeSchema = z.enum(["core", "homebrew"]);
 export const ImportPublishModeSchema = z.enum(["draft", "published"]);
