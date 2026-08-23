@@ -3,7 +3,7 @@ import {
   CombatContextSchema,
   CombatEventSchema,
   CombatTurnOwnerSchema,
-} from "../combatContext.js";
+} from "../runtime/combatContext.js";
 
 describe("CombatTurnOwnerSchema", () => {
   it("requires actorInstanceId for actor turn owners", () => {

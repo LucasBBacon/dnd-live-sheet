@@ -1,4 +1,4 @@
-import type { CharacterSlot } from "../schemas/content/items.js";
+import type { CharacterSlot } from "../content/items.js";
 
 // #region Socket Events
 
@@ -156,7 +156,7 @@ export interface RuntimeEffectSyncPayload {
     | "manual";
   durationRemaining?: number;
   isSelfConcentration: boolean;
-  modifiers: import("../schemas/content/modifiers.js").RuntimeModifier[];
+  modifiers: import("../content/modifiers.js").RuntimeModifier[];
   grantedStates: string[];
   /**
    * Mirrors the engine's ActiveEffect["kind"]. "trait_state" has to cross the
@@ -182,13 +182,13 @@ export interface ActionResolvedPayload {
   activeStates: string[];
   resources: RuntimeResourceSyncPayload[];
   effects: RuntimeEffectSyncPayload[];
-  actors: import("../schemas/actors.js").ActorInstance[];
+  actors: import("../runtime/actors.js").ActorInstance[];
   /**
    * The server's turn state after this action. Sent for the same reason
    * effects and resources are: the server owns it, so the sheet mirrors rather
    * than maintains it.
    */
-  combatContext: import("../schemas/combatContext.js").CombatContext;
+  combatContext: import("../runtime/combatContext.js").CombatContext;
   timestamp: number;
 }
 
@@ -208,8 +208,8 @@ export interface TurnResolvedPayload {
   activeStates: string[];
   resources: RuntimeResourceSyncPayload[];
   effects: RuntimeEffectSyncPayload[];
-  actors: import("../schemas/actors.js").ActorInstance[];
-  combatContext: import("../schemas/combatContext.js").CombatContext;
+  actors: import("../runtime/actors.js").ActorInstance[];
+  combatContext: import("../runtime/combatContext.js").CombatContext;
   timestamp: number;
 }
 
@@ -234,7 +234,7 @@ export interface SurpriseResolvedPayload {
    * TurnResolvedPayload carries it: the sheet mirrors the server's turn state
    * rather than maintaining its own copy of it.
    */
-  combatContext: import("../schemas/combatContext.js").CombatContext;
+  combatContext: import("../runtime/combatContext.js").CombatContext;
   timestamp: number;
 }
 

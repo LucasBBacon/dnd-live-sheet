@@ -1,5 +1,5 @@
 import z from "zod";
-import { AttackTypeSchema } from "./content/actions.js";
+import { AttackTypeSchema } from "../content/actions.js";
 
 export const CombatTurnOwnerKindSchema = z.enum([
   "player",

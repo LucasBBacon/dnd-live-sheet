@@ -5,7 +5,7 @@ import {
   HomebrewLifecycleActionSchema,
   UpdateHomebrewItemSchema,
   UpdateHomebrewTraitSchema,
-} from "../homebrew.js";
+} from "../transport/homebrew.js";
 
 describe("homebrew schemas", () => {
   it("accepts valid trait creation payload", () => {

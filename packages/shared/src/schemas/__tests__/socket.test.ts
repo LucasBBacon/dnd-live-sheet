@@ -4,7 +4,7 @@ import {
   unwrapServerBroadcastPayload,
   type ActionExecutedPayload,
   type HpModifiedPayload,
-} from "../socket.js";
+} from "../transport/socket.js";
 
 describe("socket broadcast payload helpers", () => {
   const hpPayload: HpModifiedPayload = {

@@ -1,12 +1,14 @@
 import { describe, expect, it } from "vitest";
 import {
-  CharacterClassStateSchema,
   CharacterFlavorSchema,
-  CharacterSaveSchema,
-  CreateCharacterPayloadSchema,
   RaceConfigurationSchema,
 } from "../content/character.js";
 import { RuntimeModifierSchema, RuntimeModifiersListSchema } from "../content/modifiers.js";
+import {
+  CharacterClassStateSchema,
+  CharacterSaveSchema,
+} from "../runtime/characterSave.js";
+import { CreateCharacterPayloadSchema } from "../transport/createCharacter.js";
 
 describe("CharacterFlavorSchema", () => {
   it("accepts the minimal flavour payload", () => {

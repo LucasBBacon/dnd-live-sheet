@@ -1,5 +1,5 @@
 import z from "zod";
-import { ActionGrantSchema } from "./content/actions.js";
+import { ActionGrantSchema } from "../content/actions.js";
 
 export const ActorControllerSchema = z.enum([
   "player",

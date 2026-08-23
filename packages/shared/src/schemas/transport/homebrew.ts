@@ -1,7 +1,7 @@
 import { z } from "zod";
-import { TraitEffectSchema } from "./effects.js";
-import { LoreSchema } from "./primitives/lore.js";
-import { CoreRuleIdSchema as HomebrewIdSchema } from "./primitives/ids.js";
+import { TraitEffectSchema } from "../effects.js";
+import { LoreSchema } from "../primitives/lore.js";
+import { CoreRuleIdSchema as HomebrewIdSchema } from "../primitives/ids.js";
 
 // #region Homebrew Schemas
 

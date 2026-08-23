@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { ImportPackSchema } from "../importPack.js";
+import { ImportPackSchema } from "../transport/importPack.js";
 
 describe("ImportPackSchema", () => {
   it("accepts a valid core pack with typed entries and relations", () => {
