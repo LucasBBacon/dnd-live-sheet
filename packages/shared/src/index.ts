@@ -18,15 +18,7 @@ export * from "./schemas/prerequisites.js";
 export * from "./schemas/primitives/scaling.js";
 export * from "./schemas/proficiencies.js";
 export * from "./schemas/resources.js";
-// Named rather than star-exported: rules.ts declares its own minimal
-// TraitDefinitionSchema (for RuleSnapshot.traitsById) and re-exports the weapon
-// types, both of which would collide with ./schemas/traits.js and
-// ./schemas/weapons.js and silently resolve to the wrong shape.
-export {
-  RuleSnapshotSchema,
-  type ResourceThreshold,
-  type RuleSnapshot,
-} from "./schemas/rules.js";
+export * from "./schemas/rules.js";
 export * from "./schemas/spells.js";
 export * from "./schemas/traits.js";
 export * from "./schemas/triggers.js";

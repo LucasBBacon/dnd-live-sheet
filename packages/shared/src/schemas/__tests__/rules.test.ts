@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { RuleSnapshotSchema, WeaponDefinitionSchema } from "../rules.js";
+import { RuleSnapshotSchema } from "../rules.js";
 import { ResourceResetSchema, ResourceSchema } from "../resources.js";
+import { WeaponDefinitionSchema } from "../weapons.js";
 
 describe("Weapon Definition Schema", () => {
   it("accepts a valid weapon definition", () => {
@@ -97,14 +98,17 @@ describe("Rule Snapshot Schema", () => {
         feat_tough: {
           id: "feat_tough",
           name: "Tough",
-          modifiers: [
-            {
-              target: "MAX_HP",
-              type: "add",
-              value: 2,
-              scalingFactor: "total_level",
-            },
-          ],
+          modifiers: {
+            fixed: [
+              {
+                target: "MAX_HP",
+                type: "add",
+                value: 2,
+                scalingFactor: "total_level",
+              },
+            ],
+            choices: [],
+          },
         },
       },
       weaponsById: {
@@ -130,7 +134,7 @@ describe("Rule Snapshot Schema", () => {
       requiredStates: [],
       forbiddenStates: [],
     });
-    expect(parsed.traitsById.feat_tough?.modifiers?.[0]).toMatchObject({
+    expect(parsed.traitsById.feat_tough?.modifiers.fixed[0]).toMatchObject({
       requiredStates: [],
       forbiddenStates: [],
     });
@@ -172,6 +176,40 @@ describe("Rule Snapshot Schema", () => {
 
     const parsed = RuleSnapshotSchema.parse(snapshot);
     expect(parsed.equipmentById).toBeUndefined();
+  });
+});
+
+describe("a RuleSnapshot holds real traits", () => {
+  const snapshotWith = (trait: unknown) => ({
+    itemsById: {},
+    resourcesById: {},
+    weaponsById: {},
+    traitsById: { trait_test: trait },
+  });
+
+  it("accepts a trait with the fixed/choices modifier block", () => {
+    const result = RuleSnapshotSchema.safeParse(
+      snapshotWith({
+        id: "trait_test",
+        name: "Test",
+        modifiers: {
+          fixed: [{ target: "MAX_HP", type: "add", value: 2 }],
+          choices: [],
+        },
+      }),
+    );
+    expect(result.success).toBe(true);
+  });
+
+  it("accepts a trait carrying resources and implementation metadata", () => {
+    const result = RuleSnapshotSchema.safeParse(
+      snapshotWith({
+        id: "trait_test",
+        name: "Test",
+        implementation: { mode: "engine", summary: "Grants a state." },
+      }),
+    );
+    expect(result.success).toBe(true);
   });
 });
 
