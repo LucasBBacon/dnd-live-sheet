@@ -608,3 +608,78 @@ inventory rows and 2 `character_custom_traits`. `db:seed:samples` restores the
 ten fixture characters; anything hand-made is not recoverable. Worth a
 confirmation prompt, or a documented warning on the script, before anyone runs
 it against data they care about.
+
+---
+
+## P5 — Schema layering branch findings (opened 2026-08-23)
+
+Found while executing `docs/superpowers/plans/2026-08-22-schema-layering.md`.
+
+### 5a. Pack assembly is hand-reimplemented three times
+
+| # | Item | Notes |
+| --- | --- | --- |
+| 45 | Three independent implementations of "read the manifest, strip assembly-only keys, merge the sections, parse through `CoreRulePackSchema`" | **Proven to drift, three times in one branch.** See below. |
+
+The three copies:
+
+| Path | Kind |
+| --- | --- |
+| `packages/database/src/corePackAssembler.ts` | The real one |
+| `packages/engine/src/pipeline/__tests__/corePackFixture.ts` | Hand-copied |
+| `apps/web/src/store/__tests__/packFixture.ts` | Hand-copied |
+
+`apps/server/src/services/__tests__/packFixture.ts` is **not** a fourth. It calls
+`assembleCoreRulePack()` instead of reimplementing, and it is the only one of the
+four that never broke.
+
+**The evidence this is a real cost, not a tidiness complaint.** Adding a single
+`"$schema"` key to `manifest.json` — one key, for editor completion — broke both
+hand-copied implementations, because each has its own destructuring that has to
+strip assembly-only keys before the strict pack envelope sees them. The two
+failures were found weeks apart in wall-clock terms and one at a time:
+
+- The engine copy broke 16 suites. Worse, 14 of them threw at *module load*, so
+  their tests were never collected at all — the suite reported 533 tests instead
+  of 733 rather than reporting failures. Partial breakage shrinks the denominator
+  instead of showing red.
+- The web copy broke 4 more suites, 65 tests, the same way — and again the total
+  silently dropped (266 instead of 284) rather than failing loudly.
+
+**Why the copies exist, which is the part worth fixing.** `@project/database`'s
+`package.json` sets `"main": "./src/client.ts"`, which eagerly imports
+`drizzle-orm` and `postgres` and calls `dotenv.config()` at module evaluation.
+A browser-side or engine-side test cannot import the package normally without
+dragging a database driver in. `apps/server` works around this by *deep-importing*
+`@project/database/src/corePackAssembler.js` — which works today only because the
+build resolves internal paths, and is coupled to file layout rather than to a
+stable export.
+
+**Suggested fix.** `assembleCoreRulePack` is already dependency-clean — it imports
+only `node:fs/promises`, `node:path` and `@project/shared`. So:
+
+1. Add a DB-free subpath to `packages/database/package.json`'s `exports` map, e.g.
+   `"./pack": { "types": "./src/corePackAssembler.ts", "default": "./src/corePackAssembler.ts" }`.
+2. Repoint all three fixtures at `@project/database/pack`, deleting the two
+   hand-copied implementations and the server's deep import.
+
+One new export plus three file changes. Low risk, and it retires the whole bug
+class rather than the current instance of it.
+
+**Do this before the next change to `CoreRulePackSchema.pack` or to
+`manifest.json`'s shape** — those are exactly the changes that trip it.
+
+### 5b. Related, already recorded
+
+Item #37 is the same disease in the projection layer rather than the assembly
+layer: `ruleSnapshotCache`, the engine's `corePackLookup()` and the web
+`packFixture` each rebuild equipment and resources by hand. Both items are
+arguments for one shared, DB-free pack module; fixing #45 is the natural place to
+absorb #37.
+
+### 5c. Other findings from the same branch
+
+| # | Item | Notes |
+| --- | --- | --- |
+| 46 | `rest_condition` Postgres enum is missing two values | `packages/database/src/schema/operational.ts:222-228` lists only the five original pack-side reset values. The authored schema now has seven — `initiative_roll` and `start_of_turn` were already valid on trait-side resources *before* the schema-layering branch, so this gap predates it (last touched in `14c3690`). Relevant to anyone persisting resource state. |
+| 47 | No repo safety net catches line-ending corruption | `scripts/check-source-hygiene.mjs` checks for stray build artefacts under `src/` and nothing else. During this branch the Edit tool silently rewrote whole files as LF-only on three separate occasions, each caught only by a manual byte-level check. `git status` cannot show it — `core.autocrlf=true` normalizes both sides of the comparison, and git's stat cache hides it further. A hygiene check comparing each tracked text file's on-disk endings against its `.gitattributes` policy would close this. |
