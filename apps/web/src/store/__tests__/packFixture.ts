@@ -42,8 +42,11 @@ const SECTIONS = [
 let cached: ReturnType<typeof build> | undefined;
 
 const build = () => {
-  const { segments, ...packMeta } = readSegment("manifest.json") as {
+  const { segments, $schema: _schemaPointer, ...packMeta } = readSegment(
+    "manifest.json",
+  ) as {
     segments: string[];
+    $schema?: string;
   };
 
   const merged = segments.reduce<Record<string, unknown[]>>(
