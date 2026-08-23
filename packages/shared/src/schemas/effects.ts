@@ -1,4 +1,5 @@
 import z from "zod";
+import { AbilityKeySchema } from "./primitives/ability.js";
 
 // #region Shared Effect Schemas
 
@@ -39,16 +40,14 @@ export const ProficiencyEffectSchema = BaseEffectSchema.extend({
 
 export const StatModifierEffectSchema = BaseEffectSchema.extend({
   type: z.literal("stat_modifier"),
-  target: z.enum(["str", "dex", "con", "int", "wis", "cha"]),
+  target: AbilityKeySchema,
   value: z.number().int(),
 });
 
 export const SpellGrantEffectSchema = BaseEffectSchema.extend({
   type: z.literal("spell_grant"),
   target: z.string(), // e.g., 'spell_firebolt'
-  spellcastingAbility: z
-    .enum(["str", "dex", "con", "int", "wis", "cha"])
-    .optional(),
+  spellcastingAbility: AbilityKeySchema.optional(),
 });
 
 // explicit fallback for traits that require no engine hooks

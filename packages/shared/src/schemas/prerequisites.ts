@@ -1,15 +1,9 @@
 import z from "zod";
+import { AbilityMinimumsSchema } from "./primitives/ability.js";
 
 // #region Ability Minimums
 
-export const AbilityMinimumsSchema = z.object({
-  str: z.number().int().min(1).max(30).optional(),
-  dex: z.number().int().min(1).max(30).optional(),
-  con: z.number().int().min(1).max(30).optional(),
-  int: z.number().int().min(1).max(30).optional(),
-  wis: z.number().int().min(1).max(30).optional(),
-  cha: z.number().int().min(1).max(30).optional(),
-});
+export { AbilityMinimumsSchema };
 
 const hasAnyAbilityMinimum = (
   minimums: z.infer<typeof AbilityMinimumsSchema>,

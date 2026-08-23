@@ -1,10 +1,9 @@
 import z from "zod";
+import { AbilitySchema } from "./primitives/ability.js";
 import {
   ModifierScalingSchema,
   ModifierScalingThresholdSchema,
 } from "./primitives/scaling.js";
-
-const AbilitySchema = z.enum(["STR", "DEX", "CON", "INT", "WIS", "CHA"]);
 
 // #region Modifier Schemas
 

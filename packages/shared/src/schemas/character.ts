@@ -3,6 +3,7 @@ import { StartingEquipmentDefinitionSchema } from "./items.js";
 import { SpellChoiceNodeSchema } from "./spells.js";
 import { ClassMulticlassPrerequisitesSchema } from "./prerequisites.js";
 import { LoreSchema } from "./lore.js";
+import { abilityScoresOf } from "./primitives/ability.js";
 
 // #region Core Primitives Schemas
 
@@ -174,14 +175,7 @@ export const CharacterClassStateSchema = z.object({
 
 export const CharacterSaveSchema = z.object({
   // base attributes
-  attributes: z.object({
-    str: z.number().int().min(1).max(30),
-    dex: z.number().int().min(1).max(30),
-    con: z.number().int().min(1).max(30),
-    int: z.number().int().min(1).max(30),
-    wis: z.number().int().min(1).max(30),
-    cha: z.number().int().min(1).max(30),
-  }),
+  attributes: abilityScoresOf(1, 30),
 
   // progressions
   race: RaceConfigurationSchema,
@@ -223,16 +217,7 @@ export const CreateCharacterPayloadSchema = z.object({
   classId: z.string(),
   subclassId: z.string().nullable(),
 
-  baseAbilityScores: z
-    .object({
-      str: z.number().int().min(3).max(18),
-      dex: z.number().int().min(3).max(18),
-      con: z.number().int().min(3).max(18),
-      int: z.number().int().min(3).max(18),
-      wis: z.number().int().min(3).max(18),
-      cha: z.number().int().min(3).max(18),
-    })
-    .strict(),
+  baseAbilityScores: abilityScoresOf(3, 18),
 
   alignment: z.string(),
 

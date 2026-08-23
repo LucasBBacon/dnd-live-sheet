@@ -15,6 +15,7 @@ export * from "./schemas/lore.js";
 export * from "./schemas/actors.js";
 export * from "./schemas/modifiers.js";
 export * from "./schemas/prerequisites.js";
+export * from "./schemas/primitives/ability.js";
 export * from "./schemas/primitives/scaling.js";
 export * from "./schemas/proficiencies.js";
 export * from "./schemas/resources.js";
