@@ -1053,13 +1053,17 @@ Expected: FAIL on both — the minimal schema is `.strict()`, rejects `implement
 
 - [ ] **Step 3: Point RuleSnapshot at the real schema**
 
-In `packages/shared/src/schemas/rules.ts`, delete the local `TraitDefinitionSchema` declaration and its type export, then import and use the real one:
+In `packages/shared/src/schemas/rules.ts`, delete the local `TraitDefinitionSchema` declaration and its `TraitDefinition` type export, then import and use the real one:
 
 ```ts
 import { TraitDefinitionSchema } from "./traits.js";
 ```
 
 `RuleSnapshotSchema.traitsById` becomes `z.record(z.string(), TraitDefinitionSchema)`.
+
+**Also delete the weapon re-export block** — the `export { WeaponCategorySchema, WeaponPropertySchema, WeaponDefinitionSchema } from "./weapons.js";` stanza and the three matching `WeaponCategory` / `WeaponProperty` / `WeaponDefinition` type exports. They are redundant: `index.ts` already star-exports `./schemas/weapons.js` directly, so every consumer reaches them anyway. Keep the plain `import` of `WeaponDefinitionSchema` that `RuleSnapshotSchema.weaponsById` needs.
+
+This is what makes Step 4 safe. Two star exports that re-export the *same* binding are legal, but leaving a redundant re-export in the file the barrel is about to star-export invites exactly the ambiguity the exception list existed to avoid.
 
 - [ ] **Step 4: Simplify the barrel**
 
