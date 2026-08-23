@@ -11,8 +11,8 @@ import { FeatPrerequisitesSchema } from "./prerequisites.js";
 import { ResourceSchema } from "./resources.js";
 import { SpellDefinitionSchema } from "./spells.js";
 import { TraitDefinitionSchema } from "./traits.js";
-import { LoreSchema } from "./primitives/lore.js";
-import { CoreRuleIdSchema } from "./primitives/ids.js";
+import { LoreSchema } from "../primitives/lore.js";
+import { CoreRuleIdSchema } from "../primitives/ids.js";
 
 const CoreSubraceSchema = z
   .object({

@@ -2,12 +2,12 @@ import { describe, expect, it } from "vitest";
 import {
   EquipmentDefinitionSchema,
   WeaponCapabilitySchema,
-} from "../equipment.js";
+} from "../content/equipment.js";
 import {
   ItemDefinitionSchema,
   StartingEquipmentDefinitionSchema,
-} from "../items.js";
-import { WeaponDefinitionSchema } from "../weapons.js";
+} from "../content/items.js";
+import { WeaponDefinitionSchema } from "../content/weapons.js";
 
 /**
  * EquipmentDefinition carries a weapon as a WeaponCapability, and the engine

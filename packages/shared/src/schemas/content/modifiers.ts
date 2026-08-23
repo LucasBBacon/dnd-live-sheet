@@ -1,10 +1,10 @@
 import z from "zod";
-import { AbilitySchema } from "./primitives/ability.js";
+import { AbilitySchema } from "../primitives/ability.js";
 import {
   ModifierScalingSchema,
   ModifierScalingThresholdSchema,
-} from "./primitives/scaling.js";
-import { StatePredicateSchema } from "./primitives/statePredicate.js";
+} from "../primitives/scaling.js";
+import { StatePredicateSchema } from "../primitives/statePredicate.js";
 
 // #region Modifier Schemas
 
@@ -52,7 +52,7 @@ export {
   ModifierScalingSchema,
   ModifierScalingThresholdSchema,
   type ModifierScaling,
-} from "./primitives/scaling.js";
+} from "../primitives/scaling.js";
 
 export const ModifierAttackContextSchema = z.enum(["main_hand", "off_hand"]);
 export const ModifierValueSourceSchema = z.enum([

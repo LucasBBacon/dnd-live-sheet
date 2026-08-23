@@ -3,12 +3,12 @@ import { TraitEffectSchema } from "./effects.js";
 import {
   ClassMulticlassPrerequisitesSchema,
   FeatPrerequisitesSchema,
-} from "./prerequisites.js";
+} from "./content/prerequisites.js";
 import {
   ItemDefinitionSchema,
   StartingEquipmentDefinitionSchema,
-} from "./items.js";
-import { WeaponDefinitionSchema } from "./weapons.js";
+} from "./content/items.js";
+import { WeaponDefinitionSchema } from "./content/weapons.js";
 import { LoreSchema } from "./primitives/lore.js";
 import { CoreRuleIdSchema as ImportIdSchema } from "./primitives/ids.js";
 

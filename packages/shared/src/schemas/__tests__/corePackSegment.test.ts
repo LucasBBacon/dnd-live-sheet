@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   CorePackManifestSchema,
   CorePackSegmentSchema,
-} from "../corePackSegment.js";
+} from "../content/corePackSegment.js";
 
 describe("CorePackSegmentSchema", () => {
   it("accepts a segment carrying one section", () => {

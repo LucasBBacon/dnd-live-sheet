@@ -1,9 +1,9 @@
 import z from "zod";
-import { EquipmentDefinitionSchema } from "./equipment.js";
-import { ItemDefinitionSchema } from "./items.js";
-import { ResourceSchema } from "./resources.js";
-import { TraitDefinitionSchema } from "./traits.js";
-import { WeaponDefinitionSchema } from "./weapons.js";
+import { EquipmentDefinitionSchema } from "./content/equipment.js";
+import { ItemDefinitionSchema } from "./content/items.js";
+import { ResourceSchema } from "./content/resources.js";
+import { TraitDefinitionSchema } from "./content/traits.js";
+import { WeaponDefinitionSchema } from "./content/weapons.js";
 
 // #region Resource Rules
 

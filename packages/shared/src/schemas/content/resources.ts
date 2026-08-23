@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { ResourceThresholdSchema } from "./primitives/scaling.js";
+import { ResourceThresholdSchema } from "../primitives/scaling.js";
 
 /**
  * When a resource's charges come back.

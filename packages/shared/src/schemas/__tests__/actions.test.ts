@@ -7,7 +7,7 @@ import {
   isDowntime,
   isFree,
   type ActionActivation,
-} from "../actions.js";
+} from "../content/actions.js";
 
 const ALL_ACTIVATIONS = ActionActivationSchema.options as ActionActivation[];
 

@@ -5,8 +5,8 @@ import {
   CharacterSaveSchema,
   CreateCharacterPayloadSchema,
   RaceConfigurationSchema,
-} from "../character.js";
-import { RuntimeModifierSchema, RuntimeModifiersListSchema } from "../modifiers.js";
+} from "../content/character.js";
+import { RuntimeModifierSchema, RuntimeModifiersListSchema } from "../content/modifiers.js";
 
 describe("CharacterFlavorSchema", () => {
   it("accepts the minimal flavour payload", () => {

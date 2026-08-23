@@ -2,7 +2,7 @@ import type {
   StartingEquipmentDefinition,
   StartingEquipmentCategoryTag,
   StartingEquipmentGrant,
-} from "./schemas/items.js";
+} from "./schemas/content/items.js";
 
 export type StartingEquipmentCategoryCandidate = {
   id: string;

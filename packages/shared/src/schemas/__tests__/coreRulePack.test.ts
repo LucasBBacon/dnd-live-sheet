@@ -3,7 +3,7 @@ import {
   CoreRulePackSchema,
   type CoreRulePack,
   validateCoreRulePack,
-} from "../coreRulePack.js";
+} from "../content/coreRulePack.js";
 
 const createValidPack = (): CoreRulePack => {
   const lore = {

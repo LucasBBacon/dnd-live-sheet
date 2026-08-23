@@ -1,4 +1,4 @@
-import type { ActionGrant } from "./schemas/actions.js";
+import type { ActionGrant } from "./schemas/content/actions.js";
 
 /**
  * The actions any character can take on their turn, from the 2014 PHB.

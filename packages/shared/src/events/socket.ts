@@ -1,4 +1,4 @@
-import type { CharacterSlot } from "../schemas/items.js";
+import type { CharacterSlot } from "../schemas/content/items.js";
 
 // #region Socket Events
 
@@ -156,7 +156,7 @@ export interface RuntimeEffectSyncPayload {
     | "manual";
   durationRemaining?: number;
   isSelfConcentration: boolean;
-  modifiers: import("../schemas/modifiers.js").RuntimeModifier[];
+  modifiers: import("../schemas/content/modifiers.js").RuntimeModifier[];
   grantedStates: string[];
   /**
    * Mirrors the engine's ActiveEffect["kind"]. "trait_state" has to cross the

@@ -5,7 +5,7 @@ import {
   ModifierScalingSchema,
   ModifierScalingThresholdSchema,
 } from "./modifiers.js";
-import { StatePredicateSchema } from "./primitives/statePredicate.js";
+import { StatePredicateSchema } from "../primitives/statePredicate.js";
 
 export const DiceRuleTargetSchema = z.enum([
   "DAMAGE_ROLL",

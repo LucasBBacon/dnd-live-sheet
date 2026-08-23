@@ -1,7 +1,7 @@
 import z from "zod";
-import { DamageTypeSchema } from "./primitives/damageType.js";
+import { DamageTypeSchema } from "../primitives/damageType.js";
 
-export { DamageTypeSchema } from "./primitives/damageType.js";
+export { DamageTypeSchema } from "../primitives/damageType.js";
 
 export const AffinityLevelSchema = z.enum([
   "vulnerability",

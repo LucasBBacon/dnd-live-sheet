@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { RuleSnapshotSchema } from "../rules.js";
-import { ResourceResetSchema, ResourceSchema } from "../resources.js";
-import { WeaponDefinitionSchema } from "../weapons.js";
+import { ResourceResetSchema, ResourceSchema } from "../content/resources.js";
+import { WeaponDefinitionSchema } from "../content/weapons.js";
 
 describe("Weapon Definition Schema", () => {
   it("accepts a valid weapon definition", () => {

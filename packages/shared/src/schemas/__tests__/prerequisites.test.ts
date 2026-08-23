@@ -3,7 +3,7 @@ import {
   AbilityMinimumsSchema,
   ClassMulticlassPrerequisitesSchema,
   FeatPrerequisitesSchema,
-} from "../prerequisites.js";
+} from "../content/prerequisites.js";
 
 describe("Ability Minimums Schema", () => {
   it("accepts empty object (all optional)", () => {

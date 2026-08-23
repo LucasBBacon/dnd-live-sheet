@@ -2,8 +2,8 @@ import { z } from "zod";
 import { StartingEquipmentDefinitionSchema } from "./items.js";
 import { SpellChoiceNodeSchema } from "./spells.js";
 import { ClassMulticlassPrerequisitesSchema } from "./prerequisites.js";
-import { LoreSchema } from "./primitives/lore.js";
-import { abilityScoresOf } from "./primitives/ability.js";
+import { LoreSchema } from "../primitives/lore.js";
+import { abilityScoresOf } from "../primitives/ability.js";
 
 // #region Core Primitives Schemas
 

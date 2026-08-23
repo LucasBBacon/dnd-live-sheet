@@ -7,7 +7,7 @@ import {
 } from "./modifiers.js";
 import { DamageTypeSchema } from "./affinities.js";
 import { TargetFilterSchema } from "./creatures.js";
-import { StatePredicateSchema } from "./primitives/statePredicate.js";
+import { StatePredicateSchema } from "../primitives/statePredicate.js";
 
 /**
  * What performing an action costs.

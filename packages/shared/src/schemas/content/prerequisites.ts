@@ -1,5 +1,5 @@
 import z from "zod";
-import { AbilityMinimumsSchema } from "./primitives/ability.js";
+import { AbilityMinimumsSchema } from "../primitives/ability.js";
 
 // #region Ability Minimums
 

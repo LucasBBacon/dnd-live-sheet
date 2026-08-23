@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { TraitDefinitionSchema } from "../traits.js";
+import { TraitDefinitionSchema } from "../content/traits.js";
 
 describe("TraitDefinitionSchema", () => {
   it("accepts manual sheet helper metadata for intentionally non-engine rules", () => {
