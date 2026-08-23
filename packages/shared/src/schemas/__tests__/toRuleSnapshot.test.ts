@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { toRuleSnapshot } from "../content/coreRulePack.js";
+import { toRuleSnapshot } from "../runtime/ruleSnapshot.js";
 import type { CoreRulePack } from "../content/coreRulePack.js";
 
 const pack = (overrides: Partial<CoreRulePack> = {}): CoreRulePack =>

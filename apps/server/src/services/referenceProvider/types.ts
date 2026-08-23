@@ -10,10 +10,11 @@ export type TraitCategory = "skills" | "tools_and_languages";
 /**
  * What /rules/snapshot serves.
  *
- * Pack content is typed through CoreRulePackSnapshot rather than RuleSnapshot:
- * RuleSnapshot.traitsById parses against a minimal trait schema whose
- * `modifiers` is a flat array, which is not the shape a real authored trait
- * has. Partial because a database with no imported pack serves neither.
+ * Races, classes and subclasses live only on CoreRulePackSnapshot - RuleSnapshot
+ * has no fields for them. Traits are picked from CoreRulePackSnapshot too, since
+ * that shape requires isStartingProficiency and lore that a bare
+ * RuleSnapshot.traitsById entry does not guarantee. Partial because a database
+ * with no imported pack serves neither.
  */
 export type RulesSnapshotPayload = Pick<
   RuleSnapshot,

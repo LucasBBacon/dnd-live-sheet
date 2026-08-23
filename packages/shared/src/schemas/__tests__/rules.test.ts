@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { RuleSnapshotSchema } from "../rules.js";
+import { RuleSnapshotSchema } from "../runtime/ruleSnapshot.js";
 import { ResourceResetSchema, ResourceSchema } from "../content/resources.js";
 import { WeaponDefinitionSchema } from "../content/weapons.js";
 

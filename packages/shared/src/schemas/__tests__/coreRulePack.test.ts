@@ -2,8 +2,8 @@ import { describe, expect, it } from "vitest";
 import {
   CoreRulePackSchema,
   type CoreRulePack,
-  validateCoreRulePack,
 } from "../content/coreRulePack.js";
+import { validateCoreRulePack } from "../content/validatePack.js";
 
 const createValidPack = (): CoreRulePack => {
   const lore = {

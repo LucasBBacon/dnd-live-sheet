@@ -80,9 +80,10 @@ export const toInventoryInstance = (item: {
  * The rule content the sheet hands to the engine.
  *
  * Pack content rides alongside the equipment maps rather than inside
- * RuleSnapshot, because RuleSnapshot.traitsById parses against a minimal trait
- * schema whose `modifiers` is a flat array - not the shape an authored trait
- * has. Partial: a deployment with no imported pack serves none of it.
+ * RuleSnapshot, because RuleSnapshot has no fields for races, classes or
+ * subclasses, and its traitsById entries are not guaranteed to carry the
+ * isStartingProficiency and lore that CoreRulePackSnapshot requires. Partial:
+ * a deployment with no imported pack serves none of it.
  */
 type SheetRuleSnapshot = Pick<
   RuleSnapshot,
