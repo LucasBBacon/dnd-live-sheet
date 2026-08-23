@@ -3,7 +3,7 @@ import type {
   CoreRulePackSnapshot,
   EquipmentDefinition,
   ItemDefinition,
-  ResourceRule,
+  Resource,
   TraitDefinition,
   WeaponDefinition,
 } from "@project/shared";
@@ -23,7 +23,7 @@ type RuleSnapshotLookup = {
   // compatibility fields - still accepted while consumers migrate to equipmentById
   itemsById?: Record<string, ItemDefinition> | undefined;
   weaponsById?: Record<string, WeaponDefinition> | undefined;
-  resourcesById?: Record<string, ResourceRule> | undefined;
+  resourcesById?: Record<string, Resource> | undefined;
   /**
    * Rulebook content loaded from a core rule pack.
    *
@@ -104,11 +104,11 @@ export const resolveWeaponDefinition = (
 export const resolveResourceRule = (
   resourceId: string,
   snapshot?: RuleSnapshotLookup,
-): ResourceRule | undefined => snapshot?.resourcesById?.[resourceId];
+): Resource | undefined => snapshot?.resourcesById?.[resourceId];
 
 export const resolveResourceRules = (
   snapshot?: RuleSnapshotLookup,
-): Record<string, ResourceRule> => snapshot?.resourcesById ?? {};
+): Record<string, Resource> => snapshot?.resourcesById ?? {};
 
 /**
  * A trait, from the pack.

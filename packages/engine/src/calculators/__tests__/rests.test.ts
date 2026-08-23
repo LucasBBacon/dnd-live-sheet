@@ -149,7 +149,12 @@ describe("RestEngine.executeShortRest", () => {
     it("resets short_rest resources via resourceManager.tickRest(false)", () => {
       const context = makeContext();
       context.resourceManager.initializeFromGrants([
-        { id: "ki", name: "Ki Points", maxCharges: 2, resetOn: "short_rest" },
+        {
+          id: "ki",
+          name: "Ki Points",
+          maxRule: { kind: "fixed", value: 2 },
+          resetCondition: "short_rest",
+        },
       ]);
       context.resourceManager.consume("ki", 2);
 
@@ -161,7 +166,12 @@ describe("RestEngine.executeShortRest", () => {
     it("does not reset long_rest resources via a short rest", () => {
       const context = makeContext();
       context.resourceManager.initializeFromGrants([
-        { id: "rage", name: "Rage", maxCharges: 2, resetOn: "long_rest" },
+        {
+          id: "rage",
+          name: "Rage",
+          maxRule: { kind: "fixed", value: 2 },
+          resetCondition: "long_rest",
+        },
       ]);
       context.resourceManager.consume("rage", 2);
 
@@ -313,13 +323,23 @@ describe("RestEngine.executeLongRest", () => {
     it("resets short_rest, long_rest, and dawn resources via resourceManager.tickRest(true)", () => {
       const context = makeContext();
       context.resourceManager.initializeFromGrants([
-        { id: "ki", name: "Ki Points", maxCharges: 2, resetOn: "short_rest" },
-        { id: "rage", name: "Rage", maxCharges: 2, resetOn: "long_rest" },
+        {
+          id: "ki",
+          name: "Ki Points",
+          maxRule: { kind: "fixed", value: 2 },
+          resetCondition: "short_rest",
+        },
+        {
+          id: "rage",
+          name: "Rage",
+          maxRule: { kind: "fixed", value: 2 },
+          resetCondition: "long_rest",
+        },
         {
           id: "channel_divinity",
           name: "Channel Divinity",
-          maxCharges: 1,
-          resetOn: "dawn",
+          maxRule: { kind: "fixed", value: 1 },
+          resetCondition: "dawn",
         },
       ]);
       context.resourceManager.consume("ki", 2);

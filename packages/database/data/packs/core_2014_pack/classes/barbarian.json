@@ -299,7 +299,7 @@
                             }
                         ]
                     },
-                    "resetOn": "long_rest"
+                    "resetCondition": "long_rest"
                 }
             ],
             "triggers": [],

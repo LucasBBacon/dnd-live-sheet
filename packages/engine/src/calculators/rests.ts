@@ -1,4 +1,4 @@
-import type { RestCondition } from "@project/shared";
+import type { ResourceReset } from "@project/shared";
 import type { RuntimeHealthState } from "../types/combat.js";
 import type { OperationalResource } from "../types/resources.js";
 import { resolveResourceRule, type RuleSnapshotLookup } from "../rules/ruleLookup.js";
@@ -143,7 +143,7 @@ export class RestEngine {
  * maximum rounded down, but never less than one.
  */
 const restedCharges = (
-  resetCondition: RestCondition,
+  resetCondition: ResourceReset,
   current: number,
   maxUses: number,
   isLongRest: boolean,
@@ -160,6 +160,9 @@ const restedCharges = (
         ? Math.min(maxUses, current + Math.max(1, Math.floor(maxUses / 2)))
         : current;
     case "never":
+    case "initiative_roll":
+    case "start_of_turn":
+      // neither condition is rest-triggered, so a rest leaves them untouched
       return current;
   }
 };

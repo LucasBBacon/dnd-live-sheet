@@ -1,13 +1,13 @@
 import { describe, expect, it } from "vitest";
-import type { ResourceRule } from "@project/shared";
+import type { Resource } from "@project/shared";
 import { RestEngine } from "../rests.js";
 import type { OperationalResource } from "../../types/resources.js";
 
 const rule = (
   id: string,
-  resetCondition: ResourceRule["resetCondition"],
+  resetCondition: Resource["resetCondition"],
   value: number,
-): ResourceRule => ({
+): Resource => ({
   id,
   name: id,
   resetCondition,
@@ -21,6 +21,8 @@ const snapshot = {
     dawn: rule("dawn", "dawn", 1),
     half: rule("half", "long_rest_half", 6),
     never: rule("never", "never", 4),
+    initiative: rule("initiative", "initiative_roll", 2),
+    turnStart: rule("turnStart", "start_of_turn", 2),
   },
 };
 
@@ -55,6 +57,15 @@ describe("RestEngine.applyRest", () => {
 
   it("never refills a resource that never resets", () => {
     expect(chargesOf(rest([spent("never")], "long"), "never")).toBe(0);
+  });
+
+  it("leaves initiative-roll and start-of-turn resources alone on a rest", () => {
+    // neither condition is rest-triggered - a long rest is the most
+    // generous case, and even that must not refill them
+    const result = rest([spent("initiative"), spent("turnStart")], "long");
+
+    expect(chargesOf(result, "initiative")).toBe(0);
+    expect(chargesOf(result, "turnStart")).toBe(0);
   });
 
   it("restores half the maximum for long_rest_half", () => {

@@ -478,14 +478,14 @@
                 {
                     "id": "drow_magic_faerie_fire",
                     "name": "Faerie Fire (Drow Magic)",
-                    "maxCharges": 1,
-                    "resetOn": "dawn"
+                    "maxRule": { "kind": "fixed", "value": 1 },
+                    "resetCondition": "dawn"
                 },
                 {
                     "id": "drow_magic_darkness",
                     "name": "Darkness (Drow Magic)",
-                    "maxCharges": 1,
-                    "resetOn": "dawn"
+                    "maxRule": { "kind": "fixed", "value": 1 },
+                    "resetCondition": "dawn"
                 }
             ],
             "triggers": [],

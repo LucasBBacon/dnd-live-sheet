@@ -140,14 +140,14 @@
                 {
                     "id": "infernal_legacy_hellish_rebuke",
                     "name": "Hellish Rebuke (Infernal Legacy)",
-                    "maxCharges": 1,
-                    "resetOn": "long_rest"
+                    "maxRule": { "kind": "fixed", "value": 1 },
+                    "resetCondition": "long_rest"
                 },
                 {
                     "id": "infernal_legacy_darkness",
                     "name": "Darkness (Infernal Legacy)",
-                    "maxCharges": 1,
-                    "resetOn": "long_rest"
+                    "maxRule": { "kind": "fixed", "value": 1 },
+                    "resetCondition": "long_rest"
                 }
             ],
             "triggers": [],

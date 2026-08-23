@@ -465,8 +465,8 @@ describe("useCharacterSheetStore hp trigger handling", () => {
             {
               id: "resource_test",
               name: "Test Resource",
-              maxCharges: 1,
-              resetOn: "long_rest",
+              maxRule: { kind: "fixed", value: 1 },
+              resetCondition: "long_rest",
             },
           ],
           diceRules: [],

@@ -985,8 +985,8 @@ describe("ActionResolver trigger dispatch", () => {
       {
         id: "resource_relentless_endurance",
         name: "Relentless Endurance",
-        maxCharges: 1,
-        resetOn: "long_rest",
+        maxRule: { kind: "fixed", value: 1 },
+        resetCondition: "long_rest",
       },
     ]);
   });
@@ -1046,7 +1046,12 @@ describe("ActionResolver cost settlement", () => {
     combatContext = new CombatContextManager();
     combatContext.beginTurn({ kind: "player" });
     resourceManager.initializeFromGrants([
-      { id: "pool_ki", name: "Ki", maxCharges: 2, resetOn: "short_rest" },
+      {
+        id: "pool_ki",
+        name: "Ki",
+        maxRule: { kind: "fixed", value: 2 },
+        resetCondition: "short_rest",
+      },
     ]);
   });
 

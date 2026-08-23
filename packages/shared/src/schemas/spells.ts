@@ -62,7 +62,7 @@ export type SpellDefinition = z.infer<typeof SpellDefinitionSchema>;
  * - at_will: no cost (racial cantrips, some invocations)
  * - always_prepared: cast with the character's own slots, and does not count
  *   against a prepared caster's daily limit (domain and oath spells)
- * - resource: spends a ResourceGrant declared on the same trait, which is what
+ * - resource: spends a Resource declared on the same trait, which is what
  *   carries the reset condition ("once per day" is dawn, not long_rest)
  */
 export const SpellUsageSchema = z

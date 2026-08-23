@@ -8,7 +8,7 @@ import {
 import { EquipmentDefinitionSchema } from "./equipment.js";
 import { StartingEquipmentDefinitionSchema } from "./items.js";
 import { FeatPrerequisitesSchema } from "./prerequisites.js";
-import { ResourceRuleSchema } from "./rules.js";
+import { ResourceSchema } from "./resources.js";
 import { SpellDefinitionSchema } from "./spells.js";
 import { TraitDefinitionSchema } from "./traits.js";
 import { LoreSchema } from "./lore.js";
@@ -217,7 +217,7 @@ export const CoreRulePackSchema = z
       })
       .strict(),
     traits: z.array(CoreTraitSchema).default([]),
-    resources: z.array(ResourceRuleSchema).default([]),
+    resources: z.array(ResourceSchema).default([]),
     races: z.array(CoreRaceSchema).default([]),
     classes: z.array(CoreClassSchema).default([]),
     subclasses: z.array(CoreSubclassSchema).default([]),

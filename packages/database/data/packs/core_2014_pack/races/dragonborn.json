@@ -61,8 +61,8 @@
                 {
                     "id": "dragonborn_breath_charge",
                     "name": "Breath Weapon",
-                    "maxCharges": 1,
-                    "resetOn": "short_rest"
+                    "maxRule": { "kind": "fixed", "value": 1 },
+                    "resetCondition": "short_rest"
                 }
             ],
             "triggers": [],
@@ -141,8 +141,8 @@
                 {
                     "id": "dragonborn_breath_charge",
                     "name": "Breath Weapon",
-                    "maxCharges": 1,
-                    "resetOn": "short_rest"
+                    "maxRule": { "kind": "fixed", "value": 1 },
+                    "resetCondition": "short_rest"
                 }
             ],
             "triggers": [],
@@ -221,8 +221,8 @@
                 {
                     "id": "dragonborn_breath_charge",
                     "name": "Breath Weapon",
-                    "maxCharges": 1,
-                    "resetOn": "short_rest"
+                    "maxRule": { "kind": "fixed", "value": 1 },
+                    "resetCondition": "short_rest"
                 }
             ],
             "triggers": [],
@@ -301,8 +301,8 @@
                 {
                     "id": "dragonborn_breath_charge",
                     "name": "Breath Weapon",
-                    "maxCharges": 1,
-                    "resetOn": "short_rest"
+                    "maxRule": { "kind": "fixed", "value": 1 },
+                    "resetCondition": "short_rest"
                 }
             ],
             "triggers": [],
@@ -381,8 +381,8 @@
                 {
                     "id": "dragonborn_breath_charge",
                     "name": "Breath Weapon",
-                    "maxCharges": 1,
-                    "resetOn": "short_rest"
+                    "maxRule": { "kind": "fixed", "value": 1 },
+                    "resetCondition": "short_rest"
                 }
             ],
             "triggers": [],
@@ -461,8 +461,8 @@
                 {
                     "id": "dragonborn_breath_charge",
                     "name": "Breath Weapon",
-                    "maxCharges": 1,
-                    "resetOn": "short_rest"
+                    "maxRule": { "kind": "fixed", "value": 1 },
+                    "resetCondition": "short_rest"
                 }
             ],
             "triggers": [],
@@ -541,8 +541,8 @@
                 {
                     "id": "dragonborn_breath_charge",
                     "name": "Breath Weapon",
-                    "maxCharges": 1,
-                    "resetOn": "short_rest"
+                    "maxRule": { "kind": "fixed", "value": 1 },
+                    "resetCondition": "short_rest"
                 }
             ],
             "triggers": [],
@@ -621,8 +621,8 @@
                 {
                     "id": "dragonborn_breath_charge",
                     "name": "Breath Weapon",
-                    "maxCharges": 1,
-                    "resetOn": "short_rest"
+                    "maxRule": { "kind": "fixed", "value": 1 },
+                    "resetCondition": "short_rest"
                 }
             ],
             "triggers": [],
@@ -701,8 +701,8 @@
                 {
                     "id": "dragonborn_breath_charge",
                     "name": "Breath Weapon",
-                    "maxCharges": 1,
-                    "resetOn": "short_rest"
+                    "maxRule": { "kind": "fixed", "value": 1 },
+                    "resetCondition": "short_rest"
                 }
             ],
             "triggers": [],
@@ -781,8 +781,8 @@
                 {
                     "id": "dragonborn_breath_charge",
                     "name": "Breath Weapon",
-                    "maxCharges": 1,
-                    "resetOn": "short_rest"
+                    "maxRule": { "kind": "fixed", "value": 1 },
+                    "resetCondition": "short_rest"
                 }
             ],
             "triggers": [],

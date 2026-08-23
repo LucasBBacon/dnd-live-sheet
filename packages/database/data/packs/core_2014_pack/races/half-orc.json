@@ -104,8 +104,8 @@
                 {
                     "id": "resource_relentless_endurance",
                     "name": "Relentless Endurance Use",
-                    "maxCharges": 1,
-                    "resetOn": "long_rest"
+                    "maxRule": { "kind": "fixed", "value": 1 },
+                    "resetCondition": "long_rest"
                 }
             ],
             "triggers": [

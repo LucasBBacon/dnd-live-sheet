@@ -1,9 +1,6 @@
 import { describe, expect, it } from "vitest";
-import {
-  ResourceRuleSchema,
-  RuleSnapshotSchema,
-  WeaponDefinitionSchema,
-} from "../rules.js";
+import { RuleSnapshotSchema, WeaponDefinitionSchema } from "../rules.js";
+import { ResourceResetSchema, ResourceSchema } from "../resources.js";
 
 describe("Weapon Definition Schema", () => {
   it("accepts a valid weapon definition", () => {
@@ -51,12 +48,12 @@ describe("Resource Rule Schema", () => {
       },
     };
 
-    expect(ResourceRuleSchema.parse(rule)).toEqual(rule);
+    expect(ResourceSchema.parse(rule)).toEqual(rule);
   });
 
   it("rejects legacy executable resource definitions", () => {
     expect(() =>
-      ResourceRuleSchema.parse({
+      ResourceSchema.parse({
         id: "trait_action_surge",
         name: "Action Surge",
         resetCondition: "short_rest",
@@ -175,5 +172,45 @@ describe("Rule Snapshot Schema", () => {
 
     const parsed = RuleSnapshotSchema.parse(snapshot);
     expect(parsed.equipmentById).toBeUndefined();
+  });
+});
+
+describe("one resource schema", () => {
+  it("accepts the reset conditions from both former enums", () => {
+    for (const reset of [
+      "short_rest",
+      "long_rest",
+      "long_rest_half",
+      "dawn",
+      "never",
+      "initiative_roll",
+      "start_of_turn",
+    ]) {
+      expect(ResourceResetSchema.safeParse(reset).success).toBe(true);
+    }
+  });
+
+  it("uses resetCondition, the name the pack data authors", () => {
+    const parsed = ResourceSchema.parse({
+      id: "trait_action_surge",
+      name: "Action Surge",
+      resetCondition: "short_rest",
+      maxRule: { kind: "fixed", value: 1 },
+    });
+    expect(parsed.resetCondition).toBe("short_rest");
+  });
+
+  it("accepts a total_level_thresholds max rule", () => {
+    expect(
+      ResourceSchema.safeParse({
+        id: "r",
+        name: "R",
+        resetCondition: "long_rest",
+        maxRule: {
+          kind: "total_level_thresholds",
+          thresholds: [{ minimumLevel: 1, value: 1 }],
+        },
+      }).success,
+    ).toBe(true);
   });
 });

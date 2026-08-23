@@ -23,14 +23,8 @@ export * from "./schemas/resources.js";
 // types, both of which would collide with ./schemas/traits.js and
 // ./schemas/weapons.js and silently resolve to the wrong shape.
 export {
-  RestConditionSchema,
-  ResourceMaxRuleSchema,
-  ResourceRuleSchema,
   RuleSnapshotSchema,
-  type RestCondition,
   type ResourceThreshold,
-  type ResourceMaxRule,
-  type ResourceRule,
   type RuleSnapshot,
 } from "./schemas/rules.js";
 export * from "./schemas/spells.js";

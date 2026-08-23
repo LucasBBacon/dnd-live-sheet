@@ -768,10 +768,17 @@
                 "name": {
                   "type": "string"
                 },
-                "maxCharges": {
-                  "type": "integer",
-                  "minimum": 0,
-                  "maximum": 9007199254740991
+                "resetCondition": {
+                  "type": "string",
+                  "enum": [
+                    "short_rest",
+                    "long_rest",
+                    "long_rest_half",
+                    "dawn",
+                    "never",
+                    "initiative_roll",
+                    "start_of_turn"
+                  ]
                 },
                 "maxRule": {
                   "oneOf": [
@@ -791,6 +798,44 @@
                       "required": [
                         "kind",
                         "value"
+                      ],
+                      "additionalProperties": false
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "kind": {
+                          "type": "string",
+                          "const": "total_level_thresholds"
+                        },
+                        "thresholds": {
+                          "minItems": 1,
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "minimumLevel": {
+                                "type": "integer",
+                                "exclusiveMinimum": 0,
+                                "maximum": 9007199254740991
+                              },
+                              "value": {
+                                "type": "integer",
+                                "minimum": 0,
+                                "maximum": 9007199254740991
+                              }
+                            },
+                            "required": [
+                              "minimumLevel",
+                              "value"
+                            ],
+                            "additionalProperties": false
+                          }
+                        }
+                      },
+                      "required": [
+                        "kind",
+                        "thresholds"
                       ],
                       "additionalProperties": false
                     },
@@ -837,23 +882,15 @@
                       "additionalProperties": false
                     }
                   ]
-                },
-                "resetOn": {
-                  "type": "string",
-                  "enum": [
-                    "short_rest",
-                    "long_rest",
-                    "dawn",
-                    "initiative_roll",
-                    "start_of_turn"
-                  ]
                 }
               },
               "required": [
                 "id",
                 "name",
-                "resetOn"
-              ]
+                "resetCondition",
+                "maxRule"
+              ],
+              "additionalProperties": false
             }
           },
           "triggers": {
@@ -3006,7 +3043,9 @@
               "long_rest",
               "long_rest_half",
               "dawn",
-              "never"
+              "never",
+              "initiative_roll",
+              "start_of_turn"
             ]
           },
           "maxRule": {

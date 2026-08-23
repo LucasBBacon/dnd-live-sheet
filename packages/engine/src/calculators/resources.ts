@@ -1,4 +1,4 @@
-import type { ResourceGrant, ResourceMaxRule } from "@project/shared";
+import type { Resource, ResourceMaxRule } from "@project/shared";
 
 export type ResourceLevelProfile = {
   total?: number;
@@ -10,7 +10,7 @@ export interface RuntimeResource {
   name: string;
   maxCharges: number;
   currentCharges: number;
-  resetOn: ResourceGrant["resetOn"];
+  resetOn: Resource["resetCondition"];
 }
 
 // #region RESOURCE MANAGER
@@ -29,17 +29,11 @@ export class ResourceManager {
    * @param grants Static trait resource grant to be processed.
    */
   public initializeFromGrants(
-    grants: ResourceGrant[],
+    grants: Resource[],
     levels: ResourceLevelProfile = { classes: {} },
   ): void {
     for (const grant of grants) {
-      const maxCharges = this.resolveMaxCharges(
-        grant.maxRule ?? {
-          kind: "fixed",
-          value: grant.maxCharges ?? 1,
-        },
-        levels,
-      );
+      const maxCharges = this.resolveMaxCharges(grant.maxRule, levels);
       if (this.resources.has(grant.id)) {
         // handle overlapping pools (e.g., standard spellcasting accumulation)
         const existing = this.resources.get(grant.id);
@@ -56,7 +50,7 @@ export class ResourceManager {
           name: grant.name,
           maxCharges,
           currentCharges: maxCharges,
-          resetOn: grant.resetOn,
+          resetOn: grant.resetCondition,
         });
       }
     }

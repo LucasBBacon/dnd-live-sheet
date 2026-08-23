@@ -4,7 +4,7 @@ import {
   ChoiceAffinityGrantSchema,
   FixedAffinityGrantSchema,
 } from "./affinities.js";
-import { ResourceGrantSchema } from "./resources.js";
+import { ResourceSchema } from "./resources.js";
 import { TriggerGrantSchema } from "./triggers.js";
 import {
   ChoiceProficiencyGrantSchema,
@@ -79,7 +79,7 @@ export const TraitDefinitionSchema = z.object({
   implementation: TraitImplementationMetadataSchema.optional(),
 
   // reactive blocks
-  resources: z.array(ResourceGrantSchema).default([]),
+  resources: z.array(ResourceSchema).default([]),
   triggers: z.array(TriggerGrantSchema).default([]),
   diceRules: z.array(DiceRuleSchema).default([]),
   criticalHitModifiers: z.array(CriticalHitModifierSchema).default([]),

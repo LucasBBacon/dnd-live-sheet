@@ -1,4 +1,4 @@
-import type { ResourceMaxRule, ResourceRule } from "@project/shared";
+import type { Resource, ResourceMaxRule } from "@project/shared";
 
 type ThresholdRule = Extract<
   ResourceMaxRule,
@@ -21,7 +21,7 @@ const resolveThresholdValue = (
 };
 
 export const getResourceMaxUses = (
-  rule: ResourceRule,
+  rule: Resource,
   totalLevel: number,
   classLevels: Record<string, number>,
 ): number => {
