@@ -1578,12 +1578,21 @@ Cut `CoreRulePackSnapshot`, `byId` and `toRuleSnapshot` into `runtime/ruleSnapsh
 git rm packages/shared/src/schemas/rules.ts
 ```
 
-- [ ] **Step 4: Verify**
+- [ ] **Step 4: Delete two comments that Task 7 made false**
 
-Run: `pnpm --filter @project/shared test --run && pnpm --filter @project/shared typecheck && pnpm --filter @project/database test --run && pnpm --filter @project/engine test --run && pnpm --filter @project/server test --run`
+Both describe the minimal trait schema that no longer exists, and say `RuleSnapshot.traitsById` cannot hold a real authored trait. It can, as of Task 7. Delete or rewrite both to match reality:
+
+- `apps/server/src/services/referenceProvider/types.ts:13-16`
+- `apps/web/src/store/characterSheetStore.ts:82-85`
+
+These are the only two files outside `packages/shared` that still describe the old collision. Left alone they become the misleading commentary this refactor exists to remove.
+
+- [ ] **Step 5: Verify**
+
+Run: `pnpm --filter @project/shared test --run && pnpm --filter @project/shared typecheck && pnpm --filter @project/database test --run && pnpm --filter @project/engine test --run && pnpm --filter @project/server test --run && pnpm --filter @project/web test --run`
 Expected: PASS, including `toRuleSnapshot.test.ts` and `coreRulePack.test.ts`
 
-- [ ] **Step 5: Commit**
+- [ ] **Step 6: Commit**
 
 ```bash
 git add -A packages/shared
