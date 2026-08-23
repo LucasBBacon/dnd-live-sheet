@@ -31,4 +31,20 @@ export default defineConfig([
       "@typescript-eslint/no-unused-vars": "off",
     },
   },
+  {
+    files: ["packages/shared/src/schemas/primitives/**/*.ts"],
+    rules: {
+      "@typescript-eslint/no-restricted-imports": ["error", {
+        patterns: ["**/content/**", "**/runtime/**", "**/transport/**"],
+      }],
+    },
+  },
+  {
+    files: ["packages/shared/src/schemas/content/**/*.ts"],
+    rules: {
+      "@typescript-eslint/no-restricted-imports": ["error", {
+        patterns: ["**/runtime/**", "**/transport/**"],
+      }],
+    },
+  },
 ]);
