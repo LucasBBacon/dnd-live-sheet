@@ -11,7 +11,7 @@
     "test": "turbo run test",
     "typecheck": "turbo run typecheck",
     "test:shared": "pnpm --filter @project/shared test",
-    "test:all": "pnpm check:hygiene && pnpm --filter @project/shared test --run && pnpm --filter @project/database test --run && pnpm --filter @project/server test --run && pnpm --filter @project/web test --run",
+    "test:all": "pnpm check:hygiene && pnpm --filter @project/shared test --run && pnpm --filter @project/engine test --run && pnpm --filter @project/database test --run && pnpm --filter @project/server test --run && pnpm --filter @project/web test --run",
     "test:coverage": "pnpm --filter @project/shared test:coverage && pnpm --filter @project/database test:coverage && pnpm --filter @project/server test:coverage && pnpm --filter @project/web test:coverage"
   },
   "keywords": [],

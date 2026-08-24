@@ -3,6 +3,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { CoreRulePackSchema } from "@project/shared";
+import { assembleCoreRulePack } from "../corePackAssembler.js";
 import { loadCoreRulePack } from "../corePackLoader.js";
 import { projectCoreRulePack } from "../corePackProjection.js";
 
@@ -125,5 +126,43 @@ describe("projectCoreRulePack", () => {
     expect(projection.traits[0]?.definition.modifiers.fixed[0]?.target).toBe(
       "MAX_HP",
     );
+  });
+});
+
+describe("projectCoreRulePack strips pack-only fields from itemRule", () => {
+  // A hand-written fixture would not stress this: the field this guards
+  // against leaking (implementation) only exists on real pack data, and a
+  // synthetic item that happened not to author it would pass whether or not
+  // toItemRule still stripped it. Reading the shipped pack is the only thing
+  // that catches that, the same reasoning ruleSnapshotSeam.test.ts uses.
+  const SHIPPED_PACK = join(process.cwd(), "data/packs/core_2014_pack");
+
+  it("does not leak lore, isBundle, bundleContents or implementation into itemRule", async () => {
+    const pack = await assembleCoreRulePack(SHIPPED_PACK);
+    const projection = projectCoreRulePack(pack);
+
+    // item_armor_breastplate is one of 29 items in equipment/legacy.json
+    // that authors "implementation" (it is missing its AC and armour
+    // category); item_pack_explorers is one of 4 in equipment/core.json
+    // that authors "isBundle"/"bundleContents". EquipmentDefinitionSchema is
+    // strict, so if toItemRule ever stops stripping these, every stored
+    // item_rule for these items fails the moment ruleSnapshotProjection
+    // reads it back - see apps/server/.../ruleSnapshotProjection.ts.
+    const breastplate = projection.items.find(
+      (item) => item.id === "item_armor_breastplate",
+    );
+    const explorersPack = projection.items.find(
+      (item) => item.id === "item_pack_explorers",
+    );
+
+    expect(breastplate).toBeDefined();
+    expect(explorersPack).toBeDefined();
+
+    for (const item of [breastplate!, explorersPack!]) {
+      expect(item.itemRule).not.toHaveProperty("lore");
+      expect(item.itemRule).not.toHaveProperty("isBundle");
+      expect(item.itemRule).not.toHaveProperty("bundleContents");
+      expect(item.itemRule).not.toHaveProperty("implementation");
+    }
   });
 });

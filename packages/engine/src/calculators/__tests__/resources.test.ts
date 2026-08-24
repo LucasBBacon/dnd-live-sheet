@@ -262,6 +262,70 @@ describe("ResourceManager.tickRest", () => {
     expect(manager.consume("lucky_points", 1)).toBe(false);
   });
 
+  it("does not reset long_rest_half resources on a short rest", () => {
+    manager.initializeFromGrants([
+      makeGrant({
+        id: "font_of_inspiration",
+        maxRule: { kind: "fixed", value: 4 },
+        resetCondition: "long_rest_half",
+      }),
+    ]);
+    manager.consume("font_of_inspiration", 4);
+
+    manager.tickRest(false);
+
+    expect(manager.consume("font_of_inspiration", 1)).toBe(false);
+  });
+
+  it("restores half of max charges, rounded down, on top of what remains, on a long rest", () => {
+    manager.initializeFromGrants([
+      makeGrant({
+        id: "font_of_inspiration",
+        maxRule: { kind: "fixed", value: 5 },
+        resetCondition: "long_rest_half",
+      }),
+    ]);
+    manager.consume("font_of_inspiration", 3); // 2 remaining
+
+    manager.tickRest(true);
+
+    // floor(5 / 2) = 2, added to the 2 that remained: 4 total
+    expect(manager.consume("font_of_inspiration", 4)).toBe(true);
+    expect(manager.consume("font_of_inspiration", 1)).toBe(false);
+  });
+
+  it("never regains less than 1 long_rest_half charge, even when half rounds down to zero", () => {
+    manager.initializeFromGrants([
+      makeGrant({
+        id: "font_of_inspiration",
+        maxRule: { kind: "fixed", value: 1 },
+        resetCondition: "long_rest_half",
+      }),
+    ]);
+    manager.consume("font_of_inspiration", 1);
+
+    manager.tickRest(true);
+
+    expect(manager.consume("font_of_inspiration", 1)).toBe(true);
+  });
+
+  it("does not let a long_rest_half recovery push currentCharges above maxCharges", () => {
+    manager.initializeFromGrants([
+      makeGrant({
+        id: "font_of_inspiration",
+        maxRule: { kind: "fixed", value: 4 },
+        resetCondition: "long_rest_half",
+      }),
+    ]);
+    manager.consume("font_of_inspiration", 1); // 3 remaining, half-recovery would be 3 + 2 = 5
+
+    manager.tickRest(true);
+
+    // capped at maxCharges (4), not 5
+    expect(manager.consume("font_of_inspiration", 4)).toBe(true);
+    expect(manager.consume("font_of_inspiration", 1)).toBe(false);
+  });
+
   it("resets short_rest, long_rest, and dawn resources together on a long rest", () => {
     manager.initializeFromGrants([
       makeGrant({

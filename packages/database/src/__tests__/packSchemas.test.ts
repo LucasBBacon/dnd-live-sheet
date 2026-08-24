@@ -61,7 +61,10 @@ describe("the authored pack validates against its own schemas", () => {
   const validateManifest = ajv.compile(manifest);
 
   it("validates the manifest", () => {
-    expect(validateManifest(manifestFile)).toBe(true);
+    const valid = validateManifest(manifestFile);
+    // surface the actual failures rather than a bare false
+    expect(validateManifest.errors ?? []).toEqual([]);
+    expect(valid).toBe(true);
   });
 
   it.each(manifestFile.segments)("validates %s", (relativePath) => {

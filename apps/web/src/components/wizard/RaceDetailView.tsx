@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useMemo } from "react";
 import { useWizardStore } from "../../store/wizardStore";
 
@@ -7,10 +6,6 @@ interface TraitPayload {
   name: string;
   sourceOrigin: string;
   lore: { shortDescription: string; fullText?: string };
-  // Trait rows no longer carry a separate effects list (see TraitDefinition
-  // in @project/shared) - kept optional so older/loosely-typed API payloads
-  // don't force a crash here.
-  effects?: any[];
 }
 
 interface RaceDetailViewProps {
@@ -191,32 +186,6 @@ export const RaceDetailView = ({ races }: RaceDetailViewProps) => {
               >
                 {trait.lore.shortDescription}
               </div>
-
-              {/* technical mechanics badge bar */}
-              {Array.isArray(trait.effects) && trait.effects.length > 0 && (
-                <div
-                  style={{
-                    marginTop: "0.5rem",
-                    display: "flex",
-                    gap: "0.5rem",
-                  }}
-                >
-                  {trait.effects.map((eff: any, idx: number) => (
-                    <span
-                      key={idx}
-                      style={{
-                        fontSize: "0.7rem",
-                        background: "#eef9ee",
-                        border: "1px solid #cceecc",
-                        padding: "0.1rem 0.3rem",
-                        color: "#155724",
-                      }}
-                    >
-                      Mod: {eff.type} {eff.target || ""}
-                    </span>
-                  ))}
-                </div>
-              )}
             </div>
           ))}
         </div>

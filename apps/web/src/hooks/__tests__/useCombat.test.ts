@@ -19,7 +19,6 @@ let mockStoreState: {
   classLevels: Record<string, number>;
   ruleSnapshot: {
     equipmentById?: Record<string, unknown>;
-    weaponsById: Record<string, unknown>;
   } | null;
 };
 

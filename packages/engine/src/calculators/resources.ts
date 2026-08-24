@@ -128,16 +128,33 @@ export class ResourceManager {
    * Triggered when a character takes a short or long rest.
    * It resets resources that are set to reset on short or long rests, respectively.
    * This method ensures that the ResourceManager maintains an accurate state of resources after resting.
+   *
+   * Must agree with rests.ts's restedCharges, the pure projection the web
+   * store uses to preview a rest before committing it - both read the same
+   * ResourceReset values, and a resource that recovers differently depending
+   * on which of the two paths ticked it would be a live desync between the
+   * store's preview and the engine's actual state.
    * @param isLongRest A boolean indicating whether the rest is a long rest (true) or a short rest (false).
    */
   public tickRest(isLongRest: boolean): void {
     for (const resource of this.resources.values()) {
-      if (
-        resource.resetOn === "short_rest" ||
-        (isLongRest && resource.resetOn === "long_rest") ||
-        (isLongRest && resource.resetOn === "dawn")
-      ) {
+      if (resource.resetOn === "short_rest") {
         resource.currentCharges = resource.maxCharges;
+        continue;
+      }
+
+      if (!isLongRest) continue;
+
+      if (resource.resetOn === "long_rest" || resource.resetOn === "dawn") {
+        resource.currentCharges = resource.maxCharges;
+      } else if (resource.resetOn === "long_rest_half") {
+        // hit-dice style recovery: half of max, rounded down, minimum 1 -
+        // same formula as rests.ts's restedCharges
+        resource.currentCharges = Math.min(
+          resource.maxCharges,
+          resource.currentCharges +
+            Math.max(1, Math.floor(resource.maxCharges / 2)),
+        );
       }
     }
   }
