@@ -19,6 +19,7 @@ import {
   type CharacterSave,
   type HpModifiedPayload,
   type ItemConsumedPayload,
+  type ItemAttunedPayload,
   type ItemEquippedPayload,
   type ResourceConsumedPayload,
   type RuntimeEffectSyncPayload,
@@ -37,6 +38,8 @@ import {
   EffectManager,
   ResourceManager,
   RestEngine,
+  ATTUNEMENT_LIMIT,
+  CARRIED_SLOT,
   canEquipTo,
   slotsConsumedBy,
 } from "@project/engine";
@@ -834,6 +837,100 @@ export function initializeWebSocketGateway(httpServer: any) {
           socket.emit("action_error", {
             event: SOCKET_EVENTS.ITEM_EQUIPPED,
             error: "Slot contention failure. Rolling back state.",
+            payload,
+          });
+        }
+      },
+    );
+
+    // #endregion
+
+    // #region ITEM ATTUNED
+
+    /**
+     * Attunement was emitted by the client and bound by nobody, so it was
+     * applied optimistically and lost on the next rehydrate - taking every
+     * modifier gated on it with it.
+     *
+     * Both authored rules are enforced here rather than trusted from the
+     * payload. The client's own `syncRemoteAttunement` already re-checks the
+     * cap on the grounds that "a stale client could push a fourth
+     * attunement", which only holds if something authoritative refuses it.
+     */
+    socket.on(
+      SOCKET_EVENTS.ITEM_ATTUNED,
+      async (payload: ItemAttunedPayload) => {
+        try {
+          const campaignId = await ensureCharacterInSocketCampaign(
+            socket,
+            payload.characterId,
+          );
+
+          await db.transaction(async (tx) => {
+            // The character's whole inventory, not just the target row: the
+            // cap is a property of the set, and reading it in the same query
+            // inside the same transaction is what keeps two simultaneous
+            // attunements from both seeing two and both committing a third.
+            const rows = await tx
+              .select({
+                id: characterInventory.id,
+                slot: characterInventory.slot,
+                isAttuned: characterInventory.isAttuned,
+              })
+              .from(characterInventory)
+              .where(eq(characterInventory.characterId, payload.characterId));
+
+            const target = rows.find((row) => row.id === payload.inventoryId);
+
+            if (!target) {
+              throw new Error("Inventory item not found for character.");
+            }
+
+            if (payload.isAttuned) {
+              // attunement is formed while the item is worn or held, so a
+              // stowed item cannot begin one
+              if (target.slot === CARRIED_SLOT) {
+                throw new Error(
+                  `Item '${payload.inventoryId}' must be equipped before attuning.`,
+                );
+              }
+
+              // the target is excluded from its own count: re-sending an
+              // attunement the character already holds is a no-op, not a
+              // breach of the cap
+              const attunedElsewhere = rows.filter(
+                (row) => row.isAttuned && row.id !== payload.inventoryId,
+              ).length;
+
+              if (attunedElsewhere >= ATTUNEMENT_LIMIT) {
+                throw new Error(
+                  `Already attuned to ${ATTUNEMENT_LIMIT} items.`,
+                );
+              }
+            }
+
+            await tx
+              .update(characterInventory)
+              .set({ isAttuned: payload.isAttuned })
+              .where(
+                and(
+                  eq(characterInventory.id, payload.inventoryId),
+                  eq(characterInventory.characterId, payload.characterId), // security boundary
+                ),
+              );
+          });
+
+          // sender applied it optimistically, so the room minus sender
+          socket.to(`campaign_${campaignId}`).emit(SOCKET_EVENTS.ITEM_ATTUNED, {
+            actorId: socket.id,
+            data: payload,
+          });
+        } catch (error) {
+          console.error("Failed to process attunement transaction:", error);
+          // instruct sender's ui to rollback
+          socket.emit("action_error", {
+            event: SOCKET_EVENTS.ITEM_ATTUNED,
+            error: "Attunement failed. Rolling back state.",
             payload,
           });
         }

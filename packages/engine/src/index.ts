@@ -6,7 +6,6 @@ export * from "./rules/equipmentProjection.js";
 export * from "./rules/equipSlots.js";
 export * from "./rules/raceTypes.js";
 export * from "./rules/proficiencyDictionary.js";
-export * from "./rules/spellDictionary.js";
 export * from "./rules/ruleLookup.js";
 export * from "./rules/creatureSize.js";
 export * from "./calculators/abilities.js";

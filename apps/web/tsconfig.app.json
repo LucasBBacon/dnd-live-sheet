@@ -4,10 +4,10 @@
     "target": "es2023",
     "lib": ["ES2023", "DOM"],
     "module": "esnext",
-    // "node" is here for the test fixtures under src/**/__tests__, which read
-    // the shipped rule pack off disk. Application code must not reach for node
-    // APIs - the bundler would reject it long before this config would.
-    "types": ["vite/client", "node"],
+    // Browser code only. The test fixtures that read the shipped rule pack
+    // off disk need "node", and get it from tsconfig.test.json instead - so
+    // a node API reached for from application code fails here.
+    "types": ["vite/client"],
     "skipLibCheck": true,
 
     /* Bundler mode */
@@ -24,5 +24,6 @@
     "erasableSyntaxOnly": true,
     "noFallthroughCasesInSwitch": true
   },
-  "include": ["src"]
+  "include": ["src"],
+  "exclude": ["src/**/__tests__/**/*"]
 }

@@ -27,6 +27,7 @@ describe("socket gateway - event bindings", () => {
         SOCKET_EVENTS.TURN_ENDED,
         SOCKET_EVENTS.SURPRISE_DECLARED,
         SOCKET_EVENTS.ITEM_EQUIPPED,
+        SOCKET_EVENTS.ITEM_ATTUNED,
         SOCKET_EVENTS.ITEM_CONSUMED,
         SOCKET_EVENTS.RESOURCE_CONSUMED,
         SOCKET_EVENTS.REST_COMPLETED,
@@ -36,18 +37,18 @@ describe("socket gateway - event bindings", () => {
   });
 
   /**
-   * Documents a real gap rather than asserting a desired state: both of these
-   * are declared in SOCKET_EVENTS and were listed in the backlog as handlers
-   * needing coverage, but neither is bound. INVENTORY_SYNC is emit-only (the
-   * gateway pushes a snapshot on ROOM_JOIN), and ITEM_ATTUNED has no server
-   * implementation at all - a client emitting it is talking to nobody.
+   * INVENTORY_SYNC is declared in SOCKET_EVENTS but is emit-only: the gateway
+   * pushes a snapshot to the joining client during ROOM_JOIN, so there is no
+   * inbound direction to bind. Asserting the absence keeps a future "bind the
+   * unbound events" sweep from adding a listener for a one-way event.
+   *
+   * ITEM_ATTUNED was listed here for the same reason and was never the same
+   * case: it was a live client emit talking to nobody. It is bound now, and
+   * the roster above is what pins it.
    */
-  it("has no inbound listener for ITEM_ATTUNED or INVENTORY_SYNC", async () => {
+  it("has no inbound listener for INVENTORY_SYNC", async () => {
     harness = await setupGateway();
 
-    expect(harness.socket.boundEvents()).not.toContain(
-      SOCKET_EVENTS.ITEM_ATTUNED,
-    );
     expect(harness.socket.boundEvents()).not.toContain(
       SOCKET_EVENTS.INVENTORY_SYNC,
     );

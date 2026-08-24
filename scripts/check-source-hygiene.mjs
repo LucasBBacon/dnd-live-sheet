@@ -1,6 +1,10 @@
 import { access, readdir } from "node:fs/promises";
 import path from "node:path";
 import process from "node:process";
+import {
+  BLOCKING_REASONS,
+  findLineEndingViolations,
+} from "./lineEndings.mjs";
 
 const repoRoot = process.cwd();
 const sourceRoots = ["apps", "packages"];
@@ -88,7 +92,31 @@ const run = async () => {
 
   const retiredPathViolations = await existingRetiredPaths();
 
-  if (generatedArtifacts.length === 0 && retiredPathViolations.length === 0) {
+  const lineEndingFindings = await findLineEndingViolations(repoRoot);
+  const lineEndingViolations = lineEndingFindings.filter((finding) =>
+    BLOCKING_REASONS.has(finding.reason),
+  );
+  const conventionFindings = lineEndingFindings.filter(
+    (finding) => finding.reason === "convention",
+  );
+
+  // Off by default: these cannot be told apart from a checkout made while
+  // core.autocrlf was off, so they are a listing to work through rather than
+  // a gate. See the line-endings note in the backlog.
+  if (process.argv.includes("--report-eol") && conventionFindings.length > 0) {
+    console.log(
+      `${conventionFindings.length} files differ from this checkout's line-ending convention:`,
+    );
+    for (const { file, found, expected } of conventionFindings) {
+      console.log(`- ${file} (${found}, convention is ${expected})`);
+    }
+  }
+
+  if (
+    generatedArtifacts.length === 0 &&
+    retiredPathViolations.length === 0 &&
+    lineEndingViolations.length === 0
+  ) {
     console.log("Hygiene check passed.");
     return;
   }
@@ -106,6 +134,17 @@ const run = async () => {
     console.error("Retired duplicate paths reintroduced:");
     for (const retiredPath of retiredPathViolations) {
       console.error(`- ${retiredPath}`);
+    }
+  }
+
+  if (lineEndingViolations.length > 0) {
+    console.error("Line-ending corruption:");
+    for (const { file, found, expected, reason } of lineEndingViolations) {
+      const why =
+        reason === "mixed"
+          ? "one file, both endings - something rewrote part of it"
+          : `.gitattributes pins this file to ${expected}`;
+      console.error(`- ${file}: ${found} (${why})`);
     }
   }
 

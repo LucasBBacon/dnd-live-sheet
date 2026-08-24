@@ -140,67 +140,107 @@ structural.
 
 ## Recommended sequence
 
-Refreshed 2026-08-21, after the pack cutover. The previous list is preserved at
-the bottom of this section; every item on it is now either closed or superseded.
+Refreshed **2026-08-24**. Every item below was re-verified against the working
+tree on that date rather than carried forward on trust; two entries changed
+severity as a result, and both notes say so. The 2026-08-21 ordering this
+replaces has been retired — its closed entries are already marked ✅ in their
+own sections, and each of its still-open items carries through to a tier here,
+so nothing is dropped silently. See "Superseded" below for the record.
 
-The ordering principle is **fix the pipe before filling it**. Several content
-gaps below are invisible or worthless until a delivery path above them works,
-so authoring first would mean authoring into a hole.
+The ordering principle has changed, because the old one has been satisfied.
+The previous list said **fix the pipe before filling it**, and that was right:
+its Tier 1 is closed, the equip path works, and the pack is the only rules
+source. The principle for this pass is **silent wrong before loud missing**.
 
-### Tier 1 — broken for players today
+A battleaxe with no `weapon` block announces itself the first time a player
+clicks it. An attunement that never persists, a reset condition the database
+cannot store, and a trait query that returns empty instead of erroring do not.
+Missing content is findable and countable — that is the entire point of the
+`implementation` markers. Silent breakage is neither, and it costs a debugging
+session every time it eventually surfaces. So the silent failures go first,
+even though the missing content is what is visible on the sheet.
+
+`🟢` marks an **easy win**: self-contained, and with an existing template or a
+test that proves it done rather than a judgement call to make.
+
+### Tier 1 — wrong today, and silent about it
+
+Item 1 is closed. Items 2-4 are open and are the top of the list.
 
 | Order | Item | Why first |
 | --- | --- | --- |
-| 1 | ✅ **Equip slot validation** — see E1 below | **Closed 2026-08-21.** The gateway now decides legality with the engine's `canEquipTo`. Unblocks #32 and #33. |
-| 2 | ✅ **S2** — replayed actions arrive in a different shape | **Closed 2026-08-21.** One channel, one shape. Severity was overstated — see the corrected note below. |
-| 3 | ✅ **S3** — `ROOM_JOIN` has no error path | **Closed 2026-08-21.** Reported on both sides: the gateway emits `action_error`, and the sheet now shows it. **Tier 1 is clear.** |
+| 1 | ✅ **`ITEM_ATTUNED` has no server binding** — S6 below | **Closed 2026-08-24.** The gateway binds it, enforces both authored rules inside the transaction, and broadcasts to the room minus sender. Eight tests, each sabotage-verified. The two characterisation tests that pinned the absence were flipped. |
+| 2 | 🟢 **#46** — `rest_condition` enum is two values short | `ResetConditionSchema` authors seven; the Postgres enum lists five. A resource resetting on `initiative_roll` or `start_of_turn` — both already valid pack-side — cannot be written to `character_resources` at all. The fix is one `ALTER TYPE … ADD VALUE` migration; the friction is #38, not the change. See Tier 7 item 25. |
+| 3 | **#50** — trait and pack rows are read on a raw cast | `matchesTraitCategory` casts, and `toRuleSnapshot` maps `core_rule_packs.payload` with no parse anywhere in the path. A stale row yields `undefined` for `proficiencies`, so a category-filtered query returns **nothing rather than erroring**. The equipment path is the counter-example worth copying: its real `safeParse` is the only reason the legacy `weapon_rule` breakage was ever visible. |
+| 4 | 🟢 **#49** — `importPipeline` re-parses staged rows with no error handling | `planImportRun` and `publishImportRun` have no `try`/`catch` at all, so a stale row throws an uncaught ZodError and the run's status and issues are never updated — the failure leaves no record of itself. Easy because the fix is not a design: `parseRollbackRowPayload` is a working, already-merged template, and this is four call sites adopting it. |
 
-### Tier 2 — cheap content that makes existing characters work
+### Tier 2 — free, or nearly
+**Tier 2 is closed as of 2026-08-24.** Kept with its reasoning visible, since
+two of the items found more than they were scheduled to fix (#51, #52).
 
-| Order | Item | Why here |
-| --- | --- | --- |
-| 4 | **#33** — 6 armours with no AC modifier | Unblocked: Tier 1 item 1 is closed, so an equipped suit now reaches the AC calculation. |
-| 5 | **#32** — 23 weapons with no `weapon` block | A battleaxe that cannot attack. PHB values are well known and the schema already expresses them. |
 
-~~Worth doing alongside these: give `CoreEquipmentSchema` an `implementation`
-marker.~~ **Done 2026-08-21, ahead of the content work** — see E3. Equipment can
-now declare its own gaps, and a cross-check test keeps the declarations honest,
-so #32 and #33 announce themselves instead of having to be gone looking for.
-
-### Tier 3 — free wins
+Everything in this tier is hours, not days, and most of it is minutes. Worth
+clearing in one sitting before starting anything in Tier 3 or below.
 
 | Order | Item | Why here |
 | --- | --- | --- |
-| 6 | **#34, #35** — delete the two dead dictionaries | ~900 lines, zero readers, zero risk. |
-| 7 | ✅ **#39** — `client.test.ts` cold-import timeout | **Closed 2026-08-21.** Was not a transform cost and did not want a raised timeout — see below. `pnpm test` is green again. |
-| 8 | **#4f** — guard the destructive import | It has already destroyed 12 characters once. |
+| 5 | ✅ **#35** — `startingEquipmentDictionary.ts` deleted | **Closed 2026-08-24.** 802 lines, zero readers, nothing to repoint. |
+| 6 | ✅ **#34** — `spellDictionary.ts` deleted | **Closed 2026-08-24.** Deleted with its one barrel line. Its three authored spells were *not* folded into the pack first: they would have been the only non-stub spells in a section of 111 stubs, which #31 should settle as a whole rather than by exception. |
+| 7 | ✅ **A7** — closed as won't-fix | **Closed 2026-08-24.** The reopening condition is kept. |
+| 8 | ✅ **#4f** — destructive import guarded | **Closed 2026-08-24.** `db:import-pack` now counts the character rows the CASCADE will take, prints them, and refuses without `--yes`. The decision is `parseImportInvocation` in `src/`, so it is tested without a database attached; the count and the refusal live in the script. |
+| 9 | ✅ **#40** — node-types guard restored | **Closed 2026-08-24.** `tsconfig.app.json` is back to `["vite/client"]` and excludes `src/**/__tests__`; the new `tsconfig.test.json` is the only project granted `node`. Verified in both directions: `process.cwd()` in a component now fails `tsc -b`, and the same call in a test still passes. |
+| 10 | ✅ **E3 follow-up** — markers cross-checked | **Closed 2026-08-24.** `implementationMarkers.test.ts`, sabotage-verified. It found more than it was written to check — see #51. |
+| 11 | ✅ **#47** — line-ending check added | **Closed 2026-08-24.** It gates on the two unambiguous cases and found four genuinely corrupted files on its first run. The whole-file case turned out to be neither safe to gate nor small — see #52. |
 
-### Tier 4 — debt, before it compounds
+### Tier 3 — stop the drift before it earns a third instance
 
 | Order | Item | Why here |
 | --- | --- | --- |
-| 9 | **#37** — three hand-built copies of the equipment/resource projection | They will drift. Cheapest to fix while all three are fresh. |
-| 10 | **#36** — `SUMMON_ACTOR_DICTIONARY` into the pack | The last live rules content outside it. |
-| 11 | **#40** — restore the node-types guard in web's tsconfig | Small, and it protects a boundary that is easy to erode quietly. |
+| 12 | **#45** — one DB-free pack export, three fixtures repointed | Proven, not predicted. One key added to `manifest.json` broke both hand-copied assemblers, found weeks apart — and **both times the totals shrank instead of going red**: 533 tests reported instead of 733, then 266 instead of 284. A regression that reduces the denominator is the worst kind to own, because a passing run looks identical to a healthy one. Re-verified 2026-08-24: `packages/database/package.json` still has no `exports` map, and the server fixture still deep-imports `@project/database/src/corePackAssembler.js`. One new export plus three file changes. |
+| 13 | **#37** — absorb into #45 | The same disease one layer up, in the projection rather than the assembly. Do not schedule it separately; #45 is the natural place to land both. |
+
+Not higher than Tier 2 only because nothing is broken *right now*. But do it
+**before the next change to `CoreRulePackSchema.pack` or to `manifest.json`'s
+shape** — those are precisely the changes that trip it, and it has cost two
+debugging sessions already.
+
+### Tier 4 — content that makes existing characters work
+
+| Order | Item | Why here |
+| --- | --- | --- |
+| 14 | 🟢 **#33** — 6 armours with no AC **and** no category | Six items, well-known PHB values, both facets already expressible in the schema, and `equipmentGaps.test.ts` stays red until the declared gaps genuinely close. The smallest content item in the backlog with a real player-visible payoff. Filling only the AC half will not close it, by design. |
+| 15 | **#32** — 23 weapons with no `weapon` block | The same shape at four times the volume: a battleaxe that equips, weighs correctly and rolls no attack. Mechanical, parallelisable, and self-checking through the same test. |
+| 16 | 🟢 **#44** — Relentless Rage | The design is already written and parked in `docs/superpowers/specs/2026-08-20-relentless-rage-design.md`, and the cutover unblocked it. Executing a finished spec is the cheapest real trait in the backlog. |
 
 ### Tier 5 — the burndown
 
 | Order | Item | Why here |
 | --- | --- | --- |
-| 12 | **#30** — 456 unimplemented traits | The largest item and fully parallel. Go class by class, in the order the table actually plays. Barbarian is the worked example to copy. |
-| 13 | **#31** — 111 unimplemented spells | Lower than the count suggests: `level` and `school` are placeholders too, so these need real data before they need rules. |
+| 17 | **#30** — 456 unimplemented traits, 65% of 700 | The largest item and fully parallel. Class by class, in the order the table actually plays; Barbarian is the worked example to copy. Do Tier 2 item 10 first if the remaining count is to mean anything. |
+| 18 | **#36** — `SUMMON_ACTOR_DICTIONARY` into the pack | The last live rules content outside the pack — two real readers, re-verified 2026-08-24. Until it moves, "packs are the only source of rules" carries an asterisk. |
+| 19 | **#31** — 111 unimplemented spells | Lower than the raw count suggests, and lower than #30: `level` and `school` are placeholders too, so these need real **data** before they can carry rules. Two passes, not one. |
 
 ### Tier 6 — design passes, not before Tiers 1-4
 
 | Order | Item | Why last |
 | --- | --- | --- |
-| 14 | **A1 + A5 + #23 together** | One root, not three items. `EngineEventSchema` cannot express "a creature left my reach", and Protection needs reactions targeting another creature's roll. Deserves its own design pass. |
-| 15 | **#41, #42** — two-mode import, honouring `extends` / `owns` | Genuinely blocked until a second pack exists. Building it now is composition machinery with nothing to compose. |
-| 16 | **A2b** polish, **A7** close as won't-fix, **#43** when a browse endpoint wants it | Optional or conditional. |
+| 20 | **#23 + A1 + A5 together** | One root, three symptoms. `EngineEventSchema` models seven things that happen to you on your own turn, and neither "a creature left my reach" nor "the condition I readied for occurred" can be expressed. `CombatEvent`, `reaction_window_opened` and `spendReaction` already exist, so this is extending a vocabulary rather than building a reaction system. |
+| 21 | **E2** — two-weapon fighting is unreachable | Belongs *with* item 20 rather than after it: an off-hand attack is worthless without a bonus-action attack to spend it on. A model gap, not a data gap — resist fixing it by authoring `off_hand` onto all 26 weapons, which would also let a greatsword be dual-wielded. |
+| 22 | **A2b**, **S5** | Both small, and both judgement calls rather than defects. A2b is worth doing only if the two-click check flow proves annoying in play; S5's right treatment is page-level, which is a UI design decision rather than a bug to fix. |
 
-Tiers 1-3 are roughly a day's work and are what turn "structurally complete"
-into "actually playable". Tier 6 should not start until 1-4 are done —
-reactions are hard enough without a broken equip path underneath them.
+### Tier 7 — blocked or conditional; do not start
+
+| Order | Item | Status |
+| --- | --- | --- |
+| 23 | **#41, #42** | Genuinely blocked until a second pack exists. Composition machinery with nothing to compose. |
+| 24 | **#43** | Conditional — only wanted when a browse endpoint needs to query resources. |
+| 25 | **#38** — `db:push` needs a TTY | Recorded as "fine while the schema is stable". **Tier 1 item 2 is a schema change**, so this may stop being theoretical the moment #46 is picked up. Worth knowing before starting item 2, not after. |
+| 26 | Coverage thresholds | ~49% statements / ~37% branches server-wide against a configured 80%, held down by `src/services` (~21%) and `src/routes` (~38%). Not usable as a gate until those two move; the gateway pass raised the global number rather than lowering it. |
+
+**Suggested first sitting:** Tier 1 item 1 plus all of Tier 2. That is one
+player-facing defect fixed, ~900 lines of dead code gone, two guards restored,
+a marker cross-check that makes the burndown measurable, and one item closed as
+won't-fix — with nothing in it that needs a design decision first.
 
 ### E1 — armour cannot be equipped; seven slots are unreachable ✅
 
@@ -293,10 +333,12 @@ after a gap is filled. Verified by sabotage in each direction rather than
 assumed — worth doing, because the comparison had a bug on first write that let
 six mismatches pass.
 
-**Follow-up worth having: nothing cross-checks the trait or spell markers.**
-Every existing assertion on them is a spot-check, so those markers can drift out
-of step with their data exactly the way the two slot vocabularies did before E1.
-Equipment now has the check the older sections do not.
+**Follow-up: nothing cross-checked the trait or spell markers.** ✅ **Done
+2026-08-24** — `implementationMarkers.test.ts`, built on this test's shape and
+sabotage-verified the same way. Every existing assertion on those markers had
+been a spot-check, so they could drift out of step with their data exactly the
+way the two slot vocabularies did before E1. They had not drifted in the
+direction feared; they had drifted in the other one. See #51.
 
 ### S5 — a failed room join reports itself on the inventory banner
 
@@ -310,6 +352,55 @@ Strictly better than the silence it replaces, and deliberately minimal. The
 right treatment is probably page-level — the route knows it asked for a
 character in a campaign and got refused — but that is a UI design decision
 rather than a defect, so it is recorded rather than guessed at.
+
+### S6 — `ITEM_ATTUNED` is emitted by the client and bound by nobody
+
+Promoted 2026-08-24 from the "two smaller findings" list below, where it was
+recorded as "a client emitting it is talking to nobody" and rated lower value.
+Re-checking it against the working tree makes it the last Tier-1 defect, so the
+severity call is corrected here rather than left standing.
+
+**The event is live on the client, not vestigial.** `characterSheetStore` emits
+it from two call sites — [:800](apps/web/src/store/characterSheetStore.ts:800)
+when an attunement is formed and
+[:836](apps/web/src/store/characterSheetStore.ts:836) when one is broken — and
+[LiveSheetProvider.tsx:67](apps/web/src/components/sheet/LiveSheetProvider.tsx:67)
+subscribes to a broadcast that never comes.
+
+`apps/server` has no listener at all; `socket.bindings.test.ts` pins the
+absence. And `is_attuned` has **no gameplay writer anywhere on the server**:
+the column is read on `ROOM_JOIN` and by the character route, and written only
+by `seedSampleCharacters` and `seedDevInventory`.
+
+So the full path is: the store applies the change locally, re-checks the
+three-item cap, emits — and the change dies on the wire. Three consequences, in
+descending order of how quietly they happen:
+
+- **The bonus silently disappears on reload.** `InventoryExtractor` grants
+  nothing from an unattuned item, so a Ring of Protection stops contributing
+  the moment the sheet rehydrates from the server, with no error and nothing in
+  the UI to explain it. The sample fixtures seed nine `isAttuned: true` rows, so
+  this is reachable immediately rather than hypothetically.
+- **The table never sees it.** Every other inventory mutation reaches the room.
+  This one does not, so the other players' sheets show the item unattuned
+  forever.
+- **The server-side cap does not exist.** The store re-checks
+  `ATTUNEMENT_LIMIT` on the broadcast path specifically because a hostile client
+  "could push a fourth attunement" — but with no server binding there is no
+  server-side enforcement at all, and that comment describes a defence that was
+  never built.
+
+Cheap to fix, which is why it leads the sequence rather than sitting with the
+content items: `ITEM_EQUIPPED` is a near-identical handler with the same
+ownership check, the same `character_inventory` write and the same broadcast
+shape, and the gateway harness plus `renderSql` already exist to assert the
+write stays scoped by `character_id`.
+
+One decision the fix has to make rather than inherit: whether the server
+enforces `ATTUNEMENT_LIMIT` or merely records what it is told. Consistent with
+the track-never-block stance taken for A6, recording is defensible — but the
+client comment above assumes enforcement, so the two should be made to agree
+either way.
 
 ### E2 — no weapon can be held in the off hand, so two-weapon fighting is unreachable
 
@@ -334,8 +425,17 @@ Kept so the change of direction is visible rather than silent.
 
 1. ~~**2c inventory (#18, #19)**~~ — closed.
 2. ~~**P3 remainder (#26, #29)**~~ — both closed.
-3. **2e (#23)** — still open, now folded into Tier 6 item 14 with A1 and A5.
+3. **2e (#23)** — still open, now folded into Tier 6 item 20 with A1 and A5.
 4. ~~**Typecheck / API drift cleanup**~~ — the workspace reports 0 errors and lint is clean.
+
+The **2026-08-21 tier list** that sat above E1 was itself retired on
+2026-08-24. Of its sixteen entries, three were already ✅ in place (Tier 1),
+one was ✅ (#39) and one done ahead of schedule (E3); the rest are carried
+into the current tiers, several at a different priority. The two that moved
+furthest are recorded where they moved: `ITEM_ATTUNED` up to Tier 1 (S6), and
+#46 up from unlisted to Tier 1 item 2. The list is not reproduced here because
+every line of it is either a ✅ that lives in its own section or an item with a
+current row above.
 
 
 ---
@@ -368,7 +468,7 @@ deliberately left out and are listed so the absence stays deliberate.
 | ~~A4~~ | ~~Dodge's disadvantage not displayed~~ | **Closed 2026-08-19.** The AC widget now reports both mirrors, and shows both at once when both apply rather than resolving a rule the DM owns. |
 | A5 | No opportunity-attack model | **Open** — see "reactions and external events" below |
 | ~~A6~~ | ~~Two-weapon fighting's main-hand requirement~~ | **Closed 2026-08-19** as a warning, not enforcement: the off-hand attack card says it needs the Attack action first while `attacksRemaining` is null. Consistent with track-never-block. |
-| A7 | No way to take the Attack action without swinging | **Recommend closing as won't-fix** — see below |
+| ~~A7~~ | ~~No way to take the Attack action without swinging~~ | **Closed 2026-08-24 as won't-fix** — see below |
 
 ### A2b — actions do not prompt their own check
 
@@ -379,7 +479,7 @@ it an optional `skillId` and having the resolver surface which check to roll
 would close it. Small, and only worth doing if the two-click flow proves
 annoying in play.
 
-### A7 — recommend closing as won't-fix
+### A7 — closed as won't-fix ✅
 
 Taking the Attack action *without* attacking has no representation, and giving
 it one costs more than it returns. It needs either a new effect type
@@ -388,6 +488,13 @@ scenario it serves is a character with no weapon who wants to open an allowance
 they cannot spend — unarmed strikes already work, and they are `attack`
 activations like any other. Reopen if a real trait ever keys off "you took the
 Attack action" rather than off an attack landing.
+
+**Closed 2026-08-24.** The recommendation had stood since 2026-08-19 with no
+counter-example raised against it, and an open item that nobody intends to
+do makes the backlog look larger than it is. The reopening condition above is
+unchanged and is the whole point of recording it rather than deleting it: if a
+trait ever keys off *taking* the Attack action rather than off an attack
+landing, this comes back.
 
 ### Reactions and external events (A1, A5)
 
@@ -417,7 +524,10 @@ to flip rather than a test to write.
 Two smaller findings, recorded but lower value:
 
 - `ITEM_ATTUNED` is declared in `SOCKET_EVENTS` and has no server binding at
-  all — a client emitting it is talking to nobody.
+  all — a client emitting it is talking to nobody. **Promoted 2026-08-24 to
+  S6 above**, and no longer a smaller finding: the client emits it from two
+  live call sites, so attunement is lost on reload and never reaches the
+  room. This entry is kept for the record.
 - `EQUIPMENT_SLOTS` advertises `head`, `cloak`, `boots`, `gloves`, `ring_1`,
   `ring_2` and `amulet`, but `isValidTargetSlotForItem` only ever returns true
   for `backpack`, the two hands and `armor`, so those seven slots are
@@ -542,7 +652,7 @@ cutover either created or made visible.
 
 | # | Item | Scale | Notes |
 | --- | --- | --- | --- |
-| 30 | Traits marked `implementation.mode: "unimplemented"` | **456 of 700 (65%)** | They exist so progressions resolve and carry no rules. Fighters, wizards, monks and the rest have structure and no mechanics. Query the pack for the marker to get the current list. |
+| 30 | Traits marked `implementation.mode: "unimplemented"` | **456 of 700 (65%)** — but see #51 | They exist so progressions resolve and carry no rules. Fighters, wizards, monks and the rest have structure and no mechanics. Query the pack for the marker to get the current list. **This number understates the work by 119**: a further 119 traits carry no rules and no marker either, so they are absent from this count. The real figure is 576 of 700. |
 | 31 | Spells marked `unimplemented` | **111 of 111** | Every spell in the pack is a stub with a `no_effect` action; `level` and `school` are placeholders, which the marker's summary says outright. |
 
 This is the deliberate, accepted trade recorded in the design doc — a marked
@@ -575,8 +685,8 @@ feats, backgrounds, equipment, spells and resources. Three files in
 
 | # | Item | Location | Status |
 | --- | --- | --- | --- |
-| 34 | `SPELL_DICTIONARY` — 3 spells | [spellDictionary.ts](packages/engine/src/rules/spellDictionary.ts) | **Dead.** Nothing reads it, and the pack carries 111 spell ids it duplicates three of. Delete it, or fold its three authored spells into the pack as the first non-stub spells and then delete it. |
-| 35 | `CLASS_STARTING_EQUIPMENT` / `BACKGROUND_STARTING_EQUIPMENT` — 802 lines | [startingEquipmentDictionary.ts](packages/engine/src/rules/startingEquipmentDictionary.ts) | **Dead.** Neither export has a reader anywhere in the workspace. Pack classes and backgrounds carry their own `startingEquipment`, which is what validation checks. |
+| ~~34~~ | ~~`SPELL_DICTIONARY` — 3 spells~~ | — | **Deleted 2026-08-24**, with its one barrel export. Its three authored spells were deliberately *not* folded into the pack first: they would have been the only non-stub spells in a section of 111 stubs, and #31 should settle the section as a whole rather than by exception. |
+| ~~35~~ | ~~`CLASS_STARTING_EQUIPMENT` / `BACKGROUND_STARTING_EQUIPMENT` — 802 lines~~ | — | **Deleted 2026-08-24.** Zero readers re-verified first; a pure deletion with nothing to repoint. |
 | 36 | `SUMMON_ACTOR_DICTIONARY` | [summonActorDictionary.ts](packages/engine/src/rules/summonActorDictionary.ts) | **Live** — `characterEngine` and `actionResolver` both resolve blueprints from it. Genuine rules content sitting outside the pack; needs a pack section before the claim is unqualified. |
 
 `proficiencyDictionary.ts` is deliberately excluded: it is a roster of valid
@@ -589,7 +699,7 @@ proficiency ids consumed by the extractors and calculators, not authored rules.
 | 37 | `toRuleSnapshot` carries only the four id-keyed rulebook maps | Equipment and resources are rebuilt by hand in three places — `ruleSnapshotCache`, the engine's `corePackLookup()` and the web `packFixture`. Three copies of the same projection will drift. Either widen `toRuleSnapshot` or export one shared builder. |
 | 38 | `db:push` cannot run non-interactively | drizzle-kit demands a TTY for its data-loss prompt, so the cutover import skipped it. Fine while the schema is stable; a blocker the first time a migration is actually needed in CI. |
 | ~~39~~ | `client.test.ts` fails on a cold run | **Fixed 2026-08-21 by stubbing the schema graph, not by raising the timeout.** The recorded mechanism was wrong: transform was only 801ms of the 4.3s. The cost was module *evaluation* — `vi.resetModules()` plus the dynamic `import("../client.js")` force the real schema modules to be re-evaluated on every run, constructing ~40 drizzle tables and, through `operational.js`, all of `@project/shared`'s zod schemas. That left the first test at **3331ms against a 5s default even when run alone**, so it went red under `turbo`'s parallel load and green in isolation — which is exactly why it read as a cold/warm effect. Raising the timeout would have kept a 3.3s test one CPU spike from red. Neither assertion needs the schema's content (the second only asks that drizzle received *an object*), so both modules are now `vi.mock`ed: **3331ms → 49ms**. Verified the stubs did not neuter it by removing the `DATABASE_URL is missing` throw from `client.ts` and confirming the test still fails. |
-| 40 | `apps/web/tsconfig.app.json` now includes `node` types | Added for the test fixtures that read the pack off disk. It weakens the guard that kept node APIs out of browser code. A separate tsconfig for `src/**/__tests__` would restore it. |
+| ~~40~~ | ~~`apps/web/tsconfig.app.json` includes `node` types~~ | **Fixed 2026-08-24.** `tsconfig.app.json` is `["vite/client"]` again and excludes `src/**/__tests__/**/*`; the new `tsconfig.test.json` is the only project granted `node`. Verified both ways: `process.cwd()` in a component fails `tsc -b`, the same call in a test passes. The hole was real and confirmed before the fix — the probe type-checked clean beforehand. |
 
 ### 4e. Deferred by the plan, still deferred
 
@@ -600,7 +710,7 @@ proficiency ids consumed by the extractors and calculators, not authored rules.
 | 43 | No `resources` reference table | `pack.resources` reaches the runtime through the payload. Only needed when a browse endpoint wants to query resources. |
 | 44 | Relentless Rage | Parked in `docs/superpowers/specs/2026-08-20-relentless-rage-design.md`. Unblocked by the cutover. |
 
-### 4f. Note on the destructive import
+### 4f. Note on the destructive import ✅
 
 `persistCoreRulePack` truncates the reference tables `CASCADE`, which reaches
 character data — the cutover removed 12 characters, 184 `character_traits`, 104
@@ -608,6 +718,18 @@ inventory rows and 2 `character_custom_traits`. `db:seed:samples` restores the
 ten fixture characters; anything hand-made is not recoverable. Worth a
 confirmation prompt, or a documented warning on the script, before anyone runs
 it against data they care about.
+
+**Closed 2026-08-24.** Both, as it turned out, rather than either: the script
+counts the rows the CASCADE will actually take, prints them, and then refuses
+unless `--yes` is passed. Counting first is the point — an operator now accepts
+or refuses a real number rather than a caveat, and on an empty development
+database the warning stays silent instead of crying wolf.
+
+The decision is `parseImportInvocation` in `src/importInvocation.ts` rather than
+inline in the script, because `scripts/importPack.ts` imports `client.ts` and so
+cannot be exercised without a live `DATABASE_URL`. Six tests cover it, including
+the two failure modes that would quietly disarm the guard: a flag read as a
+path, and a prefix like `--y` counting as consent.
 
 ---
 
@@ -686,4 +808,83 @@ absorb #37.
 | 50 | Rows read from `traits.definition` and `core_rule_packs.payload` are never validated | `databaseReferenceProvider.matchesTraitCategory` takes a raw cast (`trait as { definition: TraitDefinition }`); nothing in `apps/server` or `packages/database` parses a `traits` row through `TraitDefinitionSchema`, and `toRuleSnapshot` maps `core_rule_packs.payload` with no `.parse()` anywhere in the path. Unlike the equipment path — which *is* gated by a real `safeParse`, and which is the only reason the legacy `weapon_rule` breakage was visible and fixable at all — these two fail silently: a stale row yields `undefined` for `proficiencies`, so a category-filtered trait query returns nothing rather than erroring. Self-heals on reimport. Worth a `safeParse` at the read boundary so the next shape change surfaces instead of quietly returning empty. |
 | ~~48~~ | ~~**CI never runs the engine test suite**~~ | **Fixed on the schema-layering branch.** `test:all` now chains `@project/engine` between `shared` and `database`, so the Tests gate covers all five packages. Original finding retained below for the record. |
 | 48 | **CI never runs the engine test suite** (resolved — see above) | `.github/workflows/ci.yml`'s Tests gate runs `pnpm test:all`, which chains `@project/{shared,database,server,web}` and omits `@project/engine` entirely — 734 tests, the largest suite in the repo. `packages/engine` does have a working `test` script; it is simply not in the chain. This is not theoretical: during the schema-layering branch a change to `manifest.json` broke 16 engine suites, and no CI gate would have caught it. Worse, most of that breakage was *invisible in the totals* — a fixture throwing at module load leaves its tests uncollected, so the suite reports a smaller denominator rather than failures. Fix is one clause in the `test:all` script, or switching the gate to `turbo run test`, which picks up every package with a `test` script. |
-| 47 | No repo safety net catches line-ending corruption | `scripts/check-source-hygiene.mjs` checks for stray build artefacts under `src/` and nothing else. During this branch the Edit tool silently rewrote whole files as LF-only on three separate occasions, each caught only by a manual byte-level check. `git status` cannot show it — `core.autocrlf=true` normalizes both sides of the comparison, and git's stat cache hides it further. A hygiene check comparing each tracked text file's on-disk endings against its `.gitattributes` policy would close this. |
+| ~~47~~ | ~~No repo safety net catches line-ending corruption~~ | **Fixed 2026-08-24.** `scripts/lineEndings.mjs`, wired into `check:hygiene` so it already gates `build` and `test:all`. It gates on the two unambiguous cases — a file containing both endings, and a file contradicting an explicit `.gitattributes` pin — and reports the platform-dependent third under `--report-eol` rather than gating it. Its first run found **four genuinely corrupted files**, all repaired: `ArmorClassWidget.test.tsx` (46 LF / 69 CRLF), `useCharacterStats.test.ts` (65 LF / 234 CRLF), `combatContext.test.ts` (53 LF / 186 CRLF) and `0010_nullable_subrace.sql` (2 LF / 1 CRLF). The recorded mechanism was understated: this was not only whole-file rewrites but **partial** ones. See #52 and #53. |
+
+
+---
+
+## P6 — Findings from the Tier 2 pass (opened 2026-08-24)
+
+Both numbered items below were found *by* the guards added in Tier 2, on their
+first run, which is the argument for the guards restated as evidence.
+
+### 6a. #51 — 119 traits are rule-free and carry no marker at all
+
+| # | Item | Scale | Notes |
+| --- | --- | --- | --- |
+| 51 | Traits with no rules and no `implementation` marker | **119** | Invisible to #30's count, and to any query for the marker. |
+
+The cross-check was written to catch a *stale* marker — rules authored, marker
+left behind. That direction is clean: zero traits are marked `unimplemented`
+while carrying rules, zero claim `engine` delivery with nothing to deliver, and
+the spell section is honest in both directions. What it found instead was the
+opposite failure, and a larger one.
+
+**576 of 700 traits (82%) carry no rules**, not the 456 (65%) #30 records:
+456 marked `unimplemented`, 119 unmarked, and `trait_fs_protection` marked
+`manual_sheet_helper` because the modifier vocabulary cannot express it (#23).
+
+The worked example is `trait_dragon_ancestor_black`. Its own lore text names
+acid resistance, Draconic literacy and doubled proficiency on Charisma checks
+with dragons. It carries none of the three, and — unlike the 456 — says nothing
+about carrying none of them. That is precisely the silence
+`TraitImplementationMetadataSchema` was written to break: "a trait with no
+modifiers is otherwise indistinguishable from one that deliberately grants
+nothing".
+
+`implementationMarkers.test.ts` pins the count at 119 and fails if it **rises**,
+so a new silent stub cannot be added quietly. Lower it as they are marked.
+
+Closing #51 is mostly mechanical, but each trait needs one judgement first:
+rule-free because nobody authored it, or rule-free because it genuinely grants
+nothing mechanical? The dragon ancestors answer the first way; some will not.
+Worth doing before #30, for the same reason the cross-check came before the
+burndown — an unmarked stub is not counted, and what is not counted is not
+burned down.
+
+### 6b. #52 — 73 project-source files are LF against a CRLF working tree
+
+| # | Item | Scale | Notes |
+| --- | --- | --- | --- |
+| 52 | Files pure LF where this checkout's convention is CRLF | **73** in project source | 24 `apps`, 36 `packages`, 17 `docs`, plus `skills-lock.json`. A further ~300 sit in vendored `.claude/` and `.github/skills`, which are not ours to normalize. |
+
+Reported by the #47 check, **deliberately not gated**. A whole file that is pure
+LF cannot be told apart from a legitimate checkout made while `core.autocrlf`
+was off, and the expectation inverts on a Linux CI runner — so failing on it
+would be a platform accident rather than a check. `pnpm check:hygiene
+--report-eol` lists them.
+
+Worth knowing even though it is not gated:
+`apps/server/src/gateway/__tests__/` alone holds **five LF files beside six
+CRLF ones**. That inconsistency inside a single directory is what makes an
+editing tool's whole-file rewrite invisible — there is no local convention left
+for it to violate.
+
+Normalizing them changes no committed content: with `core.autocrlf=true` git's
+clean filter reconciles both sides, which was verified while repairing the four
+mixed files (`git diff HEAD` stayed empty afterwards; note that `git status`
+still shows ` M` from its stat cache, and `git diff` is the honest answer). It
+is still 73 files touched at once, so it is a separate call rather than a
+side effect of adding the check.
+
+### 6c. #53 — the line-ending check itself has no unit test
+
+`scripts/lineEndings.mjs` is verified by sabotage rather than by a permanent
+test: a file corrupted to mixed endings turned the check red, and so did a file
+rewritten against an explicit `eol=lf` pin. Both were reverted.
+
+It has no unit test because there is nowhere to put one. `test:all` chains the
+five packages and nothing owns `scripts/`, so a root-level test would not run
+in CI. Either add a root vitest project or move the module into a package. Small,
+and the check is load-bearing enough now to deserve it — `expectedEnding` and
+`classifyEndings` are both pure and exported ready for it.
