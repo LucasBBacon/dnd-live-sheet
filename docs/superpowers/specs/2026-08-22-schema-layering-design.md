@@ -49,12 +49,21 @@ Four layers inside `packages/shared/src/schemas/`, each importing only downward.
 | `primitives/` | ability, damageType, coreRuleId, lore, statePredicate, scaling rule + threshold, choice block | nothing |
 | `content/` | traits, spells, equipment, classes, races, feats, backgrounds, resources, proficiencies, actions, modifiers, affinities, dice, triggers, the pack envelope, the semantic validator | primitives |
 | `runtime/` | RuntimeModifier, InventoryInstance, ActorInstance, CombatContext, CharacterSave, RuleSnapshot | content, primitives |
-| `transport/` | socket events, importPack, homebrew payloads, CreateCharacterPayload | content, primitives |
+| `transport/` | socket events, importPack, homebrew payloads, CreateCharacterPayload | runtime, content, primitives |
 
 The layer boundary answers questions that are currently unanswerable. Where does
 `InventoryInstance` go? Runtime — it never appears in a pack. Does a wire-format
 change force a pack version bump? Only if `content/` changed, which the directory
 now states.
+
+The order is `primitives < content < runtime < transport`, and transport sits
+outermost on purpose: it is the layer that puts everything else on the wire, so it
+is the one layer that legitimately needs to name a live character's state, not just
+authored content. A socket event or a level-up payload routinely references a
+runtime concept - an inventory slot, a combat context - by id, and that is transport
+describing runtime, not runtime depending on transport. `content/` and `primitives/`
+stay closed to both `runtime/` and `transport/`, since authored rules must never
+depend on the state or wire shape of a session that is playing them.
 
 ### The external surface does not change
 
@@ -81,6 +90,14 @@ the existing root `eslint.config.mjs`:
   rules: {
     "@typescript-eslint/no-restricted-imports": ["error", {
       patterns: ["**/runtime/**", "**/transport/**"],
+    }],
+  },
+},
+{
+  files: ["packages/shared/src/schemas/runtime/**/*.ts"],
+  rules: {
+    "@typescript-eslint/no-restricted-imports": ["error", {
+      patterns: ["**/transport/**"],
     }],
   },
 },

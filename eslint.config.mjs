@@ -47,4 +47,12 @@ export default defineConfig([
       }],
     },
   },
+  {
+    files: ["packages/shared/src/schemas/runtime/**/*.ts"],
+    rules: {
+      "@typescript-eslint/no-restricted-imports": ["error", {
+        patterns: ["**/transport/**"],
+      }],
+    },
+  },
 ]);
