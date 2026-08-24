@@ -27,6 +27,7 @@ import postgres from "postgres";
 import { randomUUID } from "node:crypto";
 import type {
   EquipmentDefinition,
+  ResourceReset,
   StartingEquipmentDefinition,
   WeaponCapability,
 } from "@project/shared";
@@ -450,12 +451,10 @@ interface SampleResourceRow {
   name: string;
   current: number;
   max: number;
-  resetCondition:
-    | "short_rest"
-    | "long_rest"
-    | "long_rest_half"
-    | "dawn"
-    | "never";
+  // The authored type, not a copy of five of its seven members. Restating it
+  // is what left the rest_condition enum two values short (#46); this was the
+  // third hand-written copy of the same vocabulary.
+  resetCondition: ResourceReset;
 }
 
 interface SampleCharacter {

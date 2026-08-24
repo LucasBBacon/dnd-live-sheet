@@ -1,4 +1,8 @@
-import { CharacterSlotSchema, type InventoryInstance } from "@project/shared";
+import {
+  CharacterSlotSchema,
+  ResourceResetSchema,
+  type InventoryInstance,
+} from "@project/shared";
 import {
   boolean,
   integer,
@@ -219,13 +223,26 @@ export const characterInventory = pgTable(
 
 // #region RESOURCES
 
-export const restConditionEnum = pgEnum("rest_condition", [
-  "short_rest",
-  "long_rest",
-  "long_rest_half",
-  "dawn",
-  "never",
-]);
+/**
+ * A projection of the authored vocabulary, not a restatement of it.
+ *
+ * This was a hand-written list of five values while `ResourceResetSchema`
+ * authored seven, so a resource resetting on `initiative_roll` or
+ * `start_of_turn` - both long valid pack-side - could not be written to
+ * `character_resources` at all. Same failure as the two slot vocabularies
+ * before E1, and fixed the same way: derive it, so the two cannot drift.
+ */
+export const RESET_CONDITIONS = ResourceResetSchema.options;
+
+type ResourceReset = (typeof RESET_CONDITIONS)[number];
+
+export const restConditionEnum = pgEnum(
+  "rest_condition",
+  // pgEnum wants a non-empty tuple and zod hands back an array. The assertion
+  // narrows the shape only - every member still comes from the schema, so the
+  // values themselves cannot drift, which is the whole point here.
+  RESET_CONDITIONS as [ResourceReset, ...ResourceReset[]],
+);
 
 export const characterResources = pgTable(
   "character_resources",

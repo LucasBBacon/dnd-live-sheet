@@ -1,8 +1,17 @@
 # TODO Backlog
 
-This backlog has been refreshed to reflect the repo state as of 2026-08-09. Several
-of the originally inert seams are now wired end to end, so the remaining work below
-focuses on the pieces that still genuinely block the next milestones.
+**Status as of 2026-08-24.** The workspace is green — 1652 tests, 0 failures,
+typecheck and lint clean, `check:hygiene` passing. Nothing below is breaking a
+build; these are gaps, debt and content.
+
+Read [Recommended sequence](#recommended-sequence) first — it is the ordered
+list, re-verified against the working tree on 2026-08-24, and every other
+section is reference material it points into. **Tiers 1 and 2 are closed**;
+Tier 3 (#45, absorbing #37) is the top of the list.
+
+Item numbers are stable ids. Gaps in the numbering are intentional, closed
+items are struck through rather than deleted, and superseded decisions are kept
+with their reasoning visible so a change of direction is never silent.
 
 Two `NOTE:` comments in `packages/engine/src/calculators/__tests__/` are
 documentation, not work items, and are excluded.
@@ -165,14 +174,14 @@ test that proves it done rather than a judgement call to make.
 
 ### Tier 1 — wrong today, and silent about it
 
-Item 1 is closed. Items 2-4 are open and are the top of the list.
+**Tier 1 is closed as of 2026-08-24.** Kept with its reasoning visible. **Tier 3 (#45, absorbing #37) is now the top of the list** — Tier 2 is closed too, and the drift it names has cost two debugging sessions already.
 
 | Order | Item | Why first |
 | --- | --- | --- |
 | 1 | ✅ **`ITEM_ATTUNED` has no server binding** — S6 below | **Closed 2026-08-24.** The gateway binds it, enforces both authored rules inside the transaction, and broadcasts to the room minus sender. Eight tests, each sabotage-verified. The two characterisation tests that pinned the absence were flipped. |
-| 2 | 🟢 **#46** — `rest_condition` enum is two values short | `ResetConditionSchema` authors seven; the Postgres enum lists five. A resource resetting on `initiative_roll` or `start_of_turn` — both already valid pack-side — cannot be written to `character_resources` at all. The fix is one `ALTER TYPE … ADD VALUE` migration; the friction is #38, not the change. See Tier 7 item 25. |
-| 3 | **#50** — trait and pack rows are read on a raw cast | `matchesTraitCategory` casts, and `toRuleSnapshot` maps `core_rule_packs.payload` with no parse anywhere in the path. A stale row yields `undefined` for `proficiencies`, so a category-filtered query returns **nothing rather than erroring**. The equipment path is the counter-example worth copying: its real `safeParse` is the only reason the legacy `weapon_rule` breakage was ever visible. |
-| 4 | 🟢 **#49** — `importPipeline` re-parses staged rows with no error handling | `planImportRun` and `publishImportRun` have no `try`/`catch` at all, so a stale row throws an uncaught ZodError and the run's status and issues are never updated — the failure leaves no record of itself. Easy because the fix is not a design: `parseRollbackRowPayload` is a working, already-merged template, and this is four call sites adopting it. |
+| 2 | ✅ **#46** — `rest_condition` enum | **Closed 2026-08-24.** Not by adding two strings: the enum is now `ResourceResetSchema.options`, a projection like `EQUIPMENT_SLOTS`, so the two cannot drift again. Migration `0013_add_reset_conditions.sql` is generated but **not applied** — see 6d. |
+| 3 | ✅ **#50** — read boundaries validated | **Closed 2026-08-24.** Both halves. `filterTraitsByCategory` parses each trait row and follows `projectEquipmentRows`' policy exactly: one bad row is named and skipped, every row bad throws as a schema divergence. `parseStoredPackPayload` guards the single pack payload, where there is no "skip it" option. |
+| 4 | ✅ **#49** — staged-row re-parses handled | **Closed 2026-08-24.** Two helpers, because the two phases want different things: `parseImportRowPayload` throws with the row named (apply, publish), and `parseLedgerRow` *returns an issue* (plan) so the failure lands in the machinery that already marks the run failed and records why — which is the half that was actually missing. `validateImportRun` was already fine and is untouched. |
 
 ### Tier 2 — free, or nearly
 **Tier 2 is closed as of 2026-08-24.** Kept with its reasoning visible, since
@@ -803,9 +812,9 @@ absorb #37.
 
 | # | Item | Notes |
 | --- | --- | --- |
-| 46 | `rest_condition` Postgres enum is missing two values | `packages/database/src/schema/operational.ts:222-228` lists only the five original pack-side reset values. The authored schema now has seven — `initiative_roll` and `start_of_turn` were already valid on trait-side resources *before* the schema-layering branch, so this gap predates it (last touched in `14c3690`). Relevant to anyone persisting resource state. |
-| 49 | **`importPipeline.ts` re-parses persisted payloads with no error handling** | Same defect class as the one just fixed in `rollbackPipeline.ts`, and in two places worse. Both files stage rows to jsonb in one phase and re-read them with `.parse()` in a later phase — so any schema change between the two makes a stale row throw. `planImportRun` (`apps/server/src/services/importPipeline.ts:1562,1569`) and `publishImportRun` (`:1739`) have **no `try`/`catch` at all**: a stale row raises an uncaught ZodError and the run's status and issues are never updated, so there is no record of what happened. `applyImportRun` (`:1655,1678`) is caught, but only by an outer transaction handler that reports a bare Zod message with no row index or kind — exactly the legibility gap just closed on the rollback side. `validateImportRun` (`:1462-1487`) is already fine; it wraps each row individually. Pre-existing, not introduced by the schema-layering branch, but that branch changed two of the schemas being re-parsed (`TraitImportDataSchema.effects` → `definition`, and `itemRule` to a strict schema), which makes it live rather than theoretical. Fix: mirror `parseRollbackRowPayload` — per-row `safeParse` naming the row id and kind — across all four sites. |
-| 50 | Rows read from `traits.definition` and `core_rule_packs.payload` are never validated | `databaseReferenceProvider.matchesTraitCategory` takes a raw cast (`trait as { definition: TraitDefinition }`); nothing in `apps/server` or `packages/database` parses a `traits` row through `TraitDefinitionSchema`, and `toRuleSnapshot` maps `core_rule_packs.payload` with no `.parse()` anywhere in the path. Unlike the equipment path — which *is* gated by a real `safeParse`, and which is the only reason the legacy `weapon_rule` breakage was visible and fixable at all — these two fail silently: a stale row yields `undefined` for `proficiencies`, so a category-filtered trait query returns nothing rather than erroring. Self-heals on reimport. Worth a `safeParse` at the read boundary so the next shape change surfaces instead of quietly returning empty. |
+| ~~46~~ | ~~`rest_condition` Postgres enum is missing two values~~ | **Fixed 2026-08-24.** `restConditionEnum` is now `pgEnum("rest_condition", ResourceResetSchema.options)` rather than a hand-written list — the `EQUIPMENT_SLOTS` treatment, so it is a projection and cannot drift again. Widening the column's inferred type broke nothing, because everything except this enum already worked off the seven-value schema. A **third** restatement turned up while fixing it: `SampleResourceRow.resetCondition` in `seedSampleCharacters.ts` spelled the same five values out again, so the seed could never produce a resource resetting on initiative or start of turn; it now uses the authored `ResourceReset`. Migration generated, not applied — see 6d. |
+| ~~49~~ | ~~`importPipeline.ts` re-parses persisted payloads with no error handling~~ | **Fixed 2026-08-24.** The recorded fix — "mirror `parseRollbackRowPayload` across all four sites" — was right for three of them and wrong for the most important one. Apply and publish want a throw that names the row, and they get `parseImportRowPayload`. **Planning does not**: it collects issues, marks the run failed and only then throws, so an exception raised mid-loop escaped all of that, which is exactly why the run recorded nothing. `parseLedgerRow` returns an issue instead, and the existing machinery does the rest. `validateImportRun` was already fine and is untouched; the count was five unprotected sites, not four. |
+| ~~50~~ | ~~Rows read from `traits.definition` and `core_rule_packs.payload` are never validated~~ | **Fixed 2026-08-24.** The two halves needed different policies. Traits are many rows, so `filterTraitsByCategory` copies `projectEquipmentRows` exactly — one unparsable row is named and skipped so a browse endpoint stays up, every row failing throws as a schema divergence, and an empty table is not a divergence. The pack payload is a single blob, so `parseStoredPackPayload` has no "skip it" option and throws; `ruleSnapshotCache` now parses once and reads both the snapshot and the resource map off the validated value, since validating one and not the other would have left half the read unchecked. |
 | ~~48~~ | ~~**CI never runs the engine test suite**~~ | **Fixed on the schema-layering branch.** `test:all` now chains `@project/engine` between `shared` and `database`, so the Tests gate covers all five packages. Original finding retained below for the record. |
 | 48 | **CI never runs the engine test suite** (resolved — see above) | `.github/workflows/ci.yml`'s Tests gate runs `pnpm test:all`, which chains `@project/{shared,database,server,web}` and omits `@project/engine` entirely — 734 tests, the largest suite in the repo. `packages/engine` does have a working `test` script; it is simply not in the chain. This is not theoretical: during the schema-layering branch a change to `manifest.json` broke 16 engine suites, and no CI gate would have caught it. Worse, most of that breakage was *invisible in the totals* — a fixture throwing at module load leaves its tests uncollected, so the suite reports a smaller denominator rather than failures. Fix is one clause in the `test:all` script, or switching the gate to `turbo run test`, which picks up every package with a `test` script. |
 | ~~47~~ | ~~No repo safety net catches line-ending corruption~~ | **Fixed 2026-08-24.** `scripts/lineEndings.mjs`, wired into `check:hygiene` so it already gates `build` and `test:all`. It gates on the two unambiguous cases — a file containing both endings, and a file contradicting an explicit `.gitattributes` pin — and reports the platform-dependent third under `--report-eol` rather than gating it. Its first run found **four genuinely corrupted files**, all repaired: `ArmorClassWidget.test.tsx` (46 LF / 69 CRLF), `useCharacterStats.test.ts` (65 LF / 234 CRLF), `combatContext.test.ts` (53 LF / 186 CRLF) and `0010_nullable_subrace.sql` (2 LF / 1 CRLF). The recorded mechanism was understated: this was not only whole-file rewrites but **partial** ones. See #52 and #53. |
@@ -888,3 +897,32 @@ five packages and nothing owns `scripts/`, so a root-level test would not run
 in CI. Either add a root vitest project or move the module into a package. Small,
 and the check is load-bearing enough now to deserve it — `expectedEnding` and
 `classifyEndings` are both pure and exported ready for it.
+
+
+### 6d. #54 — the reset-condition migration is generated but not applied
+
+`packages/database/drizzle/0013_add_reset_conditions.sql` adds the two missing
+enum values and nothing else — confirmed by generating it against an otherwise
+in-sync snapshot. It has **not been run**: applying a migration to a live
+database is the owner's call, not a side effect of a backlog pass.
+
+```bash
+pnpm --filter @project/database db:migrate
+```
+
+Two things to know before running it:
+
+- **It needs PostgreSQL 12 or newer.** `migrate.ts` uses drizzle's migrator,
+  which wraps each migration in a transaction, and `ALTER TYPE … ADD VALUE`
+  inside a transaction is a PG 12+ feature. Nothing in this repo pins a
+  Postgres version. PG 12 reached end of life in November 2024, so any current
+  install is fine — this is recorded because the failure mode is a confusing
+  syntax-level error rather than an obvious version complaint.
+- **The migration only adds values; it uses none.** That matters because even
+  on PG 12+ a newly added enum value cannot be *used* in the transaction that
+  added it. Nothing here does, so it is safe as written — but a future
+  migration that adds a value and then inserts a row using it must be split.
+
+Until it runs, the code accepts both new conditions and the database will
+reject a write using either. Nothing in the pack authors one yet, so this is
+latent rather than live.

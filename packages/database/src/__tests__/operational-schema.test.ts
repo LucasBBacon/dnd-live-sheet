@@ -1,8 +1,13 @@
 import type { InferSelectModel } from "drizzle-orm";
-import { CharacterSlotSchema, type InventoryInstance } from "@project/shared";
+import {
+  CharacterSlotSchema,
+  ResourceResetSchema,
+  type InventoryInstance,
+} from "@project/shared";
 import { describe, expect, expectTypeOf, it } from "vitest";
 import {
   EQUIPMENT_SLOTS,
+  restConditionEnum,
   campaignMembers,
   campaigns,
   characterClasses,
@@ -110,5 +115,27 @@ describe("operational schema", () => {
    */
   it("stays in step with the slot vocabulary the client authors against", () => {
     expect(EQUIPMENT_SLOTS).toEqual(CharacterSlotSchema.options);
+  });
+
+  it("offers every reset condition a resource can be authored with", () => {
+    expect(restConditionEnum.enumValues).toEqual([
+      "short_rest",
+      "long_rest",
+      "long_rest_half",
+      "dawn",
+      "never",
+      "initiative_roll",
+      "start_of_turn",
+    ]);
+  });
+
+  /**
+   * The same failure EQUIPMENT_SLOTS had, one table over. This enum was a
+   * hand-written restatement of five of the seven authored values, so a
+   * resource resetting on initiative_roll or start_of_turn - both long valid
+   * pack-side - could not be written to character_resources at all.
+   */
+  it("stays in step with the reset vocabulary resources are authored with", () => {
+    expect(restConditionEnum.enumValues).toEqual(ResourceResetSchema.options);
   });
 });

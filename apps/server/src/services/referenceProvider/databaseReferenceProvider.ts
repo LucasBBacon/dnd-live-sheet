@@ -3,7 +3,7 @@ import {
   characterClasses,
   characters,
 } from "@project/database/src/schema/operational.js";
-import type { TraitDefinition } from "@project/shared";
+import { TraitDefinitionSchema, type TraitDefinition } from "@project/shared";
 import { and, eq } from "drizzle-orm";
 import {
   getEffectiveReferenceSnapshot,
@@ -54,6 +54,57 @@ export const matchesTraitCategory = (
   }
 
   return hasProficiencyCategory(trait.definition, ["tools", "languages"]);
+};
+
+export interface TraitCategoryFilterResult<T> {
+  traits: T[];
+  /** Rows whose stored definition did not parse. Named, never silently dropped. */
+  malformedTraitIds: string[];
+}
+
+/**
+ * Filters trait rows by category, validating each stored definition first.
+ *
+ * `traits.definition` is jsonb declared `$type<TraitDefinition>()` - a
+ * compile-time claim and no runtime check - and the call site used to cast
+ * straight through it. A row written before a schema change therefore did not
+ * error: it read as a trait with no proficiencies and dropped out of the
+ * filter, so the endpoint returned an empty list and looked like it had simply
+ * found nothing.
+ *
+ * The policy is `projectEquipmentRows`': one unparsable row is named and
+ * skipped so a browse endpoint stays up, but every row failing in a non-empty
+ * set is a schema divergence rather than bad data, and throws.
+ */
+export const filterTraitsByCategory = <T extends { id: string; definition: unknown }>(
+  rows: readonly T[],
+  category: TraitCategory,
+): TraitCategoryFilterResult<T> => {
+  const traits: T[] = [];
+  const malformedTraitIds: string[] = [];
+
+  for (const row of rows) {
+    const parsed = TraitDefinitionSchema.safeParse(row.definition);
+
+    if (!parsed.success) {
+      malformedTraitIds.push(row.id);
+      continue;
+    }
+
+    if (matchesTraitCategory({ definition: parsed.data }, category)) {
+      traits.push(row);
+    }
+  }
+
+  // Zero of zero failing is an empty table, not a break - the same carve-out
+  // the equipment projection makes for the empty catalogue.
+  if (rows.length > 0 && malformedTraitIds.length === rows.length) {
+    throw new Error(
+      `[databaseReferenceProvider] every one of ${rows.length} trait rows failed to parse against TraitDefinition; the stored definitions and the schema have diverged`,
+    );
+  }
+
+  return { traits, malformedTraitIds };
 };
 
 const buildClassTimeline = ({
@@ -422,9 +473,21 @@ export class DatabaseReferenceProvider implements ReferenceProvider {
       return allTraits;
     }
 
-    return allTraits.filter((trait) =>
-      matchesTraitCategory(trait as { definition: TraitDefinition }, category),
+    const { traits, malformedTraitIds } = filterTraitsByCategory(
+      allTraits,
+      category,
     );
+
+    // Named rather than swallowed: a definition that stopped parsing used to
+    // leave no trace at all, which is what made this class of staleness
+    // invisible until someone noticed the list was short.
+    if (malformedTraitIds.length > 0) {
+      console.warn(
+        `[databaseReferenceProvider] ${malformedTraitIds.length} trait rows failed to parse against TraitDefinition and were skipped: ${malformedTraitIds.join(", ")}`,
+      );
+    }
+
+    return traits;
   }
 
   public async getTraitById(

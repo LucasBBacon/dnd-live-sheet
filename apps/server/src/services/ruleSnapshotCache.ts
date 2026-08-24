@@ -1,6 +1,7 @@
 import { db } from "@project/database";
 import { coreRulePacks, items } from "@project/database/src/schema/reference.js";
 import { RuleSnapshotSchema, toRuleSnapshot } from "@project/shared";
+import { parseStoredPackPayload } from "./storedPackPayload.js";
 import { and, desc, eq } from "drizzle-orm";
 import { getReferenceCacheVersion } from "./referenceCache.js";
 import { projectEquipmentRows } from "./ruleSnapshotProjection.js";
@@ -51,14 +52,21 @@ const buildRuleSnapshot = async (): Promise<CachedRuleSnapshot> => {
     .orderBy(desc(coreRulePacks.version))
     .limit(1);
 
-  const packContent = packRow ? toRuleSnapshot(packRow.payload) : undefined;
+  // parsed once, then read twice below - both the snapshot and the resource
+  // map come off the same blob, and validating only one of them would leave
+  // the other reading a shape nothing had checked
+  const packPayload = packRow
+    ? parseStoredPackPayload(packRow.payload, "core_rule_packs.payload")
+    : undefined;
+
+  const packContent = packPayload ? toRuleSnapshot(packPayload) : undefined;
 
   // resources come from pack.resources, which toRuleSnapshot does not carry -
   // it holds only what the engine resolves through the rulebook path. the
   // static RESOURCE_DICTIONARY that used to fill this is gone, so without
   // this a short rest would find no rule and restore nothing
   const resourcesById = Object.fromEntries(
-    (packRow?.payload.resources ?? []).map((resource) => [
+    (packPayload?.resources ?? []).map((resource) => [
       resource.id,
       resource,
     ]),

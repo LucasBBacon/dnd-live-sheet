@@ -54,6 +54,77 @@ type ParsedLedgerRow =
   | { row: ImportRowRow; entity: ImportEntityEntry; relation?: undefined }
   | { row: ImportRowRow; relation: ImportRelationEntry; entity?: undefined };
 
+/**
+ * Re-reads a staged row's jsonb payload, naming the row if it no longer parses.
+ *
+ * Rows are staged to jsonb in one phase and re-read in a later one, so a schema
+ * change between the two makes a stale row throw. A raw ZodError does not say
+ * which of a run's rows failed, which is the legibility gap already closed on
+ * the rollback side by `parseRollbackRowPayload`; this is its counterpart.
+ */
+export const parseImportRowPayload = <T>(
+  schema: { parse: (input: unknown) => T },
+  row: ImportRowRow,
+): T => {
+  try {
+    return schema.parse(row.payload);
+  } catch (error) {
+    const reason = error instanceof Error ? error.message : String(error);
+    throw new Error(
+      `Import row ${row.rowIndex} (${row.rowType}:${row.kind}` +
+        `${row.entityId ? `, entityId=${row.entityId}` : ""}) failed to ` +
+        `parse its stored payload: ${reason}`,
+      { cause: error },
+    );
+  }
+};
+
+export type ParseLedgerRowResult =
+  | { ok: true; parsed: ParsedLedgerRow }
+  | { ok: false; issue: ImportIssue };
+
+/**
+ * The planning-phase variant, which reports rather than throws.
+ *
+ * `planImportRun` collects issues, marks the run failed and only then throws.
+ * A parse error raised as an exception escaped all of that, so the run's
+ * status and issues were never written and there was no record of what
+ * stopped it. Returning an issue puts the failure back inside the machinery
+ * that already knows how to record one.
+ */
+export const parseLedgerRow = (row: ImportRowRow): ParseLedgerRowResult => {
+  const schema =
+    row.rowType === "relation"
+      ? ImportRelationEntrySchema
+      : ImportEntityEntrySchema;
+
+  const parsed = schema.safeParse(row.payload);
+
+  if (!parsed.success) {
+    const details = parsed.error.issues
+      .map((issue) => `${issue.path.join(".") || "root"}: ${issue.message}`)
+      .join("; ");
+
+    return {
+      ok: false,
+      issue: {
+        rowIndex: row.rowIndex,
+        severity: "error",
+        code: "ROW_PAYLOAD_UNPARSABLE",
+        message:
+          `Row ${row.rowIndex} (${row.rowType}:${row.kind}` +
+          `${row.entityId ? `, entityId=${row.entityId}` : ""}) failed to ` +
+          `parse its stored payload: ${details}`,
+        details,
+      },
+    };
+  }
+
+  return row.rowType === "relation"
+    ? { ok: true, parsed: { row, relation: parsed.data as ImportRelationEntry } }
+    : { ok: true, parsed: { row, entity: parsed.data as ImportEntityEntry } };
+};
+
 type ImportPlanSummary = {
   runId: string;
   status: "planned";
@@ -1558,16 +1629,33 @@ export const planImportRun = async (
   const parsedRows: ParsedLedgerRow[] = [];
 
   for (const row of rows) {
-    if (row.rowType === "relation") {
-      const relation = ImportRelationEntrySchema.parse(row.payload);
-      parsedRows.push({ row, relation });
-      if (relation.op === "add") summary.relationAddCount += 1;
+    const parseResult = parseLedgerRow(row);
+
+    // A stale payload arrives as a blocking issue rather than an exception.
+    // The tail of this function is what marks the run failed and records why,
+    // and a ZodError thrown from here escaped all of it - leaving the run
+    // sitting at its previous status with no record of what stopped it.
+    if (!parseResult.ok) {
+      issues.push(parseResult.issue);
+      await updateLedgerRowStatus(
+        runId,
+        row.rowIndex,
+        "failed",
+        parseResult.issue.message,
+      );
+      continue;
+    }
+
+    const { parsed } = parseResult;
+    parsedRows.push(parsed);
+
+    if (parsed.relation !== undefined) {
+      if (parsed.relation.op === "add") summary.relationAddCount += 1;
       else summary.relationRemoveCount += 1;
       continue;
     }
 
-    const entity = ImportEntityEntrySchema.parse(row.payload);
-    parsedRows.push({ row, entity });
+    const entity = parsed.entity;
     const exists = await entityExists(entity);
 
     if (entity.op === "archive") {
@@ -1652,7 +1740,10 @@ export const applyImportRun = async (
     await db.transaction(async (tx) => {
       for (const row of rows) {
         if (row.rowType === "entity") {
-          const entity = ImportEntityEntrySchema.parse(row.payload);
+          const entity = parseImportRowPayload(
+            ImportEntityEntrySchema,
+            row,
+          );
           const exists = await entityExists(entity);
 
           if (entity.op === "insert" && exists) {
@@ -1675,7 +1766,10 @@ export const applyImportRun = async (
           continue;
         }
 
-        const relation = ImportRelationEntrySchema.parse(row.payload);
+        const relation = parseImportRowPayload(
+          ImportRelationEntrySchema,
+          row,
+        );
         await applyRelationEntry(tx, relation, run);
         await updateLedgerRowStatus(runId, row.rowIndex, "applied");
         appliedRowCountsByKind[row.kind] =
@@ -1736,7 +1830,7 @@ export const publishImportRun = async (
 
   const entityRows = rows.filter((row) => row.rowType === "entity");
   const entities = entityRows.map((row) =>
-    ImportEntityEntrySchema.parse(row.payload),
+    parseImportRowPayload(ImportEntityEntrySchema, row),
   );
 
   const idsByKind = new Map<string, string[]>();

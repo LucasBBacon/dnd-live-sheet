@@ -1,6 +1,7 @@
 import { db } from "@project/database";
 import { coreRulePacks } from "@project/database/src/schema/reference.js";
 import { toRuleSnapshot, type CoreRulePackSnapshot } from "@project/shared";
+import { parseStoredPackPayload } from "./storedPackPayload.js";
 import { desc } from "drizzle-orm";
 
 /**
@@ -49,7 +50,11 @@ export const primePackRulebook = async (): Promise<void> => {
     return;
   }
 
-  rulebook = toRuleSnapshot(row.payload);
+  // the stored blob is untrusted regardless of its declared type: a payload
+  // written before a schema change used to build a short rulebook in silence
+  rulebook = toRuleSnapshot(
+    parseStoredPackPayload(row.payload, "core_rule_packs.payload"),
+  );
   console.log(
     `[packRulebook] Loaded ${Object.keys(rulebook.classesById).length} classes, ${Object.keys(rulebook.traitsById).length} traits.`,
   );
