@@ -1,7 +1,10 @@
 import express from "express";
 import request from "supertest";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { TraitDefinitionSchema } from "@project/shared";
 import { globalErrorHandler } from "../../middleware/errorHandler.js";
+import { matchesTraitCategory } from "../../services/referenceProvider/databaseReferenceProvider.js";
+import type { TraitCategory } from "../../services/referenceProvider/types.js";
 
 const setupReferenceApp = async (
   providerOverrides: Record<string, unknown>,
@@ -510,286 +513,70 @@ describe("Reference Routes", () => {
   });
 
   describe("GET /api/reference/traits", () => {
-    it("returns all traits when no category specified", () => {
-      const traits = [
-        { id: "trait_1", name: "Feature 1", effects: [] },
-        { id: "trait_2", name: "Feature 2", effects: [] },
-        { id: "trait_3", name: "Feature 3", effects: [] },
-      ];
-
-      expect(traits.length).toBeGreaterThan(0);
-    });
-
-    it("filters traits by skills category", () => {
-      const allTraits = [
-        {
-          id: "skill_insight",
-          name: "Insight",
-          effects: [{ type: "proficiency", category: "skills" }],
+    // A trait shaped the way the real projection produces it: definition is
+    // the whole authored TraitDefinition (see corePackProjection.ts), and
+    // matchesTraitCategory reads proficiencies.fixed[].category off it. The
+    // four blocks this replaces tested a "effects: [{type, category}]" shape
+    // and an id.includes("_prof_skills") fallback that Task 14 deleted -
+    // neither exists in the production code any more.
+    const skillTrait = {
+      id: "trait_skill_acrobatics",
+      name: "Acrobatic Training",
+      definition: TraitDefinitionSchema.parse({
+        id: "trait_skill_acrobatics",
+        name: "Acrobatic Training",
+        proficiencies: {
+          fixed: [{ category: "skills", proficiencyId: "skill_acrobatics" }],
         },
-        {
-          id: "skill_perception",
-          name: "Perception",
-          effects: [{ type: "proficiency", category: "skills" }],
-        },
-        {
-          id: "tool_tinker",
-          name: "Tinker's Tools",
-          effects: [{ type: "proficiency", category: "tools" }],
-        },
-      ];
+      }),
+    };
 
-      const skillTraits = allTraits.filter((t) =>
-        t.effects.some((e) => e.category === "skills"),
+    const toolTrait = {
+      id: "trait_tool_tinkerer",
+      name: "Tinkerer's Training",
+      definition: TraitDefinitionSchema.parse({
+        id: "trait_tool_tinkerer",
+        name: "Tinkerer's Training",
+        proficiencies: {
+          fixed: [{ category: "tools", proficiencyId: "tool_tinkers" }],
+        },
+      }),
+    };
+
+    // Drives the real (rewritten) matchesTraitCategory through the route,
+    // rather than re-implementing category matching as a local predicate -
+    // that mismatch is exactly how this block went 22 assertions deep
+    // without ever exercising production code.
+    const setupWithTraits = () =>
+      setupReferenceApp({
+        getTraits: vi.fn(async (_scope: unknown, category?: TraitCategory) => {
+          const traits = [skillTrait, toolTrait];
+          return category
+            ? traits.filter((trait) => matchesTraitCategory(trait, category))
+            : traits;
+        }),
+      });
+
+    it("returns a skills-category trait for ?category=skills", async () => {
+      const { app } = await setupWithTraits();
+
+      const response = await request(app).get(
+        "/api/reference/traits?category=skills",
       );
-      expect(skillTraits).toHaveLength(2);
+
+      expect(response.status).toBe(200);
+      expect(response.body.traits).toEqual([skillTrait]);
     });
 
-    it("filters traits by tools_and_languages category", () => {
-      const allTraits = [
-        {
-          id: "tool_cook",
-          name: "Cook's Utensils",
-          effects: [{ type: "proficiency", category: "tools" }],
-        },
-        {
-          id: "lang_draconic",
-          name: "Draconic",
-          effects: [{ type: "proficiency", category: "languages" }],
-        },
-        {
-          id: "skill_stealth",
-          name: "Stealth",
-          effects: [{ type: "proficiency", category: "skills" }],
-        },
-      ];
+    it("excludes a skills-category trait for ?category=tools_and_languages", async () => {
+      const { app } = await setupWithTraits();
 
-      const toolLanguageTraits = allTraits.filter(
-        (t) =>
-          t.effects.some(
-            (e) => e.category === "tools" || e.category === "languages",
-          ) && !t.effects.some((e) => e.category === "skills"),
+      const response = await request(app).get(
+        "/api/reference/traits?category=tools_and_languages",
       );
-      expect(toolLanguageTraits).toHaveLength(2);
-    });
 
-    it("returns 400 for invalid category", () => {
-      const invalidCategory = "invalid_category";
-      expect(invalidCategory).not.toBe("skills");
-      expect(invalidCategory).not.toBe("tools_and_languages");
-    });
-
-    it("matches traits by effect properties", () => {
-      const trait = {
-        id: "trait_skill",
-        name: "Acrobatics",
-        effects: [{ type: "proficiency", category: "skills" }],
-      };
-
-      const hasSkillEffect = trait.effects.some(
-        (e) => e.type === "proficiency" && e.category === "skills",
-      );
-      expect(hasSkillEffect).toBe(true);
-    });
-
-    it("matches traits by ID pattern", () => {
-      const trait = { id: "skill_prof_skills", name: "Skill", effects: [] };
-      const isSkillTrait = trait.id.includes("_prof_skills");
-      expect(isSkillTrait).toBe(true);
-    });
-
-    it("matches traits by name pattern", () => {
-      const traits = [
-        { id: "t1", name: "Skill Expertise", effects: [] },
-        { id: "t2", name: "Tool Mastery", effects: [] },
-      ];
-
-      const skillTraits = traits.filter((t) =>
-        t.name.toLowerCase().includes("skill"),
-      );
-      expect(skillTraits).toHaveLength(1);
-    });
-  });
-
-  describe("GET /api/reference/traits/:id", () => {
-    it("returns single trait by id", () => {
-      const trait = {
-        id: "trait_strength_surge",
-        name: "Strength Surge",
-        description: "Gain +1d4 to Strength check",
-        effects: [],
-      };
-
-      expect(trait).toHaveProperty("id");
-      expect(trait).toHaveProperty("name");
-      expect(trait).toHaveProperty("description");
-    });
-
-    it("returns 404 for non-existent trait", () => {
-      const statusCode = 404;
-      expect(statusCode).toBe(404);
-    });
-
-    it("includes full trait object with flavor text", () => {
-      const trait = {
-        id: "feat_great_weapon_master",
-        name: "Great Weapon Master",
-        description: "You learn to put the weight of a weapon to its best use.",
-        effects: [
-          {
-            type: "bonus",
-            target: "attack_roll",
-            value: -5,
-          },
-          {
-            type: "bonus",
-            target: "damage_roll",
-            value: 10,
-          },
-        ],
-        lore: "Legendary fighters speak of a technique that turns weapon drawbacks into advantages.",
-      };
-
-      expect(trait).toHaveProperty("lore");
-      expect(trait.effects).toHaveLength(2);
-    });
-  });
-
-  describe("Helper Functions", () => {
-    describe("hasEffectCategory", () => {
-      it("identifies proficiency effects with category", () => {
-        const effects = [{ type: "proficiency", category: "skills" }];
-
-        const hasSkillProf = effects.some(
-          (e) => e.type === "proficiency" && e.category === "skills",
-        );
-        expect(hasSkillProf).toBe(true);
-      });
-
-      it("returns false for non-proficiency effects", () => {
-        const effects = [{ type: "bonus", value: 2 }];
-
-        const hasProf = effects.some((e) => e.type === "proficiency");
-        expect(hasProf).toBe(false);
-      });
-
-      it("handles proficiency_choice variant", () => {
-        const effects = [
-          { type: "proficiency_choice", category: "tools", choices: 2 },
-        ];
-
-        const isChoiceProf = effects.some(
-          (e) => e.type === "proficiency_choice",
-        );
-        expect(isChoiceProf).toBe(true);
-      });
-
-      it("filters by multiple categories", () => {
-        const effects = [
-          { type: "proficiency", category: "skills" },
-          { type: "proficiency", category: "tools" },
-        ];
-
-        const hasToolsOrSkills = effects.some(
-          (e) =>
-            (e.category === "tools" || e.category === "skills") &&
-            (e.type === "proficiency" || e.type === "proficiency_choice"),
-        );
-        expect(hasToolsOrSkills).toBe(true);
-      });
-    });
-
-    describe("matchesTraitCategory", () => {
-      it("matches skills category by effect", () => {
-        const trait = {
-          id: "skill_acrobatics",
-          name: "Acrobatics",
-          effects: [{ type: "proficiency", category: "skills" }],
-        };
-
-        const category = "skills";
-        const matches =
-          trait.effects.some((e) => e.category === category) ||
-          trait.id.toLowerCase().includes("skill") ||
-          trait.name.toLowerCase().includes("skill");
-        expect(matches).toBe(true);
-      });
-
-      it("matches tools_and_languages category", () => {
-        const trait = {
-          id: "tool_tinker",
-          name: "Tinker's Tools",
-          effects: [{ type: "proficiency", category: "tools" }],
-        };
-
-        const category = "tools_and_languages";
-        const matches =
-          trait.effects.some(
-            (e) => e.category === "tools" || e.category === "languages",
-          ) ||
-          trait.id.includes("_prof_tools") ||
-          trait.id.includes("_languages");
-        expect(matches).toBe(true);
-      });
-
-      it("uses ID pattern as fallback", () => {
-        const trait = {
-          id: "custom_skill_prof_skills",
-          name: "Custom Trait",
-          effects: [],
-        };
-
-        const matches = trait.id.includes("_prof_skills");
-        expect(matches).toBe(true);
-      });
-
-      it("uses name pattern as fallback", () => {
-        const trait = {
-          id: "feat_something",
-          name: "Language: Draconic",
-          effects: [],
-        };
-
-        const matches = trait.name.toLowerCase().includes("language");
-        expect(matches).toBe(true);
-      });
-
-      it("case-insensitive matching", () => {
-        const trait = {
-          id: "SKILL_INSIGHT",
-          name: "INSIGHT",
-          effects: [],
-        };
-
-        const id = trait.id.toLowerCase();
-        const name = trait.name.toLowerCase();
-        expect(id.includes("skill")).toBe(true);
-        expect(name.includes("insight")).toBe(true);
-      });
-    });
-  });
-
-  describe("Error Handling", () => {
-    it("handles empty trait array gracefully", () => {
-      const traits: any[] = [];
-      expect(traits).toHaveLength(0);
-    });
-
-    it("handles null effects safely", () => {
-      const trait = {
-        id: "trait_1",
-        name: "Trait",
-        effects: null,
-      } as any;
-
-      const hasEffects = Array.isArray(trait.effects);
-      expect(hasEffects).toBe(false);
-    });
-
-    it("handles malformed effect objects", () => {
-      const effect = {};
-      const type = (effect as any).type;
-      expect(type).toBeUndefined();
+      expect(response.status).toBe(200);
+      expect(response.body.traits).toEqual([toolTrait]);
     });
   });
 });

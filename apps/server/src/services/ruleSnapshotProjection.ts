@@ -26,6 +26,29 @@ export interface RuleSnapshotProjection {
 }
 
 /**
+ * Strips id/name off a stored weapon_rule, if present.
+ *
+ * Before e40188a, corePackProjection.toWeaponRule wrote a whole
+ * WeaponDefinition - WeaponCapability's fields plus id and name - into
+ * weapon_rule, and this file had a toWeaponCapability adapter that stripped
+ * them back out before parsing. e40188a retired WeaponDefinition: the writer
+ * now stores bare WeaponCapability, and the adapter was deleted as dead code
+ * for the new shape. It was not dead for a row written before that commit -
+ * WeaponCapabilitySchema is strict, so a legacy row's id/name now fails as
+ * unrecognized_keys and the weapon silently disappears from the snapshot. A
+ * re-import fixes the rows that exist today but not a deployment that has not
+ * re-imported yet, so the strip stays here too: it costs one destructure per
+ * row and means an old row self-heals through this reader instead of hard
+ * failing.
+ */
+const stripLegacyWeaponIdentity = (
+  weaponRule: WeaponCapability & { id?: unknown; name?: unknown },
+): WeaponCapability => {
+  const { id: _id, name: _name, ...capability } = weaponRule;
+  return capability;
+};
+
+/**
  * Turns stored item rows into the equipment lookup map a rule snapshot
  * exposes.
  *
@@ -69,7 +92,9 @@ export const projectEquipmentRows = (
       // extractor carried weight hold a stale 0, so reading the column heals
       // them without a re-seed
       weight: hundredthsToPounds(row.weight),
-      ...(row.weaponRule ? { weapon: row.weaponRule } : {}),
+      ...(row.weaponRule
+        ? { weapon: stripLegacyWeaponIdentity(row.weaponRule) }
+        : {}),
     });
 
     // one unparsable row must not take the whole snapshot - and with it every

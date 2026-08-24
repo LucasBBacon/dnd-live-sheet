@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
+import { ImportEntityEntrySchema } from "@project/shared";
 import {
   buildRollbackPlanRows,
+  parseRollbackRowPayload,
   preflightRollbackPlanRows,
 } from "../rollbackPipeline.js";
 
@@ -117,5 +119,62 @@ describe("rollback pipeline planning", () => {
       "ROLLBACK_PREFLIGHT_MISSING_REFERENCE",
       "ROLLBACK_PREFLIGHT_MISSING_REFERENCE",
     ]);
+  });
+});
+
+describe("parseRollbackRowPayload", () => {
+  const row = (payload: unknown) =>
+    ({
+      rowIndex: 3,
+      rowType: "entity",
+      kind: "trait",
+      op: "archive",
+      entityId: "trait_darkvision",
+      payload,
+      status: "pending",
+      errorMessage: null,
+    }) as any;
+
+  it("returns the parsed payload when it still matches the schema", () => {
+    const parsed = parseRollbackRowPayload(
+      ImportEntityEntrySchema,
+      row({
+        kind: "trait",
+        id: "trait_darkvision",
+        op: "archive",
+        data: {
+          name: "Darkvision",
+          lore: { shortDescription: "See in dim light." },
+          definition: { id: "trait_darkvision", name: "Darkvision" },
+          isStartingProficiency: false,
+        },
+      }),
+    );
+
+    expect(parsed).toMatchObject({ kind: "trait", id: "trait_darkvision" });
+  });
+
+  it("names the row, kind and reason when a ledger row predates a schema rename", () => {
+    // the exact defect the final whole-branch review reproduced: a
+    // rollback_rows payload captured before Task 14 renamed
+    // TraitImportDataSchema.effects to definition no longer parses, and a
+    // raw ZodError does not say which of the run's rows failed
+    const legacyShapedRow = row({
+      kind: "trait",
+      id: "trait_darkvision",
+      op: "archive",
+      data: {
+        name: "Darkvision",
+        lore: { shortDescription: "See in dim light." },
+        effects: [],
+        isStartingProficiency: false,
+      },
+    });
+
+    expect(() =>
+      parseRollbackRowPayload(ImportEntityEntrySchema, legacyShapedRow),
+    ).toThrow(
+      "Rollback row 3 (entity:trait, entityId=trait_darkvision) failed to parse its stored payload:",
+    );
   });
 });

@@ -40,7 +40,12 @@ const hasProficiencyCategory = (
     categories.includes(choice.category),
   );
 
-const matchesTraitCategory = (
+/**
+ * Exported for `reference.test.ts`, which drives the real filter through the
+ * setupReferenceApp harness instead of re-implementing it as a local
+ * predicate - the trap the four blocks this replaces fell into.
+ */
+export const matchesTraitCategory = (
   trait: { definition: TraitDefinition },
   category: TraitCategory,
 ): boolean => {

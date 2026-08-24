@@ -57,8 +57,9 @@ describe("projectEquipmentRows", () => {
     // doesn't drop any key already present on fullItemRule, but fullItemRule
     // is a hand-written literal and the assertion below is a subset check,
     // so a new EquipmentDefinition field changes neither side and this stays
-    // green. schema drift is caught by the complementary-schemas test in
-    // packages/shared/src/schemas/__tests__/equipment.test.ts instead
+    // green. schema drift is caught by ruleSnapshotSeam.test.ts instead,
+    // which runs the real pack catalogue through both projectCoreRulePack
+    // and projectEquipmentRows and asserts zero malformed rows
     const equipment = projectEquipmentRows([row()]).equipmentById
       .item_armor_plate;
 
@@ -130,6 +131,52 @@ describe("projectEquipmentRows", () => {
       weaponRule,
     );
     expect(result.malformedItemIds).toEqual([]);
+  });
+
+  it("strips legacy id/name from a weapon_rule written before e40188a", () => {
+    // corePackProjection.toWeaponRule used to write a whole WeaponDefinition -
+    // WeaponCapability's fields plus id and name - into weapon_rule. Any
+    // database that has not re-imported since e40188a still has rows shaped
+    // like this on disk, and WeaponCapabilitySchema.strict() would otherwise
+    // reject the extra keys as unrecognized_keys and drop the weapon from
+    // the snapshot entirely
+    const legacyWeaponRule = {
+      id: "item_weapon_dagger",
+      name: "Dagger",
+      category: "simple_melee",
+      damageDice: "1d4",
+      damageType: "piercing",
+      properties: ["finesse", "light", "thrown"],
+      range: 20,
+      longRange: 60,
+    } as unknown as WeaponCapability;
+
+    const result = projectEquipmentRows([
+      row({
+        id: "item_weapon_dagger",
+        name: "Dagger",
+        weight: 100,
+        itemRule: {
+          id: "item_weapon_dagger",
+          name: "Dagger",
+          type: "weapon",
+          weight: 1,
+          requiresAttunement: false,
+          categoryTags: [],
+        },
+        weaponRule: legacyWeaponRule,
+      }),
+    ]);
+
+    expect(result.malformedItemIds).toEqual([]);
+    expect(result.equipmentById.item_weapon_dagger?.weapon).toEqual({
+      category: "simple_melee",
+      damageDice: "1d4",
+      damageType: "piercing",
+      properties: ["finesse", "light", "thrown"],
+      range: 20,
+      longRange: 60,
+    });
   });
 
   it("leaves .weapon absent on equipment with no weapon rule", () => {

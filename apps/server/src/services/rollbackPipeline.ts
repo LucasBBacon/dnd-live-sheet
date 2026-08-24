@@ -1132,6 +1132,36 @@ export const planRollbackRun = async ({
   };
 };
 
+/**
+ * Parses a persisted rollback row's payload, naming the row on failure.
+ *
+ * row.payload is jsonb written by an earlier planRollbackRun call - possibly
+ * one planned before this deployment's schemas took their current shape
+ * (Task 14 renamed TraitImportDataSchema.effects to definition; Task 16
+ * retyped itemRule to a strict schema), so a row captured on an older commit
+ * can fail here even though it parsed fine when it was planned. The database
+ * is expendable, so this does not attempt to migrate an old payload forward -
+ * it only turns an opaque ZodError into one that names which row and kind
+ * failed and why, since applyRollbackRun's rows are not otherwise identified
+ * once the loop is a stack trace.
+ */
+export const parseRollbackRowPayload = <T>(
+  schema: { parse: (input: unknown) => T },
+  row: RollbackRowRow,
+): T => {
+  try {
+    return schema.parse(row.payload);
+  } catch (error) {
+    const reason = error instanceof Error ? error.message : String(error);
+    throw new Error(
+      `Rollback row ${row.rowIndex} (${row.rowType}:${row.kind}` +
+        `${row.entityId ? `, entityId=${row.entityId}` : ""}) failed to ` +
+        `parse its stored payload: ${reason}`,
+      { cause: error },
+    );
+  }
+};
+
 export const applyRollbackRun = async (
   rollbackRunId: string,
 ): Promise<{
@@ -1163,7 +1193,7 @@ export const applyRollbackRun = async (
       }
 
       if (row.rowType === "entity") {
-        const entity = ImportEntityEntrySchema.parse(row.payload);
+        const entity = parseRollbackRowPayload(ImportEntityEntrySchema, row);
         await applyRollbackEntity(entity);
         await updateRollbackRowStatus(rollbackRunId, row.rowIndex, "applied");
         appliedRowCountsByKind[row.kind] =
@@ -1172,7 +1202,7 @@ export const applyRollbackRun = async (
         continue;
       }
 
-      const relation = ImportRelationEntrySchema.parse(row.payload);
+      const relation = parseRollbackRowPayload(ImportRelationEntrySchema, row);
       await applyRollbackRelation(relation, sourceRun);
       await updateRollbackRowStatus(rollbackRunId, row.rowIndex, "applied");
       appliedRowCountsByKind[row.kind] =
