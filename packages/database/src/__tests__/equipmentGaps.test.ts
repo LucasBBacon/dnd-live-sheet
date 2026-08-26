@@ -67,17 +67,17 @@ describe("equipment declares its own gaps", () => {
     expect(mismatches).toEqual([]);
   });
 
-  it("still has the gaps #32 and #33 record, which this only marks", async () => {
+  it("still has the gaps #32 records, and no longer the armour gaps of #33", async () => {
     const pack = await assembleCoreRulePack(SHIPPED_PACK);
 
     const withGap = (gap: EquipmentGap) =>
       pack.equipment.filter((item) => item.implementation?.gaps.includes(gap));
 
     expect(withGap("weapon")).toHaveLength(23);
-    expect(withGap("armor_class")).toHaveLength(6);
-    // the half of #33 the backlog did not record: the same six armours also
-    // declare no category, which is what proficiency and Fast Movement gate on
-    expect(withGap("armor_category")).toHaveLength(6);
+    // #33 is closed: the six AC-less, category-less armours were placeholders
+    // shadowing the authored armour table, and went when it was wired in
+    expect(withGap("armor_class")).toEqual([]);
+    expect(withGap("armor_category")).toEqual([]);
   });
 
   it("leaves a finished item unmarked rather than marking it complete", async () => {

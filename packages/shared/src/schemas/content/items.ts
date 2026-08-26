@@ -1,4 +1,5 @@
 import z from "zod";
+import { AbilityMinimumsSchema } from "../primitives/ability.js";
 
 // #region Item Schemas
 
@@ -46,6 +47,46 @@ export const ContainerCapacitySchema = z
     capacityPounds: z.number(),
   })
   .strict();
+
+/**
+ * What an item costs its wearer when they do not meet its requirement.
+ *
+ * A closed vocabulary, not a free modifier target. The requirement is checked
+ * against the *final* ability score, which only exists after the stage-one
+ * calculators have run - so a penalty aimed at anything stage one produces
+ * would change the score that decided the penalty. Keeping `kind` a literal
+ * makes that loop unauthorable rather than merely discouraged.
+ */
+export const ItemRequirementPenaltySchema = z
+  .object({
+    kind: z.literal("speed_reduction"),
+    feet: z.number().int().min(0),
+  })
+  .strict();
+
+/**
+ * A minimum-ability qualifier on an item, and what going without costs.
+ *
+ * The PHB's heavy armour Strength entries are the only printed case, but the
+ * shape is per-ability because nothing about the rule is Strength-specific.
+ * An entry is unmet when *any* of its minimums is unmet, matching how
+ * `abilityMinimums` reads everywhere else.
+ */
+export const ItemRequirementSchema = z
+  .object({
+    abilityMinimums: AbilityMinimumsSchema,
+    unmetPenalty: ItemRequirementPenaltySchema,
+  })
+  .strict()
+  .superRefine((data, ctx) => {
+    if (Object.keys(data.abilityMinimums).length === 0) {
+      ctx.addIssue({
+        code: "custom",
+        message: "An item requirement must define at least one ability minimum.",
+        path: ["abilityMinimums"],
+      });
+    }
+  });
 
 // explicit category vocabulary for starting-equipment category resolution
 export const StartingEquipmentCategoryTagSchema = z.enum([
@@ -97,6 +138,10 @@ export const StartingEquipmentDefinitionSchema = z
 export type ArmorCategory = z.infer<typeof ArmorCategorySchema>;
 export type EquipSlot = z.infer<typeof EquipSlotSchema>;
 export type ContainerCapacity = z.infer<typeof ContainerCapacitySchema>;
+export type ItemRequirementPenalty = z.infer<
+  typeof ItemRequirementPenaltySchema
+>;
+export type ItemRequirement = z.infer<typeof ItemRequirementSchema>;
 export type StartingEquipmentCategoryTag = z.infer<
   typeof StartingEquipmentCategoryTagSchema
 >;

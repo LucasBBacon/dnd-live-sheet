@@ -41,6 +41,10 @@ import {
   ContainerEngine,
   type ContainerReport,
 } from "../calculators/containers.js";
+import {
+  ItemRequirementEngine,
+  type ItemRequirementResult,
+} from "../calculators/itemRequirements.js";
 import { DEFAULT_WALKING_SPEED } from "../rules/raceTypes.js";
 import {
   resolveRaceDefinition,
@@ -111,6 +115,8 @@ export interface LiveCharacterSheet {
    * Partitions the same weight `encumbrance` totals; it never changes it.
    */
   containers: ContainerReport;
+  /** Worn items whose ability requirement the character does not meet. */
+  equipmentRequirements: ItemRequirementResult;
 
   // executable actions (traits, spells, weapons)
   actions: ActionGrant[];
@@ -354,8 +360,26 @@ export class CharacterEngine {
     // seam - it sits here because this is where carrying is reasoned about
     const containers = ContainerEngine.report(inventory, options.snapshot);
 
+    // belongs to stage two for the same reason encumbrance does: it tests the
+    // *final* scores, so a belt of giant strength decides whether the wearer
+    // still pays for their plate
+    const equipmentRequirements = ItemRequirementEngine.evaluate({
+      items: inventory,
+      abilityScores: Object.fromEntries(
+        Object.entries(abilities).map(([ability, derived]) => [
+          ability,
+          derived.score,
+        ]),
+      ) as Record<Ability, number>,
+      snapshot: options.snapshot,
+    });
+
     const activeStates = Array.from(
-      new Set([...baseStates, ...encumbrance.states]),
+      new Set([
+        ...baseStates,
+        ...encumbrance.states,
+        ...equipmentRequirements.states,
+      ]),
     );
 
     const speed = SpeedEngine.calculateSpeed(
@@ -370,6 +394,10 @@ export class CharacterEngine {
       // nothing authors that today, so it is latent rather than a live bug
       baseStates,
       encumbrance.tier,
+      equipmentRequirements.charges.map((charge) => ({
+        name: charge.label,
+        feet: charge.feet,
+      })),
     );
 
     // reads only modifiers and levels, so it has no stake in the two-stage
@@ -501,6 +529,7 @@ export class CharacterEngine {
       skills,
       encumbrance,
       containers,
+      equipmentRequirements,
       actions,
       activeActors,
       summons,

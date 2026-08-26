@@ -21,6 +21,7 @@
     "typecheck": "tsc --noEmit"
   },
   "devDependencies": {
+    "@project/database": "workspace:^",
     "@vitest/coverage-v8": "^4.1.9",
     "typescript": "latest",
     "vitest": "^4.1.9"

@@ -6,8 +6,11 @@ build; these are gaps, debt and content.
 
 Read [Recommended sequence](#recommended-sequence) first — it is the ordered
 list, re-verified against the working tree on 2026-08-24, and every other
-section is reference material it points into. **Tiers 1 and 2 are closed**;
-Tier 3 (#45, absorbing #37) is the top of the list.
+section is reference material it points into. **Tiers 1, 2 and 3 are closed**;
+Tier 4 (#33, #32, #44) is the top of the list.
+
+**One caveat on "green":** `pnpm typecheck` currently fails for `packages/engine`
+on pre-existing uncommitted work, which turbo’s cache had been hiding. See 6f.
 
 Item numbers are stable ids. Gaps in the numbering are intentional, closed
 items are struck through rather than deleted, and superseded decisions are kept
@@ -203,10 +206,12 @@ clearing in one sitting before starting anything in Tier 3 or below.
 
 ### Tier 3 — stop the drift before it earns a third instance
 
+**Tier 3 is closed as of 2026-08-24**, except the deliberate remainder of #37 noted below. **Tier 4 (#33, #32, #44) is now the top of the list.**
+
 | Order | Item | Why here |
 | --- | --- | --- |
-| 12 | **#45** — one DB-free pack export, three fixtures repointed | Proven, not predicted. One key added to `manifest.json` broke both hand-copied assemblers, found weeks apart — and **both times the totals shrank instead of going red**: 533 tests reported instead of 733, then 266 instead of 284. A regression that reduces the denominator is the worst kind to own, because a passing run looks identical to a healthy one. Re-verified 2026-08-24: `packages/database/package.json` still has no `exports` map, and the server fixture still deep-imports `@project/database/src/corePackAssembler.js`. One new export plus three file changes. |
-| 13 | **#37** — absorb into #45 | The same disease one layer up, in the projection rather than the assembly. Do not schedule it separately; #45 is the natural place to land both. |
+| 12 | ✅ **#45** — one assembler, reached by a stable subpath | **Closed 2026-08-24.** `@project/database/pack` is a DB-free export; both hand-copied assemblers are deleted and all five deep imports of `corePackAssembler.js` are repointed. Both copies had **already drifted**, in the same two ways — see 6e. |
+| 13 | ◐ **#37** — projection half done | **Partly closed 2026-08-24.** The two identical copies (engine fixture, web fixture) are now one `packToRuleLookup` in the engine. The third, `ruleSnapshotCache`, is **not** a copy of it and was left alone: it builds equipment from the relational `items` table via `projectEquipmentRows`, so it projects a different source into the same shape. Folding it in would mean pretending one source is two. |
 
 Not higher than Tier 2 only because nothing is broken *right now*. But do it
 **before the next change to `CoreRulePackSchema.pack` or to `manifest.json`'s
@@ -926,3 +931,89 @@ Two things to know before running it:
 Until it runs, the code accepts both new conditions and the database will
 reject a write using either. Nothing in the pack authors one yet, so this is
 latent rather than live.
+
+
+### 6e. #45 in hindsight — both copies had already drifted
+
+Recorded because the backlog argued #45 from a *future* risk ("they will
+drift") when they already had, in two ways neither copy advertised:
+
+- **Both omitted `proficiencies`.** The real assembler merges ten array
+  sections; both copies listed nine. Any proficiency authored into a segment
+  was silently dropped from every engine and web fixture.
+- **Both skipped semantic validation.** Each called `CoreRulePackSchema.parse`
+  directly instead of `parseCoreRulePack`, so neither ran
+  `validateCoreRulePack` — id uniqueness and the spell-reference rule. The
+  fixtures would have accepted a pack the importer rejects.
+
+Both are gone by construction now. The guard against a third instance is
+`corePackAssembler.test.ts`'s "merges every array section the pack schema
+declares", which holds `MERGED_SECTIONS` against `CoreRulePackSchema.shape` —
+the drift itself, pinned, rather than the symptom.
+
+**One wrinkle the plan did not anticipate.** `assembleCoreRulePack` is async
+and the two fixtures are consumed **synchronously in 75 places**, so a
+straight repoint would have meant rewriting every call site. Instead the merge,
+the assembly-key strip and the validation now live in one internal
+`buildCoreRulePack`, with `assembleCoreRulePack` and
+`assembleCoreRulePackSync` as thin readers around it. Two ways in, one
+implementation, and a test asserts the two produce equal packs.
+
+**A second wrinkle, caught only by `tsc`.** The shared projection was first
+typed `RuleSnapshotLookup & { … }`, since that is what the engine consumes.
+That type widens every map so it can accept a partial snapshot from any
+source, and the web store's own snapshot type is narrower - so the web fixture
+stopped typechecking while its **tests still passed**, because vitest does not
+typecheck. `PackRuleLookup` is now built on `CoreRulePackSnapshot`, which is
+what `toRuleSnapshot` actually returns, and stays assignable to
+`RuleSnapshotLookup` where the engine wants it.
+
+Worth remembering as a general point: a green web suite says nothing about
+whether `apps/web` compiles. `tsc -b` is a separate gate and the only one
+that saw this.
+
+
+The `exports` map carries `"./src/*": "./src/*"` so the remaining deep
+imports (`schema/reference.js`, `schema/operational.js`,
+`utils/startingEquipment.js`, `corePackProjection.js`) keep resolving,
+including the two `vi.mock` calls that name them. Giving those named subpaths
+too is a follow-up, not a blocker.
+
+### 6f. #55 — the engine typecheck was passing without running
+
+`pnpm typecheck` reported "5 successful" on 2026-08-21 and twice on
+2026-08-24. It is not currently true: `packages/engine` fails with
+
+```
+src/pipeline/characterEngine.ts(366,66): error TS2379: ... not assignable to
+parameter of type 'ItemRequirementInput' with 'exactOptionalPropertyTypes: true'
+```
+
+**This is pre-existing and not from the #45 work.** Verified by parking every
+engine change made here and running `npx tsc --noEmit` directly: the error
+persists. It comes from the uncommitted `itemRequirements.ts` /
+`characterEngine.ts` work already in the tree, and reproduces under **both**
+TypeScript 6.0.3 and 7.0.2, so it is not a compiler-version effect either.
+
+What hid it is turbo's cache: the gate replayed a stored success for an input
+set that predated the WIP. Editing engine's `package.json` invalidated the
+entry and the error surfaced. The same class of problem as #48 (a gate that
+does not run) and as the fixture breakage above (a suite that under-collects) —
+a green check that was never computed.
+
+Worth deciding: whether `typecheck` should run with turbo caching at all, or
+whether CI should pass `--force`. A cached typecheck is only sound if the task
+inputs cover every file it reads, and for a project-wide `tsc` that is easy to
+get wrong.
+
+### 6g. #56 — engine's TypeScript floats on `latest`
+
+`packages/engine/package.json` declares `"typescript": "latest"` while every
+other package pins `^6.0.3` (web `~6.0.2`). The committed lockfile resolves it
+to **7.0.2**, so the engine already compiles on a different major version than
+the rest of the workspace, and any `pnpm install` can move it again without a
+diff anyone reviews.
+
+Left as-is deliberately: it is committed state, and pinning it is a toolchain
+decision rather than a backlog cleanup. Recorded so the next unexplained
+engine-only type error has somewhere to start.

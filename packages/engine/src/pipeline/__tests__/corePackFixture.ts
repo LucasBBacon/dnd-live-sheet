@@ -1,88 +1,45 @@
-import { readFileSync } from "node:fs";
 import path from "node:path";
-import {
-  CoreRulePackSchema,
-  toRuleSnapshot,
-  type CoreRulePack,
-  type CoreRulePackSnapshot,
-  type EquipmentDefinition,
+import { assembleCoreRulePackSync } from "@project/database/pack";
+import type {
+  CoreRulePack,
+  CoreRulePackSnapshot,
+  EquipmentDefinition,
 } from "@project/shared";
-import {
-  toWeaponDefinition,
-  type WeaponView,
-} from "../../rules/equipmentProjection.js";
+import { toRuleSnapshot } from "@project/shared";
+import { packToRuleLookup } from "../../rules/packLookup.js";
+import type { WeaponView } from "../../rules/equipmentProjection.js";
 import type { RuleSnapshotLookup } from "../../rules/ruleLookup.js";
 
 /**
  * The shipped core rule pack, loaded once for the engine's suites.
  *
- * The engine has no runtime dependency on the database package and should not
- * gain one - a pack reaches production by being handed in, not by being
- * imported. Tests are the exception: they need the real authored content,
- * because these suites are the only place the engine and the rulebook meet,
- * and a hand-written stub would drift out of agreement with what ships.
+ * The engine has no *runtime* dependency on the database package and still
+ * should not gain one - a pack reaches production by being handed in, not by
+ * being imported. `@project/database` is a devDependency, and
+ * `@project/database/pack` is a subpath that imports only node builtins and
+ * `@project/shared`, so nothing here drags a driver in.
  *
- * Hence the relative read rather than a package import. It is deliberate, and
- * confined to this file.
+ * This file used to reimplement the assembler rather than call it, and had
+ * drifted from it in two ways at once: it omitted the `proficiencies` section,
+ * and it validated with a bare `CoreRulePackSchema.parse`, skipping the
+ * semantic validation the real loader runs. Adding one key to `manifest.json`
+ * broke it, and the suite reported *fewer tests* rather than failures.
  */
 const PACK_ROOT = path.join(
   process.cwd(),
   "../database/data/packs/core_2014_pack",
 );
 
-const readSegment = (relativePath: string): Record<string, unknown> =>
-  JSON.parse(readFileSync(path.join(PACK_ROOT, relativePath), "utf8"));
-
 let cachedPack: CoreRulePack | undefined;
-let cached: CoreRulePackSnapshot | undefined;
+let cachedSnapshot: CoreRulePackSnapshot | undefined;
+let cachedLookup: RuleSnapshotLookup | undefined;
 
 /**
  * The whole shipped pack, merged and validated.
- *
- * Validated through CoreRulePackSchema rather than cast: a fixture that
- * accepted malformed content would let a broken pack pass the very suites
- * meant to catch it.
  * @returns Every section the manifest's segments carry
  */
 export const corePack = (): CoreRulePack => {
-  if (cachedPack) return cachedPack;
-
-  // the manifest is the pack's identity block plus assembly metadata; only the
-  // identity half may reach the pack, whose meta schema is strict
-  const { segments, $schema: _schemaPointer, ...packMeta } = readSegment(
-    "manifest.json",
-  ) as {
-    segments: string[];
-    $schema?: string;
-  };
-
-  const merged = segments.reduce<Record<string, unknown[]>>(
-    (accumulator, segmentPath) => {
-      const segment = readSegment(segmentPath);
-
-      for (const key of [
-        "traits",
-        "races",
-        "classes",
-        "subclasses",
-        "resources",
-        "equipment",
-        "feats",
-        "backgrounds",
-        "spells",
-      ]) {
-        const entries = segment[key];
-        if (Array.isArray(entries)) {
-          accumulator[key] = [...(accumulator[key] ?? []), ...entries];
-        }
-      }
-
-      return accumulator;
-    },
-    {},
-  );
-
-  cachedPack = CoreRulePackSchema.parse({ pack: packMeta, ...merged });
+  cachedPack ??= assembleCoreRulePackSync(PACK_ROOT);
   return cachedPack;
 };
 
@@ -91,39 +48,20 @@ export const corePack = (): CoreRulePack => {
  * @returns Traits, races, classes and subclasses from the shipped pack
  */
 export const corePackSnapshot = (): CoreRulePackSnapshot => {
-  cached ??= toRuleSnapshot(corePack());
-  return cached;
+  cachedSnapshot ??= toRuleSnapshot(corePack());
+  return cachedSnapshot;
 };
 
 /**
  * The pack's equipment, keyed by id, plus the weapon view every
  * weapon-capable entry projects.
- *
- * CoreRulePackSnapshot deliberately carries only what resolves by id through
- * ruleLookup's rulebook path; equipment reaches the runtime as its own map.
- * EquipmentDefinition is the single authored item shape, so equipmentById
- * alone stands in for the ITEM dictionary the suites used to read.
- * weaponsById is a convenience view for suites that only care about a
- * weapon's attack-facing fields - equipmentById is the single source both
- * are built from.
  * @returns equipmentById and weaponsById built from the pack
  */
 export const corePackEquipment = (): {
   equipmentById: Record<string, EquipmentDefinition>;
   weaponsById: Record<string, WeaponView>;
 } => {
-  const equipment = corePack().equipment;
-
-  const equipmentById = Object.fromEntries(
-    equipment.map((entry) => [entry.id, entry as EquipmentDefinition]),
-  );
-  const weaponsById = Object.fromEntries(
-    equipment.flatMap((entry) => {
-      const weapon = toWeaponDefinition(entry as EquipmentDefinition);
-      return weapon ? [[entry.id, weapon] as const] : [];
-    }),
-  );
-
+  const { equipmentById, weaponsById } = packToRuleLookup(corePack());
   return { equipmentById, weaponsById };
 };
 
@@ -136,10 +74,7 @@ export const corePackEquipment = (): {
  * longsword; now nothing resolves without it, which is the point.
  * @returns A RuleSnapshotLookup covering every section the pack carries
  */
-export const corePackLookup = (): RuleSnapshotLookup => ({
-  ...corePackSnapshot(),
-  ...corePackEquipment(),
-  resourcesById: Object.fromEntries(
-    corePack().resources.map((resource) => [resource.id, resource]),
-  ),
-});
+export const corePackLookup = (): RuleSnapshotLookup => {
+  cachedLookup ??= packToRuleLookup(corePack());
+  return cachedLookup;
+};

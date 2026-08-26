@@ -66,6 +66,14 @@ describe("ArmorClassWidget", () => {
       "Attacks against you have advantage",
     );
   });
+
+  it("warns when a worn item requires a higher ability score", async () => {
+    mocks.activeStates.current = ["status_item_requirement_unmet"];
+
+    const container = await renderWidget();
+
+    expect(container.textContent).toContain("Item requirement unmet");
+  });
 });
 
 describe("ArmorClassWidget incoming attack rolls", () => {

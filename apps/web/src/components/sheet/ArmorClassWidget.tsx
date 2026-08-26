@@ -11,6 +11,7 @@ import { useCharacterSheetStore } from "../../store/characterSheetStore";
  */
 const EXPOSURE_STATE = "status_attacks_against_have_advantage";
 const GUARDED_STATE = "status_attacks_against_have_disadvantage";
+const ITEM_REQUIREMENT_STATE = "status_item_requirement_unmet";
 
 export const ArmorClassWidget = () => {
   const { armorClass } = useDerivedStats();
@@ -19,6 +20,9 @@ export const ArmorClassWidget = () => {
   );
   const isGuarded = useCharacterSheetStore((state) =>
     state.activeStates.includes(GUARDED_STATE),
+  );
+  const isItemRequirementUnmet = useCharacterSheetStore((state) =>
+    state.activeStates.includes(ITEM_REQUIREMENT_STATE),
   );
 
   return (
@@ -86,6 +90,25 @@ export const ArmorClassWidget = () => {
             </p>
             <p className="mt-0.5 text-xs text-amber-100/80">
               Until the start of your next turn.
+            </p>
+          </div>
+        </div>
+      )}
+
+      {isItemRequirementUnmet && (
+        <div
+          role="status"
+          className="mt-4 flex items-start gap-2 rounded-xl border border-red-300/40 bg-red-400/15 p-3"
+        >
+          <span aria-hidden="true" className="text-base leading-none">
+            ⚠️
+          </span>
+          <div>
+            <p className="text-sm font-semibold text-red-100">
+              Item requirement unmet
+            </p>
+            <p className="mt-0.5 text-xs text-red-100/80">
+              A worn item requires a higher score and is reducing your speed.
             </p>
           </div>
         </div>

@@ -25,6 +25,12 @@ const TIER_LABEL: Record<EncumbranceTier, string> = {
   over_capacity: "Over Capacity",
 };
 
+/** A flat reduction the caller has already decided applies, and its label. */
+export interface SpeedPenalty {
+  name: string;
+  feet: number;
+}
+
 /**
  * Turns a racial walking speed, the modifiers acting on it, and how loaded
  * down the character is into a final speed with a breakdown.
@@ -40,6 +46,7 @@ export class SpeedEngine {
     modifiers: RuntimeModifier[],
     gatingStates: string[] = [],
     encumbranceTier: EncumbranceTier = "none",
+    extraPenalties: SpeedPenalty[] = [],
   ): CalculationResult {
     const breakdown: CalculationResult["breakdown"] = [];
 
@@ -103,6 +110,16 @@ export class SpeedEngine {
         name: TIER_LABEL[encumbranceTier],
         value: `-${penalty}`,
       });
+    }
+
+    // 3b - penalties arriving as typed argument rather than as modifiers, for
+    // the same reason the tier does: they are derived from the final ability
+    // scores, so a state-gated modifier would count them a second time
+    for (const extra of extraPenalties) {
+      if (extra.feet <= 0) continue;
+
+      total -= extra.feet;
+      breakdown.push({ name: extra.name, value: `-${extra.feet}` });
     }
 
     // 4 - multipliers (Dash, Haste), applied last so they scale the loaded speed

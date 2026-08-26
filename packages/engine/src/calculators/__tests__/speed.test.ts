@@ -172,4 +172,37 @@ describe("SpeedEngine.calculateSpeed", () => {
 
     expect(result.total).toBe(0);
   });
+
+  it("subtracts a caller-supplied penalty and names it", () => {
+    const result = SpeedEngine.calculateSpeed(30, [], [], "none", [
+      { name: "Plate Armor (requires STR 15)", feet: 10 },
+    ]);
+
+    expect(result.total).toBe(20);
+    expect(result.breakdown).toContainEqual({
+      name: "Plate Armor (requires STR 15)",
+      value: "-10",
+    });
+  });
+
+  it("stacks a caller-supplied penalty with an encumbrance tier", () => {
+    const result = SpeedEngine.calculateSpeed(30, [], [], "encumbered", [
+      { name: "Plate Armor (requires STR 15)", feet: 10 },
+    ]);
+
+    expect(result.total).toBe(10); // 30 - 10 tier - 10 armour
+  });
+
+  it("multiplies the penalised speed, not the unpenalised one", () => {
+    // the ordering that matters: Dash doubles what you can actually manage
+    const result = SpeedEngine.calculateSpeed(
+      30,
+      [mod({ sourceName: "Dash", type: "multiplier", value: 2 })],
+      [],
+      "none",
+      [{ name: "Plate Armor (requires STR 15)", feet: 10 }],
+    );
+
+    expect(result.total).toBe(40); // (30 - 10) x 2
+  });
 });

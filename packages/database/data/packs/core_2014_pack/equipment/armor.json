@@ -1,7 +1,416 @@
 {
+    "$schema": "../../../schemas/segment.schema.json",
     "equipment": [
         {
-            
+            "id": "item_armor_padded",
+            "name": "Padded Armor",
+            "type": "armor",
+            "weight": 8,
+            "armorCategory": "light",
+            "equipSlot": "body",
+            "requiresAttunement": false,
+            "categoryTags": [],
+            "modifiers": [
+                {
+                    "target": "ARMOR_CLASS",
+                    "type": "set_base",
+                    "value": 11,
+                    "scalingFactor": "none",
+                    "requiredStates": [],
+                    "forbiddenStates": []
+                },
+                {
+                    "target": "STEALTH_CHECK",
+                    "type": "disadvantage",
+                    "value": 0,
+                    "scalingFactor": "none",
+                    "requiredStates": [],
+                    "forbiddenStates": []
+                }
+            ],
+            "lore": {
+                "shortDescription": "Armor made of quilted layers of cloth and batting.",
+                "fullText": "Padded armor consists of quilted layers of cloth and batting."
+            }
+        },
+        {
+            "id": "item_armor_leather",
+            "name": "Leather Armor",
+            "type": "armor",
+            "weight": 10,
+            "armorCategory": "light",
+            "equipSlot": "body",
+            "requiresAttunement": false,
+            "categoryTags": [],
+            "modifiers": [
+                {
+                    "target": "ARMOR_CLASS",
+                    "type": "set_base",
+                    "value": 11,
+                    "scalingFactor": "none",
+                    "requiredStates": [],
+                    "forbiddenStates": []
+                }
+            ],
+            "lore": {
+                "shortDescription": "Armor made of tough but flexible leather.",
+                "fullText": "The breastplate and shoulder protectors of this armor are made of leather that has been stiffened by being boiled in oil. The rest of the armor is made of softer and more flexible materiaIs."
+            }
+        },
+        {
+            "id": "item_armor_studded_leather",
+            "name": "Studded Leather Armor",
+            "type": "armor",
+            "weight": 13,
+            "armorCategory": "light",
+            "equipSlot": "body",
+            "requiresAttunement": false,
+            "categoryTags": [],
+            "modifiers": [
+                {
+                    "target": "ARMOR_CLASS",
+                    "type": "set_base",
+                    "value": 12,
+                    "scalingFactor": "none",
+                    "requiredStates": [],
+                    "forbiddenStates": []
+                }
+            ],
+            "lore": {
+                "shortDescription": "Leather armor reinforced with close-set rivets or spikes.",
+                "fullText": "Made from tough but flexible leather, studded leather is reinforced with close-set rivets or spikes."
+            }
+        },
+        {
+            "id": "item_armor_hide",
+            "name": "Hide Armor",
+            "type": "armor",
+            "weight": 12,
+            "armorCategory": "medium",
+            "equipSlot": "body",
+            "requiresAttunement": false,
+            "categoryTags": [],
+            "modifiers": [
+                {
+                    "target": "ARMOR_CLASS",
+                    "type": "set_base",
+                    "value": 12,
+                    "scalingFactor": "none",
+                    "maxDexCap": 2,
+                    "requiredStates": [],
+                    "forbiddenStates": []
+                }
+            ],
+            "lore": {
+                "shortDescription": "Armor made from the hides of beasts.",
+                "fullText": "This crude armor consists of thick furs and pelts. It is commonly worn by barbarian tribes, evil humanoids, and other folk who lack access to the tools and materials needed to create better armor."
+            }
+        },
+        {
+            "id": "item_armor_chain_shirt",
+            "name": "Chain Shirt",
+            "type": "armor",
+            "weight": 20,
+            "armorCategory": "medium",
+            "equipSlot": "body",
+            "requiresAttunement": false,
+            "categoryTags": [],
+            "modifiers": [
+                {
+                    "target": "ARMOR_CLASS",
+                    "type": "set_base",
+                    "value": 13,
+                    "scalingFactor": "none",
+                    "maxDexCap": 2,
+                    "requiredStates": [],
+                    "forbiddenStates": []
+                }
+            ],
+            "lore": {
+                "shortDescription": "Armor made of interlocking metal rings.",
+                "fullText": "Made of interlocking metal rings, a chain shirt is worn between layers of clothing or leather. This armor offers modest protection to the wearer's upper body and allows the sound of the rings rubbing against one another to be muffled by outer layers."
+            }
+        },
+        {
+            "id": "item_armor_scale_mail",
+            "name": "Scale Mail",
+            "type": "armor",
+            "weight": 45,
+            "armorCategory": "medium",
+            "equipSlot": "body",
+            "requiresAttunement": false,
+            "categoryTags": [],
+            "modifiers": [
+                {
+                    "target": "ARMOR_CLASS",
+                    "type": "set_base",
+                    "value": 14,
+                    "scalingFactor": "none",
+                    "maxDexCap": 2,
+                    "requiredStates": [],
+                    "forbiddenStates": []
+                },
+                {
+                    "target": "STEALTH_CHECK",
+                    "type": "disadvantage",
+                    "value": 0,
+                    "scalingFactor": "none",
+                    "requiredStates": [],
+                    "forbiddenStates": []
+                }
+            ],
+            "lore": {
+                "shortDescription": "Armor made of leather covered with overlapping pieces of metal.",
+                "fullText": "This armor consists of a coat and leggings (and perhaps a separate skirt) of leather covered with overlapping pieces of metal, much like the scales of a fish. The suit includes gauntlets."
+            }
+        },
+        {
+            "id": "item_armor_breastplate",
+            "name": "Breastplate",
+            "type": "armor",
+            "weight": 20,
+            "armorCategory": "medium",
+            "equipSlot": "body",
+            "requiresAttunement": false,
+            "categoryTags": [],
+            "modifiers": [
+                {
+                    "target": "ARMOR_CLASS",
+                    "type": "set_base",
+                    "value": 14,
+                    "scalingFactor": "none",
+                    "maxDexCap": 2,
+                    "requiredStates": [],
+                    "forbiddenStates": []
+                }
+            ],
+            "lore": {
+                "shortDescription": "Armor consisting of a fitted metal chest piece worn with supple leather.",
+                "fullText": "This armor consists of a fitted metal chest piece worn with supple leather. Although it leaves the legs and arms relatively unprotected, this armor provides good protection for the wearer's vital organs while leaving the wearer relatively unencumbered."
+            }
+        },
+        {
+            "id": "item_armor_half_plate",
+            "name": "Half Plate",
+            "type": "armor",
+            "weight": 40,
+            "armorCategory": "medium",
+            "equipSlot": "body",
+            "requiresAttunement": false,
+            "categoryTags": [],
+            "modifiers": [
+                {
+                    "target": "ARMOR_CLASS",
+                    "type": "set_base",
+                    "value": 15,
+                    "scalingFactor": "none",
+                    "maxDexCap": 2,
+                    "requiredStates": [],
+                    "forbiddenStates": []
+                },
+                {
+                    "target": "STEALTH_CHECK",
+                    "type": "disadvantage",
+                    "value": 0,
+                    "scalingFactor": "none",
+                    "requiredStates": [],
+                    "forbiddenStates": []
+                }
+            ],
+            "lore": {
+                "shortDescription": "Armor made of shaped metal plates that cover most of the wearer's body.",
+                "fullText": "Half plate consists of shaped metal plates that cover most of the wearer's body. It does not include leg protection beyond simple greaves that are attached with leather straps."
+            }
+        },
+        {
+            "id": "item_armor_ring_mail",
+            "name": "Ring Mail",
+            "type": "armor",
+            "weight": 40,
+            "armorCategory": "heavy",
+            "equipSlot": "body",
+            "requiresAttunement": false,
+            "categoryTags": [],
+            "modifiers": [
+                {
+                    "target": "ARMOR_CLASS",
+                    "type": "set_base",
+                    "value": 14,
+                    "scalingFactor": "none",
+                    "maxDexCap": 0,
+                    "requiredStates": [],
+                    "forbiddenStates": []
+                },
+                {
+                    "target": "STEALTH_CHECK",
+                    "type": "disadvantage",
+                    "value": 0,
+                    "scalingFactor": "none",
+                    "requiredStates": [],
+                    "forbiddenStates": []
+                }
+            ],
+            "lore": {
+                "shortDescription": "Armor made of leather with heavy rings sewn into it.",
+                "fullText": "This armor is leather armor with heavy rings sewn into it. The rings help reinforce the armor against blows from swords and axes. Ring mail is inferior to chain mail, and it’s usually worn only by those who can't afford better armor."
+            }
+        },
+        {
+            "id": "item_armor_chain_mail",
+            "name": "Chain Mail",
+            "type": "armor",
+            "weight": 55,
+            "armorCategory": "heavy",
+            "equipSlot": "body",
+            "requiresAttunement": false,
+            "categoryTags": [],
+            "requirements": [
+                {
+                    "abilityMinimums": {
+                        "str": 13
+                    },
+                    "unmetPenalty": {
+                        "kind": "speed_reduction",
+                        "feet": 10
+                    }
+                }
+            ],
+            "modifiers": [
+                {
+                    "target": "ARMOR_CLASS",
+                    "type": "set_base",
+                    "value": 16,
+                    "scalingFactor": "none",
+                    "maxDexCap": 0,
+                    "requiredStates": [],
+                    "forbiddenStates": []
+                },
+                {
+                    "target": "STEALTH_CHECK",
+                    "type": "disadvantage",
+                    "value": 0,
+                    "scalingFactor": "none",
+                    "requiredStates": [],
+                    "forbiddenStates": []
+                }
+            ],
+            "lore": {
+                "shortDescription": "Armor made of interlocking metal rings, worn over a layer of quilted fabric.",
+                "fullText": "Made of interlocking metal rings, chain mail includes a layer of quilted fabric worn underneath the mail to prevent chafing and to cushion the impact of blows. The suit includes gauntlets."
+            }
+        },
+        {
+            "id": "item_armor_splint",
+            "name": "Splint Armor",
+            "type": "armor",
+            "weight": 60,
+            "armorCategory": "heavy",
+            "equipSlot": "body",
+            "requiresAttunement": false,
+            "categoryTags": [],
+            "requirements": [
+                {
+                    "abilityMinimums": {
+                        "str": 15
+                    },
+                    "unmetPenalty": {
+                        "kind": "speed_reduction",
+                        "feet": 10
+                    }
+                }
+            ],
+            "modifiers": [
+                {
+                    "target": "ARMOR_CLASS",
+                    "type": "set_base",
+                    "value": 17,
+                    "scalingFactor": "none",
+                    "maxDexCap": 0,
+                    "requiredStates": [],
+                    "forbiddenStates": []
+                },
+                {
+                    "target": "STEALTH_CHECK",
+                    "type": "disadvantage",
+                    "value": 0,
+                    "scalingFactor": "none",
+                    "requiredStates": [],
+                    "forbiddenStates": []
+                }
+            ],
+            "lore": {
+                "shortDescription": "Armor made of narrow vertical strips of metal riveted to a backing of leather that is worn over cloth padding.",
+                "fullText": "This armor is made of narrow vertical strips of metal riveted to a backing of leather that is worn over cloth padding. Flexible chain mail protects the joints."
+            }
+        },
+        {
+            "id": "item_armor_plate",
+            "name": "Plate Armor",
+            "type": "armor",
+            "weight": 65,
+            "armorCategory": "heavy",
+            "equipSlot": "body",
+            "requiresAttunement": false,
+            "categoryTags": [],
+            "requirements": [
+                {
+                    "abilityMinimums": {
+                        "str": 15
+                    },
+                    "unmetPenalty": {
+                        "kind": "speed_reduction",
+                        "feet": 10
+                    }
+                }
+            ],
+            "modifiers": [
+                {
+                    "target": "ARMOR_CLASS",
+                    "type": "set_base",
+                    "value": 18,
+                    "scalingFactor": "none",
+                    "maxDexCap": 0,
+                    "requiredStates": [],
+                    "forbiddenStates": []
+                },
+                {
+                    "target": "STEALTH_CHECK",
+                    "type": "disadvantage",
+                    "value": 0,
+                    "scalingFactor": "none",
+                    "requiredStates": [],
+                    "forbiddenStates": []
+                }
+            ],
+            "lore": {
+                "shortDescription": "Armor made of shaped, interlocking metal plates to cover the entire body.",
+                "fullText": "Plate consists of shaped, interlocking metal plates to cover the entire body. A suit of plate includes gauntlets, heavy leather boots, a visored helmet, and thick layers of padding underneath the armor. Buckles and straps distribute the weight over the body."
+            }
+        },
+        {
+            "id": "item_armor_shield",
+            "name": "Shield",
+            "type": "armor",
+            "weight": 6,
+            "equipSlot": "off_hand",
+            "requiresAttunement": false,
+            "categoryTags": [
+                "category_armor_shield"
+            ],
+            "modifiers": [
+                {
+                    "target": "ARMOR_CLASS",
+                    "type": "add",
+                    "value": 2,
+                    "scalingFactor": "none",
+                    "requiredStates": [],
+                    "forbiddenStates": []
+                }
+            ],
+            "lore": {
+                "shortDescription": "A protective device carried in one hand.",
+                "fullText": "A shield is made from wood or metal and is carried in one hand. Wielding a shield increases your Armor Class by 2. You can benefit from only one shield at a time."
+            }
         }
     ]
 }

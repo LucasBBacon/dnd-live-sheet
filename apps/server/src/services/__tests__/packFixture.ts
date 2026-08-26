@@ -1,5 +1,5 @@
 import path from "node:path";
-import { assembleCoreRulePack } from "@project/database/src/corePackAssembler.js";
+import { assembleCoreRulePack } from "@project/database/pack";
 import { toRuleSnapshot } from "@project/shared";
 import { setPackRulebookForTests } from "../packRulebook.js";
 

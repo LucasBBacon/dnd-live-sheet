@@ -4,6 +4,17 @@
   "description": "",
   "main": "./src/client.ts",
   "types": "./src/client.ts",
+  "exports": {
+    ".": {
+      "types": "./src/client.ts",
+      "default": "./src/client.ts"
+    },
+    "./pack": {
+      "types": "./src/corePackAssembler.ts",
+      "default": "./src/corePackAssembler.ts"
+    },
+    "./src/*": "./src/*"
+  },
   "type": "module",
   "scripts": {
     "db:push": "drizzle-kit push",

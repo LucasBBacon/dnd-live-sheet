@@ -4,6 +4,7 @@ import {
   ArmorCategorySchema,
   ContainerCapacitySchema,
   EquipSlotSchema,
+  ItemRequirementSchema,
   StartingEquipmentCategoryTagSchema,
 } from "./items.js";
 import { WeaponCategorySchema, WeaponPropertySchema } from "./weapons.js";
@@ -46,6 +47,7 @@ export const EquipmentDefinitionSchema = z
     armorCategory: ArmorCategorySchema.optional(),
     equipSlot: EquipSlotSchema.optional(),
     requiresAttunement: z.boolean().default(false),
+    requirements: z.array(ItemRequirementSchema).optional(),
     ammoTag: z.string().optional(),
     container: ContainerCapacitySchema.optional(),
     categoryTags: z.array(StartingEquipmentCategoryTagSchema).default([]),

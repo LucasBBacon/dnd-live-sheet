@@ -1,93 +1,32 @@
-import { readFileSync } from "node:fs";
 import path from "node:path";
-import {
-  CoreRulePackSchema,
-  toRuleSnapshot,
-  type EquipmentDefinition,
-} from "@project/shared";
-import { toWeaponDefinition, type WeaponView } from "@project/engine";
+import { assembleCoreRulePackSync } from "@project/database/pack";
+import { packToRuleLookup, type PackRuleLookup } from "@project/engine";
 
 /**
  * The shipped pack, for suites that drive the store's rule lookups.
  *
- * The web app has no dependency on the database package and should not gain
- * one - a pack reaches the client over /rules/snapshot, not by being imported.
- * Tests are the exception: they need the real authored content, because a
- * hand-written stub would drift out of agreement with what ships.
+ * The web app has no *runtime* dependency on the database package and still
+ * should not gain one - a pack reaches the client over /rules/snapshot, not by
+ * being imported. `@project/database` is a devDependency, and the `/pack`
+ * subpath imports only node builtins and `@project/shared`.
  *
- * The relative read is deliberate, and confined to this file.
+ * This file used to reimplement both the assembler and the projection. It
+ * carried the same two drifts the engine's copy did - no `proficiencies`
+ * section, and no semantic validation - and broke the same way, silently
+ * dropping 4 suites and 65 tests from the reported total rather than failing.
  */
 const PACK_ROOT = path.join(
   process.cwd(),
   "../../packages/database/data/packs/core_2014_pack",
 );
 
-const readSegment = (relativePath: string): Record<string, unknown> =>
-  JSON.parse(readFileSync(path.join(PACK_ROOT, relativePath), "utf8"));
-
-const SECTIONS = [
-  "traits",
-  "races",
-  "classes",
-  "subclasses",
-  "resources",
-  "equipment",
-  "feats",
-  "backgrounds",
-  "spells",
-];
-
-let cached: ReturnType<typeof build> | undefined;
-
-const build = () => {
-  const { segments, $schema: _schemaPointer, ...packMeta } = readSegment(
-    "manifest.json",
-  ) as {
-    segments: string[];
-    $schema?: string;
-  };
-
-  const merged = segments.reduce<Record<string, unknown[]>>(
-    (accumulator, segmentPath) => {
-      const segment = readSegment(segmentPath);
-      for (const key of SECTIONS) {
-        const entries = segment[key];
-        if (Array.isArray(entries)) {
-          accumulator[key] = [...(accumulator[key] ?? []), ...entries];
-        }
-      }
-      return accumulator;
-    },
-    {},
-  );
-
-  const pack = CoreRulePackSchema.parse({ pack: packMeta, ...merged });
-
-  const equipmentById: Record<string, EquipmentDefinition> = {};
-  const weaponsById: Record<string, WeaponView> = {};
-
-  for (const entry of pack.equipment) {
-    const equipment = entry as EquipmentDefinition;
-    equipmentById[entry.id] = equipment;
-    const weapon = toWeaponDefinition(equipment);
-    if (weapon) weaponsById[entry.id] = weapon;
-  }
-
-  return {
-    equipmentById,
-    weaponsById,
-    resourcesById: Object.fromEntries(
-      pack.resources.map((resource) => [resource.id, resource]),
-    ),
-    ...toRuleSnapshot(pack),
-  };
-};
+let cached: PackRuleLookup | undefined;
 
 /**
  * What the server serves on /rules/snapshot, built from the shipped pack.
  * @returns The rule snapshot the store hands to the engine
  */
-export const packRuleSnapshot = () => {
-  cached ??= build();
+export const packRuleSnapshot = (): PackRuleLookup => {
+  cached ??= packToRuleLookup(assembleCoreRulePackSync(PACK_ROOT));
   return cached;
 };

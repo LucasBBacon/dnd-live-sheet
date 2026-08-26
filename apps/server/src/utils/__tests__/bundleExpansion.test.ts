@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { assembleCoreRulePack } from "@project/database/src/corePackAssembler.js";
+import { assembleCoreRulePack } from "@project/database/pack";
 import path from "node:path";
 import { resolveItemPayload } from "../inventory.js";
 

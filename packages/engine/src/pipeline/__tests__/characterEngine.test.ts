@@ -852,6 +852,98 @@ describe("CharacterEngine.buildLiveSheet: speed and encumbrance", () => {
   });
 });
 
+describe("CharacterEngine.buildLiveSheet: armour ability requirements", () => {
+  /** Plate asks STR 15; the fixture's ASI choice leaves the fighter on 15. */
+  const weakling = () =>
+    halfElfFighter({
+      attributes: { str: 8, dex: 14, con: 13, int: 12, wis: 10, cha: 8 },
+    });
+
+  const worn = (itemId: string): InventoryInstance => ({
+    ...carried(itemId),
+    slot: "body",
+  });
+
+  it("slows a wearer who cannot meet the armour's Strength", () => {
+    const sheet = buildSheet(weakling(), [worn("item_armor_plate")]);
+
+    expect(sheet.speed.total).toBe(20); // 30 - 10
+    expect(sheet.equipmentRequirements.unmet[0]).toMatchObject({
+      itemId: "item_armor_plate",
+      ability: "STR",
+      requiredScore: 15,
+    });
+  });
+
+  it("names the shortfall in the speed breakdown", () => {
+    const sheet = buildSheet(weakling(), [worn("item_armor_plate")]);
+
+    expect(sheet.speed.breakdown).toContainEqual({
+      name: "Plate Armor (requires STR 15)",
+      value: "-10",
+    });
+  });
+
+  it("leaves a strong enough wearer at full speed", () => {
+    const sheet = buildSheet(halfElfFighter(), [worn("item_armor_plate")]);
+
+    expect(sheet.equipmentRequirements.unmet).toEqual([]);
+    expect(sheet.speed.total).toBe(30);
+  });
+
+  it("asks nothing of plate that is only being carried", () => {
+    const sheet = buildSheet(weakling(), [carried("item_armor_plate")]);
+
+    expect(sheet.speed.total).toBe(30);
+  });
+
+  it("reads the final STR score, so a belt of giant strength lifts the penalty", () => {
+    // the seam this feature shares with encumbrance: the requirement cannot be
+    // settled until the scores are final, or the belt would be inert
+    const sheet = CharacterEngine.buildLiveSheet(
+      weakling(),
+      [worn("item_armor_plate")],
+      effectWith("STR", 7),
+      new ResourceManager(),
+      { snapshot: corePackLookup() },
+    );
+
+    expect(sheet.abilities.STR.score).toBe(15);
+    expect(sheet.equipmentRequirements.unmet).toEqual([]);
+    expect(sheet.speed.total).toBe(30);
+  });
+
+  it("does not let the requirement feed back into stage one", () => {
+    // the invariant the two-stage split exists to protect: a stage-two verdict
+    // must not move a stage-one number
+    const strong = buildSheet(halfElfFighter(), [worn("item_armor_plate")]);
+    const weak = buildSheet(weakling(), [worn("item_armor_plate")]);
+
+    expect(weak.armorClass.total).toBe(strong.armorClass.total);
+  });
+
+  it("counts the penalty once, not once per channel", () => {
+    // the lesson the encumbrance tier taught: a stage-two penalty that also
+    // reached SpeedEngine as a state would be subtracted twice
+    const sheet = buildSheet(weakling(), [worn("item_armor_plate")]);
+
+    expect(
+      sheet.speed.breakdown.filter((entry) => entry.value === "-10"),
+    ).toHaveLength(1);
+  });
+
+  it("stacks the shortfall with an encumbrance tier", () => {
+    // STR 8 carries 120 lb, and is encumbered past 40 - so the 65 lb suit is
+    // both too heavy to move freely in and too heavy to meet its own bar
+    const sheet = buildSheet(weakling(), [worn("item_armor_plate")], {
+      encumbranceRules: { useVariantEncumbrance: true },
+    });
+
+    expect(sheet.encumbrance.tier).toBe("encumbered");
+    expect(sheet.speed.total).toBe(10); // 30 - 10 tier - 10 armour
+  });
+});
+
 describe("CharacterEngine.buildLiveSheet: inventory modifiers", () => {
   it("applies the AC of worn armour", () => {
     const sheet = buildSheet(halfElfFighter(), [

@@ -1,6 +1,6 @@
 import path from "node:path";
 import { describe, expect, it } from "vitest";
-import { assembleCoreRulePack } from "@project/database/src/corePackAssembler.js";
+import { assembleCoreRulePack } from "@project/database/pack";
 import { parseStoredPackPayload } from "../storedPackPayload.js";
 
 const PACK_DIR = path.join(

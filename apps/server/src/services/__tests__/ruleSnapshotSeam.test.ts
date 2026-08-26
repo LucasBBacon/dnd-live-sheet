@@ -1,6 +1,6 @@
 import { beforeAll, describe, expect, it } from "vitest";
 import path from "node:path";
-import { assembleCoreRulePack } from "@project/database/src/corePackAssembler.js";
+import { assembleCoreRulePack } from "@project/database/pack";
 import { projectCoreRulePack } from "@project/database/src/corePackProjection.js";
 import {
   projectEquipmentRows,

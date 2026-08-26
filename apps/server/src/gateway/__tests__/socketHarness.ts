@@ -2,7 +2,7 @@ import { vi, type MockInstance } from "vitest";
 import path from "node:path";
 import { SOCKET_EVENTS, toRuleSnapshot } from "@project/shared";
 import { campaignMembers } from "@project/database/src/schema/operational.js";
-import { assembleCoreRulePack } from "@project/database/src/corePackAssembler.js";
+import { assembleCoreRulePack } from "@project/database/pack";
 import { FakeDb } from "./fakeDb.js";
 
 const PACK_DIR = path.join(
