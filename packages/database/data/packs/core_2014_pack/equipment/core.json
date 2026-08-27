@@ -33,90 +33,6 @@
             }
         },
         {
-            "id": "item_weapon_longsword",
-            "name": "Longsword",
-            "type": "weapon",
-            "weight": 3,
-            "equipSlot": "main_hand",
-            "requiresAttunement": false,
-            "categoryTags": [
-                "category_weapon_martial",
-                "category_weapon_martial_melee"
-            ],
-            "weapon": {
-                "category": "martial_melee",
-                "damageDice": "1d8",
-                "versatileDamageDice": "1d10",
-                "damageType": "slashing",
-                "properties": [
-                    "versatile"
-                ],
-                "range": 5
-            },
-            "lore": {
-                "shortDescription": "Longsword",
-                "fullText": "Longsword"
-            }
-        },
-        {
-            "id": "item_weapon_dagger",
-            "name": "Dagger",
-            "type": "weapon",
-            "weight": 1,
-            "equipSlot": "main_hand",
-            "requiresAttunement": false,
-            "categoryTags": [
-                "category_weapon_simple",
-                "category_weapon_simple_melee"
-            ],
-            "weapon": {
-                "category": "simple_melee",
-                "damageDice": "1d4",
-                "damageType": "piercing",
-                "properties": [
-                    "finesse",
-                    "light",
-                    "thrown"
-                ],
-                "range": 20,
-                "longRange": 60
-            },
-            "lore": {
-                "shortDescription": "Dagger",
-                "fullText": "Dagger"
-            }
-        },
-        {
-            "id": "item_weapon_longbow",
-            "name": "Longbow",
-            "type": "weapon",
-            "weight": 2,
-            "equipSlot": "main_hand",
-            "requiresAttunement": false,
-            "categoryTags": [
-                "category_weapon_martial",
-                "category_weapon_martial_ranged"
-            ],
-            "weapon": {
-                "category": "martial_ranged",
-                "damageDice": "1d8",
-                "damageType": "piercing",
-                "properties": [
-                    "ammunition",
-                    "heavy",
-                    "two_handed"
-                ],
-                "range": 150,
-                "longRange": 600,
-                "ammoItemId": "item_ammo_arrow",
-                "ammoTag": "arrow"
-            },
-            "lore": {
-                "shortDescription": "Longbow",
-                "fullText": "Longbow"
-            }
-        },
-        {
             "id": "item_ammo_arrow",
             "name": "Arrow",
             "type": "consumable",
@@ -296,66 +212,6 @@
             ]
         },
         {
-            "id": "item_weapon_javelin",
-            "name": "Javelin",
-            "type": "gear",
-            "weight": 0,
-            "requiresAttunement": false,
-            "categoryTags": [
-                "category_weapon_simple",
-                "category_weapon_simple_melee"
-            ],
-            "lore": {
-                "shortDescription": "Javelin",
-                "fullText": "Javelin"
-            }
-        },
-        {
-            "id": "item_weapon_greataxe",
-            "name": "Greataxe",
-            "type": "gear",
-            "weight": 0,
-            "requiresAttunement": false,
-            "categoryTags": [
-                "category_weapon_martial",
-                "category_weapon_martial_melee"
-            ],
-            "lore": {
-                "shortDescription": "Greataxe",
-                "fullText": "Greataxe"
-            }
-        },
-        {
-            "id": "item_weapon_handaxe",
-            "name": "Handaxe",
-            "type": "gear",
-            "weight": 0,
-            "requiresAttunement": false,
-            "categoryTags": [
-                "category_weapon_simple",
-                "category_weapon_simple_melee"
-            ],
-            "lore": {
-                "shortDescription": "Handaxe",
-                "fullText": "Handaxe"
-            }
-        },
-        {
-            "id": "item_weapon_rapier",
-            "name": "Rapier",
-            "type": "gear",
-            "weight": 0,
-            "requiresAttunement": false,
-            "categoryTags": [
-                "category_weapon_martial",
-                "category_weapon_martial_melee"
-            ],
-            "lore": {
-                "shortDescription": "Rapier",
-                "fullText": "Rapier"
-            }
-        },
-        {
             "id": "item_pack_diplomats",
             "name": "Diplomat's Pack",
             "type": "gear",
@@ -472,21 +328,6 @@
             }
         },
         {
-            "id": "item_weapon_mace",
-            "name": "Mace",
-            "type": "gear",
-            "weight": 0,
-            "requiresAttunement": false,
-            "categoryTags": [
-                "category_weapon_simple",
-                "category_weapon_simple_melee"
-            ],
-            "lore": {
-                "shortDescription": "Mace",
-                "fullText": "Mace"
-            }
-        },
-        {
             "id": "item_weapon_warhammer",
             "name": "Warhammer",
             "type": "gear",
@@ -499,21 +340,6 @@
             "lore": {
                 "shortDescription": "Warhammer",
                 "fullText": "Warhammer"
-            }
-        },
-        {
-            "id": "item_weapon_crossbow_light",
-            "name": "Light Crossbow",
-            "type": "gear",
-            "weight": 0,
-            "requiresAttunement": false,
-            "categoryTags": [
-                "category_weapon_simple",
-                "category_weapon_simple_ranged"
-            ],
-            "lore": {
-                "shortDescription": "Light Crossbow",
-                "fullText": "Light Crossbow"
             }
         },
         {
@@ -598,21 +424,6 @@
             }
         },
         {
-            "id": "item_weapon_scimitar",
-            "name": "Scimitar",
-            "type": "gear",
-            "weight": 0,
-            "requiresAttunement": false,
-            "categoryTags": [
-                "category_weapon_martial",
-                "category_weapon_martial_melee"
-            ],
-            "lore": {
-                "shortDescription": "Scimitar",
-                "fullText": "Scimitar"
-            }
-        },
-        {
             "id": "item_weapon_arrow",
             "name": "Arrows",
             "type": "gear",
@@ -664,36 +475,6 @@
             }
         },
         {
-            "id": "item_weapon_dart",
-            "name": "Dart",
-            "type": "gear",
-            "weight": 0,
-            "requiresAttunement": false,
-            "categoryTags": [
-                "category_weapon_simple",
-                "category_weapon_simple_ranged"
-            ],
-            "lore": {
-                "shortDescription": "Dart",
-                "fullText": "Dart"
-            }
-        },
-        {
-            "id": "item_weapon_shortsword",
-            "name": "Shortsword",
-            "type": "gear",
-            "weight": 0,
-            "requiresAttunement": false,
-            "categoryTags": [
-                "category_weapon_martial",
-                "category_weapon_martial_melee"
-            ],
-            "lore": {
-                "shortDescription": "Shortsword",
-                "fullText": "Shortsword"
-            }
-        },
-        {
             "id": "item_pack_quiver",
             "name": "Quiver",
             "type": "gear",
@@ -727,21 +508,6 @@
             "lore": {
                 "shortDescription": "Thieves' Tools",
                 "fullText": "Thieves' Tools"
-            }
-        },
-        {
-            "id": "item_weapon_shortbow",
-            "name": "Shortbow",
-            "type": "gear",
-            "weight": 0,
-            "requiresAttunement": false,
-            "categoryTags": [
-                "category_weapon_simple",
-                "category_weapon_simple_ranged"
-            ],
-            "lore": {
-                "shortDescription": "Shortbow",
-                "fullText": "Shortbow"
             }
         },
         {
@@ -790,21 +556,6 @@
             "lore": {
                 "shortDescription": "Spellbook",
                 "fullText": "Spellbook"
-            }
-        },
-        {
-            "id": "item_weapon_quarterstaff",
-            "name": "Quarterstaff",
-            "type": "gear",
-            "weight": 0,
-            "requiresAttunement": false,
-            "categoryTags": [
-                "category_weapon_simple",
-                "category_weapon_simple_melee"
-            ],
-            "lore": {
-                "shortDescription": "Quarterstaff",
-                "fullText": "Quarterstaff"
             }
         },
         {
