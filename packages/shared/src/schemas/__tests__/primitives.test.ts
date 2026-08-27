@@ -13,6 +13,7 @@ import {
 import { CoreRuleIdSchema } from "../primitives/ids.js";
 import { StatePredicateSchema } from "../primitives/statePredicate.js";
 import { DamageTypeSchema } from "../primitives/damageType.js";
+import { DamageExpressionSchema } from "../primitives/damageExpression.js";
 import { choiceOf } from "../primitives/choice.js";
 import { z } from "zod";
 
@@ -128,5 +129,31 @@ describe("choiceOf", () => {
       schema.parse({ id: "trait_choice_stats", pickCount: 2, options: [1, 2, 3] })
         .pickCount,
     ).toBe(2);
+  });
+});
+
+describe("DamageExpressionSchema", () => {
+  it("accepts dice, dice with a modifier, and a flat amount", () => {
+    expect(DamageExpressionSchema.safeParse("1d8").success).toBe(true);
+    expect(DamageExpressionSchema.safeParse("2d6+1").success).toBe(true);
+    expect(DamageExpressionSchema.safeParse("2d6-1").success).toBe(true);
+    // the blowgun and an unarmed strike deal exactly 1, with no die to roll
+    expect(DamageExpressionSchema.safeParse("1").success).toBe(true);
+  });
+
+  it("rejects the empty string that stood in for no damage", () => {
+    // the net carried damageDice: "" and damageType: "", which no layer caught
+    expect(DamageExpressionSchema.safeParse("").success).toBe(false);
+  });
+
+  it("rejects malformed expressions", () => {
+    expect(DamageExpressionSchema.safeParse("1d").success).toBe(false);
+    expect(DamageExpressionSchema.safeParse("d6").success).toBe(false);
+    expect(DamageExpressionSchema.safeParse("1d6x2").success).toBe(false);
+  });
+
+  it("rejects spaced expressions, which authored weapon data never uses", () => {
+    // DiceEngine.parse tolerates "2d6 + 3" at roll time; authored data does not
+    expect(DamageExpressionSchema.safeParse("2d6 + 3").success).toBe(false);
   });
 });

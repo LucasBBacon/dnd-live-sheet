@@ -16,6 +16,7 @@ export * from "./schemas/content/modifiers.js";
 export * from "./schemas/content/prerequisites.js";
 export * from "./schemas/primitives/ability.js";
 export * from "./schemas/primitives/choice.js";
+export * from "./schemas/primitives/damageExpression.js";
 export * from "./schemas/primitives/damageType.js";
 export * from "./schemas/primitives/ids.js";
 export * from "./schemas/primitives/lore.js";
