@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 import { DiceEngine } from "../diceParser.js";
 import { corePackSnapshot } from "../../pipeline/__tests__/corePackFixture.js";
 
-const FIGHTING_STYLE_TRAITS = corePackSnapshot().traitsById;
+const fightingStyleTraits = () => corePackSnapshot().traitsById;
 
 describe("DiceEngine dice-rule application", () => {
   it("maximizes every die while preserving the expression modifier", () => {
@@ -14,7 +14,7 @@ describe("DiceEngine dice-rule application", () => {
   });
 
   it("rerolls matching damage dice for authored traits when the required state is active", () => {
-    const trait = FIGHTING_STYLE_TRAITS.trait_fs_great_weapon_fighting;
+    const trait = fightingStyleTraits().trait_fs_great_weapon_fighting;
 
     const rerolled = DiceEngine.applyDiceRules(
       [1, 4],
@@ -31,7 +31,7 @@ describe("DiceEngine dice-rule application", () => {
   });
 
   it("does not reroll when the required state is not active", () => {
-    const trait = FIGHTING_STYLE_TRAITS.trait_fs_great_weapon_fighting;
+    const trait = fightingStyleTraits().trait_fs_great_weapon_fighting;
 
     const rerolled = DiceEngine.applyDiceRules(
       [1, 4],
