@@ -161,6 +161,8 @@ export const AttackEffectSchema = z.object({
    * authored before critical segments existed wants.
    */
   criticalDamage: z.array(DamageSegmentSchema).optional(),
+  /** Carried through from the weapon so the resolved action can report it. */
+  specialNote: z.string().optional(),
 });
 
 export const SummonEffectSchema = z.object({

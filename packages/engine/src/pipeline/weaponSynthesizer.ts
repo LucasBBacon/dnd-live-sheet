@@ -77,6 +77,9 @@ export class WeaponSynthesizer {
         longRange: maxRange,
         weaponContext: attackContext,
         criticalDamageMaximized,
+        ...(weapon.specialNote === undefined
+          ? {}
+          : { specialNote: weapon.specialNote }),
         damage: [
           {
             sourceName: weapon.name,

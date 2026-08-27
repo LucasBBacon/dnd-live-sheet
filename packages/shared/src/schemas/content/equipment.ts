@@ -32,6 +32,16 @@ export const WeaponCapabilitySchema = z
     longRange: z.number().optional(),
     ammoItemId: z.string().optional(),
     ammoTag: z.string().optional(),
+    /**
+     * A rule this engine cannot enforce, in words the table can act on.
+     *
+     * The net restrains its target and the lance is at disadvantage within
+     * five feet; neither is representable here, because hostiles exist only as
+     * a `targetLabel` string and `apply_effect` writes to the character's own
+     * EffectManager. Reporting it is what this codebase already does with
+     * surprise and with Disengage, Help and Ready.
+     */
+    specialNote: z.string().min(1).optional(),
   })
   .strict();
 

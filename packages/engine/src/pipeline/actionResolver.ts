@@ -60,6 +60,13 @@ export interface ActionResult {
    * flag exists so the sheet can say so rather than pretend the turn was legal.
    */
   economyOverdrawn?: boolean;
+  /**
+   * Rules the engine could not enforce, for the sheet to show the player.
+   *
+   * On the result rather than on an ActionRollResult because the note belongs
+   * to the action: a net has no damage roll to hang one on.
+   */
+  notes?: string[];
 }
 
 /**
@@ -412,7 +419,13 @@ export class ActionResolver {
           });
         }
 
-        return { ...ok, rollResults };
+        return {
+          ...ok,
+          rollResults,
+          ...(effect.specialNote === undefined
+            ? {}
+            : { notes: [effect.specialNote] }),
+        };
       }
 
       case "summon": {

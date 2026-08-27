@@ -169,3 +169,47 @@ describe("WeaponSynthesizer activation", () => {
     expect(action.activation).toBe("bonus_action");
   });
 });
+
+describe("WeaponSynthesizer carries unenforced weapon rules to the player", () => {
+  it("puts a weapon's specialNote on the attack effect", () => {
+    const net: WeaponView = {
+      id: "item_weapon_net",
+      name: "Net",
+      category: "martial_ranged",
+      damageDice: "1d4",
+      damageType: "bludgeoning",
+      properties: ["special", "thrown"],
+      range: 5,
+      longRange: 15,
+      specialNote: "Target is restrained (Large or smaller).",
+    };
+
+    const action = WeaponSynthesizer.generateWeaponAction(net, "DEX");
+    if (action.effect.type !== "attack") {
+      throw new Error("Expected an attack effect");
+    }
+
+    expect(action.effect.specialNote).toBe(
+      "Target is restrained (Large or smaller).",
+    );
+  });
+
+  it("omits specialNote entirely when the weapon has none", () => {
+    const club: WeaponView = {
+      id: "item_weapon_club",
+      name: "Club",
+      category: "simple_melee",
+      damageDice: "1d4",
+      damageType: "bludgeoning",
+      properties: ["light"],
+      range: 5,
+    };
+
+    const action = WeaponSynthesizer.generateWeaponAction(club, "STR");
+    if (action.effect.type !== "attack") {
+      throw new Error("Expected an attack effect");
+    }
+
+    expect("specialNote" in action.effect).toBe(false);
+  });
+});

@@ -1677,6 +1677,9 @@
                               "damageType"
                             ]
                           }
+                        },
+                        "specialNote": {
+                          "type": "string"
                         }
                       },
                       "required": [
@@ -2573,6 +2576,9 @@
                                         "damageType"
                                       ]
                                     }
+                                  },
+                                  "specialNote": {
+                                    "type": "string"
                                   }
                                 },
                                 "required": [
@@ -4664,6 +4670,10 @@
               },
               "ammoTag": {
                 "type": "string"
+              },
+              "specialNote": {
+                "type": "string",
+                "minLength": 1
               }
             },
             "required": [
@@ -5355,6 +5365,9 @@
                             "damageType"
                           ]
                         }
+                      },
+                      "specialNote": {
+                        "type": "string"
                       }
                     },
                     "required": [
@@ -6251,6 +6264,9 @@
                                       "damageType"
                                     ]
                                   }
+                                },
+                                "specialNote": {
+                                  "type": "string"
                                 }
                               },
                               "required": [
