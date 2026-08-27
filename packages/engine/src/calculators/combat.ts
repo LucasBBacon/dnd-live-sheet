@@ -399,6 +399,11 @@ export class CombatEngine {
       }
     }
 
+    // the weapon's group is the first segment's damage type, captured before
+    // filtering: a dropped group must take the bonus with it rather than hand
+    // it to whichever rider happens to survive into position zero
+    const weaponDamageType = segments[0]?.damageType;
+
     const rendered = [...groups.entries()]
       // a group with neither dice nor flat damage came from an unparseable
       // segment and has nothing to say
@@ -406,14 +411,15 @@ export class CombatEngine {
         ([damageType, diceBySides]) =>
           diceBySides.size > 0 || (flatByType.get(damageType) ?? 0) !== 0,
       )
-      .map(([damageType, diceBySides], index) => {
+      .map(([damageType, diceBySides]) => {
         const dice = [...diceBySides.entries()]
           .map(([sides, count]) => `${count}d${sides}`)
           .join(" + ");
 
         // only the weapon's group carries the flat bonus; a flat segment's own
         // damage joins it rather than pretending to be a die
-        const bonusTotal = (index === 0 ? totalDamageBonus : 0) +
+        const bonusTotal =
+          (damageType === weaponDamageType ? totalDamageBonus : 0) +
           (flatByType.get(damageType) ?? 0);
         const bonus =
           bonusTotal !== 0 ? ` ${bonusTotal > 0 ? "+" : ""}${bonusTotal}` : "";

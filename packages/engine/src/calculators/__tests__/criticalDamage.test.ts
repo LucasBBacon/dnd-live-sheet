@@ -272,4 +272,39 @@ describe("flat damage survives the critical-hit maths", () => {
     // the guard must not disturb the weapon every other test in this file uses
     expect(critFor([]).criticalDamageExpression).toBe("2d12 slashing");
   });
+
+  it("does not hand the ability bonus to a rider when the weapon's own group is filtered out", () => {
+    // "0" parses to zero dice AND a zero modifier, so the weapon's slashing
+    // group is empty and gets dropped by the pre-map filter entirely. Before
+    // this round's fix, the bonus followed array position after filtering
+    // and would have landed on whichever group survived - here, the fire
+    // rider added by the critical hit - even though it belongs to slashing.
+    const uselessWeapon = makeWeapon({
+      name: "Training Weapon",
+      damageDice: "0",
+      damageType: "slashing",
+    });
+    const flameRider = {
+      type: "add_specific_die",
+      diceToAdd: "1d6",
+      damageType: "fire",
+      requiredAttackTypes: ["melee_weapon"],
+    };
+
+    const attack = CombatEngine.calculateWeaponAttack(
+      uselessWeapon,
+      makeScores({ STR: 14 }), // +2 STR mod, so there is a bonus to misattach
+      0,
+      [],
+      [],
+      [],
+      [flameRider] as never,
+      true,
+      "melee_weapon",
+    );
+
+    // the +2 belonged to the dropped slashing group; it must not resurface
+    // attached to fire
+    expect(attack.criticalDamageExpression).toBe("1d6 fire");
+  });
 });
