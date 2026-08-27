@@ -146,3 +146,80 @@ describe("a container carries its capacity on EquipmentDefinition", () => {
     expect(equipment.categoryTags).toEqual([]);
   });
 });
+
+describe("WeaponCapabilitySchema damage is optional but never half-authored", () => {
+  // These refines are invisible to packSchemas.test.ts: z.toJSONSchema drops
+  // .refine() silently, so Zod is the only layer that enforces them and this
+  // is the only place they are covered.
+
+  it("accepts a weapon with no damage at all", () => {
+    const parsed = WeaponCapabilitySchema.parse({
+      category: "martial_ranged",
+      properties: ["special", "thrown"],
+      range: 5,
+      longRange: 15,
+      specialNote: "Target is restrained (Large or smaller).",
+    });
+
+    expect(parsed.damageDice).toBeUndefined();
+    expect(parsed.damageType).toBeUndefined();
+  });
+
+  it("accepts flat damage", () => {
+    const parsed = WeaponCapabilitySchema.parse({
+      category: "simple_ranged",
+      damageDice: "1",
+      damageType: "piercing",
+      properties: ["ammunition", "loading"],
+      range: 25,
+      longRange: 100,
+    });
+
+    expect(parsed.damageDice).toBe("1");
+  });
+
+  it("rejects a damage die with no damage type", () => {
+    const result = WeaponCapabilitySchema.safeParse({
+      category: "simple_melee",
+      damageDice: "1d4",
+      properties: [],
+      range: 5,
+    });
+
+    expect(result.success).toBe(false);
+  });
+
+  it("rejects a damage type with no damage die", () => {
+    const result = WeaponCapabilitySchema.safeParse({
+      category: "simple_melee",
+      damageType: "bludgeoning",
+      properties: [],
+      range: 5,
+    });
+
+    expect(result.success).toBe(false);
+  });
+
+  it("rejects the empty-string damage the net used to carry", () => {
+    const result = WeaponCapabilitySchema.safeParse({
+      category: "martial_ranged",
+      damageDice: "",
+      damageType: "",
+      properties: ["special", "thrown"],
+      range: 5,
+    });
+
+    expect(result.success).toBe(false);
+  });
+
+  it("rejects a versatile die with no one-handed die to upgrade from", () => {
+    const result = WeaponCapabilitySchema.safeParse({
+      category: "martial_melee",
+      versatileDamageDice: "1d10",
+      properties: ["versatile"],
+      range: 5,
+    });
+
+    expect(result.success).toBe(false);
+  });
+});

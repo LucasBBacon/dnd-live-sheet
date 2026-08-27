@@ -213,3 +213,48 @@ describe("WeaponSynthesizer carries unenforced weapon rules to the player", () =
     expect("specialNote" in action.effect).toBe(false);
   });
 });
+
+describe("WeaponSynthesizer handles weapons that deal no damage", () => {
+  it("emits an empty damage pool for a weapon with no damage dice", () => {
+    const net: WeaponView = {
+      id: "item_weapon_net",
+      name: "Net",
+      category: "martial_ranged",
+      properties: ["special", "thrown"],
+      range: 5,
+      longRange: 15,
+      specialNote: "Target is restrained (Large or smaller).",
+    };
+
+    const action = WeaponSynthesizer.generateWeaponAction(net, "DEX");
+    if (action.effect.type !== "attack") {
+      throw new Error("Expected an attack effect");
+    }
+
+    // it still attacks - a net rolls to hit, it just deals nothing
+    expect(action.effect.attackType).toBe("ranged_weapon");
+    expect(action.effect.damage).toEqual([]);
+  });
+
+  it("emits one flat segment for a weapon that deals a fixed amount", () => {
+    const blowgun: WeaponView = {
+      id: "item_weapon_blowgun",
+      name: "Blowgun",
+      category: "simple_ranged",
+      damageDice: "1",
+      damageType: "piercing",
+      properties: ["ammunition", "loading"],
+      range: 25,
+      longRange: 100,
+    };
+
+    const action = WeaponSynthesizer.generateWeaponAction(blowgun, "DEX");
+    if (action.effect.type !== "attack") {
+      throw new Error("Expected an attack effect");
+    }
+
+    expect(action.effect.damage).toHaveLength(1);
+    expect(action.effect.damage[0]?.baseDice).toBe("1");
+    expect(action.effect.damage[0]?.damageType).toBe("piercing");
+  });
+});

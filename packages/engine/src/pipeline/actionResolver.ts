@@ -395,6 +395,7 @@ export class ActionResolver {
 
         for (const [index, segment] of resolvedSegments.entries()) {
           const baseDice = segment.baseDice;
+          const { sides } = DiceEngine.parse(baseDice);
           const roll =
             segment.maximized ||
             (isCriticalHit && effect.criticalDamageMaximized)
@@ -405,7 +406,7 @@ export class ActionResolver {
             "DAMAGE_ROLL",
             context,
             resolvedActiveStates,
-            DiceEngine.parse(baseDice).sides,
+            sides,
             segment.damageType,
           );
 
@@ -499,6 +500,7 @@ export class ActionResolver {
 
         for (const segment of effect.damage) {
           const baseDice = segment.baseDice;
+          const { sides } = DiceEngine.parse(baseDice);
           const roll = segment.maximized
             ? DiceEngine.rollMaximized(baseDice)
             : DiceEngine.rollDigital(baseDice);
@@ -509,7 +511,7 @@ export class ActionResolver {
             activeStates.length > 0
               ? activeStates
               : (context.activeStates ?? []),
-            DiceEngine.parse(baseDice).sides,
+            sides,
             segment.damageType,
           );
 

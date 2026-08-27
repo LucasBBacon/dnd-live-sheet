@@ -80,15 +80,20 @@ export class WeaponSynthesizer {
         ...(weapon.specialNote === undefined
           ? {}
           : { specialNote: weapon.specialNote }),
-        damage: [
-          {
-            sourceName: weapon.name,
-            baseDice: damageDice,
-            damageType: weapon.damageType,
-            scalingMode: "none",
-            levelScaling: [],
-          },
-        ],
+        // a weapon with no authored damage still attacks; it just has nothing
+        // to roll. The empty pool is what stops ActionResolver rolling one.
+        damage:
+          damageDice === undefined || weapon.damageType === undefined
+            ? []
+            : [
+                {
+                  sourceName: weapon.name,
+                  baseDice: damageDice,
+                  damageType: weapon.damageType,
+                  scalingMode: "none",
+                  levelScaling: [],
+                },
+              ],
       },
     };
   }

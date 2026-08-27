@@ -4615,10 +4615,12 @@
                 ]
               },
               "damageDice": {
-                "type": "string"
+                "type": "string",
+                "pattern": "^(\\d+d\\d+([+-]\\d+)?|\\d+)$"
               },
               "versatileDamageDice": {
-                "type": "string"
+                "type": "string",
+                "pattern": "^(\\d+d\\d+([+-]\\d+)?|\\d+)$"
               },
               "damageType": {
                 "type": "string",
@@ -4678,8 +4680,6 @@
             },
             "required": [
               "category",
-              "damageDice",
-              "damageType",
               "properties"
             ],
             "additionalProperties": false

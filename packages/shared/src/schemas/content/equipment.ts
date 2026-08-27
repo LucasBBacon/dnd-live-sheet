@@ -9,6 +9,7 @@ import {
 } from "./items.js";
 import { WeaponCategorySchema, WeaponPropertySchema } from "./weapons.js";
 import { DamageTypeSchema } from "./affinities.js";
+import { DamageExpressionSchema } from "../primitives/damageExpression.js";
 
 export const EquipmentTypeSchema = z.enum([
   "armor",
@@ -21,12 +22,14 @@ export const EquipmentTypeSchema = z.enum([
 export const WeaponCapabilitySchema = z
   .object({
     category: WeaponCategorySchema,
-    damageDice: z.string(),
+    // absent means the weapon deals no damage. A net rolls to hit and deals
+    // nothing; it used to say so with `""`, which no layer could catch.
+    damageDice: DamageExpressionSchema.optional(),
     // the two-handed die for a versatile weapon. Without it here,
     // EquipmentDefinition cannot carry a versatile weapon and the engine's
     // weapon view silently downgrades it
-    versatileDamageDice: z.string().optional(),
-    damageType: DamageTypeSchema,
+    versatileDamageDice: DamageExpressionSchema.optional(),
+    damageType: DamageTypeSchema.optional(),
     properties: z.array(WeaponPropertySchema),
     range: z.number().default(5),
     longRange: z.number().optional(),
@@ -43,7 +46,28 @@ export const WeaponCapabilitySchema = z
      */
     specialNote: z.string().min(1).optional(),
   })
-  .strict();
+  .strict()
+  // Both refines are Zod-only: z.toJSONSchema drops .refine() silently, so the
+  // ajv pass in packSchemas.test.ts cannot see them. equipment.test.ts covers
+  // them directly.
+  .refine(
+    (weapon) =>
+      (weapon.damageDice === undefined) === (weapon.damageType === undefined),
+    {
+      message:
+        "damageDice and damageType must be authored together, or both omitted for a weapon that deals no damage",
+      path: ["damageType"],
+    },
+  )
+  .refine(
+    (weapon) =>
+      weapon.versatileDamageDice === undefined ||
+      weapon.damageDice !== undefined,
+    {
+      message: "versatileDamageDice requires a one-handed damageDice",
+      path: ["versatileDamageDice"],
+    },
+  );
 
 export const EquipmentDefinitionSchema = z
   .object({

@@ -671,16 +671,21 @@ export class CombatEngine {
         : weapon.damageDice;
 
     // the weapon's own dice, and the only segment CombatEngine authors: riders
-    // reach the roll as their own actions, and join the pool downstream
-    const damageSegments: DamageSegment[] = [
-      {
-        sourceName: weapon.name,
-        baseDice: finalDice ?? weapon.damageDice,
-        damageType: weapon.damageType,
-        scalingMode: "none",
-        levelScaling: [],
-      },
-    ];
+    // reach the roll as their own actions, and join the pool downstream. A
+    // weapon with no authored damage - a net - contributes no segment at all,
+    // which is what leaves its damage roll unrolled rather than zero.
+    const damageSegments: DamageSegment[] =
+      finalDice === undefined || weapon.damageType === undefined
+        ? []
+        : [
+            {
+              sourceName: weapon.name,
+              baseDice: finalDice,
+              damageType: weapon.damageType,
+              scalingMode: "none",
+              levelScaling: [],
+            },
+          ];
 
     // a critical hit rolls every damage die twice before any modifier speaks
     let criticalDamage = damageSegments.map((segment) =>
