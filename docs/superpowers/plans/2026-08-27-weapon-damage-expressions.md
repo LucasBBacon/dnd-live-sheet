@@ -17,7 +17,15 @@
 - **`z.toJSONSchema` silently drops `.refine()`.** It does not throw and emits no `anyOf`/`dependentRequired` substitute. `.regex()` *does* survive as `pattern`. Therefore **every cross-field invariant in this plan needs a Zod-level unit test**; the ajv pass in `packSchemas.test.ts` cannot see them and must never be treated as covering them.
 - **Layering.** `packages/shared/src/schemas/primitives/` may import nothing but `zod`. `content/` may import `primitives/`. Never the reverse.
 - **Typecheck command.** Use `pnpm --filter @project/<pkg> typecheck`. Do **not** run `tsc -b` in `packages/database` — it emits `.js`/`.d.ts` next to sources and trips `pnpm check:hygiene`.
-- **Existing green baseline.** All package suites pass before this work starts. No task may leave a suite red at its commit.
+- **The baseline is RED, and Task 7 is the cure.** Commit `4c24eb6` moved 37 weapons into `equipment/weapons.json` without registering it, so the manifest reaches only 78 equipment ids — 4 of them weapons — and `assembleCoreRulePack` throws `Unknown equipment 'item_weapon_javelin'` and friends on every class's `startingEquipment`. Measured at `efcbb9a`:
+
+  | Package | Baseline |
+  | --- | --- |
+  | shared | 19 files / 179 tests — all pass |
+  | engine | 18 of 40 files fail — 51 of 537 tests |
+  | database | 5 of 12 files fail — 16 of 144 tests |
+
+  **Tasks 1-6 must not increase these counts; Task 7 must clear them.** A task is verified against its own test files plus the shared suite, which is green throughout. Do not treat a pre-existing failure as your breakage, and do not treat the engine or database suite going green early as success — it cannot until the manifest is registered.
 
 ---
 
@@ -248,7 +256,7 @@ Expected: PASS.
 pnpm --filter @project/engine test
 ```
 
-Expected: PASS. Nothing authored today is a bare integer, so no existing behavior changes.
+Expected: **51 failures out of 537** — the recorded baseline, unchanged. Nothing authored today is a bare integer, so no existing behavior changes. Any 52nd failure is yours.
 
 - [ ] **Step 6: Commit**
 
@@ -275,60 +283,50 @@ All three sites rebuild an expression from `count` and `sides` and discard `modi
 
 - [ ] **Step 1: Write the failing test**
 
-Append to `packages/engine/src/calculators/__tests__/criticalDamage.test.ts`:
+Append to `packages/engine/src/calculators/__tests__/criticalDamage.test.ts`. `doubleSegment` and `formatDamageExpression` are private; drive them through the public `calculateWeaponAttack` using the `makeWeapon`, `makeScores` and `critFor` helpers already at the top of this file. Do **not** reach into the class with bracket notation — nothing in this codebase does, and it would couple the test to a private name.
 
 ```ts
-describe("flat damage segments survive the critical-hit maths", () => {
-  it("does not double a flat segment on a critical hit", () => {
+describe("flat damage survives the critical-hit maths", () => {
+  const blowgun = makeWeapon({
+    id: "item_weapon_blowgun",
+    name: "Blowgun",
+    category: "simple_ranged",
+    damageDice: "1",
+    damageType: "piercing",
+    properties: ["ammunition", "loading"],
+    range: 25,
+    longRange: 100,
+  });
+
+  it("renders flat damage as a bonus term rather than 1d0", () => {
+    // makeScores() is all 10s, so the ability modifier is 0 and the only
+    // damage in the pool is the blowgun's flat 1
+    const attack = CombatEngine.calculateWeaponAttack(
+      blowgun,
+      makeScores(),
+      0,
+      [],
+      [],
+      [],
+      [],
+      false,
+      "ranged_weapon",
+    );
+
+    expect(attack.damageExpression).toBe("+1 piercing");
+  });
+
+  it("does not double flat damage on a critical hit", () => {
     // 5e doubles damage *dice*; a blowgun has none, so a crit is still 1
-    const doubled = CombatEngine["doubleSegment"]({
-      sourceName: "Blowgun",
-      baseDice: "1",
-      damageType: "piercing",
-      scalingMode: "none",
-      levelScaling: [],
-    });
-
-    expect(doubled.baseDice).toBe("1");
+    expect(critFor([], blowgun).criticalDamageExpression).toBe("+1 piercing");
   });
 
-  it("renders a flat segment as a bonus term rather than 1d0", () => {
-    const expression = CombatEngine["formatDamageExpression"](
-      [
-        {
-          sourceName: "Blowgun",
-          baseDice: "1",
-          damageType: "piercing",
-          scalingMode: "none",
-          levelScaling: [],
-        },
-      ],
-      3,
-    );
-
-    expect(expression).toBe("+4 piercing");
-  });
-
-  it("still renders an ordinary dice pool unchanged", () => {
-    const expression = CombatEngine["formatDamageExpression"](
-      [
-        {
-          sourceName: "Greatsword",
-          baseDice: "2d6",
-          damageType: "slashing",
-          scalingMode: "none",
-          levelScaling: [],
-        },
-      ],
-      4,
-    );
-
-    expect(expression).toBe("2d6 +4 slashing");
+  it("still doubles an ordinary dice pool", () => {
+    // the guard must not disturb the weapon every other test in this file uses
+    expect(critFor([]).criticalDamageExpression).toBe("2d12 slashing");
   });
 });
 ```
-
-Confirm the file's existing imports already bring in `CombatEngine`; if not, add `import { CombatEngine } from "../combat.js";`.
 
 - [ ] **Step 2: Run test to verify it fails**
 
@@ -336,7 +334,7 @@ Confirm the file's existing imports already bring in `CombatEngine`; if not, add
 pnpm --filter @project/engine test src/calculators/__tests__/criticalDamage.test.ts
 ```
 
-Expected: FAIL — `doubleSegment` returns `"0d0"`, and `formatDamageExpression` returns `"0d0 +3 piercing"`.
+Expected: FAIL — the first two cases receive `"0d0 +1 piercing"` and `"0d0 +1 piercing"` instead of `"+1 piercing"`. The third case passes already; it is the regression guard.
 
 - [ ] **Step 3: Guard `doubleSegment`**
 
@@ -447,7 +445,7 @@ Expected: PASS.
 pnpm --filter @project/engine test
 ```
 
-Expected: PASS — particularly `combat.test.ts`, which asserts rendered damage expressions.
+Expected: **51 failures out of 537** — the recorded baseline, unchanged. Watch `combat.test.ts` and `criticalDamage.test.ts` especially: they assert rendered damage expressions, and the `formatDamageExpression` rewrite is the riskiest edit in this task. Any 52nd failure is yours.
 
 - [ ] **Step 8: Commit**
 
@@ -611,7 +609,7 @@ Expected: PASS.
 pnpm --filter @project/shared test && pnpm --filter @project/engine test && pnpm --filter @project/database test
 ```
 
-Expected: PASS, including the regeneration byte-compare in `packSchemas.test.ts`.
+Expected: shared **179/179 pass**; engine **51 fail / 537**; database **16 fail / 144** — the recorded baseline, unchanged. `packSchemas.test.ts` must be among the passing files: if its regeneration byte-compare fails, you skipped Step 6.
 
 - [ ] **Step 8: Commit**
 
@@ -934,7 +932,7 @@ Review the diff: `damageDice`, `versatileDamageDice` and `damageType` should lea
 pnpm --filter @project/shared test && pnpm --filter @project/engine test && pnpm --filter @project/database test
 ```
 
-Expected: PASS.
+Expected: shared **179/179 pass**; engine **51 fail / 537**; database **16 fail / 144** — the recorded baseline, unchanged. This task makes fields optional, so a 52nd engine failure most likely means a consumer you missed rather than a bad test.
 
 - [ ] **Step 10: Typecheck and commit**
 
@@ -1151,7 +1149,7 @@ And add the note below the properties block, inside the same wrapper:
 pnpm --filter @project/shared test && pnpm --filter @project/engine test
 ```
 
-Expected: PASS.
+Expected: shared **179/179 pass**; engine **51 fail / 537** — the recorded baseline, unchanged.
 
 - [ ] **Step 9: Regenerate, typecheck and commit**
 
@@ -1260,7 +1258,7 @@ The `derivedGaps` helper needs no change: it derives a `weapon` gap from a missi
 pnpm --filter @project/database test
 ```
 
-Expected: PASS.
+Expected: **144/144 pass** — all 16 baseline failures cleared. This is the step where the red baseline goes green: the pack now assembles because the 37 weapons are reachable again.
 
 - [ ] **Step 6: Run the full workspace suite**
 
@@ -1268,7 +1266,7 @@ Expected: PASS.
 pnpm test:all
 ```
 
-Expected: PASS, including `pnpm check:hygiene`, which gates mixed line endings and `.gitattributes` violations.
+Expected: **PASS across every package** — all 67 baseline failures cleared (engine 537/537, database 144/144, shared 179/179). This is the first point in the plan where a fully green suite is the correct expectation. `pnpm check:hygiene` runs first and gates mixed line endings and `.gitattributes` violations. If engine failures remain, the pack is still not assembling — check the manifest entry before suspecting your own changes.
 
 - [ ] **Step 7: Confirm the pack actually carries the weapons**
 
