@@ -232,3 +232,44 @@ describe("critical damage - segments", () => {
     expect(segments.every((segment) => segment.maximized)).toBe(true);
   });
 });
+
+describe("flat damage survives the critical-hit maths", () => {
+  const blowgun = makeWeapon({
+    id: "item_weapon_blowgun",
+    name: "Blowgun",
+    category: "simple_ranged",
+    damageDice: "1",
+    damageType: "piercing",
+    properties: ["ammunition", "loading"],
+    range: 25,
+    longRange: 100,
+  });
+
+  it("renders flat damage as a bonus term rather than 1d0", () => {
+    // makeScores() is all 10s, so the ability modifier is 0 and the only
+    // damage in the pool is the blowgun's flat 1
+    const attack = CombatEngine.calculateWeaponAttack(
+      blowgun,
+      makeScores(),
+      0,
+      [],
+      [],
+      [],
+      [],
+      false,
+      "ranged_weapon",
+    );
+
+    expect(attack.damageExpression).toBe("+1 piercing");
+  });
+
+  it("does not double flat damage on a critical hit", () => {
+    // 5e doubles damage *dice*; a blowgun has none, so a crit is still 1
+    expect(critFor([], blowgun).criticalDamageExpression).toBe("+1 piercing");
+  });
+
+  it("still doubles an ordinary dice pool", () => {
+    // the guard must not disturb the weapon every other test in this file uses
+    expect(critFor([]).criticalDamageExpression).toBe("2d12 slashing");
+  });
+});

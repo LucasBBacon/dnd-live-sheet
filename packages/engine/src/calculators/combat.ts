@@ -272,6 +272,9 @@ export class CombatEngine {
   private static doubleSegment(segment: DamageSegment): DamageSegment {
     try {
       const { count, sides } = DiceEngine.parse(segment.baseDice);
+      // a flat segment has no dice to double, and rebuilding it from count and
+      // sides would discard the modifier that carries its whole damage
+      if (count === 0) return segment;
       return { ...segment, baseDice: `${count * 2}d${sides}` };
     } catch {
       return segment;
@@ -320,6 +323,9 @@ export class CombatEngine {
 
       try {
         const { count, sides } = DiceEngine.parse(weaponSegment.baseDice);
+        // nothing to grow on a flat segment: `1d0` would be worse than leaving
+        // the pool alone
+        if (count === 0) return segments;
         return [
           { ...weaponSegment, baseDice: `${count + extraDice}d${sides}` },
           ...segments.slice(1),
@@ -366,6 +372,7 @@ export class CombatEngine {
     totalDamageBonus: number,
   ): string {
     const groups = new Map<string, Map<number, number>>();
+    const flatByType = new Map<string, number>();
 
     for (const segment of segments) {
       let diceBySides = groups.get(segment.damageType);
@@ -375,8 +382,17 @@ export class CombatEngine {
       }
 
       try {
-        const { count, sides } = DiceEngine.parse(segment.baseDice);
-        diceBySides.set(sides, (diceBySides.get(sides) ?? 0) + count);
+        const { count, sides, modifier } = DiceEngine.parse(segment.baseDice);
+        if (count > 0) {
+          diceBySides.set(sides, (diceBySides.get(sides) ?? 0) + count);
+        }
+        // a flat segment carries its whole damage in the modifier
+        if (modifier !== 0) {
+          flatByType.set(
+            segment.damageType,
+            (flatByType.get(segment.damageType) ?? 0) + modifier,
+          );
+        }
       } catch {
         // an unparseable segment contributes no dice rather than corrupting the
         // whole expression
@@ -384,20 +400,26 @@ export class CombatEngine {
     }
 
     const rendered = [...groups.entries()]
+      // a group with neither dice nor flat damage came from an unparseable
+      // segment and has nothing to say
+      .filter(
+        ([damageType, diceBySides]) =>
+          diceBySides.size > 0 || (flatByType.get(damageType) ?? 0) !== 0,
+      )
       .map(([damageType, diceBySides], index) => {
         const dice = [...diceBySides.entries()]
           .map(([sides, count]) => `${count}d${sides}`)
           .join(" + ");
 
-        // only the weapon's group carries the flat bonus
+        // only the weapon's group carries the flat bonus; a flat segment's own
+        // damage joins it rather than pretending to be a die
+        const bonusTotal = (index === 0 ? totalDamageBonus : 0) +
+          (flatByType.get(damageType) ?? 0);
         const bonus =
-          index === 0 && totalDamageBonus !== 0
-            ? ` ${totalDamageBonus > 0 ? "+" : ""}${totalDamageBonus}`
-            : "";
+          bonusTotal !== 0 ? ` ${bonusTotal > 0 ? "+" : ""}${bonusTotal}` : "";
 
-        return `${dice}${bonus} ${damageType}`;
-      })
-      .filter((group) => !group.startsWith(" "));
+        return `${dice}${bonus} ${damageType}`.trim();
+      });
 
     return rendered.join(" + ");
   }
