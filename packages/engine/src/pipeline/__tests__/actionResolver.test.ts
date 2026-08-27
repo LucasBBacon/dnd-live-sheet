@@ -3,6 +3,8 @@ import type { ActionGrant } from "@project/shared";
 import { ActionResolver } from "../actionResolver.js";
 import type { InventoryLedger } from "../inventoryLedger.js";
 import type { RollContextPayload } from "../rollContextBuilder.js";
+import { WeaponSynthesizer } from "../weaponSynthesizer.js";
+import type { WeaponView } from "../../rules/equipmentProjection.js";
 import { CombatContextManager } from "../../calculators/combatContext.js";
 import { EffectManager } from "../../calculators/effects.js";
 import { ResourceManager } from "../../calculators/resources.js";
@@ -1736,5 +1738,46 @@ describe("ActionResolver no_effect", () => {
     expect(combatContext.getContext().economy.spentActionSourceId).toBe(
       "action_disengage",
     );
+  });
+});
+
+describe("a weapon that deals no damage still resolves", () => {
+  let effectManager: EffectManager;
+  let resourceManager: ResourceManager;
+
+  beforeEach(() => {
+    effectManager = new EffectManager();
+    resourceManager = new ResourceManager();
+  });
+
+  it("rolls to hit, rolls no damage, and reports its note", () => {
+    const net: WeaponView = {
+      id: "item_weapon_net",
+      name: "Net",
+      category: "martial_ranged",
+      properties: ["special", "thrown"],
+      range: 5,
+      longRange: 15,
+      specialNote: "Target is restrained (Large or smaller).",
+    };
+
+    const action = WeaponSynthesizer.generateWeaponAction(net, "DEX");
+    const result = ActionResolver.execute(
+      action,
+      { actionId: action.id, activeStates: [] },
+      { effectManager, resourceManager },
+    );
+
+    expect(result.executed).toBe(true);
+    const attackRolls = (result.rollResults ?? []).filter(
+      (roll) => roll.target === "ATTACK_ROLL",
+    );
+    const damageRolls = (result.rollResults ?? []).filter(
+      (roll) => roll.target === "DAMAGE_ROLL",
+    );
+
+    expect(attackRolls).toHaveLength(1);
+    expect(damageRolls).toEqual([]);
+    expect(result.notes).toEqual(["Target is restrained (Large or smaller)."]);
   });
 });

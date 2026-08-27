@@ -47,9 +47,9 @@ export const WeaponCapabilitySchema = z
     specialNote: z.string().min(1).optional(),
   })
   .strict()
-  // Both refines are Zod-only: z.toJSONSchema drops .refine() silently, so the
-  // ajv pass in packSchemas.test.ts cannot see them. equipment.test.ts covers
-  // them directly.
+  // All three refines are Zod-only: z.toJSONSchema drops .refine() silently,
+  // so the ajv pass in packSchemas.test.ts cannot see them. equipment.test.ts
+  // covers them directly.
   .refine(
     (weapon) =>
       (weapon.damageDice === undefined) === (weapon.damageType === undefined),
@@ -66,6 +66,16 @@ export const WeaponCapabilitySchema = z
     {
       message: "versatileDamageDice requires a one-handed damageDice",
       path: ["versatileDamageDice"],
+    },
+  )
+  .refine(
+    (weapon) =>
+      !weapon.properties.includes("special") ||
+      weapon.specialNote !== undefined,
+    {
+      message:
+        "a weapon with the special property must carry a specialNote saying what is special about it",
+      path: ["specialNote"],
     },
   );
 

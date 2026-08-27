@@ -223,3 +223,32 @@ describe("WeaponCapabilitySchema damage is optional but never half-authored", ()
     expect(result.success).toBe(false);
   });
 });
+
+describe("a special weapon must say what is special about it", () => {
+  // Zod-only, like the other two refines: invisible to the ajv pass.
+  it("rejects the special property with no specialNote", () => {
+    const result = WeaponCapabilitySchema.safeParse({
+      category: "martial_melee",
+      damageDice: "1d12",
+      damageType: "piercing",
+      properties: ["reach", "special"],
+      range: 10,
+    });
+
+    expect(result.success).toBe(false);
+  });
+
+  it("accepts the special property when a note is authored", () => {
+    const result = WeaponCapabilitySchema.safeParse({
+      category: "martial_melee",
+      damageDice: "1d12",
+      damageType: "piercing",
+      properties: ["reach", "special"],
+      range: 10,
+      specialNote:
+        "Disadvantage on attacks against targets within 5 feet. Requires two hands to attack while not mounted.",
+    });
+
+    expect(result.success).toBe(true);
+  });
+});

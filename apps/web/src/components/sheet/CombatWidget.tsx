@@ -547,7 +547,7 @@ export const CombatWidget = () => {
                       DMG
                     </span>
                     <span className="font-bold text-red-700">
-                      {attack.damageExpression}
+                      {attack.damageExpression || "—"}
                     </span>
                   </div>
                 </div>

@@ -4,10 +4,11 @@ import { useCharacterSheetStore } from "../../store/characterSheetStore";
 
 interface WeaponData {
   category: string;
-  damageDice: string;
-  damageType: string;
+  damageDice?: string;
+  damageType?: string;
   properties: string[];
   ammoItemId?: string;
+  specialNote?: string;
 }
 
 interface Modifier {
@@ -62,7 +63,9 @@ const WeaponDetails = ({ weapon }: { weapon: WeaponData }) => (
       </div>
       <div>
         <span className="text-gray-500 block text-xs">Damage</span>{" "}
-        {weapon.damageDice} {weapon.damageType}
+        {weapon.damageDice
+          ? `${weapon.damageDice} ${weapon.damageType ?? ""}`.trim()
+          : "—"}
       </div>
     </div>
 
@@ -79,6 +82,13 @@ const WeaponDetails = ({ weapon }: { weapon: WeaponData }) => (
             </span>
           ))}
         </div>
+      </div>
+    )}
+
+    {weapon.specialNote && (
+      <div className="mt-2">
+        <span className="text-gray-500 text-xs block mb-1">Special</span>
+        <p className="text-gray-300 text-xs">{weapon.specialNote}</p>
       </div>
     )}
 

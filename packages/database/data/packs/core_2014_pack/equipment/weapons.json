@@ -596,7 +596,8 @@
                     "reach",
                     "special"
                 ],
-                "range": 5
+                "range": 5,
+                "specialNote": "Disadvantage on attacks against targets within 5 feet. Requires two hands to attack while not mounted."
             },
             "lore": {
                 "shortDescription": "A lance is a long pole weapon designed for mounted combat.",
@@ -857,7 +858,9 @@
                 "damageDice": "1d8",
                 "versatileDamageDice": "1d10",
                 "damageType": "bludgeoning",
-                "properties": ["versatile"],
+                "properties": [
+                    "versatile"
+                ],
                 "range": 5
             },
             "lore": {
@@ -1034,14 +1037,13 @@
             ],
             "weapon": {
                 "category": "martial_ranged",
-                "damageDice": "",
-                "damageType": "",
                 "properties": [
                     "special",
                     "thrown"
                 ],
                 "range": 5,
-                "longRange": 15
+                "longRange": 15,
+                "specialNote": "On a hit, a Large or smaller target is restrained until freed. A creature can use its action to make a DC 10 Strength check, freeing itself or another creature within its reach on a success. Dealing 5 slashing damage to the net (AC 10) also frees the target. No effect on formless creatures or those Huge or larger."
             },
             "lore": {
                 "shortDescription": "A weapon designed to entangle and restrain targets, often used by hunters and trappers.",
