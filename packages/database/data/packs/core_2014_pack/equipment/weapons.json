@@ -843,6 +843,31 @@
             "bundleContents": []
         },
         {
+            "id": "item_weapon_warhammer",
+            "name": "Warhammer",
+            "type": "weapon",
+            "weight": 2,
+            "requiresAttunement": false,
+            "categoryTags": [
+                "category_weapon_martial",
+                "category_weapon_martial_melee"
+            ],
+            "weapon": {
+                "category": "martial_melee",
+                "damageDice": "1d8",
+                "versatileDamageDice": "1d10",
+                "damageType": "bludgeoning",
+                "properties": ["versatile"],
+                "range": 5
+            },
+            "lore": {
+                "shortDescription": "Warhammer",
+                "fullText": "Warhammer"
+            },
+            "isBundle": false,
+            "bundleContents": []
+        },
+        {
             "id": "item_weapon_whip",
             "name": "Whip",
             "type": "weapon",

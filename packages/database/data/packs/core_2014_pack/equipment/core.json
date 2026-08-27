@@ -328,21 +328,6 @@
             }
         },
         {
-            "id": "item_weapon_warhammer",
-            "name": "Warhammer",
-            "type": "gear",
-            "weight": 0,
-            "requiresAttunement": false,
-            "categoryTags": [
-                "category_weapon_martial",
-                "category_weapon_martial_melee"
-            ],
-            "lore": {
-                "shortDescription": "Warhammer",
-                "fullText": "Warhammer"
-            }
-        },
-        {
             "id": "item_ammo_bolt",
             "name": "Bolts",
             "type": "gear",
