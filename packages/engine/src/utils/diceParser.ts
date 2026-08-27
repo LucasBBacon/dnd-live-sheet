@@ -19,6 +19,20 @@ export interface ParsedDiceExpression {
 export class DiceEngine {
   public static parse(expression: string): ParsedDiceExpression {
     const cleanExpr = expression.replace(/\s+/g, "").toLowerCase();
+
+    // flat damage: a blowgun deals 1, an unarmed strike deals 1, and neither
+    // rolls anything. Reported as zero dice carrying the whole amount in the
+    // modifier, so every caller that loops `count` times rolls nothing and
+    // every caller that adds `modifier` still gets the damage.
+    const flatMatch = cleanExpr.match(/^(\d+)$/);
+    if (flatMatch?.[1]) {
+      return {
+        count: 0,
+        sides: 0,
+        modifier: Number.parseInt(flatMatch[1], 10),
+      };
+    }
+
     const match = cleanExpr.match(/^(\d+)d(\d+)([+-]\d+)?$/);
 
     if (!match || !match[1] || !match[2]) {

@@ -76,3 +76,40 @@ describe("DiceEngine dice-rule application", () => {
     vi.restoreAllMocks();
   });
 });
+
+describe("DiceEngine flat damage expressions", () => {
+  it("parses a bare integer as a modifier with no dice", () => {
+    expect(DiceEngine.parse("1")).toEqual({
+      count: 0,
+      sides: 0,
+      modifier: 1,
+    });
+  });
+
+  it("rolls a flat expression to its own value with no dice rolled", () => {
+    // a blowgun deals 1 piercing; there is nothing to randomize
+    expect(DiceEngine.rollDigital("1")).toEqual({
+      total: 1,
+      rolls: [],
+      modifier: 1,
+    });
+  });
+
+  it("maximizes a flat expression to the same value", () => {
+    // a crit doubles damage dice, and flat damage has none
+    expect(DiceEngine.rollMaximized("1")).toEqual({
+      total: 1,
+      rolls: [],
+      modifier: 1,
+    });
+  });
+
+  it("still rejects the empty string", () => {
+    expect(() => DiceEngine.parse("")).toThrow("Invalid dice expression");
+  });
+
+  it("still rejects malformed expressions", () => {
+    expect(() => DiceEngine.parse("d6")).toThrow("Invalid dice expression");
+    expect(() => DiceEngine.parse("1d")).toThrow("Invalid dice expression");
+  });
+});
