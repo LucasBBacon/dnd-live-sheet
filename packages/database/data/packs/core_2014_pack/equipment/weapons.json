@@ -256,7 +256,7 @@
                 "category": "simple_melee",
                 "damageDice": "1d6",
                 "versatileDamageDice": "1d8",
-                "damageType": "slashing",
+                "damageType": "piercing",
                 "properties": [
                     "thrown",
                     "versatile"
@@ -266,7 +266,7 @@
             },
             "lore": {
                 "shortDescription": "A versatile melee weapon that can be used for both thrusting and throwing.",
-                "fullText": "A spear is a versatile melee weapon that can be used for both thrusting and throwing. It typically consists of a long wooden shaft with a pointed metal tip. In combat, a spear can be used to strike enemies from a distance or to engage in close-quarters combat. The spear's design allows it to be effective for both piercing and slashing attacks, making it a popular choice for characters who want a flexible weapon option."
+                "fullText": "A spear is a versatile melee weapon that can be used for both thrusting and throwing. It typically consists of a long wooden shaft with a pointed metal tip. In combat, a spear can be used to strike enemies from a distance or to engage in close-quarters combat. The spear's design allows it to be effective for piercing attacks in melee or at range, making it a popular choice for characters who want a flexible weapon option."
             },
             "isBundle": false,
             "bundleContents": []
@@ -1047,7 +1047,7 @@
                 ],
                 "range": 5,
                 "longRange": 15,
-                "specialNote": "On a hit, a Large or smaller target is restrained until freed. A creature can use its action to make a DC 10 Strength check, freeing itself or another creature within its reach on a success. Dealing 5 slashing damage to the net (AC 10) also frees the target. No effect on formless creatures or those Huge or larger."
+                "specialNote": "On a hit, a Large or smaller target is restrained until freed. A creature can use its action to make a DC 10 Strength check, freeing itself or another creature within its reach on a success. Dealing 5 slashing damage to the net (AC 10) also frees the target. No effect on formless creatures or those Huge or larger. Attacking with a net, whether using an action, bonus action, or reaction, allows only one attack regardless of how many attacks the wielder normally gets."
             },
             "lore": {
                 "shortDescription": "A weapon designed to entangle and restrain targets, often used by hunters and trappers.",

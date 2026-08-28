@@ -285,14 +285,19 @@ export class CombatEngine {
    * Applies one critical hit modifier to the critical damage pool.
    *
    * `add_base_die` grows the weapon's own die, which is segment zero -
-   * `WeaponSynthesizer` always emits the weapon ahead of any rider, the same
-   * invariant `ActionResolver` leans on when it attaches the flat damage bonus
-   * to `index === 0`.
+   * `WeaponSynthesizer` emits the weapon ahead of any rider whenever the
+   * weapon authors damage, the same invariant `ActionResolver` leans on when
+   * it attaches the flat damage bonus to `index === 0`. A weapon authoring no
+   * damage emits an empty pool instead, so segment zero will not exist; the
+   * `!weaponSegment` check below is what protects this method from that case.
    *
    * `add_specific_die` appends a *new* segment. It is not doubled: it is
    * already extra damage that only exists because the attack crit. Appending
    * rather than substituting is the fix for the backlog entry that named this
    * method - the old code returned `diceToAdd` alone and discarded the weapon.
+   * Appending to a no-damage weapon's empty pool lands the rider at index 0
+   * instead of behind the weapon; no shipped content authors this modifier
+   * type today, so nothing currently exercises that case.
    * @param segments The critical damage pool so far
    * @param modifier The critical hit modifier being applied
    * @param classLevels Levels per class, for a `class_level_thresholds` count

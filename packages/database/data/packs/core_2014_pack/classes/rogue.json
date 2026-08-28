@@ -60,7 +60,7 @@
                                     },
                                     {
                                         "kind": "item",
-                                        "refId": "item_weapon_arrow",
+                                        "refId": "item_ammo_arrow",
                                         "quantity": 20
                                     },
                                     {

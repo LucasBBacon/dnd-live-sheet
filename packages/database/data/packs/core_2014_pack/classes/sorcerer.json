@@ -22,12 +22,12 @@
                                 "equipmentBundle": [
                                     {
                                         "kind": "item",
-                                        "refId": "item_weapon_light_crossbow",
+                                        "refId": "item_weapon_crossbow_light",
                                         "quantity": 1
                                     },
                                     {
                                         "kind": "item",
-                                        "refId": "item_weapon_crossbow_bolt",
+                                        "refId": "item_ammo_bolt",
                                         "quantity": 20
                                     }
                                 ]

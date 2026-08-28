@@ -410,45 +410,6 @@
             }
         },
         {
-            "id": "item_weapon_arrow",
-            "name": "Arrows",
-            "type": "gear",
-            "weight": 0,
-            "requiresAttunement": false,
-            "categoryTags": [],
-            "lore": {
-                "shortDescription": "Arrows",
-                "fullText": "Arrows"
-            }
-        },
-        {
-            "id": "item_weapon_light_crossbow",
-            "name": "Light Crossbow",
-            "type": "gear",
-            "weight": 0,
-            "requiresAttunement": false,
-            "categoryTags": [
-                "category_weapon_simple",
-                "category_weapon_simple_ranged"
-            ],
-            "lore": {
-                "shortDescription": "Light Crossbow",
-                "fullText": "Light Crossbow"
-            }
-        },
-        {
-            "id": "item_weapon_crossbow_bolt",
-            "name": "Crossbow Bolts",
-            "type": "gear",
-            "weight": 0,
-            "requiresAttunement": false,
-            "categoryTags": [],
-            "lore": {
-                "shortDescription": "Crossbow Bolts",
-                "fullText": "Crossbow Bolts"
-            }
-        },
-        {
             "id": "item_pack_dungeoneers",
             "name": "Dungeoneer's Pack",
             "type": "gear",
