@@ -67,13 +67,18 @@ describe("equipment declares its own gaps", () => {
     expect(mismatches).toEqual([]);
   });
 
-  it("still has the gaps #32 records, and no longer the armour gaps of #33", async () => {
+  it("no longer has the weapon gaps of #32, nor the armour gaps of #33", async () => {
     const pack = await assembleCoreRulePack(SHIPPED_PACK);
 
     const withGap = (gap: EquipmentGap) =>
       pack.equipment.filter((item) => item.implementation?.gaps.includes(gap));
 
-    expect(withGap("weapon")).toHaveLength(23);
+    // #32 is closed: the 23 weapons that rolled no attack were migrated into
+    // equipment/weapons.json with real weapon blocks. The net was the last of
+    // them - it deals no damage by rule, which the schema can now say out loud
+    // instead of encoding as "", and its restrain rule reaches the table as a
+    // specialNote because this engine has no target to apply it to.
+    expect(withGap("weapon")).toEqual([]);
     // #33 is closed: the six AC-less, category-less armours were placeholders
     // shadowing the authored armour table, and went when it was wired in
     expect(withGap("armor_class")).toEqual([]);

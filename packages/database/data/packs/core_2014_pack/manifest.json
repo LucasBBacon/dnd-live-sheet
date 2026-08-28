@@ -44,6 +44,7 @@
         "equipment/core.json",
         "equipment/armor.json",
         "equipment/legacy.json",
+        "equipment/weapons.json",
         "feats/core.json",
         "feats/unimplemented.json",
         "backgrounds/core.json",
