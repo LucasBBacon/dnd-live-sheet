@@ -7,6 +7,7 @@
             "type": "gear",
             "weight": 0.02,
             "requiresAttunement": false,
+            "ammoTag": "needle",
             "categoryTags": [],
             "lore": {
                 "shortDescription": "Standard ammunition for blowguns.",

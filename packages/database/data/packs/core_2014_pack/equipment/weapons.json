@@ -374,8 +374,8 @@
                 ],
                 "range": 80,
                 "longRange": 320,
-                "ammoItemId": "item_ammo_bolt",
-                "ammoTag": "bolt"
+                "ammoItemId": "item_ammo_arrow",
+                "ammoTag": "arrow"
             },
             "lore": {
                 "shortDescription": "Shortbow",
@@ -719,6 +719,7 @@
             "name": "Rapier",
             "type": "weapon",
             "weight": 2,
+            "equipSlot": "main_hand",
             "requiresAttunement": false,
             "categoryTags": [
                 "category_weapon_martial",
@@ -743,6 +744,7 @@
             "name": "Scimitar",
             "type": "weapon",
             "weight": 3,
+            "equipSlot": "main_hand",
             "requiresAttunement": false,
             "categoryTags": [
                 "category_weapon_martial",
@@ -768,6 +770,7 @@
             "name": "Shortsword",
             "type": "weapon",
             "weight": 2,
+            "equipSlot": "main_hand",
             "requiresAttunement": false,
             "categoryTags": [
                 "category_weapon_martial",
@@ -848,6 +851,7 @@
             "name": "Warhammer",
             "type": "weapon",
             "weight": 2,
+            "equipSlot": "main_hand",
             "requiresAttunement": false,
             "categoryTags": [
                 "category_weapon_martial",
@@ -919,8 +923,8 @@
                 ],
                 "range": 25,
                 "longRange": 100,
-                "ammoItemId": "item_ammo_dart",
-                "ammoTag": "dart"
+                "ammoItemId": "item_ammo_needle",
+                "ammoTag": "needle"
             },
             "lore": {
                 "shortDescription": "A martial ranged weapon that propels small projectiles using the user's breath.",
