@@ -335,6 +335,62 @@ describe("CombatWidget", () => {
     root.unmount();
     container.remove();
   });
+
+  // The server draws the arrow now: ACTION_INTENT resolves the shot against
+  // the quiver and broadcasts the spend back as ITEM_CONSUMED. Spending here
+  // too would take two arrows off the sheet for one shot.
+  it("leaves the arrow for the server to spend", async () => {
+    mocks.consumeItem.mockClear();
+    mocks.attacks.current = [
+      {
+        weaponId: "item_weapon_longbow",
+        name: "Longbow",
+        attackBonus: 5,
+        rollState: "normal",
+        damageBonus: 2,
+        damageExpression: "1d8 +2 piercing",
+        criticalDamageExpression: "2d8 +2 piercing",
+        isProficient: true,
+        context: {
+          hand: "main_hand",
+          attackUsage: "standard",
+          isTwoHandedGrip: true,
+        },
+        breakdown: { governingStat: "DEX", attack: [], damage: [] },
+        slot: "main_hand",
+        activation: "action",
+        actionId: "action_weapon_item_weapon_longbow",
+        requiresAmmo: true,
+        currentAmmo: 20,
+        ammoInventoryId: "inv_arrows",
+      },
+    ];
+
+    const container = document.createElement("div");
+    document.body.appendChild(container);
+    const root = createRoot(container);
+
+    await act(async () => {
+      root.render(<CombatWidget />);
+    });
+
+    const button = Array.from(container.querySelectorAll("button")).find(
+      (candidate) => candidate.textContent === "STRIKE",
+    );
+
+    await act(async () => {
+      button?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    });
+
+    mocks.attacks.current = null;
+    root.unmount();
+    container.remove();
+
+    expect(mocks.executeCharacterAction).toHaveBeenCalledWith(
+      "action_weapon_item_weapon_longbow",
+    );
+    expect(mocks.consumeItem).not.toHaveBeenCalled();
+  });
 });
 
 describe("CombatWidget roll state", () => {

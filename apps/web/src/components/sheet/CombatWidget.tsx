@@ -25,7 +25,6 @@ export const CombatWidget = () => {
   const { attacksPerAction } = useDerivedStats();
   const requestRoll = useRollStore((state) => state.requestRoll);
 
-  const consumeItem = useCharacterSheetStore((state) => state.consumeItem);
   const traits = useCharacterSheetStore((state) => state.traits);
   const traitGrants = useCharacterSheetStore((state) => state.traitGrants);
   const inventory = useCharacterSheetStore((state) => state.inventory);
@@ -138,10 +137,12 @@ export const CombatWidget = () => {
   };
 
   const handleAttack = (attack: any) => {
-    if (attack.requiresAmmo) {
-      if (attack.currentAmmo <= 0) return; // prevent negative ammo
-      consumeItem(attack.ammoInventoryId, 1);
-    }
+    // The quiver is the server's to draw from: ACTION_INTENT settles the shot
+    // against it and broadcasts the spend back as ITEM_CONSUMED, which this
+    // sheet already adopts. Spending here as well would take two arrows off
+    // for one shot. The guard stays - it is what stops a shot being asked for
+    // at all with nothing left to fire.
+    if (attack.requiresAmmo && attack.currentAmmo <= 0) return;
 
     executeCharacterAction(attack.actionId);
   };

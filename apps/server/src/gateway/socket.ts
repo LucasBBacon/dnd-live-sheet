@@ -38,6 +38,7 @@ import {
   EffectManager,
   ResourceManager,
   RestEngine,
+  RollContextBuilder,
   ATTUNEMENT_LIMIT,
   CARRIED_SLOT,
   canEquipTo,
@@ -655,6 +656,33 @@ export function initializeWebSocketGateway(httpServer: any) {
 
           const ledger = buildInventoryLedger(inventory);
 
+          // settleCosts checks a chosen ammunition stack against its pack
+          // definition - the ammo tag lives there, not on the inventory row -
+          // so without the snapshot no definition ever resolves and every shot
+          // is refused as the wrong ammunition.
+          const { snapshot } = await getCachedRuleSnapshot();
+
+          // ActionResolver takes the ammunition choice as input rather than
+          // making it, because policy belongs to the caller. Nothing on
+          // ACTION_INTENT carries a choice, though, so the caller making one
+          // is what stops every `consumesAmmo` action failing unfired as
+          // `ammo_not_selected`. buildAmmoOptions is the same matcher the
+          // roll-preparation UI offers a player, so the stack taken here is
+          // one they would have been offered - and matched on the tag, which
+          // is exactly what settleCosts re-validates it against.
+          //
+          // First rather than chosen: the sheet has no picker yet, and a
+          // quiver is a quiver. When one arrives it sends its pick on the
+          // payload and this becomes the fallback.
+          const chosenAmmo =
+            action?.consumesAmmo === undefined
+              ? undefined
+              : RollContextBuilder.buildAmmoOptions(
+                  { ammoTag: action.consumesAmmo },
+                  inventory,
+                  snapshot,
+                )[0];
+
           const execution =
             action !== null
               ? ActionResolver.execute(
@@ -662,11 +690,21 @@ export function initializeWebSocketGateway(httpServer: any) {
                   {
                     actionId: payload.actionId,
                     activeStates: actionStates,
+                    ...(chosenAmmo !== undefined && {
+                      consumedResources: [
+                        {
+                          type: "inventory_instance" as const,
+                          id: chosenAmmo.instanceId,
+                          amount: 1,
+                        },
+                      ],
+                    }),
                   },
                   {
                     effectManager: runtime.effectManager,
                     resourceManager: runtime.resourceManager,
                     combatContext: runtime.combatContext,
+                    snapshot,
                     attacksPerAction,
                     // the sheet tracks the economy rather than policing it:
                     // tables bend it constantly, and a refusal here would be
