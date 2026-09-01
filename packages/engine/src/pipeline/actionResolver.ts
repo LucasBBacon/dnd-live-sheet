@@ -582,6 +582,27 @@ export class ActionResolver {
         };
       }
 
+      case "heal": {
+        const roll = DiceEngine.rollDigital(effect.dice);
+
+        // No HP is written here. This resolver returns rolls and never mutates
+        // character state; the server owns the HP-delta path the total is
+        // applied through, and it is the only writer.
+        return {
+          ...ok,
+          rollResults: [
+            {
+              total: roll.total,
+              rolls: roll.rolls,
+              modifier: roll.modifier,
+              // healing is a dice pool, so it reports as one. No damageType is
+              // what tells it apart from damage downstream.
+              target: "DAMAGE_ROLL",
+            },
+          ],
+        };
+      }
+
       default:
         return ok;
     }

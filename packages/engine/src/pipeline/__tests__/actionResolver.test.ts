@@ -1805,3 +1805,40 @@ describe("a table note rides out regardless of what the effect did", () => {
     ]);
   });
 });
+
+describe("ActionResolver heal resolution", () => {
+  let effectManager: EffectManager;
+  let resourceManager: ResourceManager;
+
+  beforeEach(() => {
+    effectManager = new EffectManager();
+    resourceManager = new ResourceManager();
+  });
+
+  it("rolls a heal and reports the total without touching hit points", () => {
+    const result = ActionResolver.execute(
+      {
+        id: "action_potion_of_healing_drink",
+        name: "Drink Potion of Healing",
+        activation: "action",
+        consumesSelf: false,
+        effect: { type: "heal", dice: "2d4+2" },
+      },
+      { actionId: "action_potion_of_healing_drink", activeStates: [] },
+      {
+        effectManager: new EffectManager(),
+        resourceManager: new ResourceManager(),
+      },
+    );
+
+    expect(result.executed).toBe(true);
+    expect(result.rollResults).toHaveLength(1);
+
+    const [roll] = result.rollResults!;
+    expect(roll?.target).toBe("DAMAGE_ROLL");
+    expect(roll?.damageType).toBeUndefined();
+    // 2d4+2 spans 4..10
+    expect(roll!.total).toBeGreaterThanOrEqual(4);
+    expect(roll!.total).toBeLessThanOrEqual(10);
+  });
+});
