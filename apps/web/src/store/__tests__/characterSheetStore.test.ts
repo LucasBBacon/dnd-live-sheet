@@ -741,6 +741,51 @@ describe("useCharacterSheetStore remote action state composition", () => {
     expect(state.activeStates).toContain("status_reckless_attack");
   });
 
+  it("ignores an action resolution for a different character, so another player's sheet cannot paint into this one", () => {
+    useCharacterSheetStore.getState().recordRollResult({
+      characterId: "char_remote",
+      rollResults: [
+        {
+          total: 12,
+          rolls: [12],
+          modifier: 0,
+          target: "ATTACK_ROLL",
+        },
+      ],
+      timestamp: Date.now(),
+    });
+
+    const before = useCharacterSheetStore.getState();
+    expect(before.latestRollResults).toHaveLength(1);
+
+    // ACTION_RESOLVED broadcasts to the whole campaign room. This resolution
+    // belongs to another character's caltrops: no roll, a table note. Landing
+    // on this sheet would wipe latestRollResults to [] and paint the caltrops
+    // note into a panel about a rule this character's player never triggered.
+    useCharacterSheetStore.getState().syncRemoteActionExecution({
+      characterId: "char_other",
+      requestId: "req_other",
+      actionId: "action_item_caltrops_scatter",
+      source: "item",
+      instanceId: "inv_caltrops",
+      executed: true,
+      rollResults: [],
+      notes: [
+        "Any creature entering the area must succeed on a DC 15 Dexterity saving throw or stop moving and take 1 piercing damage.",
+      ],
+      activeStates: [],
+      resources: [],
+      effects: [],
+      actors: [],
+      timestamp: Date.now(),
+    } as never);
+
+    const after = useCharacterSheetStore.getState();
+    expect(after.latestRollResults).toEqual(before.latestRollResults);
+    expect(after.latestNotes).toEqual([]);
+    expect(after.activeStates).toEqual(before.activeStates);
+  });
+
   it("clears a resolved action's notes once an unrelated roll arrives, so a stale note cannot sit beside it", () => {
     useCharacterSheetStore.getState().syncRemoteActionExecution({
       characterId: "char_remote",

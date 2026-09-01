@@ -94,4 +94,92 @@ describe("authored item actions", () => {
       }
     }
   });
+
+  // The suite above checks shape - one action, the right consumesSelf, the
+  // right effect type, a note where one is required - but never a single die,
+  // DC or range. A wrong 2d4 where 2d6 belongs would still pass every test
+  // above. These pin the actual authored values so a rules error is caught
+  // here rather than only by a human reviewer.
+  it("gives each engine-run item action the exact dice, range and damage the design specifies", async () => {
+    const pack = await assembleCoreRulePack(SHIPPED_PACK);
+
+    const firstAction = (itemId: string) => {
+      const item = pack.equipment.find((entry) => entry.id === itemId);
+      expect(item, itemId).toBeDefined();
+      const [action] = item!.actions ?? [];
+      expect(action, itemId).toBeDefined();
+      return action!;
+    };
+
+    const acid = firstAction("item_acid_vial");
+    if (acid.effect.type !== "attack") {
+      throw new Error("item_acid_vial's action did not author an attack");
+    }
+    expect(acid.effect.range).toBe(20);
+    expect(acid.effect.damage).toEqual([
+      expect.objectContaining({ baseDice: "2d6", damageType: "acid" }),
+    ]);
+
+    const fire = firstAction("item_alchemists_fire_flask");
+    if (fire.effect.type !== "attack") {
+      throw new Error(
+        "item_alchemists_fire_flask's action did not author an attack",
+      );
+    }
+    expect(fire.effect.range).toBe(20);
+    expect(fire.effect.damage).toEqual([]);
+
+    const holyWater = firstAction("item_holy_water_flask");
+    if (holyWater.effect.type !== "attack") {
+      throw new Error("item_holy_water_flask's action did not author an attack");
+    }
+    expect(holyWater.effect.range).toBe(20);
+    expect(holyWater.effect.damage).toEqual([
+      expect.objectContaining({ baseDice: "2d6", damageType: "radiant" }),
+    ]);
+
+    const oil = firstAction("item_oil_flask");
+    if (oil.effect.type !== "attack") {
+      throw new Error("item_oil_flask's action did not author an attack");
+    }
+    expect(oil.effect.range).toBe(20);
+    expect(oil.effect.damage).toEqual([]);
+
+    const antitoxin = firstAction("item_antitoxin_vial");
+    if (antitoxin.effect.type !== "apply_effect") {
+      throw new Error(
+        "item_antitoxin_vial's action did not author apply_effect",
+      );
+    }
+    expect(antitoxin.effect.modifiers).toEqual([
+      expect.objectContaining({ target: "POISON_SAVE", type: "advantage" }),
+    ]);
+
+    const potion = firstAction("item_potion_of_healing");
+    if (potion.effect.type !== "heal") {
+      throw new Error("item_potion_of_healing's action did not author heal");
+    }
+    expect(potion.effect.dice).toBe("2d4+2");
+  });
+
+  it("pins the DC or key number each no_effect item's tableNote turns on", async () => {
+    const pack = await assembleCoreRulePack(SHIPPED_PACK);
+
+    const noteOf = (itemId: string) => {
+      const item = pack.equipment.find((entry) => entry.id === itemId);
+      expect(item, itemId).toBeDefined();
+      const [action] = item!.actions ?? [];
+      expect(action, itemId).toBeDefined();
+      return action!.tableNote;
+    };
+
+    expect(noteOf("item_caltrops_bag")).toContain("DC 15");
+    expect(noteOf("item_ball_bearings_bag")).toContain("DC 10");
+    expect(noteOf("item_poison_basic_vial")).toContain("DC 10");
+    expect(noteOf("item_hunting_trap")).toContain("DC 13");
+    expect(noteOf("item_healers_kit")).toContain("ten uses");
+    expect(noteOf("item_climbers_kit")).toContain("25 feet");
+    expect(noteOf("item_ram_portable")).toContain("+4");
+    expect(noteOf("item_lantern_hooded")).toContain("5-foot radius");
+  });
 });

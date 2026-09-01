@@ -46,6 +46,7 @@ import {
 } from "@project/engine";
 import { resolvePlayerTurn } from "../services/turnResolution.js";
 import { getCachedRuleSnapshot } from "../services/ruleSnapshotCache.js";
+import { modifyCharacterHp } from "../services/combatService.js";
 import {
   getCampaignMembershipRole,
   getUserIdFromSocket,
@@ -689,39 +690,90 @@ export function initializeWebSocketGateway(httpServer: any) {
           // alone, not of execute() as a whole, so this is the unwind that
           // guarantee doesn't cover.
           if (execution.executed) {
-            // Flushed after resolution, never during: the ledger's
-            // deductions are the last thing the resolver does, so by here
-            // they are final.
-            //
-            // The cache write below runs after this rather than before it on
-            // purpose. Caching first would mean a flush failure leaves a
-            // "succeeded" response cached for this requestId forever - a
-            // retry would replay it without ever attempting the write again,
-            // telling the client an item was spent that the database never
-            // actually lost. Flushing first risks the opposite: something
-            // throwing between a *successful* flush and the cache write
-            // below would leave this requestId uncached, so a client retry
-            // re-resolves from scratch and could spend a second unit of the
-            // same stack. That window is real, but narrow (everything
-            // between here and the cache write is synchronous state reads,
-            // nothing that plausibly throws) and, unlike the reordered
-            // alternative, it fails loud - the retry either double-spends
-            // and it can be reasoned about the same way any other unlogged
-            // duplicate action can be, or the flush itself throws and no
-            // spend happened at all. Silently lying about a persisted spend
-            // is the worse failure mode, so this ordering stands.
-            await flushInventoryLedger(payload.characterId, ledger);
-
-            for (const deduction of ledger.pending) {
-              io.to(`campaign_${campaignId}`).emit(
-                SOCKET_EVENTS.ITEM_CONSUMED,
-                {
-                  characterId: payload.characterId,
-                  inventoryId: deduction.id,
-                  amount: deduction.amount,
-                  timestamp: Date.now(),
-                } satisfies ItemConsumedPayload,
+            try {
+              // Flushed after resolution, never during: the ledger's
+              // deductions are the last thing the resolver does, so by here
+              // they are final.
+              //
+              // The cache write below runs after this rather than before it on
+              // purpose. Caching first would mean a flush failure leaves a
+              // "succeeded" response cached for this requestId forever - a
+              // retry would replay it without ever attempting the write again,
+              // telling the client an item was spent that the database never
+              // actually lost. Flushing first risks the opposite: something
+              // throwing between a *successful* flush and the cache write
+              // below would leave this requestId uncached, so a client retry
+              // re-resolves from scratch and could spend a second unit of the
+              // same stack. That window is real, but narrow (everything
+              // between here and the cache write is synchronous state reads,
+              // nothing that plausibly throws) and, unlike the reordered
+              // alternative, it fails loud - the retry either double-spends
+              // and it can be reasoned about the same way any other unlogged
+              // duplicate action can be, or the flush itself throws and no
+              // spend happened at all. Silently lying about a persisted spend
+              // is the worse failure mode, so this ordering stands.
+              //
+              // Everything in this block is wrapped for the same reason:
+              // ActionResolver.execute has already mutated the long-lived
+              // runtime.combatContext, effectManager and resourceManager, and
+              // none of that unwinds on its own. If a write below throws -
+              // the ledger flush, or the HP write a heal makes - that
+              // in-memory state is now diverged from what actually reached
+              // the database, and a retry would re-resolve against economy
+              // that already paid and effects that already applied. The
+              // catch below evicts the cached runtime instead of attempting a
+              // full unwind, so the next request rebuilds it from the
+              // database rather than trusting memory that no longer matches.
+              const flushed = await flushInventoryLedger(
+                payload.characterId,
+                ledger,
               );
+
+              for (const deduction of flushed) {
+                io.to(`campaign_${campaignId}`).emit(
+                  SOCKET_EVENTS.ITEM_CONSUMED,
+                  {
+                    characterId: payload.characterId,
+                    inventoryId: deduction.id,
+                    amount: deduction.amount,
+                    timestamp: Date.now(),
+                  } satisfies ItemConsumedPayload,
+                );
+              }
+
+              // A heal rolls its total but never writes HP itself - see the
+              // comment on ActionResolver's "heal" case. The server is the
+              // only writer of the HP-delta path, so this is where the total
+              // that potion just rolled actually becomes hit points.
+              if (
+                action !== null &&
+                action.effect.type === "heal" &&
+                "rollResults" in execution
+              ) {
+                const healRoll = execution.rollResults?.[0];
+                if (healRoll) {
+                  // modifyCharacterHp already clamps to max HP - see
+                  // combatService.ts - so healing past full is handled there,
+                  // not here.
+                  await modifyCharacterHp(payload.characterId, healRoll.total);
+
+                  io.to(`campaign_${campaignId}`).emit(
+                    SOCKET_EVENTS.HP_MODIFIED,
+                    {
+                      actorId: socket.id,
+                      data: {
+                        characterId: payload.characterId,
+                        delta: healRoll.total,
+                        source: action.name,
+                        timestamp: Date.now(),
+                      } satisfies HpModifiedPayload,
+                    },
+                  );
+                }
+              }
+            } catch (persistError) {
+              authoritativeRuntimeByCharacter.delete(payload.characterId);
+              throw persistError;
             }
           }
 

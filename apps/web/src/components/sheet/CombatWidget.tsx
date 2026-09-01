@@ -412,32 +412,44 @@ export const CombatWidget = () => {
             Latest rolls
           </div>
           <div className="flex flex-col gap-2">
-            {latestRollResults.map((result, index) => (
-              <div
-                key={`${result.target}-${index}`}
-                className="flex items-center justify-between rounded-lg border border-gray-200 bg-white px-3 py-2"
-              >
-                <div>
-                  <div className="font-semibold text-gray-900">
-                    {result.target === "SAVING_THROW"
-                      ? "Saving throw"
-                      : result.target === "ATTACK_ROLL"
-                        ? "Attack roll"
-                        : "Damage roll"}
+            {latestRollResults.map((result, index) => {
+              // healing rides the DAMAGE_ROLL target - there is no separate
+              // roll kind for it - so the label set on it downstream is what
+              // tells the two apart here.
+              const isHeal =
+                result.target === "DAMAGE_ROLL" && result.label === "Healing";
+
+              return (
+                <div
+                  key={`${result.target}-${index}`}
+                  className="flex items-center justify-between rounded-lg border border-gray-200 bg-white px-3 py-2"
+                >
+                  <div>
+                    <div className="font-semibold text-gray-900">
+                      {result.target === "SAVING_THROW"
+                        ? "Saving throw"
+                        : result.target === "ATTACK_ROLL"
+                          ? "Attack roll"
+                          : isHeal
+                            ? "Healing"
+                            : "Damage roll"}
+                    </div>
+                    <div className="text-xs text-gray-500">
+                      {result.target === "ATTACK_ROLL" && result.label
+                        ? `${result.label}${result.summary ? ` • ${result.summary}` : ""}`
+                        : result.damageType
+                          ? `${result.damageType}`
+                          : "authored effect"}
+                    </div>
                   </div>
-                  <div className="text-xs text-gray-500">
-                    {result.target === "ATTACK_ROLL" && result.label
-                      ? `${result.label}${result.summary ? ` • ${result.summary}` : ""}`
-                      : result.damageType
-                        ? `${result.damageType}`
-                        : "authored effect"}
+                  <div
+                    className={`text-sm font-bold ${isHeal ? "text-green-700" : "text-red-700"}`}
+                  >
+                    {result.total}
                   </div>
                 </div>
-                <div className="text-sm font-bold text-red-700">
-                  {result.total}
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       )}

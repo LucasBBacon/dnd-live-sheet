@@ -1837,6 +1837,9 @@ describe("ActionResolver heal resolution", () => {
     const [roll] = result.rollResults!;
     expect(roll?.target).toBe("DAMAGE_ROLL");
     expect(roll?.damageType).toBeUndefined();
+    // labeled, so the sheet can tell this apart from damage without a
+    // damageType to key off of
+    expect(roll?.label).toBe("Healing");
     // 2d4+2 spans 4..10
     expect(roll!.total).toBeGreaterThanOrEqual(4);
     expect(roll!.total).toBeLessThanOrEqual(10);

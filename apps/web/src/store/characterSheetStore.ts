@@ -1218,6 +1218,13 @@ export const useCharacterSheetStore = create<CharacterSheetState>(
 
     syncRemoteActionExecution: (payload) => {
       const state = get();
+      // ACTION_RESOLVED broadcasts to the whole campaign room, not just the
+      // character it resolved for - so without this, another player's action
+      // paints into this sheet: their tableNote fills this sheet's "rules the
+      // engine could not run" panel, and a no-roll resolution wipes this
+      // sheet's roll display out from under it.
+      if (payload.characterId !== state.id) return;
+
       const nextSave = toCharacterSave(state);
       const runtimeEffects = hydrateRuntimeEffectsFromResolved(payload);
       const runtimeResources = state.runtimeResources ?? new ResourceManager();

@@ -249,6 +249,9 @@ export class FakeDb {
       "returning",
       "onConflictDoNothing",
       "onConflictDoUpdate",
+      // row locking (`.for("update")`) - combatService's HP path takes it,
+      // and the fake only has to accept and chain through it, never enforce it
+      "for",
     ]) {
       passthrough(name);
     }

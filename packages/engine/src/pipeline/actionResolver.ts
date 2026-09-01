@@ -605,8 +605,11 @@ export class ActionResolver {
               rolls: roll.rolls,
               modifier: roll.modifier,
               // healing is a dice pool, so it reports as one. No damageType is
-              // what tells it apart from damage downstream.
+              // what tells it apart from damage downstream - that, and the
+              // label below, which is what lets the sheet stop rendering it
+              // as damage.
               target: "DAMAGE_ROLL",
+              label: "Healing",
             },
           ],
         };

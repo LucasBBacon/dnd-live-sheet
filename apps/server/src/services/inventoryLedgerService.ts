@@ -40,14 +40,22 @@ export const buildInventoryLedger = (
  * Mirrors the ITEM_CONSUMED handler exactly - a stack that reaches zero is
  * swept rather than left as a zero row - so the two paths cannot drift into
  * disagreeing about what an empty stack is.
+ *
+ * Returns only the deductions that actually landed. A pending entry whose row
+ * has since vanished is skipped rather than written, and the caller must not
+ * tell the room about a deduction the database never took - broadcasting the
+ * full `ledger.pending` regardless would have the client delete a stack that,
+ * as far as the database is concerned, was never touched.
  */
 export const flushInventoryLedger = async (
   characterId: string,
   ledger: BufferedInventoryLedger,
-): Promise<void> => {
-  if (ledger.pending.length === 0) return;
+): Promise<ReadonlyArray<{ id: string; amount: number }>> => {
+  if (ledger.pending.length === 0) return [];
 
-  await db.transaction(async (tx) => {
+  return await db.transaction(async (tx) => {
+    const written: Array<{ id: string; amount: number }> = [];
+
     for (const deduction of ledger.pending) {
       const [row] = await tx
         .select({ quantity: characterInventory.quantity })
@@ -65,6 +73,7 @@ export const flushInventoryLedger = async (
         await tx
           .delete(characterInventory)
           .where(eq(characterInventory.id, deduction.id));
+        written.push(deduction);
         continue;
       }
 
@@ -74,6 +83,9 @@ export const flushInventoryLedger = async (
           quantity: sql`${characterInventory.quantity} - ${deduction.amount}`,
         })
         .where(eq(characterInventory.id, deduction.id));
+      written.push(deduction);
     }
+
+    return written;
   });
 };

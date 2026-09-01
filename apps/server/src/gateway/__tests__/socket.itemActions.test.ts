@@ -208,4 +208,110 @@ describe("socket gateway - ACTION_INTENT (item source)", () => {
     expect(harness.db.opsFor(characterInventory, "update")).toEqual([]);
     expect(harness.db.opsFor(characterInventory, "delete")).toEqual([]);
   });
+
+  it("applies a positive HP delta and broadcasts it when the item action heals", async () => {
+    await ready();
+    harness.db.seed(characterInventory, [
+      inventoryRow({
+        id: "inv-potion",
+        itemId: "item_potion_of_healing",
+        quantity: 1,
+      }),
+    ]);
+
+    const resolved = await emitIntent({
+      actionId: "action_potion_of_healing_drink",
+      instanceId: "inv-potion",
+    });
+
+    expect(resolved.executed).toBe(true);
+    expect(resolved.rollResults).toHaveLength(1);
+    // labeled, so the sheet stops rendering healing under the damage heading
+    expect(resolved.rollResults[0]?.label).toBe("Healing");
+
+    // characterRow() seeds currentHp 20 / maxHp 24. 2d4+2 spans 4..10, and
+    // even the minimum roll already reaches the cap, so the clamped result on
+    // both the write and the broadcast is deterministic regardless of the
+    // roll.
+    const hpUpdates = harness.db.opsFor(characters, "update");
+    expect(hpUpdates).toHaveLength(1);
+    expect(hpUpdates[0]?.set?.["currentHp"]).toBe(24);
+
+    const hpEmit = harness.ioEmits.find(
+      (emit) => emit.event === SOCKET_EVENTS.HP_MODIFIED,
+    );
+    expect(hpEmit).toMatchObject({
+      room: ROOM,
+      event: SOCKET_EVENTS.HP_MODIFIED,
+      payload: {
+        actorId: harness.socket.id,
+        data: {
+          characterId: "char-1",
+          source: "Drink Potion of Healing",
+        },
+      },
+    });
+
+    const delta = (hpEmit?.payload as { data: { delta: number } }).data.delta;
+    expect(delta).toBeGreaterThan(0);
+  });
+
+  it("broadcasts only the deductions the database actually wrote", async () => {
+    await ready();
+    // The first read is resolution's own inventory fetch, which has to see
+    // the real row or the action cannot be found at all. The second is
+    // flushInventoryLedger's own check before it writes - forcing that one
+    // empty simulates the row having vanished between resolution and
+    // persistence, the same case inventoryLedgerService's `continue` handles.
+    harness.db.queue(characterInventory, [
+      [inventoryRow({ id: "inv-vial", itemId: "item_acid_vial", quantity: 2 })],
+      [],
+    ]);
+
+    await emitIntent({
+      actionId: "action_acid_vial_throw",
+      instanceId: "inv-vial",
+    });
+
+    // The database never touched this row, so the client must not be told to
+    // delete it from the carried stack.
+    expect(
+      harness.ioEmits.filter(
+        (emit) => emit.event === SOCKET_EVENTS.ITEM_CONSUMED,
+      ),
+    ).toEqual([]);
+  });
+
+  it("evicts the cached runtime when persisting a resolved action throws, so a retry rebuilds from the database", async () => {
+    await ready();
+    harness.db.seed(characterInventory, [
+      inventoryRow({
+        id: "inv-antitoxin",
+        itemId: "item_antitoxin_vial",
+        quantity: 1,
+      }),
+    ]);
+    harness.db.failOn(characterInventory, "delete", new Error("disk full"));
+
+    await emitIntent({
+      actionId: "action_antitoxin_vial_drink",
+      instanceId: "inv-antitoxin",
+    });
+
+    // A flush failure rolls back to the sender rather than resolving.
+    expect(harness.senderEmits.at(-1)?.event).toBe("error:rollback");
+
+    // ActionResolver.execute already added the Antitoxin effect to the
+    // long-lived effectManager before the flush threw. A fresh, unrelated
+    // action for the same character must not carry it forward - if the
+    // cached runtime had survived the failure, it would.
+    const resolved = await emitIntent({
+      actionId: "action_dodge",
+      source: "character",
+    });
+
+    expect(
+      resolved.effects?.some((effect) => effect.sourceName === "Antitoxin"),
+    ).toBe(false);
+  });
 });
