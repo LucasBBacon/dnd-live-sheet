@@ -8,6 +8,7 @@ import {
 import { DamageTypeSchema } from "./affinities.js";
 import { TargetFilterSchema } from "./creatures.js";
 import { StatePredicateSchema } from "../primitives/statePredicate.js";
+import { DamageExpressionSchema } from "../primitives/damageExpression.js";
 
 /**
  * What performing an action costs.
@@ -137,6 +138,22 @@ export const NoEffectSchema = z.object({
   type: z.literal("no_effect"),
 });
 
+/**
+ * Restores hit points.
+ *
+ * Rolls and reports; it does not write hit points. ActionResolver returns rolls
+ * and never mutates character state, and the server already owns the HP-delta
+ * path this total is applied through.
+ *
+ * `DamageExpressionSchema` rather than a bare string because it already accepts
+ * exactly the forms healing takes - `2d4+2`, `1d8`, a flat `1` - and rejects
+ * the `""` that used to reach DiceEngine and throw.
+ */
+export const HealEffectSchema = z.object({
+  type: z.literal("heal"),
+  dice: DamageExpressionSchema,
+});
+
 export const AttackEffectSchema = z.object({
   type: z.literal("attack"),
   attackType: AttackTypeSchema,
@@ -215,6 +232,7 @@ export const CoreEffectUnion = z.discriminatedUnion("type", [
   ApplyStateEffectSchema,
   RemoveEffectSchema,
   DynamicWeaponAttackSchema,
+  HealEffectSchema,
 ]);
 
 export const MacroEffectSchema = z.object({

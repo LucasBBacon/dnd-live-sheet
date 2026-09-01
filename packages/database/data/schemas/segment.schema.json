@@ -2105,6 +2105,23 @@
                       "properties": {
                         "type": {
                           "type": "string",
+                          "const": "heal"
+                        },
+                        "dice": {
+                          "type": "string",
+                          "pattern": "^(\\d+d\\d+([+-]\\d+)?|\\d+)$"
+                        }
+                      },
+                      "required": [
+                        "type",
+                        "dice"
+                      ]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "type": {
+                          "type": "string",
                           "const": "macro"
                         },
                         "effects": {
@@ -2994,6 +3011,23 @@
                                 },
                                 "required": [
                                   "type"
+                                ]
+                              },
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "type": {
+                                    "type": "string",
+                                    "const": "heal"
+                                  },
+                                  "dice": {
+                                    "type": "string",
+                                    "pattern": "^(\\d+d\\d+([+-]\\d+)?|\\d+)$"
+                                  }
+                                },
+                                "required": [
+                                  "type",
+                                  "dice"
                                 ]
                               }
                             ]
@@ -5796,6 +5830,23 @@
                     "properties": {
                       "type": {
                         "type": "string",
+                        "const": "heal"
+                      },
+                      "dice": {
+                        "type": "string",
+                        "pattern": "^(\\d+d\\d+([+-]\\d+)?|\\d+)$"
+                      }
+                    },
+                    "required": [
+                      "type",
+                      "dice"
+                    ]
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "type": {
+                        "type": "string",
                         "const": "macro"
                       },
                       "effects": {
@@ -6685,6 +6736,23 @@
                               },
                               "required": [
                                 "type"
+                              ]
+                            },
+                            {
+                              "type": "object",
+                              "properties": {
+                                "type": {
+                                  "type": "string",
+                                  "const": "heal"
+                                },
+                                "dice": {
+                                  "type": "string",
+                                  "pattern": "^(\\d+d\\d+([+-]\\d+)?|\\d+)$"
+                                }
+                              },
+                              "required": [
+                                "type",
+                                "dice"
                               ]
                             }
                           ]

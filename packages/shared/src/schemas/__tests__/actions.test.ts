@@ -152,3 +152,27 @@ describe("tableNote", () => {
     expect("specialNote" in parsed.effect).toBe(false);
   });
 });
+
+describe("heal effect", () => {
+  it("accepts a dice-plus-modifier expression", () => {
+    const parsed = ActionGrantSchema.parse({
+      id: "action_potion_of_healing_drink",
+      name: "Drink Potion of Healing",
+      activation: "action",
+      effect: { type: "heal", dice: "2d4+2" },
+    });
+
+    expect(parsed.effect).toEqual({ type: "heal", dice: "2d4+2" });
+  });
+
+  it("rejects an expression the dice engine cannot parse", () => {
+    expect(() =>
+      ActionGrantSchema.parse({
+        id: "action_bad_heal",
+        name: "Bad Heal",
+        activation: "action",
+        effect: { type: "heal", dice: "" },
+      }),
+    ).toThrow();
+  });
+});
