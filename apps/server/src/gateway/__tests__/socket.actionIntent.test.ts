@@ -309,4 +309,53 @@ describe("socket gateway - ACTION_INTENT", () => {
     // constantly, so the server records the overdraw instead of blocking it.
     expect(lastResolved(harness)["executed"]).toBe(true);
   });
+
+  /**
+   * Regression test: resolveCharacterAction builds a sheet purely to look an
+   * action up, but that sheet-build used to re-hydrate the authoritative,
+   * long-lived resourceManager on every single intent.
+   * ResourceManager.initializeFromGrants is deliberately additive for a
+   * resource id it has already seen - that is what lets multiclass
+   * spellcasting accumulate slots correctly - so re-running it against the
+   * same instance a second time doubled every limited-use pool's max and
+   * refilled it to full. Ki, rages, spell slots: all free after the first
+   * action. A barbarian's Rage (2 charges at level 1) is the fixture here
+   * because it is a real trait-granted resource in the shipped pack.
+   */
+  it("does not touch a resource pool's charges on a second intent for the same character", async () => {
+    harness = await setupGateway();
+    await joinCampaign(harness);
+    harness.db.seed(characters, [characterRow()]);
+    harness.db.seed(characterClasses, [
+      { classId: "class_barbarian", classLevel: 1 },
+    ]);
+    harness.db.seed(characterInventory, []);
+
+    const findRage = (h: GatewayHarness) => {
+      const resources = lastResolved(h)["resources"] as Array<{
+        id: string;
+        current: number;
+        currentCharges: number;
+      }>;
+      return resources.find(
+        (resource) => resource.id === "resource_barbarian_rage",
+      );
+    };
+
+    await harness.emit(SOCKET_EVENTS.ACTION_INTENT, intent());
+    const afterFirst = findRage(harness);
+
+    await harness.emit(
+      SOCKET_EVENTS.ACTION_INTENT,
+      intent({ requestId: "req-2", actionId: "action_dash" }),
+    );
+    const afterSecond = findRage(harness);
+
+    // Whatever the first intent produced (whether Rage is even present, or
+    // present at its correct un-doubled charges), a second intent for the
+    // same character must leave it completely alone. Before the fix this
+    // failed with afterFirst = { current: 2, currentCharges: 2 } and
+    // afterSecond = { current: 4, currentCharges: 4 }.
+    expect(afterSecond).toEqual(afterFirst);
+  });
 });

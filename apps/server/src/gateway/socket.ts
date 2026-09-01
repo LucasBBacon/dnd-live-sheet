@@ -271,6 +271,33 @@ const getAuthoritativeRuntimeContext = async (
   return runtime;
 };
 
+/**
+ * A disposable copy of the effect manager's current effects and actors.
+ *
+ * resolveCharacterAction builds a sheet purely to look an action up, and
+ * CharacterEngine.buildLiveSheet unconditionally re-hydrates whatever
+ * effect/resource managers it is handed (CharacterBootstrapper.hydrateRuntimeManagers).
+ * Handing it the authoritative, per-character instance directly let that
+ * hydration mutate long-lived state on every single action intent - which is
+ * exactly what caused resource pools to double from the second intent
+ * onward, since ResourceManager.initializeFromGrants is deliberately additive
+ * for a resource id it has already seen.
+ *
+ * The clone starts from the real current effects rather than an empty
+ * manager, because active states still have to gate what buildLiveSheet
+ * computes here - a haste-granted extra attack changes attacksPerAction, for
+ * one. Anything hydrateRuntimeManagers then adds or removes lands on this
+ * throwaway copy instead of the character's real state.
+ */
+const cloneEffectManagerForReadModel = (source: EffectManager): EffectManager => {
+  const clone = new EffectManager();
+  for (const effect of source.getActiveEffects()) {
+    clone.addEffect(effect);
+  }
+  clone.addActors(source.getActiveActors());
+  return clone;
+};
+
 const resolveCharacterAction = async (
   runtime: AuthoritativeRuntimeContext,
   characterId: string,
@@ -302,11 +329,20 @@ const resolveCharacterAction = async (
   // below would silently come back empty.
   const { snapshot } = await getCachedRuleSnapshot();
 
+  // This sheet exists only to look an action up - it is a read model and must
+  // not mutate the authoritative runtime. So it runs against a disposable
+  // effect-manager copy (see cloneEffectManagerForReadModel) rather than
+  // runtime.effectManager directly, and against a brand new ResourceManager
+  // rather than runtime.resourceManager: buildLiveSheet never reads resource
+  // state back out for anything returned from here (it only forwards the
+  // manager into hydration), so a fresh, empty one changes nothing this
+  // function returns while guaranteeing the authoritative pool is never
+  // touched.
   const liveSheet = CharacterEngine.buildLiveSheet(
     runtime.save,
     inventory,
-    runtime.effectManager,
-    runtime.resourceManager,
+    cloneEffectManagerForReadModel(runtime.effectManager),
+    new ResourceManager(),
     { snapshot },
   );
 
@@ -646,17 +682,47 @@ export function initializeWebSocketGateway(httpServer: any) {
                 )
               : { executed: false, reason: "action_not_found" as const };
 
-          // Flushed after resolution, never during: the ledger's deductions
-          // are the last thing the resolver does, so by here they are final.
-          await flushInventoryLedger(payload.characterId, ledger);
+          // Gated on executed: settleCosts can buffer a deduction and then
+          // have executeEffect fail anyway (e.g. a summon action hitting its
+          // cap), in which case nothing should be spent. InventoryLedger's
+          // "never has to be unwound" guarantee is a property of settleCosts
+          // alone, not of execute() as a whole, so this is the unwind that
+          // guarantee doesn't cover.
+          if (execution.executed) {
+            // Flushed after resolution, never during: the ledger's
+            // deductions are the last thing the resolver does, so by here
+            // they are final.
+            //
+            // The cache write below runs after this rather than before it on
+            // purpose. Caching first would mean a flush failure leaves a
+            // "succeeded" response cached for this requestId forever - a
+            // retry would replay it without ever attempting the write again,
+            // telling the client an item was spent that the database never
+            // actually lost. Flushing first risks the opposite: something
+            // throwing between a *successful* flush and the cache write
+            // below would leave this requestId uncached, so a client retry
+            // re-resolves from scratch and could spend a second unit of the
+            // same stack. That window is real, but narrow (everything
+            // between here and the cache write is synchronous state reads,
+            // nothing that plausibly throws) and, unlike the reordered
+            // alternative, it fails loud - the retry either double-spends
+            // and it can be reasoned about the same way any other unlogged
+            // duplicate action can be, or the flush itself throws and no
+            // spend happened at all. Silently lying about a persisted spend
+            // is the worse failure mode, so this ordering stands.
+            await flushInventoryLedger(payload.characterId, ledger);
 
-          for (const deduction of ledger.pending) {
-            io.to(`campaign_${campaignId}`).emit(SOCKET_EVENTS.ITEM_CONSUMED, {
-              characterId: payload.characterId,
-              inventoryId: deduction.id,
-              amount: deduction.amount,
-              timestamp: Date.now(),
-            } satisfies ItemConsumedPayload);
+            for (const deduction of ledger.pending) {
+              io.to(`campaign_${campaignId}`).emit(
+                SOCKET_EVENTS.ITEM_CONSUMED,
+                {
+                  characterId: payload.characterId,
+                  inventoryId: deduction.id,
+                  amount: deduction.amount,
+                  timestamp: Date.now(),
+                } satisfies ItemConsumedPayload,
+              );
+            }
           }
 
           const executionRollResults =
