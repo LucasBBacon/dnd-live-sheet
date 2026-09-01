@@ -133,7 +133,9 @@ export class RollContextBuilder {
       const matchesTag =
         weapon.ammoTag !== undefined && definition.ammoTag === weapon.ammoTag;
       // an untagged item still works if the weapon names it outright, which
-      // keeps older content loadable
+      // keeps older content loadable. ActionResolver.settleCosts accepts the
+      // same two, measured against the grant's collapsed consumesAmmo -
+      // relaxing either side alone offers the player a stack the roll refuses.
       const matchesDefault = row.itemId === weapon.ammoItemId;
 
       if (!matchesTag && !matchesDefault) continue;

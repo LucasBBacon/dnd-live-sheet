@@ -1,8 +1,15 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import type { ActionGrant } from "@project/shared";
+import type {
+  ActionGrant,
+  CharacterSlot,
+  InventoryInstance,
+} from "@project/shared";
 import { ActionResolver } from "../actionResolver.js";
 import type { InventoryLedger } from "../inventoryLedger.js";
-import type { RollContextPayload } from "../rollContextBuilder.js";
+import {
+  RollContextBuilder,
+  type RollContextPayload,
+} from "../rollContextBuilder.js";
 import { WeaponSynthesizer } from "../weaponSynthesizer.js";
 import type { WeaponView } from "../../rules/equipmentProjection.js";
 import { CombatContextManager } from "../../calculators/combatContext.js";
@@ -48,6 +55,41 @@ const bowShot: ActionGrant = {
     ],
   },
 };
+
+/**
+ * A weapon from older content: it names its ammunition outright and carries
+ * no ammo tag.
+ *
+ * WeaponSynthesizer collapses the pair into one `consumesAmmo` field, so the
+ * grant this projects asks for an *item id* where bowShot asks for a tag.
+ * RollContextBuilder.buildAmmoOptions offers the named stack for such a
+ * weapon, and the resolver has to take the stack the builder offered.
+ */
+const legacyBow: WeaponView = {
+  id: "item_weapon_old_bow",
+  name: "Old Bow",
+  category: "martial_ranged",
+  damageDice: "1d8",
+  damageType: "piercing",
+  properties: ["ammunition", "two_handed"],
+  range: 150,
+  longRange: 600,
+  ammoItemId: ARROW,
+};
+
+const legacyShot = WeaponSynthesizer.generateWeaponAction(legacyBow, "DEX");
+
+const inventoryRow = (
+  id: string,
+  itemId: string,
+  quantity: number,
+): InventoryInstance => ({
+  id,
+  itemId,
+  quantity,
+  slot: "backpack" as CharacterSlot,
+  isAttuned: false,
+});
 
 const payload = (
   consumedResources?: RollContextPayload["consumedResources"],
@@ -181,6 +223,56 @@ describe("ActionResolver ammunition", () => {
 
     expect(result.executed).toBe(false);
     expect(ledger.stacks[0]?.quantity).toBe(20);
+  });
+
+  it("fires a weapon that names its ammunition by item id", () => {
+    const ledger = makeLedger([
+      { id: "inv_plain", itemId: ARROW, quantity: 20 },
+    ]);
+
+    const result = run(legacyShot, payload(arrow("inv_plain")), ledger);
+
+    expect(result.executed).toBe(true);
+    expect(ledger.stacks[0]?.quantity).toBe(19);
+  });
+
+  it("refuses a stack an untagged weapon does not name", () => {
+    const ledger = makeLedger([
+      { id: "inv_bolt", itemId: "item_ammo_bolt", quantity: 20 },
+    ]);
+
+    const result = run(legacyShot, payload(arrow("inv_bolt")), ledger);
+
+    expect(result.executed).toBe(false);
+    expect(result.reason).toBe("wrong_ammo");
+    expect(ledger.stacks[0]?.quantity).toBe(20);
+  });
+
+  it("spends every stack buildAmmoOptions offered for the weapon", () => {
+    // the builder and the resolver have to agree, or the player is handed a
+    // quiver the roll then refuses
+    const inventory = [
+      inventoryRow("inv_plain", ARROW, 20),
+      inventoryRow("inv_bolt", "item_ammo_bolt", 20),
+    ];
+
+    const options = RollContextBuilder.buildAmmoOptions(
+      legacyBow,
+      inventory,
+      corePackLookup(),
+    );
+
+    expect(options.map((option) => option.instanceId)).toEqual(["inv_plain"]);
+
+    for (const option of options) {
+      const ledger = makeLedger([
+        { id: option.instanceId, itemId: option.itemId, quantity: 20 },
+      ]);
+
+      expect(
+        run(legacyShot, payload(arrow(option.instanceId)), ledger).executed,
+      ).toBe(true);
+    }
   });
 });
 

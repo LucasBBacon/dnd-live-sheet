@@ -730,7 +730,18 @@ export class ActionResolver {
         stack.itemId,
         context.snapshot,
       );
-      if (!definition || definition.ammoTag !== action.consumesAmmo) {
+      if (!definition) return fail("wrong_ammo", cost.id);
+
+      // consumesAmmo is `ammoTag ?? ammoItemId` (WeaponSynthesizer), so an
+      // untagged weapon names its ammunition by item id and no definition's
+      // tag can ever equal it. Checking the tag alone failed every shot from
+      // such a weapon with wrong_ammo - on the very stack
+      // RollContextBuilder.buildAmmoOptions had just offered the player,
+      // whose matching accepts the named item id for the same reason.
+      const matchesTag = definition.ammoTag === action.consumesAmmo;
+      const matchesDefault = stack.itemId === action.consumesAmmo;
+
+      if (!matchesTag && !matchesDefault) {
         return fail("wrong_ammo", cost.id);
       }
     }
