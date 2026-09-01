@@ -88,6 +88,15 @@ export interface ActionExecutionContext {
   combatContext?: CombatContextManager;
   /** Required only for actions that spend ammunition. */
   inventoryLedger?: InventoryLedger;
+  /**
+   * The stack an item action was invoked from.
+   *
+   * Required only when the action declares `consumesSelf`. It is not part of
+   * the roll payload because there is nothing for the player to choose: the
+   * server found this action *on* this instance, so the instance is already
+   * decided by the time the roll is prepared.
+   */
+  selfInstanceId?: string;
   snapshot?: RuleSnapshotLookup;
   activeStates?: string[];
   diceRules?: DiceRule[];
@@ -686,6 +695,18 @@ export class ActionResolver {
       if (stacks.length === 0) return fail("ammo_not_selected");
     }
 
+    if (action.consumesSelf) {
+      const ledger = context.inventoryLedger;
+      if (!ledger) return fail("no_ledger", action.id);
+      if (!context.selfInstanceId) return fail("missing_stack", action.id);
+
+      const stack = ledger.getStack(context.selfInstanceId);
+      if (!stack) return fail("missing_stack", context.selfInstanceId);
+      if (stack.quantity < 1) {
+        return fail("insufficient_stack", context.selfInstanceId);
+      }
+    }
+
     // an unrequested stack cost has nothing to justify it
     if (!action.consumesAmmo && stacks.length > 0) {
       return fail("unrequested_cost", stacks[0]?.id);
@@ -811,6 +832,10 @@ export class ActionResolver {
     // validated above, so these cannot fail and nothing after them can
     for (const cost of stacks) {
       context.inventoryLedger?.consumeStack(cost.id, cost.amount);
+    }
+
+    if (action.consumesSelf && context.selfInstanceId) {
+      context.inventoryLedger?.consumeStack(context.selfInstanceId, 1);
     }
 
     // endregion

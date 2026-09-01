@@ -1842,3 +1842,99 @@ describe("ActionResolver heal resolution", () => {
     expect(roll!.total).toBeLessThanOrEqual(10);
   });
 });
+
+describe("consumesSelf", () => {
+  const vialAction: ActionGrant = {
+    id: "action_acid_vial_throw",
+    name: "Throw Acid",
+    activation: "special",
+    consumesSelf: true,
+    effect: {
+      type: "attack",
+      attackType: "ranged_weapon",
+      attackStat: "DEX",
+      range: 20,
+      damage: [
+        {
+          sourceName: "Acid",
+          baseDice: "2d6",
+          damageType: "acid",
+          scalingMode: "none",
+          levelScaling: [],
+        },
+      ],
+    },
+  };
+
+  const ledgerFor = (quantity: number) => {
+    const consumed: Array<{ id: string; amount: number }> = [];
+    return {
+      consumed,
+      ledger: {
+        getStack: (id: string) =>
+          id === "inv-vial"
+            ? { id, itemId: "item_acid_vial", quantity }
+            : undefined,
+        consumeStack: (id: string, amount: number) => {
+          consumed.push({ id, amount });
+        },
+      },
+    };
+  };
+
+  it("spends exactly one of the stack Use was pressed on", () => {
+    const { ledger, consumed } = ledgerFor(3);
+
+    const result = ActionResolver.execute(
+      vialAction,
+      { actionId: vialAction.id, activeStates: [] },
+      {
+        effectManager: new EffectManager(),
+        resourceManager: new ResourceManager(),
+        inventoryLedger: ledger,
+        selfInstanceId: "inv-vial",
+      },
+    );
+
+    expect(result.executed).toBe(true);
+    expect(consumed).toEqual([{ id: "inv-vial", amount: 1 }]);
+  });
+
+  it("refuses when the character is not carrying it", () => {
+    const { ledger, consumed } = ledgerFor(3);
+
+    const result = ActionResolver.execute(
+      vialAction,
+      { actionId: vialAction.id, activeStates: [] },
+      {
+        effectManager: new EffectManager(),
+        resourceManager: new ResourceManager(),
+        inventoryLedger: ledger,
+        selfInstanceId: "inv-missing",
+      },
+    );
+
+    expect(result.executed).toBe(false);
+    expect(result.reason).toBe("missing_stack");
+    expect(consumed).toEqual([]);
+  });
+
+  it("refuses when the stack is empty", () => {
+    const { ledger, consumed } = ledgerFor(0);
+
+    const result = ActionResolver.execute(
+      vialAction,
+      { actionId: vialAction.id, activeStates: [] },
+      {
+        effectManager: new EffectManager(),
+        resourceManager: new ResourceManager(),
+        inventoryLedger: ledger,
+        selfInstanceId: "inv-vial",
+      },
+    );
+
+    expect(result.executed).toBe(false);
+    expect(result.reason).toBe("insufficient_stack");
+    expect(consumed).toEqual([]);
+  });
+});
