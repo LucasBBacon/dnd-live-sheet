@@ -202,13 +202,20 @@ export const setupGateway = async (
   // reads core_rule_packs.payload - a table the fake db does not carry. Serve
   // the real shipped pack instead, so a rest resolves against the same rules
   // production would use rather than against nothing.
+  //
+  // Item-action resolution needs equipmentById for the same reason: an item's
+  // actions live on its pack definition, not on the inventory row, so without
+  // this an item action would never be found regardless of what the gateway
+  // does with it.
   const pack = await assembleCoreRulePack(PACK_DIR);
   vi.doMock("../../services/ruleSnapshotCache.js", () => ({
     getCachedRuleSnapshot: async () => ({
       cacheVersion: 1,
       loadedAt: Date.now(),
       snapshot: {
-        equipmentById: {},
+        equipmentById: Object.fromEntries(
+          pack.equipment.map((item) => [item.id, item]),
+        ),
         resourcesById: Object.fromEntries(
           pack.resources.map((resource) => [resource.id, resource]),
         ),

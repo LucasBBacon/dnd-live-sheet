@@ -42,6 +42,7 @@ import {
   CARRIED_SLOT,
   canEquipTo,
   slotsConsumedBy,
+  type LiveCharacterSheet,
 } from "@project/engine";
 import { resolvePlayerTurn } from "../services/turnResolution.js";
 import { getCachedRuleSnapshot } from "../services/ruleSnapshotCache.js";
@@ -49,6 +50,10 @@ import {
   getCampaignMembershipRole,
   getUserIdFromSocket,
 } from "../services/campaignAccess.js";
+import {
+  buildInventoryLedger,
+  flushInventoryLedger,
+} from "../services/inventoryLedgerService.js";
 
 const EQUIPMENT_SLOT_SET = new Set<string>(EQUIPMENT_SLOTS);
 
@@ -274,6 +279,8 @@ const resolveCharacterAction = async (
   action: ActionGrant | null;
   diceRules: Array<any>;
   attacksPerAction: number;
+  liveSheet: LiveCharacterSheet;
+  inventory: InventoryInstance[];
 }> => {
   const inventoryRows = await db
     .select({
@@ -288,11 +295,19 @@ const resolveCharacterAction = async (
     .where(eq(characterInventory.characterId, characterId));
 
   const inventory = inventoryRows as InventoryInstance[];
+
+  // itemActions only surfaces an entry once buildLiveSheet can resolve the
+  // carried item's own definition, which lives in the pack snapshot rather
+  // than on the inventory row itself. Without it every item-action lookup
+  // below would silently come back empty.
+  const { snapshot } = await getCachedRuleSnapshot();
+
   const liveSheet = CharacterEngine.buildLiveSheet(
     runtime.save,
     inventory,
     runtime.effectManager,
     runtime.resourceManager,
+    { snapshot },
   );
 
   const activeTraits = CharacterBootstrapper.compileActiveTraits(runtime.save);
@@ -304,6 +319,38 @@ const resolveCharacterAction = async (
     action,
     diceRules,
     attacksPerAction: liveSheet.attacksPerAction.total,
+    liveSheet,
+    inventory,
+  };
+};
+
+/**
+ * The item action on one carried stack.
+ *
+ * A sibling of resolveCharacterAction rather than a branch inside it: item
+ * actions are deliberately absent from liveSheet.actions, so there is nothing
+ * for that lookup to find.
+ */
+const resolveItemAction = async (
+  runtime: AuthoritativeRuntimeContext,
+  characterId: string,
+  instanceId: string,
+  actionId: string,
+) => {
+  const resolved = await resolveCharacterAction(runtime, characterId, actionId);
+  const liveSheet = resolved.liveSheet;
+
+  const entry =
+    liveSheet.itemActions.find(
+      (candidate) =>
+        candidate.instanceId === instanceId && candidate.action.id === actionId,
+    ) ?? null;
+
+  return {
+    action: entry?.action ?? null,
+    diceRules: resolved.diceRules,
+    attacksPerAction: resolved.attacksPerAction,
+    inventory: resolved.inventory,
   };
 };
 
@@ -518,6 +565,10 @@ export function initializeWebSocketGateway(httpServer: any) {
           let attacksPerAction = 1;
           let actorInstanceId: string | undefined = payload.actorInstanceId;
           let actionStates = runtime.effectManager.getActiveStates();
+          // Both the character and item branches resolve through
+          // resolveCharacterAction, so this is populated either way; the actor
+          // branch leaves it empty, since a summoned actor carries nothing.
+          let inventory: InventoryInstance[] = [];
 
           if (payload.source === "character") {
             const resolved = await resolveCharacterAction(
@@ -528,6 +579,22 @@ export function initializeWebSocketGateway(httpServer: any) {
             action = resolved.action;
             diceRules = resolved.diceRules;
             attacksPerAction = resolved.attacksPerAction;
+            inventory = resolved.inventory;
+          } else if (payload.source === "item") {
+            if (!payload.instanceId) {
+              throw new Error("Item action intent missing instanceId.");
+            }
+
+            const resolved = await resolveItemAction(
+              runtime,
+              payload.characterId,
+              payload.instanceId,
+              payload.actionId,
+            );
+            action = resolved.action;
+            diceRules = resolved.diceRules;
+            attacksPerAction = resolved.attacksPerAction;
+            inventory = resolved.inventory;
           } else {
             if (!payload.actorInstanceId) {
               throw new Error("Actor action intent missing actorInstanceId.");
@@ -549,6 +616,8 @@ export function initializeWebSocketGateway(httpServer: any) {
             actorInstanceId = actor.instanceId;
           }
 
+          const ledger = buildInventoryLedger(inventory);
+
           const execution =
             action !== null
               ? ActionResolver.execute(
@@ -568,9 +637,27 @@ export function initializeWebSocketGateway(httpServer: any) {
                     economyPolicy: "track",
                     activeStates: runtime.effectManager.getActiveStates(),
                     diceRules: diceRules as any,
+                    inventoryLedger: ledger,
+                    ...(payload.source === "item" &&
+                      payload.instanceId !== undefined && {
+                        selfInstanceId: payload.instanceId,
+                      }),
                   },
                 )
               : { executed: false, reason: "action_not_found" as const };
+
+          // Flushed after resolution, never during: the ledger's deductions
+          // are the last thing the resolver does, so by here they are final.
+          await flushInventoryLedger(payload.characterId, ledger);
+
+          for (const deduction of ledger.pending) {
+            io.to(`campaign_${campaignId}`).emit(SOCKET_EVENTS.ITEM_CONSUMED, {
+              characterId: payload.characterId,
+              inventoryId: deduction.id,
+              amount: deduction.amount,
+              timestamp: Date.now(),
+            } satisfies ItemConsumedPayload);
+          }
 
           const executionRollResults =
             "rollResults" in execution ? execution.rollResults : [];
@@ -598,6 +685,8 @@ export function initializeWebSocketGateway(httpServer: any) {
               ...(result.label !== undefined && { label: result.label }),
               ...(result.summary !== undefined && { summary: result.summary }),
             })),
+            ...("notes" in execution &&
+              execution.notes !== undefined && { notes: execution.notes }),
             activeStates: runtime.effectManager.getActiveStates(),
             resources: runtime.resourceManager
               .getRuntimeResources()
