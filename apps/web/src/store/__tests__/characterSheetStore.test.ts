@@ -69,12 +69,43 @@ describe("useCharacterSheetStore hp trigger handling", () => {
   it("replays the same trigger when a remote hp update drops the character to zero", () => {
     const store = useCharacterSheetStore.getState();
 
-    store.syncRemoteHealthDelta(-5);
+    store.syncRemoteHealthDelta({
+      characterId: "char_1",
+      delta: -5,
+      source: "test",
+      timestamp: Date.now(),
+    });
 
     expect(useCharacterSheetStore.getState().currentHp).toBe(1);
     expect(useCharacterSheetStore.getState().activeStates).toContain(
       "drop_to_one_hp",
     );
+  });
+
+  it("ignores an hp update addressed to another character, so another player's heal or damage cannot change this sheet's hp", () => {
+    const store = useCharacterSheetStore.getState();
+
+    store.syncRemoteHealthDelta({
+      characterId: "char_other",
+      delta: 100,
+      source: "test",
+      timestamp: Date.now(),
+    });
+
+    expect(useCharacterSheetStore.getState().currentHp).toBe(5);
+  });
+
+  it("applies an hp update addressed to this character", () => {
+    const store = useCharacterSheetStore.getState();
+
+    store.syncRemoteHealthDelta({
+      characterId: "char_1",
+      delta: 3,
+      source: "test",
+      timestamp: Date.now(),
+    });
+
+    expect(useCharacterSheetStore.getState().currentHp).toBe(8);
   });
 
   it("dispatches rest triggers through the authored runtime path", () => {

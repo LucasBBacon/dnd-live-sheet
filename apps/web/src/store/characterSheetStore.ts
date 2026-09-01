@@ -33,6 +33,7 @@ import {
   type CoreRulePackSnapshot,
   type DamageType,
   type EngineEvent,
+  type HpModifiedPayload,
   type InventoryInstance,
   type RollResultsBroadcastPayload,
   type RuleSnapshot,
@@ -623,7 +624,7 @@ export interface CharacterSheetState {
   initialize: (payload: Partial<CharacterSheetState>) => void;
 
   applyHealthDelta: (delta: number, source: string) => void;
-  syncRemoteHealthDelta: (delta: number) => void;
+  syncRemoteHealthDelta: (payload: HpModifiedPayload) => void;
 
   equipItem: (inventoryId: string, targetSlot: string) => void;
   toggleAttunement: (inventoryId: string) => void;
@@ -757,8 +758,15 @@ export const useCharacterSheetStore = create<CharacterSheetState>(
       });
     },
 
-    syncRemoteHealthDelta: (delta) => {
+    syncRemoteHealthDelta: (payload) => {
       const state = get();
+      // HP_MODIFIED broadcasts to the whole campaign room, not just the
+      // character it applies to - so without this, another player's heal or
+      // damage silently changes this sheet's displayed hp too, and only a
+      // reload would reveal the divergence from the database.
+      if (payload.characterId !== state.id) return;
+
+      const { delta } = payload;
       const previousHp = state.currentHp;
       const nextHp = clampHealth(previousHp, delta, state.maxHp);
 

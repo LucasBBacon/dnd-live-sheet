@@ -52,8 +52,7 @@ export const LiveSheetProvider = ({
 
     // 2. Bind remote events to zustand state mutations
     socketService.subscribeToHpUpdates((broadcast) => {
-      // broadcast.data contains the payload
-      syncRemoteHealthDelta(broadcast.delta);
+      syncRemoteHealthDelta(broadcast);
     });
 
     socketService.subscribeToInventoryUpdates((broadcast) => {
