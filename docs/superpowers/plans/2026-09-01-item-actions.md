@@ -62,7 +62,9 @@ Dispatch in this order, which is **not** ascending task number:
 - Consumes: nothing.
 - Produces: `ActionGrantSchema` with `tableNote?: string`, refined so a `no_effect` action must carry one. `AttackEffectSchema` no longer accepts `specialNote`.
 
-**Why this is safe:** `specialNote` is authored in the shipped pack on exactly two weapon blocks (lance, net) under `weapon.specialNote`, which is `WeaponCapabilitySchema` and is **not** changing. It appears zero times inside an authored action or effect. `ActionGrantSchema` is only ever `.parse`d — nothing calls `.extend()` or `.shape` on it — so wrapping it in `.refine()` breaks no caller.
+**No schema-level note requirement.** An earlier draft refined `ActionGrantSchema` so a `no_effect` action had to carry a `tableNote`. That is false of actions in general: 5 standard actions (Disengage, Help, Ready, Search, Use an Object) and 111 `unimplemented` spell stubs are `no_effect` with no note, and rightly so. The rule is true of *item* actions only, so Task 9 enforces it against item data instead.
+
+**Why removing specialNote is safe:** `specialNote` is authored in the shipped pack on exactly two weapon blocks (lance, net) under `weapon.specialNote`, which is `WeaponCapabilitySchema` and is **not** changing. It appears zero times inside an authored action or effect. `ActionGrantSchema` is only ever `.parse`d — nothing calls `.extend()` or `.shape` on it — so wrapping it in `.refine()` breaks no caller.
 
 - [ ] **Step 1: Write the failing tests**
 
@@ -84,15 +86,19 @@ describe("tableNote", () => {
     );
   });
 
-  it("refuses an action that does nothing and says nothing", () => {
+  it("lets an action be silent, because some legitimately are", () => {
+    // Disengage, Help and Ready are no_effect and need no note - their name is
+    // the rule, which is what NoEffectSchema's own comment says. 111 spell
+    // stubs are no_effect placeholders too. A schema-level "must carry a
+    // note" would be a false claim about all three.
     expect(() =>
       ActionGrantSchema.parse({
-        id: "action_says_nothing",
-        name: "Says Nothing",
+        id: "action_disengage",
+        name: "Disengage",
         activation: "action",
         effect: { type: "no_effect" },
       }),
-    ).toThrow();
+    ).not.toThrow();
   });
 
   it("does not require a note from an action the engine actually runs", () => {
@@ -178,18 +184,7 @@ export const ActionGrantSchema = z
      */
     tableNote: z.string().min(1).optional(),
     effect: ActionEffectSchema,
-  })
-  // Zod-only: z.toJSONSchema drops .refine() silently, so actions.test.ts
-  // covers this directly. Same arrangement as WeaponCapabilitySchema's refines.
-  .refine(
-    (action) =>
-      action.effect.type !== "no_effect" || action.tableNote !== undefined,
-    {
-      message:
-        "an action with no effect must carry a tableNote saying what happens at the table",
-      path: ["tableNote"],
-    },
-  );
+  });
 ```
 
 - [ ] **Step 5: Run the tests and verify they pass**
@@ -1210,11 +1205,29 @@ describe("authored item actions", () => {
       );
 
       if (!expected.rolls) {
-        // the schema refine already guarantees this; asserting it here is what
-        // makes the *ledger* above honest rather than just the shape
         expect(action.tableNote, expected.id).toBeTruthy();
       }
     }
+  });
+
+  it("never lets an item action roll nothing and say nothing", async () => {
+    // This is the whole guarantee, and it lives here rather than in the schema.
+    // A Zod refine on ActionGrantSchema would also gate Disengage, Help and
+    // Ready - which are no_effect and need no note, their name being the rule -
+    // and the 111 no_effect spell stubs marked "unimplemented". The rule is
+    // true of *item* actions only, so it is enforced against item data.
+    // Deliberately not limited to AUTHORED: a future item cannot skip its note.
+    const pack = await assembleCoreRulePack(SHIPPED_PACK);
+
+    const silent = pack.equipment.flatMap((entry) =>
+      entry.actions
+        .filter(
+          (action) => action.effect.type === "no_effect" && !action.tableNote,
+        )
+        .map((action) => ),
+    );
+
+    expect(silent).toEqual([]);
   });
 
   it("gives every item action a unique id across the whole pack", async () => {
