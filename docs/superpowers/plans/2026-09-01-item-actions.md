@@ -1309,7 +1309,7 @@ Write a script under the scratchpad that adds these. Ids follow `action_<item id
     "attackType": "ranged_weapon",
     "attackStat": "DEX",
     "range": 20,
-    "damage": [{ "sourceName": "Alchemist's Fire", "baseDice": "1d4", "damageType": "fire" }]
+    "damage": []
   }
 }
 ```

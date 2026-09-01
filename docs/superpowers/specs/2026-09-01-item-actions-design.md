@@ -203,10 +203,17 @@ design turns on. Alchemist's fire is one action that both rolls and does not:
 {
   "activation": "action",
   "consumesSelf": true,
-  "effect": { "type": "attack", "damage": [{ "baseDice": "1d4", "damageType": "fire" }] },
+  "effect": { "type": "attack", "attackType": "ranged_weapon", "range": 20, "damage": [] },
   "tableNote": "The target takes 1d4 fire damage at the start of each of its turns until a creature uses its action to make a DC 10 Dexterity check to extinguish the flames."
 }
 ```
+
+The engine rolls the attack; the note carries everything that follows a hit. The
+damage pool is empty on purpose, and the rule is why: the PHB gives alchemist's
+fire **no** damage on the hit itself — catching fire *is* the hit's whole effect,
+and the 1d4 lands at the start of each of the target's turns thereafter. An
+authored `1d4` here would have the sheet report damage the rules do not grant.
+The oil flask has the same shape for the same reason.
 
 The sheet shows the roll it made and the rule the player still owes the DM, side
 by side. Neither is disguised as the other.
@@ -242,7 +249,7 @@ Fourteen items gain one action each.
 | Item | Effect | Consumes self | Note |
 | --- | --- | --- | --- |
 | Acid (vial) | attack, 2d6 acid, range 20 | yes | — |
-| Alchemist's fire | attack, 1d4 fire, range 20 | yes | ongoing burn, DC 10 Dex to end |
+| Alchemist's fire | attack, no damage, range 20 | yes | 1d4 at the start of each of its turns, DC 10 Dex to end |
 | Holy water | attack, 2d6 radiant, range 20 | yes | only fiends and undead take it |
 | Oil (flask) | attack, no damage, range 20 | yes | covered in oil; +5 fire within 1 minute |
 | Antitoxin | apply_effect, advantage on `POISON_SAVE` | yes | lasts 1 hour |
