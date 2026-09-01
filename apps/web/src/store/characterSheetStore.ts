@@ -739,6 +739,10 @@ export const useCharacterSheetStore = create<CharacterSheetState>(
         currentHp: appliedHp,
         activeStates,
         latestRollResults: rollResults,
+        // an hp change is a new moment superseding whatever the roll display
+        // was showing, and it never carries a note of its own - so a stale
+        // note from an earlier action must not survive it either
+        latestNotes: [],
         resources,
         runtimeEffects,
         runtimeResources,
@@ -771,6 +775,7 @@ export const useCharacterSheetStore = create<CharacterSheetState>(
         currentHp: appliedHp,
         activeStates,
         latestRollResults: rollResults,
+        latestNotes: [],
         resources,
         runtimeEffects,
         runtimeResources,
@@ -1101,6 +1106,9 @@ export const useCharacterSheetStore = create<CharacterSheetState>(
         currentHp: updatedHp,
         activeStates: dispatched.activeStates,
         latestRollResults: dispatched.rollResults,
+        // a rest is a new moment, and this dispatch path carries no note of
+        // its own - clear whatever the last resolved action left behind
+        latestNotes: [],
         runtimeEffects,
         runtimeResources,
       });
@@ -1119,6 +1127,9 @@ export const useCharacterSheetStore = create<CharacterSheetState>(
       set({
         activeStates: dispatched.activeStates,
         latestRollResults: dispatched.rollResults,
+        // this dispatch path carries no note of its own, so a note left by
+        // an earlier resolved action must not survive it
+        latestNotes: [],
         resources: dispatched.resources,
         runtimeEffects: dispatched.runtimeEffects,
         runtimeResources: dispatched.runtimeResources,
@@ -1246,6 +1257,11 @@ export const useCharacterSheetStore = create<CharacterSheetState>(
           state,
           payload.rollResults.map(toActionRollResult),
         ),
+        // this always records a fresh, unrelated roll - an ability check, a
+        // save, the Protection reaction - so a note from whatever action
+        // resolved last must not linger beside it. Only ACTION_RESOLVED ever
+        // supplies a real note; every other roll source clears it.
+        latestNotes: [],
       }));
     },
 
@@ -1373,6 +1389,11 @@ export const useCharacterSheetStore = create<CharacterSheetState>(
                 payload.rollResults.map(toActionRollResult),
               )
             : previous.latestRollResults,
+        // TurnResolvedPayload carries no note of its own. When it does add a
+        // roll, that roll is not the one any prior note described, so the
+        // note must go with it; when it adds nothing, latestRollResults is
+        // untouched and latestNotes follows the same rule
+        latestNotes: payload.rollResults.length > 0 ? [] : previous.latestNotes,
         runtimeEffects,
         runtimeResources,
         runtimeCombat: createCombatManager(payload.combatContext),

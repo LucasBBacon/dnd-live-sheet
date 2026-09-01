@@ -738,6 +738,49 @@ describe("useCharacterSheetStore remote action state composition", () => {
     expect(state.activeStates).toContain("status_wearing_armor");
     expect(state.activeStates).toContain("status_reckless_attack");
   });
+
+  it("clears a resolved action's notes once an unrelated roll arrives, so a stale note cannot sit beside it", () => {
+    useCharacterSheetStore.getState().syncRemoteActionExecution({
+      characterId: "char_remote",
+      requestId: "req_caltrops",
+      actionId: "action_item_caltrops_scatter",
+      source: "item",
+      instanceId: "inv_caltrops",
+      executed: true,
+      rollResults: [],
+      notes: [
+        "Any creature entering the area must succeed on a DC 15 Dexterity saving throw or stop moving and take 1 piercing damage.",
+      ],
+      activeStates: [],
+      resources: [],
+      effects: [],
+      actors: [],
+      timestamp: Date.now(),
+    } as never);
+
+    expect(useCharacterSheetStore.getState().latestNotes).toHaveLength(1);
+
+    // an unrelated roll - a saving throw, nothing to do with the caltrops
+    // that were just scattered a moment ago
+    useCharacterSheetStore.getState().recordRollResult({
+      characterId: "char_remote",
+      rollResults: [
+        {
+          total: 14,
+          rolls: [14],
+          modifier: 0,
+          target: "SAVING_THROW",
+        },
+      ],
+      timestamp: Date.now(),
+    });
+
+    const state = useCharacterSheetStore.getState();
+
+    expect(state.latestRollResults).toHaveLength(1);
+    expect(state.latestRollResults[0]?.target).toBe("SAVING_THROW");
+    expect(state.latestNotes).toEqual([]);
+  });
 });
 
 describe("useCharacterSheetStore conditions", () => {
