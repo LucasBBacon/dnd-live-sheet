@@ -3,6 +3,8 @@ import {
   isServerBroadcastPayload,
   unwrapServerBroadcastPayload,
   type ActionExecutedPayload,
+  type ActionIntentPayload,
+  type ActionResolvedPayload,
   type HpModifiedPayload,
 } from "../transport/socket.js";
 
@@ -55,5 +57,29 @@ describe("socket broadcast payload helpers", () => {
 
     expect(isServerBroadcastPayload(wrapped)).toBe(true);
     expect(unwrapServerBroadcastPayload(wrapped)).toEqual(actionPayload);
+  });
+});
+
+describe("item action transport", () => {
+  it("types an item intent with the instance it was pressed on", () => {
+    const intent: ActionIntentPayload = {
+      characterId: "char-1",
+      requestId: "req-1",
+      actionId: "action_acid_vial_throw",
+      source: "item",
+      instanceId: "inv-42",
+      timestamp: 0,
+    };
+
+    expect(intent.source).toBe("item");
+    expect(intent.instanceId).toBe("inv-42");
+  });
+
+  it("carries notes back on the resolved payload", () => {
+    const resolved: Pick<ActionResolvedPayload, "notes"> = {
+      notes: ["The target takes 1d4 fire damage at the start of its turns."],
+    };
+
+    expect(resolved.notes).toHaveLength(1);
   });
 });

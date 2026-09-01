@@ -128,8 +128,17 @@ export interface ActionIntentPayload {
   characterId: string;
   requestId: string;
   actionId: string;
-  source: "character" | "actor";
+  /**
+   * Where the action was found.
+   *
+   * "item" resolves against the character's itemActions rather than the live
+   * sheet's action list, because item actions are deliberately kept out of the
+   * combat list - they are used from the inventory row.
+   */
+  source: "character" | "actor" | "item";
   actorInstanceId?: string;
+  /** Required when source is "item": the inventory stack Use was pressed on. */
+  instanceId?: string;
   timestamp: number;
 }
 
@@ -179,6 +188,13 @@ export interface ActionResolvedPayload {
   /** True when the action ran despite its activation already being spent. */
   economyOverdrawn?: boolean;
   rollResults: RollResultPayload[];
+  /**
+   * Rules the engine could not enforce, for the sheet to show the player.
+   *
+   * Mirrors ActionResult.notes, which has carried the net's restrain rule since
+   * it was authored and until now had nowhere to go once it crossed the wire.
+   */
+  notes?: string[];
   activeStates: string[];
   resources: RuntimeResourceSyncPayload[];
   effects: RuntimeEffectSyncPayload[];
