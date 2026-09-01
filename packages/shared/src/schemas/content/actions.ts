@@ -161,8 +161,6 @@ export const AttackEffectSchema = z.object({
    * authored before critical segments existed wants.
    */
   criticalDamage: z.array(DamageSegmentSchema).optional(),
-  /** Carried through from the weapon so the resolved action can report it. */
-  specialNote: z.string().optional(),
 });
 
 export const SummonEffectSchema = z.object({
@@ -240,6 +238,25 @@ export const ActionGrantSchema = z.object({
   // chooses from, not a pool of charges
   consumesAmmo: z.string().optional(),
   targetFilter: TargetFilterSchema.optional(),
+  /**
+   * The part of this action's rule the engine cannot enforce, in words the
+   * table can act on.
+   *
+   * Lifted here from AttackEffectSchema, where it could only ever describe an
+   * attack. Caltrops spend an action and roll nothing, and alchemist's fire
+   * both rolls an attack *and* leaves a burn this engine has no target to
+   * apply — neither is sayable from inside a single effect.
+   *
+   * Optional even on a `no_effect` action: Disengage, Help and Ready are
+   * `no_effect` and need no note - their name is the rule. A schema-level
+   * requirement here would be a false claim about those and about the pack's
+   * many still-unauthored spell stubs. Where a note truly is required (an
+   * authored item action that rolls nothing and says nothing), that is
+   * enforced against item data specifically, not against every action.
+   *
+   * It reaches the player as ActionResult.notes.
+   */
+  tableNote: z.string().min(1).optional(),
   effect: ActionEffectSchema,
 });
 

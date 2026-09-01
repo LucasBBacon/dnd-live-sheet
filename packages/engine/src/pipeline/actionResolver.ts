@@ -232,11 +232,18 @@ export class ActionResolver {
       payload.activeStates,
     );
 
+    // 3 - a table note belongs to the action, so it rides out regardless of
+    // which effect ran - or whether any of them rolled anything
+    const withNote =
+      action.tableNote === undefined
+        ? outcome
+        : { ...outcome, notes: [...(outcome.notes ?? []), action.tableNote] };
+
     // an overdraft is settled at cost time but only meaningful once the action
     // has actually happened, so it rides out on the effect's result
     return settlement.economyOverdrawn
-      ? { ...outcome, economyOverdrawn: true }
-      : outcome;
+      ? { ...withNote, economyOverdrawn: true }
+      : withNote;
   }
 
   public static dispatchEvent(
@@ -420,13 +427,7 @@ export class ActionResolver {
           });
         }
 
-        return {
-          ...ok,
-          rollResults,
-          ...(effect.specialNote === undefined
-            ? {}
-            : { notes: [effect.specialNote] }),
-        };
+        return { ...ok, rollResults };
       }
 
       case "summon": {

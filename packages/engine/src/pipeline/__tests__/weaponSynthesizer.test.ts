@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import type { WeaponAttackContext } from "@project/shared";
 import { WeaponSynthesizer } from "../weaponSynthesizer.js";
 import type { WeaponView } from "../../rules/equipmentProjection.js";
+import { corePackEquipment } from "./corePackFixture.js";
 
 const makeAttackContext = (
   overrides: Partial<WeaponAttackContext> = {},
@@ -171,7 +172,7 @@ describe("WeaponSynthesizer activation", () => {
 });
 
 describe("WeaponSynthesizer carries unenforced weapon rules to the player", () => {
-  it("puts a weapon's specialNote on the attack effect", () => {
+  it("puts a weapon's specialNote on the action as tableNote", () => {
     const net: WeaponView = {
       id: "item_weapon_net",
       name: "Net",
@@ -189,12 +190,11 @@ describe("WeaponSynthesizer carries unenforced weapon rules to the player", () =
       throw new Error("Expected an attack effect");
     }
 
-    expect(action.effect.specialNote).toBe(
-      "Target is restrained (Large or smaller).",
-    );
+    expect(action.tableNote).toBe("Target is restrained (Large or smaller).");
+    expect(action.effect).not.toHaveProperty("specialNote");
   });
 
-  it("omits specialNote entirely when the weapon has none", () => {
+  it("omits tableNote entirely when the weapon has none", () => {
     const club: WeaponView = {
       id: "item_weapon_club",
       name: "Club",
@@ -210,7 +210,20 @@ describe("WeaponSynthesizer carries unenforced weapon rules to the player", () =
       throw new Error("Expected an attack effect");
     }
 
+    expect("tableNote" in action).toBe(false);
     expect("specialNote" in action.effect).toBe(false);
+  });
+
+  it("puts the weapon's special rule on the action, not inside the effect", () => {
+    const pack = corePackEquipment();
+    const net = pack.weaponsById["item_weapon_net"];
+    expect(net).toBeDefined();
+
+    // generateWeaponAction returns ONE ActionGrant, not an array
+    const action = WeaponSynthesizer.generateWeaponAction(net!, "DEX");
+
+    expect(action.tableNote).toContain("restrained");
+    expect(action.effect).not.toHaveProperty("specialNote");
   });
 });
 

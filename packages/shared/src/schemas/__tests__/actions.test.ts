@@ -84,3 +84,71 @@ describe("NoEffectSchema", () => {
     expect(parsed.effect).toEqual({ type: "no_effect" });
   });
 });
+
+describe("tableNote", () => {
+  it("carries a rule the engine cannot enforce on the action, not the effect", () => {
+    const parsed = ActionGrantSchema.parse({
+      id: "action_caltrops_bag_spread",
+      name: "Spread Caltrops",
+      activation: "action",
+      tableNote: "DC 15 Dexterity saving throw or stop moving.",
+      effect: { type: "no_effect" },
+    });
+
+    expect(parsed.tableNote).toBe(
+      "DC 15 Dexterity saving throw or stop moving.",
+    );
+  });
+
+  it("lets an action be silent, because some legitimately are", () => {
+    // Disengage, Help and Ready are no_effect and need no note - their name is
+    // the rule, which is what NoEffectSchema's own comment says. 111 spell
+    // stubs are no_effect placeholders too. A schema-level "must carry a note"
+    // would be a false claim about all three.
+    expect(() =>
+      ActionGrantSchema.parse({
+        id: "action_disengage",
+        name: "Disengage",
+        activation: "action",
+        effect: { type: "no_effect" },
+      }),
+    ).not.toThrow();
+  });
+
+  it("does not require a note from an action the engine actually runs", () => {
+    expect(() =>
+      ActionGrantSchema.parse({
+        id: "action_acid_vial_throw",
+        name: "Throw Acid",
+        activation: "action",
+        effect: {
+          type: "attack",
+          attackType: "ranged_weapon",
+          attackStat: "DEX",
+          range: 20,
+          damage: [
+            { sourceName: "Acid", baseDice: "2d6", damageType: "acid" },
+          ],
+        },
+      }),
+    ).not.toThrow();
+  });
+
+  it("no longer accepts specialNote on an attack effect", () => {
+    const parsed = ActionGrantSchema.parse({
+      id: "action_legacy_note",
+      name: "Legacy Note",
+      activation: "action",
+      effect: {
+        type: "attack",
+        attackType: "melee_weapon",
+        attackStat: "STR",
+        range: 5,
+        damage: [],
+        specialNote: "should be stripped",
+      },
+    });
+
+    expect("specialNote" in parsed.effect).toBe(false);
+  });
+});

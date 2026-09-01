@@ -1781,3 +1781,27 @@ describe("a weapon that deals no damage still resolves", () => {
     expect(result.notes).toEqual(["Target is restrained (Large or smaller)."]);
   });
 });
+
+describe("a table note rides out regardless of what the effect did", () => {
+  it("reports a table note from an action that rolls nothing", () => {
+    const result = ActionResolver.execute(
+      {
+        id: "action_caltrops_bag_spread",
+        name: "Spread Caltrops",
+        activation: "action",
+        tableNote: "DC 15 Dexterity saving throw or stop moving.",
+        effect: { type: "no_effect" },
+      },
+      { actionId: "action_caltrops_bag_spread", activeStates: [] },
+      {
+        effectManager: new EffectManager(),
+        resourceManager: new ResourceManager(),
+      },
+    );
+
+    expect(result.executed).toBe(true);
+    expect(result.notes).toEqual([
+      "DC 15 Dexterity saving throw or stop moving.",
+    ]);
+  });
+});

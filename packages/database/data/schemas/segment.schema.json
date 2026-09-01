@@ -1209,6 +1209,10 @@
                     "targetEntity"
                   ]
                 },
+                "tableNote": {
+                  "type": "string",
+                  "minLength": 1
+                },
                 "effect": {
                   "oneOf": [
                     {
@@ -1677,9 +1681,6 @@
                               "damageType"
                             ]
                           }
-                        },
-                        "specialNote": {
-                          "type": "string"
                         }
                       },
                       "required": [
@@ -2576,9 +2577,6 @@
                                         "damageType"
                                       ]
                                     }
-                                  },
-                                  "specialNote": {
-                                    "type": "string"
                                   }
                                 },
                                 "required": [
@@ -4902,6 +4900,10 @@
                   "targetEntity"
                 ]
               },
+              "tableNote": {
+                "type": "string",
+                "minLength": 1
+              },
               "effect": {
                 "oneOf": [
                   {
@@ -5370,9 +5372,6 @@
                             "damageType"
                           ]
                         }
-                      },
-                      "specialNote": {
-                        "type": "string"
                       }
                     },
                     "required": [
@@ -6269,9 +6268,6 @@
                                       "damageType"
                                     ]
                                   }
-                                },
-                                "specialNote": {
-                                  "type": "string"
                                 }
                               },
                               "required": [

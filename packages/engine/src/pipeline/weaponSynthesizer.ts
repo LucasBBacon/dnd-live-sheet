@@ -68,6 +68,12 @@ export class WeaponSynthesizer {
         ? (weapon.ammoTag ?? weapon.ammoItemId)
         : undefined,
 
+      // the weapon's unenforceable rule belongs to the action now, so a weapon
+      // that rolls nothing at all can still carry one
+      ...(weapon.specialNote === undefined
+        ? {}
+        : { tableNote: weapon.specialNote }),
+
       effect: {
         type: "attack",
         // categorize accurately for engine's critical hit/trait filters
@@ -77,9 +83,6 @@ export class WeaponSynthesizer {
         longRange: maxRange,
         weaponContext: attackContext,
         criticalDamageMaximized,
-        ...(weapon.specialNote === undefined
-          ? {}
-          : { specialNote: weapon.specialNote }),
         // a weapon with no authored damage still attacks; it just has nothing
         // to roll. The empty pool is what stops ActionResolver rolling one.
         damage:
