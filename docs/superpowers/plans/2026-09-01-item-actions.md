@@ -1224,7 +1224,7 @@ describe("authored item actions", () => {
         .filter(
           (action) => action.effect.type === "no_effect" && !action.tableNote,
         )
-        .map((action) => ),
+        .map((action) => `${entry.id}/${action.id}`),
     );
 
     expect(silent).toEqual([]);
