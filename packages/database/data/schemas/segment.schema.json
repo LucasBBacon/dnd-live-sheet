@@ -4309,6 +4309,10 @@
             "default": 0,
             "type": "number"
           },
+          "costCp": {
+            "type": "number",
+            "minimum": 0
+          },
           "armorCategory": {
             "type": "string",
             "enum": [
@@ -4433,7 +4437,8 @@
                 "category_holy_symbol",
                 "category_arcane_focus",
                 "category_druidic_focus",
-                "category_musical_instrument"
+                "category_musical_instrument",
+                "category_pack"
               ]
             }
           },

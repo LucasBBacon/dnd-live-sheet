@@ -137,7 +137,7 @@ describe("inventory utils", () => {
     it("returns empty array when matching candidates are missing category tags", async () => {
       allItemRows = [
         {
-          id: "item_holy_symbol_amulet",
+          id: "item_focus_amulet",
           name: "Holy Symbol (Amulet)",
           itemRule: { categoryTags: [] },
           isBundle: false,

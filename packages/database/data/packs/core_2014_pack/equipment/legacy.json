@@ -6,6 +6,7 @@
             "name": "Blowgun Needle",
             "type": "gear",
             "weight": 0.02,
+            "costCp": 2,
             "requiresAttunement": false,
             "ammoTag": "needle",
             "categoryTags": [],
@@ -21,8 +22,11 @@
             "name": "Amulet Holy Symbol",
             "type": "gear",
             "weight": 1,
+            "costCp": 500,
             "requiresAttunement": false,
-            "categoryTags": [],
+            "categoryTags": [
+                "category_holy_symbol"
+            ],
             "lore": {
                 "shortDescription": "A sacred item used by clerics and paladins to channel divine power.",
                 "fullText": "An amulet holy symbol is a sacred item used by clerics and paladins to channel divine power. It is typically a pendant or charm that bears the symbol of the deity the wearer worships. The amulet serves as a focus for the wearer's divine magic, allowing them to cast spells and perform rituals associated with their faith. It is often worn around the neck and can be made from various materials, such as metal, wood, or stone, depending on the preferences of the wearer and the traditions of their religion."
@@ -35,8 +39,11 @@
             "name": "Emblem Holy Symbol",
             "type": "gear",
             "weight": 0,
+            "costCp": 500,
             "requiresAttunement": false,
-            "categoryTags": [],
+            "categoryTags": [
+                "category_holy_symbol"
+            ],
             "lore": {
                 "shortDescription": "A sacred item used by clerics and paladins to channel divine power.",
                 "fullText": "An emblem holy symbol is a sacred item used by clerics and paladins to channel divine power. It is typically a small, flat object that bears the symbol of the deity the wearer worships. The emblem serves as a focus for the wearer's divine magic, allowing them to cast spells and perform rituals associated with their faith. It can be made from various materials, such as metal, wood, or stone, depending on the preferences of the wearer and the traditions of their religion. Unlike an amulet holy symbol, an emblem is not worn around the neck but is instead held in hand or displayed prominently on clothing or armor."
@@ -49,8 +56,11 @@
             "name": "Reliquary Holy Symbol",
             "type": "gear",
             "weight": 2,
+            "costCp": 500,
             "requiresAttunement": false,
-            "categoryTags": [],
+            "categoryTags": [
+                "category_holy_symbol"
+            ],
             "lore": {
                 "shortDescription": "A sacred item used by clerics and paladins to channel divine power.",
                 "fullText": "A reliquary holy symbol is a sacred item used by clerics and paladins to channel divine power. It is typically a small, ornate container that holds a relic or sacred object associated with the deity the wearer worships. The reliquary serves as a focus for the wearer's divine magic, allowing them to cast spells and perform rituals associated with their faith. It can be made from various materials, such as metal, wood, or stone, depending on the preferences of the wearer and the traditions of their religion. Unlike an amulet or emblem holy symbol, a reliquary is designed to house a sacred relic, making it a powerful and revered item."
@@ -63,6 +73,7 @@
             "name": "Torch",
             "type": "gear",
             "weight": 1,
+            "costCp": 1,
             "requiresAttunement": false,
             "categoryTags": [],
             "lore": {
@@ -77,6 +88,7 @@
             "name": "Bedroll",
             "type": "gear",
             "weight": 7,
+            "costCp": 100,
             "requiresAttunement": false,
             "categoryTags": [],
             "lore": {
@@ -91,6 +103,7 @@
             "name": "Mess Kit",
             "type": "gear",
             "weight": 1,
+            "costCp": 20,
             "requiresAttunement": false,
             "categoryTags": [],
             "lore": {
@@ -105,6 +118,7 @@
             "name": "Tinderbox",
             "type": "gear",
             "weight": 1,
+            "costCp": 50,
             "requiresAttunement": false,
             "categoryTags": [],
             "lore": {
@@ -119,6 +133,7 @@
             "name": "Rations (1 day)",
             "type": "gear",
             "weight": 2,
+            "costCp": 50,
             "requiresAttunement": false,
             "categoryTags": [],
             "lore": {
@@ -133,6 +148,7 @@
             "name": "Waterskin",
             "type": "gear",
             "weight": 5,
+            "costCp": 20,
             "requiresAttunement": false,
             "categoryTags": [],
             "lore": {
@@ -147,6 +163,7 @@
             "name": "Rope, Hempen (50 feet)",
             "type": "gear",
             "weight": 10,
+            "costCp": 100,
             "requiresAttunement": false,
             "categoryTags": [],
             "lore": {
@@ -161,6 +178,7 @@
             "name": "Case, Map or Scroll",
             "type": "gear",
             "weight": 1,
+            "costCp": 100,
             "requiresAttunement": false,
             "categoryTags": [],
             "lore": {
@@ -175,6 +193,7 @@
             "name": "Ink (1 ounce bottle)",
             "type": "gear",
             "weight": 0,
+            "costCp": 1000,
             "requiresAttunement": false,
             "categoryTags": [],
             "lore": {
@@ -189,6 +208,7 @@
             "name": "Ink Pen",
             "type": "gear",
             "weight": 0,
+            "costCp": 2,
             "requiresAttunement": false,
             "categoryTags": [],
             "lore": {
@@ -203,6 +223,7 @@
             "name": "Lamp",
             "type": "gear",
             "weight": 1,
+            "costCp": 50,
             "requiresAttunement": false,
             "categoryTags": [],
             "lore": {
@@ -217,6 +238,7 @@
             "name": "Oil (flask)",
             "type": "gear",
             "weight": 1,
+            "costCp": 10,
             "requiresAttunement": false,
             "categoryTags": [],
             "lore": {
@@ -231,6 +253,7 @@
             "name": "Paper (one sheet)",
             "type": "gear",
             "weight": 0,
+            "costCp": 20,
             "requiresAttunement": false,
             "categoryTags": [],
             "lore": {
@@ -245,6 +268,7 @@
             "name": "Perfume (vial)",
             "type": "gear",
             "weight": 0,
+            "costCp": 500,
             "requiresAttunement": false,
             "categoryTags": [],
             "lore": {
@@ -259,6 +283,7 @@
             "name": "Sealing Wax",
             "type": "gear",
             "weight": 0,
+            "costCp": 50,
             "requiresAttunement": false,
             "categoryTags": [],
             "lore": {
@@ -273,6 +298,7 @@
             "name": "Soap",
             "type": "gear",
             "weight": 0,
+            "costCp": 2,
             "requiresAttunement": false,
             "categoryTags": [],
             "lore": {
@@ -287,6 +313,7 @@
             "name": "Blanket",
             "type": "gear",
             "weight": 3,
+            "costCp": 50,
             "requiresAttunement": false,
             "categoryTags": [],
             "lore": {
@@ -301,6 +328,7 @@
             "name": "Candle",
             "type": "gear",
             "weight": 0,
+            "costCp": 1,
             "requiresAttunement": false,
             "categoryTags": [],
             "lore": {
@@ -325,7 +353,7 @@
             "bundleContents": []
         },
         {
-            "id": "item_incense",
+            "id": "item_incense_block",
             "name": "Incense (block)",
             "type": "gear",
             "weight": 0,
@@ -353,24 +381,11 @@
             "bundleContents": []
         },
         {
-            "id": "item_vestments",
-            "name": "Vestments",
-            "type": "gear",
-            "weight": 4,
-            "requiresAttunement": false,
-            "categoryTags": [],
-            "lore": {
-                "shortDescription": "Ceremonial garments worn during religious rites.",
-                "fullText": "Ceremonial garments worn during religious rites. Marks the wearer as a cleric or acolyte of their faith."
-            },
-            "isBundle": false,
-            "bundleContents": []
-        },
-        {
             "id": "item_clothes_costume",
             "name": "Clothes, Costume",
             "type": "gear",
             "weight": 4,
+            "costCp": 500,
             "requiresAttunement": false,
             "categoryTags": [],
             "lore": {
@@ -385,6 +400,7 @@
             "name": "Disguise Kit",
             "type": "gear",
             "weight": 3,
+            "costCp": 2500,
             "requiresAttunement": false,
             "categoryTags": [],
             "lore": {

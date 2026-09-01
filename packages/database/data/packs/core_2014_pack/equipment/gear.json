@@ -1,0 +1,918 @@
+{
+    "$schema": "../../../schemas/segment.schema.json",
+    "equipment": [
+        {
+            "id": "item_ammo_sling_bullet",
+            "name": "Sling Bullet",
+            "type": "consumable",
+            "weight": 0.075,
+            "costCp": 0.2,
+            "requiresAttunement": false,
+            "ammoTag": "bullet",
+            "categoryTags": [],
+            "lore": {
+                "shortDescription": "A single cast lead sling bullet.",
+                "fullText": "A small ball of cast lead, heavier and far truer in flight than a stone of the same size, whirled out of a sling. Bullets are sold by the score and carried loose in a pouch, and drawing one is part of the attack that uses it. At the end of a battle you can spend a minute searching the field to recover half the ammunition you fired; bullets that hit are destroyed."
+            },
+            "isBundle": false,
+            "bundleContents": []
+        },
+        {
+            "id": "item_antitoxin_vial",
+            "name": "Antitoxin (vial)",
+            "type": "consumable",
+            "weight": 0,
+            "costCp": 5000,
+            "requiresAttunement": false,
+            "categoryTags": [],
+            "lore": {
+                "shortDescription": "A vial of bitter tonic that wards off poison for an hour.",
+                "fullText": "A creature that drinks this vial of liquid gains advantage on saving throws against poison for 1 hour. It confers no benefit to undead or constructs. Antitoxin is brewed to be swallowed before the danger rather than after it, and an hour is not long - the whole trick of the stuff is knowing when to spend it."
+            },
+            "isBundle": false,
+            "bundleContents": []
+        },
+        {
+            "id": "item_focus_crystal",
+            "name": "Crystal",
+            "type": "gear",
+            "weight": 1,
+            "costCp": 1000,
+            "requiresAttunement": false,
+            "categoryTags": [
+                "category_arcane_focus"
+            ],
+            "lore": {
+                "shortDescription": "A cut crystal that gathers and holds arcane energy steady.",
+                "fullText": "An arcane focus is a special item made to channel the power of arcane spells. A crystal is cut and polished to a shape that gathers energy along its axes and holds it there, and it is prized by casters who like to watch their magic collect before it goes anywhere. A sorcerer, warlock or wizard can use one in place of a spell's material components, except for those components that have a cost given in the spell."
+            },
+            "isBundle": false,
+            "bundleContents": []
+        },
+        {
+            "id": "item_focus_orb",
+            "name": "Orb",
+            "type": "gear",
+            "weight": 3,
+            "costCp": 2000,
+            "requiresAttunement": false,
+            "categoryTags": [
+                "category_arcane_focus"
+            ],
+            "lore": {
+                "shortDescription": "A heavy sphere of glass or polished stone, held to focus arcane spells.",
+                "fullText": "An arcane focus is a special item made to channel the power of arcane spells. An orb is a solid sphere of glass, crystal or polished stone - at three pounds, heavy enough that it has to be held deliberately rather than carried absent-mindedly, which is exactly the discipline some traditions want from it. A sorcerer, warlock or wizard can use one in place of a spell's material components, except for those components that have a cost given in the spell."
+            },
+            "isBundle": false,
+            "bundleContents": []
+        },
+        {
+            "id": "item_focus_rod",
+            "name": "Rod",
+            "type": "gear",
+            "weight": 2,
+            "costCp": 1000,
+            "requiresAttunement": false,
+            "categoryTags": [
+                "category_arcane_focus"
+            ],
+            "lore": {
+                "shortDescription": "A short banded rod, gripped in the fist and pointed to cast.",
+                "fullText": "An arcane focus is a special item made to channel the power of arcane spells. A rod is a short bar of metal or dense wood, banded and weighted at one end, sized to be gripped in the fist and pointed. It reads as an emblem of office as much as a piece of equipment, which suits casters who would rather be recognised than overlooked. A sorcerer, warlock or wizard can use one in place of a spell's material components, except for those components that have a cost given in the spell."
+            },
+            "isBundle": false,
+            "bundleContents": []
+        },
+        {
+            "id": "item_focus_staff",
+            "name": "Staff",
+            "type": "gear",
+            "weight": 4,
+            "costCp": 500,
+            "requiresAttunement": false,
+            "categoryTags": [
+                "category_arcane_focus"
+            ],
+            "lore": {
+                "shortDescription": "A specially constructed staff that doubles as an arcane focus.",
+                "fullText": "An arcane focus is a special item made to channel the power of arcane spells. This one is a specially constructed staff - a full-length shaft, worked and fitted for the purpose rather than cut out of a hedge. It is the cheapest of the arcane foci and the most useful off duty, a staff being a walking stick the rest of the time. A sorcerer, warlock or wizard can use one in place of a spell's material components, except for those components that have a cost given in the spell."
+            },
+            "isBundle": false,
+            "bundleContents": []
+        },
+        {
+            "id": "item_focus_sprig_of_mistletoe",
+            "name": "Sprig of Mistletoe",
+            "type": "gear",
+            "weight": 0,
+            "costCp": 100,
+            "requiresAttunement": false,
+            "categoryTags": [
+                "category_druidic_focus"
+            ],
+            "lore": {
+                "shortDescription": "A cut sprig of mistletoe kept green as a druidic focus.",
+                "fullText": "A druidic focus is an object drawn out of the natural world and kept for the power in it. A sprig of mistletoe or holly is the plainest of them - cut at the right season, from the right tree, and kept green afterwards by means the circle does not explain to outsiders. A druid can use one in place of a spell's material components, except for those components that have a cost given in the spell."
+            },
+            "isBundle": false,
+            "bundleContents": []
+        },
+        {
+            "id": "item_focus_wooden_staff",
+            "name": "Wooden Staff",
+            "type": "gear",
+            "weight": 4,
+            "costCp": 500,
+            "requiresAttunement": false,
+            "categoryTags": [
+                "category_druidic_focus"
+            ],
+            "lore": {
+                "shortDescription": "A staff drawn whole out of a living tree, carried as a druidic focus.",
+                "fullText": "A druidic focus is an object drawn out of the natural world and kept for the power in it. This one is a staff drawn whole out of a living tree rather than cut and shaped from dead wood, which is why no two are alike and why a druid who loses one does not simply buy another. A druid can use one in place of a spell's material components, except for those components that have a cost given in the spell."
+            },
+            "isBundle": false,
+            "bundleContents": []
+        },
+        {
+            "id": "item_focus_yew_wand",
+            "name": "Yew Wand",
+            "type": "gear",
+            "weight": 1,
+            "costCp": 1000,
+            "requiresAttunement": false,
+            "categoryTags": [
+                "category_druidic_focus"
+            ],
+            "lore": {
+                "shortDescription": "A wand of yew or another sacred wood, carried as a druidic focus.",
+                "fullText": "A druidic focus is an object drawn out of the natural world and kept for the power in it. A wand or scepter of yew or another special wood is the most portable of them, small enough to keep up a sleeve and unremarkable to anyone who does not know what yew means. A druid can use one in place of a spell's material components, except for those components that have a cost given in the spell."
+            },
+            "isBundle": false,
+            "bundleContents": []
+        },
+        {
+            "id": "item_ball_bearings_bag",
+            "name": "Ball Bearings (bag of 1,000)",
+            "type": "gear",
+            "weight": 2,
+            "costCp": 100,
+            "requiresAttunement": false,
+            "categoryTags": [],
+            "lore": {
+                "shortDescription": "A pouch of 1,000 tiny metal balls, spilled to send pursuers sprawling.",
+                "fullText": "As an action, you can spill these tiny metal balls from their pouch to cover a level area 10 feet square. A creature moving across the covered area must succeed on a DC 10 Dexterity saving throw or fall prone. A creature moving through the area at half speed doesn't need to make the saving throw."
+            },
+            "isBundle": false,
+            "bundleContents": []
+        },
+        {
+            "id": "item_barrel",
+            "name": "Barrel",
+            "type": "gear",
+            "weight": 70,
+            "costCp": 200,
+            "requiresAttunement": false,
+            "categoryTags": [],
+            "lore": {
+                "shortDescription": "A stave-built barrel holding 40 gallons of liquid or 4 cubic feet of goods.",
+                "fullText": "A barrel of oak staves bound with iron hoops, holding 40 gallons of liquid or 4 cubic feet of solid goods. Empty it weighs seventy pounds, and full it is going nowhere without a cart or a very determined shove, so barrels are what a cellar is measured in rather than something anyone carries. On its side and rolled is how one usually travels at all."
+            },
+            "isBundle": false,
+            "bundleContents": []
+        },
+        {
+            "id": "item_bell",
+            "name": "Bell",
+            "type": "gear",
+            "weight": 0,
+            "costCp": 100,
+            "requiresAttunement": false,
+            "categoryTags": [],
+            "lore": {
+                "shortDescription": "A small hand bell, loud out of all proportion to its size.",
+                "fullText": "A small cast hand bell with a wooden grip. Bells are rung for services, for alarms and for calling a household to a table, and adventurers buy them for a quieter use than any of those: tied to a thread across a corridor, a bell is the cheapest tripwire there is."
+            },
+            "isBundle": false,
+            "bundleContents": []
+        },
+        {
+            "id": "item_block_and_tackle",
+            "name": "Block and Tackle",
+            "type": "gear",
+            "weight": 5,
+            "costCp": 100,
+            "requiresAttunement": false,
+            "categoryTags": [],
+            "lore": {
+                "shortDescription": "A rigged set of pulleys that lets you hoist four times your usual load.",
+                "fullText": "A set of pulleys with a cable threaded through them and a hook to attach to objects, a block and tackle allows you to hoist up to four times the weight you can normally lift. It needs something solid overhead to hang from and a clear drop beneath, and the rope that runs through it is bought separately."
+            },
+            "isBundle": false,
+            "bundleContents": []
+        },
+        {
+            "id": "item_book",
+            "name": "Book",
+            "type": "gear",
+            "weight": 5,
+            "costCp": 2500,
+            "requiresAttunement": false,
+            "categoryTags": [],
+            "lore": {
+                "shortDescription": "A bound volume of poetry, history, lore or diagrams.",
+                "fullText": "A book might contain poetry, historical accounts, information pertaining to a particular field of lore, diagrams and notes on gnomish contraptions, or just about anything else that can be represented using text or pictures. A book of spells is a spellbook, which is a different item at twice the price."
+            },
+            "isBundle": false,
+            "bundleContents": []
+        },
+        {
+            "id": "item_bottle_glass",
+            "name": "Bottle, Glass",
+            "type": "gear",
+            "weight": 2,
+            "costCp": 200,
+            "requiresAttunement": false,
+            "categoryTags": [],
+            "lore": {
+                "shortDescription": "A corked glass bottle holding a pint and a half.",
+                "fullText": "A blown glass bottle with a cork stopper, holding 1 1/2 pints of liquid. Glass is expensive and it breaks, so a bottle is what you keep wine or a delicate reagent in rather than water for the road - that is what a waterskin is for. Its one real advantage is that you can see what is inside without opening it."
+            },
+            "isBundle": false,
+            "bundleContents": []
+        },
+        {
+            "id": "item_bucket",
+            "name": "Bucket",
+            "type": "gear",
+            "weight": 2,
+            "costCp": 5,
+            "requiresAttunement": false,
+            "categoryTags": [],
+            "lore": {
+                "shortDescription": "A wooden bucket holding 3 gallons of liquid.",
+                "fullText": "A wooden bucket with an iron handle, holding 3 gallons of liquid or half a cubic foot of solids. It is the cheapest way to move water short of cupped hands, and in practice it turns up far more often as something to catch a drip in, lower down a well on a rope, or put over a head."
+            },
+            "isBundle": false,
+            "bundleContents": []
+        },
+        {
+            "id": "item_caltrops_bag",
+            "name": "Caltrops (bag of 20)",
+            "type": "gear",
+            "weight": 2,
+            "costCp": 100,
+            "requiresAttunement": false,
+            "categoryTags": [],
+            "lore": {
+                "shortDescription": "A bag of 20 spiked caltrops, scattered to stop a charge.",
+                "fullText": "As an action, you can spread a single bag of caltrops to cover a 5-foot-square area. Any creature that enters the area must succeed on a DC 15 Dexterity saving throw or stop moving and take 1 piercing damage. Until the creature regains at least 1 hit point, its walking speed is reduced by 10 feet. A creature moving through the area at half speed doesn't need to make the saving throw."
+            },
+            "isBundle": false,
+            "bundleContents": []
+        },
+        {
+            "id": "item_case_crossbow_bolt",
+            "name": "Case, Crossbow Bolt",
+            "type": "gear",
+            "weight": 1,
+            "costCp": 100,
+            "requiresAttunement": false,
+            "categoryTags": [],
+            "lore": {
+                "shortDescription": "A wooden case holding up to 20 crossbow bolts.",
+                "fullText": "This wooden case can hold up to twenty crossbow bolts. It is worn at the hip with the mouth angled forward so a bolt can be drawn and seated one-handed; drawing the ammunition from a case is part of the attack that uses it rather than an action of its own."
+            },
+            "isBundle": false,
+            "bundleContents": []
+        },
+        {
+            "id": "item_chain",
+            "name": "Chain (10 feet)",
+            "type": "gear",
+            "weight": 10,
+            "costCp": 500,
+            "requiresAttunement": false,
+            "categoryTags": [],
+            "lore": {
+                "shortDescription": "Ten feet of iron chain with 10 hit points, burst DC 20.",
+                "fullText": "Ten feet of heavy iron chain. A chain has 10 hit points. It can be burst with a successful DC 20 Strength check. Chain does the one thing rope cannot - it will not be cut, burned or chewed through - at the price of ten pounds on your back and a great deal of noise wherever you take it."
+            },
+            "isBundle": false,
+            "bundleContents": []
+        },
+        {
+            "id": "item_chalk",
+            "name": "Chalk (1 piece)",
+            "type": "gear",
+            "weight": 0,
+            "costCp": 1,
+            "requiresAttunement": false,
+            "categoryTags": [],
+            "lore": {
+                "shortDescription": "A single stick of chalk for marking walls and floors.",
+                "fullText": "A single piece of soft white chalk. It costs one copper piece and it is the first thing an experienced delver buys: a mark at every junction is what turns a maze into a map. Chalk writes on stone, wood and slate, and wipes off again when you would rather nobody followed your marks."
+            },
+            "isBundle": false,
+            "bundleContents": []
+        },
+        {
+            "id": "item_climbers_kit",
+            "name": "Climber's Kit",
+            "type": "gear",
+            "weight": 12,
+            "costCp": 2500,
+            "requiresAttunement": false,
+            "categoryTags": [],
+            "lore": {
+                "shortDescription": "Pitons, boot tips, gloves and a harness for anchoring yourself to a climb.",
+                "fullText": "A climber's kit includes special pitons, boot tips, gloves, and a harness. You can use the climber's kit as an action to anchor yourself; when you do, you can't fall more than 25 feet from the point where you anchored yourself, and you can't climb more than 25 feet away from that point without undoing the anchor."
+            },
+            "isBundle": false,
+            "bundleContents": []
+        },
+        {
+            "id": "item_clothes_travelers",
+            "name": "Clothes, Traveler's",
+            "type": "gear",
+            "weight": 4,
+            "costCp": 200,
+            "requiresAttunement": false,
+            "categoryTags": [],
+            "lore": {
+                "shortDescription": "Sturdy road clothes: boots, cloak, hat and a wool overcoat.",
+                "fullText": "A set of traveller's clothes - stout boots, a wool overcoat, a hooded cloak, layers beneath and a wide hat - cut to keep the weather off over long days on the road. They are the default dress of anyone who expects to sleep somewhere other than where they woke up, and they are built to be repaired rather than replaced."
+            },
+            "isBundle": false,
+            "bundleContents": []
+        },
+        {
+            "id": "item_crowbar",
+            "name": "Crowbar",
+            "type": "gear",
+            "weight": 5,
+            "costCp": 200,
+            "requiresAttunement": false,
+            "categoryTags": [],
+            "lore": {
+                "shortDescription": "An iron pry bar granting advantage on Strength checks it can leverage.",
+                "fullText": "A bar of iron with a flattened, split end for prying. Using a crowbar grants advantage to Strength checks where the crowbar's leverage can be applied - lifting a portcullis the inch it needs, springing a nailed crate, levering a swollen door off its seat. Where there is nothing to brace against, it is five pounds of dead weight."
+            },
+            "isBundle": false,
+            "bundleContents": []
+        },
+        {
+            "id": "item_fishing_tackle",
+            "name": "Fishing Tackle",
+            "type": "gear",
+            "weight": 4,
+            "costCp": 100,
+            "requiresAttunement": false,
+            "categoryTags": [],
+            "lore": {
+                "shortDescription": "Rod, line, hooks, sinkers, lures and netting for catching fish.",
+                "fullText": "This kit includes a wooden rod, silken line, corkwood bobbers, steel hooks, lead sinkers, velvet lures, and narrow netting. Given water, time and a little patience it turns a halt into a meal, which over a long journey is worth a good deal more than the gold piece it costs."
+            },
+            "isBundle": false,
+            "bundleContents": []
+        },
+        {
+            "id": "item_flask",
+            "name": "Flask or Tankard",
+            "type": "gear",
+            "weight": 1,
+            "costCp": 2,
+            "requiresAttunement": false,
+            "categoryTags": [],
+            "lore": {
+                "shortDescription": "A flask or tankard holding a pint of liquid.",
+                "fullText": "A pewter or tin vessel holding one pint - a stoppered flask for the road, or an open tankard for a table. The flask is also the standard measure for lamp oil, which is why a lantern's burn time is given in flasks rather than in pints."
+            },
+            "isBundle": false,
+            "bundleContents": []
+        },
+        {
+            "id": "item_grappling_hook",
+            "name": "Grappling Hook",
+            "type": "gear",
+            "weight": 4,
+            "costCp": 200,
+            "requiresAttunement": false,
+            "categoryTags": [],
+            "lore": {
+                "shortDescription": "A weighted iron hook for throwing a rope over a ledge.",
+                "fullText": "A weighted iron hook with three or four flukes and an eye for a rope. Thrown over a battlement, a ledge or a roof beam, it turns fifty feet of rope into a way up. Setting one is a matter of aim and then a hard pull to test it, which is the part people skip."
+            },
+            "isBundle": false,
+            "bundleContents": []
+        },
+        {
+            "id": "item_hammer",
+            "name": "Hammer",
+            "type": "gear",
+            "weight": 3,
+            "costCp": 100,
+            "requiresAttunement": false,
+            "categoryTags": [],
+            "lore": {
+                "shortDescription": "A carpenter's hammer, for pitons, spikes and nails.",
+                "fullText": "An ordinary one-handed hammer with an iron head and a wooden haft. It is carried not to fight with but to drive things: pitons into a rock face, iron spikes into a door frame, tent pegs into hard ground. Any party that owns spikes owns a hammer, or spends an evening wishing it did."
+            },
+            "isBundle": false,
+            "bundleContents": []
+        },
+        {
+            "id": "item_hammer_sledge",
+            "name": "Hammer, Sledge",
+            "type": "gear",
+            "weight": 10,
+            "costCp": 200,
+            "requiresAttunement": false,
+            "categoryTags": [],
+            "lore": {
+                "shortDescription": "A heavy two-handed sledge for breaking stone and timber.",
+                "fullText": "A ten-pound iron head on a long haft, swung with both hands. A sledge is for demolition rather than construction - breaking mortar, splitting a beam, staving in a door that a crowbar cannot shift - and it is heavy enough that carrying one is a decision rather than an afterthought."
+            },
+            "isBundle": false,
+            "bundleContents": []
+        },
+        {
+            "id": "item_healers_kit",
+            "name": "Healer's Kit",
+            "type": "gear",
+            "weight": 3,
+            "costCp": 500,
+            "requiresAttunement": false,
+            "categoryTags": [],
+            "lore": {
+                "shortDescription": "A pouch of bandages, salves and splints with ten uses.",
+                "fullText": "This kit is a leather pouch containing bandages, salves, and splints. The kit has ten uses. As an action, you can expend one use of the kit to stabilize a creature that has 0 hit points, without needing to make a Wisdom (Medicine) check. It needs no proficiency and no roll, which makes it the most reliable five gold pieces a low-level party can spend."
+            },
+            "isBundle": false,
+            "bundleContents": []
+        },
+        {
+            "id": "item_holy_water_flask",
+            "name": "Holy Water (flask)",
+            "type": "consumable",
+            "weight": 1,
+            "costCp": 2500,
+            "requiresAttunement": false,
+            "categoryTags": [],
+            "lore": {
+                "shortDescription": "A flask of consecrated water that sears fiends and undead.",
+                "fullText": "As an action, you can splash the contents of this flask onto a creature within 5 feet of you or throw it up to 20 feet, shattering it on impact. In either case, make a ranged attack against a target creature, treating the holy water as an improvised weapon. If the target is a fiend or undead, it takes 2d6 radiant damage. A cleric or paladin may create holy water by performing a special ritual. The ritual takes 1 hour to perform, uses 25 gp worth of powdered silver, and requires the caster to expend a 1st-level spell slot."
+            },
+            "isBundle": false,
+            "bundleContents": []
+        },
+        {
+            "id": "item_hourglass",
+            "name": "Hourglass",
+            "type": "gear",
+            "weight": 1,
+            "costCp": 2500,
+            "requiresAttunement": false,
+            "categoryTags": [],
+            "lore": {
+                "shortDescription": "A sand glass that measures out a fixed span of time.",
+                "fullText": "Two glass bulbs joined at a narrow waist, mounted in a wooden frame and filled with sand fine enough to run from one to the other in a fixed span. An hourglass is how a watch is kept honest, how a ritual is timed, and how a party arguing about whether it has really been ten minutes settles the question."
+            },
+            "isBundle": false,
+            "bundleContents": []
+        },
+        {
+            "id": "item_hunting_trap",
+            "name": "Hunting Trap",
+            "type": "gear",
+            "weight": 25,
+            "costCp": 500,
+            "requiresAttunement": false,
+            "categoryTags": [],
+            "lore": {
+                "shortDescription": "A saw-toothed steel ring that snaps shut on whatever steps in it.",
+                "fullText": "When you use your action to set it, this trap forms a saw-toothed steel ring that snaps shut when a creature steps on a pressure plate in the center. The trap is affixed by a heavy chain to an immobile object, such as a tree or a spike driven into the ground. A creature that steps on the plate must succeed on a DC 13 Dexterity saving throw or take 1d4 piercing damage and stop moving. Thereafter, until the creature breaks free of the trap, its movement is limited by the length of the chain (typically 3 feet long). A creature can use its action to make a DC 13 Strength check, freeing itself or another creature within its reach on a success. Each failed check deals 1 piercing damage to the trapped creature."
+            },
+            "isBundle": false,
+            "bundleContents": []
+        },
+        {
+            "id": "item_jug",
+            "name": "Jug or Pitcher",
+            "type": "gear",
+            "weight": 4,
+            "costCp": 2,
+            "requiresAttunement": false,
+            "categoryTags": [],
+            "lore": {
+                "shortDescription": "An earthenware jug holding a gallon of liquid.",
+                "fullText": "A fired clay jug or pitcher with a handle and a lipped mouth, holding about a gallon. It is heavier and far more fragile than a waterskin and it pours a great deal better, which makes it a thing for tables and kitchens rather than for the road."
+            },
+            "isBundle": false,
+            "bundleContents": []
+        },
+        {
+            "id": "item_ladder",
+            "name": "Ladder (10-foot)",
+            "type": "gear",
+            "weight": 25,
+            "costCp": 10,
+            "requiresAttunement": false,
+            "categoryTags": [],
+            "lore": {
+                "shortDescription": "A ten-foot wooden ladder.",
+                "fullText": "Ten feet of wooden ladder, rungs pegged between two rails. It weighs twenty-five pounds and does not fold, so it is carried only by parties who already know there is a pit, a wall or a loft between them and where they are going - and it is a tenth the price of the rope they would otherwise use."
+            },
+            "isBundle": false,
+            "bundleContents": []
+        },
+        {
+            "id": "item_lantern_bullseye",
+            "name": "Lantern, Bullseye",
+            "type": "gear",
+            "weight": 2,
+            "costCp": 1000,
+            "requiresAttunement": false,
+            "categoryTags": [],
+            "lore": {
+                "shortDescription": "A lensed lantern that throws light in a 60-foot cone.",
+                "fullText": "A bullseye lantern casts bright light in a 60-foot cone and dim light for an additional 60 feet. Once lit, it burns for 6 hours on a flask (1 pint) of oil. The lens throws the light twice as far as a hooded lantern will, at the price of showing you nothing whatsoever to either side of it."
+            },
+            "isBundle": false,
+            "bundleContents": []
+        },
+        {
+            "id": "item_lantern_hooded",
+            "name": "Lantern, Hooded",
+            "type": "gear",
+            "weight": 2,
+            "costCp": 500,
+            "requiresAttunement": false,
+            "categoryTags": [],
+            "lore": {
+                "shortDescription": "A shuttered lantern casting light in a 30-foot radius.",
+                "fullText": "A hooded lantern casts bright light in a 30-foot radius and dim light for an additional 30 feet. Once lit, it burns for 6 hours on a flask (1 pint) of oil. As an action, you can lower the hood, reducing the light to dim light in a 5-foot radius - which is how a party keeps a flame alive without announcing itself down the length of a corridor."
+            },
+            "isBundle": false,
+            "bundleContents": []
+        },
+        {
+            "id": "item_lock",
+            "name": "Lock",
+            "type": "gear",
+            "weight": 1,
+            "costCp": 1000,
+            "requiresAttunement": false,
+            "categoryTags": [],
+            "lore": {
+                "shortDescription": "A keyed lock, picked with thieves' tools on a DC 15 Dexterity check.",
+                "fullText": "A key is provided with the lock. Without the key, a creature proficient with thieves' tools can pick this lock with a successful DC 15 Dexterity check. Your DM may decide that better locks are available for higher prices."
+            },
+            "isBundle": false,
+            "bundleContents": []
+        },
+        {
+            "id": "item_magnifying_glass",
+            "name": "Magnifying Glass",
+            "type": "gear",
+            "weight": 0,
+            "costCp": 10000,
+            "requiresAttunement": false,
+            "categoryTags": [],
+            "lore": {
+                "shortDescription": "A ground lens granting advantage on checks to appraise fine detail.",
+                "fullText": "This lens allows a closer look at small objects. It is also useful as a substitute for flint and steel when starting fires. Lighting a fire with a magnifying glass requires light as bright as sunlight to focus, tinder to ignite, and about 5 minutes for the fire to ignite. A magnifying glass grants advantage on any ability check made to appraise or inspect an item that is small or highly detailed."
+            },
+            "isBundle": false,
+            "bundleContents": []
+        },
+        {
+            "id": "item_manacles",
+            "name": "Manacles",
+            "type": "gear",
+            "weight": 6,
+            "costCp": 200,
+            "requiresAttunement": false,
+            "categoryTags": [],
+            "lore": {
+                "shortDescription": "Metal restraints that bind a Small or Medium creature, escape DC 20.",
+                "fullText": "These metal restraints can bind a Small or Medium creature. Escaping the manacles requires a successful DC 20 Dexterity check. Breaking them requires a successful DC 20 Strength check. Each set of manacles comes with one key. Without the key, a creature proficient with thieves' tools can pick the manacles' lock with a successful DC 15 Dexterity check. Manacles have 15 hit points."
+            },
+            "isBundle": false,
+            "bundleContents": []
+        },
+        {
+            "id": "item_mirror_steel",
+            "name": "Mirror, Steel",
+            "type": "gear",
+            "weight": 0.5,
+            "costCp": 500,
+            "requiresAttunement": false,
+            "categoryTags": [],
+            "lore": {
+                "shortDescription": "A polished steel hand mirror.",
+                "fullText": "A hand mirror of polished steel rather than silvered glass, because steel does not shatter in a pack. It is used for shaving, for signalling with sunlight across a valley, and for the oldest trick in dungeoneering: putting it round the corner instead of your head."
+            },
+            "isBundle": false,
+            "bundleContents": []
+        },
+        {
+            "id": "item_parchment",
+            "name": "Parchment (one sheet)",
+            "type": "gear",
+            "weight": 0,
+            "costCp": 10,
+            "requiresAttunement": false,
+            "categoryTags": [],
+            "lore": {
+                "shortDescription": "A single sheet of scraped and prepared hide for writing on.",
+                "fullText": "A single sheet of parchment - animal hide scraped, limed and stretched until it takes ink cleanly. It is tougher and far longer-lived than paper and costs half as much, which is why charters, contracts and spell scrolls are written on parchment and idle letters generally are not."
+            },
+            "isBundle": false,
+            "bundleContents": []
+        },
+        {
+            "id": "item_pick_miners",
+            "name": "Pick, Miner's",
+            "type": "gear",
+            "weight": 10,
+            "costCp": 200,
+            "requiresAttunement": false,
+            "categoryTags": [],
+            "lore": {
+                "shortDescription": "A heavy two-handed pick for breaking rock.",
+                "fullText": "A miner's pick has a heavy iron head with a point at one end and a chisel at the other, swung two-handed. It is made for rock and packed earth - opening a seam, breaking through a wall, clearing a fall - and it is slow, loud, sweating work with every one of them."
+            },
+            "isBundle": false,
+            "bundleContents": []
+        },
+        {
+            "id": "item_piton",
+            "name": "Piton",
+            "type": "gear",
+            "weight": 0.25,
+            "costCp": 5,
+            "requiresAttunement": false,
+            "categoryTags": [],
+            "lore": {
+                "shortDescription": "An iron spike driven into rock to anchor a rope.",
+                "fullText": "A short iron spike with an eye at the head, hammered into a crack in rock or masonry to take a rope. Pitons are bought by the handful and left behind where they are driven, so a climb of any length is counted in how many of them it costs."
+            },
+            "isBundle": false,
+            "bundleContents": []
+        },
+        {
+            "id": "item_poison_basic_vial",
+            "name": "Poison, Basic (vial)",
+            "type": "consumable",
+            "weight": 0,
+            "costCp": 10000,
+            "requiresAttunement": false,
+            "categoryTags": [],
+            "lore": {
+                "shortDescription": "A vial of poison that coats one blade or three pieces of ammunition.",
+                "fullText": "You can use the poison in this vial to coat one slashing or piercing weapon or up to three pieces of ammunition. Applying the poison takes an action. A creature hit by the poisoned weapon or ammunition must make a DC 10 Constitution saving throw or take 1d4 poison damage. Once applied, the poison retains potency for 1 minute before drying."
+            },
+            "isBundle": false,
+            "bundleContents": []
+        },
+        {
+            "id": "item_pole",
+            "name": "Pole (10-foot)",
+            "type": "gear",
+            "weight": 7,
+            "costCp": 5,
+            "requiresAttunement": false,
+            "categoryTags": [],
+            "lore": {
+                "shortDescription": "A ten-foot wooden pole for probing what you would rather not touch.",
+                "fullText": "Ten feet of straight wooden pole. It has no rules attached to it and never has; what it has is reach. A pole is how a floor gets tested for pressure plates, a chest gets opened from out of range, and a suspiciously still pool gets measured before anybody wades in."
+            },
+            "isBundle": false,
+            "bundleContents": []
+        },
+        {
+            "id": "item_pot_iron",
+            "name": "Pot, Iron",
+            "type": "gear",
+            "weight": 10,
+            "costCp": 200,
+            "requiresAttunement": false,
+            "categoryTags": [],
+            "lore": {
+                "shortDescription": "A cast-iron cooking pot for a camp fire.",
+                "fullText": "A cast-iron pot with a bail handle, made to hang over a fire or sit in the embers. At ten pounds it is the heaviest thing in most camp kits and the reason the party eats something hot at the end of the day. It also boils water, boils bandages, and serves at need as a very poor helmet."
+            },
+            "isBundle": false,
+            "bundleContents": []
+        },
+        {
+            "id": "item_potion_of_healing",
+            "name": "Potion of Healing",
+            "type": "consumable",
+            "weight": 0.5,
+            "costCp": 5000,
+            "requiresAttunement": false,
+            "categoryTags": [],
+            "lore": {
+                "shortDescription": "A vial of red fluid that restores 2d4 + 2 hit points when drunk.",
+                "fullText": "A character who drinks the magical red fluid in this vial regains 2d4 + 2 hit points. Drinking or administering a potion takes an action. It is the one magic item that can reliably be bought rather than found, and the reason a party's first fifty gold pieces usually leave town in somebody's belt pouch."
+            },
+            "isBundle": false,
+            "bundleContents": []
+        },
+        {
+            "id": "item_ram_portable",
+            "name": "Ram, Portable",
+            "type": "gear",
+            "weight": 35,
+            "costCp": 400,
+            "requiresAttunement": false,
+            "categoryTags": [],
+            "lore": {
+                "shortDescription": "A braced ram giving a +4 bonus on Strength checks to break down doors.",
+                "fullText": "You can use a portable ram to break down doors. When doing so, you gain a +4 bonus on the Strength check. One other character can help you use the ram, giving you advantage on this check. It weighs thirty-five pounds, which is the standing price of never having to ask whether the door is worth the noise."
+            },
+            "isBundle": false,
+            "bundleContents": []
+        },
+        {
+            "id": "item_rope_silk",
+            "name": "Rope, Silk (50 feet)",
+            "type": "gear",
+            "weight": 5,
+            "costCp": 1000,
+            "requiresAttunement": false,
+            "categoryTags": [],
+            "lore": {
+                "shortDescription": "Fifty feet of silk rope with 2 hit points, burst DC 17.",
+                "fullText": "Fifty feet of silk rope. Rope, whether made of hemp or silk, has 2 hit points and can be burst with a DC 17 Strength check. Silk costs ten times what hemp does and weighs half as much - five pounds over fifty feet that somebody in the party does not have to carry."
+            },
+            "isBundle": false,
+            "bundleContents": []
+        },
+        {
+            "id": "item_scale_merchants",
+            "name": "Scale, Merchant's",
+            "type": "gear",
+            "weight": 3,
+            "costCp": 500,
+            "requiresAttunement": false,
+            "categoryTags": [],
+            "lore": {
+                "shortDescription": "A balance and weights for measuring small goods up to two pounds.",
+                "fullText": "A scale includes a small balance, pans, and a suitable assortment of weights up to 2 pounds. With it, you can measure the exact weight of small objects, such as raw precious metals or trade goods, to help determine their worth."
+            },
+            "isBundle": false,
+            "bundleContents": []
+        },
+        {
+            "id": "item_shovel",
+            "name": "Shovel",
+            "type": "gear",
+            "weight": 5,
+            "costCp": 200,
+            "requiresAttunement": false,
+            "categoryTags": [],
+            "lore": {
+                "shortDescription": "A shovel for digging, filling and shifting earth.",
+                "fullText": "An iron-bladed shovel on a wooden haft. It digs latrines, graves, firepits and cache holes, and it is the only tool that answers the question of what is buried under this floor without an hour of scraping at it with somebody's dagger."
+            },
+            "isBundle": false,
+            "bundleContents": []
+        },
+        {
+            "id": "item_signal_whistle",
+            "name": "Signal Whistle",
+            "type": "gear",
+            "weight": 0,
+            "costCp": 5,
+            "requiresAttunement": false,
+            "categoryTags": [],
+            "lore": {
+                "shortDescription": "A whistle that carries a signal further than a shout.",
+                "fullText": "A small whistle of bone, wood or tin, shrill enough to carry across a valley or through a building. A prearranged pattern of blasts says more, faster and further than a shout does - and unlike a shout it gives away only that somebody whistled, not who."
+            },
+            "isBundle": false,
+            "bundleContents": []
+        },
+        {
+            "id": "item_spike_iron",
+            "name": "Iron Spike",
+            "type": "gear",
+            "weight": 0.5,
+            "costCp": 10,
+            "requiresAttunement": false,
+            "categoryTags": [],
+            "lore": {
+                "shortDescription": "An iron spike, hammered in to wedge a door or anchor a rope.",
+                "fullText": "A heavy iron spike, sold ten to a bundle and driven home with a hammer. Spikes wedge a door shut behind you, pin a hinge, anchor a hunting trap's chain to the ground, or hold a rope where there is nothing else to tie it to. Each one weighs half a pound, so the full bundle is five."
+            },
+            "isBundle": false,
+            "bundleContents": []
+        },
+        {
+            "id": "item_spyglass",
+            "name": "Spyglass",
+            "type": "gear",
+            "weight": 1,
+            "costCp": 100000,
+            "requiresAttunement": false,
+            "categoryTags": [],
+            "lore": {
+                "shortDescription": "A drawtube glass that magnifies distant objects to twice their size.",
+                "fullText": "Objects viewed through a spyglass are magnified to twice their size. At a thousand gold pieces it is the most expensive thing on the adventuring gear table by a factor of ten, and worth every coin to anyone whose life depends on counting a warband before the warband counts them."
+            },
+            "isBundle": false,
+            "bundleContents": []
+        },
+        {
+            "id": "item_tent",
+            "name": "Tent, Two-Person",
+            "type": "gear",
+            "weight": 20,
+            "costCp": 200,
+            "requiresAttunement": false,
+            "categoryTags": [],
+            "lore": {
+                "shortDescription": "A canvas shelter that sleeps two.",
+                "fullText": "A simple and portable canvas shelter, a tent sleeps two. It is poles, pegs and oiled canvas and nothing cleverer, and it is the whole difference between a long rest and a long night on any evening the weather turns."
+            },
+            "isBundle": false,
+            "bundleContents": []
+        },
+        {
+            "id": "item_vial",
+            "name": "Vial",
+            "type": "gear",
+            "weight": 0,
+            "costCp": 100,
+            "requiresAttunement": false,
+            "categoryTags": [],
+            "lore": {
+                "shortDescription": "A small stoppered vial holding four ounces of liquid.",
+                "fullText": "A small glass vial with a ground stopper, holding about four ounces. Vials are what acids, antitoxins, poisons and potions come in, and an empty one is worth carrying for exactly that reason - some things want a container that can be sealed, seen through, and thrown."
+            },
+            "isBundle": false,
+            "bundleContents": []
+        },
+        {
+            "id": "item_whetstone",
+            "name": "Whetstone",
+            "type": "gear",
+            "weight": 1,
+            "costCp": 1,
+            "requiresAttunement": false,
+            "categoryTags": [],
+            "lore": {
+                "shortDescription": "A stone for putting an edge back on a blade.",
+                "fullText": "A block of fine-grained stone for grinding an edge back onto a blade. It carries no rules and everybody carries one anyway: a whetstone is what a character reaches for at a campfire when they want something to do with their hands while the conversation happens."
+            },
+            "isBundle": false,
+            "bundleContents": []
+        },
+        {
+            "id": "item_string",
+            "name": "String (10 feet)",
+            "type": "gear",
+            "weight": 0,
+            "costCp": 1,
+            "requiresAttunement": false,
+            "categoryTags": [],
+            "lore": {
+                "shortDescription": "Ten feet of light string.",
+                "fullText": "Ten feet of thin string wound on a card. It will not take a person's weight and is not meant to. String is for tying a bell across a doorway, marking a route back, lowering something small down a shaft, or binding a bundle that would be a waste of rope."
+            },
+            "isBundle": false,
+            "bundleContents": []
+        },
+        {
+            "id": "item_sand_bag",
+            "name": "Bag of Sand",
+            "type": "gear",
+            "weight": 0,
+            "requiresAttunement": false,
+            "categoryTags": [],
+            "lore": {
+                "shortDescription": "A little bag of fine dry sand, for blotting ink and quieting floors.",
+                "fullText": "A little bag of fine, dry sand. Scribes keep one to blot wet ink before it can smear; burglars keep one because a handful cast on a polished floor takes the squeak out of a boot, and a handful cast in a face buys a moment. It appears in both the burglar's and the scholar's packs for those two very different reasons, and the book prints no price for it."
+            },
+            "isBundle": false,
+            "bundleContents": []
+        },
+        {
+            "id": "item_small_knife",
+            "name": "Small Knife",
+            "type": "gear",
+            "weight": 0,
+            "requiresAttunement": false,
+            "categoryTags": [],
+            "lore": {
+                "shortDescription": "A small utility knife for cord, quills and food.",
+                "fullText": "A short-bladed knife with a plain handle, carried for work rather than for fighting: cutting cord, trimming a quill, lifting a seal, eating. It travels in the scholar's pack, where its job is the quill and the string around a bundle of notes rather than anything that fights back. The book gives it neither price nor weight, so it carries neither here."
+            },
+            "isBundle": false,
+            "bundleContents": []
+        }
+    ]
+}

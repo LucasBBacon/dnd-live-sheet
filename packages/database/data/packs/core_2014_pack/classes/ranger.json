@@ -32,7 +32,7 @@
                                 "equipmentBundle": [
                                     {
                                         "kind": "item",
-                                        "refId": "item_armor_scale",
+                                        "refId": "item_armor_scale_mail",
                                         "quantity": 1
                                     }
                                 ]

@@ -627,8 +627,8 @@ const ROSTER: SampleCharacter[] = [
       { itemId: "item_focus_amulet", slot: "amulet" },
       { itemId: "item_pack_priests" },
       { itemId: "item_potion_healing", quantity: 2 },
-      { itemId: "item_vestments" },
-      { itemId: "item_incense", quantity: 4 },
+      { itemId: "item_clothes_vestments" },
+      { itemId: "item_incense_block", quantity: 4 },
     ],
     resources: [
       {
@@ -1123,7 +1123,7 @@ const ROSTER: SampleCharacter[] = [
       },
       { itemId: "item_weapon_shortsword" },
       { itemId: "item_weapon_dart", quantity: 10 },
-      { itemId: "item_vestments" },
+      { itemId: "item_clothes_vestments" },
       { itemId: "item_pack_explorers" },
       { itemId: "item_potion_greater_healing" },
       { itemId: "item_wondrous_headband_of_intellect" },

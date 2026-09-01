@@ -127,7 +127,7 @@ describe("a container carries its capacity on EquipmentDefinition", () => {
 
   it("parses category tags on authored equipment", () => {
     const equipment = EquipmentDefinitionSchema.parse({
-      id: "item_holy_symbol_amulet",
+      id: "item_focus_amulet",
       name: "Holy Symbol (Amulet)",
       type: "gear",
       categoryTags: ["category_holy_symbol"],

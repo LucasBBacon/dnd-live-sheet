@@ -88,6 +88,25 @@ export const EquipmentDefinitionSchema = z
     // shape, so every field the inventory and encumbrance code reads has to
     // live here or it can never be authored
     weight: z.number().default(0),
+    /**
+     * The item's list price, in copper pieces.
+     *
+     * One denomination, named in the field, for the reason `capacityPounds`
+     * gives: the PHB prices gear across four coins, and "2 gp" as authored
+     * text is not a number anything can add up. Copper is the smallest of the
+     * four, so every printed price converts to it exactly.
+     *
+     * Not an integer, because ammunition is priced per unit here exactly as it
+     * is weighed per unit - a sling bullet is a fifth of a copper the same way
+     * it is a fortieth of a pound, and rounding either would put the bundle
+     * price back out of reach.
+     *
+     * Optional rather than defaulted, because an item with no printed price is
+     * not an item that is free. A magic item, an unarmed strike and a priest's
+     * vestments are all unpriced in the book; `0` would claim they are worth
+     * nothing, which is a different and false statement.
+     */
+    costCp: z.number().min(0).optional(),
     armorCategory: ArmorCategorySchema.optional(),
     equipSlot: EquipSlotSchema.optional(),
     requiresAttunement: z.boolean().default(false),

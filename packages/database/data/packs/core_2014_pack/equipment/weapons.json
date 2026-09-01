@@ -6,6 +6,7 @@
             "name": "Club",
             "type": "weapon",
             "weight": 2,
+            "costCp": 10,
             "equipSlot": "main_hand",
             "requiresAttunement": false,
             "categoryTags": [
@@ -33,6 +34,7 @@
             "name": "Dagger",
             "type": "weapon",
             "weight": 1,
+            "costCp": 200,
             "equipSlot": "main_hand",
             "requiresAttunement": false,
             "categoryTags": [
@@ -61,6 +63,7 @@
             "name": "Greatclub",
             "type": "weapon",
             "weight": 10,
+            "costCp": 20,
             "equipSlot": "main_hand",
             "requiresAttunement": false,
             "categoryTags": [
@@ -88,6 +91,7 @@
             "name": "Handaxe",
             "type": "weapon",
             "weight": 2,
+            "costCp": 500,
             "equipSlot": "main_hand",
             "requiresAttunement": false,
             "categoryTags": [
@@ -115,6 +119,7 @@
             "name": "Javelin",
             "type": "weapon",
             "weight": 2,
+            "costCp": 50,
             "equipSlot": "main_hand",
             "requiresAttunement": false,
             "categoryTags": [
@@ -141,6 +146,7 @@
             "name": "Light Hammer",
             "type": "weapon",
             "weight": 2,
+            "costCp": 200,
             "equipSlot": "main_hand",
             "requiresAttunement": false,
             "categoryTags": [
@@ -170,6 +176,7 @@
             "name": "Mace",
             "type": "weapon",
             "weight": 4,
+            "costCp": 500,
             "equipSlot": "main_hand",
             "requiresAttunement": false,
             "categoryTags": [
@@ -193,6 +200,7 @@
             "name": "Quarterstaff",
             "type": "weapon",
             "weight": 4,
+            "costCp": 20,
             "equipSlot": "main_hand",
             "requiresAttunement": false,
             "categoryTags": [
@@ -219,6 +227,7 @@
             "name": "Sickle",
             "type": "weapon",
             "weight": 2,
+            "costCp": 100,
             "equipSlot": "main_hand",
             "requiresAttunement": false,
             "categoryTags": [
@@ -246,6 +255,7 @@
             "name": "Spear",
             "type": "weapon",
             "weight": 3,
+            "costCp": 100,
             "equipSlot": "main_hand",
             "requiresAttunement": false,
             "categoryTags": [
@@ -301,6 +311,7 @@
             "name": "Light Crossbow",
             "type": "weapon",
             "weight": 5,
+            "costCp": 2500,
             "equipSlot": "main_hand",
             "requiresAttunement": false,
             "categoryTags": [
@@ -331,6 +342,7 @@
             "name": "Dart",
             "type": "weapon",
             "weight": 0.25,
+            "costCp": 5,
             "equipSlot": "main_hand",
             "requiresAttunement": false,
             "categoryTags": [
@@ -358,6 +370,7 @@
             "name": "Shortbow",
             "type": "weapon",
             "weight": 2,
+            "costCp": 2500,
             "equipSlot": "main_hand",
             "requiresAttunement": false,
             "categoryTags": [
@@ -387,6 +400,7 @@
             "name": "Sling",
             "type": "weapon",
             "weight": 0,
+            "costCp": 10,
             "equipSlot": "main_hand",
             "requiresAttunement": false,
             "categoryTags": [
@@ -401,7 +415,9 @@
                     "ammunition"
                 ],
                 "range": 30,
-                "longRange": 120
+                "longRange": 120,
+                "ammoItemId": "item_ammo_sling_bullet",
+                "ammoTag": "bullet"
             },
             "lore": {
                 "shortDescription": "A simple ranged weapon that hurls small projectiles with a cord.",
@@ -415,6 +431,7 @@
             "name": "Battleaxe",
             "type": "weapon",
             "weight": 4,
+            "costCp": 1000,
             "equipSlot": "main_hand",
             "requiresAttunement": false,
             "categoryTags": [
@@ -443,6 +460,7 @@
             "name": "Flail",
             "type": "weapon",
             "weight": 2,
+            "costCp": 1000,
             "equipSlot": "main_hand",
             "requiresAttunement": false,
             "categoryTags": [
@@ -468,6 +486,7 @@
             "name": "Glaive",
             "type": "weapon",
             "weight": 6,
+            "costCp": 2000,
             "equipSlot": "main_hand",
             "requiresAttunement": false,
             "categoryTags": [
@@ -497,6 +516,7 @@
             "name": "Greataxe",
             "type": "weapon",
             "weight": 7,
+            "costCp": 3000,
             "equipSlot": "main_hand",
             "requiresAttunement": false,
             "categoryTags": [
@@ -525,6 +545,7 @@
             "name": "Greatsword",
             "type": "weapon",
             "weight": 6,
+            "costCp": 5000,
             "equipSlot": "main_hand",
             "requiresAttunement": false,
             "categoryTags": [
@@ -553,6 +574,7 @@
             "name": "Halberd",
             "type": "weapon",
             "weight": 6,
+            "costCp": 2000,
             "equipSlot": "main_hand",
             "requiresAttunement": false,
             "categoryTags": [
@@ -582,6 +604,7 @@
             "name": "Lance",
             "type": "weapon",
             "weight": 6,
+            "costCp": 1000,
             "equipSlot": "main_hand",
             "requiresAttunement": false,
             "categoryTags": [
@@ -611,6 +634,7 @@
             "name": "Longsword",
             "type": "weapon",
             "weight": 3,
+            "costCp": 1500,
             "equipSlot": "main_hand",
             "requiresAttunement": false,
             "categoryTags": [
@@ -637,6 +661,7 @@
             "name": "Maul",
             "type": "weapon",
             "weight": 10,
+            "costCp": 1000,
             "equipSlot": "main_hand",
             "requiresAttunement": false,
             "categoryTags": [
@@ -665,6 +690,7 @@
             "name": "Morningstar",
             "type": "weapon",
             "weight": 4,
+            "costCp": 1500,
             "equipSlot": "main_hand",
             "requiresAttunement": false,
             "categoryTags": [
@@ -690,6 +716,7 @@
             "name": "Pike",
             "type": "weapon",
             "weight": 18,
+            "costCp": 500,
             "equipSlot": "main_hand",
             "requiresAttunement": false,
             "categoryTags": [
@@ -719,6 +746,7 @@
             "name": "Rapier",
             "type": "weapon",
             "weight": 2,
+            "costCp": 2500,
             "equipSlot": "main_hand",
             "requiresAttunement": false,
             "categoryTags": [
@@ -744,6 +772,7 @@
             "name": "Scimitar",
             "type": "weapon",
             "weight": 3,
+            "costCp": 2500,
             "equipSlot": "main_hand",
             "requiresAttunement": false,
             "categoryTags": [
@@ -770,6 +799,7 @@
             "name": "Shortsword",
             "type": "weapon",
             "weight": 2,
+            "costCp": 1000,
             "equipSlot": "main_hand",
             "requiresAttunement": false,
             "categoryTags": [
@@ -796,6 +826,7 @@
             "name": "Trident",
             "type": "weapon",
             "weight": 4,
+            "costCp": 500,
             "equipSlot": "main_hand",
             "requiresAttunement": false,
             "categoryTags": [
@@ -826,6 +857,7 @@
             "name": "War Pick",
             "type": "weapon",
             "weight": 2,
+            "costCp": 500,
             "equipSlot": "main_hand",
             "requiresAttunement": false,
             "categoryTags": [
@@ -851,6 +883,7 @@
             "name": "Warhammer",
             "type": "weapon",
             "weight": 2,
+            "costCp": 1500,
             "equipSlot": "main_hand",
             "requiresAttunement": false,
             "categoryTags": [
@@ -879,6 +912,7 @@
             "name": "Whip",
             "type": "weapon",
             "weight": 3,
+            "costCp": 200,
             "equipSlot": "main_hand",
             "requiresAttunement": false,
             "categoryTags": [
@@ -907,6 +941,7 @@
             "name": "Blowgun",
             "type": "weapon",
             "weight": 1,
+            "costCp": 1000,
             "equipSlot": "main_hand",
             "requiresAttunement": false,
             "categoryTags": [
@@ -938,6 +973,7 @@
             "name": "Hand Crossbow",
             "type": "weapon",
             "weight": 3,
+            "costCp": 7500,
             "equipSlot": "main_hand",
             "requiresAttunement": false,
             "categoryTags": [
@@ -970,6 +1006,7 @@
             "name": "Heavy Crossbow",
             "type": "weapon",
             "weight": 18,
+            "costCp": 5000,
             "equipSlot": "main_hand",
             "requiresAttunement": false,
             "categoryTags": [
@@ -1003,6 +1040,7 @@
             "name": "Longbow",
             "type": "weapon",
             "weight": 2,
+            "costCp": 5000,
             "equipSlot": "main_hand",
             "requiresAttunement": false,
             "categoryTags": [
@@ -1033,6 +1071,7 @@
             "name": "Net",
             "type": "weapon",
             "weight": 3,
+            "costCp": 100,
             "equipSlot": "main_hand",
             "requiresAttunement": false,
             "categoryTags": [

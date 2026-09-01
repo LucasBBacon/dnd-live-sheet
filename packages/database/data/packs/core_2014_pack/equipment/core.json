@@ -2,6 +2,45 @@
     "$schema": "../../../schemas/segment.schema.json",
     "equipment": [
         {
+            "id": "item_abacus",
+            "name": "Abacus",
+            "type": "gear",
+            "weight": 2,
+            "costCp": 200,
+            "requiresAttunement": false,
+            "categoryTags": [],
+            "lore": {
+                "shortDescription": "A framed rack of sliding beads for reckoning sums.",
+                "fullText": "An abacus is a wooden frame strung with rods of sliding beads, used by merchants, tax collectors and ships' pursers to reckon sums far faster than they can be done in the head. Each rod stands for a place value, so a practised user can add, subtract and divide large figures by touch alone. It is the standard tool of any trade that has to balance a ledger before the end of the day."
+            }
+        },
+        {
+            "id": "item_acid_vial",
+            "name": "Acid (vial)",
+            "type": "consumable",
+            "weight": 1,
+            "costCp": 2500,
+            "requiresAttunement": false,
+            "categoryTags": [],
+            "lore": {
+                "shortDescription": "A stoppered vial of corrosive acid, splashed or thrown as an improvised weapon.",
+                "fullText": "As an action, you can splash the contents of this vial onto a creature within 5 feet of you or throw the vial up to 20 feet, shattering it on impact. In either case, make a ranged attack against a creature or object, treating the acid as an improvised weapon. On a hit, the target takes 2d6 acid damage."
+            }
+        },
+        {
+            "id": "item_alchemists_fire_flask",
+            "name": "Alchemist's fire (flask)",
+            "type": "consumable",
+            "weight": 1,
+            "costCp": 5000,
+            "requiresAttunement": false,
+            "categoryTags": [],
+            "lore": {
+                "shortDescription": "A flask of sticky fluid that catches light the moment it meets the air.",
+                "fullText": "This sticky, adhesive fluid ignites when exposed to air. As an action, you can throw this flask up to 20 feet, shattering it on impact. Make a ranged attack against a creature or object, treating the alchemist's fire as an improvised weapon. On a hit, the target takes 1d4 fire damage at the start of each of its turns. A creature can end this damage by using its action to make a DC 10 Dexterity check to extinguish the flames."
+            }
+        },
+        {
             "id": "item_ring_of_protection",
             "name": "Ring of Protection",
             "type": "wondrous",
@@ -28,8 +67,8 @@
                 }
             ],
             "lore": {
-                "shortDescription": "Ring of Protection",
-                "fullText": "Ring of Protection"
+                "shortDescription": "A ring that turns aside blows and steadies its wearer against magic.",
+                "fullText": "You gain a +1 bonus to AC and saving throws while wearing this ring. The protection is subtle - no glow, no shimmer - and shows itself only in the blow that lands an inch wide and the spell that fails to take hold. Like most rings of its kind it answers to one wearer at a time, and must be attuned before it answers at all. It carries no market price; rings of protection are found, granted or taken, not bought."
             }
         },
         {
@@ -37,12 +76,13 @@
             "name": "Arrow",
             "type": "consumable",
             "weight": 0.05,
+            "costCp": 5,
             "requiresAttunement": false,
             "ammoTag": "arrow",
             "categoryTags": [],
             "lore": {
-                "shortDescription": "Arrow",
-                "fullText": "Arrow"
+                "shortDescription": "A single arrow, fletched for a shortbow or longbow.",
+                "fullText": "A slender shaft of wood tipped with a bladed head and fletched with feathers, loosed from a shortbow or longbow. Arrows are sold by the score and carried in a quiver, and drawing one is part of the attack that uses it. At the end of a battle you can spend a minute searching the field to recover half the ammunition you fired; arrows that hit are destroyed."
             }
         },
         {
@@ -72,8 +112,8 @@
                 }
             ],
             "lore": {
-                "shortDescription": "+1 Arrow",
-                "fullText": "+1 Arrow"
+                "shortDescription": "An enchanted arrow that flies truer and bites deeper than its plain kin.",
+                "fullText": "You have a +1 bonus to attack and damage rolls made with this piece of magic ammunition. Once it hits a target, the arrow is no longer magical and becomes an ordinary arrow. Magic ammunition is not stocked beside the common sort at any fletcher's, which is why it has no market price here - a quiver of these comes out of a hoard or a patron's hand."
             }
         },
         {
@@ -81,12 +121,13 @@
             "name": "Robe",
             "type": "wondrous",
             "weight": 4,
+            "costCp": 100,
             "equipSlot": "body",
             "requiresAttunement": false,
             "categoryTags": [],
             "lore": {
-                "shortDescription": "Robe",
-                "fullText": "Robe"
+                "shortDescription": "A loose, full-length robe of plain cloth.",
+                "fullText": "A loose garment of plain cloth falling to the ankle, cut wide enough to be thrown on over other clothing. Robes are the working dress of scholars, ascetics and hedge-mages who want to look the part. A robe carries no protection of its own - it is clothing, not armour, and anyone who wears one into a fight is relying on something else entirely."
             }
         },
         {
@@ -94,14 +135,15 @@
             "name": "Backpack",
             "type": "gear",
             "weight": 5,
+            "costCp": 200,
             "requiresAttunement": false,
             "container": {
                 "capacityPounds": 30
             },
             "categoryTags": [],
             "lore": {
-                "shortDescription": "Backpack",
-                "fullText": "Backpack"
+                "shortDescription": "A leather pack worn on the shoulders, holding 30 pounds of gear.",
+                "fullText": "A sturdy leather pack with shoulder straps and a drawstring throat - the standard way an adventurer carries everything that is not in hand. It holds 1 cubic foot or 30 pounds of gear. Bulky items such as a bedroll or a coil of rope are usually strapped to the outside rather than forced inside, and a backpack can also be used as a saddlebag."
             }
         },
         {
@@ -109,14 +151,15 @@
             "name": "Sack",
             "type": "gear",
             "weight": 0.5,
+            "costCp": 1,
             "requiresAttunement": false,
             "container": {
                 "capacityPounds": 30
             },
             "categoryTags": [],
             "lore": {
-                "shortDescription": "Sack",
-                "fullText": "Sack"
+                "shortDescription": "A plain cloth sack holding 30 pounds of gear.",
+                "fullText": "A sack of coarse cloth closed with a length of cord, holding 1 cubic foot or 30 pounds of gear. It costs a single copper piece, which is why loot leaves a dungeon in sacks far more often than it leaves in chests. Empty, it weighs half a pound and folds away into a pocket."
             }
         },
         {
@@ -124,14 +167,15 @@
             "name": "Pouch",
             "type": "gear",
             "weight": 1,
+            "costCp": 50,
             "requiresAttunement": false,
             "container": {
                 "capacityPounds": 6
             },
             "categoryTags": [],
             "lore": {
-                "shortDescription": "Pouch",
-                "fullText": "Pouch"
+                "shortDescription": "A belt pouch of cloth or leather holding 6 pounds of small goods.",
+                "fullText": "A cloth or leather pouch worn on the belt. It can hold up to 20 sling bullets or 50 blowgun needles, among other things, to a limit of 1/5 cubic foot or 6 pounds of gear. A compartmentalised pouch made for holding spell components is a component pouch, which is a separate item at fifty times the price."
             }
         },
         {
@@ -139,14 +183,15 @@
             "name": "Basket",
             "type": "gear",
             "weight": 2,
+            "costCp": 40,
             "requiresAttunement": false,
             "container": {
                 "capacityPounds": 40
             },
             "categoryTags": [],
             "lore": {
-                "shortDescription": "Basket",
-                "fullText": "Basket"
+                "shortDescription": "A woven basket holding 40 pounds of gear.",
+                "fullText": "A basket woven from split reed or willow, carried on the arm or the hip, holding 2 cubic feet or 40 pounds of gear. It is open-topped and rigid, which makes it good for bread, fruit and firewood and poor for anything that has to stay dry, stay upright or stay out of sight."
             }
         },
         {
@@ -154,355 +199,96 @@
             "name": "Chest",
             "type": "gear",
             "weight": 25,
+            "costCp": 500,
             "requiresAttunement": false,
             "container": {
                 "capacityPounds": 300
             },
             "categoryTags": [],
             "lore": {
-                "shortDescription": "Chest",
-                "fullText": "Chest"
+                "shortDescription": "A banded wooden chest holding 300 pounds of gear.",
+                "fullText": "A heavy wooden chest bound with iron and hinged at the back, holding 12 cubic feet or 300 pounds of gear. At twenty-five pounds empty it is not a thing anyone carries far. A chest is what waits in a room - usually with a lock on it, and usually with something worth the lock inside."
             }
-        },
-        {
-            "id": "item_pack_explorers",
-            "name": "Explorer's Pack",
-            "type": "gear",
-            "weight": 0,
-            "requiresAttunement": false,
-            "categoryTags": [],
-            "lore": {
-                "shortDescription": "Explorer's Pack",
-                "fullText": "Explorer's Pack"
-            },
-            "isBundle": true,
-            "bundleContents": [
-                {
-                    "itemId": "item_backpack",
-                    "quantity": 1
-                },
-                {
-                    "itemId": "item_bedroll",
-                    "quantity": 1
-                },
-                {
-                    "itemId": "item_mess_kit",
-                    "quantity": 1
-                },
-                {
-                    "itemId": "item_tinderbox",
-                    "quantity": 1
-                },
-                {
-                    "itemId": "item_torch",
-                    "quantity": 10
-                },
-                {
-                    "itemId": "item_rations",
-                    "quantity": 10
-                },
-                {
-                    "itemId": "item_waterskin",
-                    "quantity": 1
-                },
-                {
-                    "itemId": "item_rope_hempen",
-                    "quantity": 1
-                }
-            ]
-        },
-        {
-            "id": "item_pack_diplomats",
-            "name": "Diplomat's Pack",
-            "type": "gear",
-            "weight": 0,
-            "requiresAttunement": false,
-            "categoryTags": [],
-            "lore": {
-                "shortDescription": "Diplomat's Pack",
-                "fullText": "Diplomat's Pack"
-            },
-            "isBundle": true,
-            "bundleContents": [
-                {
-                    "itemId": "item_chest",
-                    "quantity": 1
-                },
-                {
-                    "itemId": "item_case_map_or_scroll",
-                    "quantity": 2
-                },
-                {
-                    "itemId": "item_clothes_fine",
-                    "quantity": 1
-                },
-                {
-                    "itemId": "item_ink",
-                    "quantity": 1
-                },
-                {
-                    "itemId": "item_ink_pen",
-                    "quantity": 1
-                },
-                {
-                    "itemId": "item_lamp",
-                    "quantity": 1
-                },
-                {
-                    "itemId": "item_oil_flask",
-                    "quantity": 2
-                },
-                {
-                    "itemId": "item_paper",
-                    "quantity": 5
-                },
-                {
-                    "itemId": "item_perfume",
-                    "quantity": 1
-                },
-                {
-                    "itemId": "item_sealing_wax",
-                    "quantity": 1
-                },
-                {
-                    "itemId": "item_soap",
-                    "quantity": 1
-                }
-            ]
-        },
-        {
-            "id": "item_pack_entertainers",
-            "name": "Entertainer's Pack",
-            "type": "gear",
-            "weight": 0,
-            "requiresAttunement": false,
-            "categoryTags": [],
-            "lore": {
-                "shortDescription": "Entertainer's Pack",
-                "fullText": "Entertainer's Pack"
-            },
-            "isBundle": true,
-            "bundleContents": [
-                {
-                    "itemId": "item_backpack",
-                    "quantity": 1
-                },
-                {
-                    "itemId": "item_bedroll",
-                    "quantity": 1
-                },
-                {
-                    "itemId": "item_clothes_costume",
-                    "quantity": 2
-                },
-                {
-                    "itemId": "item_candle",
-                    "quantity": 5
-                },
-                {
-                    "itemId": "item_rations",
-                    "quantity": 5
-                },
-                {
-                    "itemId": "item_waterskin",
-                    "quantity": 1
-                },
-                {
-                    "itemId": "item_disguise_kit",
-                    "quantity": 1
-                }
-            ]
         },
         {
             "id": "item_musical_instrument_lute",
             "name": "Lute",
             "type": "gear",
-            "weight": 0,
+            "weight": 2,
+            "costCp": 3500,
             "requiresAttunement": false,
             "categoryTags": [
                 "category_musical_instrument"
             ],
             "lore": {
-                "shortDescription": "Lute",
-                "fullText": "Lute"
+                "shortDescription": "A pear-bodied stringed instrument, plucked or strummed.",
+                "fullText": "A lute has a deep pear-shaped body, a fretted neck and courses of gut strings, played with the fingers. It is the instrument most associated with travelling performers, being loud enough to fill a taproom and light enough to carry down a road. A character proficient with the lute adds their proficiency bonus to ability checks made to play it, and a bard can use one as a spellcasting focus."
             }
         },
         {
             "id": "item_ammo_bolt",
-            "name": "Bolts",
+            "name": "Crossbow Bolt",
             "type": "gear",
-            "weight": 0,
+            "weight": 0.075,
+            "costCp": 5,
             "requiresAttunement": false,
             "ammoTag": "bolt",
             "categoryTags": [],
             "lore": {
-                "shortDescription": "Bolts",
-                "fullText": "Bolts"
-            }
-        },
-        {
-            "id": "item_pack_priests",
-            "name": "Priest's Pack",
-            "type": "gear",
-            "weight": 0,
-            "requiresAttunement": false,
-            "categoryTags": [],
-            "lore": {
-                "shortDescription": "Priest's Pack",
-                "fullText": "Priest's Pack"
-            },
-            "isBundle": true,
-            "bundleContents": [
-                {
-                    "itemId": "item_backpack",
-                    "quantity": 1
-                },
-                {
-                    "itemId": "item_blanket",
-                    "quantity": 1
-                },
-                {
-                    "itemId": "item_candle",
-                    "quantity": 10
-                },
-                {
-                    "itemId": "item_tinderbox",
-                    "quantity": 1
-                },
-                {
-                    "itemId": "item_alms_box",
-                    "quantity": 1
-                },
-                {
-                    "itemId": "item_incense",
-                    "quantity": 2
-                },
-                {
-                    "itemId": "item_censer",
-                    "quantity": 1
-                },
-                {
-                    "itemId": "item_vestments",
-                    "quantity": 1
-                },
-                {
-                    "itemId": "item_rations",
-                    "quantity": 2
-                },
-                {
-                    "itemId": "item_waterskin",
-                    "quantity": 1
-                }
-            ]
-        },
-        {
-            "id": "item_armor_shield_wooden",
-            "name": "Wooden Shield",
-            "type": "gear",
-            "weight": 0,
-            "requiresAttunement": false,
-            "categoryTags": [
-                "category_armor_shield"
-            ],
-            "lore": {
-                "shortDescription": "Wooden Shield",
-                "fullText": "Wooden Shield"
-            }
-        },
-        {
-            "id": "item_pack_dungeoneers",
-            "name": "Dungeoneer's Pack",
-            "type": "gear",
-            "weight": 0,
-            "requiresAttunement": false,
-            "categoryTags": [],
-            "lore": {
-                "shortDescription": "Dungeoneer's Pack",
-                "fullText": "Dungeoneer's Pack"
+                "shortDescription": "A single crossbow bolt, short and heavy-headed.",
+                "fullText": "A short, thick quarrel with a heavy head, made to be seated in a crossbow rather than drawn on a string. Bolts are sold by the score and carried in a bolt case, and drawing one is part of the attack that uses it. At the end of a battle you can spend a minute searching the field to recover half the ammunition you fired; bolts that hit are destroyed."
             }
         },
         {
             "id": "item_pack_quiver",
             "name": "Quiver",
             "type": "gear",
-            "weight": 0,
+            "weight": 1,
+            "costCp": 100,
             "requiresAttunement": false,
             "categoryTags": [],
             "lore": {
-                "shortDescription": "Quiver",
-                "fullText": "Quiver"
-            }
-        },
-        {
-            "id": "item_armor_scale",
-            "name": "Scale Armor",
-            "type": "gear",
-            "weight": 0,
-            "requiresAttunement": false,
-            "categoryTags": [],
-            "lore": {
-                "shortDescription": "Scale Armor",
-                "fullText": "Scale Armor"
+                "shortDescription": "A stiffened case worn at the hip that holds 20 arrows.",
+                "fullText": "A quiver is a stiffened tube of leather worn at the hip or slung across the back, cut so that an arrow can be drawn out one-handed without looking down. It holds up to 20 arrows, and drawing one is part of the attack that uses it rather than an action of its own."
             }
         },
         {
             "id": "item_tool_thieves_tools",
             "name": "Thieves' Tools",
             "type": "gear",
-            "weight": 0,
+            "weight": 1,
+            "costCp": 2500,
             "requiresAttunement": false,
             "categoryTags": [],
             "lore": {
-                "shortDescription": "Thieves' Tools",
-                "fullText": "Thieves' Tools"
-            }
-        },
-        {
-            "id": "item_pack_burglars",
-            "name": "Burglar's Pack",
-            "type": "gear",
-            "weight": 0,
-            "requiresAttunement": false,
-            "categoryTags": [],
-            "lore": {
-                "shortDescription": "Burglar's Pack",
-                "fullText": "Burglar's Pack"
+                "shortDescription": "A folding roll of picks, files and mirrors for locks and traps.",
+                "fullText": "Thieves' tools are a compact roll holding a small file, a set of lock picks, a mirror mounted on a metal handle, a set of narrow-bladed scissors and a pair of pliers. Proficiency with these tools lets you add your proficiency bonus to any ability check you make to disarm traps or open locks."
             }
         },
         {
             "id": "item_gear_component_pouch",
             "name": "Component Pouch",
             "type": "gear",
-            "weight": 0,
+            "weight": 2,
+            "costCp": 2500,
             "requiresAttunement": false,
             "categoryTags": [],
             "lore": {
-                "shortDescription": "Component Pouch",
-                "fullText": "Component Pouch"
-            }
-        },
-        {
-            "id": "item_pack_scholars",
-            "name": "Scholar's Pack",
-            "type": "gear",
-            "weight": 0,
-            "requiresAttunement": false,
-            "categoryTags": [],
-            "lore": {
-                "shortDescription": "Scholar's Pack",
-                "fullText": "Scholar's Pack"
+                "shortDescription": "A watertight belt pouch of compartments holding spell components.",
+                "fullText": "A component pouch is a small, watertight leather belt pouch divided into compartments, holding all the material components and other special items you need to cast your spells - except for those components that have a specific cost given in the spell's description. A caster carrying one never has to name or track the common components inside it."
             }
         },
         {
             "id": "item_magic_item_spellbook",
             "name": "Spellbook",
             "type": "gear",
-            "weight": 0,
+            "weight": 3,
+            "costCp": 5000,
             "requiresAttunement": false,
             "categoryTags": [],
             "lore": {
-                "shortDescription": "Spellbook",
-                "fullText": "Spellbook"
+                "shortDescription": "A leather-bound tome of 100 vellum pages for recording spells.",
+                "fullText": "Essential for wizards, a spellbook is a leather-bound tome with 100 blank vellum pages suitable for recording spells. A wizard copies each spell into it in a private shorthand of notation, sigils and marginal reminders, and the book is the master record from which the day's prepared spells are chosen. Losing it is the worst thing that can happen to a wizard short of dying."
             }
         },
         {
@@ -513,44 +299,46 @@
             "requiresAttunement": false,
             "categoryTags": [],
             "lore": {
-                "shortDescription": "Incense Stick",
-                "fullText": "Incense Stick"
+                "shortDescription": "A slender stick of scented resin, burned during rites.",
+                "fullText": "A stick of compressed resin and aromatic gum that burns down over most of an hour, giving off a thin, sweet smoke. Sticks of incense are carried by priests and acolytes and lit at prayers, consecrations and funerals; a temple measures the length of a service by how many have burned through. They are given out rather than sold, and carry no price on the equipment table."
             }
         },
         {
             "id": "item_clothes_vestments",
             "name": "Vestments",
             "type": "gear",
-            "weight": 0,
+            "weight": 4,
             "requiresAttunement": false,
             "categoryTags": [],
             "lore": {
-                "shortDescription": "Vestments",
-                "fullText": "Vestments"
+                "shortDescription": "Ceremonial garments worn while conducting religious rites.",
+                "fullText": "Vestments are the formal garments of a religious office - robe, stole, and whatever colours, cuts and embroidery the faith calls for. They are worn while conducting rites rather than while travelling, and they mark the wearer as ordained to anyone who knows the faith on sight. They give no protection and are not meant to. A temple issues vestments rather than selling them, so the book prints no price."
             }
         },
         {
             "id": "item_clothes_common",
             "name": "Common Clothes",
             "type": "gear",
-            "weight": 0,
+            "weight": 3,
+            "costCp": 50,
             "requiresAttunement": false,
             "categoryTags": [],
             "lore": {
-                "shortDescription": "Common Clothes",
-                "fullText": "Common Clothes"
+                "shortDescription": "Ordinary working clothes of undyed wool and linen.",
+                "fullText": "A set of ordinary clothes - shirt, breeches or skirt, jerkin, stockings and shoes - in undyed wool and linen, cut for work rather than for show. Common clothes are what most people in the world are wearing, which quietly makes them the most useful disguise a character owns: nobody looks twice at someone dressed like everybody else."
             }
         },
         {
             "id": "item_clothes_fine",
             "name": "Fine Clothes",
             "type": "gear",
-            "weight": 0,
+            "weight": 6,
+            "costCp": 1500,
             "requiresAttunement": false,
             "categoryTags": [],
             "lore": {
-                "shortDescription": "Fine Clothes",
-                "fullText": "Fine Clothes"
+                "shortDescription": "Well-cut clothes of expensive cloth, finished with real tailoring.",
+                "fullText": "Fine clothes are made of expensive fabrics - silk, velvet, close-woven wool - and finished with careful tailoring, buttons of bone or metal, and a little embroidery. They are the required dress at court, at a noble's table, and at any occasion where being underdressed is itself the insult. They are also heavy and delicate enough that nobody fights in them by choice."
             }
         },
         {
@@ -558,11 +346,12 @@
             "name": "Signet Ring",
             "type": "gear",
             "weight": 0,
+            "costCp": 500,
             "requiresAttunement": false,
             "categoryTags": [],
             "lore": {
-                "shortDescription": "Signet Ring",
-                "fullText": "Signet Ring"
+                "shortDescription": "A ring bearing an engraved seal, pressed into wax to mark a document.",
+                "fullText": "A signet ring carries a device cut in reverse into its face - a house's arms, a guild's mark, a personal cipher - so that it can be pressed into hot wax to seal and authenticate a letter. The seal is the signature. A signet ring in the wrong hands can commit its owner to debts, promises and treasons they never made, which is why they are worn rather than stored."
             }
         },
         {
@@ -573,36 +362,23 @@
             "requiresAttunement": false,
             "categoryTags": [],
             "lore": {
-                "shortDescription": "Scroll of Pedigree",
-                "fullText": "Scroll of Pedigree"
-            }
-        },
-        {
-            "id": "item_holy_symbol_amulet",
-            "name": "Holy Symbol (Amulet)",
-            "type": "gear",
-            "weight": 0,
-            "requiresAttunement": false,
-            "categoryTags": [
-                "category_holy_symbol"
-            ],
-            "lore": {
-                "shortDescription": "Holy Symbol (Amulet)",
-                "fullText": "Holy Symbol (Amulet)"
+                "shortDescription": "A sealed scroll setting out a noble family's line of descent.",
+                "fullText": "A scroll of pedigree traces a family's descent through its generations, naming the marriages, titles and holdings that attach to the line, and carries the seals of whoever certified it. Nobles produce one to press a claim, to settle precedence at a table, or to establish that a stranger with the right name really is who they say they are. It is granted with the name rather than purchased, and has no market price."
             }
         },
         {
             "id": "item_focus_wand",
             "name": "Wand",
             "type": "gear",
-            "weight": 0,
+            "weight": 1,
+            "costCp": 1000,
             "requiresAttunement": false,
             "categoryTags": [
                 "category_arcane_focus"
             ],
             "lore": {
-                "shortDescription": "Wand",
-                "fullText": "Wand"
+                "shortDescription": "A wand-like length of worked wood, held to channel arcane spells.",
+                "fullText": "An arcane focus is a special item made to channel the power of arcane spells, and a wand is the smallest of them: a slender, wand-like length of wood, turned and finished and often cored with something that carries a charge well. It aims one-handed, which is why it is favoured by casters who want the other hand free. A sorcerer, warlock or wizard can use one in place of a spell's material components, except for those components that have a cost given in the spell."
             }
         },
         {
@@ -610,13 +386,14 @@
             "name": "Druidic Totem",
             "type": "gear",
             "weight": 0,
+            "costCp": 100,
             "requiresAttunement": false,
             "categoryTags": [
                 "category_druidic_focus"
             ],
             "lore": {
-                "shortDescription": "Druidic Totem",
-                "fullText": "Druidic Totem"
+                "shortDescription": "A bound token of feather, fur, bone and tooth from sacred animals.",
+                "fullText": "A druidic focus is an object drawn out of the natural world and kept for the power in it. This one is a totem: a small carved or bound object incorporating feathers, fur, bones and teeth from animals sacred to the druid's circle, and no two are made alike. A druid can use one in place of a spell's material components, except for those components that have a cost given in the spell."
             }
         }
     ]

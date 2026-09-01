@@ -126,22 +126,34 @@ describe("EQUIPMENT_DICTIONARY", () => {
     }
   });
 
-  it("gives every wearable entry a slot, and ammunition a tag instead", () => {
+  it("gives every wearable entry a slot, and nothing carried one", () => {
     for (const [id, item] of Object.entries(EQUIPMENT_DICTIONARY)) {
-      if (item.type === "consumable") {
-        // ammunition is spent from the pack, never worn
-        expect(item.equipSlot, `${id} slot`).toBeUndefined();
-        expect(item.ammoTag, `${id} tag`).toBeDefined();
-        continue;
-      }
-
-      if (item.type === "gear") {
-        // gear items like containers are carried but not worn
+      if (item.type === "consumable" || item.type === "gear") {
+        // a consumable is drunk, thrown or spent and gear is carried; the two
+        // differ over whether the sheet offers a "use" button, not over where
+        // on the body they sit, because neither sits anywhere
         expect(item.equipSlot, `${id} slot`).toBeUndefined();
         continue;
       }
 
       expect(item.equipSlot, `${id} slot`).toBeDefined();
+    }
+  });
+
+  it("gives every piece of ammunition the tag a weapon looks it up by", () => {
+    // This used to be asserted of every consumable, which held only while the
+    // two arrows were the only consumables the pack had. Once the gear table
+    // arrived with acid, antitoxin, holy water, poison and a healing potion,
+    // "consumable" plainly meant "spent when used" and not "ammunition" - and
+    // ammunition is found by its tag anyway, which is the fact worth pinning.
+    const ammunition = Object.entries(EQUIPMENT_DICTIONARY).filter(([id]) =>
+      id.startsWith("item_ammo_"),
+    );
+
+    expect(ammunition.length).toBeGreaterThan(0);
+    for (const [id, item] of ammunition) {
+      expect(item.ammoTag, `${id} tag`).toBeDefined();
+      expect(item.equipSlot, `${id} slot`).toBeUndefined();
     }
   });
 

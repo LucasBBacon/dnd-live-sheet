@@ -35,7 +35,7 @@ describe("buildCategoryItemOptions", () => {
       {
         equipmentById: {
           item_holy_symbol_amulet: {
-            id: "item_holy_symbol_amulet",
+            id: "item_focus_amulet",
             name: "Holy Symbol (Amulet)",
             type: "gear",
             weight: 1,

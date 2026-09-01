@@ -88,7 +88,13 @@ export const ItemRequirementSchema = z
     }
   });
 
-// explicit category vocabulary for starting-equipment category resolution
+/**
+ * The category vocabulary a starting-equipment grant can name.
+ *
+ * Membership is declared by the item, never inferred from its id or its name:
+ * an arcane focus is one because it carries `category_arcane_focus`, and that
+ * tag is the only reason a class grant of "an arcane focus" resolves to it.
+ */
 export const StartingEquipmentCategoryTagSchema = z.enum([
   "category_weapon_simple",
   "category_weapon_simple_melee",
@@ -101,6 +107,11 @@ export const StartingEquipmentCategoryTagSchema = z.enum([
   "category_arcane_focus",
   "category_druidic_focus",
   "category_musical_instrument",
+  // Six classes grant "an equipment pack" by category, so the seven packs need
+  // a tag to be interchangeable through. equipment/packs.json already carried
+  // this tag while nothing here declared it, which is why the shipped pack
+  // stopped parsing the moment that segment joined the manifest.
+  "category_pack",
 ]);
 
 export const StartingEquipmentGrantSchema = z

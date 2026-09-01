@@ -32,7 +32,7 @@
                                 "equipmentBundle": [
                                     {
                                         "kind": "item",
-                                        "refId": "item_armor_shield_wooden",
+                                        "refId": "item_armor_shield",
                                         "quantity": 1
                                     }
                                 ]

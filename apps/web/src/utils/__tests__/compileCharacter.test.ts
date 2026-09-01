@@ -267,7 +267,7 @@ describe("compileCharacterPayload", () => {
       selectedEquipmentCategoryChoices: {
         "class-given:0": {
           kind: "item",
-          refId: "item_holy_symbol_amulet",
+          refId: "item_focus_amulet",
           quantity: 1,
         },
         "background-given:0": {
@@ -282,7 +282,7 @@ describe("compileCharacterPayload", () => {
     const result = compileCharacterPayload(state);
 
     expect(result.startingEquipment.given).toEqual([
-      { kind: "item", refId: "item_holy_symbol_amulet", quantity: 1 },
+      { kind: "item", refId: "item_focus_amulet", quantity: 1 },
       { kind: "item", refId: "item_focus_wand", quantity: 1 },
     ]);
   });

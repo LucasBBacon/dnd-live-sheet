@@ -104,7 +104,7 @@ describe("startingEquipment helpers", () => {
   it("matches a holy symbol category candidate by explicit tag", () => {
     const isMatch = matchesStartingEquipmentCategory(
       {
-        id: "item_holy_symbol_amulet",
+        id: "item_focus_amulet",
         name: "Holy Symbol (Amulet)",
         categoryTags: ["category_holy_symbol"],
       },
@@ -117,7 +117,7 @@ describe("startingEquipment helpers", () => {
   it("does not match when the candidate lacks the requested tag", () => {
     const isMatch = matchesStartingEquipmentCategory(
       {
-        id: "item_holy_symbol_amulet",
+        id: "item_focus_amulet",
         name: "Holy Symbol (Amulet)",
         categoryTags: [],
       },
