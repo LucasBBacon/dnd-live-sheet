@@ -120,7 +120,6 @@ describe("validateCoreRulePack", () => {
       weight: 2,
       requiresAttunement: false,
       categoryTags: [],
-      actions: [],
       lore: {
         shortDescription: "Minimal authored lore for a test weapon.",
       },

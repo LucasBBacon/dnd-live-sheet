@@ -229,7 +229,7 @@ const SAMPLE_ITEMS: SampleItem[] = [
     pounds: 0.5,
     description:
       "A vial of red liquid that glimmers when agitated. Drinking it restores 2d4 + 2 hit points.",
-    itemRule: { type: "consumable", requiresAttunement: false, categoryTags: [], actions: [] },
+    itemRule: { type: "consumable", requiresAttunement: false, categoryTags: [] },
   },
   {
     id: "item_potion_greater_healing",
@@ -237,7 +237,7 @@ const SAMPLE_ITEMS: SampleItem[] = [
     pounds: 0.5,
     description:
       "A larger vial of the same red liquid. Drinking it restores 4d4 + 4 hit points.",
-    itemRule: { type: "consumable", requiresAttunement: false, categoryTags: [], actions: [] },
+    itemRule: { type: "consumable", requiresAttunement: false, categoryTags: [] },
   },
   {
     id: "item_scroll_fireball",
@@ -245,7 +245,7 @@ const SAMPLE_ITEMS: SampleItem[] = [
     pounds: 0,
     description:
       "A spell scroll bearing Fireball at 3rd level. The scroll crumbles once the spell is cast.",
-    itemRule: { type: "consumable", requiresAttunement: false, categoryTags: [], actions: [] },
+    itemRule: { type: "consumable", requiresAttunement: false, categoryTags: [] },
   },
   {
     id: "item_weapon_longsword_plus_1",
@@ -258,7 +258,6 @@ const SAMPLE_ITEMS: SampleItem[] = [
       equipSlot: "main_hand",
       requiresAttunement: false,
       categoryTags: ["category_weapon_martial", "category_weapon_martial_melee"],
-      actions: [],
       modifiers: [
         { target: "ATTACK_BONUS", type: "add", value: 1, scalingFactor: "none" },
         { target: "DAMAGE_BONUS", type: "add", value: 1, scalingFactor: "none" },
@@ -285,7 +284,6 @@ const SAMPLE_ITEMS: SampleItem[] = [
       equipSlot: "body",
       requiresAttunement: false,
       categoryTags: [],
-      actions: [],
       modifiers: [
         {
           target: "ARMOR_CLASS",
@@ -314,7 +312,6 @@ const SAMPLE_ITEMS: SampleItem[] = [
       equipSlot: "cloak",
       requiresAttunement: true,
       categoryTags: [],
-      actions: [],
       modifiers: [
         { target: "ARMOR_CLASS", type: "add", value: 1, scalingFactor: "none" },
         { target: "ALL_SAVES", type: "add", value: 1, scalingFactor: "none" },
@@ -332,7 +329,6 @@ const SAMPLE_ITEMS: SampleItem[] = [
       equipSlot: "ring",
       requiresAttunement: true,
       categoryTags: [],
-      actions: [],
       modifiers: [
         { target: "ARMOR_CLASS", type: "add", value: 1, scalingFactor: "none" },
         { target: "ALL_SAVES", type: "add", value: 1, scalingFactor: "none" },
@@ -349,7 +345,6 @@ const SAMPLE_ITEMS: SampleItem[] = [
       type: "wondrous",
       requiresAttunement: false,
       categoryTags: [],
-      actions: [],
       container: { capacityPounds: 500 },
     },
   },
@@ -364,7 +359,6 @@ const SAMPLE_ITEMS: SampleItem[] = [
       equipSlot: "boots",
       requiresAttunement: true,
       categoryTags: [],
-      actions: [],
       modifiers: [
         {
           target: "STEALTH_CHECK",
@@ -386,7 +380,6 @@ const SAMPLE_ITEMS: SampleItem[] = [
       equipSlot: "amulet",
       requiresAttunement: true,
       categoryTags: [],
-      actions: [],
       modifiers: [
         { target: "CON", type: "set_base", value: 19, scalingFactor: "none" },
       ],
@@ -403,7 +396,6 @@ const SAMPLE_ITEMS: SampleItem[] = [
       equipSlot: "head",
       requiresAttunement: true,
       categoryTags: [],
-      actions: [],
       modifiers: [
         { target: "INT", type: "set_base", value: 19, scalingFactor: "none" },
       ],
@@ -420,7 +412,6 @@ const SAMPLE_ITEMS: SampleItem[] = [
       equipSlot: "gloves",
       requiresAttunement: true,
       categoryTags: [],
-      actions: [],
       modifiers: [
         { target: "STR", type: "set_base", value: 19, scalingFactor: "none" },
       ],
@@ -437,7 +428,6 @@ const SAMPLE_ITEMS: SampleItem[] = [
       equipSlot: "main_hand",
       requiresAttunement: false,
       categoryTags: [],
-      actions: [],
     },
   },
 ];
