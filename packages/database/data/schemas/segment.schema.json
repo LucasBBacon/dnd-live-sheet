@@ -1139,6 +1139,10 @@
                 "consumesAmmo": {
                   "type": "string"
                 },
+                "consumesSelf": {
+                  "default": false,
+                  "type": "boolean"
+                },
                 "targetFilter": {
                   "type": "object",
                   "properties": {
@@ -4639,6 +4643,1952 @@
               ]
             }
           },
+          "actions": {
+            "default": [],
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "name": {
+                  "type": "string"
+                },
+                "activation": {
+                  "type": "string",
+                  "enum": [
+                    "action",
+                    "bonus_action",
+                    "reaction",
+                    "attack",
+                    "special",
+                    "minute",
+                    "hour",
+                    "eight_hours"
+                  ]
+                },
+                "consumesResource": {
+                  "type": "string"
+                },
+                "consumesAmmo": {
+                  "type": "string"
+                },
+                "consumesSelf": {
+                  "default": false,
+                  "type": "boolean"
+                },
+                "targetFilter": {
+                  "type": "object",
+                  "properties": {
+                    "targetEntity": {
+                      "type": "string",
+                      "enum": [
+                        "self",
+                        "creature",
+                        "object",
+                        "point_in_space"
+                      ]
+                    },
+                    "maxCount": {
+                      "default": 1,
+                      "type": "number"
+                    },
+                    "allowedTypes": {
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "enum": [
+                          "aberration",
+                          "beast",
+                          "celestial",
+                          "construct",
+                          "dragon",
+                          "elemental",
+                          "fey",
+                          "fiend",
+                          "giant",
+                          "humanoid",
+                          "monstrosity",
+                          "ooze",
+                          "plant",
+                          "undead"
+                        ]
+                      }
+                    },
+                    "forbiddenTypes": {
+                      "default": [],
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "enum": [
+                          "aberration",
+                          "beast",
+                          "celestial",
+                          "construct",
+                          "dragon",
+                          "elemental",
+                          "fey",
+                          "fiend",
+                          "giant",
+                          "humanoid",
+                          "monstrosity",
+                          "ooze",
+                          "plant",
+                          "undead"
+                        ]
+                      }
+                    },
+                    "requiresVisibility": {
+                      "default": true,
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "targetEntity"
+                  ]
+                },
+                "tableNote": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "effect": {
+                  "oneOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "type": {
+                          "type": "string",
+                          "const": "save"
+                        },
+                        "areaOfEffect": {
+                          "type": "object",
+                          "properties": {
+                            "shape": {
+                              "type": "string",
+                              "enum": [
+                                "cone",
+                                "line",
+                                "sphere",
+                                "cube",
+                                "cylinder",
+                                "single_target"
+                              ]
+                            },
+                            "size": {
+                              "type": "number"
+                            },
+                            "secondarySize": {
+                              "type": "number"
+                            }
+                          },
+                          "required": [
+                            "shape",
+                            "size"
+                          ]
+                        },
+                        "savingThrow": {
+                          "type": "object",
+                          "properties": {
+                            "targetStat": {
+                              "type": "string",
+                              "enum": [
+                                "MAX_HP",
+                                "ARMOR_CLASS",
+                                "INITIATIVE",
+                                "SPEED",
+                                "ATTACK_BONUS",
+                                "DAMAGE_BONUS",
+                                "ATTACKS_PER_ACTION",
+                                "STR_SAVE",
+                                "DEX_SAVE",
+                                "CON_SAVE",
+                                "INT_SAVE",
+                                "WIS_SAVE",
+                                "CHA_SAVE",
+                                "ALL_SAVES",
+                                "POISON_SAVE",
+                                "CHARM_SAVE",
+                                "FRIGHTEN_SAVE",
+                                "STR",
+                                "DEX",
+                                "CON",
+                                "INT",
+                                "WIS",
+                                "CHA",
+                                "STEALTH_CHECK",
+                                "SENSE_DARKVISION",
+                                "SPELLCASTING_MOD"
+                              ]
+                            },
+                            "dcCalculation": {
+                              "type": "object",
+                              "properties": {
+                                "base": {
+                                  "default": 8,
+                                  "type": "number"
+                                },
+                                "scalingStat": {
+                                  "type": "string",
+                                  "enum": [
+                                    "MAX_HP",
+                                    "ARMOR_CLASS",
+                                    "INITIATIVE",
+                                    "SPEED",
+                                    "ATTACK_BONUS",
+                                    "DAMAGE_BONUS",
+                                    "ATTACKS_PER_ACTION",
+                                    "STR_SAVE",
+                                    "DEX_SAVE",
+                                    "CON_SAVE",
+                                    "INT_SAVE",
+                                    "WIS_SAVE",
+                                    "CHA_SAVE",
+                                    "ALL_SAVES",
+                                    "POISON_SAVE",
+                                    "CHARM_SAVE",
+                                    "FRIGHTEN_SAVE",
+                                    "STR",
+                                    "DEX",
+                                    "CON",
+                                    "INT",
+                                    "WIS",
+                                    "CHA",
+                                    "STEALTH_CHECK",
+                                    "SENSE_DARKVISION",
+                                    "SPELLCASTING_MOD"
+                                  ]
+                                },
+                                "includeProficiency": {
+                                  "default": true,
+                                  "type": "boolean"
+                                }
+                              },
+                              "required": [
+                                "scalingStat"
+                              ]
+                            },
+                            "saveEffect": {
+                              "type": "string",
+                              "enum": [
+                                "half_damage",
+                                "no_damage",
+                                "negates_effect"
+                              ]
+                            }
+                          },
+                          "required": [
+                            "targetStat",
+                            "dcCalculation",
+                            "saveEffect"
+                          ]
+                        },
+                        "damage": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "sourceName": {
+                                "type": "string"
+                              },
+                              "baseDice": {
+                                "type": "string"
+                              },
+                              "maximized": {
+                                "type": "boolean"
+                              },
+                              "damageType": {
+                                "type": "string",
+                                "enum": [
+                                  "acid",
+                                  "bludgeoning",
+                                  "cold",
+                                  "fire",
+                                  "force",
+                                  "lightning",
+                                  "necrotic",
+                                  "piercing",
+                                  "poison",
+                                  "psychic",
+                                  "radiant",
+                                  "slashing",
+                                  "thunder",
+                                  "same_as_weapon"
+                                ]
+                              },
+                              "scalingMode": {
+                                "default": "none",
+                                "type": "string",
+                                "enum": [
+                                  "total_level",
+                                  "class_level",
+                                  "class_level_thresholds",
+                                  "none"
+                                ]
+                              },
+                              "scalingClassId": {
+                                "type": "string"
+                              },
+                              "levelScaling": {
+                                "default": [],
+                                "type": "array",
+                                "items": {
+                                  "type": "object",
+                                  "properties": {
+                                    "levelRequired": {
+                                      "type": "number"
+                                    },
+                                    "newDice": {
+                                      "type": "string"
+                                    }
+                                  },
+                                  "required": [
+                                    "levelRequired",
+                                    "newDice"
+                                  ]
+                                }
+                              }
+                            },
+                            "required": [
+                              "sourceName",
+                              "baseDice",
+                              "damageType"
+                            ]
+                          }
+                        }
+                      },
+                      "required": [
+                        "type",
+                        "savingThrow"
+                      ]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "type": {
+                          "type": "string",
+                          "const": "ability_check"
+                        }
+                      },
+                      "required": [
+                        "type"
+                      ]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "type": {
+                          "type": "string",
+                          "const": "no_effect"
+                        }
+                      },
+                      "required": [
+                        "type"
+                      ]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "type": {
+                          "type": "string",
+                          "const": "attack"
+                        },
+                        "attackType": {
+                          "type": "string",
+                          "enum": [
+                            "melee_weapon",
+                            "ranged_weapon",
+                            "melee_spell",
+                            "ranged_spell"
+                          ]
+                        },
+                        "attackStat": {
+                          "type": "string",
+                          "enum": [
+                            "MAX_HP",
+                            "ARMOR_CLASS",
+                            "INITIATIVE",
+                            "SPEED",
+                            "ATTACK_BONUS",
+                            "DAMAGE_BONUS",
+                            "ATTACKS_PER_ACTION",
+                            "STR_SAVE",
+                            "DEX_SAVE",
+                            "CON_SAVE",
+                            "INT_SAVE",
+                            "WIS_SAVE",
+                            "CHA_SAVE",
+                            "ALL_SAVES",
+                            "POISON_SAVE",
+                            "CHARM_SAVE",
+                            "FRIGHTEN_SAVE",
+                            "STR",
+                            "DEX",
+                            "CON",
+                            "INT",
+                            "WIS",
+                            "CHA",
+                            "STEALTH_CHECK",
+                            "SENSE_DARKVISION",
+                            "SPELLCASTING_MOD"
+                          ]
+                        },
+                        "range": {
+                          "default": 5,
+                          "type": "number"
+                        },
+                        "longRange": {
+                          "type": "number"
+                        },
+                        "weaponContext": {
+                          "type": "object",
+                          "properties": {
+                            "hand": {
+                              "type": "string",
+                              "enum": [
+                                "main_hand",
+                                "off_hand"
+                              ]
+                            },
+                            "attackUsage": {
+                              "type": "string",
+                              "enum": [
+                                "standard",
+                                "two_weapon_bonus"
+                              ]
+                            },
+                            "isTwoHandedGrip": {
+                              "type": "boolean"
+                            }
+                          },
+                          "required": [
+                            "hand",
+                            "attackUsage"
+                          ]
+                        },
+                        "attackBonus": {
+                          "type": "number"
+                        },
+                        "damageBonus": {
+                          "type": "number"
+                        },
+                        "criticalDamageMaximized": {
+                          "type": "boolean"
+                        },
+                        "damage": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "sourceName": {
+                                "type": "string"
+                              },
+                              "baseDice": {
+                                "type": "string"
+                              },
+                              "maximized": {
+                                "type": "boolean"
+                              },
+                              "damageType": {
+                                "type": "string",
+                                "enum": [
+                                  "acid",
+                                  "bludgeoning",
+                                  "cold",
+                                  "fire",
+                                  "force",
+                                  "lightning",
+                                  "necrotic",
+                                  "piercing",
+                                  "poison",
+                                  "psychic",
+                                  "radiant",
+                                  "slashing",
+                                  "thunder",
+                                  "same_as_weapon"
+                                ]
+                              },
+                              "scalingMode": {
+                                "default": "none",
+                                "type": "string",
+                                "enum": [
+                                  "total_level",
+                                  "class_level",
+                                  "class_level_thresholds",
+                                  "none"
+                                ]
+                              },
+                              "scalingClassId": {
+                                "type": "string"
+                              },
+                              "levelScaling": {
+                                "default": [],
+                                "type": "array",
+                                "items": {
+                                  "type": "object",
+                                  "properties": {
+                                    "levelRequired": {
+                                      "type": "number"
+                                    },
+                                    "newDice": {
+                                      "type": "string"
+                                    }
+                                  },
+                                  "required": [
+                                    "levelRequired",
+                                    "newDice"
+                                  ]
+                                }
+                              }
+                            },
+                            "required": [
+                              "sourceName",
+                              "baseDice",
+                              "damageType"
+                            ]
+                          }
+                        },
+                        "criticalDamage": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "sourceName": {
+                                "type": "string"
+                              },
+                              "baseDice": {
+                                "type": "string"
+                              },
+                              "maximized": {
+                                "type": "boolean"
+                              },
+                              "damageType": {
+                                "type": "string",
+                                "enum": [
+                                  "acid",
+                                  "bludgeoning",
+                                  "cold",
+                                  "fire",
+                                  "force",
+                                  "lightning",
+                                  "necrotic",
+                                  "piercing",
+                                  "poison",
+                                  "psychic",
+                                  "radiant",
+                                  "slashing",
+                                  "thunder",
+                                  "same_as_weapon"
+                                ]
+                              },
+                              "scalingMode": {
+                                "default": "none",
+                                "type": "string",
+                                "enum": [
+                                  "total_level",
+                                  "class_level",
+                                  "class_level_thresholds",
+                                  "none"
+                                ]
+                              },
+                              "scalingClassId": {
+                                "type": "string"
+                              },
+                              "levelScaling": {
+                                "default": [],
+                                "type": "array",
+                                "items": {
+                                  "type": "object",
+                                  "properties": {
+                                    "levelRequired": {
+                                      "type": "number"
+                                    },
+                                    "newDice": {
+                                      "type": "string"
+                                    }
+                                  },
+                                  "required": [
+                                    "levelRequired",
+                                    "newDice"
+                                  ]
+                                }
+                              }
+                            },
+                            "required": [
+                              "sourceName",
+                              "baseDice",
+                              "damageType"
+                            ]
+                          }
+                        }
+                      },
+                      "required": [
+                        "type",
+                        "attackType",
+                        "attackStat",
+                        "damage"
+                      ]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "type": {
+                          "type": "string",
+                          "const": "damage_rider"
+                        },
+                        "requiredWeaponProperties": {
+                          "default": [],
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        },
+                        "damage": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "sourceName": {
+                                "type": "string"
+                              },
+                              "baseDice": {
+                                "type": "string"
+                              },
+                              "maximized": {
+                                "type": "boolean"
+                              },
+                              "damageType": {
+                                "type": "string",
+                                "enum": [
+                                  "acid",
+                                  "bludgeoning",
+                                  "cold",
+                                  "fire",
+                                  "force",
+                                  "lightning",
+                                  "necrotic",
+                                  "piercing",
+                                  "poison",
+                                  "psychic",
+                                  "radiant",
+                                  "slashing",
+                                  "thunder",
+                                  "same_as_weapon"
+                                ]
+                              },
+                              "scalingMode": {
+                                "default": "none",
+                                "type": "string",
+                                "enum": [
+                                  "total_level",
+                                  "class_level",
+                                  "class_level_thresholds",
+                                  "none"
+                                ]
+                              },
+                              "scalingClassId": {
+                                "type": "string"
+                              },
+                              "levelScaling": {
+                                "default": [],
+                                "type": "array",
+                                "items": {
+                                  "type": "object",
+                                  "properties": {
+                                    "levelRequired": {
+                                      "type": "number"
+                                    },
+                                    "newDice": {
+                                      "type": "string"
+                                    }
+                                  },
+                                  "required": [
+                                    "levelRequired",
+                                    "newDice"
+                                  ]
+                                }
+                              }
+                            },
+                            "required": [
+                              "sourceName",
+                              "baseDice",
+                              "damageType"
+                            ]
+                          }
+                        }
+                      },
+                      "required": [
+                        "type",
+                        "damage"
+                      ]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "type": {
+                          "type": "string",
+                          "const": "summon"
+                        },
+                        "effectTag": {
+                          "type": "string"
+                        },
+                        "entityTemplateIds": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        },
+                        "maxActive": {
+                          "type": "number"
+                        },
+                        "durationHours": {
+                          "type": "number"
+                        },
+                        "materialCostGP": {
+                          "type": "number"
+                        }
+                      },
+                      "required": [
+                        "type",
+                        "entityTemplateIds"
+                      ]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "type": {
+                          "type": "string",
+                          "const": "apply_effect"
+                        },
+                        "effectName": {
+                          "type": "string"
+                        },
+                        "effectTag": {
+                          "type": "string"
+                        },
+                        "requiredStates": {
+                          "default": [],
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        },
+                        "forbiddenStates": {
+                          "default": [],
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        },
+                        "predicates": {
+                          "type": "object",
+                          "properties": {
+                            "requiredStates": {
+                              "default": [],
+                              "type": "array",
+                              "items": {
+                                "type": "string"
+                              }
+                            },
+                            "forbiddenStates": {
+                              "default": [],
+                              "type": "array",
+                              "items": {
+                                "type": "string"
+                              }
+                            }
+                          }
+                        },
+                        "durationType": {
+                          "type": "string",
+                          "enum": [
+                            "turn_start",
+                            "turn_end",
+                            "rounds",
+                            "rest_short",
+                            "rest_long",
+                            "manual"
+                          ]
+                        },
+                        "durationRounds": {
+                          "type": "number"
+                        },
+                        "isSelfConcentration": {
+                          "default": false,
+                          "type": "boolean"
+                        },
+                        "modifiers": {
+                          "default": [],
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "target": {
+                                "type": "string",
+                                "enum": [
+                                  "MAX_HP",
+                                  "ARMOR_CLASS",
+                                  "INITIATIVE",
+                                  "SPEED",
+                                  "ATTACK_BONUS",
+                                  "DAMAGE_BONUS",
+                                  "ATTACKS_PER_ACTION",
+                                  "STR_SAVE",
+                                  "DEX_SAVE",
+                                  "CON_SAVE",
+                                  "INT_SAVE",
+                                  "WIS_SAVE",
+                                  "CHA_SAVE",
+                                  "ALL_SAVES",
+                                  "POISON_SAVE",
+                                  "CHARM_SAVE",
+                                  "FRIGHTEN_SAVE",
+                                  "STR",
+                                  "DEX",
+                                  "CON",
+                                  "INT",
+                                  "WIS",
+                                  "CHA",
+                                  "STEALTH_CHECK",
+                                  "SENSE_DARKVISION",
+                                  "SPELLCASTING_MOD"
+                                ]
+                              },
+                              "type": {
+                                "type": "string",
+                                "enum": [
+                                  "set_base",
+                                  "add",
+                                  "multiplier",
+                                  "advantage",
+                                  "disadvantage"
+                                ]
+                              },
+                              "value": {
+                                "default": 0,
+                                "type": "number"
+                              },
+                              "valueSource": {
+                                "type": "string",
+                                "enum": [
+                                  "fixed",
+                                  "attack_ability_modifier",
+                                  "governing_stat_modifier",
+                                  "cha_modifier"
+                                ]
+                              },
+                              "scalingFactor": {
+                                "default": "none",
+                                "type": "string",
+                                "enum": [
+                                  "total_level",
+                                  "class_level",
+                                  "class_level_thresholds",
+                                  "none"
+                                ]
+                              },
+                              "scalingClassId": {
+                                "type": "string"
+                              },
+                              "scalingThresholds": {
+                                "minItems": 1,
+                                "type": "array",
+                                "items": {
+                                  "type": "object",
+                                  "properties": {
+                                    "minimumLevel": {
+                                      "type": "integer",
+                                      "exclusiveMinimum": 0,
+                                      "maximum": 9007199254740991
+                                    },
+                                    "value": {
+                                      "type": "number"
+                                    }
+                                  },
+                                  "required": [
+                                    "minimumLevel",
+                                    "value"
+                                  ],
+                                  "additionalProperties": false
+                                }
+                              },
+                              "maxDexCap": {
+                                "type": "number"
+                              },
+                              "formula": {
+                                "type": "object",
+                                "properties": {
+                                  "kind": {
+                                    "type": "string",
+                                    "const": "ability_sum"
+                                  },
+                                  "base": {
+                                    "type": "integer",
+                                    "minimum": -9007199254740991,
+                                    "maximum": 9007199254740991
+                                  },
+                                  "abilities": {
+                                    "minItems": 1,
+                                    "type": "array",
+                                    "items": {
+                                      "type": "string",
+                                      "enum": [
+                                        "STR",
+                                        "DEX",
+                                        "CON",
+                                        "INT",
+                                        "WIS",
+                                        "CHA"
+                                      ]
+                                    }
+                                  }
+                                },
+                                "required": [
+                                  "kind",
+                                  "base",
+                                  "abilities"
+                                ],
+                                "additionalProperties": false
+                              },
+                              "attackContext": {
+                                "type": "string",
+                                "enum": [
+                                  "main_hand",
+                                  "off_hand"
+                                ]
+                              },
+                              "appliesWhen": {
+                                "type": "string",
+                                "minLength": 1,
+                                "maxLength": 120
+                              },
+                              "requiredStates": {
+                                "default": [],
+                                "type": "array",
+                                "items": {
+                                  "type": "string"
+                                }
+                              },
+                              "forbiddenStates": {
+                                "default": [],
+                                "type": "array",
+                                "items": {
+                                  "type": "string"
+                                }
+                              }
+                            },
+                            "required": [
+                              "target",
+                              "type"
+                            ]
+                          }
+                        },
+                        "states": {
+                          "default": [],
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        }
+                      },
+                      "required": [
+                        "type",
+                        "durationType"
+                      ]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "type": {
+                          "type": "string",
+                          "const": "remove_effect"
+                        },
+                        "effectTag": {
+                          "type": "string",
+                          "minLength": 1
+                        }
+                      },
+                      "required": [
+                        "type",
+                        "effectTag"
+                      ]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "type": {
+                          "type": "string",
+                          "const": "dynamic_weapon_attack"
+                        },
+                        "requiredWeaponProperties": {
+                          "default": [],
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        },
+                        "requiredWeaponCategory": {
+                          "default": [],
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        }
+                      },
+                      "required": [
+                        "type"
+                      ]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "type": {
+                          "type": "string",
+                          "const": "heal"
+                        },
+                        "dice": {
+                          "type": "string",
+                          "pattern": "^(\\d+d\\d+([+-]\\d+)?|\\d+)$"
+                        }
+                      },
+                      "required": [
+                        "type",
+                        "dice"
+                      ]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "type": {
+                          "type": "string",
+                          "const": "macro"
+                        },
+                        "effects": {
+                          "type": "array",
+                          "items": {
+                            "oneOf": [
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "type": {
+                                    "type": "string",
+                                    "const": "save"
+                                  },
+                                  "areaOfEffect": {
+                                    "type": "object",
+                                    "properties": {
+                                      "shape": {
+                                        "type": "string",
+                                        "enum": [
+                                          "cone",
+                                          "line",
+                                          "sphere",
+                                          "cube",
+                                          "cylinder",
+                                          "single_target"
+                                        ]
+                                      },
+                                      "size": {
+                                        "type": "number"
+                                      },
+                                      "secondarySize": {
+                                        "type": "number"
+                                      }
+                                    },
+                                    "required": [
+                                      "shape",
+                                      "size"
+                                    ]
+                                  },
+                                  "savingThrow": {
+                                    "type": "object",
+                                    "properties": {
+                                      "targetStat": {
+                                        "type": "string",
+                                        "enum": [
+                                          "MAX_HP",
+                                          "ARMOR_CLASS",
+                                          "INITIATIVE",
+                                          "SPEED",
+                                          "ATTACK_BONUS",
+                                          "DAMAGE_BONUS",
+                                          "ATTACKS_PER_ACTION",
+                                          "STR_SAVE",
+                                          "DEX_SAVE",
+                                          "CON_SAVE",
+                                          "INT_SAVE",
+                                          "WIS_SAVE",
+                                          "CHA_SAVE",
+                                          "ALL_SAVES",
+                                          "POISON_SAVE",
+                                          "CHARM_SAVE",
+                                          "FRIGHTEN_SAVE",
+                                          "STR",
+                                          "DEX",
+                                          "CON",
+                                          "INT",
+                                          "WIS",
+                                          "CHA",
+                                          "STEALTH_CHECK",
+                                          "SENSE_DARKVISION",
+                                          "SPELLCASTING_MOD"
+                                        ]
+                                      },
+                                      "dcCalculation": {
+                                        "type": "object",
+                                        "properties": {
+                                          "base": {
+                                            "default": 8,
+                                            "type": "number"
+                                          },
+                                          "scalingStat": {
+                                            "type": "string",
+                                            "enum": [
+                                              "MAX_HP",
+                                              "ARMOR_CLASS",
+                                              "INITIATIVE",
+                                              "SPEED",
+                                              "ATTACK_BONUS",
+                                              "DAMAGE_BONUS",
+                                              "ATTACKS_PER_ACTION",
+                                              "STR_SAVE",
+                                              "DEX_SAVE",
+                                              "CON_SAVE",
+                                              "INT_SAVE",
+                                              "WIS_SAVE",
+                                              "CHA_SAVE",
+                                              "ALL_SAVES",
+                                              "POISON_SAVE",
+                                              "CHARM_SAVE",
+                                              "FRIGHTEN_SAVE",
+                                              "STR",
+                                              "DEX",
+                                              "CON",
+                                              "INT",
+                                              "WIS",
+                                              "CHA",
+                                              "STEALTH_CHECK",
+                                              "SENSE_DARKVISION",
+                                              "SPELLCASTING_MOD"
+                                            ]
+                                          },
+                                          "includeProficiency": {
+                                            "default": true,
+                                            "type": "boolean"
+                                          }
+                                        },
+                                        "required": [
+                                          "scalingStat"
+                                        ]
+                                      },
+                                      "saveEffect": {
+                                        "type": "string",
+                                        "enum": [
+                                          "half_damage",
+                                          "no_damage",
+                                          "negates_effect"
+                                        ]
+                                      }
+                                    },
+                                    "required": [
+                                      "targetStat",
+                                      "dcCalculation",
+                                      "saveEffect"
+                                    ]
+                                  },
+                                  "damage": {
+                                    "type": "array",
+                                    "items": {
+                                      "type": "object",
+                                      "properties": {
+                                        "sourceName": {
+                                          "type": "string"
+                                        },
+                                        "baseDice": {
+                                          "type": "string"
+                                        },
+                                        "maximized": {
+                                          "type": "boolean"
+                                        },
+                                        "damageType": {
+                                          "type": "string",
+                                          "enum": [
+                                            "acid",
+                                            "bludgeoning",
+                                            "cold",
+                                            "fire",
+                                            "force",
+                                            "lightning",
+                                            "necrotic",
+                                            "piercing",
+                                            "poison",
+                                            "psychic",
+                                            "radiant",
+                                            "slashing",
+                                            "thunder",
+                                            "same_as_weapon"
+                                          ]
+                                        },
+                                        "scalingMode": {
+                                          "default": "none",
+                                          "type": "string",
+                                          "enum": [
+                                            "total_level",
+                                            "class_level",
+                                            "class_level_thresholds",
+                                            "none"
+                                          ]
+                                        },
+                                        "scalingClassId": {
+                                          "type": "string"
+                                        },
+                                        "levelScaling": {
+                                          "default": [],
+                                          "type": "array",
+                                          "items": {
+                                            "type": "object",
+                                            "properties": {
+                                              "levelRequired": {
+                                                "type": "number"
+                                              },
+                                              "newDice": {
+                                                "type": "string"
+                                              }
+                                            },
+                                            "required": [
+                                              "levelRequired",
+                                              "newDice"
+                                            ]
+                                          }
+                                        }
+                                      },
+                                      "required": [
+                                        "sourceName",
+                                        "baseDice",
+                                        "damageType"
+                                      ]
+                                    }
+                                  }
+                                },
+                                "required": [
+                                  "type",
+                                  "savingThrow"
+                                ]
+                              },
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "type": {
+                                    "type": "string",
+                                    "const": "ability_check"
+                                  }
+                                },
+                                "required": [
+                                  "type"
+                                ]
+                              },
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "type": {
+                                    "type": "string",
+                                    "const": "no_effect"
+                                  }
+                                },
+                                "required": [
+                                  "type"
+                                ]
+                              },
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "type": {
+                                    "type": "string",
+                                    "const": "attack"
+                                  },
+                                  "attackType": {
+                                    "type": "string",
+                                    "enum": [
+                                      "melee_weapon",
+                                      "ranged_weapon",
+                                      "melee_spell",
+                                      "ranged_spell"
+                                    ]
+                                  },
+                                  "attackStat": {
+                                    "type": "string",
+                                    "enum": [
+                                      "MAX_HP",
+                                      "ARMOR_CLASS",
+                                      "INITIATIVE",
+                                      "SPEED",
+                                      "ATTACK_BONUS",
+                                      "DAMAGE_BONUS",
+                                      "ATTACKS_PER_ACTION",
+                                      "STR_SAVE",
+                                      "DEX_SAVE",
+                                      "CON_SAVE",
+                                      "INT_SAVE",
+                                      "WIS_SAVE",
+                                      "CHA_SAVE",
+                                      "ALL_SAVES",
+                                      "POISON_SAVE",
+                                      "CHARM_SAVE",
+                                      "FRIGHTEN_SAVE",
+                                      "STR",
+                                      "DEX",
+                                      "CON",
+                                      "INT",
+                                      "WIS",
+                                      "CHA",
+                                      "STEALTH_CHECK",
+                                      "SENSE_DARKVISION",
+                                      "SPELLCASTING_MOD"
+                                    ]
+                                  },
+                                  "range": {
+                                    "default": 5,
+                                    "type": "number"
+                                  },
+                                  "longRange": {
+                                    "type": "number"
+                                  },
+                                  "weaponContext": {
+                                    "type": "object",
+                                    "properties": {
+                                      "hand": {
+                                        "type": "string",
+                                        "enum": [
+                                          "main_hand",
+                                          "off_hand"
+                                        ]
+                                      },
+                                      "attackUsage": {
+                                        "type": "string",
+                                        "enum": [
+                                          "standard",
+                                          "two_weapon_bonus"
+                                        ]
+                                      },
+                                      "isTwoHandedGrip": {
+                                        "type": "boolean"
+                                      }
+                                    },
+                                    "required": [
+                                      "hand",
+                                      "attackUsage"
+                                    ]
+                                  },
+                                  "attackBonus": {
+                                    "type": "number"
+                                  },
+                                  "damageBonus": {
+                                    "type": "number"
+                                  },
+                                  "criticalDamageMaximized": {
+                                    "type": "boolean"
+                                  },
+                                  "damage": {
+                                    "type": "array",
+                                    "items": {
+                                      "type": "object",
+                                      "properties": {
+                                        "sourceName": {
+                                          "type": "string"
+                                        },
+                                        "baseDice": {
+                                          "type": "string"
+                                        },
+                                        "maximized": {
+                                          "type": "boolean"
+                                        },
+                                        "damageType": {
+                                          "type": "string",
+                                          "enum": [
+                                            "acid",
+                                            "bludgeoning",
+                                            "cold",
+                                            "fire",
+                                            "force",
+                                            "lightning",
+                                            "necrotic",
+                                            "piercing",
+                                            "poison",
+                                            "psychic",
+                                            "radiant",
+                                            "slashing",
+                                            "thunder",
+                                            "same_as_weapon"
+                                          ]
+                                        },
+                                        "scalingMode": {
+                                          "default": "none",
+                                          "type": "string",
+                                          "enum": [
+                                            "total_level",
+                                            "class_level",
+                                            "class_level_thresholds",
+                                            "none"
+                                          ]
+                                        },
+                                        "scalingClassId": {
+                                          "type": "string"
+                                        },
+                                        "levelScaling": {
+                                          "default": [],
+                                          "type": "array",
+                                          "items": {
+                                            "type": "object",
+                                            "properties": {
+                                              "levelRequired": {
+                                                "type": "number"
+                                              },
+                                              "newDice": {
+                                                "type": "string"
+                                              }
+                                            },
+                                            "required": [
+                                              "levelRequired",
+                                              "newDice"
+                                            ]
+                                          }
+                                        }
+                                      },
+                                      "required": [
+                                        "sourceName",
+                                        "baseDice",
+                                        "damageType"
+                                      ]
+                                    }
+                                  },
+                                  "criticalDamage": {
+                                    "type": "array",
+                                    "items": {
+                                      "type": "object",
+                                      "properties": {
+                                        "sourceName": {
+                                          "type": "string"
+                                        },
+                                        "baseDice": {
+                                          "type": "string"
+                                        },
+                                        "maximized": {
+                                          "type": "boolean"
+                                        },
+                                        "damageType": {
+                                          "type": "string",
+                                          "enum": [
+                                            "acid",
+                                            "bludgeoning",
+                                            "cold",
+                                            "fire",
+                                            "force",
+                                            "lightning",
+                                            "necrotic",
+                                            "piercing",
+                                            "poison",
+                                            "psychic",
+                                            "radiant",
+                                            "slashing",
+                                            "thunder",
+                                            "same_as_weapon"
+                                          ]
+                                        },
+                                        "scalingMode": {
+                                          "default": "none",
+                                          "type": "string",
+                                          "enum": [
+                                            "total_level",
+                                            "class_level",
+                                            "class_level_thresholds",
+                                            "none"
+                                          ]
+                                        },
+                                        "scalingClassId": {
+                                          "type": "string"
+                                        },
+                                        "levelScaling": {
+                                          "default": [],
+                                          "type": "array",
+                                          "items": {
+                                            "type": "object",
+                                            "properties": {
+                                              "levelRequired": {
+                                                "type": "number"
+                                              },
+                                              "newDice": {
+                                                "type": "string"
+                                              }
+                                            },
+                                            "required": [
+                                              "levelRequired",
+                                              "newDice"
+                                            ]
+                                          }
+                                        }
+                                      },
+                                      "required": [
+                                        "sourceName",
+                                        "baseDice",
+                                        "damageType"
+                                      ]
+                                    }
+                                  }
+                                },
+                                "required": [
+                                  "type",
+                                  "attackType",
+                                  "attackStat",
+                                  "damage"
+                                ]
+                              },
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "type": {
+                                    "type": "string",
+                                    "const": "damage_rider"
+                                  },
+                                  "requiredWeaponProperties": {
+                                    "default": [],
+                                    "type": "array",
+                                    "items": {
+                                      "type": "string"
+                                    }
+                                  },
+                                  "damage": {
+                                    "type": "array",
+                                    "items": {
+                                      "type": "object",
+                                      "properties": {
+                                        "sourceName": {
+                                          "type": "string"
+                                        },
+                                        "baseDice": {
+                                          "type": "string"
+                                        },
+                                        "maximized": {
+                                          "type": "boolean"
+                                        },
+                                        "damageType": {
+                                          "type": "string",
+                                          "enum": [
+                                            "acid",
+                                            "bludgeoning",
+                                            "cold",
+                                            "fire",
+                                            "force",
+                                            "lightning",
+                                            "necrotic",
+                                            "piercing",
+                                            "poison",
+                                            "psychic",
+                                            "radiant",
+                                            "slashing",
+                                            "thunder",
+                                            "same_as_weapon"
+                                          ]
+                                        },
+                                        "scalingMode": {
+                                          "default": "none",
+                                          "type": "string",
+                                          "enum": [
+                                            "total_level",
+                                            "class_level",
+                                            "class_level_thresholds",
+                                            "none"
+                                          ]
+                                        },
+                                        "scalingClassId": {
+                                          "type": "string"
+                                        },
+                                        "levelScaling": {
+                                          "default": [],
+                                          "type": "array",
+                                          "items": {
+                                            "type": "object",
+                                            "properties": {
+                                              "levelRequired": {
+                                                "type": "number"
+                                              },
+                                              "newDice": {
+                                                "type": "string"
+                                              }
+                                            },
+                                            "required": [
+                                              "levelRequired",
+                                              "newDice"
+                                            ]
+                                          }
+                                        }
+                                      },
+                                      "required": [
+                                        "sourceName",
+                                        "baseDice",
+                                        "damageType"
+                                      ]
+                                    }
+                                  }
+                                },
+                                "required": [
+                                  "type",
+                                  "damage"
+                                ]
+                              },
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "type": {
+                                    "type": "string",
+                                    "const": "summon"
+                                  },
+                                  "effectTag": {
+                                    "type": "string"
+                                  },
+                                  "entityTemplateIds": {
+                                    "type": "array",
+                                    "items": {
+                                      "type": "string"
+                                    }
+                                  },
+                                  "maxActive": {
+                                    "type": "number"
+                                  },
+                                  "durationHours": {
+                                    "type": "number"
+                                  },
+                                  "materialCostGP": {
+                                    "type": "number"
+                                  }
+                                },
+                                "required": [
+                                  "type",
+                                  "entityTemplateIds"
+                                ]
+                              },
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "type": {
+                                    "type": "string",
+                                    "const": "apply_effect"
+                                  },
+                                  "effectName": {
+                                    "type": "string"
+                                  },
+                                  "effectTag": {
+                                    "type": "string"
+                                  },
+                                  "requiredStates": {
+                                    "default": [],
+                                    "type": "array",
+                                    "items": {
+                                      "type": "string"
+                                    }
+                                  },
+                                  "forbiddenStates": {
+                                    "default": [],
+                                    "type": "array",
+                                    "items": {
+                                      "type": "string"
+                                    }
+                                  },
+                                  "predicates": {
+                                    "type": "object",
+                                    "properties": {
+                                      "requiredStates": {
+                                        "default": [],
+                                        "type": "array",
+                                        "items": {
+                                          "type": "string"
+                                        }
+                                      },
+                                      "forbiddenStates": {
+                                        "default": [],
+                                        "type": "array",
+                                        "items": {
+                                          "type": "string"
+                                        }
+                                      }
+                                    }
+                                  },
+                                  "durationType": {
+                                    "type": "string",
+                                    "enum": [
+                                      "turn_start",
+                                      "turn_end",
+                                      "rounds",
+                                      "rest_short",
+                                      "rest_long",
+                                      "manual"
+                                    ]
+                                  },
+                                  "durationRounds": {
+                                    "type": "number"
+                                  },
+                                  "isSelfConcentration": {
+                                    "default": false,
+                                    "type": "boolean"
+                                  },
+                                  "modifiers": {
+                                    "default": [],
+                                    "type": "array",
+                                    "items": {
+                                      "type": "object",
+                                      "properties": {
+                                        "target": {
+                                          "type": "string",
+                                          "enum": [
+                                            "MAX_HP",
+                                            "ARMOR_CLASS",
+                                            "INITIATIVE",
+                                            "SPEED",
+                                            "ATTACK_BONUS",
+                                            "DAMAGE_BONUS",
+                                            "ATTACKS_PER_ACTION",
+                                            "STR_SAVE",
+                                            "DEX_SAVE",
+                                            "CON_SAVE",
+                                            "INT_SAVE",
+                                            "WIS_SAVE",
+                                            "CHA_SAVE",
+                                            "ALL_SAVES",
+                                            "POISON_SAVE",
+                                            "CHARM_SAVE",
+                                            "FRIGHTEN_SAVE",
+                                            "STR",
+                                            "DEX",
+                                            "CON",
+                                            "INT",
+                                            "WIS",
+                                            "CHA",
+                                            "STEALTH_CHECK",
+                                            "SENSE_DARKVISION",
+                                            "SPELLCASTING_MOD"
+                                          ]
+                                        },
+                                        "type": {
+                                          "type": "string",
+                                          "enum": [
+                                            "set_base",
+                                            "add",
+                                            "multiplier",
+                                            "advantage",
+                                            "disadvantage"
+                                          ]
+                                        },
+                                        "value": {
+                                          "default": 0,
+                                          "type": "number"
+                                        },
+                                        "valueSource": {
+                                          "type": "string",
+                                          "enum": [
+                                            "fixed",
+                                            "attack_ability_modifier",
+                                            "governing_stat_modifier",
+                                            "cha_modifier"
+                                          ]
+                                        },
+                                        "scalingFactor": {
+                                          "default": "none",
+                                          "type": "string",
+                                          "enum": [
+                                            "total_level",
+                                            "class_level",
+                                            "class_level_thresholds",
+                                            "none"
+                                          ]
+                                        },
+                                        "scalingClassId": {
+                                          "type": "string"
+                                        },
+                                        "scalingThresholds": {
+                                          "minItems": 1,
+                                          "type": "array",
+                                          "items": {
+                                            "type": "object",
+                                            "properties": {
+                                              "minimumLevel": {
+                                                "type": "integer",
+                                                "exclusiveMinimum": 0,
+                                                "maximum": 9007199254740991
+                                              },
+                                              "value": {
+                                                "type": "number"
+                                              }
+                                            },
+                                            "required": [
+                                              "minimumLevel",
+                                              "value"
+                                            ],
+                                            "additionalProperties": false
+                                          }
+                                        },
+                                        "maxDexCap": {
+                                          "type": "number"
+                                        },
+                                        "formula": {
+                                          "type": "object",
+                                          "properties": {
+                                            "kind": {
+                                              "type": "string",
+                                              "const": "ability_sum"
+                                            },
+                                            "base": {
+                                              "type": "integer",
+                                              "minimum": -9007199254740991,
+                                              "maximum": 9007199254740991
+                                            },
+                                            "abilities": {
+                                              "minItems": 1,
+                                              "type": "array",
+                                              "items": {
+                                                "type": "string",
+                                                "enum": [
+                                                  "STR",
+                                                  "DEX",
+                                                  "CON",
+                                                  "INT",
+                                                  "WIS",
+                                                  "CHA"
+                                                ]
+                                              }
+                                            }
+                                          },
+                                          "required": [
+                                            "kind",
+                                            "base",
+                                            "abilities"
+                                          ],
+                                          "additionalProperties": false
+                                        },
+                                        "attackContext": {
+                                          "type": "string",
+                                          "enum": [
+                                            "main_hand",
+                                            "off_hand"
+                                          ]
+                                        },
+                                        "appliesWhen": {
+                                          "type": "string",
+                                          "minLength": 1,
+                                          "maxLength": 120
+                                        },
+                                        "requiredStates": {
+                                          "default": [],
+                                          "type": "array",
+                                          "items": {
+                                            "type": "string"
+                                          }
+                                        },
+                                        "forbiddenStates": {
+                                          "default": [],
+                                          "type": "array",
+                                          "items": {
+                                            "type": "string"
+                                          }
+                                        }
+                                      },
+                                      "required": [
+                                        "target",
+                                        "type"
+                                      ]
+                                    }
+                                  },
+                                  "states": {
+                                    "default": [],
+                                    "type": "array",
+                                    "items": {
+                                      "type": "string"
+                                    }
+                                  }
+                                },
+                                "required": [
+                                  "type",
+                                  "durationType"
+                                ]
+                              },
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "type": {
+                                    "type": "string",
+                                    "const": "remove_effect"
+                                  },
+                                  "effectTag": {
+                                    "type": "string",
+                                    "minLength": 1
+                                  }
+                                },
+                                "required": [
+                                  "type",
+                                  "effectTag"
+                                ]
+                              },
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "type": {
+                                    "type": "string",
+                                    "const": "dynamic_weapon_attack"
+                                  },
+                                  "requiredWeaponProperties": {
+                                    "default": [],
+                                    "type": "array",
+                                    "items": {
+                                      "type": "string"
+                                    }
+                                  },
+                                  "requiredWeaponCategory": {
+                                    "default": [],
+                                    "type": "array",
+                                    "items": {
+                                      "type": "string"
+                                    }
+                                  }
+                                },
+                                "required": [
+                                  "type"
+                                ]
+                              },
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "type": {
+                                    "type": "string",
+                                    "const": "heal"
+                                  },
+                                  "dice": {
+                                    "type": "string",
+                                    "pattern": "^(\\d+d\\d+([+-]\\d+)?|\\d+)$"
+                                  }
+                                },
+                                "required": [
+                                  "type",
+                                  "dice"
+                                ]
+                              }
+                            ]
+                          }
+                        }
+                      },
+                      "required": [
+                        "type",
+                        "effects"
+                      ]
+                    }
+                  ]
+                }
+              },
+              "required": [
+                "id",
+                "name",
+                "activation",
+                "effect"
+              ]
+            }
+          },
           "weapon": {
             "type": "object",
             "properties": {
@@ -4863,6 +6813,10 @@
               },
               "consumesAmmo": {
                 "type": "string"
+              },
+              "consumesSelf": {
+                "default": false,
+                "type": "boolean"
               },
               "targetFilter": {
                 "type": "object",

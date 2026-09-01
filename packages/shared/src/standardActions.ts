@@ -21,6 +21,7 @@ export const STANDARD_ACTIONS: ActionGrant[] = [
     id: "action_dash",
     name: "Dash",
     activation: "action",
+    consumesSelf: false,
     effect: {
       type: "apply_effect",
       effectName: "Dash",
@@ -49,12 +50,14 @@ export const STANDARD_ACTIONS: ActionGrant[] = [
     id: "action_disengage",
     name: "Disengage",
     activation: "action",
+    consumesSelf: false,
     effect: { type: "no_effect" },
   },
   {
     id: "action_dodge",
     name: "Dodge",
     activation: "action",
+    consumesSelf: false,
     effect: {
       type: "apply_effect",
       effectName: "Dodge",
@@ -80,12 +83,14 @@ export const STANDARD_ACTIONS: ActionGrant[] = [
     id: "action_help",
     name: "Help",
     activation: "action",
+    consumesSelf: false,
     effect: { type: "no_effect" },
   },
   {
     id: "action_hide",
     name: "Hide",
     activation: "action",
+    consumesSelf: false,
     effect: {
       type: "apply_effect",
       effectName: "Hidden",
@@ -103,24 +108,28 @@ export const STANDARD_ACTIONS: ActionGrant[] = [
     id: "action_end_hiding",
     name: "Stop Hiding",
     activation: "special",
+    consumesSelf: false,
     effect: { type: "remove_effect", effectTag: "hidden" },
   },
   {
     id: "action_ready",
     name: "Ready",
     activation: "action",
+    consumesSelf: false,
     effect: { type: "no_effect" },
   },
   {
     id: "action_search",
     name: "Search",
     activation: "action",
+    consumesSelf: false,
     effect: { type: "no_effect" },
   },
   {
     id: "action_use_object",
     name: "Use an Object",
     activation: "action",
+    consumesSelf: false,
     effect: { type: "no_effect" },
   },
 ];

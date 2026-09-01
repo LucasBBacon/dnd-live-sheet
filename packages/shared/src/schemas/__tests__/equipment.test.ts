@@ -252,3 +252,45 @@ describe("a special weapon must say what is special about it", () => {
     expect(result.success).toBe(true);
   });
 });
+
+describe("item actions", () => {
+  it("defaults to no actions", () => {
+    const parsed = EquipmentDefinitionSchema.parse({
+      id: "item_abacus",
+      name: "Abacus",
+      type: "gear",
+      weight: 2,
+    });
+
+    expect(parsed.actions).toEqual([]);
+  });
+
+  it("carries an action that spends the item itself", () => {
+    const parsed = EquipmentDefinitionSchema.parse({
+      id: "item_acid_vial",
+      name: "Acid (vial)",
+      type: "consumable",
+      weight: 1,
+      actions: [
+        {
+          id: "action_acid_vial_throw",
+          name: "Throw Acid",
+          activation: "action",
+          consumesSelf: true,
+          effect: {
+            type: "attack",
+            attackType: "ranged_weapon",
+            attackStat: "DEX",
+            range: 20,
+            damage: [
+              { sourceName: "Acid", baseDice: "2d6", damageType: "acid" },
+            ],
+          },
+        },
+      ],
+    });
+
+    expect(parsed.actions[0]?.consumesSelf).toBe(true);
+    expect(parsed.actions[0]?.id).toBe("action_acid_vial_throw");
+  });
+});

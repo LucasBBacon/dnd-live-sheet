@@ -255,6 +255,16 @@ export const ActionGrantSchema = z.object({
   // from consumesResource because ammunition is a physical stack the player
   // chooses from, not a pool of charges
   consumesAmmo: z.string().optional(),
+  /**
+   * Spends one of the item this action was granted by.
+   *
+   * Apart from `consumesAmmo` for the reason that is apart from
+   * `consumesResource`: ammunition is a stack the player picks from mid-roll,
+   * and *self* is the stack they already picked by pressing Use on that row.
+   * The resolver takes the instance from `ActionExecutionContext.selfInstanceId`
+   * rather than from the roll payload, because there is nothing to choose.
+   */
+  consumesSelf: z.boolean().default(false),
   targetFilter: TargetFilterSchema.optional(),
   /**
    * The part of this action's rule the engine cannot enforce, in words the

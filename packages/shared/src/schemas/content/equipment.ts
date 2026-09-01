@@ -10,6 +10,7 @@ import {
 import { WeaponCategorySchema, WeaponPropertySchema } from "./weapons.js";
 import { DamageTypeSchema } from "./affinities.js";
 import { DamageExpressionSchema } from "../primitives/damageExpression.js";
+import { ActionGrantSchema } from "./actions.js";
 
 export const EquipmentTypeSchema = z.enum([
   "armor",
@@ -115,6 +116,16 @@ export const EquipmentDefinitionSchema = z
     container: ContainerCapacitySchema.optional(),
     categoryTags: z.array(StartingEquipmentCategoryTagSchema).default([]),
     modifiers: z.array(BaseModifierSchema).optional(),
+    /**
+     * Rules the item lets the character *do*, as opposed to the passive numbers
+     * `modifiers` changes.
+     *
+     * On EquipmentDefinitionSchema rather than CoreEquipmentSchema because
+     * importPack.ts projects this whole shape as `itemRule`; `lore`,
+     * `isBundle` and `implementation` live on the Core wrapper and are stripped
+     * on the way to the engine, and an action must not be.
+     */
+    actions: z.array(ActionGrantSchema).default([]),
     weapon: WeaponCapabilitySchema.optional(),
   })
   .strict();
