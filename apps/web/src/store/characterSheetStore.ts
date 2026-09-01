@@ -1236,13 +1236,17 @@ export const useCharacterSheetStore = create<CharacterSheetState>(
         // that do not come from effects have to be folded back in here
         activeStates: composeActiveStates(previous.baseStates, previous.activeConditions, runtimeEffects),
         resources: payload.resources,
+        // one ACTION_RESOLVED reply is one action, so latestRollResults
+        // and latestNotes are always decided together from this payload -
+        // an empty payload.rollResults legitimately means this action
+        // rolled nothing, not "keep showing whatever the last action rolled"
         latestRollResults:
           payload.rollResults.length > 0
             ? appendRollResults(
                 previous,
                 payload.rollResults.map(toActionRollResult),
               )
-            : previous.latestRollResults,
+            : [],
         latestNotes: payload.notes ?? [],
         runtimeEffects,
         runtimeResources,

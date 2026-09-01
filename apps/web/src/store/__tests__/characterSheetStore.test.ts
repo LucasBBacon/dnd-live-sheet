@@ -704,6 +704,8 @@ describe("useCharacterSheetStore remote action state composition", () => {
       ruleSnapshot: packRuleSnapshot(),
       baseStates: ["status_wearing_armor"],
       activeStates: ["status_wearing_armor"],
+      latestRollResults: [],
+      latestNotes: [],
       runtimeEffects: null,
       runtimeResources: null,
     });
@@ -780,6 +782,48 @@ describe("useCharacterSheetStore remote action state composition", () => {
     expect(state.latestRollResults).toHaveLength(1);
     expect(state.latestRollResults[0]?.target).toBe("SAVING_THROW");
     expect(state.latestNotes).toEqual([]);
+  });
+
+  it("clears a stale roll when a note-bearing action rolls nothing, so the two never describe different actions", () => {
+    useCharacterSheetStore.getState().recordRollResult({
+      characterId: "char_remote",
+      rollResults: [
+        {
+          total: 17,
+          rolls: [17],
+          modifier: 0,
+          target: "ATTACK_ROLL",
+        },
+      ],
+      timestamp: Date.now(),
+    });
+
+    expect(useCharacterSheetStore.getState().latestRollResults).toHaveLength(1);
+
+    // caltrops: no_effect, rolls nothing, leaves a table note - the earlier
+    // attack roll above has nothing to do with this action
+    useCharacterSheetStore.getState().syncRemoteActionExecution({
+      characterId: "char_remote",
+      requestId: "req_caltrops_reverse",
+      actionId: "action_item_caltrops_scatter",
+      source: "item",
+      instanceId: "inv_caltrops",
+      executed: true,
+      rollResults: [],
+      notes: [
+        "Any creature entering the area must succeed on a DC 15 Dexterity saving throw or stop moving and take 1 piercing damage.",
+      ],
+      activeStates: [],
+      resources: [],
+      effects: [],
+      actors: [],
+      timestamp: Date.now(),
+    } as never);
+
+    const reverseState = useCharacterSheetStore.getState();
+
+    expect(reverseState.latestRollResults).toEqual([]);
+    expect(reverseState.latestNotes).toHaveLength(1);
   });
 });
 
