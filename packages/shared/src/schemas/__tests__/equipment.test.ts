@@ -254,7 +254,7 @@ describe("a special weapon must say what is special about it", () => {
 });
 
 describe("item actions", () => {
-  it("defaults to no actions", () => {
+  it("leaves actions absent when an item grants none", () => {
     const parsed = EquipmentDefinitionSchema.parse({
       id: "item_abacus",
       name: "Abacus",
@@ -262,7 +262,7 @@ describe("item actions", () => {
       weight: 2,
     });
 
-    expect(parsed.actions).toEqual([]);
+    expect(parsed.actions).toBeUndefined();
   });
 
   it("carries an action that spends the item itself", () => {
@@ -290,7 +290,7 @@ describe("item actions", () => {
       ],
     });
 
-    expect(parsed.actions[0]?.consumesSelf).toBe(true);
-    expect(parsed.actions[0]?.id).toBe("action_acid_vial_throw");
+    expect(parsed.actions?.[0]?.consumesSelf).toBe(true);
+    expect(parsed.actions?.[0]?.id).toBe("action_acid_vial_throw");
   });
 });

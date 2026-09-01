@@ -264,7 +264,7 @@ export const ActionGrantSchema = z.object({
    * The resolver takes the instance from `ActionExecutionContext.selfInstanceId`
    * rather than from the roll payload, because there is nothing to choose.
    */
-  consumesSelf: z.boolean().default(false),
+  consumesSelf: z.boolean().optional(),
   targetFilter: TargetFilterSchema.optional(),
   /**
    * The part of this action's rule the engine cannot enforce, in words the

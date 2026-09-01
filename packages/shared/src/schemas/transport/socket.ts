@@ -181,7 +181,7 @@ export interface ActionResolvedPayload {
   characterId: string;
   requestId: string;
   actionId: string;
-  source: "character" | "actor";
+  source: "character" | "actor" | "item";
   actorInstanceId?: string;
   executed: boolean;
   reason?: string;

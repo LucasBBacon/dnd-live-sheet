@@ -124,8 +124,12 @@ export const EquipmentDefinitionSchema = z
      * importPack.ts projects this whole shape as `itemRule`; `lore`,
      * `isBundle` and `implementation` live on the Core wrapper and are stripped
      * on the way to the engine, and an action must not be.
+     *
+     * Optional rather than defaulted, for the reason coreRulePack.ts already
+     * records twice: a `.default()` makes the field required on the inferred
+     * OUTPUT type, so every hand-written literal in the repo has to restate it.
      */
-    actions: z.array(ActionGrantSchema).default([]),
+    actions: z.array(ActionGrantSchema).optional(),
     weapon: WeaponCapabilitySchema.optional(),
   })
   .strict();

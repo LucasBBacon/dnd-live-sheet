@@ -1140,7 +1140,6 @@
                   "type": "string"
                 },
                 "consumesSelf": {
-                  "default": false,
                   "type": "boolean"
                 },
                 "targetFilter": {
@@ -4644,7 +4643,6 @@
             }
           },
           "actions": {
-            "default": [],
             "type": "array",
             "items": {
               "type": "object",
@@ -4675,7 +4673,6 @@
                   "type": "string"
                 },
                 "consumesSelf": {
-                  "default": false,
                   "type": "boolean"
                 },
                 "targetFilter": {
@@ -6815,7 +6812,6 @@
                 "type": "string"
               },
               "consumesSelf": {
-                "default": false,
                 "type": "boolean"
               },
               "targetFilter": {
