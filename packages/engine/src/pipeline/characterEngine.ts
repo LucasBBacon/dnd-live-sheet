@@ -47,6 +47,7 @@ import {
 } from "../calculators/itemRequirements.js";
 import { DEFAULT_WALKING_SPEED } from "../rules/raceTypes.js";
 import {
+  resolveEquipmentDefinition,
   resolveRaceDefinition,
   resolveWeaponDefinition,
   type RuleSnapshotLookup,
@@ -89,6 +90,18 @@ export interface LiveSheetOptions {
   encumbranceRules?: EncumbranceRules;
 }
 
+/**
+ * An action an item grants, bound to the stack it came from.
+ *
+ * Keyed by instance rather than by item id because two stacks of the same item
+ * are two rows on the sheet, and Use has to spend the one that was pressed.
+ */
+export interface ItemActionGrant {
+  instanceId: string;
+  itemId: string;
+  action: ActionGrant;
+}
+
 export interface LiveCharacterSheet {
   // core stats
   abilities: Record<Ability, DerivedAbility>;
@@ -120,6 +133,14 @@ export interface LiveCharacterSheet {
 
   // executable actions (traits, spells, weapons)
   actions: ActionGrant[];
+  /**
+   * Actions granted by carried items.
+   *
+   * Deliberately apart from `actions`: these are used from the inventory row,
+   * and the combat list stays the combat list. Kept in the sheet rather than
+   * recomputed by the server so both surfaces read the same gather.
+   */
+  itemActions: ItemActionGrant[];
   activeActors: ActorInstance[];
   summons: Array<{
     templateId: string;
@@ -430,6 +451,25 @@ export class CharacterEngine {
       ...activeTraits.flatMap((t) => t.actions || []),
     ];
 
+    // Carried, not equipped: a vial in your pack is throwable. This is why the
+    // gather cannot ride along with the weapon loop below, which skips
+    // anything without a hand slot.
+    const itemActions: ItemActionGrant[] = [];
+    for (const instance of inventory) {
+      const definition = resolveEquipmentDefinition(
+        instance.itemId,
+        options.snapshot,
+      );
+
+      for (const action of definition?.actions ?? []) {
+        itemActions.push({
+          instanceId: instance.id,
+          itemId: instance.itemId,
+          action,
+        });
+      }
+    }
+
     for (const instance of inventory) {
       if (!instance.slot || instance.slot === "backpack") continue;
 
@@ -531,6 +571,7 @@ export class CharacterEngine {
       containers,
       equipmentRequirements,
       actions,
+      itemActions,
       activeActors,
       summons,
       saves,

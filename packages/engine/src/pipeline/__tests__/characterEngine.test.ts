@@ -79,6 +79,22 @@ const carried = (itemId: string, quantity = 1): InventoryInstance => ({
 });
 
 /**
+ * Builds a sheet whose only fixture concern is what's in the bag: itemActions
+ * tests care about carried inventory, not about the character underneath it.
+ *
+ * Wraps `buildSheet` the same way every other test in this file does -
+ * `halfElfFighter()` over the shipped pack via `corePackLookup()` - filling in
+ * the InventoryInstance fields the brief's fixtures leave implicit.
+ */
+const buildSheetWithInventory = (
+  items: Array<Pick<InventoryInstance, "id" | "itemId" | "quantity" | "slot">>,
+) =>
+  buildSheet(
+    halfElfFighter(),
+    items.map((item) => ({ ...item, isAttuned: false })),
+  );
+
+/**
  * A barbarian of the given level, for the class-progression traits.
  *
  * race_half_elf is 30ft, and its ASI choice leaves STR at 15, so a 65lb suit
@@ -1610,5 +1626,74 @@ describe("CharacterEngine: critical damage reaches the action", () => {
       // melee analysis's pool
       expect(thrown.effect.criticalDamage).toBeUndefined();
     }
+  });
+});
+
+describe("itemActions", () => {
+  it("gathers actions from carried items, not only equipped ones", () => {
+    const sheet = buildSheetWithInventory([
+      { id: "inv-vial", itemId: "item_acid_vial", quantity: 2, slot: "backpack" },
+    ]);
+
+    const entry = sheet.itemActions.find(
+      (candidate) => candidate.instanceId === "inv-vial",
+    );
+
+    expect(entry).toBeDefined();
+    expect(entry?.itemId).toBe("item_acid_vial");
+    expect(entry?.action.id).toBe("action_acid_vial_throw");
+  });
+
+  it("keeps item actions out of the combat action list", () => {
+    const sheet = buildSheetWithInventory([
+      { id: "inv-vial", itemId: "item_acid_vial", quantity: 2, slot: "backpack" },
+    ]);
+
+    // Compared against the gathered ids rather than a name prefix: a prefix
+    // test passes just as happily when the gather is empty, which is the exact
+    // regression it is supposed to catch.
+    const itemActionIds = new Set(
+      sheet.itemActions.map((entry) => entry.action.id),
+    );
+
+    expect(itemActionIds.size).toBeGreaterThan(0);
+    expect(sheet.actions.some((action) => itemActionIds.has(action.id))).toBe(
+      false,
+    );
+  });
+
+  it("does not gather a slotted weapon's attack as an item action", () => {
+    const sheet = buildSheetWithInventory([
+      {
+        id: "inv-sword",
+        itemId: "item_weapon_longsword",
+        quantity: 1,
+        slot: "main_hand",
+      },
+    ]);
+
+    // The longsword's attack is synthesized into `actions` by the weapon loop.
+    // It must not also appear here, or it would be offered twice and the
+    // economy could be spent from two places.
+    expect(
+      sheet.itemActions.some((entry) => entry.itemId === "item_weapon_longsword"),
+    ).toBe(false);
+    expect(
+      sheet.actions.some((action) => action.id.includes("longsword")),
+    ).toBe(true);
+  });
+
+  it("gives two stacks of the same item one entry each", () => {
+    const sheet = buildSheetWithInventory([
+      { id: "inv-a", itemId: "item_acid_vial", quantity: 1, slot: "backpack" },
+      { id: "inv-b", itemId: "item_acid_vial", quantity: 1, slot: "backpack" },
+    ]);
+
+    const instanceIds = sheet.itemActions
+      .filter((entry) => entry.itemId === "item_acid_vial")
+      .map((entry) => entry.instanceId)
+      .sort();
+
+    expect(instanceIds).toEqual(["inv-a", "inv-b"]);
   });
 });
