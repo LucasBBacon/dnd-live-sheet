@@ -108,6 +108,7 @@ const storeState = {
     },
   ],
   latestRollResults: [],
+  latestNotes: [],
   combatContext: {
     pendingEvents: [
       {

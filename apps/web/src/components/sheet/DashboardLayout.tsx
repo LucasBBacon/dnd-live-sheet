@@ -27,6 +27,13 @@ export const DashboardLayout = () => {
     (state) => state.toggleAttunement,
   );
   const consumeItem = useCharacterSheetStore((state) => state.consumeItem);
+  const itemActions = useCharacterSheetStore((state) => state.itemActions);
+  // aliased locally: a variable named useItemAction would read as a hook to
+  // react-hooks/rules-of-hooks wherever it is called, even though this is a
+  // plain store action rather than a hook
+  const triggerItemAction = useCharacterSheetStore(
+    (state) => state.useItemAction,
+  );
   const inventoryError = useCharacterSheetStore((state) => state.inventoryError);
   const setInventoryError = useCharacterSheetStore(
     (state) => state.setInventoryError,
@@ -354,14 +361,30 @@ export const DashboardLayout = () => {
                         </option>
                       ))}
                     </select>
-                    {item.itemType === "consumable" && (
-                      <button
-                        onClick={() => consumeItem(item.id, 1)}
-                        className="text-xs px-2 py-1 rounded border bg-white hover:bg-gray-100"
-                      >
-                        Use 1
-                      </button>
-                    )}
+                    {itemActions
+                      .filter((entry) => entry.instanceId === item.id)
+                      .map((entry) => (
+                        <button
+                          key={entry.action.id}
+                          onClick={() =>
+                            triggerItemAction(item.id, entry.action.id)
+                          }
+                          className="text-xs px-2 py-1 rounded border bg-white hover:bg-gray-100"
+                        >
+                          {entry.action.name}
+                        </button>
+                      ))}
+                    {item.itemType === "consumable" &&
+                      !itemActions.some(
+                        (entry) => entry.instanceId === item.id,
+                      ) && (
+                        <button
+                          onClick={() => consumeItem(item.id, 1)}
+                          className="text-xs px-2 py-1 rounded border bg-white hover:bg-gray-100"
+                        >
+                          Use 1
+                        </button>
+                      )}
                   </div>
                 </div>
               ))}

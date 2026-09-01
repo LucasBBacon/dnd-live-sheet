@@ -12,6 +12,7 @@ import {
   slotsConsumedBy,
   type Ability,
   type ActionRollResult,
+  type ItemActionGrant,
   type OperationalResource,
   type ProficiencyLevel,
 } from "@project/engine";
@@ -73,6 +74,37 @@ export const toInventoryInstance = (item: {
     isAttuned: item.isAttuned,
     ...(item.customName !== undefined && { customName: item.customName }),
   };
+};
+
+/**
+ * Actions granted by carried items, keyed by the inventory instance rather
+ * than the item id.
+ *
+ * Two stacks of the same item are two rows on the sheet, and Use has to spend
+ * the one the player pressed - so a lookup keyed by itemId could not tell them
+ * apart. Mirrors the gather `CharacterEngine.buildLiveSheet` performs
+ * server-side; kept here rather than sourced from a broadcast because the
+ * inputs it reads - inventory and the rule snapshot - are already the ones
+ * the store keeps live.
+ */
+const computeItemActions = (
+  inventory: InventoryInstance[],
+  snapshot: SheetRuleSnapshot | null,
+): ItemActionGrant[] => {
+  const itemActions: ItemActionGrant[] = [];
+
+  for (const instance of inventory) {
+    const definition = resolveEquipmentDefinition(
+      instance.itemId,
+      snapshot ?? undefined,
+    );
+
+    for (const action of definition?.actions ?? []) {
+      itemActions.push({ instanceId: instance.id, itemId: instance.itemId, action });
+    }
+  }
+
+  return itemActions;
 };
 
 /**
@@ -549,6 +581,12 @@ export interface CharacterSheetState {
   // operational inventory
   inventory: InventoryInstance[];
   inventoryError: string | null;
+  /**
+   * Actions granted by carried items, recomputed alongside `inventory` and
+   * `ruleSnapshot` - see computeItemActions. Read from the inventory row so a
+   * carried vial offers "Throw Acid" beside the plain "Use" button.
+   */
+  itemActions: ItemActionGrant[];
 
   // transient or spell based mods
   activeModifiers: RuntimeModifier[];
@@ -568,6 +606,13 @@ export interface CharacterSheetState {
   activeStates: string[];
   selectedActorInstanceId: string | null;
   latestRollResults: ActionRollResult[];
+  /**
+   * Rules the engine could not enforce on the last resolved action, for the
+   * sheet to show the player - mirrors ActionResolvedPayload.notes. Kept
+   * alongside latestRollResults rather than in its own slice so both surfaces
+   * that already read the last resolution can read this too.
+   */
+  latestNotes: string[];
   runtimeEffects: EffectManager | null;
   runtimeResources: ResourceManager | null;
   combatContext: CombatContext;
@@ -591,6 +636,7 @@ export interface CharacterSheetState {
   consumeItem: (inventoryId: string, amount: number) => void;
   syncRemoteConsumption: (inventoryId: string, amount: number) => void;
   setInventoryError: (message: string | null) => void;
+  useItemAction: (instanceId: string, actionId: string) => void;
 
   consumeResource: (resourceId: string, amount?: number) => void;
   syncRemoteResource: (resourceId: string, amount: number) => void;
@@ -651,6 +697,7 @@ export const useCharacterSheetStore = create<CharacterSheetState>(
     traitGrants: [],
     inventory: [],
     inventoryError: null,
+    itemActions: [],
     activeModifiers: [],
     resources: [],
     baseStates: [],
@@ -658,13 +705,21 @@ export const useCharacterSheetStore = create<CharacterSheetState>(
     activeStates: [],
     selectedActorInstanceId: null,
     latestRollResults: [],
+    latestNotes: [],
     runtimeEffects: null,
     runtimeResources: null,
     combatContext: CombatContextSchema.parse({}),
     runtimeCombat: null,
     ruleSnapshot: null,
 
-    initialize: (payload) => set((state) => ({ ...state, ...payload })),
+    initialize: (payload) =>
+      set((state) => {
+        const next = { ...state, ...payload };
+        return {
+          ...next,
+          itemActions: computeItemActions(next.inventory, next.ruleSnapshot),
+        };
+      }),
 
     applyHealthDelta: (delta, source) => {
       const state = get();
@@ -865,7 +920,11 @@ export const useCharacterSheetStore = create<CharacterSheetState>(
     },
 
     syncInventorySnapshot: (inventory) => {
-      set({ inventory: inventory.map(toInventoryInstance) });
+      const nextInventory = inventory.map(toInventoryInstance);
+      set((state) => ({
+        inventory: nextInventory,
+        itemActions: computeItemActions(nextInventory, state.ruleSnapshot),
+      }));
     },
 
     syncRemoteEquipment: (inventoryId, targetSlot) => {
@@ -904,7 +963,11 @@ export const useCharacterSheetStore = create<CharacterSheetState>(
         })
         .filter((item) => item.quantity > 0); // strip it out if it hits 0
 
-      set({ inventory: updatedInventory, inventoryError: null });
+      set({
+        inventory: updatedInventory,
+        itemActions: computeItemActions(updatedInventory, state.ruleSnapshot),
+        inventoryError: null,
+      });
 
       socketService.emitInventoryConsumed({
         characterId: state.id,
@@ -924,7 +987,10 @@ export const useCharacterSheetStore = create<CharacterSheetState>(
         )
         .filter((item) => item.quantity > 0);
 
-      set({ inventory: updatedInventory });
+      set({
+        inventory: updatedInventory,
+        itemActions: computeItemActions(updatedInventory, state.ruleSnapshot),
+      });
     },
 
     setInventoryError: (message) => {
@@ -1166,6 +1232,7 @@ export const useCharacterSheetStore = create<CharacterSheetState>(
                 payload.rollResults.map(toActionRollResult),
               )
             : previous.latestRollResults,
+        latestNotes: payload.notes ?? [],
         runtimeEffects,
         runtimeResources,
         selectedActorInstanceId:
@@ -1242,6 +1309,19 @@ export const useCharacterSheetStore = create<CharacterSheetState>(
       });
 
       return spent;
+    },
+
+    // The server settles the cost, including spending the item itself, so this
+    // must not also call consumeItem - that would spend two.
+    useItemAction: (instanceId, actionId) => {
+      socketService.emitActionIntent({
+        characterId: get().id,
+        requestId: crypto.randomUUID(),
+        actionId,
+        source: "item",
+        instanceId,
+        timestamp: Date.now(),
+      });
     },
 
     // Turn transitions are requested, not performed. The server owns effect

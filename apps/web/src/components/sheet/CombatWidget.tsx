@@ -35,6 +35,7 @@ export const CombatWidget = () => {
   const latestRollResults = useCharacterSheetStore(
     (state) => state.latestRollResults,
   );
+  const latestNotes = useCharacterSheetStore((state) => state.latestNotes);
   const recordRollResult = useCharacterSheetStore(
     (state) => state.recordRollResult,
   );
@@ -438,6 +439,19 @@ export const CombatWidget = () => {
               </div>
             ))}
           </div>
+        </div>
+      )}
+
+      {latestNotes.length > 0 && (
+        <div className="rounded-xl border border-amber-200 bg-amber-50 p-3">
+          <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-amber-700">
+            Rules the engine could not run
+          </div>
+          {latestNotes.map((note) => (
+            <p key={note} className="mt-2 text-xs text-amber-700">
+              {note}
+            </p>
+          ))}
         </div>
       )}
 
