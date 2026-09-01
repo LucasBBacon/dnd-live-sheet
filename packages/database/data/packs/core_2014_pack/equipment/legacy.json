@@ -241,9 +241,25 @@
             "costCp": 10,
             "requiresAttunement": false,
             "categoryTags": [],
+            "actions": [
+                {
+                    "id": "action_oil_flask_throw",
+                    "name": "Throw Oil",
+                    "activation": "action",
+                    "consumesSelf": true,
+                    "tableNote": "On a hit the target is covered in oil and takes an extra 5 fire damage if it takes any fire damage before the oil dries after 1 minute. Poured on level ground instead, a flask covers a 5-foot square; lit, it burns for 2 rounds and deals 5 fire damage to a creature that enters the area or ends its turn there, once per turn.",
+                    "effect": {
+                        "type": "attack",
+                        "attackType": "ranged_weapon",
+                        "attackStat": "DEX",
+                        "range": 20,
+                        "damage": []
+                    }
+                }
+            ],
             "lore": {
                 "shortDescription": "A flask of oil for a lamp, or thrown as an improvised weapon.",
-                "fullText": "A flask of oil for a lamp, or thrown as an improvised weapon. Burns for 6 hours when used to fuel a lamp."
+                "fullText": "Oil usually comes in a clay flask that holds 1 pint. As an action, you can splash the oil in this flask onto a creature within 5 feet of you, or throw it up to 20 feet, shattering it on impact. Make a ranged attack against a target creature or object, treating the oil as an improvised weapon. On a hit, the target is covered in oil. If the target takes any fire damage before the oil dries after 1 minute, the target takes an additional 5 fire damage from the burning oil. You can also pour a flask of oil on the ground to cover a 5-foot-square area, provided that the surface is level. If lit, the oil burns for 2 rounds and deals 5 fire damage to any creature that enters the area or ends its turn in the area. A creature can take this damage only once per turn. One flask also fuels a lamp for 6 hours."
             },
             "isBundle": false,
             "bundleContents": []

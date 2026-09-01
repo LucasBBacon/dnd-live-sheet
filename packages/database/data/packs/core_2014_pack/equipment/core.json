@@ -22,6 +22,27 @@
             "costCp": 2500,
             "requiresAttunement": false,
             "categoryTags": [],
+            "actions": [
+                {
+                    "id": "action_acid_vial_throw",
+                    "name": "Throw Acid",
+                    "activation": "action",
+                    "consumesSelf": true,
+                    "effect": {
+                        "type": "attack",
+                        "attackType": "ranged_weapon",
+                        "attackStat": "DEX",
+                        "range": 20,
+                        "damage": [
+                            {
+                                "sourceName": "Acid",
+                                "baseDice": "2d6",
+                                "damageType": "acid"
+                            }
+                        ]
+                    }
+                }
+            ],
             "lore": {
                 "shortDescription": "A stoppered vial of corrosive acid, splashed or thrown as an improvised weapon.",
                 "fullText": "As an action, you can splash the contents of this vial onto a creature within 5 feet of you or throw the vial up to 20 feet, shattering it on impact. In either case, make a ranged attack against a creature or object, treating the acid as an improvised weapon. On a hit, the target takes 2d6 acid damage."
@@ -35,6 +56,28 @@
             "costCp": 5000,
             "requiresAttunement": false,
             "categoryTags": [],
+            "actions": [
+                {
+                    "id": "action_alchemists_fire_flask_throw",
+                    "name": "Throw Alchemist's Fire",
+                    "activation": "action",
+                    "consumesSelf": true,
+                    "tableNote": "The target takes 1d4 fire damage at the start of each of its turns until a creature uses its action to make a DC 10 Dexterity check to extinguish the flames.",
+                    "effect": {
+                        "type": "attack",
+                        "attackType": "ranged_weapon",
+                        "attackStat": "DEX",
+                        "range": 20,
+                        "damage": [
+                            {
+                                "sourceName": "Alchemist's Fire",
+                                "baseDice": "1d4",
+                                "damageType": "fire"
+                            }
+                        ]
+                    }
+                }
+            ],
             "lore": {
                 "shortDescription": "A flask of sticky fluid that catches light the moment it meets the air.",
                 "fullText": "This sticky, adhesive fluid ignites when exposed to air. As an action, you can throw this flask up to 20 feet, shattering it on impact. Make a ranged attack against a creature or object, treating the alchemist's fire as an improvised weapon. On a hit, the target takes 1d4 fire damage at the start of each of its turns. A creature can end this damage by using its action to make a DC 10 Dexterity check to extinguish the flames."
