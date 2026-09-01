@@ -19,6 +19,20 @@
 - **`z.toJSONSchema` silently drops `.refine()`.** Any refine added here is Zod-only and must be covered by a direct unit test, as `equipment.test.ts` already does for `WeaponCapabilitySchema`.
 - **Commit after every task.** Work directly on `main`.
 
+## Execution Order
+
+Dispatch in this order, which is **not** ascending task number:
+
+```
+1 → 2 → 3 → 4 → 6 → 7 → 9 → 8 → 10 → 11
+```
+
+- **Task 5 is merged into Task 1** and is never dispatched.
+- **Task 9 runs before Task 8.** Task 8 asserts that the acid vial produces an
+  `itemActions` entry, which is only true once Task 9 has authored it. Running
+  9 first removes the conditional Task 8 would otherwise carry; when you reach
+  Task 9, skip its Step 7 (it defers to a Task 8 that has not run yet).
+
 ---
 
 ## File Structure
@@ -183,16 +197,138 @@ export const ActionGrantSchema = z
 Run: `cd packages/shared && npx vitest run src/schemas/__tests__/actions.test.ts`
 Expected: PASS, including the pre-existing tests in that file.
 
-- [ ] **Step 6: Check nothing else referenced the removed field**
+- [ ] **Step 6: Write the failing engine tests**
 
-Run: `npx tsc --noEmit` from `packages/shared`, then from `packages/engine`.
-Expected: `packages/engine` FAILS at `weaponSynthesizer.ts:80` and `actionResolver.ts:426` — both still reference `effect.specialNote`. **That is the expected state; Task 5 fixes it.** Do not fix it here.
+Removing `effect.specialNote` breaks its two readers. Fix them in this same task rather than a later one: a move that spans the schema and its readers is one change, and splitting it would leave `packages/engine` knowingly red in between — which makes every intermediate test run in later tasks untrustworthy.
 
-- [ ] **Step 7: Commit**
+Append to `packages/engine/src/pipeline/__tests__/weaponSynthesizer.test.ts`:
+
+```ts
+it("puts the weapon's special rule on the action, not inside the effect", () => {
+  const pack = corePackEquipment();
+  const net = pack.weaponsById["item_weapon_net"];
+  expect(net).toBeDefined();
+
+  // synthesize returns ONE ActionGrant, not an array
+  const action = WeaponSynthesizer.synthesize(net!, {
+    hand: "main_hand",
+    attackUsage: "standard",
+  });
+
+  expect(action.tableNote).toContain("restrained");
+  expect(action.effect).not.toHaveProperty("specialNote");
+});
+```
+
+> `synthesize` takes `(weapon, attackContext, …, criticalDamageMaximized = false)` and returns a single `ActionGrant`. Copy the exact argument list from the nearest existing call in this file — the middle parameters have defaults and this suite already supplies them in its own way.
+
+Append to `packages/engine/src/pipeline/__tests__/actionResolver.test.ts`:
+
+```ts
+it("reports a table note from an action that rolls nothing", () => {
+  const result = ActionResolver.execute(
+    {
+      id: "action_caltrops_bag_spread",
+      name: "Spread Caltrops",
+      activation: "action",
+      tableNote: "DC 15 Dexterity saving throw or stop moving.",
+      effect: { type: "no_effect" },
+    },
+    { actionId: "action_caltrops_bag_spread", activeStates: [] },
+    {
+      effectManager: new EffectManager(),
+      resourceManager: new ResourceManager(),
+    },
+  );
+
+  expect(result.executed).toBe(true);
+  expect(result.notes).toEqual([
+    "DC 15 Dexterity saving throw or stop moving.",
+  ]);
+});
+```
+
+- [ ] **Step 7: Run them and verify they fail**
+
+Run: `cd packages/engine && npx vitest run src/pipeline/__tests__/weaponSynthesizer.test.ts src/pipeline/__tests__/actionResolver.test.ts`
+Expected: FAIL — the synthesizer still writes `effect.specialNote` (and no longer typechecks), and a `no_effect` action returns bare `ok` with no notes.
+
+- [ ] **Step 8: Fix the synthesizer**
+
+In `packages/engine/src/pipeline/weaponSynthesizer.ts`, move the spread out of the `effect` object and up onto the action. Delete these lines from inside `effect`:
+
+```ts
+        ...(weapon.specialNote === undefined
+          ? {}
+          : { specialNote: weapon.specialNote }),
+```
+
+and add this to the action object, immediately after the `consumesAmmo` property:
+
+```ts
+      // the weapon's unenforceable rule belongs to the action now, so a weapon
+      // that rolls nothing at all can still carry one
+      ...(weapon.specialNote === undefined
+        ? {}
+        : { tableNote: weapon.specialNote }),
+```
+
+- [ ] **Step 9: Attach notes once, for every effect type**
+
+In `packages/engine/src/pipeline/actionResolver.ts`, delete the attack case's note spread:
+
+```ts
+          ...(effect.specialNote === undefined
+            ? {}
+            : { notes: [effect.specialNote] }),
+```
+
+so the attack case returns `{ ...ok, rollResults }`.
+
+Then in `execute`, replace the final return with one that attaches the note to whatever the effect produced:
+
+```ts
+    // 3 - a table note belongs to the action, so it rides out regardless of
+    // which effect ran - or whether any of them rolled anything
+    const withNote =
+      action.tableNote === undefined
+        ? outcome
+        : { ...outcome, notes: [...(outcome.notes ?? []), action.tableNote] };
+
+    // an overdraft is settled at cost time but only meaningful once the action
+    // has actually happened, so it rides out on the effect's result
+    return settlement.economyOverdrawn
+      ? { ...withNote, economyOverdrawn: true }
+      : withNote;
+```
+
+- [ ] **Step 10: Regenerate the JSON schemas**
+
+Traits carry actions, so the action shape is embedded in `segment.schema.json` — `specialNote` appears there five times today. Removing it from the Zod schema without regenerating leaves `packSchemas.test.ts` red for every task that follows.
+
+Run: `pnpm --filter @project/database schemas:generate`
+Then: `git diff packages/database/data/schemas/segment.schema.json | head -40`
+Expected: `specialNote` removed, `tableNote` added. Never edit this file by hand.
+
+- [ ] **Step 11: Run everything and verify it is green**
 
 ```bash
-git add packages/shared/src/schemas/content/actions.ts packages/shared/src/schemas/__tests__/actions.test.ts
-git commit -m "feat(shared): lift specialNote off the attack effect onto the action as tableNote"
+pnpm test && pnpm check:hygiene
+```
+
+Expected: all suites pass, including `packSchemas.test.ts`'s byte-comparison of the regenerated schema. Then typecheck the two packages you touched:
+
+```bash
+cd packages/shared && npx tsc --noEmit && cd ../engine && npx tsc --noEmit
+```
+
+Expected: both clean.
+
+- [ ] **Step 12: Commit**
+
+```bash
+git add packages/shared/src/schemas/content/actions.ts packages/shared/src/schemas/__tests__/actions.test.ts packages/engine/src/pipeline/weaponSynthesizer.ts packages/engine/src/pipeline/actionResolver.ts packages/engine/src/pipeline/__tests__/weaponSynthesizer.test.ts packages/engine/src/pipeline/__tests__/actionResolver.test.ts packages/database/data/schemas/segment.schema.json
+git commit -m "feat: lift a weapon's special rule off the attack effect onto the action as tableNote"
 ```
 
 ---
@@ -292,10 +428,18 @@ export const CoreEffectUnion = z.discriminatedUnion("type", [
 Run: `cd packages/shared && npx vitest run src/schemas/__tests__/actions.test.ts`
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [ ] **Step 5: Regenerate the JSON schemas**
+
+A new member of `CoreEffectUnion` changes the action shape, which traits embed in `segment.schema.json`. Regenerate or `packSchemas.test.ts` goes red for every task after this one.
+
+Run: `pnpm --filter @project/database schemas:generate`
+Then: `pnpm --filter @project/database test`
+Expected: PASS — the regenerated schema matches the generator byte for byte and all 31 segments still validate. Never edit the file by hand.
+
+- [ ] **Step 6: Commit**
 
 ```bash
-git add packages/shared/src/schemas/content/actions.ts packages/shared/src/schemas/__tests__/actions.test.ts
+git add packages/shared/src/schemas/content/actions.ts packages/shared/src/schemas/__tests__/actions.test.ts packages/database/data/schemas/segment.schema.json
 git commit -m "feat(shared): add a heal effect that rolls its expression and reports the total"
 ```
 
@@ -531,138 +675,15 @@ git commit -m "feat(shared): carry action notes and item intents across the sock
 
 ---
 
-## Task 5: Move the engine onto `tableNote`
+## Task 5: MERGED INTO TASK 1 — skip
 
-**Files:**
-- Modify: `packages/engine/src/pipeline/weaponSynthesizer.ts:79-82`, `packages/engine/src/pipeline/actionResolver.ts:424-429`
-- Test: `packages/engine/src/pipeline/__tests__/weaponSynthesizer.test.ts`, `packages/engine/src/pipeline/__tests__/actionResolver.test.ts`
+Moving `specialNote` off the effect and onto the action spans the schema and
+both of its readers. Splitting that across two tasks left `packages/engine`
+knowingly red in between, which makes every intermediate test run in Tasks 2-4
+untrustworthy. Task 1 now carries the synthesizer and resolver changes that
+used to live here.
 
-**Interfaces:**
-- Consumes: `ActionGrant.tableNote` from Task 1.
-- Produces: the synthesized weapon action carries `tableNote`; `ActionResult.notes` is populated from `action.tableNote` for **every** effect type, not just attacks.
-
-**This is the fix for the typecheck failure Task 1 deliberately left.**
-
-- [ ] **Step 1: Write the failing tests**
-
-Append to `packages/engine/src/pipeline/__tests__/weaponSynthesizer.test.ts`:
-
-```ts
-it("puts the weapon's special rule on the action, not inside the effect", () => {
-  const pack = corePackEquipment();
-  const net = pack.weaponsById["item_weapon_net"];
-  expect(net).toBeDefined();
-
-  // synthesize returns ONE ActionGrant, not an array
-  const action = WeaponSynthesizer.synthesize(net!, {
-    hand: "main_hand",
-    attackUsage: "standard",
-  });
-
-  expect(action.tableNote).toContain("restrained");
-  expect(action.effect).not.toHaveProperty("specialNote");
-});
-```
-
-> `synthesize` takes `(weapon, attackContext, …, criticalDamageMaximized = false)` and returns a single `ActionGrant`. Copy the exact argument list from the nearest existing call in this file — the middle parameters have defaults and this suite already supplies them in its own way.
-
-Append to `packages/engine/src/pipeline/__tests__/actionResolver.test.ts`:
-
-```ts
-it("reports a table note from an action that rolls nothing", () => {
-  const result = ActionResolver.execute(
-    {
-      id: "action_caltrops_bag_spread",
-      name: "Spread Caltrops",
-      activation: "action",
-      consumesSelf: false,
-      tableNote: "DC 15 Dexterity saving throw or stop moving.",
-      effect: { type: "no_effect" },
-    },
-    { actionId: "action_caltrops_bag_spread", activeStates: [] },
-    {
-      effectManager: new EffectManager(),
-      resourceManager: new ResourceManager(),
-    },
-  );
-
-  expect(result.executed).toBe(true);
-  expect(result.notes).toEqual([
-    "DC 15 Dexterity saving throw or stop moving.",
-  ]);
-});
-```
-
-- [ ] **Step 2: Run the tests and verify they fail**
-
-Run: `cd packages/engine && npx vitest run src/pipeline/__tests__/weaponSynthesizer.test.ts src/pipeline/__tests__/actionResolver.test.ts`
-Expected: FAIL — the synthesizer still writes `effect.specialNote` (and no longer typechecks), and `no_effect` returns bare `ok` with no notes.
-
-- [ ] **Step 3: Fix the synthesizer**
-
-In `packages/engine/src/pipeline/weaponSynthesizer.ts`, move the spread out of the `effect` object and up onto the action. Delete these lines from inside `effect`:
-
-```ts
-        ...(weapon.specialNote === undefined
-          ? {}
-          : { specialNote: weapon.specialNote }),
-```
-
-and add this to the action object, immediately after the `consumesAmmo` property:
-
-```ts
-      // the weapon's unenforceable rule belongs to the action now, so a weapon
-      // that rolls nothing at all can still carry one
-      ...(weapon.specialNote === undefined
-        ? {}
-        : { tableNote: weapon.specialNote }),
-```
-
-- [ ] **Step 4: Attach notes once, for every effect type**
-
-In `packages/engine/src/pipeline/actionResolver.ts`, delete the attack case's note spread:
-
-```ts
-          ...(effect.specialNote === undefined
-            ? {}
-            : { notes: [effect.specialNote] }),
-```
-
-so the attack case returns `{ ...ok, rollResults }`.
-
-Then in `execute`, replace the final return with one that attaches the note to whatever the effect produced:
-
-```ts
-    // 3 - a table note belongs to the action, so it rides out regardless of
-    // which effect ran - or whether any of them rolled anything
-    const withNote =
-      action.tableNote === undefined
-        ? outcome
-        : { ...outcome, notes: [...(outcome.notes ?? []), action.tableNote] };
-
-    // an overdraft is settled at cost time but only meaningful once the action
-    // has actually happened, so it rides out on the effect's result
-    return settlement.economyOverdrawn
-      ? { ...withNote, economyOverdrawn: true }
-      : withNote;
-```
-
-- [ ] **Step 5: Run the tests and verify they pass**
-
-Run: `cd packages/engine && npx vitest run`
-Expected: PASS, 771 tests plus the two new ones.
-
-- [ ] **Step 6: Typecheck both packages**
-
-Run: `cd packages/shared && npx tsc --noEmit && cd ../engine && npx tsc --noEmit`
-Expected: both clean. The failure Task 1 left is now closed.
-
-- [ ] **Step 7: Commit**
-
-```bash
-git add packages/engine/src/pipeline/weaponSynthesizer.ts packages/engine/src/pipeline/actionResolver.ts packages/engine/src/pipeline/__tests__/weaponSynthesizer.test.ts packages/engine/src/pipeline/__tests__/actionResolver.test.ts
-git commit -m "feat(engine): report an action's table note whatever its effect rolled"
-```
+**Do not dispatch this task.** Its content is Task 1 Steps 6-12.
 
 ---
 
