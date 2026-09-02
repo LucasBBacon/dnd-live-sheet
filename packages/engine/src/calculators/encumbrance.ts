@@ -13,6 +13,7 @@ export type EncumbranceTier =
 
 /** Granted by trait_powerful_build; read here and nowhere else. */
 export const POWERFUL_BUILD_STATE = "powerful_build";
+export const CARRYING_CAPACITY_DOUBLED_STATE = "carrying_capacity_doubled";
 
 export interface EncumbranceRules {
   /**
@@ -34,6 +35,7 @@ export interface EncumbranceInput {
   strScore: number;
   size: CreatureSize;
   hasPowerfulBuild: boolean;
+  hasCarryingCapacityDoubled?: boolean;
   rules?: EncumbranceRules;
 }
 
@@ -76,12 +78,14 @@ export class EncumbranceEngine {
     strScore,
     size,
     hasPowerfulBuild,
+    hasCarryingCapacityDoubled = false,
     rules = DEFAULT_ENCUMBRANCE_RULES,
   }: EncumbranceInput): EncumbranceResult {
     // Powerful Build does not change the creature's size, only which row of
     // the capacity table it reads
     const effectiveSize = hasPowerfulBuild ? oneSizeLarger(size) : size;
-    const multiplier = SIZE_CAPACITY_MULTIPLIER[effectiveSize];
+    const multiplier =
+      SIZE_CAPACITY_MULTIPLIER[effectiveSize] * (hasCarryingCapacityDoubled ? 2 : 1);
 
     const thresholds: Thresholds = {
       capacity: strScore * 15 * multiplier,

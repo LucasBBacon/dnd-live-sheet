@@ -14,6 +14,11 @@ export type CharacterSheetPayload = {
   campaignId: string | null;
   level: number;
   classLevels: Record<string, number>;
+  classes?: Array<{
+    classId: string;
+    level: number;
+    subclassId: string | null;
+  }>;
   raceId: string | null;
   subraceId: string | null;
   str: number;
@@ -76,6 +81,9 @@ export const hydrateCharacterSheet = (
     campaignId: character.campaignId,
     level: character.level || 1,
     classLevels: character.classLevels || {},
+    subclassIds: Object.fromEntries(
+      (character.classes ?? []).map((entry) => [entry.classId, entry.subclassId]),
+    ),
     raceId: character.raceId ?? null,
     subraceId: character.subraceId ?? null,
     // API payload keeps the flat lowercase column names; the store is keyed by

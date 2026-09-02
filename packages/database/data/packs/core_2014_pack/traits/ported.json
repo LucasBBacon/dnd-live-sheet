@@ -3180,15 +3180,30 @@
         },
         {
             "id": "trait_totem_spirit_eagle",
-            "implementation": {
-                "mode": "unimplemented",
-                "summary": "Awaiting authoring.",
-                "blockedBy": []
-            },
             "name": "Totem Spirit: Eagle",
             "lore": {
-                "shortDescription": "While raging and unarmored, opportunity attacks against you have disadvantage and you can Dash as a bonus action."
+                "shortDescription": "While raging and not wearing heavy armour, other creatures have disadvantage on opportunity attack rolls against you, and you can use a bonus action on your turn to Dash.",
+                "fullText": "While you're raging and aren't wearing heavy armor, other creatures have disadvantage on opportunity attack rolls against you, and you can use the Dash action as a bonus action on your turn."
             },
+            "isStartingProficiency": false,
+            "implementation": {
+                "mode": "engine",
+                "summary": "The bonus-action Dash is gated on status_raging and forbidden under status_wearing_heavy_armor. The opportunity-attack half is a table note with the same gate.",
+                "blockedBy": [
+                    "status_wearing_heavy_armor"
+                ]
+            },
+            "tableNotes": [
+                {
+                    "text": "While raging and not wearing heavy armour, other creatures have disadvantage on opportunity attack rolls against you.",
+                    "requiredStates": [
+                        "status_raging"
+                    ],
+                    "forbiddenStates": [
+                        "status_wearing_heavy_armor"
+                    ]
+                }
+            ],
             "modifiers": {
                 "fixed": [],
                 "choices": []
@@ -3197,7 +3212,39 @@
             "triggers": [],
             "diceRules": [],
             "criticalHitModifiers": [],
-            "actions": []
+            "actions": [
+                {
+                    "id": "action_eagle_dash",
+                    "name": "Dash (Eagle Totem)",
+                    "activation": "bonus_action",
+                    "effect": {
+                        "type": "apply_effect",
+                        "effectName": "Dash",
+                        "effectTag": "dash",
+                        "durationType": "turn_end",
+                        "isSelfConcentration": false,
+                        "requiredStates": [
+                            "status_raging"
+                        ],
+                        "forbiddenStates": [
+                            "status_wearing_heavy_armor"
+                        ],
+                        "states": [
+                            "status_dashing"
+                        ],
+                        "modifiers": [
+                            {
+                                "target": "SPEED",
+                                "type": "multiplier",
+                                "value": 2,
+                                "scalingFactor": "none",
+                                "requiredStates": [],
+                                "forbiddenStates": []
+                            }
+                        ]
+                    }
+                }
+            ]
         },
         {
             "id": "trait_totem_spirit_wolf",
@@ -3233,15 +3280,27 @@
         },
         {
             "id": "trait_aspect_of_the_beast_bear",
-            "implementation": {
-                "mode": "unimplemented",
-                "summary": "Awaiting authoring.",
-                "blockedBy": []
-            },
             "name": "Aspect of the Beast: Bear",
             "lore": {
-                "shortDescription": "Your carrying capacity doubles and you have advantage on Strength checks to move objects."
+                "shortDescription": "You gain the might of a bear: your carrying capacity is doubled, and you have advantage on Strength checks made to push, pull, lift or break objects.",
+                "fullText": "You gain the might of a bear. Your carrying capacity (including maximum load and maximum lift) is doubled, and you have advantage on Strength checks made to push, pull, lift, or break objects."
             },
+            "isStartingProficiency": false,
+            "implementation": {
+                "mode": "engine",
+                "summary": "Grants carrying_capacity_doubled, which EncumbranceEngine applies as a second multiplier beside size and Powerful Build. The advantage on Strength checks to move objects is a table note.",
+                "blockedBy": []
+            },
+            "grantedStates": [
+                "carrying_capacity_doubled"
+            ],
+            "tableNotes": [
+                {
+                    "text": "You have advantage on Strength checks made to push, pull, lift or break objects.",
+                    "requiredStates": [],
+                    "forbiddenStates": []
+                }
+            ],
             "modifiers": {
                 "fixed": [],
                 "choices": []

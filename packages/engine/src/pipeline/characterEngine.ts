@@ -34,6 +34,7 @@ import {
   DEFAULT_ENCUMBRANCE_RULES,
   EncumbranceEngine,
   POWERFUL_BUILD_STATE,
+  CARRYING_CAPACITY_DOUBLED_STATE,
   type EncumbranceResult,
   type EncumbranceRules,
 } from "../calculators/encumbrance.js";
@@ -374,6 +375,9 @@ export class CharacterEngine {
       // assumption that changes the least
       size: race?.size ?? "medium",
       hasPowerfulBuild: baseStates.includes(POWERFUL_BUILD_STATE),
+      hasCarryingCapacityDoubled: baseStates.includes(
+        CARRYING_CAPACITY_DOUBLED_STATE,
+      ),
       rules: options.encumbranceRules ?? DEFAULT_ENCUMBRANCE_RULES,
     });
 

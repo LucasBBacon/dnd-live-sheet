@@ -528,28 +528,6 @@
             "actions": []
         },
         {
-            "id": "trait_primal_path",
-            "implementation": {
-                "mode": "unimplemented",
-                "summary": "Awaiting authoring.",
-                "blockedBy": []
-            },
-            "name": "Primal Path",
-            "lore": {
-                "shortDescription": "placeholder",
-                "fullText": "placeholder"
-            },
-            "modifiers": {
-                "fixed": [],
-                "choices": []
-            },
-            "resources": [],
-            "triggers": [],
-            "diceRules": [],
-            "criticalHitModifiers": [],
-            "actions": []
-        },
-        {
             "id": "trait_extra_attack",
             "name": "Extra Attack",
             "lore": {
@@ -790,18 +768,39 @@
         },
         {
             "id": "trait_primal_champion",
-            "implementation": {
-                "mode": "unimplemented",
-                "summary": "Awaiting authoring.",
-                "blockedBy": []
-            },
             "name": "Primal Champion",
             "lore": {
-                "shortDescription": "placeholder",
-                "fullText": "placeholder"
+                "shortDescription": "Your Strength and Constitution scores increase by 4, and your maximum for those scores is now 24.",
+                "fullText": "At 20th level, you embody the power of the wilds. Your Strength and Constitution scores increase by 4. Your maximum for those scores is now 24."
             },
+            "isStartingProficiency": false,
+            "implementation": {
+                "mode": "engine",
+                "summary": "Two flat adds of 4 to STR and CON, plus the barbarian_capstone state, which AbilityEngine reads as a cap of 24 for those two scores only.",
+                "blockedBy": []
+            },
+            "grantedStates": [
+                "barbarian_capstone"
+            ],
             "modifiers": {
-                "fixed": [],
+                "fixed": [
+                    {
+                        "target": "STR",
+                        "type": "add",
+                        "value": 4,
+                        "scalingFactor": "none",
+                        "requiredStates": [],
+                        "forbiddenStates": []
+                    },
+                    {
+                        "target": "CON",
+                        "type": "add",
+                        "value": 4,
+                        "scalingFactor": "none",
+                        "requiredStates": [],
+                        "forbiddenStates": []
+                    }
+                ],
                 "choices": []
             },
             "resources": [],
@@ -978,8 +977,7 @@
                 {
                     "level": 3,
                     "grants": [
-                        "trait_rage",
-                        "trait_primal_path"
+                        "trait_rage"
                     ],
                     "grantsASI": false
                 },
@@ -998,9 +996,7 @@
                 },
                 {
                     "level": 6,
-                    "grants": [
-                        "trait_primal_path_feature"
-                    ],
+                    "grants": [],
                     "grantsASI": false
                 },
                 {
@@ -1025,9 +1021,7 @@
                 },
                 {
                     "level": 10,
-                    "grants": [
-                        "trait_primal_path_feature"
-                    ],
+                    "grants": [],
                     "grantsASI": false
                 },
                 {
@@ -1053,9 +1047,7 @@
                 },
                 {
                     "level": 14,
-                    "grants": [
-                        "trait_primal_path_feature"
-                    ],
+                    "grants": [],
                     "grantsASI": false
                 },
                 {

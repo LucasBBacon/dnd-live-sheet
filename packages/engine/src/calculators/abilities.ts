@@ -6,19 +6,34 @@ import type { RuntimeModifier } from "@project/shared";
  * @param activeStates An array of strings representing the current active states that may influence ability score caps.
  * @returns The maximum ability score cap as a number, defaulting to 20 if no relevant states are active.
  */
-const getStateDrivenAbilityCap = (activeStates: string[] = []): number => {
-  const stateCaps = new Map<string, number>([
-    ["barbarian_capstone", 24],
-    ["tome", 24],
-    ["ability_cap_24", 24],
-    ["ability_cap_30", 30],
-  ]);
+interface CapRule {
+  state: string;
+  cap: number;
+  abilities?: Ability[];
+}
 
-  return activeStates.reduce((maxCap, state) => {
-    const cap = stateCaps.get(state);
-    return cap !== undefined ? Math.max(maxCap, cap) : maxCap;
+const CAP_RULES: CapRule[] = [
+  { state: "barbarian_capstone", cap: 24, abilities: ["STR", "CON"] },
+  { state: "tome", cap: 24 },
+  { state: "ability_cap_24", cap: 24 },
+  { state: "ability_cap_30", cap: 30 },
+];
+
+const getStateDrivenAbilityCap = (
+  activeStates: string[] = [],
+  target?: Ability,
+): number =>
+  CAP_RULES.reduce((maxCap, rule) => {
+    if (!activeStates.includes(rule.state)) return maxCap;
+    if (
+      rule.abilities !== undefined &&
+      target !== undefined &&
+      !rule.abilities.includes(target)
+    ) {
+      return maxCap;
+    }
+    return Math.max(maxCap, rule.cap);
   }, 20);
-};
 
 export interface DerivedAbility {
   score: number;
@@ -67,7 +82,7 @@ export class AbilityEngine {
       breakdownTokens.push(`${mod.sourceName} (${sign}${mod.value})`);
     }
 
-    const maxCap = getStateDrivenAbilityCap(activeStates);
+    const maxCap = getStateDrivenAbilityCap(activeStates, target);
 
     // calculate capped natural score
     let finalScore = Math.min(base + naturalBonus, maxCap);

@@ -9,6 +9,8 @@ import {
   RestEngine,
   canEquipTo,
   resolveEquipmentDefinition,
+  collectGrantedResources,
+  materialiseMissingPools,
   slotsConsumedBy,
   type Ability,
   type ActionRollResult,
@@ -173,7 +175,17 @@ const toCharacterSave = (state: CharacterSheetState): CharacterSave => ({
       ? Object.entries(state.classLevels).map(([classId, level]) => ({
           classId,
           level,
-          selections: {},
+          ...(state.subclassIds[classId] !== null &&
+            state.subclassIds[classId] !== undefined && {
+              subclassId: state.subclassIds[classId],
+            }),
+          selections: CharacterBootstrapper.selectionsFromChosenTraitIds(
+            [{ classId, level, ...(state.subclassIds[classId] !== null && state.subclassIds[classId] !== undefined && { subclassId: state.subclassIds[classId] }) }],
+            state.traitGrants
+              .filter((grant) => grant.source === "player_choice")
+              .map((grant) => grant.traitId),
+            state.ruleSnapshot ?? undefined,
+          )[classId] ?? {},
         }))
       : [{ classId: "class_fighter", level: 1, selections: {} }],
   traitSelections: {},
@@ -559,6 +571,7 @@ export interface CharacterSheetState {
   campaignId: string | null;
   level: number;
   classLevels: Record<string, number>;
+  subclassIds: Record<string, string | null>;
   raceId: string | null;
   subraceId: string | null;
 
@@ -692,6 +705,7 @@ export const useCharacterSheetStore = create<CharacterSheetState>(
     campaignId: null,
     level: 1,
     classLevels: {},
+    subclassIds: {},
     raceId: null,
     subraceId: null,
     currentHp: 10,
@@ -722,8 +736,28 @@ export const useCharacterSheetStore = create<CharacterSheetState>(
     initialize: (payload) =>
       set((state) => {
         const next = { ...state, ...payload };
+        const activeTraits = CharacterBootstrapper.compileActiveTraits(
+          toCharacterSave(next),
+          next.ruleSnapshot ?? undefined,
+        );
+        const totalLevel = Object.values(next.classLevels).reduce(
+          (sum, level) => sum + level,
+          0,
+        );
+        const missingPools = materialiseMissingPools(
+          next.resources.map((resource) => resource.id),
+          collectGrantedResources(activeTraits, next.ruleSnapshot ?? undefined),
+          totalLevel,
+          next.classLevels,
+        );
         return {
           ...next,
+          resources: [...next.resources, ...missingPools.map((pool) => ({
+            id: pool.id,
+            name: pool.name,
+            current: pool.current,
+            currentCharges: pool.current,
+          }))],
           itemActions: computeItemActions(next.inventory, next.ruleSnapshot),
         };
       }),

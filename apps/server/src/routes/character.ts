@@ -113,6 +113,11 @@ const fetchCharacterPayload = async (userId: string, characterId: string) => {
     classLevels: Object.fromEntries(
       classLedger.map((entry) => [entry.classId, entry.classLevel]),
     ),
+    classes: classLedger.map((entry) => ({
+      classId: entry.classId,
+      level: entry.classLevel,
+      subclassId: entry.subclassId,
+    })),
     traitGrants,
     inventory,
   };

@@ -136,11 +136,11 @@ describe("trait and spell implementation markers match their data", () => {
   it("records how much of the trait section carries no rules", async () => {
     const pack = await assembleCoreRulePack(SHIPPED_PACK);
 
-    // 452 of 587. Slice 1 of the barbarian pass authored ten traits: nine
-    // sheet helpers carrying table notes and Bear totem's affinities.
+    // 447 of 585. The barbarian pass authored Primal Champion, Bear aspect
+    // and Eagle totem, then deleted the two obsolete Primal Path signposts.
     expect(pack.traits.filter((trait) => !carriesRules(trait))).toHaveLength(
-      452,
+      447,
     );
-    expect(pack.traits).toHaveLength(587);
+    expect(pack.traits).toHaveLength(585);
   });
 });

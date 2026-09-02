@@ -1484,19 +1484,6 @@
             }
         },
         {
-            "id": "trait_primal_path_feature",
-            "name": "Primal Path Feature",
-            "lore": {
-                "shortDescription": "Not yet authored in the pack.",
-                "fullText": "This trait exists so progressions can reference it. Its rules have not been authored yet."
-            },
-            "implementation": {
-                "mode": "unimplemented",
-                "summary": "Awaiting authoring.",
-                "blockedBy": []
-            }
-        },
-        {
             "id": "trait_berserker_frenzy",
             "name": "Berserker Frenzy",
             "lore": {
