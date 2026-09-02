@@ -2,6 +2,7 @@ import path from "node:path";
 import { describe, expect, it } from "vitest";
 import { assembleCoreRulePackSync } from "@project/database/pack";
 import { packToRuleLookup } from "../packLookup.js";
+import { corePack } from "../../pipeline/__tests__/corePackFixture.js";
 
 const PACK_ROOT = path.join(
   process.cwd(),
@@ -42,9 +43,12 @@ describe("packToRuleLookup", () => {
   });
 
   it("keys the pack's resources by id", () => {
-    expect(Object.keys(lookup.resourcesById)).toHaveLength(
-      pack.resources.length,
-    );
+    // resourcesById now also carries every trait's own pools (see the
+    // resourcesById describe block below), so this only checks that the
+    // pack-level section itself is present and correctly keyed.
+    for (const resource of pack.resources) {
+      expect(lookup.resourcesById[resource.id]).toEqual(resource);
+    }
   });
 
   it("carries the rulebook maps the snapshot resolves by id", () => {
@@ -60,5 +64,21 @@ describe("packToRuleLookup", () => {
     expect(Object.keys(lookup.subclassesById ?? {})).toHaveLength(
       pack.subclasses.length,
     );
+  });
+});
+
+describe("packToRuleLookup.resourcesById", () => {
+  it("carries the pack-level resources", () => {
+    const lookup = packToRuleLookup(corePack());
+
+    expect(lookup.resourcesById["trait_action_surge"]?.name).toBe("Action Surge");
+  });
+
+  it("carries the resources traits grant, which the old projection dropped", () => {
+    // Rage's pool lives on trait_rage, not in pack.resources. Without it in
+    // the map, applyRest found no rule and never reset it.
+    const rage = packToRuleLookup(corePack()).resourcesById["resource_barbarian_rage"];
+
+    expect(rage?.resetCondition).toBe("long_rest");
   });
 });

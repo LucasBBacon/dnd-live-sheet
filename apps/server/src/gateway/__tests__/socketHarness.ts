@@ -216,9 +216,8 @@ export const setupGateway = async (
         equipmentById: Object.fromEntries(
           pack.equipment.map((item) => [item.id, item]),
         ),
-        resourcesById: Object.fromEntries(
-          pack.resources.map((resource) => [resource.id, resource]),
-        ),
+        // resourcesById now rides on toRuleSnapshot itself, which carries
+        // pack.resources plus every trait's own pools
         ...toRuleSnapshot(pack),
       },
     }),

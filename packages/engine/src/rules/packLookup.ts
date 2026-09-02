@@ -20,7 +20,6 @@ import { toWeaponDefinition, type WeaponView } from "./equipmentProjection.js";
 export type PackRuleLookup = CoreRulePackSnapshot & {
   equipmentById: Record<string, EquipmentDefinition>;
   weaponsById: Record<string, WeaponView>;
-  resourcesById: Record<string, CoreRulePack["resources"][number]>;
 };
 
 /**
@@ -55,8 +54,5 @@ export const packToRuleLookup = (pack: CoreRulePack): PackRuleLookup => {
     ...toRuleSnapshot(pack),
     equipmentById,
     weaponsById,
-    resourcesById: Object.fromEntries(
-      pack.resources.map((resource) => [resource.id, resource]),
-    ),
   };
 };

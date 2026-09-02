@@ -22,6 +22,7 @@ const EMPTY: CoreRulePackSnapshot = {
   racesById: {},
   classesById: {},
   subclassesById: {},
+  resourcesById: {},
 };
 
 let rulebook: CoreRulePackSnapshot = EMPTY;

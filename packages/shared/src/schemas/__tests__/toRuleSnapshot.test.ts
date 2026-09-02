@@ -17,6 +17,7 @@ const pack = (overrides: Partial<CoreRulePack> = {}): CoreRulePack =>
     spells: [],
     equipment: [],
     proficiencies: [],
+    resources: [],
     ...overrides,
   }) as CoreRulePack;
 

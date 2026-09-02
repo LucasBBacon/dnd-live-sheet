@@ -61,16 +61,9 @@ const buildRuleSnapshot = async (): Promise<CachedRuleSnapshot> => {
 
   const packContent = packPayload ? toRuleSnapshot(packPayload) : undefined;
 
-  // resources come from pack.resources, which toRuleSnapshot does not carry -
-  // it holds only what the engine resolves through the rulebook path. the
-  // static RESOURCE_DICTIONARY that used to fill this is gone, so without
-  // this a short rest would find no rule and restore nothing
-  const resourcesById = Object.fromEntries(
-    (packPayload?.resources ?? []).map((resource) => [
-      resource.id,
-      resource,
-    ]),
-  );
+  // resources ride on the shared projection now - pack.resources plus every
+  // pool a trait declares - so the server no longer keeps its own copy
+  const resourcesById = packContent?.resourcesById ?? {};
 
   const parsedSnapshot = RuleSnapshotSchema.parse({
     equipmentById,

@@ -2,6 +2,7 @@ import { z } from "zod";
 import type { CoreRulePack } from "../content/coreRulePack.js";
 import { EquipmentDefinitionSchema } from "../content/equipment.js";
 import { ResourceSchema } from "../content/resources.js";
+import type { Resource } from "../content/resources.js";
 import { TraitDefinitionSchema } from "../content/traits.js";
 
 // #region Resource Rules
@@ -32,7 +33,7 @@ export type RuleSnapshot = z.infer<typeof RuleSnapshotSchema>;
 /**
  * The rulebook content a loaded pack contributes to the engine's lookups.
  *
- * Deliberately only the three the engine resolves by id. Everything else in a
+ * Deliberately only the four the engine resolves by id. Everything else in a
  * pack - feats, backgrounds, spells, proficiencies - reaches the runtime by
  * other routes, and adding them here before anything reads them would be the
  * dead-data pattern this project keeps having to unpick.
@@ -47,6 +48,13 @@ export interface CoreRulePackSnapshot {
    * lookups rather than walking into the class.
    */
   subclassesById: Record<string, CoreRulePack["subclasses"][number]>;
+  /**
+   * Every resource a character can hold, keyed by id: the pack's own section
+   * plus every pool a trait declares. Trait pools were missing from every
+   * hand-built copy of this map, so Rage resolved to no rule at runtime and
+   * never reset on a long rest.
+   */
+  resourcesById: Record<string, Resource>;
 }
 
 const byId = <T extends { id: string }>(entries: T[]): Record<string, T> =>
@@ -66,4 +74,8 @@ export const toRuleSnapshot = (pack: CoreRulePack): CoreRulePackSnapshot => ({
   racesById: byId(pack.races),
   classesById: byId(pack.classes),
   subclassesById: byId(pack.subclasses),
+  resourcesById: byId([
+    ...pack.resources,
+    ...pack.traits.flatMap((trait) => trait.resources),
+  ]),
 });
