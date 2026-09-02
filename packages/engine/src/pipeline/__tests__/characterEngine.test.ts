@@ -1697,3 +1697,81 @@ describe("itemActions", () => {
     expect(instanceIds).toEqual(["inv-a", "inv-b"]);
   });
 });
+
+describe("CharacterEngine.buildLiveSheet: Primal Champion", () => {
+  // half-elf's ASI choice in this fixture adds +1 DEX and +1 CON
+  const capstone = (level: number): CharacterSave =>
+    halfElfFighter({
+      attributes: { str: 20, dex: 20, con: 20, int: 12, wis: 10, cha: 8 },
+      classes: [{ classId: "class_barbarian", level, selections: {} }],
+    });
+
+  it("raises Strength and Constitution by four, capped at 24", () => {
+    const sheet = buildSheet(capstone(20));
+
+    expect(sheet.abilities.STR.score).toBe(24);
+    // 20 + 1 + 4 = 25, capped
+    expect(sheet.abilities.CON.score).toBe(24);
+  });
+
+  it("does not lift the cap for the other scores", () => {
+    // 20 + 1 = 21, still capped at 20
+    expect(buildSheet(capstone(20)).abilities.DEX.score).toBe(20);
+  });
+
+  it("grants nothing at 19th level", () => {
+    expect(buildSheet(capstone(19)).abilities.STR.score).toBe(20);
+  });
+});
+
+/** A Totem Warrior with the given totem picks, for the subclass traits. */
+const totemBarbarian = (
+  level: number,
+  selections: Record<string, string[]>,
+): CharacterSave =>
+  halfElfFighter({
+    classes: [
+      {
+        classId: "class_barbarian",
+        level,
+        subclassId: "subclass_barbarian_totem_warrior",
+        selections,
+      },
+    ],
+  });
+
+describe("CharacterEngine.buildLiveSheet: Aspect of the Beast (Bear)", () => {
+  const picks = {
+    barbarian_totem_level_3_totem_spirit: ["trait_totem_spirit_bear"],
+    barbarian_totem_level_6_aspect: ["trait_aspect_of_the_beast_bear"],
+  };
+
+  it("doubles carrying capacity at 6th level", () => {
+    // STR 15 in this fixture: 225 lb, doubled
+    expect(buildSheet(totemBarbarian(6, picks)).encumbrance.maxCapacity).toBe(450);
+  });
+
+  it("does not before the aspect is chosen", () => {
+    expect(buildSheet(totemBarbarian(5, picks)).encumbrance.maxCapacity).toBe(225);
+  });
+});
+
+describe("CharacterEngine.buildLiveSheet: Totem Spirit (Eagle)", () => {
+  const picks = { barbarian_totem_level_3_totem_spirit: ["trait_totem_spirit_eagle"] };
+
+  it("offers the eagle's bonus-action Dash", () => {
+    const dash = buildSheet(totemBarbarian(3, picks)).actions.find(
+      (action) => action.id === "action_eagle_dash",
+    );
+
+    expect(dash?.activation).toBe("bonus_action");
+  });
+
+  it("does not offer it to a bear totem", () => {
+    const bear = { barbarian_totem_level_3_totem_spirit: ["trait_totem_spirit_bear"] };
+
+    expect(
+      buildSheet(totemBarbarian(3, bear)).actions.some((action) => action.id === "action_eagle_dash"),
+    ).toBe(false);
+  });
+});

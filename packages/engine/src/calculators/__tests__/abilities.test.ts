@@ -227,6 +227,43 @@ describe("AbilityEngine.calculateScore", () => {
   });
 });
 
+describe("AbilityEngine.calculateScore caps", () => {
+  it("lifts Strength to 24 under barbarian_capstone", () => {
+    const result = AbilityEngine.calculateScore(
+      20,
+      "STR",
+      [makeMod({ sourceName: "Primal Champion", value: 4 })],
+      ["barbarian_capstone"],
+    );
+
+    expect(result.score).toBe(24);
+  });
+
+  it("leaves Dexterity capped at 20 under barbarian_capstone", () => {
+    // RAW raises the maximum for Strength and Constitution only
+    const result = AbilityEngine.calculateScore(
+      20,
+      "DEX",
+      [makeMod({ target: "DEX", sourceName: "Manual", value: 4 })],
+      ["barbarian_capstone"],
+    );
+
+    expect(result.score).toBe(20);
+    expect(result.breakdown).toContain("(Capped at 20)");
+  });
+
+  it("keeps the global cap states global", () => {
+    const result = AbilityEngine.calculateScore(
+      20,
+      "DEX",
+      [makeMod({ target: "DEX", sourceName: "Tome", value: 4 })],
+      ["tome"],
+    );
+
+    expect(result.score).toBe(24);
+  });
+});
+
 describe("AbilityEngine.getModifier", () => {
   it.each([
     [1, -5],

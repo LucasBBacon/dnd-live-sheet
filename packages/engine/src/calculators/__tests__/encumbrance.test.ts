@@ -125,3 +125,36 @@ describe("EncumbranceEngine.calculate and creature size", () => {
     expect(result.tier).toBe("none");
   });
 });
+
+describe("EncumbranceEngine.calculate with a doubled capacity", () => {
+  it("doubles every threshold", () => {
+    const result = EncumbranceEngine.calculate(
+      input({ hasCarryingCapacityDoubled: true, rules: { useVariantEncumbrance: true } }),
+    );
+
+    expect(result.maxCapacity).toBe(450);
+    expect(result.encumberedThreshold).toBe(150);
+    expect(result.heavilyEncumberedThreshold).toBe(300);
+  });
+
+  it("stacks with Powerful Build rather than replacing it", () => {
+    // medium -> large is x2, doubled again is x4
+    const result = EncumbranceEngine.calculate(
+      input({ hasCarryingCapacityDoubled: true, hasPowerfulBuild: true }),
+    );
+
+    expect(result.maxCapacity).toBe(900);
+  });
+
+  it("doubles a small creature's capacity, where Powerful Build would not", () => {
+    // small and medium share a multiplier of 1, so one size up changes
+    // nothing for a small barbarian; doubling does
+    expect(
+      EncumbranceEngine.calculate(input({ size: "small", hasPowerfulBuild: true })).maxCapacity,
+    ).toBe(225);
+    expect(
+      EncumbranceEngine.calculate(input({ size: "small", hasCarryingCapacityDoubled: true }))
+        .maxCapacity,
+    ).toBe(450);
+  });
+});

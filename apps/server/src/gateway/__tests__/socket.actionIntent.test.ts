@@ -475,4 +475,44 @@ describe("socket gateway - ACTION_INTENT", () => {
 
     expect(harness.db.opsFor(characterResources, "insert")).toEqual([]);
   });
+
+  it("resolves a subclass action for a Totem Warrior whose totem was a player choice", async () => {
+    harness = await setupGateway();
+    await joinCampaign(harness);
+    harness.db.seed(characters, [characterRow()]);
+    harness.db.seed(characterClasses, [
+      {
+        classId: "class_barbarian",
+        classLevel: 3,
+        subclassId: "subclass_barbarian_totem_warrior",
+      },
+    ]);
+    harness.db.seed(characterTraits, [
+      { traitId: "trait_totem_spirit_eagle", source: "player_choice" },
+    ]);
+    harness.db.seed(characterInventory, []);
+    harness.db.seed(characterResources, [
+      {
+        id: "resource_barbarian_rage",
+        characterId: "char-1",
+        name: "Rage",
+        current: 3,
+        max: 3,
+        resetCondition: "long_rest",
+      },
+    ]);
+
+    await harness.emit(
+      SOCKET_EVENTS.ACTION_INTENT,
+      intent({ actionId: "action_rage", requestId: "req-rage" }),
+    );
+    await harness.emit(
+      SOCKET_EVENTS.ACTION_INTENT,
+      intent({ actionId: "action_eagle_dash", requestId: "req-dash" }),
+    );
+
+    const resolved = lastResolved(harness);
+    expect(resolved).toMatchObject({ executed: true, actionId: "action_eagle_dash" });
+    expect(resolved["activeStates"]).toContain("status_dashing");
+  });
 });

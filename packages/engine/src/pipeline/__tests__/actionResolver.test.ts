@@ -2033,3 +2033,45 @@ describe("consumesSelf", () => {
     expect(consumed).toEqual([]);
   });
 });
+
+describe("ActionResolver and the eagle totem's Dash", () => {
+  const eagleDash = (): ActionGrant => {
+    const trait = corePackLookup().traitsById?.["trait_totem_spirit_eagle"];
+    const action = trait?.actions.find((entry) => entry.id === "action_eagle_dash");
+    if (!action) throw new Error("action_eagle_dash missing from the shipped pack");
+    return action;
+  };
+
+  it("doubles speed until the end of the turn while raging", () => {
+    const effectManager = new EffectManager();
+
+    const result = ActionResolver.execute(
+      eagleDash(),
+      { ...payload(), actionId: "action_eagle_dash" },
+      {
+        effectManager,
+        resourceManager: new ResourceManager(),
+        activeStates: ["status_raging"],
+      },
+    );
+
+    expect(result.executed).toBe(true);
+    expect(effectManager.getActiveStates()).toContain("status_dashing");
+  });
+
+  it("applies nothing when the character is not raging", () => {
+    const effectManager = new EffectManager();
+
+    ActionResolver.execute(
+      eagleDash(),
+      { ...payload(), actionId: "action_eagle_dash" },
+      {
+        effectManager,
+        resourceManager: new ResourceManager(),
+        activeStates: [],
+      },
+    );
+
+    expect(effectManager.getActiveStates()).toEqual([]);
+  });
+});

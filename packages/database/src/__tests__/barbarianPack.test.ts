@@ -366,3 +366,72 @@ describe("trait_totem_spirit_bear", () => {
     }
   });
 });
+
+describe("trait_primal_champion", () => {
+  const trait = findTrait("trait_primal_champion");
+
+  it("is engine-backed with real rule text", () => {
+    expect(trait.implementation?.mode).toBe("engine");
+    expect(trait.lore?.shortDescription).not.toBe("placeholder");
+  });
+
+  it("adds four to Strength and Constitution", () => {
+    expect(
+      trait.modifiers.fixed.map((modifier) => [modifier.target, modifier.type, modifier.value]),
+    ).toEqual([
+      ["STR", "add", 4],
+      ["CON", "add", 4],
+    ]);
+  });
+
+  it("grants the cap state the ability calculator reads", () => {
+    expect(trait.grantedStates).toEqual(["barbarian_capstone"]);
+  });
+});
+
+describe("trait_aspect_of_the_beast_bear", () => {
+  const trait = findPortedTrait("trait_aspect_of_the_beast_bear");
+
+  it("is engine-backed for the capacity and reports the check advantage", () => {
+    expect(trait.implementation?.mode).toBe("engine");
+    expect(trait.grantedStates).toEqual(["carrying_capacity_doubled"]);
+    expect(trait.tableNotes?.[0]?.text).toMatch(/push, pull, lift/);
+    expect(trait.tableNotes?.[0]?.requiredStates).toEqual([]);
+  });
+});
+
+describe("trait_totem_spirit_eagle", () => {
+  const trait = findPortedTrait("trait_totem_spirit_eagle");
+  const dash = trait.actions.find((action) => action.id === "action_eagle_dash");
+
+  it("is engine-backed with a raging-gated bonus-action Dash", () => {
+    expect(trait.implementation?.mode).toBe("engine");
+    expect(dash?.activation).toBe("bonus_action");
+    if (dash?.effect.type !== "apply_effect") throw new Error("expected apply_effect");
+    expect(dash.effect.requiredStates).toEqual(["status_raging"]);
+    expect(dash.effect.forbiddenStates).toEqual(["status_wearing_heavy_armor"]);
+    expect(dash.effect.states).toEqual(["status_dashing"]);
+    expect(dash.effect.durationType).toBe("turn_end");
+    expect(dash.effect.modifiers[0]).toMatchObject({ target: "SPEED", type: "multiplier", value: 2 });
+  });
+
+  it("reports the opportunity-attack half as a note with the same gate", () => {
+    expect(trait.tableNotes?.[0]?.text).toMatch(/opportunity attack/);
+    expect(trait.tableNotes?.[0]?.requiredStates).toEqual(["status_raging"]);
+    expect(trait.tableNotes?.[0]?.forbiddenStates).toEqual(["status_wearing_heavy_armor"]);
+  });
+});
+
+describe("the Primal Path signposts are gone", () => {
+  it("grants no signpost trait at any level", () => {
+    const barbarian = segment.classes.find((entry) => entry.id === "class_barbarian");
+    const granted = barbarian?.progression.flatMap((row) => row.grants) ?? [];
+
+    expect(granted).not.toContain("trait_primal_path");
+    expect(granted).not.toContain("trait_primal_path_feature");
+  });
+
+  it("no longer authors either trait", () => {
+    expect(() => findTrait("trait_primal_path")).toThrow();
+  });
+});

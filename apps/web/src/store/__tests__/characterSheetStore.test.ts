@@ -1305,3 +1305,65 @@ describe("useCharacterSheetStore surprise", () => {
     );
   });
 });
+
+describe("initialize materialises trait-granted pools", () => {
+  it("adds Rage for a barbarian whose payload carried no resources", () => {
+    useCharacterSheetStore.getState().initialize({
+      id: "char_1",
+      level: 3,
+      classLevels: { class_barbarian: 3 },
+      raceId: "race_human",
+      subraceId: null,
+      resources: [],
+      ruleSnapshot: packRuleSnapshot(),
+    });
+
+    expect(useCharacterSheetStore.getState().resources).toContainEqual(
+      expect.objectContaining({ id: "resource_barbarian_rage", current: 3 }),
+    );
+  });
+
+  it("keeps a pool the payload already carried, without duplicating it", () => {
+    useCharacterSheetStore.getState().initialize({
+      id: "char_1",
+      level: 3,
+      classLevels: { class_barbarian: 3 },
+      raceId: "race_human",
+      subraceId: null,
+      resources: [{ id: "resource_barbarian_rage", current: 1 }],
+      ruleSnapshot: packRuleSnapshot(),
+    });
+
+    const rage = useCharacterSheetStore
+      .getState()
+      .resources.filter((resource) => resource.id === "resource_barbarian_rage");
+    expect(rage).toHaveLength(1);
+    expect(rage[0]?.current).toBe(1);
+  });
+});
+
+describe("getActiveTraits with a subclass", () => {
+  it("compiles the chosen totem from the class ledger and the player's choice", () => {
+    useCharacterSheetStore.getState().initialize({
+      id: "char_1",
+      level: 3,
+      classLevels: { class_barbarian: 3 },
+      subclassIds: { class_barbarian: "subclass_barbarian_totem_warrior" },
+      traitGrants: [
+        { id: "grant_1", traitId: "trait_totem_spirit_bear", source: "player_choice" },
+      ],
+      raceId: "race_human",
+      subraceId: null,
+      ruleSnapshot: packRuleSnapshot(),
+    });
+
+    const ids = useCharacterSheetStore
+      .getState()
+      .getActiveTraits()
+      .map((trait) => trait.id);
+
+    expect(ids).toContain("trait_spirit_seeker");
+    expect(ids).toContain("trait_totem_spirit_bear");
+    expect(ids).not.toContain("trait_totem_spirit_eagle");
+  });
+});
