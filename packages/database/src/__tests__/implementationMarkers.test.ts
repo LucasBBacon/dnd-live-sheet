@@ -33,6 +33,7 @@ const carriesRules = (trait: PackTrait): boolean => {
     grants(t["affinities"]) ||
     grants(t["spells"]) ||
     len("grantedStates") > 0 ||
+    len("tableNotes") > 0 ||
     len("resources") > 0 ||
     len("triggers") > 0 ||
     len("diceRules") > 0 ||
@@ -135,12 +136,11 @@ describe("trait and spell implementation markers match their data", () => {
   it("records how much of the trait section carries no rules", async () => {
     const pack = await assembleCoreRulePack(SHIPPED_PACK);
 
-    // 463 of 587: 343 marked unimplemented, 119 unmarked, and
-    // trait_fs_protection marked as a sheet helper because the modifier
-    // vocabulary cannot express it (#23). Was 576 of 700 until #57 deleted
-    // 113 stubs that no progression referenced.
+    // 462 of 587: 343 marked unimplemented and 119 unmarked. Was 463 until
+    // trait_fs_protection gained the table note that makes its helper marker
+    // visible, and tableNotes started counting as a rule channel.
     expect(pack.traits.filter((trait) => !carriesRules(trait))).toHaveLength(
-      463,
+      462,
     );
     expect(pack.traits).toHaveLength(587);
   });
