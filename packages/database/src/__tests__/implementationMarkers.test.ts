@@ -114,37 +114,34 @@ describe("trait and spell implementation markers match their data", () => {
   });
 
   /**
-   * Characterisation, not a desired state - the same treatment the gateway
-   * S-findings got, so the fix has a test to flip rather than a test to write.
+   * Was a characterisation test pinning 119 silent stubs. They are marked now
+   * (#51), so it asserts the invariant instead of recording the gap.
    *
-   * These traits carry no rules and say nothing about it, which is precisely
-   * the silence the marker exists to break: `trait_dragon_ancestor_black`
-   * grants no acid resistance, no Draconic and no Charisma-check doubling, and
-   * is indistinguishable from a trait that deliberately grants nothing.
-   *
-   * They also do not appear in #30's count, so the authoring burndown is
-   * larger than the backlog records. Lower the number as they are marked or
-   * authored; if it ever *rises*, a new silent stub has been added.
+   * The silence this breaks was real: `trait_dragon_ancestor_black` grants no
+   * acid resistance, no Draconic and no Charisma-check doubling, and while it
+   * carried no marker it was indistinguishable from a trait that deliberately
+   * grants nothing. Every rule-free trait now says which it is.
    */
-  it("records the rule-free traits that carry no marker at all", async () => {
+  it("leaves no rule-free trait unmarked", async () => {
     const pack = await assembleCoreRulePack(SHIPPED_PACK);
 
-    const unmarked = pack.traits.filter(
-      (trait) => !trait.implementation && !carriesRules(trait),
-    );
+    const unmarked = pack.traits
+      .filter((trait) => !trait.implementation && !carriesRules(trait))
+      .map((trait) => trait.id);
 
-    expect(unmarked).toHaveLength(119);
+    expect(unmarked).toEqual([]);
   });
 
   it("records how much of the trait section carries no rules", async () => {
     const pack = await assembleCoreRulePack(SHIPPED_PACK);
 
-    // 576 of 700, not the 456 of 700 that #30 records: 456 marked
-    // unimplemented, 119 unmarked, and trait_fs_protection marked as a sheet
-    // helper because the modifier vocabulary cannot express it (#23).
+    // 463 of 587: 343 marked unimplemented, 119 unmarked, and
+    // trait_fs_protection marked as a sheet helper because the modifier
+    // vocabulary cannot express it (#23). Was 576 of 700 until #57 deleted
+    // 113 stubs that no progression referenced.
     expect(pack.traits.filter((trait) => !carriesRules(trait))).toHaveLength(
-      576,
+      463,
     );
-    expect(pack.traits).toHaveLength(700);
+    expect(pack.traits).toHaveLength(587);
   });
 });

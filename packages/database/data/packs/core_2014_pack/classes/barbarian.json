@@ -512,6 +512,11 @@
         },
         {
             "id": "trait_primal_path",
+            "implementation": {
+                "mode": "unimplemented",
+                "summary": "Awaiting authoring.",
+                "blockedBy": []
+            },
             "name": "Primal Path",
             "lore": {
                 "shortDescription": "placeholder",
@@ -689,6 +694,11 @@
         },
         {
             "id": "trait_relentless_rage",
+            "implementation": {
+                "mode": "unimplemented",
+                "summary": "Awaiting authoring.",
+                "blockedBy": []
+            },
             "name": "Relentless Rage",
             "lore": {
                 "shortDescription": "placeholder",
@@ -706,6 +716,11 @@
         },
         {
             "id": "trait_persistent_rage",
+            "implementation": {
+                "mode": "unimplemented",
+                "summary": "Awaiting authoring.",
+                "blockedBy": []
+            },
             "name": "Persistent Rage",
             "lore": {
                 "shortDescription": "placeholder",
@@ -723,6 +738,11 @@
         },
         {
             "id": "trait_indomitable_might",
+            "implementation": {
+                "mode": "unimplemented",
+                "summary": "Awaiting authoring.",
+                "blockedBy": []
+            },
             "name": "Indomitable Might",
             "lore": {
                 "shortDescription": "placeholder",
@@ -740,6 +760,11 @@
         },
         {
             "id": "trait_primal_champion",
+            "implementation": {
+                "mode": "unimplemented",
+                "summary": "Awaiting authoring.",
+                "blockedBy": []
+            },
             "name": "Primal Champion",
             "lore": {
                 "shortDescription": "placeholder",

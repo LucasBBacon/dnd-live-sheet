@@ -1,16 +1,15 @@
 # TODO Backlog
 
-**Status as of 2026-08-24.** The workspace is green — 1652 tests, 0 failures,
-typecheck and lint clean, `check:hygiene` passing. Nothing below is breaking a
-build; these are gaps, debt and content.
+**Status as of 2026-09-02.** The workspace is green — **1779 tests**, 0
+failures, lint clean, `check:hygiene` passing, and **typecheck clean across
+all five packages** (verified per package, not through turbo — 6f explains why
+that distinction matters). Nothing below is breaking a build; these are gaps,
+debt and content.
 
 Read [Recommended sequence](#recommended-sequence) first — it is the ordered
-list, re-verified against the working tree on 2026-08-24, and every other
-section is reference material it points into. **Tiers 1, 2 and 3 are closed**;
-Tier 4 (#33, #32, #44) is the top of the list.
-
-**One caveat on "green":** `pnpm typecheck` currently fails for `packages/engine`
-on pre-existing uncommitted work, which turbo’s cache had been hiding. See 6f.
+list, re-measured against the working tree on 2026-09-02. **Tiers 1-3 of the
+previous pass are closed, and so are #32, #33 and #55.** What remains is
+mostly the authoring burndown.
 
 Item numbers are stable ids. Gaps in the numbering are intentional, closed
 items are struck through rather than deleted, and superseded decisions are kept
@@ -152,109 +151,96 @@ structural.
 
 ## Recommended sequence
 
-Refreshed **2026-08-24**. Every item below was re-verified against the working
-tree on that date rather than carried forward on trust; two entries changed
-severity as a result, and both notes say so. The 2026-08-21 ordering this
-replaces has been retired — its closed entries are already marked ✅ in their
-own sections, and each of its still-open items carries through to a tier here,
-so nothing is dropped silently. See "Superseded" below for the record.
+Refreshed **2026-09-02**, after the item-actions branch (49 commits) landed
+without touching this file. Every item below was re-measured against the
+working tree that day, and three entries changed state as a result.
 
-The ordering principle has changed, because the old one has been satisfied.
-The previous list said **fix the pipe before filling it**, and that was right:
-its Tier 1 is closed, the equip path works, and the pack is the only rules
-source. The principle for this pass is **silent wrong before loud missing**.
+**Closed since the last pass, by that branch rather than by a backlog run:**
+#32 (23 weapons with no `weapon` block) and #33 (6 armours with no AC or
+category) are **both done** — every equipment gap marker is gone, the
+battleaxe carries real PHB stats, and the breastplate carries `medium` and
+AC 14 with a Dex cap of 2. Equipment grew from 57 entries to 171. #55 is
+closed too: the `characterEngine.ts(366,66)` error is gone, and all five
+packages typecheck clean when checked per package.
 
-A battleaxe with no `weapon` block announces itself the first time a player
-clicks it. An attunement that never persists, a reset condition the database
-cannot store, and a trait query that returns empty instead of erroring do not.
-Missing content is findable and countable — that is the entire point of the
-`implementation` markers. Silent breakage is neither, and it costs a debugging
-session every time it eventually surfaces. So the silent failures go first,
-even though the missing content is what is visible on the sheet.
+The ordering principle has changed again, because the previous two are spent.
+"Fix the pipe before filling it" is done. "Silent wrong before loud missing" is
+done — the guards are in and green. What is left is overwhelmingly **loud
+missing**: 576 of 700 traits and 111 of 111 spells carry no rules. So the
+principle for this pass is **shrink the problem before working it**.
 
-`🟢` marks an **easy win**: self-contained, and with an existing template or a
-test that proves it done rather than a judgement call to make.
+That is not a stalling tactic. 112 of those 576 stubs are referenced by
+nothing at all, and 23 of them duplicate traits that already work. Deleting
+them is a morning's work that makes every subsequent estimate honest, and the
+burndown is large enough that an honest estimate is worth having.
 
-### Tier 1 — wrong today, and silent about it
+`🟢` marks an easy win: self-contained, with a template or a test to prove it.
 
-**Tier 1 is closed as of 2026-08-24.** Kept with its reasoning visible. **Tier 3 (#45, absorbing #37) is now the top of the list** — Tier 2 is closed too, and the drift it names has cost two debugging sessions already.
+### Tier 1 — make the burndown honest (hours, not days)
+
+**Tier 1 is closed as of 2026-09-02.** It found a live defect on the way — the elf race granted a stub and elves received no languages. **Tier 2 (#30) is now the top of the list.**
 
 | Order | Item | Why first |
 | --- | --- | --- |
-| 1 | ✅ **`ITEM_ATTUNED` has no server binding** — S6 below | **Closed 2026-08-24.** The gateway binds it, enforces both authored rules inside the transaction, and broadcasts to the room minus sender. Eight tests, each sabotage-verified. The two characterisation tests that pinned the absence were flipped. |
-| 2 | ✅ **#46** — `rest_condition` enum | **Closed 2026-08-24.** Not by adding two strings: the enum is now `ResourceResetSchema.options`, a projection like `EQUIPMENT_SLOTS`, so the two cannot drift again. Migration `0013_add_reset_conditions.sql` is generated but **not applied** — see 6d. |
-| 3 | ✅ **#50** — read boundaries validated | **Closed 2026-08-24.** Both halves. `filterTraitsByCategory` parses each trait row and follows `projectEquipmentRows`' policy exactly: one bad row is named and skipped, every row bad throws as a schema divergence. `parseStoredPackPayload` guards the single pack payload, where there is no "skip it" option. |
-| 4 | ✅ **#49** — staged-row re-parses handled | **Closed 2026-08-24.** Two helpers, because the two phases want different things: `parseImportRowPayload` throws with the row named (apply, publish), and `parseLedgerRow` *returns an issue* (plan) so the failure lands in the machinery that already marks the run failed and records why — which is the half that was actually missing. `validateImportRun` was already fine and is untouched. |
+| 1 | ✅ **#57** — orphan stub traits deleted | **Closed 2026-09-02.** 113 removed. The guard found 114 unreachable, not 112, and **two carried real rules** — see 7d. |
+| 2 | ✅ **#58** — reachability guard added | **Closed 2026-09-02.** `collectReferencedTraitIds` in `validatePack.ts` beside the forward checks, eight unit tests (one per reference site), and `traitReachability.test.ts` over the shipped pack. Sabotage-verified. |
+| 3 | ✅ **#51** — every rule-free trait now declares itself | **Closed 2026-09-02.** 119 marked; the characterisation test is now the invariant `expect(unmarked).toEqual([])`. Six may deserve `manual_sheet_helper` instead — a ruling worth making, see 7d. |
 
-### Tier 2 — free, or nearly
-**Tier 2 is closed as of 2026-08-24.** Kept with its reasoning visible, since
-two of the items found more than they were scheduled to fix (#51, #52).
+### Tier 2 — the burndown, which is now the actual work
 
+| Order | Item | Scale | Why here |
+| --- | --- | --- | --- |
+| 4 | **#30** — reachable trait stubs | **462** | Re-measured 2026-09-02, after #57 and #51. The count *rose* from 456 because 119 silent stubs were marked while 113 unreferenced ones were deleted — so it now means "granted to a character and does nothing" rather than "tagged by the port". Every one is reachable. Per-class breakdown below. |
+| 5 | **#31** — spells | **111 of 111** | Two passes, not one. `level` is `0` for every spell and `school` is `evocation` for every spell, so these need real **data** before they can carry rules — which is why this sits behind #30 despite the smaller number. |
+| 6 | **#36** — `SUMMON_ACTOR_DICTIONARY` into the pack | — | The last live rules content outside the pack, two real readers, re-verified 2026-09-02. Until it moves, "packs are the only source of rules" carries an asterisk. |
 
-Everything in this tier is hours, not days, and most of it is minutes. Worth
-clearing in one sitting before starting anything in Tier 3 or below.
+**Where the 464 referenced stubs sit**, so #30 can be picked up by whoever is
+playing what:
 
-| Order | Item | Why here |
-| --- | --- | --- |
-| 5 | ✅ **#35** — `startingEquipmentDictionary.ts` deleted | **Closed 2026-08-24.** 802 lines, zero readers, nothing to repoint. |
-| 6 | ✅ **#34** — `spellDictionary.ts` deleted | **Closed 2026-08-24.** Deleted with its one barrel line. Its three authored spells were *not* folded into the pack first: they would have been the only non-stub spells in a section of 111 stubs, which #31 should settle as a whole rather than by exception. |
-| 7 | ✅ **A7** — closed as won't-fix | **Closed 2026-08-24.** The reopening condition is kept. |
-| 8 | ✅ **#4f** — destructive import guarded | **Closed 2026-08-24.** `db:import-pack` now counts the character rows the CASCADE will take, prints them, and refuses without `--yes`. The decision is `parseImportInvocation` in `src/`, so it is tested without a database attached; the count and the refusal live in the script. |
-| 9 | ✅ **#40** — node-types guard restored | **Closed 2026-08-24.** `tsconfig.app.json` is back to `["vite/client"]` and excludes `src/**/__tests__`; the new `tsconfig.test.json` is the only project granted `node`. Verified in both directions: `process.cwd()` in a component now fails `tsc -b`, and the same call in a test still passes. |
-| 10 | ✅ **E3 follow-up** — markers cross-checked | **Closed 2026-08-24.** `implementationMarkers.test.ts`, sabotage-verified. It found more than it was written to check — see #51. |
-| 11 | ✅ **#47** — line-ending check added | **Closed 2026-08-24.** It gates on the two unambiguous cases and found four genuinely corrupted files on its first run. The whole-file case turned out to be neither safe to gate nor small — see #52. |
+| Class | Stubs | Class | Stubs |
+| --- | --- | --- | --- |
+| warlock | 63 | rogue | 35 |
+| monk | 48 | ranger | 33 |
+| wizard | 48 | sorcerer | 33 |
+| cleric | 47 | paladin | 32 |
+| fighter | 41 | bard | 25 |
+| | | druid | 24 |
+| | | **barbarian** | **21** |
 
-### Tier 3 — stop the drift before it earns a third instance
+Barbarian is both the smallest and the worked example, so it is the cheapest
+class to finish and the one to copy from. Races are nearly done — 9 stubs
+across elf, halfling, gnome and the shared core file.
 
-**Tier 3 is closed as of 2026-08-24**, except the deliberate remainder of #37 noted below. **Tier 4 (#33, #32, #44) is now the top of the list.**
-
-| Order | Item | Why here |
-| --- | --- | --- |
-| 12 | ✅ **#45** — one assembler, reached by a stable subpath | **Closed 2026-08-24.** `@project/database/pack` is a DB-free export; both hand-copied assemblers are deleted and all five deep imports of `corePackAssembler.js` are repointed. Both copies had **already drifted**, in the same two ways — see 6e. |
-| 13 | ◐ **#37** — projection half done | **Partly closed 2026-08-24.** The two identical copies (engine fixture, web fixture) are now one `packToRuleLookup` in the engine. The third, `ruleSnapshotCache`, is **not** a copy of it and was left alone: it builds equipment from the relational `items` table via `projectEquipmentRows`, so it projects a different source into the same shape. Folding it in would mean pretending one source is two. |
-
-Not higher than Tier 2 only because nothing is broken *right now*. But do it
-**before the next change to `CoreRulePackSchema.pack` or to `manifest.json`'s
-shape** — those are precisely the changes that trip it, and it has cost two
-debugging sessions already.
-
-### Tier 4 — content that makes existing characters work
+### Tier 3 — small, and each closes a loose end
 
 | Order | Item | Why here |
 | --- | --- | --- |
-| 14 | 🟢 **#33** — 6 armours with no AC **and** no category | Six items, well-known PHB values, both facets already expressible in the schema, and `equipmentGaps.test.ts` stays red until the declared gaps genuinely close. The smallest content item in the backlog with a real player-visible payoff. Filling only the AC half will not close it, by design. |
-| 15 | **#32** — 23 weapons with no `weapon` block | The same shape at four times the volume: a battleaxe that equips, weighs correctly and rolls no attack. Mechanical, parallelisable, and self-checking through the same test. |
-| 16 | 🟢 **#44** — Relentless Rage | The design is already written and parked in `docs/superpowers/specs/2026-08-20-relentless-rage-design.md`, and the cutover unblocked it. Executing a finished spec is the cheapest real trait in the backlog. |
+| 7 | 🟢 **#56** — pin engine's TypeScript | `packages/engine` declares `"typescript": "latest"` and resolves **7.0.2** while every other package is on 6.0.x. One package compiling on a different major than the rest, movable by any install, with no diff anyone reviews. Pin it or upgrade the workspace — but decide, rather than leave it floating. |
+| 8 | 🟢 **#54** — confirm the reset-condition migration ran | `0013_add_reset_conditions.sql` is generated and journalled. Whether it has been applied to a live database cannot be checked from the tree. Until it has, the code accepts `initiative_roll` and `start_of_turn` and the database rejects them. |
+| 9 | **#53** — a unit test for the line-ending check | Sabotage-verified but with no permanent test, because nothing owns `scripts/`. Needs a root vitest project or a move into a package; `expectedEnding` and `classifyEndings` are pure and exported ready for it. |
+| 10 | **#52** — 80 project-source files are LF against a CRLF tree | Was 73 on 2026-08-24; the item-actions branch added 7 more, which is the argument for doing it rather than watching it grow. Normalising changes no committed content. Not gated, deliberately — see 6b. |
 
-### Tier 5 — the burndown
-
-| Order | Item | Why here |
-| --- | --- | --- |
-| 17 | **#30** — 456 unimplemented traits, 65% of 700 | The largest item and fully parallel. Class by class, in the order the table actually plays; Barbarian is the worked example to copy. Do Tier 2 item 10 first if the remaining count is to mean anything. |
-| 18 | **#36** — `SUMMON_ACTOR_DICTIONARY` into the pack | The last live rules content outside the pack — two real readers, re-verified 2026-08-24. Until it moves, "packs are the only source of rules" carries an asterisk. |
-| 19 | **#31** — 111 unimplemented spells | Lower than the raw count suggests, and lower than #30: `level` and `school` are placeholders too, so these need real **data** before they can carry rules. Two passes, not one. |
-
-### Tier 6 — design passes, not before Tiers 1-4
+### Tier 4 — design passes
 
 | Order | Item | Why last |
 | --- | --- | --- |
-| 20 | **#23 + A1 + A5 together** | One root, three symptoms. `EngineEventSchema` models seven things that happen to you on your own turn, and neither "a creature left my reach" nor "the condition I readied for occurred" can be expressed. `CombatEvent`, `reaction_window_opened` and `spendReaction` already exist, so this is extending a vocabulary rather than building a reaction system. |
-| 21 | **E2** — two-weapon fighting is unreachable | Belongs *with* item 20 rather than after it: an off-hand attack is worthless without a bonus-action attack to spend it on. A model gap, not a data gap — resist fixing it by authoring `off_hand` onto all 26 weapons, which would also let a greatsword be dual-wielded. |
-| 22 | **A2b**, **S5** | Both small, and both judgement calls rather than defects. A2b is worth doing only if the two-click check flow proves annoying in play; S5's right treatment is page-level, which is a UI design decision rather than a bug to fix. |
+| 11 | **#23 + A1 + A5 + E2 together** | One root. `EngineEventSchema` models only what happens to you on your own turn, so Ready, opportunity attacks and Protection are all unexpressible; two-weapon fighting joins them, because an off-hand attack needs a bonus action to be worth anything. `CombatEvent`, `reaction_window_opened` and `spendReaction` already exist, so this extends a vocabulary rather than building a system. |
+| 12 | **A2b**, **S5** | Both small judgement calls. `AbilityCheckEffectSchema` is still `{ type }` with no `skillId`, so Hide and Search still do not prompt their own check; S5's right treatment is page-level, which is a UI decision rather than a defect. |
 
-### Tier 7 — blocked or conditional; do not start
+### Tier 5 — blocked or conditional; do not start
 
 | Order | Item | Status |
 | --- | --- | --- |
-| 23 | **#41, #42** | Genuinely blocked until a second pack exists. Composition machinery with nothing to compose. |
-| 24 | **#43** | Conditional — only wanted when a browse endpoint needs to query resources. |
-| 25 | **#38** — `db:push` needs a TTY | Recorded as "fine while the schema is stable". **Tier 1 item 2 is a schema change**, so this may stop being theoretical the moment #46 is picked up. Worth knowing before starting item 2, not after. |
-| 26 | Coverage thresholds | ~49% statements / ~37% branches server-wide against a configured 80%, held down by `src/services` (~21%) and `src/routes` (~38%). Not usable as a gate until those two move; the gateway pass raised the global number rather than lowering it. |
+| 13 | **#41, #42** | Blocked until a second pack exists. |
+| 14 | **#43** | Conditional on a browse endpoint needing to query resources. |
+| 15 | **#38** | `db:push` needs a TTY. #54's migration went through `db:generate` + `db:migrate`, which is the right path anyway, so this reads as less pressing than it did. |
+| 16 | **#37** remainder | Deliberate, re-verified 2026-09-02. `ruleSnapshotCache` projects the relational `items` table, not `pack.equipment`; it is not a third copy. |
+| 17 | Coverage thresholds | ~49% / ~37% server-wide against a configured 80%. Not usable as a gate until `src/services` and `src/routes` move. |
 
-**Suggested first sitting:** Tier 1 item 1 plus all of Tier 2. That is one
-player-facing defect fixed, ~900 lines of dead code gone, two guards restored,
-a marker cross-check that makes the burndown measurable, and one item closed as
-won't-fix — with nothing in it that needs a design decision first.
+**Suggested first sitting:** Tier 1 entire — delete the 112 orphans, add the
+unreferenced-trait guard, mark what is left. That is a morning, it removes 23
+actively misleading duplicates, and it means the number everyone quotes for
+#30 is finally the number of traits that actually need rules.
 
 ### E1 — armour cannot be equipped; seven slots are unreachable ✅
 
@@ -666,7 +652,7 @@ cutover either created or made visible.
 
 | # | Item | Scale | Notes |
 | --- | --- | --- | --- |
-| 30 | Traits marked `implementation.mode: "unimplemented"` | **456 of 700 (65%)** — but see #51 | They exist so progressions resolve and carry no rules. Fighters, wizards, monks and the rest have structure and no mechanics. Query the pack for the marker to get the current list. **This number understates the work by 119**: a further 119 traits carry no rules and no marker either, so they are absent from this count. The real figure is 576 of 700. |
+| 30 | Traits marked `implementation.mode: "unimplemented"` | **456 of 700** — but the workable figure is **464** | Re-measured 2026-09-02. Two corrections in opposite directions. **Up:** 119 further traits carry no rules and no marker (#51), so 576 of 700 are rule-free. **Down:** 112 of those 576 are referenced by nothing at all and should simply be deleted (#57). What is left — traits that are both rule-free and actually reachable — is **464**, and that is the number the burndown should quote. Per-class breakdown in the Recommended sequence. |
 | 31 | Spells marked `unimplemented` | **111 of 111** | Every spell in the pack is a stub with a `no_effect` action; `level` and `school` are placeholders, which the marker's summary says outright. |
 
 This is the deliberate, accepted trade recorded in the design doc — a marked
@@ -683,8 +669,8 @@ because the data to recover them never existed in that file.
 
 | # | Item | Scale | Notes |
 | --- | --- | --- | --- |
-| 32 | Ported weapons carry no `weapon` block | **23** | `item_weapon_battleaxe`, `_blowgun`, `_club`, `_crossbow_hand`, `_crossbow_heavy`, `_flail`, `_glaive`, `_greatclub` and 15 more. They equip and weigh correctly and roll no attack. **Still open, but no longer invisible:** each now declares `implementation.gaps: ["weapon"]`, and `equipmentGaps.test.ts` fails if one stops. |
-| 33 | Ported armour carries no AC modifier **or category** | **6** | `item_armor_breastplate`, `_chain_shirt`, `_half_plate`, `_hide`, `_ring_mail`, `_splint`. They are wearable and grant nothing. **Wider than first recorded:** the same six also carry no `armorCategory`, so proficiency and the rules that gate on light/medium/heavy — Fast Movement among them — cannot see them either. Found 2026-08-21 while marking the gaps. Each declares `implementation.gaps: ["armor_class", "armor_category"]`, so filling only the AC half will not close the item. |
+| ~~32~~ | ~~Ported weapons carry no `weapon` block~~ | — | **Closed by the item-actions branch, confirmed 2026-09-02.** All 23 carry a real `weapon` block; `item_weapon_battleaxe` is `martial_melee`, `1d8`, versatile `1d10`, slashing, range 5. No equipment entry declares a `weapon` gap any more, and `equipmentGaps.test.ts` asserts the list is empty. |
+| ~~33~~ | ~~Ported armour carries no AC modifier **or category**~~ | — | **Closed by the item-actions branch, confirmed 2026-09-02.** All 6 carry both facets; `item_armor_breastplate` is `medium` with an `ARMOR_CLASS` `set_base` of 14 and `maxDexCap` 2. Both gap lists assert empty. |
 
 Both live in
 [equipment/legacy.json](packages/database/data/packs/core_2014_pack/equipment/legacy.json).
@@ -1017,3 +1003,156 @@ diff anyone reviews.
 Left as-is deliberately: it is committed state, and pinning it is a toolchain
 decision rather than a backlog cleanup. Recorded so the next unexplained
 engine-only type error has somewhere to start.
+
+---
+
+## P7 — Findings from the 2026-09-02 re-measure (opened 2026-09-02)
+
+The item-actions branch landed 49 commits without touching this file, so this
+pass re-measured every open number rather than reading them off the page. Two
+were already closed by that branch; two new items came out of the recount.
+
+### 7a. #57 — 112 stub traits are referenced by nothing
+
+| # | Item | Scale | Notes |
+| --- | --- | --- | --- |
+| 57 | Rule-free traits referenced by no race, class, subclass, background or feat | **112** | Deletable outright. 23 of them duplicate a trait that already works. |
+
+The stated reason stubs exist is that "they exist so progressions can reference
+them" — `TraitImplementationMetadataSchema` says so in as many words. For 112
+of the 576 rule-free traits that reason does not hold: nothing anywhere in the
+pack names them.
+
+**23 are twins of working traits.** The pack carries both `relentless_endurance`
+(defined in `races/half-orc.json`, with a resource, a `ON_HP_REDUCED_TO_ZERO`
+trigger and a `macro_drop_to_one_hp` action) and `trait_relentless_endurance`
+(in `traits/unimplemented.json`, no rules, lore reading "Not yet authored in
+the pack"). Half-orc grants the working one. Nothing grants the twin. The same
+pairing holds for `lucky`/`trait_lucky`, `savage_attacks`/`trait_savage_attacks`,
+and twenty more.
+
+Id uniqueness validation does not catch this, correctly — the ids genuinely
+differ. What makes them duplicates is that they describe the same rule, and the
+`trait_` prefix is the tell: it is the naming the port applied, sitting beside
+the naming the authored content uses.
+
+**Why this is worth an hour before the burndown starts.** It is the difference
+between "456 traits need rules" and the truth. It also removes a live trap:
+authoring Relentless Endurance's rules onto `trait_relentless_endurance` would
+produce a trait that is complete, tested, and reaches no character — and the
+marker cross-check would go green while doing it, because a marked stub gaining
+rules is exactly what it is looking for.
+
+### 7b. #58 — nothing checks that a trait is reachable
+
+| # | Item | Notes |
+| --- | --- | --- |
+| 58 | No guard that every trait is referenced | The check that stops #57 recurring. |
+
+Same shape as `equipmentGaps.test.ts` and `implementationMarkers.test.ts`:
+derive the referenced set from the data — every `traitId` named by a race,
+subrace, class progression, subclass progression, background or feat — and
+require every trait in the pack to appear in it.
+
+Do it **with** #57 rather than after, so the deletion has something holding it
+down. Expect to allow a small deliberate exception list, or none at all: after
+#57 the count should be zero, which is the cheapest possible assertion.
+
+### 7c. What the item-actions branch closed
+
+Recorded because the branch closed backlog items without saying so, and the
+next reader deserves to know the page was behind rather than wrong.
+
+- **#32** — all 23 weapons carry a real `weapon` block. `item_weapon_battleaxe`
+  is `martial_melee`, `1d8`, versatile `1d10`, slashing, range 5.
+- **#33** — all 6 armours carry both facets. `item_armor_breastplate` is
+  `medium` with an `ARMOR_CLASS` `set_base` of 14 and `maxDexCap` 2.
+- Equipment grew from 57 entries to **171**, and **zero** items now carry an
+  `implementation.gaps` marker. `equipmentGaps.test.ts` asserts each gap list
+  is empty, so the markers cannot come back unnoticed.
+- 14 items carry authored `actions`.
+
+`implementationMarkers.test.ts`'s counts were untouched by all of this: traits
+are still 700 with 456 marked, and spells still 111 of 111 — so the branch
+moved equipment and nothing else in the burndown.
+
+### 7d. Tier 1 executed — what the reachability guard actually found
+
+Done 2026-09-02. The plan was "delete 112 orphans"; the guard found 114
+unreachable traits, and **two of them carried real rules**. Deleting on the
+count alone would have destroyed working content, so both were checked before
+anything was removed.
+
+**`elf_languages` was a live defect, not an orphan.** Every race defines its
+language trait as `race_<race>_languages` in its own file, carrying the actual
+proficiencies — dragonborn, dwarf, gnome, half-elf, half-orc, halfling, human
+and tiefling all do. The elf's was authored as `elf_languages`, without the
+prefix. A stub then took the conventional id in `unimplemented.json`, and
+`races/elf.json` granted **the stub**, so elves received no languages at all.
+
+Fixed by renaming the real trait to `race_elf_languages` and deleting the stub
+— a one-line change to `elf.json` — which brings elf in line with the other
+eight races and leaves the race's existing grant untouched. Pinned by a test
+asserting the elf's language trait grants `common` and `elvish`.
+
+**`trait_powerful_build` is a deliberate exception.** It is the only grantor of
+the `powerful_build` state, which `encumbrance.ts` reads and documents as read
+"here and nowhere else". No core-2014 race has Powerful Build — it is Goliath
+content — so the trait is authored, working, engine-supported content waiting
+for a race to grant it. Deleting it would remove the only source of a state the
+engine explicitly supports. `traitReachability.test.ts` names it in a
+`DELIBERATELY_UNREACHABLE` list of one, so anything *else* going unreachable
+still fails.
+
+**The other 112 were exactly what they looked like** — rule-free stubs in
+`traits/unimplemented.json` that nothing referenced, 27 of them `trait_`-prefixed
+twins of a trait that already worked. All deleted, plus the elf stub: 113 rows.
+
+#### The numbers now
+
+| | before | after |
+| --- | --- | --- |
+| traits in the pack | 700 | **587** |
+| rule-free | 576 | **463** |
+| marked `unimplemented` (#30) | 456 | **462** |
+| rule-free **and unmarked** (#51) | 119 | **0** |
+| unreachable | 114 | **1** (documented) |
+
+#30's marked count *rose*, which is the point: 113 stubs left, 119 silent ones
+were marked, and the number now means "traits that are granted to a character
+and do nothing" rather than "traits the port happened to tag". The workable
+burndown is 462 rather than the 464 estimated, and every one of them is
+reachable.
+
+#### #51's judgement call, made conservatively
+
+The 119 were marked `unimplemented` rather than individually triaged. Six are
+arguably finished as written and want `manual_sheet_helper` instead — `trance`,
+`mask_of_the_wild`, `naturally_stealthy`, `halfling_nimbleness`,
+`speak_with_small_beasts` and possibly `sunlight_sensitivity`, which are
+permissions or roleplay rather than modifiers.
+
+`unimplemented` is the safe default of the two: it claims "no rules yet", which
+is true of all 119, whereas `manual_sheet_helper` claims "this is finished by
+design", which is a decision about the game rather than about the data.
+Over-marking creates a little busywork; under-marking hides real work, and the
+marker system exists because hiding real work is the more expensive mistake.
+**Worth a ruling** — re-marking is a one-line change each and the cross-check
+keeps it honest either way.
+
+#### Guards added
+
+- `collectReferencedTraitIds` in `validatePack.ts`, beside the forward
+  reference checks it mirrors, with a comment tying the two together — a site
+  added to one and forgotten in the other makes live content read as an orphan.
+  Eight unit tests, one per reference site, because a missed site is the
+  failure that gets content deleted.
+- `traitReachability.test.ts` over the shipped pack. Deliberately a test rather
+  than a rule in `validateCoreRulePack`: a *library* pack shipping traits for
+  campaigns to draw from would be legitimate, and that is a decision about packs
+  in general rather than about this one.
+- `implementationMarkers.test.ts`'s 119-stub characterisation is now an
+  invariant — `expect(unmarked).toEqual([])`.
+
+All three sabotage-verified: an added orphan, a stripped marker and a reverted
+elf id each turned the suite red.

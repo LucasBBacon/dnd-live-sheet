@@ -109,6 +109,11 @@
         },
         {
             "id": "trance",
+            "implementation": {
+                "mode": "unimplemented",
+                "summary": "Awaiting authoring.",
+                "blockedBy": []
+            },
             "name": "Trance",
             "lore": {
                 "shortDescription": "You meditate for 4 hours instead of sleeping for 8, and finish a long rest in that time.",
@@ -125,7 +130,7 @@
             "actions": []
         },
         {
-            "id": "elf_languages",
+            "id": "race_elf_languages",
             "name": "(Elf) Languages",
             "lore": {
                 "shortDescription": "You can speak, read, and write Common and Elvish.",
@@ -343,6 +348,11 @@
         },
         {
             "id": "mask_of_the_wild",
+            "implementation": {
+                "mode": "unimplemented",
+                "summary": "Awaiting authoring.",
+                "blockedBy": []
+            },
             "name": "Mask of the Wild",
             "lore": {
                 "shortDescription": "You can attempt to hide even when you are only lightly obscured by foliage, heavy rain, falling snow, mist, and other natural phenomena.",
@@ -412,6 +422,11 @@
         },
         {
             "id": "sunlight_sensitivity",
+            "implementation": {
+                "mode": "unimplemented",
+                "summary": "Awaiting authoring.",
+                "blockedBy": []
+            },
             "name": "Sunlight Sensitivity",
             "lore": {
                 "shortDescription": "You have disadvantage on attack rolls and on Wisdom (Perception) checks that rely on sight when you, the target of your attack, or whatever you are trying to perceive is in direct sunlight.",

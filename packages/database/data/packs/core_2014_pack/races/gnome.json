@@ -194,6 +194,11 @@
         },
         {
             "id": "speak_with_small_beasts",
+            "implementation": {
+                "mode": "unimplemented",
+                "summary": "Awaiting authoring.",
+                "blockedBy": []
+            },
             "name": "Speak with Small Beasts",
             "lore": {
                 "shortDescription": "Through sounds and gestures, you can communicate simple ideas with Small or smaller beasts. Forest gnomes love animals and often keep squirrels, badges, rabbits, moles, woodpeckers, and other creatures as beloved pets.",

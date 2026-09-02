@@ -871,6 +871,11 @@
         },
         {
             "id": "trait_dragon_ancestor_black",
+            "implementation": {
+                "mode": "unimplemented",
+                "summary": "Awaiting authoring.",
+                "blockedBy": []
+            },
             "name": "Dragon Ancestor: Black",
             "lore": {
                 "shortDescription": "Your draconic ancestry is black; the associated damage type is acid. You can speak, read, and write Draconic and double your proficiency bonus on Charisma checks with dragons.",
@@ -888,6 +893,11 @@
         },
         {
             "id": "trait_dragon_ancestor_blue",
+            "implementation": {
+                "mode": "unimplemented",
+                "summary": "Awaiting authoring.",
+                "blockedBy": []
+            },
             "name": "Dragon Ancestor: Blue",
             "lore": {
                 "shortDescription": "Your draconic ancestry is blue; the associated damage type is lightning. You can speak, read, and write Draconic and double your proficiency bonus on Charisma checks with dragons.",
@@ -905,6 +915,11 @@
         },
         {
             "id": "trait_dragon_ancestor_brass",
+            "implementation": {
+                "mode": "unimplemented",
+                "summary": "Awaiting authoring.",
+                "blockedBy": []
+            },
             "name": "Dragon Ancestor: Brass",
             "lore": {
                 "shortDescription": "Your draconic ancestry is brass; the associated damage type is fire. You can speak, read, and write Draconic and double your proficiency bonus on Charisma checks with dragons.",
@@ -922,6 +937,11 @@
         },
         {
             "id": "trait_dragon_ancestor_bronze",
+            "implementation": {
+                "mode": "unimplemented",
+                "summary": "Awaiting authoring.",
+                "blockedBy": []
+            },
             "name": "Dragon Ancestor: Bronze",
             "lore": {
                 "shortDescription": "Your draconic ancestry is bronze; the associated damage type is lightning. You can speak, read, and write Draconic and double your proficiency bonus on Charisma checks with dragons.",
@@ -939,6 +959,11 @@
         },
         {
             "id": "trait_dragon_ancestor_copper",
+            "implementation": {
+                "mode": "unimplemented",
+                "summary": "Awaiting authoring.",
+                "blockedBy": []
+            },
             "name": "Dragon Ancestor: Copper",
             "lore": {
                 "shortDescription": "Your draconic ancestry is copper; the associated damage type is acid. You can speak, read, and write Draconic and double your proficiency bonus on Charisma checks with dragons.",
@@ -956,6 +981,11 @@
         },
         {
             "id": "trait_dragon_ancestor_gold",
+            "implementation": {
+                "mode": "unimplemented",
+                "summary": "Awaiting authoring.",
+                "blockedBy": []
+            },
             "name": "Dragon Ancestor: Gold",
             "lore": {
                 "shortDescription": "Your draconic ancestry is gold; the associated damage type is fire. You can speak, read, and write Draconic and double your proficiency bonus on Charisma checks with dragons.",
@@ -973,6 +1003,11 @@
         },
         {
             "id": "trait_dragon_ancestor_green",
+            "implementation": {
+                "mode": "unimplemented",
+                "summary": "Awaiting authoring.",
+                "blockedBy": []
+            },
             "name": "Dragon Ancestor: Green",
             "lore": {
                 "shortDescription": "Your draconic ancestry is green; the associated damage type is poison. You can speak, read, and write Draconic and double your proficiency bonus on Charisma checks with dragons.",
@@ -990,6 +1025,11 @@
         },
         {
             "id": "trait_dragon_ancestor_red",
+            "implementation": {
+                "mode": "unimplemented",
+                "summary": "Awaiting authoring.",
+                "blockedBy": []
+            },
             "name": "Dragon Ancestor: Red",
             "lore": {
                 "shortDescription": "Your draconic ancestry is red; the associated damage type is fire. You can speak, read, and write Draconic and double your proficiency bonus on Charisma checks with dragons.",
@@ -1007,6 +1047,11 @@
         },
         {
             "id": "trait_dragon_ancestor_silver",
+            "implementation": {
+                "mode": "unimplemented",
+                "summary": "Awaiting authoring.",
+                "blockedBy": []
+            },
             "name": "Dragon Ancestor: Silver",
             "lore": {
                 "shortDescription": "Your draconic ancestry is silver; the associated damage type is cold. You can speak, read, and write Draconic and double your proficiency bonus on Charisma checks with dragons.",
@@ -1024,6 +1069,11 @@
         },
         {
             "id": "trait_dragon_ancestor_white",
+            "implementation": {
+                "mode": "unimplemented",
+                "summary": "Awaiting authoring.",
+                "blockedBy": []
+            },
             "name": "Dragon Ancestor: White",
             "lore": {
                 "shortDescription": "Your draconic ancestry is white; the associated damage type is cold. You can speak, read, and write Draconic and double your proficiency bonus on Charisma checks with dragons.",

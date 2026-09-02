@@ -103,6 +103,11 @@
         },
         {
             "id": "halfling_nimbleness",
+            "implementation": {
+                "mode": "unimplemented",
+                "summary": "Awaiting authoring.",
+                "blockedBy": []
+            },
             "name": "Halfling Nimbleness",
             "lore": {
                 "shortDescription": "You can move through the space of any creature that is of a size larger than yours.",
@@ -180,6 +185,11 @@
         },
         {
             "id": "naturally_stealthy",
+            "implementation": {
+                "mode": "unimplemented",
+                "summary": "Awaiting authoring.",
+                "blockedBy": []
+            },
             "name": "Naturally Stealthy",
             "lore": {
                 "shortDescription": "You can attempt to hide even when you are obscured only by a creature tha tis at least one size larger than you.",

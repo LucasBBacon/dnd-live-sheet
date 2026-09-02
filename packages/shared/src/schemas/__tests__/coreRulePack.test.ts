@@ -3,7 +3,10 @@ import {
   CoreRulePackSchema,
   type CoreRulePack,
 } from "../content/coreRulePack.js";
-import { validateCoreRulePack } from "../content/validatePack.js";
+import {
+  collectReferencedTraitIds,
+  validateCoreRulePack,
+} from "../content/validatePack.js";
 
 const createValidPack = (): CoreRulePack => {
   const lore = {
@@ -266,5 +269,154 @@ describe("pack composition", () => {
     expect(() =>
       CoreRulePackSchema.parse({ pack: { ...meta, owns: ["monsters"] } }),
     ).toThrow();
+  });
+});
+
+/**
+ * The reverse of the reference check above.
+ *
+ * `validateCoreRulePack` asks "does every referenced trait exist?". Nothing
+ * asked "is every trait reachable?", and 112 of the shipped pack's 700 were
+ * not - including 23 that duplicated a trait which already worked, under a
+ * `trait_`-prefixed id nothing granted. See #57.
+ *
+ * These tests exist per reference site, because the failure mode is a site
+ * being forgotten: a collector that misses one reports live traits as orphans,
+ * which is the reading that gets content deleted.
+ */
+describe("collectReferencedTraitIds", () => {
+  it("finds a trait granted by a race", () => {
+    const pack = createValidPack();
+
+    expect(collectReferencedTraitIds(pack)).toContain("trait_test_training");
+  });
+
+  it("finds a trait granted by a subrace", () => {
+    const source = createValidPack();
+    source.traits.push({ ...source.traits[0]!, id: "trait_subrace_only" });
+    source.races[0]!.hasSubraces = true;
+    source.races[0]!.subraces = {
+      subrace_test: {
+        id: "subrace_test",
+        name: "Test Subrace",
+        lore: source.races[0]!.lore,
+        grantedTraitIds: ["trait_subrace_only"],
+      },
+    } as (typeof source.races)[number]["subraces"];
+
+    expect(collectReferencedTraitIds(CoreRulePackSchema.parse(source))).toContain(
+      "trait_subrace_only",
+    );
+  });
+
+  it("finds a trait granted by a class progression", () => {
+    const source = createValidPack();
+    source.traits.push({ ...source.traits[0]!, id: "trait_level_two" });
+    source.classes[0]!.progression.push({
+      level: 2,
+      grants: ["trait_level_two"],
+      grantsASI: false,
+    });
+
+    expect(collectReferencedTraitIds(CoreRulePackSchema.parse(source))).toContain(
+      "trait_level_two",
+    );
+  });
+
+  it("finds a trait offered as one option of a trait choice", () => {
+    const source = createValidPack();
+    source.traits.push({ ...source.traits[0]!, id: "trait_option_only" });
+    source.classes[0]!.progression.push({
+      level: 3,
+      grants: [
+        {
+          type: "trait_choice",
+          nodeId: "test_choice",
+          pickCount: 1,
+          options: ["trait_option_only"],
+        },
+      ],
+      grantsASI: false,
+    });
+
+    // An option is a real reference: picking it is how a character gets it.
+    expect(collectReferencedTraitIds(CoreRulePackSchema.parse(source))).toContain(
+      "trait_option_only",
+    );
+  });
+
+  it("finds a trait named only as a choice prerequisite", () => {
+    const source = createValidPack();
+    source.traits.push({ ...source.traits[0]!, id: "trait_gate" });
+    source.traits.push({ ...source.traits[0]!, id: "trait_gated" });
+    source.classes[0]!.progression.push({
+      level: 4,
+      grants: [
+        {
+          type: "trait_choice",
+          nodeId: "gated_choice",
+          pickCount: 1,
+          options: [
+            {
+              traitId: "trait_gated",
+              prerequisites: { requiredTraitIds: ["trait_gate"] },
+            },
+          ],
+        },
+      ],
+      grantsASI: false,
+    });
+
+    // Deleting a prerequisite would break the option that names it, so a
+    // prerequisite counts as reaching the trait.
+    const referenced = collectReferencedTraitIds(CoreRulePackSchema.parse(source));
+    expect(referenced).toContain("trait_gate");
+    expect(referenced).toContain("trait_gated");
+  });
+
+  it("finds traits granted by a class's proficiency and multiclass lists", () => {
+    const source = createValidPack();
+    source.traits.push({ ...source.traits[0]!, id: "trait_starting_prof" });
+    source.traits.push({ ...source.traits[0]!, id: "trait_multiclass_prof" });
+    source.classes[0]!.startingProficiencyTraitIds = ["trait_starting_prof"];
+    source.classes[0]!.multiclassTraitIds = ["trait_multiclass_prof"];
+
+    const referenced = collectReferencedTraitIds(CoreRulePackSchema.parse(source));
+    expect(referenced).toContain("trait_starting_prof");
+    expect(referenced).toContain("trait_multiclass_prof");
+  });
+
+  it("finds a trait granted by a feat and one granted by a background", () => {
+    const source = createValidPack();
+    source.traits.push({ ...source.traits[0]!, id: "trait_from_feat" });
+    source.traits.push({ ...source.traits[0]!, id: "trait_from_background" });
+    source.feats.push({
+      id: "feat_test",
+      name: "Test Feat",
+      category: "general",
+      lore: source.traits[0]!.lore!,
+      grantedTraitIds: ["trait_from_feat"],
+    } as (typeof source.feats)[number]);
+    source.backgrounds.push({
+      id: "background_test",
+      name: "Test Background",
+      lore: source.traits[0]!.lore!,
+      featureName: "Test Feature",
+      featureDescription: "Does a test thing.",
+      backgroundTraitIds: ["trait_from_background"],
+    } as (typeof source.backgrounds)[number]);
+
+    const referenced = collectReferencedTraitIds(CoreRulePackSchema.parse(source));
+    expect(referenced).toContain("trait_from_feat");
+    expect(referenced).toContain("trait_from_background");
+  });
+
+  it("does not invent a reference for a trait nothing grants", () => {
+    const source = createValidPack();
+    source.traits.push({ ...source.traits[0]!, id: "trait_orphan" });
+
+    expect(collectReferencedTraitIds(CoreRulePackSchema.parse(source))).not.toContain(
+      "trait_orphan",
+    );
   });
 });

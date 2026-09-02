@@ -407,3 +407,68 @@ export const validateCoreRulePack = (
 
   return { ok: issues.length === 0, issues };
 };
+
+/**
+ * Every trait id the pack reaches, from anywhere.
+ *
+ * The reverse of the reference checks in `validateCoreRulePack`: that asks
+ * whether every referenced trait exists, this asks which traits are reached at
+ * all. A trait nothing reaches cannot be granted to any character, so it is
+ * either content waiting for a progression to name it or - far more often -
+ * an orphan the port left behind (#57).
+ *
+ * **Keep this in step with the trait-reference sites in
+ * `validateCoreRulePack`.** They walk the same places for opposite reasons,
+ * and a site added there and forgotten here makes live content read as an
+ * orphan, which is the reading that gets content deleted.
+ */
+export const collectReferencedTraitIds = (pack: CoreRulePack): Set<string> => {
+  const referenced = new Set<string>();
+
+  const addGrant = (grant: FeatureGrant): void => {
+    if (typeof grant === "string") {
+      referenced.add(grant);
+      return;
+    }
+
+    if (grant.type !== "trait_choice") return;
+
+    for (const option of grant.options) {
+      referenced.add(traitIdOfOption(option));
+
+      // A prerequisite reaches its trait too: deleting it would break the
+      // option that gates on it.
+      if (typeof option !== "string") {
+        option.prerequisites.requiredTraitIds?.forEach((id) =>
+          referenced.add(id),
+        );
+      }
+    }
+  };
+
+  for (const race of pack.races) {
+    for (const record of [race, ...Object.values(race.subraces)]) {
+      record.grantedTraitIds.forEach((id) => referenced.add(id));
+    }
+  }
+
+  for (const entry of pack.classes) {
+    entry.startingProficiencyTraitIds.forEach((id) => referenced.add(id));
+    entry.multiclassTraitIds.forEach((id) => referenced.add(id));
+    entry.progression.forEach((level) => level.grants.forEach(addGrant));
+  }
+
+  for (const entry of pack.subclasses) {
+    entry.progression.forEach((level) => level.grants.forEach(addGrant));
+  }
+
+  for (const entry of pack.feats) {
+    entry.grantedTraitIds.forEach((id) => referenced.add(id));
+  }
+
+  for (const entry of pack.backgrounds) {
+    entry.backgroundTraitIds.forEach((id) => referenced.add(id));
+  }
+
+  return referenced;
+};

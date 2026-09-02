@@ -55,6 +55,11 @@
         },
         {
             "id": "trait_feat_mobile",
+            "implementation": {
+                "mode": "unimplemented",
+                "summary": "Awaiting authoring.",
+                "blockedBy": []
+            },
             "name": "Mobile",
             "lore": {
                 "shortDescription": "Placeholder trait for the Mobile feat."
@@ -71,6 +76,11 @@
         },
         {
             "id": "trait_feat_skilled",
+            "implementation": {
+                "mode": "unimplemented",
+                "summary": "Awaiting authoring.",
+                "blockedBy": []
+            },
             "name": "Skilled",
             "lore": {
                 "shortDescription": "Placeholder trait for the Skilled feat."
@@ -2136,6 +2146,11 @@
         },
         {
             "id": "trait_metamagic_careful_spell",
+            "implementation": {
+                "mode": "unimplemented",
+                "summary": "Awaiting authoring.",
+                "blockedBy": []
+            },
             "name": "Careful Spell",
             "lore": {
                 "shortDescription": "Spend 1 sorcery point to shield chosen creatures from your spell's effect on a successful save."
@@ -2152,6 +2167,11 @@
         },
         {
             "id": "trait_metamagic_distant_spell",
+            "implementation": {
+                "mode": "unimplemented",
+                "summary": "Awaiting authoring.",
+                "blockedBy": []
+            },
             "name": "Distant Spell",
             "lore": {
                 "shortDescription": "Spend 1 sorcery point to double a spell's range, or to give a touch spell 30 feet of range."
@@ -2168,6 +2188,11 @@
         },
         {
             "id": "trait_metamagic_empowered_spell",
+            "implementation": {
+                "mode": "unimplemented",
+                "summary": "Awaiting authoring.",
+                "blockedBy": []
+            },
             "name": "Empowered Spell",
             "lore": {
                 "shortDescription": "Spend 1 sorcery point to reroll damage dice up to your Charisma modifier."
@@ -2184,6 +2209,11 @@
         },
         {
             "id": "trait_metamagic_extended_spell",
+            "implementation": {
+                "mode": "unimplemented",
+                "summary": "Awaiting authoring.",
+                "blockedBy": []
+            },
             "name": "Extended Spell",
             "lore": {
                 "shortDescription": "Spend 1 sorcery point to double a spell's duration, up to 24 hours."
@@ -2200,6 +2230,11 @@
         },
         {
             "id": "trait_metamagic_heightened_spell",
+            "implementation": {
+                "mode": "unimplemented",
+                "summary": "Awaiting authoring.",
+                "blockedBy": []
+            },
             "name": "Heightened Spell",
             "lore": {
                 "shortDescription": "Spend 3 sorcery points to give one target disadvantage on its first save against the spell."
@@ -2216,6 +2251,11 @@
         },
         {
             "id": "trait_metamagic_quickened_spell",
+            "implementation": {
+                "mode": "unimplemented",
+                "summary": "Awaiting authoring.",
+                "blockedBy": []
+            },
             "name": "Quickened Spell",
             "lore": {
                 "shortDescription": "Spend 2 sorcery points to cast a 1-action spell as a bonus action."
@@ -2232,6 +2272,11 @@
         },
         {
             "id": "trait_metamagic_subtle_spell",
+            "implementation": {
+                "mode": "unimplemented",
+                "summary": "Awaiting authoring.",
+                "blockedBy": []
+            },
             "name": "Subtle Spell",
             "lore": {
                 "shortDescription": "Spend 1 sorcery point to cast without verbal or somatic components."
@@ -2248,6 +2293,11 @@
         },
         {
             "id": "trait_metamagic_twinned_spell",
+            "implementation": {
+                "mode": "unimplemented",
+                "summary": "Awaiting authoring.",
+                "blockedBy": []
+            },
             "name": "Twinned Spell",
             "lore": {
                 "shortDescription": "Spend sorcery points equal to the spell's level to target a second creature."
@@ -2264,6 +2314,11 @@
         },
         {
             "id": "trait_pact_of_the_chain",
+            "implementation": {
+                "mode": "unimplemented",
+                "summary": "Awaiting authoring.",
+                "blockedBy": []
+            },
             "name": "Pact of the Chain",
             "lore": {
                 "shortDescription": "You learn find familiar and can take special forms; your familiar can attack with your bonus action."
@@ -2280,6 +2335,11 @@
         },
         {
             "id": "trait_pact_of_the_blade",
+            "implementation": {
+                "mode": "unimplemented",
+                "summary": "Awaiting authoring.",
+                "blockedBy": []
+            },
             "name": "Pact of the Blade",
             "lore": {
                 "shortDescription": "You can conjure a pact weapon you are proficient with and which counts as magical."
@@ -2296,6 +2356,11 @@
         },
         {
             "id": "trait_pact_of_the_tome",
+            "implementation": {
+                "mode": "unimplemented",
+                "summary": "Awaiting authoring.",
+                "blockedBy": []
+            },
             "name": "Pact of the Tome",
             "lore": {
                 "shortDescription": "You gain a Book of Shadows holding three cantrips from any class's spell list."
@@ -2312,6 +2377,11 @@
         },
         {
             "id": "trait_invocation_agonizing_blast",
+            "implementation": {
+                "mode": "unimplemented",
+                "summary": "Awaiting authoring.",
+                "blockedBy": []
+            },
             "name": "Agonizing Blast",
             "lore": {
                 "shortDescription": "Add your Charisma modifier to eldritch blast damage."
@@ -2328,6 +2398,11 @@
         },
         {
             "id": "trait_invocation_armor_of_shadows",
+            "implementation": {
+                "mode": "unimplemented",
+                "summary": "Awaiting authoring.",
+                "blockedBy": []
+            },
             "name": "Armor of Shadows",
             "lore": {
                 "shortDescription": "Cast mage armor on yourself at will, without a slot."
@@ -2344,6 +2419,11 @@
         },
         {
             "id": "trait_invocation_ascendant_step",
+            "implementation": {
+                "mode": "unimplemented",
+                "summary": "Awaiting authoring.",
+                "blockedBy": []
+            },
             "name": "Ascendant Step",
             "lore": {
                 "shortDescription": "Cast levitate on yourself at will, without a slot."
@@ -2360,6 +2440,11 @@
         },
         {
             "id": "trait_invocation_beast_speech",
+            "implementation": {
+                "mode": "unimplemented",
+                "summary": "Awaiting authoring.",
+                "blockedBy": []
+            },
             "name": "Beast Speech",
             "lore": {
                 "shortDescription": "Cast speak with animals at will."
@@ -2376,6 +2461,11 @@
         },
         {
             "id": "trait_invocation_beguiling_influence",
+            "implementation": {
+                "mode": "unimplemented",
+                "summary": "Awaiting authoring.",
+                "blockedBy": []
+            },
             "name": "Beguiling Influence",
             "lore": {
                 "shortDescription": "Gain proficiency in Deception and Persuasion."
@@ -2392,6 +2482,11 @@
         },
         {
             "id": "trait_invocation_bewitching_whispers",
+            "implementation": {
+                "mode": "unimplemented",
+                "summary": "Awaiting authoring.",
+                "blockedBy": []
+            },
             "name": "Bewitching Whispers",
             "lore": {
                 "shortDescription": "Cast compulsion once per long rest using a warlock slot."
@@ -2408,6 +2503,11 @@
         },
         {
             "id": "trait_invocation_book_of_ancient_secrets",
+            "implementation": {
+                "mode": "unimplemented",
+                "summary": "Awaiting authoring.",
+                "blockedBy": []
+            },
             "name": "Book of Ancient Secrets",
             "lore": {
                 "shortDescription": "Inscribe and cast ritual spells from your Book of Shadows."
@@ -2424,6 +2524,11 @@
         },
         {
             "id": "trait_invocation_chains_of_carceri",
+            "implementation": {
+                "mode": "unimplemented",
+                "summary": "Awaiting authoring.",
+                "blockedBy": []
+            },
             "name": "Chains of Carceri",
             "lore": {
                 "shortDescription": "Cast hold monster at will on a celestial, fiend, or elemental."
@@ -2440,6 +2545,11 @@
         },
         {
             "id": "trait_invocation_devils_sight",
+            "implementation": {
+                "mode": "unimplemented",
+                "summary": "Awaiting authoring.",
+                "blockedBy": []
+            },
             "name": "Devil's Sight",
             "lore": {
                 "shortDescription": "See normally in darkness, magical or not, out to 120 feet."
@@ -2456,6 +2566,11 @@
         },
         {
             "id": "trait_invocation_dreadful_word",
+            "implementation": {
+                "mode": "unimplemented",
+                "summary": "Awaiting authoring.",
+                "blockedBy": []
+            },
             "name": "Dreadful Word",
             "lore": {
                 "shortDescription": "Cast confusion once per long rest using a warlock slot."
@@ -2472,6 +2587,11 @@
         },
         {
             "id": "trait_invocation_eldritch_sight",
+            "implementation": {
+                "mode": "unimplemented",
+                "summary": "Awaiting authoring.",
+                "blockedBy": []
+            },
             "name": "Eldritch Sight",
             "lore": {
                 "shortDescription": "Cast detect magic at will."
@@ -2488,6 +2608,11 @@
         },
         {
             "id": "trait_invocation_eldritch_spear",
+            "implementation": {
+                "mode": "unimplemented",
+                "summary": "Awaiting authoring.",
+                "blockedBy": []
+            },
             "name": "Eldritch Spear",
             "lore": {
                 "shortDescription": "Eldritch blast gains 300 feet of range."
@@ -2504,6 +2629,11 @@
         },
         {
             "id": "trait_invocation_eyes_of_the_rune_keeper",
+            "implementation": {
+                "mode": "unimplemented",
+                "summary": "Awaiting authoring.",
+                "blockedBy": []
+            },
             "name": "Eyes of the Rune Keeper",
             "lore": {
                 "shortDescription": "You can read all writing."
@@ -2520,6 +2650,11 @@
         },
         {
             "id": "trait_invocation_fiendish_vigor",
+            "implementation": {
+                "mode": "unimplemented",
+                "summary": "Awaiting authoring.",
+                "blockedBy": []
+            },
             "name": "Fiendish Vigor",
             "lore": {
                 "shortDescription": "Cast false life on yourself at will as a 1st-level spell."
@@ -2536,6 +2671,11 @@
         },
         {
             "id": "trait_invocation_gaze_of_two_minds",
+            "implementation": {
+                "mode": "unimplemented",
+                "summary": "Awaiting authoring.",
+                "blockedBy": []
+            },
             "name": "Gaze of Two Minds",
             "lore": {
                 "shortDescription": "Perceive through a willing humanoid's senses until the end of your next turn."
@@ -2552,6 +2692,11 @@
         },
         {
             "id": "trait_invocation_lifedrinker",
+            "implementation": {
+                "mode": "unimplemented",
+                "summary": "Awaiting authoring.",
+                "blockedBy": []
+            },
             "name": "Lifedrinker",
             "lore": {
                 "shortDescription": "Your pact weapon deals extra necrotic damage equal to your Charisma modifier."
@@ -2568,6 +2713,11 @@
         },
         {
             "id": "trait_invocation_mask_of_many_faces",
+            "implementation": {
+                "mode": "unimplemented",
+                "summary": "Awaiting authoring.",
+                "blockedBy": []
+            },
             "name": "Mask of Many Faces",
             "lore": {
                 "shortDescription": "Cast disguise self at will."
@@ -2584,6 +2734,11 @@
         },
         {
             "id": "trait_invocation_master_of_myriad_forms",
+            "implementation": {
+                "mode": "unimplemented",
+                "summary": "Awaiting authoring.",
+                "blockedBy": []
+            },
             "name": "Master of Myriad Forms",
             "lore": {
                 "shortDescription": "Cast alter self at will."
@@ -2600,6 +2755,11 @@
         },
         {
             "id": "trait_invocation_minions_of_chaos",
+            "implementation": {
+                "mode": "unimplemented",
+                "summary": "Awaiting authoring.",
+                "blockedBy": []
+            },
             "name": "Minions of Chaos",
             "lore": {
                 "shortDescription": "Cast conjure elemental once per long rest using a warlock slot."
@@ -2616,6 +2776,11 @@
         },
         {
             "id": "trait_invocation_mire_the_mind",
+            "implementation": {
+                "mode": "unimplemented",
+                "summary": "Awaiting authoring.",
+                "blockedBy": []
+            },
             "name": "Mire the Mind",
             "lore": {
                 "shortDescription": "Cast slow once per long rest using a warlock slot."
@@ -2632,6 +2797,11 @@
         },
         {
             "id": "trait_invocation_misty_visions",
+            "implementation": {
+                "mode": "unimplemented",
+                "summary": "Awaiting authoring.",
+                "blockedBy": []
+            },
             "name": "Misty Visions",
             "lore": {
                 "shortDescription": "Cast silent image at will."
@@ -2648,6 +2818,11 @@
         },
         {
             "id": "trait_invocation_one_with_shadows",
+            "implementation": {
+                "mode": "unimplemented",
+                "summary": "Awaiting authoring.",
+                "blockedBy": []
+            },
             "name": "One with Shadows",
             "lore": {
                 "shortDescription": "Become invisible while in dim light or darkness until you move or act."
@@ -2664,6 +2839,11 @@
         },
         {
             "id": "trait_invocation_otherworldly_leap",
+            "implementation": {
+                "mode": "unimplemented",
+                "summary": "Awaiting authoring.",
+                "blockedBy": []
+            },
             "name": "Otherworldly Leap",
             "lore": {
                 "shortDescription": "Cast jump on yourself at will."
@@ -2680,6 +2860,11 @@
         },
         {
             "id": "trait_invocation_repelling_blast",
+            "implementation": {
+                "mode": "unimplemented",
+                "summary": "Awaiting authoring.",
+                "blockedBy": []
+            },
             "name": "Repelling Blast",
             "lore": {
                 "shortDescription": "Push a creature 10 feet away when eldritch blast hits it."
@@ -2696,6 +2881,11 @@
         },
         {
             "id": "trait_invocation_sculptor_of_flesh",
+            "implementation": {
+                "mode": "unimplemented",
+                "summary": "Awaiting authoring.",
+                "blockedBy": []
+            },
             "name": "Sculptor of Flesh",
             "lore": {
                 "shortDescription": "Cast polymorph once per long rest using a warlock slot."
@@ -2712,6 +2902,11 @@
         },
         {
             "id": "trait_invocation_sign_of_ill_omen",
+            "implementation": {
+                "mode": "unimplemented",
+                "summary": "Awaiting authoring.",
+                "blockedBy": []
+            },
             "name": "Sign of Ill Omen",
             "lore": {
                 "shortDescription": "Cast bestow curse once per long rest using a warlock slot."
@@ -2728,6 +2923,11 @@
         },
         {
             "id": "trait_invocation_thief_of_five_fates",
+            "implementation": {
+                "mode": "unimplemented",
+                "summary": "Awaiting authoring.",
+                "blockedBy": []
+            },
             "name": "Thief of Five Fates",
             "lore": {
                 "shortDescription": "Cast bane once per long rest using a warlock slot."
@@ -2744,6 +2944,11 @@
         },
         {
             "id": "trait_invocation_thirsting_blade",
+            "implementation": {
+                "mode": "unimplemented",
+                "summary": "Awaiting authoring.",
+                "blockedBy": []
+            },
             "name": "Thirsting Blade",
             "lore": {
                 "shortDescription": "Attack twice with your pact weapon when you take the Attack action."
@@ -2760,6 +2965,11 @@
         },
         {
             "id": "trait_invocation_visions_of_distant_realms",
+            "implementation": {
+                "mode": "unimplemented",
+                "summary": "Awaiting authoring.",
+                "blockedBy": []
+            },
             "name": "Visions of Distant Realms",
             "lore": {
                 "shortDescription": "Cast arcane eye at will."
@@ -2776,6 +2986,11 @@
         },
         {
             "id": "trait_invocation_voice_of_the_chain_master",
+            "implementation": {
+                "mode": "unimplemented",
+                "summary": "Awaiting authoring.",
+                "blockedBy": []
+            },
             "name": "Voice of the Chain Master",
             "lore": {
                 "shortDescription": "Communicate telepathically with your familiar and perceive through its senses."
@@ -2792,6 +3007,11 @@
         },
         {
             "id": "trait_invocation_whispers_of_the_grave",
+            "implementation": {
+                "mode": "unimplemented",
+                "summary": "Awaiting authoring.",
+                "blockedBy": []
+            },
             "name": "Whispers of the Grave",
             "lore": {
                 "shortDescription": "Cast speak with dead at will."
@@ -2808,6 +3028,11 @@
         },
         {
             "id": "trait_invocation_witch_sight",
+            "implementation": {
+                "mode": "unimplemented",
+                "summary": "Awaiting authoring.",
+                "blockedBy": []
+            },
             "name": "Witch Sight",
             "lore": {
                 "shortDescription": "See the true form of shapechangers and creatures concealed by illusion within 30 feet."
@@ -2824,6 +3049,11 @@
         },
         {
             "id": "trait_totem_spirit_bear",
+            "implementation": {
+                "mode": "unimplemented",
+                "summary": "Awaiting authoring.",
+                "blockedBy": []
+            },
             "name": "Totem Spirit: Bear",
             "lore": {
                 "shortDescription": "While raging you have resistance to all damage except psychic."
@@ -2840,6 +3070,11 @@
         },
         {
             "id": "trait_totem_spirit_eagle",
+            "implementation": {
+                "mode": "unimplemented",
+                "summary": "Awaiting authoring.",
+                "blockedBy": []
+            },
             "name": "Totem Spirit: Eagle",
             "lore": {
                 "shortDescription": "While raging and unarmored, opportunity attacks against you have disadvantage and you can Dash as a bonus action."
@@ -2856,6 +3091,11 @@
         },
         {
             "id": "trait_totem_spirit_wolf",
+            "implementation": {
+                "mode": "unimplemented",
+                "summary": "Awaiting authoring.",
+                "blockedBy": []
+            },
             "name": "Totem Spirit: Wolf",
             "lore": {
                 "shortDescription": "While raging, your allies have advantage on melee attacks against enemies within 5 feet of you."
@@ -2872,6 +3112,11 @@
         },
         {
             "id": "trait_aspect_of_the_beast_bear",
+            "implementation": {
+                "mode": "unimplemented",
+                "summary": "Awaiting authoring.",
+                "blockedBy": []
+            },
             "name": "Aspect of the Beast: Bear",
             "lore": {
                 "shortDescription": "Your carrying capacity doubles and you have advantage on Strength checks to move objects."
@@ -2888,6 +3133,11 @@
         },
         {
             "id": "trait_aspect_of_the_beast_eagle",
+            "implementation": {
+                "mode": "unimplemented",
+                "summary": "Awaiting authoring.",
+                "blockedBy": []
+            },
             "name": "Aspect of the Beast: Eagle",
             "lore": {
                 "shortDescription": "You can see up to a mile away with ease and dim light does not impose disadvantage on Perception."
@@ -2904,6 +3154,11 @@
         },
         {
             "id": "trait_aspect_of_the_beast_wolf",
+            "implementation": {
+                "mode": "unimplemented",
+                "summary": "Awaiting authoring.",
+                "blockedBy": []
+            },
             "name": "Aspect of the Beast: Wolf",
             "lore": {
                 "shortDescription": "You can track at a fast pace and move stealthily at a normal pace."
@@ -2920,6 +3175,11 @@
         },
         {
             "id": "trait_totemic_attunement_bear",
+            "implementation": {
+                "mode": "unimplemented",
+                "summary": "Awaiting authoring.",
+                "blockedBy": []
+            },
             "name": "Totemic Attunement: Bear",
             "lore": {
                 "shortDescription": "While raging, enemies within 5 feet have disadvantage attacking anyone but you."
@@ -2936,6 +3196,11 @@
         },
         {
             "id": "trait_totemic_attunement_eagle",
+            "implementation": {
+                "mode": "unimplemented",
+                "summary": "Awaiting authoring.",
+                "blockedBy": []
+            },
             "name": "Totemic Attunement: Eagle",
             "lore": {
                 "shortDescription": "While raging, you gain a flying speed equal to your walking speed for one turn."
@@ -2952,6 +3217,11 @@
         },
         {
             "id": "trait_totemic_attunement_wolf",
+            "implementation": {
+                "mode": "unimplemented",
+                "summary": "Awaiting authoring.",
+                "blockedBy": []
+            },
             "name": "Totemic Attunement: Wolf",
             "lore": {
                 "shortDescription": "While raging, you can knock a Large or smaller creature prone when you hit it."
@@ -2968,6 +3238,11 @@
         },
         {
             "id": "trait_elemental_attunement",
+            "implementation": {
+                "mode": "unimplemented",
+                "summary": "Awaiting authoring.",
+                "blockedBy": []
+            },
             "name": "Elemental Attunement",
             "lore": {
                 "shortDescription": "Spend an action to briefly manipulate a Tiny elemental effect within 30 feet."
@@ -2984,6 +3259,11 @@
         },
         {
             "id": "trait_discipline_fangs_of_the_fire_snake",
+            "implementation": {
+                "mode": "unimplemented",
+                "summary": "Awaiting authoring.",
+                "blockedBy": []
+            },
             "name": "Fangs of the Fire Snake",
             "lore": {
                 "shortDescription": "Spend 1 ki to extend your unarmed reach by 10 feet and deal fire damage."
@@ -3000,6 +3280,11 @@
         },
         {
             "id": "trait_discipline_fist_of_four_thunders",
+            "implementation": {
+                "mode": "unimplemented",
+                "summary": "Awaiting authoring.",
+                "blockedBy": []
+            },
             "name": "Fist of Four Thunders",
             "lore": {
                 "shortDescription": "Spend 2 ki to cast thunderwave."
@@ -3016,6 +3301,11 @@
         },
         {
             "id": "trait_discipline_fist_of_unbroken_air",
+            "implementation": {
+                "mode": "unimplemented",
+                "summary": "Awaiting authoring.",
+                "blockedBy": []
+            },
             "name": "Fist of Unbroken Air",
             "lore": {
                 "shortDescription": "Spend 2 ki to push and damage a creature within 30 feet."
@@ -3032,6 +3322,11 @@
         },
         {
             "id": "trait_discipline_rush_of_the_gale_spirits",
+            "implementation": {
+                "mode": "unimplemented",
+                "summary": "Awaiting authoring.",
+                "blockedBy": []
+            },
             "name": "Rush of the Gale Spirits",
             "lore": {
                 "shortDescription": "Spend 2 ki to cast gust of wind."
@@ -3048,6 +3343,11 @@
         },
         {
             "id": "trait_discipline_shape_the_flowing_river",
+            "implementation": {
+                "mode": "unimplemented",
+                "summary": "Awaiting authoring.",
+                "blockedBy": []
+            },
             "name": "Shape the Flowing River",
             "lore": {
                 "shortDescription": "Spend 1 ki to freeze, thaw, or reshape water within 120 feet."
@@ -3064,6 +3364,11 @@
         },
         {
             "id": "trait_discipline_sweeping_cinder_strike",
+            "implementation": {
+                "mode": "unimplemented",
+                "summary": "Awaiting authoring.",
+                "blockedBy": []
+            },
             "name": "Sweeping Cinder Strike",
             "lore": {
                 "shortDescription": "Spend 2 ki to cast burning hands."
@@ -3080,6 +3385,11 @@
         },
         {
             "id": "trait_discipline_water_whip",
+            "implementation": {
+                "mode": "unimplemented",
+                "summary": "Awaiting authoring.",
+                "blockedBy": []
+            },
             "name": "Water Whip",
             "lore": {
                 "shortDescription": "Spend 2 ki to pull, knock prone, and damage a creature within 30 feet."
@@ -3096,6 +3406,11 @@
         },
         {
             "id": "trait_discipline_clench_of_the_north_wind",
+            "implementation": {
+                "mode": "unimplemented",
+                "summary": "Awaiting authoring.",
+                "blockedBy": []
+            },
             "name": "Clench of the North Wind",
             "lore": {
                 "shortDescription": "Spend 3 ki to cast hold person."
@@ -3112,6 +3427,11 @@
         },
         {
             "id": "trait_discipline_gong_of_the_summit",
+            "implementation": {
+                "mode": "unimplemented",
+                "summary": "Awaiting authoring.",
+                "blockedBy": []
+            },
             "name": "Gong of the Summit",
             "lore": {
                 "shortDescription": "Spend 3 ki to cast shatter."
@@ -3128,6 +3448,11 @@
         },
         {
             "id": "trait_discipline_flames_of_the_phoenix",
+            "implementation": {
+                "mode": "unimplemented",
+                "summary": "Awaiting authoring.",
+                "blockedBy": []
+            },
             "name": "Flames of the Phoenix",
             "lore": {
                 "shortDescription": "Spend 4 ki to cast fireball."
@@ -3144,6 +3469,11 @@
         },
         {
             "id": "trait_discipline_mist_stance",
+            "implementation": {
+                "mode": "unimplemented",
+                "summary": "Awaiting authoring.",
+                "blockedBy": []
+            },
             "name": "Mist Stance",
             "lore": {
                 "shortDescription": "Spend 4 ki to cast gaseous form on yourself."
@@ -3160,6 +3490,11 @@
         },
         {
             "id": "trait_discipline_ride_the_wind",
+            "implementation": {
+                "mode": "unimplemented",
+                "summary": "Awaiting authoring.",
+                "blockedBy": []
+            },
             "name": "Ride the Wind",
             "lore": {
                 "shortDescription": "Spend 4 ki to cast fly on yourself."
@@ -3176,6 +3511,11 @@
         },
         {
             "id": "trait_discipline_breath_of_winter",
+            "implementation": {
+                "mode": "unimplemented",
+                "summary": "Awaiting authoring.",
+                "blockedBy": []
+            },
             "name": "Breath of Winter",
             "lore": {
                 "shortDescription": "Spend 6 ki to cast cone of cold."
@@ -3192,6 +3532,11 @@
         },
         {
             "id": "trait_discipline_eternal_mountain_defense",
+            "implementation": {
+                "mode": "unimplemented",
+                "summary": "Awaiting authoring.",
+                "blockedBy": []
+            },
             "name": "Eternal Mountain Defense",
             "lore": {
                 "shortDescription": "Spend 5 ki to cast stoneskin on yourself."
@@ -3208,6 +3553,11 @@
         },
         {
             "id": "trait_discipline_river_of_hungry_flame",
+            "implementation": {
+                "mode": "unimplemented",
+                "summary": "Awaiting authoring.",
+                "blockedBy": []
+            },
             "name": "River of Hungry Flame",
             "lore": {
                 "shortDescription": "Spend 5 ki to cast wall of fire."
@@ -3224,6 +3574,11 @@
         },
         {
             "id": "trait_discipline_wave_of_rolling_earth",
+            "implementation": {
+                "mode": "unimplemented",
+                "summary": "Awaiting authoring.",
+                "blockedBy": []
+            },
             "name": "Wave of Rolling Earth",
             "lore": {
                 "shortDescription": "Spend 6 ki to cast wall of stone."
@@ -3240,6 +3595,11 @@
         },
         {
             "id": "trait_hunters_prey_colossus_slayer",
+            "implementation": {
+                "mode": "unimplemented",
+                "summary": "Awaiting authoring.",
+                "blockedBy": []
+            },
             "name": "Colossus Slayer",
             "lore": {
                 "shortDescription": "Deal an extra 1d8 damage once per turn to a creature below its hit point maximum."
@@ -3256,6 +3616,11 @@
         },
         {
             "id": "trait_hunters_prey_giant_killer",
+            "implementation": {
+                "mode": "unimplemented",
+                "summary": "Awaiting authoring.",
+                "blockedBy": []
+            },
             "name": "Giant Killer",
             "lore": {
                 "shortDescription": "React to attack a Large or larger creature that hits or misses you within 5 feet."
@@ -3272,6 +3637,11 @@
         },
         {
             "id": "trait_hunters_prey_horde_breaker",
+            "implementation": {
+                "mode": "unimplemented",
+                "summary": "Awaiting authoring.",
+                "blockedBy": []
+            },
             "name": "Horde Breaker",
             "lore": {
                 "shortDescription": "Once per turn, attack a second creature adjacent to your first target."
@@ -3288,6 +3658,11 @@
         },
         {
             "id": "trait_defensive_tactics_escape_the_horde",
+            "implementation": {
+                "mode": "unimplemented",
+                "summary": "Awaiting authoring.",
+                "blockedBy": []
+            },
             "name": "Escape the Horde",
             "lore": {
                 "shortDescription": "Opportunity attacks against you are made with disadvantage."
@@ -3304,6 +3679,11 @@
         },
         {
             "id": "trait_defensive_tactics_multiattack_defense",
+            "implementation": {
+                "mode": "unimplemented",
+                "summary": "Awaiting authoring.",
+                "blockedBy": []
+            },
             "name": "Multiattack Defense",
             "lore": {
                 "shortDescription": "After a creature hits you, it takes -4 on its further attacks against you that turn."
@@ -3320,6 +3700,11 @@
         },
         {
             "id": "trait_defensive_tactics_steel_will",
+            "implementation": {
+                "mode": "unimplemented",
+                "summary": "Awaiting authoring.",
+                "blockedBy": []
+            },
             "name": "Steel Will",
             "lore": {
                 "shortDescription": "You have advantage on saving throws against being frightened."
@@ -3336,6 +3721,11 @@
         },
         {
             "id": "trait_multiattack_volley",
+            "implementation": {
+                "mode": "unimplemented",
+                "summary": "Awaiting authoring.",
+                "blockedBy": []
+            },
             "name": "Volley",
             "lore": {
                 "shortDescription": "Make a ranged attack against any number of creatures within 10 feet of a point."
@@ -3352,6 +3742,11 @@
         },
         {
             "id": "trait_multiattack_whirlwind_attack",
+            "implementation": {
+                "mode": "unimplemented",
+                "summary": "Awaiting authoring.",
+                "blockedBy": []
+            },
             "name": "Whirlwind Attack",
             "lore": {
                 "shortDescription": "Make a melee attack against any number of creatures within 5 feet of you."
@@ -3368,6 +3763,11 @@
         },
         {
             "id": "trait_superior_hunters_defense_evasion",
+            "implementation": {
+                "mode": "unimplemented",
+                "summary": "Awaiting authoring.",
+                "blockedBy": []
+            },
             "name": "Evasion",
             "lore": {
                 "shortDescription": "Take no damage on a successful Dexterity save, and half on a failure."
@@ -3384,6 +3784,11 @@
         },
         {
             "id": "trait_superior_hunters_defense_stand_against_the_tide",
+            "implementation": {
+                "mode": "unimplemented",
+                "summary": "Awaiting authoring.",
+                "blockedBy": []
+            },
             "name": "Stand Against the Tide",
             "lore": {
                 "shortDescription": "Redirect a missed melee attack against another creature of your choice."
@@ -3400,6 +3805,11 @@
         },
         {
             "id": "trait_superior_hunters_defense_uncanny_dodge",
+            "implementation": {
+                "mode": "unimplemented",
+                "summary": "Awaiting authoring.",
+                "blockedBy": []
+            },
             "name": "Uncanny Dodge",
             "lore": {
                 "shortDescription": "React to halve the damage of an attack you can see."
@@ -3416,6 +3826,11 @@
         },
         {
             "id": "trait_maneuver_commanders_strike",
+            "implementation": {
+                "mode": "unimplemented",
+                "summary": "Awaiting authoring.",
+                "blockedBy": []
+            },
             "name": "Commander's Strike",
             "lore": {
                 "shortDescription": "Forgo an attack to let an ally strike, adding a superiority die to the damage."
@@ -3432,6 +3847,11 @@
         },
         {
             "id": "trait_maneuver_disarming_attack",
+            "implementation": {
+                "mode": "unimplemented",
+                "summary": "Awaiting authoring.",
+                "blockedBy": []
+            },
             "name": "Disarming Attack",
             "lore": {
                 "shortDescription": "Force a target to drop an item on a failed Strength save."
@@ -3448,6 +3868,11 @@
         },
         {
             "id": "trait_maneuver_distracting_strike",
+            "implementation": {
+                "mode": "unimplemented",
+                "summary": "Awaiting authoring.",
+                "blockedBy": []
+            },
             "name": "Distracting Strike",
             "lore": {
                 "shortDescription": "Give the next attacker advantage against your target."
@@ -3464,6 +3889,11 @@
         },
         {
             "id": "trait_maneuver_evasive_footwork",
+            "implementation": {
+                "mode": "unimplemented",
+                "summary": "Awaiting authoring.",
+                "blockedBy": []
+            },
             "name": "Evasive Footwork",
             "lore": {
                 "shortDescription": "Add a superiority die to AC while you move."
@@ -3480,6 +3910,11 @@
         },
         {
             "id": "trait_maneuver_feinting_attack",
+            "implementation": {
+                "mode": "unimplemented",
+                "summary": "Awaiting authoring.",
+                "blockedBy": []
+            },
             "name": "Feinting Attack",
             "lore": {
                 "shortDescription": "Gain advantage against a creature within 5 feet, plus bonus damage."
@@ -3496,6 +3931,11 @@
         },
         {
             "id": "trait_maneuver_goading_attack",
+            "implementation": {
+                "mode": "unimplemented",
+                "summary": "Awaiting authoring.",
+                "blockedBy": []
+            },
             "name": "Goading Attack",
             "lore": {
                 "shortDescription": "The target has disadvantage attacking anyone but you on a failed Wisdom save."
@@ -3512,6 +3952,11 @@
         },
         {
             "id": "trait_maneuver_lunging_attack",
+            "implementation": {
+                "mode": "unimplemented",
+                "summary": "Awaiting authoring.",
+                "blockedBy": []
+            },
             "name": "Lunging Attack",
             "lore": {
                 "shortDescription": "Extend your melee reach by 5 feet for one attack."
@@ -3528,6 +3973,11 @@
         },
         {
             "id": "trait_maneuver_maneuvering_attack",
+            "implementation": {
+                "mode": "unimplemented",
+                "summary": "Awaiting authoring.",
+                "blockedBy": []
+            },
             "name": "Maneuvering Attack",
             "lore": {
                 "shortDescription": "Let an ally move half their speed without provoking from your target."
@@ -3544,6 +3994,11 @@
         },
         {
             "id": "trait_maneuver_menacing_attack",
+            "implementation": {
+                "mode": "unimplemented",
+                "summary": "Awaiting authoring.",
+                "blockedBy": []
+            },
             "name": "Menacing Attack",
             "lore": {
                 "shortDescription": "Frighten the target until the end of your next turn on a failed Wisdom save."
@@ -3560,6 +4015,11 @@
         },
         {
             "id": "trait_maneuver_parry",
+            "implementation": {
+                "mode": "unimplemented",
+                "summary": "Awaiting authoring.",
+                "blockedBy": []
+            },
             "name": "Parry",
             "lore": {
                 "shortDescription": "React to reduce melee damage by a superiority die plus your Dexterity modifier."
@@ -3576,6 +4036,11 @@
         },
         {
             "id": "trait_maneuver_precision_attack",
+            "implementation": {
+                "mode": "unimplemented",
+                "summary": "Awaiting authoring.",
+                "blockedBy": []
+            },
             "name": "Precision Attack",
             "lore": {
                 "shortDescription": "Add a superiority die to an attack roll."
@@ -3592,6 +4057,11 @@
         },
         {
             "id": "trait_maneuver_pushing_attack",
+            "implementation": {
+                "mode": "unimplemented",
+                "summary": "Awaiting authoring.",
+                "blockedBy": []
+            },
             "name": "Pushing Attack",
             "lore": {
                 "shortDescription": "Push a Large or smaller target 15 feet on a failed Strength save."
@@ -3608,6 +4078,11 @@
         },
         {
             "id": "trait_maneuver_rally",
+            "implementation": {
+                "mode": "unimplemented",
+                "summary": "Awaiting authoring.",
+                "blockedBy": []
+            },
             "name": "Rally",
             "lore": {
                 "shortDescription": "Grant an ally temporary hit points equal to a superiority die plus your Charisma modifier."
@@ -3624,6 +4099,11 @@
         },
         {
             "id": "trait_maneuver_riposte",
+            "implementation": {
+                "mode": "unimplemented",
+                "summary": "Awaiting authoring.",
+                "blockedBy": []
+            },
             "name": "Riposte",
             "lore": {
                 "shortDescription": "React to attack a creature that misses you with a melee attack."
@@ -3640,6 +4120,11 @@
         },
         {
             "id": "trait_maneuver_sweeping_attack",
+            "implementation": {
+                "mode": "unimplemented",
+                "summary": "Awaiting authoring.",
+                "blockedBy": []
+            },
             "name": "Sweeping Attack",
             "lore": {
                 "shortDescription": "Deal superiority die damage to a second creature within 5 feet of your target."
@@ -3656,6 +4141,11 @@
         },
         {
             "id": "trait_maneuver_trip_attack",
+            "implementation": {
+                "mode": "unimplemented",
+                "summary": "Awaiting authoring.",
+                "blockedBy": []
+            },
             "name": "Trip Attack",
             "lore": {
                 "shortDescription": "Knock a Large or smaller target prone on a failed Strength save."
