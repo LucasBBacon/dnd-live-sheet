@@ -4,6 +4,7 @@ import {
   characterClasses,
   characterInventory,
   characterResources,
+  characterTraits,
   characters,
 } from "@project/database/src/schema/operational.js";
 import {
@@ -122,9 +123,12 @@ describe("socket gateway - ACTION_INTENT", () => {
 
     await harness.emit(SOCKET_EVENTS.ACTION_INTENT, intent());
 
-    expect(lastResolved(harness)["resources"]).toEqual([
+    // Not an exact array: a level-3 fighter also materialises Second Wind,
+    // which this fixture never seeded. That pool is orthogonal to what this
+    // test checks - that a persisted, already-spent charge is not reset.
+    expect(lastResolved(harness)["resources"]).toContainEqual(
       expect.objectContaining({ id: "trait_action_surge", currentCharges: 0 }),
-    ]);
+    );
   });
 
   it("writes a spent resource back to the durable table", async () => {
@@ -413,5 +417,62 @@ describe("socket gateway - ACTION_INTENT", () => {
     // failed with afterFirst = { current: 2, currentCharges: 2 } and
     // afterSecond = { current: 4, currentCharges: 4 }.
     expect(afterSecond).toEqual(afterFirst);
+  });
+
+  it("materialises a granted pool the table has no row for", async () => {
+    harness = await setupGateway();
+    await joinCampaign(harness);
+    harness.db.seed(characters, [characterRow()]);
+    harness.db.seed(characterClasses, [
+      { classId: "class_barbarian", classLevel: 3, subclassId: null },
+    ]);
+    harness.db.seed(characterInventory, []);
+    harness.db.seed(characterTraits, []);
+    harness.db.seed(characterResources, []);
+
+    await harness.emit(
+      SOCKET_EVENTS.ACTION_INTENT,
+      intent({ actionId: "action_rage" }),
+    );
+
+    // Only the sample seeder ever wrote this table. A real barbarian had no
+    // Rage row, and every rage failed insufficient_resource.
+    const inserts = harness.db.opsFor(characterResources, "insert");
+    expect(inserts).toHaveLength(1);
+    expect(inserts[0]?.values).toEqual([
+      expect.objectContaining({
+        id: "resource_barbarian_rage",
+        characterId: "char-1",
+        current: 3,
+        max: 3,
+        resetCondition: "long_rest",
+      }),
+    ]);
+    expect(lastResolved(harness)).toMatchObject({ executed: true });
+  });
+
+  it("leaves an existing pool row alone", async () => {
+    harness = await setupGateway();
+    await joinCampaign(harness);
+    harness.db.seed(characters, [characterRow()]);
+    harness.db.seed(characterClasses, [
+      { classId: "class_barbarian", classLevel: 3, subclassId: null },
+    ]);
+    harness.db.seed(characterInventory, []);
+    harness.db.seed(characterTraits, []);
+    harness.db.seed(characterResources, [
+      {
+        id: "resource_barbarian_rage",
+        characterId: "char-1",
+        name: "Rage",
+        current: 1,
+        max: 3,
+        resetCondition: "long_rest",
+      },
+    ]);
+
+    await harness.emit(SOCKET_EVENTS.ACTION_INTENT, intent());
+
+    expect(harness.db.opsFor(characterResources, "insert")).toEqual([]);
   });
 });

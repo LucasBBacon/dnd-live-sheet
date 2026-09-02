@@ -4,6 +4,7 @@ import {
   characterClasses,
   characterInventory,
   characterResources,
+  characterTraits,
   characters,
 } from "@project/database/src/schema/operational.js";
 import { items } from "@project/database/src/schema/reference.js";
@@ -42,6 +43,8 @@ import {
   ATTUNEMENT_LIMIT,
   CARRIED_SLOT,
   canEquipTo,
+  collectGrantedResources,
+  materialiseMissingPools,
   slotsConsumedBy,
   type LiveCharacterSheet,
 } from "@project/engine";
@@ -152,7 +155,8 @@ const toCharacterSave = (
     currentHp: number | null;
     maxHp: number | null;
   },
-  classes: Array<{ classId: string; classLevel: number }>,
+  classes: Array<{ classId: string; classLevel: number; subclassId: string | null }>,
+  selectionsByClass: Record<string, Record<string, string[]>> = {},
 ): CharacterSave => ({
   attributes: {
     str: character.str,
@@ -172,7 +176,8 @@ const toCharacterSave = (
       ? classes.map((entry) => ({
           classId: entry.classId,
           level: entry.classLevel,
-          selections: {},
+          ...(entry.subclassId !== null && { subclassId: entry.subclassId }),
+          selections: selectionsByClass[entry.classId] ?? {},
         }))
       : [{ classId: "class_fighter", level: 1, selections: {} }],
   traitSelections: {},
@@ -234,9 +239,36 @@ const getAuthoritativeRuntimeContext = async (
     .select({
       classId: characterClasses.classId,
       classLevel: characterClasses.classLevel,
+      subclassId: characterClasses.subclassId,
     })
     .from(characterClasses)
     .where(eq(characterClasses.characterId, characterId));
+
+  // the chosen traits are rows with source "player_choice" and no record of
+  // which node they answered; the bootstrapper recovers that from the pack
+  const chosenTraitRows = await db
+    .select({
+      traitId: characterTraits.traitId,
+      source: characterTraits.source,
+    })
+    .from(characterTraits)
+    .where(eq(characterTraits.characterId, characterId));
+
+  const { snapshot } = await getCachedRuleSnapshot();
+
+  const selectionsByClass = CharacterBootstrapper.selectionsFromChosenTraitIds(
+    classRows.map((row) => ({
+      classId: row.classId,
+      level: row.classLevel,
+      ...(row.subclassId !== null && { subclassId: row.subclassId }),
+    })),
+    chosenTraitRows
+      .filter((row) => row.source === "player_choice")
+      .map((row) => row.traitId),
+    snapshot,
+  );
+
+  const nextSave = toCharacterSave(character, classRows, selectionsByClass);
 
   const resourceRows = await db
     .select({
@@ -249,6 +281,26 @@ const getAuthoritativeRuntimeContext = async (
     .from(characterResources)
     .where(eq(characterResources.characterId, characterId));
 
+  // pools the traits grant but the table lacks. Only the sample seeder ever
+  // wrote character_resources, so a real character had no Rage row at all
+  const activeTraits = CharacterBootstrapper.compileActiveTraits(nextSave, snapshot);
+  const classLevels = Object.fromEntries(
+    classRows.map((row) => [row.classId, row.classLevel]),
+  );
+  const totalLevel = classRows.reduce((sum, row) => sum + row.classLevel, 0);
+  const missingPools = materialiseMissingPools(
+    resourceRows.map((row) => row.id),
+    collectGrantedResources(activeTraits, snapshot),
+    totalLevel,
+    classLevels,
+  );
+
+  if (missingPools.length > 0) {
+    await db
+      .insert(characterResources)
+      .values(missingPools.map((pool) => ({ ...pool, characterId })));
+  }
+
   /**
    * The character's pools as the database holds them.
    *
@@ -258,7 +310,7 @@ const getAuthoritativeRuntimeContext = async (
    * at full charges, handing back every rage and ki point the character had
    * already spent.
    */
-  const persistedResources = resourceRows.map((row) => ({
+  const persistedResources = [...resourceRows, ...missingPools].map((row) => ({
     id: row.id,
     name: row.name,
     maxCharges: row.max,
@@ -266,7 +318,6 @@ const getAuthoritativeRuntimeContext = async (
     resetOn: row.resetCondition,
   }));
 
-  const nextSave = toCharacterSave(character, classRows);
   const existing = authoritativeRuntimeByCharacter.get(characterId);
 
   if (existing) {
@@ -378,7 +429,10 @@ const resolveCharacterAction = async (
     { snapshot },
   );
 
-  const activeTraits = CharacterBootstrapper.compileActiveTraits(runtime.save);
+  const activeTraits = CharacterBootstrapper.compileActiveTraits(
+    runtime.save,
+    snapshot,
+  );
   const diceRules = activeTraits.flatMap((trait) => trait.diceRules ?? []);
   const action =
     liveSheet.actions.find((entry) => entry.id === actionId) ?? null;
