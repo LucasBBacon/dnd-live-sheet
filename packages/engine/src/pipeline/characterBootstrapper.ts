@@ -266,6 +266,47 @@ export class CharacterBootstrapper {
   }
 
   /**
+   * Rebuilds a save's trait_choice selections from the traits the character
+   * was recorded as choosing.
+   *
+   * The database keeps a chosen trait as a character_traits row with source
+   * "player_choice" and nothing else - not which node it answered. Neither the
+   * server nor the web store could therefore hand the bootstrapper a save that
+   * knew a Totem Warrior's totem. Walking the unlocked nodes and intersecting
+   * their options with the chosen ids recovers exactly that.
+   */
+  public static selectionsFromChosenTraitIds(
+    classes: Array<{ classId: string; level: number; subclassId?: string }>,
+    chosenTraitIds: string[],
+    snapshot?: RuleSnapshotLookup,
+  ): Record<string, Record<string, string[]>> {
+    const chosen = new Set(chosenTraitIds);
+    const byClass: Record<string, Record<string, string[]>> = {};
+
+    for (const entry of classes) {
+      const selections: Record<string, string[]> = {};
+      const state: ClassState = {
+        classId: entry.classId,
+        level: entry.level,
+        selections: {},
+        ...(entry.subclassId !== undefined && { subclassId: entry.subclassId }),
+      };
+
+      for (const grant of unlockedGrants(state, snapshot)) {
+        if (!isTraitChoice(grant)) continue;
+        const picks = grant.options
+          .map(traitIdOfOption)
+          .filter((id) => chosen.has(id));
+        if (picks.length > 0) selections[grant.nodeId] = picks;
+      }
+
+      byClass[entry.classId] = selections;
+    }
+
+    return byClass;
+  }
+
+  /**
    * Checks a save against the static rulebook without throwing, so callers can
    * surface every problem at once instead of one per round trip.
    */

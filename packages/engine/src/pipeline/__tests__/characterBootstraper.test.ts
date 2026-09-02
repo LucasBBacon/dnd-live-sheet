@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 import type { CharacterSave } from "@project/shared";
 import { CharacterBootstrapper } from "../characterBootstrapper.js";
 import { ProficiencyExtractor } from "../proficiencyExtractor.js";
-import { corePackSnapshot } from "./corePackFixture.js";
+import { corePackLookup, corePackSnapshot } from "./corePackFixture.js";
 import { EffectManager } from "../../calculators/effects.js";
 import { ResourceManager } from "../../calculators/resources.js";
 
@@ -626,5 +626,49 @@ describe("CharacterBootstrapper pack resolution", () => {
         pack,
       ),
     ).not.toThrow();
+  });
+});
+
+describe("CharacterBootstrapper.selectionsFromChosenTraitIds", () => {
+  const totem = (level: number) => [
+    {
+      classId: "class_barbarian",
+      level,
+      subclassId: "subclass_barbarian_totem_warrior",
+    },
+  ];
+
+  it("assigns a chosen trait to the subclass node that offers it", () => {
+    const selections = CharacterBootstrapper.selectionsFromChosenTraitIds(
+      totem(3),
+      ["trait_totem_spirit_bear", "trait_fs_defense"],
+      corePackLookup(),
+    );
+
+    expect(selections).toEqual({
+      class_barbarian: {
+        barbarian_totem_level_3_totem_spirit: ["trait_totem_spirit_bear"],
+      },
+    });
+  });
+
+  it("ignores a node the character has not reached", () => {
+    const selections = CharacterBootstrapper.selectionsFromChosenTraitIds(
+      totem(3),
+      ["trait_aspect_of_the_beast_bear"],
+      corePackLookup(),
+    );
+
+    expect(selections).toEqual({ class_barbarian: {} });
+  });
+
+  it("returns an empty map for a class without a subclass", () => {
+    const selections = CharacterBootstrapper.selectionsFromChosenTraitIds(
+      [{ classId: "class_barbarian", level: 3 }],
+      ["trait_totem_spirit_bear"],
+      corePackLookup(),
+    );
+
+    expect(selections).toEqual({ class_barbarian: {} });
   });
 });
