@@ -16,6 +16,7 @@ import { ArmorClassWidget } from "./ArmorClassWidget";
 import { ConditionsWidget } from "./ConditionsWidget";
 import { SavingThrowsWidget } from "./SavingThrowsWidget";
 import { SkillsWidget } from "./SkillsWidget";
+import { TableRulesWidget } from "./TableRulesWidget";
 
 export const DashboardLayout = () => {
   const character = useCharacterSheetStore();
@@ -203,6 +204,7 @@ export const DashboardLayout = () => {
 
           <ConditionsWidget />
           <ActiveEffectsWidget />
+          <TableRulesWidget />
         </section>
 
         {/* ACTION ECONOMY */}

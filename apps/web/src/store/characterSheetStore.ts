@@ -648,6 +648,12 @@ export interface CharacterSheetState {
   syncRemoteSurprise: (payload: SurpriseResolvedPayload) => void;
   triggerRest: (restType: "short" | "long") => void;
   dispatchAuthoredEvent: (eventName: EngineEvent) => void;
+  /**
+   * The traits the character actually has, compiled from the save against the
+   * loaded pack. The single place the sheet resolves "what do I have" so the
+   * panel, the action list and the trigger dispatch cannot disagree.
+   */
+  getActiveTraits: () => TraitDefinition[];
   getCharacterActions: () => ActionGrant[];
   executeCharacterAction: (actionId: string) => void;
   selectActorInstance: (actorInstanceId: string | null) => void;
@@ -1144,6 +1150,14 @@ export const useCharacterSheetStore = create<CharacterSheetState>(
       });
     },
 
+    getActiveTraits: () => {
+      const state = get();
+      return CharacterBootstrapper.compileActiveTraits(
+        toCharacterSave(state),
+        state.ruleSnapshot ?? undefined,
+      );
+    },
+
     getCharacterActions: () => {
       const state = get();
       const nextSave = toCharacterSave(state);
@@ -1157,10 +1171,7 @@ export const useCharacterSheetStore = create<CharacterSheetState>(
         state.ruleSnapshot ?? undefined,
       );
 
-      const activeTraits = CharacterBootstrapper.compileActiveTraits(
-        nextSave,
-        state.ruleSnapshot ?? undefined,
-      );
+      const activeTraits = get().getActiveTraits();
       // the standard actions are not granted by anything - Dodge is a rule, not
       // a trait - so they are always present, ahead of what traits add
       return [

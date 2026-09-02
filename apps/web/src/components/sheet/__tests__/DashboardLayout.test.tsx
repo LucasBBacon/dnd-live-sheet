@@ -40,6 +40,7 @@ vi.mock("../ConditionsWidget", () => ({ ConditionsWidget: () => null }));
 vi.mock("../ActiveEffectsWidget", () => ({ ActiveEffectsWidget: () => null }));
 vi.mock("../SavingThrowsWidget", () => ({ SavingThrowsWidget: () => null }));
 vi.mock("../SkillsWidget", () => ({ SkillsWidget: () => null }));
+vi.mock("../TableRulesWidget", () => ({ TableRulesWidget: () => null }));
 vi.mock("../CombatWidget", () => ({ CombatWidget: () => null }));
 vi.mock("../modals/RestModal", () => ({ RestModal: () => null }));
 vi.mock("../../wizard/LevelUpWizard", () => ({ LevelUpWizard: () => null }));
