@@ -205,9 +205,26 @@
             "id": "trait_rage",
             "name": "Rage",
             "lore": {
-                "shortDescription": "placeholder",
-                "fullText": "placeholder"
+                "shortDescription": "On your turn, you can enter a rage as a bonus action. While raging you have advantage on Strength checks and saves, a bonus to melee weapon damage using Strength, and resistance to bludgeoning, piercing and slashing damage.",
+                "fullText": "In battle, you fight with primal ferocity. On your turn, you can enter a rage as a bonus action. While raging, you gain the following benefits if you aren't wearing heavy armour: you have advantage on Strength checks and Strength saving throws; when you make a melee weapon attack using Strength, you gain a bonus to the damage roll that increases as you gain levels as a barbarian; you have resistance to bludgeoning, piercing, and slashing damage. If you are able to cast spells, you can't cast them or concentrate on them while raging. Your rage lasts for 1 minute. It ends early if you are knocked unconscious or if your turn ends and you haven't attacked a hostile creature since your last turn or taken damage since then. You can also end your rage on your turn as a bonus action. Once you have raged the number of times shown for your barbarian level in the Rages column of the Barbarian table, you must finish a long rest before you can rage again."
             },
+            "isStartingProficiency": false,
+            "implementation": {
+                "mode": "engine",
+                "summary": "The damage bonus is a class_level_thresholds DAMAGE_BONUS gated on status_raging plus the melee and Strength attack-context states; the three resistances are affinities gated on status_raging, surfaced by the affinity reporter; the pool is resource_barbarian_rage. The one-minute limit and the early ending are reported as a table note rather than enforced, because the engine records neither attacks against hostile creatures nor damage taken since the last turn. The heavy-armour clause and the advantage on Strength checks and saves are not modelled.",
+                "blockedBy": []
+            },
+            "tableNotes": [
+                {
+                    "text": "Your rage lasts for 1 minute. It ends early if you are knocked unconscious, or if your turn ends and you have not attacked a hostile creature or taken damage since your last turn. You can end it on your turn as a bonus action.",
+                    "requiredStates": [
+                        "status_raging"
+                    ],
+                    "forbiddenStates": [
+                        "status_persistent_rage"
+                    ]
+                }
+            ],
             "modifiers": {
                 "fixed": [
                     {
@@ -716,16 +733,29 @@
         },
         {
             "id": "trait_persistent_rage",
-            "implementation": {
-                "mode": "unimplemented",
-                "summary": "Awaiting authoring.",
-                "blockedBy": []
-            },
             "name": "Persistent Rage",
             "lore": {
-                "shortDescription": "placeholder",
-                "fullText": "placeholder"
+                "shortDescription": "Your rage ends early only if you fall unconscious or if you choose to end it.",
+                "fullText": "Beginning at 15th level, your rage is so fierce that it ends early only if you fall unconscious or if you choose to end it."
             },
+            "isStartingProficiency": false,
+            "implementation": {
+                "mode": "manual_sheet_helper",
+                "summary": "Rage's ending is reported rather than enforced, so this trait has nothing engine-side to lift. It grants status_persistent_rage, which withdraws Rage's ending note, and states its own rule while raging. Nothing here changes a number.",
+                "blockedBy": []
+            },
+            "grantedStates": [
+                "status_persistent_rage"
+            ],
+            "tableNotes": [
+                {
+                    "text": "Your rage ends early only if you fall unconscious or if you choose to end it.",
+                    "requiredStates": [
+                        "status_raging"
+                    ],
+                    "forbiddenStates": []
+                }
+            ],
             "modifiers": {
                 "fixed": [],
                 "choices": []
@@ -770,6 +800,66 @@
                 "shortDescription": "placeholder",
                 "fullText": "placeholder"
             },
+            "modifiers": {
+                "fixed": [],
+                "choices": []
+            },
+            "resources": [],
+            "triggers": [],
+            "diceRules": [],
+            "criticalHitModifiers": [],
+            "actions": []
+        },
+        {
+            "id": "trait_spirit_seeker",
+            "name": "Spirit Seeker",
+            "lore": {
+                "shortDescription": "You can cast beast sense and speak with animals, but only as rituals.",
+                "fullText": "Yours is a path that seeks attunement with the natural world, giving you a kinship with beasts. At 3rd level when you adopt this path, you gain the ability to cast the beast sense and speak with animals spells, but only as rituals."
+            },
+            "isStartingProficiency": false,
+            "implementation": {
+                "mode": "manual_sheet_helper",
+                "summary": "A ritual-only spell grant. SpellUsageSchema has no ritual kind and every spell in the pack is a stub (#31), so the grant is stated as a note and the spells block stays empty until the spells pass settles ritual casting.",
+                "blockedBy": []
+            },
+            "tableNotes": [
+                {
+                    "text": "You can cast beast sense and speak with animals, but only as rituals.",
+                    "requiredStates": [],
+                    "forbiddenStates": []
+                }
+            ],
+            "modifiers": {
+                "fixed": [],
+                "choices": []
+            },
+            "resources": [],
+            "triggers": [],
+            "diceRules": [],
+            "criticalHitModifiers": [],
+            "actions": []
+        },
+        {
+            "id": "trait_spirit_walker",
+            "name": "Spirit Walker",
+            "lore": {
+                "shortDescription": "You can cast commune with nature, but only as a ritual; a spirit of one of your totem animals conveys the answer.",
+                "fullText": "At 10th level, you can cast the commune with nature spell, but only as a ritual. When you do so, a spiritual version of one of the animals you chose for Totem Spirit or Aspect of the Beast appears to you to convey the information you seek."
+            },
+            "isStartingProficiency": false,
+            "implementation": {
+                "mode": "manual_sheet_helper",
+                "summary": "A ritual-only spell grant, stated as a note for the same reason Spirit Seeker is: no ritual usage kind exists yet and the spell is a stub (#31).",
+                "blockedBy": []
+            },
+            "tableNotes": [
+                {
+                    "text": "You can cast commune with nature, but only as a ritual. A spiritual version of one of your totem animals appears to convey the information you seek.",
+                    "requiredStates": [],
+                    "forbiddenStates": []
+                }
+            ],
             "modifiers": {
                 "fixed": [],
                 "choices": []

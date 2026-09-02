@@ -1549,32 +1549,6 @@
             }
         },
         {
-            "id": "trait_spirit_seeker",
-            "name": "Spirit Seeker",
-            "lore": {
-                "shortDescription": "Not yet authored in the pack.",
-                "fullText": "This trait exists so progressions can reference it. Its rules have not been authored yet."
-            },
-            "implementation": {
-                "mode": "unimplemented",
-                "summary": "Awaiting authoring.",
-                "blockedBy": []
-            }
-        },
-        {
-            "id": "trait_spirit_walker",
-            "name": "Spirit Walker",
-            "lore": {
-                "shortDescription": "Not yet authored in the pack.",
-                "fullText": "This trait exists so progressions can reference it. Its rules have not been authored yet."
-            },
-            "implementation": {
-                "mode": "unimplemented",
-                "summary": "Awaiting authoring.",
-                "blockedBy": []
-            }
-        },
-        {
             "id": "trait_bardic_inspiration",
             "name": "Bardic Inspiration",
             "lore": {

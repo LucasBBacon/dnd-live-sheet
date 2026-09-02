@@ -136,11 +136,10 @@ describe("trait and spell implementation markers match their data", () => {
   it("records how much of the trait section carries no rules", async () => {
     const pack = await assembleCoreRulePack(SHIPPED_PACK);
 
-    // 462 of 587: 343 marked unimplemented and 119 unmarked. Was 463 until
-    // trait_fs_protection gained the table note that makes its helper marker
-    // visible, and tableNotes started counting as a rule channel.
+    // 452 of 587. Slice 1 of the barbarian pass authored ten traits: nine
+    // sheet helpers carrying table notes and Bear totem's affinities.
     expect(pack.traits.filter((trait) => !carriesRules(trait))).toHaveLength(
-      462,
+      452,
     );
     expect(pack.traits).toHaveLength(587);
   });

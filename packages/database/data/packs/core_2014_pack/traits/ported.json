@@ -3056,17 +3056,120 @@
         },
         {
             "id": "trait_totem_spirit_bear",
-            "implementation": {
-                "mode": "unimplemented",
-                "summary": "Awaiting authoring.",
-                "blockedBy": []
-            },
             "name": "Totem Spirit: Bear",
             "lore": {
-                "shortDescription": "While raging you have resistance to all damage except psychic."
+                "shortDescription": "While raging, you have resistance to all damage except psychic damage.",
+                "fullText": "While raging, you have resistance to all damage except psychic damage. The spirit of the bear makes you tough enough to stand up to any punishment."
+            },
+            "isStartingProficiency": false,
+            "implementation": {
+                "mode": "engine",
+                "summary": "Twelve resistance affinities, one per damage type other than psychic, each gated on status_raging. The affinity reporter collapses them to 'all damage except psychic' on the sheet. Authored as twelve entries rather than an 'all' pseudo-type because FixedAffinityGrant names one damage type and the validator can check each one.",
+                "blockedBy": []
             },
             "modifiers": {
                 "fixed": [],
+                "choices": []
+            },
+            "affinities": {
+                "fixed": [
+                    {
+                        "damageType": "acid",
+                        "level": "resistance",
+                        "bypassedBy": [],
+                        "requiredStates": [
+                            "status_raging"
+                        ]
+                    },
+                    {
+                        "damageType": "bludgeoning",
+                        "level": "resistance",
+                        "bypassedBy": [],
+                        "requiredStates": [
+                            "status_raging"
+                        ]
+                    },
+                    {
+                        "damageType": "cold",
+                        "level": "resistance",
+                        "bypassedBy": [],
+                        "requiredStates": [
+                            "status_raging"
+                        ]
+                    },
+                    {
+                        "damageType": "fire",
+                        "level": "resistance",
+                        "bypassedBy": [],
+                        "requiredStates": [
+                            "status_raging"
+                        ]
+                    },
+                    {
+                        "damageType": "force",
+                        "level": "resistance",
+                        "bypassedBy": [],
+                        "requiredStates": [
+                            "status_raging"
+                        ]
+                    },
+                    {
+                        "damageType": "lightning",
+                        "level": "resistance",
+                        "bypassedBy": [],
+                        "requiredStates": [
+                            "status_raging"
+                        ]
+                    },
+                    {
+                        "damageType": "necrotic",
+                        "level": "resistance",
+                        "bypassedBy": [],
+                        "requiredStates": [
+                            "status_raging"
+                        ]
+                    },
+                    {
+                        "damageType": "piercing",
+                        "level": "resistance",
+                        "bypassedBy": [],
+                        "requiredStates": [
+                            "status_raging"
+                        ]
+                    },
+                    {
+                        "damageType": "poison",
+                        "level": "resistance",
+                        "bypassedBy": [],
+                        "requiredStates": [
+                            "status_raging"
+                        ]
+                    },
+                    {
+                        "damageType": "radiant",
+                        "level": "resistance",
+                        "bypassedBy": [],
+                        "requiredStates": [
+                            "status_raging"
+                        ]
+                    },
+                    {
+                        "damageType": "slashing",
+                        "level": "resistance",
+                        "bypassedBy": [],
+                        "requiredStates": [
+                            "status_raging"
+                        ]
+                    },
+                    {
+                        "damageType": "thunder",
+                        "level": "resistance",
+                        "bypassedBy": [],
+                        "requiredStates": [
+                            "status_raging"
+                        ]
+                    }
+                ],
                 "choices": []
             },
             "resources": [],
@@ -3098,15 +3201,26 @@
         },
         {
             "id": "trait_totem_spirit_wolf",
-            "implementation": {
-                "mode": "unimplemented",
-                "summary": "Awaiting authoring.",
-                "blockedBy": []
-            },
             "name": "Totem Spirit: Wolf",
             "lore": {
-                "shortDescription": "While raging, your allies have advantage on melee attacks against enemies within 5 feet of you."
+                "shortDescription": "While raging, your friends have advantage on melee attack rolls against any creature within 5 feet of you that is hostile to you.",
+                "fullText": "While you're raging, your friends have advantage on melee attack rolls against any creature within 5 feet of you that is hostile to you. The spirit of the wolf makes you a leader of hunters."
             },
+            "isStartingProficiency": false,
+            "implementation": {
+                "mode": "manual_sheet_helper",
+                "summary": "The advantage lands on your allies' attack rolls, which this single-character sheet never sees, so the rule is a table note while raging rather than a modifier with no calculator behind it.",
+                "blockedBy": []
+            },
+            "tableNotes": [
+                {
+                    "text": "While raging, your friends have advantage on melee attack rolls against any creature within 5 feet of you that is hostile to you.",
+                    "requiredStates": [
+                        "status_raging"
+                    ],
+                    "forbiddenStates": []
+                }
+            ],
             "modifiers": {
                 "fixed": [],
                 "choices": []
@@ -3140,15 +3254,29 @@
         },
         {
             "id": "trait_aspect_of_the_beast_eagle",
-            "implementation": {
-                "mode": "unimplemented",
-                "summary": "Awaiting authoring.",
-                "blockedBy": []
-            },
             "name": "Aspect of the Beast: Eagle",
             "lore": {
-                "shortDescription": "You can see up to a mile away with ease and dim light does not impose disadvantage on Perception."
+                "shortDescription": "You gain the eyesight of an eagle: you can see up to a mile away with no difficulty, and dim light does not impose disadvantage on your Wisdom (Perception) checks.",
+                "fullText": "You gain the eyesight of an eagle. You can see up to 1 mile away with no difficulty, able to discern even fine details as though looking at something no more than 100 feet away from you. Additionally, dim light doesn't impose disadvantage on your Wisdom (Perception) checks."
             },
+            "isStartingProficiency": false,
+            "implementation": {
+                "mode": "manual_sheet_helper",
+                "summary": "Both halves are permissions rather than numbers: sight range is not modelled, and disadvantage from dim light is imposed by the table, not by any state this engine tracks. Two ungated notes.",
+                "blockedBy": []
+            },
+            "tableNotes": [
+                {
+                    "text": "You can see up to 1 mile away with no difficulty, able to discern even fine details as though looking at something no more than 100 feet away.",
+                    "requiredStates": [],
+                    "forbiddenStates": []
+                },
+                {
+                    "text": "Dim light does not impose disadvantage on your Wisdom (Perception) checks.",
+                    "requiredStates": [],
+                    "forbiddenStates": []
+                }
+            ],
             "modifiers": {
                 "fixed": [],
                 "choices": []
@@ -3161,15 +3289,24 @@
         },
         {
             "id": "trait_aspect_of_the_beast_wolf",
-            "implementation": {
-                "mode": "unimplemented",
-                "summary": "Awaiting authoring.",
-                "blockedBy": []
-            },
             "name": "Aspect of the Beast: Wolf",
             "lore": {
-                "shortDescription": "You can track at a fast pace and move stealthily at a normal pace."
+                "shortDescription": "You gain the hunting sensibilities of a wolf: you can track other creatures while travelling at a fast pace, and move stealthily while travelling at a normal pace.",
+                "fullText": "You gain the hunting sensibilities of a wolf. You can track other creatures while traveling at a fast pace, and you can move stealthily while traveling at a normal pace."
             },
+            "isStartingProficiency": false,
+            "implementation": {
+                "mode": "manual_sheet_helper",
+                "summary": "Travel pace is not modelled anywhere in the engine, so this is one ungated note.",
+                "blockedBy": []
+            },
+            "tableNotes": [
+                {
+                    "text": "You can track other creatures while travelling at a fast pace, and you can move stealthily while travelling at a normal pace.",
+                    "requiredStates": [],
+                    "forbiddenStates": []
+                }
+            ],
             "modifiers": {
                 "fixed": [],
                 "choices": []
@@ -3182,15 +3319,26 @@
         },
         {
             "id": "trait_totemic_attunement_bear",
-            "implementation": {
-                "mode": "unimplemented",
-                "summary": "Awaiting authoring.",
-                "blockedBy": []
-            },
             "name": "Totemic Attunement: Bear",
             "lore": {
-                "shortDescription": "While raging, enemies within 5 feet have disadvantage attacking anyone but you."
+                "shortDescription": "While raging, any creature within 5 feet of you that is hostile to you has disadvantage on attack rolls against targets other than you or another character with this feature.",
+                "fullText": "While you're raging, any creature within 5 feet of you that's hostile to you has disadvantage on attack rolls against targets other than you or another character with this feature. An enemy is immune to this effect if it can't see or hear you or if it can't be frightened."
             },
+            "isStartingProficiency": false,
+            "implementation": {
+                "mode": "manual_sheet_helper",
+                "summary": "The disadvantage lands on enemies' attack rolls against other targets, which the sheet never sees. One note while raging, carrying the immunity clause.",
+                "blockedBy": []
+            },
+            "tableNotes": [
+                {
+                    "text": "While raging, any creature within 5 feet of you that is hostile to you has disadvantage on attack rolls against targets other than you or another character with this feature, unless it cannot see or hear you or cannot be frightened.",
+                    "requiredStates": [
+                        "status_raging"
+                    ],
+                    "forbiddenStates": []
+                }
+            ],
             "modifiers": {
                 "fixed": [],
                 "choices": []
@@ -3203,15 +3351,26 @@
         },
         {
             "id": "trait_totemic_attunement_eagle",
-            "implementation": {
-                "mode": "unimplemented",
-                "summary": "Awaiting authoring.",
-                "blockedBy": []
-            },
             "name": "Totemic Attunement: Eagle",
             "lore": {
-                "shortDescription": "While raging, you gain a flying speed equal to your walking speed for one turn."
+                "shortDescription": "While raging, you have a flying speed equal to your current walking speed, in short bursts only; you fall if you end your turn in the air.",
+                "fullText": "While raging, you have a flying speed equal to your current walking speed. This benefit works only in short bursts; you fall if you end your turn in the air and nothing else is holding you aloft."
             },
+            "isStartingProficiency": false,
+            "implementation": {
+                "mode": "manual_sheet_helper",
+                "summary": "The engine has one SPEED and no flying speed, so the burst of flight is a note while raging rather than a modifier that would add to walking speed.",
+                "blockedBy": []
+            },
+            "tableNotes": [
+                {
+                    "text": "While raging, you have a flying speed equal to your current walking speed. It works only in short bursts: you fall if you end your turn in the air and nothing else is holding you aloft.",
+                    "requiredStates": [
+                        "status_raging"
+                    ],
+                    "forbiddenStates": []
+                }
+            ],
             "modifiers": {
                 "fixed": [],
                 "choices": []
@@ -3224,15 +3383,26 @@
         },
         {
             "id": "trait_totemic_attunement_wolf",
-            "implementation": {
-                "mode": "unimplemented",
-                "summary": "Awaiting authoring.",
-                "blockedBy": []
-            },
             "name": "Totemic Attunement: Wolf",
             "lore": {
-                "shortDescription": "While raging, you can knock a Large or smaller creature prone when you hit it."
+                "shortDescription": "While raging, you can use a bonus action on your turn to knock a Large or smaller creature prone when you hit it with a melee weapon attack.",
+                "fullText": "While you're raging, you can use a bonus action on your turn to knock a Large or smaller creature prone when you hit it with melee weapon attack."
             },
+            "isStartingProficiency": false,
+            "implementation": {
+                "mode": "manual_sheet_helper",
+                "summary": "The prone condition lands on the target, which the sheet has no model for, so the trip is a bonus action that rolls nothing and carries its rule as a tableNote; the economy tracks the bonus action as it does any other. A note while raging restates the rule beside the card.",
+                "blockedBy": []
+            },
+            "tableNotes": [
+                {
+                    "text": "While raging, when you hit a Large or smaller creature with a melee weapon attack, you can use a bonus action to knock it prone.",
+                    "requiredStates": [
+                        "status_raging"
+                    ],
+                    "forbiddenStates": []
+                }
+            ],
             "modifiers": {
                 "fixed": [],
                 "choices": []
@@ -3241,7 +3411,17 @@
             "triggers": [],
             "diceRules": [],
             "criticalHitModifiers": [],
-            "actions": []
+            "actions": [
+                {
+                    "id": "action_wolf_attunement_trip",
+                    "name": "Knock Prone (Wolf Totem)",
+                    "activation": "bonus_action",
+                    "tableNote": "Only while raging, and only after you hit a Large or smaller creature with a melee weapon attack this turn. The creature is knocked prone.",
+                    "effect": {
+                        "type": "no_effect"
+                    }
+                }
+            ]
         },
         {
             "id": "trait_elemental_attunement",

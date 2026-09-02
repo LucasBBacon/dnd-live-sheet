@@ -33,6 +33,39 @@ const findTrait = (id: string): TraitDefinition => {
   return TraitDefinitionSchema.parse(raw);
 };
 
+const PORTED_PATH = path.join(
+  process.cwd(),
+  "data/packs/core_2014_pack/traits/ported.json",
+);
+
+const portedSegment = JSON.parse(readFileSync(PORTED_PATH, "utf8")) as {
+  traits: unknown[];
+};
+
+const findPortedTrait = (id: string): TraitDefinition => {
+  const raw = portedSegment.traits.find(
+    (trait): trait is { id: string } =>
+      typeof trait === "object" &&
+      trait !== null &&
+      (trait as { id?: unknown }).id === id,
+  );
+
+  if (!raw) throw new Error(`trait '${id}' is not authored in ported.json`);
+
+  return TraitDefinitionSchema.parse(raw);
+};
+
+/** The shape every helper in this pass shares: a marker and at least one gated note. */
+const expectHelperWithNotes = (trait: TraitDefinition, gatedOnRage: boolean) => {
+  expect(trait.implementation?.mode).toBe("manual_sheet_helper");
+  expect(trait.lore?.shortDescription).not.toBe("placeholder");
+  expect((trait.tableNotes ?? []).length).toBeGreaterThan(0);
+  for (const note of trait.tableNotes ?? []) {
+    expect(note.text.length).toBeGreaterThan(20);
+    if (gatedOnRage) expect(note.requiredStates).toEqual(["status_raging"]);
+  }
+};
+
 describe("trait_reckless_attack", () => {
   const trait = findTrait("trait_reckless_attack");
 
@@ -228,5 +261,108 @@ describe("trait_extra_attack", () => {
 
   it("needs no action, because the benefit is passive", () => {
     expect(trait.actions).toEqual([]);
+  });
+});
+
+describe("trait_rage's ending is reported, not enforced", () => {
+  const trait = findTrait("trait_rage");
+
+  it("carries real rule text now", () => {
+    expect(trait.lore?.shortDescription).not.toBe("placeholder");
+  });
+
+  it("names the one-minute limit and the early ending while raging", () => {
+    const note = trait.tableNotes?.[0];
+    expect(note?.text).toMatch(/1 minute/);
+    expect(note?.text).toMatch(/attacked a hostile creature/);
+    expect(note?.requiredStates).toEqual(["status_raging"]);
+  });
+
+  it("withdraws that note once Persistent Rage is granted", () => {
+    expect(trait.tableNotes?.[0]?.forbiddenStates).toEqual(["status_persistent_rage"]);
+  });
+
+  it("keeps its resource, affinities and actions exactly as they were", () => {
+    expect(trait.resources.map((resource) => resource.id)).toEqual(["resource_barbarian_rage"]);
+    expect(trait.affinities?.fixed.map((grant) => grant.damageType)).toEqual([
+      "bludgeoning",
+      "piercing",
+      "slashing",
+    ]);
+    expect(trait.actions.map((action) => action.id)).toEqual(["action_rage", "action_end_rage"]);
+  });
+});
+
+describe("trait_persistent_rage", () => {
+  const trait = findTrait("trait_persistent_rage");
+
+  it("is a sheet helper with a raging-gated note", () => {
+    expectHelperWithNotes(trait, true);
+  });
+
+  it("grants the state Rage's ending note is withdrawn on", () => {
+    expect(trait.grantedStates).toEqual(["status_persistent_rage"]);
+  });
+});
+
+describe("the Totem Warrior helpers", () => {
+  it.each([
+    ["trait_totem_spirit_wolf", true],
+    ["trait_totemic_attunement_bear", true],
+    ["trait_totemic_attunement_eagle", true],
+    ["trait_totemic_attunement_wolf", true],
+    ["trait_aspect_of_the_beast_eagle", false],
+    ["trait_aspect_of_the_beast_wolf", false],
+  ])("%s is a helper with notes (gated on rage: %s)", (id, gated) => {
+    expectHelperWithNotes(findPortedTrait(id), gated);
+  });
+
+  it.each(["trait_spirit_seeker", "trait_spirit_walker"])(
+    "%s is a ritual helper authored beside the class",
+    (id) => {
+      const trait = findTrait(id);
+      expectHelperWithNotes(trait, false);
+      expect(trait.tableNotes?.[0]?.text).toMatch(/ritual/);
+    },
+  );
+
+  it("gives the wolf attunement a bonus action to knock a creature prone", () => {
+    const trait = findPortedTrait("trait_totemic_attunement_wolf");
+    const trip = trait.actions.find((action) => action.id === "action_wolf_attunement_trip");
+
+    expect(trip?.activation).toBe("bonus_action");
+    expect(trip?.effect.type).toBe("no_effect");
+    expect(trip?.tableNote).toMatch(/prone/);
+  });
+});
+
+describe("trait_totem_spirit_bear", () => {
+  const trait = findPortedTrait("trait_totem_spirit_bear");
+
+  it("is engine-backed through the affinity reporter", () => {
+    expect(trait.implementation?.mode).toBe("engine");
+  });
+
+  it("resists every damage type but psychic, only while raging", () => {
+    const types = (trait.affinities?.fixed ?? []).map((grant) => grant.damageType).sort();
+
+    expect(types).toEqual([
+      "acid",
+      "bludgeoning",
+      "cold",
+      "fire",
+      "force",
+      "lightning",
+      "necrotic",
+      "piercing",
+      "poison",
+      "radiant",
+      "slashing",
+      "thunder",
+    ]);
+    for (const grant of trait.affinities?.fixed ?? []) {
+      expect(grant.level).toBe("resistance");
+      expect(grant.requiredStates).toEqual(["status_raging"]);
+    }
   });
 });
