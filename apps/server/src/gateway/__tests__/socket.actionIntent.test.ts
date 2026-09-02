@@ -3,6 +3,7 @@ import { SOCKET_EVENTS } from "@project/shared";
 import {
   characterClasses,
   characterInventory,
+  characterResources,
   characters,
 } from "@project/database/src/schema/operational.js";
 import {
@@ -102,6 +103,61 @@ describe("socket gateway - ACTION_INTENT", () => {
     ]) {
       expect(resolved, `missing ${key}`).toHaveProperty(key);
     }
+  });
+
+  it("seeds runtime pools from the durable table, at their persisted charges", async () => {
+    await ready();
+    // Action Surge already spent: the table is the truth, and hydrating from
+    // trait grants instead would hand it back at full charges.
+    harness.db.seed(characterResources, [
+      {
+        id: "trait_action_surge",
+        characterId: "char-1",
+        name: "Action Surge",
+        current: 0,
+        max: 1,
+        resetCondition: "short_rest",
+      },
+    ]);
+
+    await harness.emit(SOCKET_EVENTS.ACTION_INTENT, intent());
+
+    expect(lastResolved(harness)["resources"]).toEqual([
+      expect.objectContaining({ id: "trait_action_surge", currentCharges: 0 }),
+    ]);
+  });
+
+  it("writes a spent resource back to the durable table", async () => {
+    harness = await setupGateway();
+    await joinCampaign(harness);
+    harness.db.seed(characters, [characterRow()]);
+    harness.db.seed(characterClasses, [
+      { classId: "class_barbarian", classLevel: 3 },
+    ]);
+    harness.db.seed(characterInventory, []);
+    harness.db.seed(characterResources, [
+      {
+        id: "resource_barbarian_rage",
+        characterId: "char-1",
+        name: "Rage",
+        current: 2,
+        max: 3,
+        resetCondition: "long_rest",
+      },
+    ]);
+
+    await harness.emit(
+      SOCKET_EVENTS.ACTION_INTENT,
+      intent({ actionId: "action_rage" }),
+    );
+
+    expect(lastResolved(harness)).toMatchObject({ executed: true });
+
+    // The runtime manager spending a charge is not enough: without a write the
+    // charge returns on the next request, when the table re-seeds the manager.
+    const updates = harness.db.opsFor(characterResources, "update");
+    expect(updates).toHaveLength(1);
+    expect(updates[0]?.set?.["current"]).toBe(1);
   });
 
   it("reports an unresolvable action without failing the request", async () => {

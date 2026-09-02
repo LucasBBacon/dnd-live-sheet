@@ -56,6 +56,25 @@ export class ResourceManager {
     }
   }
 
+  /**
+   * Replaces every pool with the character's persisted state.
+   *
+   * A total replacement, not a merge, and that is the point. The only other
+   * way in is `initializeFromGrants`, which *sums* max charges so overlapping
+   * pools combine - correct for multiclass spell slots, and ruinous when it
+   * runs twice on a long-lived manager, which is how the server came to double
+   * and refill every pool on every request. Replacing makes re-hydration
+   * idempotent by construction.
+   *
+   * Takes RuntimeResource rather than a database row so the engine stays
+   * ignorant of the table's column names; mapping is the caller's job.
+   */
+  public hydrateFromPersisted(persisted: RuntimeResource[]): void {
+    this.resources = new Map(
+      persisted.map((resource) => [resource.id, { ...resource }]),
+    );
+  }
+
   private resolveMaxCharges(
     maxRule: ResourceMaxRule,
     levels: ResourceLevelProfile,

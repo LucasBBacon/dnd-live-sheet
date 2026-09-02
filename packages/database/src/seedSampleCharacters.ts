@@ -728,7 +728,9 @@ const ROSTER: SampleCharacter[] = [
     ],
     resources: [
       {
-        id: "trait_rage",
+        // resource_barbarian_rage, not trait_rage: the pack's Rage action
+        // spends this id, and a pool under any other name is invisible to it.
+        id: "resource_barbarian_rage",
         name: "Rage",
         current: 1,
         max: 3,

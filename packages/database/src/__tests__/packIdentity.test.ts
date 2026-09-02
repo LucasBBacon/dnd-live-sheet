@@ -24,6 +24,23 @@ describe("the shipped pack authors every id exactly once", () => {
     expect(duplicates).toEqual([]);
   });
 
+  it("never lists the same item twice inside one bundle", async () => {
+    // bundle_contents is keyed (bundle_id, item_id), so a repeat is not merely
+    // untidy - it aborts db:import-pack on a duplicate-key violation, and that
+    // was the only thing catching it. The scholar's pack carried item_ink twice
+    // where its own lore says "a bottle of ink, an ink pen".
+    const pack = await assembleCoreRulePack(SHIPPED_PACK);
+
+    const repeated = pack.equipment.flatMap((entry) => {
+      const ids = entry.bundleContents.map((content) => content.itemId);
+      return [...new Set(ids.filter((id, index) => ids.indexOf(id) !== index))].map(
+        (id) => `${entry.id}/${id}`,
+      );
+    });
+
+    expect(repeated).toEqual([]);
+  });
+
   it("loads the armour segment the equipment tables depend on", async () => {
     // the manifest is a hand-maintained list, so a segment file can exist and
     // simply never be read - which is how armour went missing entirely

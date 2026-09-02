@@ -415,3 +415,45 @@ describe("ResourceManager.tickStartOfTurn", () => {
 });
 
 // #endregion
+
+describe("hydrateFromPersisted", () => {
+  const persisted = (overrides = {}) => ({
+    id: "resource_barbarian_rage",
+    name: "Rage",
+    maxCharges: 3,
+    currentCharges: 1,
+    resetOn: "long_rest" as const,
+    ...overrides,
+  });
+
+  it("seeds a pool at its persisted charges, not at full", () => {
+    manager.hydrateFromPersisted([persisted()]);
+
+    // 1 charge persisted: one consume succeeds, a second must not
+    expect(manager.consume("resource_barbarian_rage", 1)).toBe(true);
+    expect(manager.consume("resource_barbarian_rage", 1)).toBe(false);
+  });
+
+  it("replaces earlier state rather than accumulating onto it", () => {
+    // initializeFromGrants sums max charges for overlapping pools, so a
+    // repeated hydrate would otherwise grow the pool without bound - the
+    // defect that made the server refill every resource on every request.
+    manager.initializeFromGrants([makeGrant({ id: "resource_barbarian_rage", maxRule: { kind: "fixed", value: 3 } })]);
+    manager.hydrateFromPersisted([persisted()]);
+    manager.hydrateFromPersisted([persisted()]);
+
+    const pools = manager.getRuntimeResources();
+    expect(pools).toHaveLength(1);
+    expect(pools[0]!.maxCharges).toBe(3);
+    expect(pools[0]!.currentCharges).toBe(1);
+  });
+
+  it("drops pools the persisted state no longer carries", () => {
+    manager.initializeFromGrants([makeGrant({ id: "resource_gone" })]);
+    manager.hydrateFromPersisted([persisted()]);
+
+    expect(manager.getRuntimeResources().map((r) => r.id)).toEqual([
+      "resource_barbarian_rage",
+    ]);
+  });
+});

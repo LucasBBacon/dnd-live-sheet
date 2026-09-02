@@ -238,6 +238,34 @@ const getAuthoritativeRuntimeContext = async (
     .from(characterClasses)
     .where(eq(characterClasses.characterId, characterId));
 
+  const resourceRows = await db
+    .select({
+      id: characterResources.id,
+      name: characterResources.name,
+      current: characterResources.current,
+      max: characterResources.max,
+      resetCondition: characterResources.resetCondition,
+    })
+    .from(characterResources)
+    .where(eq(characterResources.characterId, characterId));
+
+  /**
+   * The character's pools as the database holds them.
+   *
+   * character_resources is the durable record - RESOURCE_CONSUMED decrements
+   * it and REST_COMPLETED sweeps it - so it, not the trait grants, is what the
+   * runtime manager must reflect. Hydrating from grants instead produced pools
+   * at full charges, handing back every rage and ki point the character had
+   * already spent.
+   */
+  const persistedResources = resourceRows.map((row) => ({
+    id: row.id,
+    name: row.name,
+    maxCharges: row.max,
+    currentCharges: row.current,
+    resetOn: row.resetCondition,
+  }));
+
   const nextSave = toCharacterSave(character, classRows);
   const existing = authoritativeRuntimeByCharacter.get(characterId);
 
@@ -249,6 +277,7 @@ const getAuthoritativeRuntimeContext = async (
       existing.effectManager,
       existing.resourceManager,
     );
+    existing.resourceManager.hydrateFromPersisted(persistedResources);
     return existing;
   }
 
@@ -259,6 +288,7 @@ const getAuthoritativeRuntimeContext = async (
     effectManager,
     resourceManager,
   );
+  resourceManager.hydrateFromPersisted(persistedResources);
 
   const runtime: AuthoritativeRuntimeContext = {
     save: nextSave,
@@ -656,6 +686,20 @@ export function initializeWebSocketGateway(httpServer: any) {
 
           const ledger = buildInventoryLedger(inventory);
 
+          /**
+           * Charges as they stood before the resolver spent any.
+           *
+           * The manager is the only place a spend lands - consume() mutates it
+           * in memory and writes nothing - so without this diff the charge is
+           * handed straight back the next time the runtime re-seeds from the
+           * table.
+           */
+          const chargesBefore = new Map(
+            runtime.resourceManager
+              .getRuntimeResources()
+              .map((resource) => [resource.id, resource.currentCharges]),
+          );
+
           // settleCosts checks a chosen ammunition stack against its pack
           // definition - the ammo tag lives there, not on the inventory row -
           // so without the snapshot no definition ever resolves and every shot
@@ -777,6 +821,29 @@ export function initializeWebSocketGateway(httpServer: any) {
                     timestamp: Date.now(),
                   } satisfies ItemConsumedPayload,
                 );
+              }
+
+              // Resources settle the same way inventory does: the resolver
+              // spends them in memory, and this is where that spend becomes
+              // durable. Only the pools whose charges actually moved are
+              // written, so an action that spends nothing touches no rows.
+              const spentResources = runtime.resourceManager
+                .getRuntimeResources()
+                .filter(
+                  (resource) =>
+                    chargesBefore.get(resource.id) !== resource.currentCharges,
+                );
+
+              for (const resource of spentResources) {
+                await db
+                  .update(characterResources)
+                  .set({ current: resource.currentCharges })
+                  .where(
+                    and(
+                      eq(characterResources.id, resource.id),
+                      eq(characterResources.characterId, payload.characterId),
+                    ),
+                  );
               }
 
               // A heal rolls its total but never writes HP itself - see the

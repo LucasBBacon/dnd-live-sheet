@@ -1,5 +1,8 @@
 import { describe, it, expect, vi } from "vitest";
+import path from "node:path";
 import { normalizeStartingEquipment } from "../utils/startingEquipment.js";
+import { assembleCoreRulePack } from "../corePackAssembler.js";
+import { ROSTER } from "../seedSampleCharacters.js";
 
 // Helper functions from seed.ts (re-implemented for testing)
 const normalizeSpeed = (speed: unknown): number => {
@@ -398,5 +401,47 @@ describe("Seed Helper Functions", () => {
         "trait_fighter_mult_prof_weapons",
       ]);
     });
+  });
+});
+
+describe("sample resources answer to the pack's ids", () => {
+  /**
+   * A pool is only spendable if its id is the one an action names.
+   *
+   * The barbarian was seeded with a "trait_rage" pool while the pack's Rage
+   * action spends "resource_barbarian_rage", so the action could never find
+   * it - and, before the runtime manager was seeded from the table at all,
+   * nothing surfaced the mismatch. The pack's vocabulary is authoritative.
+   */
+  it("seeds every consumable pool under the id its action spends", async () => {
+    const pack = await assembleCoreRulePack(
+      path.join(process.cwd(), "data/packs/core_2014_pack"),
+    );
+
+    const consumed = new Set<string>();
+    for (const trait of pack.traits) {
+      for (const action of trait.actions ?? []) {
+        if (action.consumesResource) consumed.add(action.consumesResource);
+      }
+    }
+
+    const seeded = new Set(
+      ROSTER.flatMap((entry) => (entry.resources ?? []).map((r) => r.id)),
+    );
+
+    // Only pools a roster character actually carries are in scope: the pack
+    // consumes dragonborn breath charges, and no sample character is one.
+    const shadowed = [...consumed].filter(
+      (id) =>
+        !seeded.has(id) &&
+        [...seeded].some(
+          (seededId) =>
+            seededId !== id &&
+            (id.includes(seededId.replace(/^trait_/, "")) ||
+              seededId.includes(id.replace(/^resource_/, ""))),
+        ),
+    );
+
+    expect(shadowed).toEqual([]);
   });
 });
