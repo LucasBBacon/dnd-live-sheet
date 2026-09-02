@@ -14,6 +14,7 @@ import { CriticalHitModifierSchema, DiceRuleSchema } from "./dice.js";
 import { ActionGrantSchema } from "./actions.js";
 import { SpellGrantBlockSchema } from "./spells.js";
 import { LoreSchema } from "../primitives/lore.js";
+import { StatePredicateSchema } from "../primitives/statePredicate.js";
 
 export const TraitImplementationMetadataSchema = z.object({
   /**
@@ -30,6 +31,22 @@ export const TraitImplementationMetadataSchema = z.object({
   summary: z.string(),
   blockedBy: z.array(z.string()).default([]),
 });
+
+/**
+ * Player-facing rule text the engine cannot enforce, shown on the sheet while
+ * its predicate holds.
+ *
+ * Distinct from `implementation.summary`, which explains delivery to a
+ * maintainer, and from an action's `tableNote`, which belongs to one action's
+ * execution. Wolf totem's "your allies have advantage" lands on rolls this
+ * single-character sheet never sees; this is how it reaches the table anyway.
+ */
+export const TableNoteSchema = z.object({
+  text: z.string().min(1).max(240),
+  ...StatePredicateSchema.shape,
+});
+
+export type TableNote = z.infer<typeof TableNoteSchema>;
 
 export const TraitDefinitionSchema = z.object({
   id: z.string(),
@@ -55,6 +72,13 @@ export const TraitDefinitionSchema = z.object({
    * to declare it.
    */
   grantedStates: z.array(z.string()).optional(),
+
+  /**
+   * Rules reported at the table rather than applied by a calculator. Optional
+   * for the reason `grantedStates` is: a default would make it required on
+   * every hand-written trait literal.
+   */
+  tableNotes: z.array(TableNoteSchema).optional(),
 
   proficiencies: z
     .object({
