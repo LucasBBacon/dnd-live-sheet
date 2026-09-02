@@ -22,6 +22,7 @@ export * from "./calculators/combatContext.js";
 export * from "./calculators/itemRequirements.js";
 export * from "./calculators/surprise.js";
 export * from "./calculators/affinities.js";
+export * from "./calculators/tableRules.js";
 export * from "./calculators/rests.js";
 export * from "./calculators/skills.js";
 export * from "./calculators/saves.js";
