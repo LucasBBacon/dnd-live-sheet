@@ -13,6 +13,7 @@ export type EncumbranceTier =
 
 /** Granted by trait_powerful_build; read here and nowhere else. */
 export const POWERFUL_BUILD_STATE = "powerful_build";
+/** Granted by trait_aspect_of_the_beast_bear; read here and nowhere else. */
 export const CARRYING_CAPACITY_DOUBLED_STATE = "carrying_capacity_doubled";
 
 export interface EncumbranceRules {
@@ -35,6 +36,7 @@ export interface EncumbranceInput {
   strScore: number;
   size: CreatureSize;
   hasPowerfulBuild: boolean;
+  /** Aspect of the Beast (Bear). A second multiplier beside size, not a size change. */
   hasCarryingCapacityDoubled?: boolean;
   rules?: EncumbranceRules;
 }

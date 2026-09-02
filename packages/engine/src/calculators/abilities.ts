@@ -1,24 +1,27 @@
 import type { Ability } from "../types/core.js";
 import type { RuntimeModifier } from "@project/shared";
 
-/**
- * Determines the maximum ability score cap based on active states.
- * @param activeStates An array of strings representing the current active states that may influence ability score caps.
- * @returns The maximum ability score cap as a number, defaulting to 20 if no relevant states are active.
- */
 interface CapRule {
   state: string;
   cap: number;
+  /** Absent means the cap applies to every ability. */
   abilities?: Ability[];
 }
 
 const CAP_RULES: CapRule[] = [
+  // Primal Champion: "your maximum for those scores is now 24" - those two only
   { state: "barbarian_capstone", cap: 24, abilities: ["STR", "CON"] },
   { state: "tome", cap: 24 },
   { state: "ability_cap_24", cap: 24 },
   { state: "ability_cap_30", cap: 30 },
 ];
 
+/**
+ * The highest cap any active state grants for this ability, 20 otherwise.
+ * @param activeStates The character's active states.
+ * @param target The ability being capped, which per-ability rules gate on.
+ * @returns The maximum score this ability may reach.
+ */
 const getStateDrivenAbilityCap = (
   activeStates: string[] = [],
   target?: Ability,

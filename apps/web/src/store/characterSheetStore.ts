@@ -736,29 +736,49 @@ export const useCharacterSheetStore = create<CharacterSheetState>(
     initialize: (payload) =>
       set((state) => {
         const next = { ...state, ...payload };
+        const itemActions = computeItemActions(next.inventory, next.ruleSnapshot);
+
+        // No pack, nothing to compile against: every resolver in ruleLookup
+        // answers undefined without a snapshot, so the walk below could only
+        // ever return an empty list. The sheet hydrates twice - once bare,
+        // then again with the snapshot - and this is the bare pass.
+        if (!next.ruleSnapshot) return { ...next, itemActions };
+
         const activeTraits = CharacterBootstrapper.compileActiveTraits(
           toCharacterSave(next),
-          next.ruleSnapshot ?? undefined,
+          next.ruleSnapshot,
         );
+        // the server counts the same way (getAuthoritativeRuntimeContext), so
+        // the two materialisations agree on a class_level_thresholds pool
         const totalLevel = Object.values(next.classLevels).reduce(
           (sum, level) => sum + level,
           0,
         );
         const missingPools = materialiseMissingPools(
           next.resources.map((resource) => resource.id),
-          collectGrantedResources(activeTraits, next.ruleSnapshot ?? undefined),
+          collectGrantedResources(activeTraits, next.ruleSnapshot),
           totalLevel,
           next.classLevels,
         );
+
+        // Hand back the same array when nothing was added. useFeatures and
+        // RestModal select `resources` under zustand's default Object.is, and
+        // TraitWidget calls initialize from an effect on every modifier
+        // change, so a fresh array here re-renders them both for nothing.
+        if (missingPools.length === 0) return { ...next, itemActions };
+
         return {
           ...next,
-          resources: [...next.resources, ...missingPools.map((pool) => ({
-            id: pool.id,
-            name: pool.name,
-            current: pool.current,
-            currentCharges: pool.current,
-          }))],
-          itemActions: computeItemActions(next.inventory, next.ruleSnapshot),
+          resources: [
+            ...next.resources,
+            ...missingPools.map((pool) => ({
+              id: pool.id,
+              name: pool.name,
+              current: pool.current,
+              currentCharges: pool.current,
+            })),
+          ],
+          itemActions,
         };
       }),
 

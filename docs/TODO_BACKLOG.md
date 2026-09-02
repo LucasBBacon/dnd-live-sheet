@@ -178,7 +178,7 @@ burndown is large enough that an honest estimate is worth having.
 
 ### Tier 1 — make the burndown honest (hours, not days)
 
-**Tier 1 is closed as of 2026-09-02.** It found a live defect on the way — the elf race granted a stub and elves received no languages. **Tier 2 (#30) is now the top of the list.**
+**Tier 1 is closed as of 2026-09-02.** It found a live defect on the way — the elf race granted a stub and elves received no languages. **Tier 2 (#30) is now the top of the list**, and its first class is under way: `feat/barbarian-traits` closed 15 of the barbarian's 21 stubs and built the table-note surface, the affinity and table-rule reporters, and the resource-snapshot fixes that the other eleven classes inherit.
 
 | Order | Item | Why first |
 | --- | --- | --- |
@@ -190,12 +190,14 @@ burndown is large enough that an honest estimate is worth having.
 
 | Order | Item | Scale | Why here |
 | --- | --- | --- | --- |
-| 4 | **#30** — reachable trait stubs | **462** | Re-measured 2026-09-02, after #57 and #51. The count *rose* from 456 because 119 silent stubs were marked while 113 unreferenced ones were deleted — so it now means "granted to a character and does nothing" rather than "tagged by the port". Every one is reachable. Per-class breakdown below. |
+| 4 | **#30** — reachable trait stubs | **447** | Re-measured 2026-09-02 after the barbarian pass, which closed 15 and deleted the two Primal Path signposts: 462 → 447, of 585 traits rather than 587. The earlier rise from 456 came from marking 119 silent stubs while deleting 113 unreferenced ones, so the number means "granted to a character and does nothing" rather than "tagged by the port". Every one is reachable. Per-class breakdown below. |
 | 5 | **#31** — spells | **111 of 111** | Two passes, not one. `level` is `0` for every spell and `school` is `evocation` for every spell, so these need real **data** before they can carry rules — which is why this sits behind #30 despite the smaller number. |
 | 6 | **#36** — `SUMMON_ACTOR_DICTIONARY` into the pack | — | The last live rules content outside the pack, two real readers, re-verified 2026-09-02. Until it moves, "packs are the only source of rules" carries an asterisk. |
 
-**Where the 464 referenced stubs sit**, so #30 can be picked up by whoever is
-playing what:
+**Where the remaining stubs sit**, so #30 can be picked up by whoever is
+playing what. Only the barbarian row was re-counted on 2026-09-02; the other
+eleven are as measured before that pass and each still carries its subclass
+signposts:
 
 | Class | Stubs | Class | Stubs |
 | --- | --- | --- | --- |
@@ -205,11 +207,28 @@ playing what:
 | cleric | 47 | paladin | 32 |
 | fighter | 41 | bard | 25 |
 | | | druid | 24 |
-| | | **barbarian** | **21** |
+| | | **barbarian** | **6** |
 
-Barbarian is both the smallest and the worked example, so it is the cheapest
-class to finish and the one to copy from. Races are nearly done — 9 stubs
-across elf, halfling, gnome and the shared core file.
+Barbarian is the worked example and is now most of the way down. Fifteen of
+its 21 closed on `feat/barbarian-traits`: nine sheet helpers carrying table
+notes, Bear totem's twelve resistances, Primal Champion, Eagle totem, the
+Bear aspect, and the two Primal Path signposts deleted outright. Six remain,
+each waiting on engine vocabulary the branch specified but did not build:
+
+| Trait | Waiting on |
+| --- | --- |
+| `trait_berserker_frenzy` | dynamic weapon attacks (spec §5) |
+| `trait_berserker_retaliation` | dynamic weapon attacks (spec §5) |
+| `trait_berserker_mindless_rage` | condition suppression (spec §4) |
+| `trait_indomitable_might` | the `minimum_total` dice rule (spec §4) |
+| `trait_berserker_intimidating_presence` | save modifiers in the resolver (spec §3) |
+| `trait_relentless_rage` | uses-mode resources and `self_save` (spec §3) |
+
+The design for all six is settled in
+`docs/superpowers/specs/2026-09-02-barbarian-traits-design.md` and planned as
+Slices 4 to 8 in `docs/superpowers/plans/2026-09-02-barbarian-traits.md`.
+Races are nearly done — 9 stubs across elf, halfling, gnome and the shared
+core file.
 
 ### Tier 3 — small, and each closes a loose end
 
@@ -535,6 +554,41 @@ Two smaller findings, recorded but lower value:
   the Recommended sequence.** It is worse than recorded here: `"armor"` is not
   a `CharacterSlot` at all, so no armour can be equipped either. Promoted to
   the top of the sequence; this is no longer a "smaller finding".
+
+---
+
+## Open — a rebuilt selection is credited to every node that offers the trait
+
+Found 2026-09-02 by the review of the barbarian pass, in code that pass merged
+rather than wrote.
+
+`CharacterBootstrapper.selectionsFromChosenTraitIds` recovers which
+`trait_choice` node a player answered by intersecting each unlocked node's
+options with the flat set of `character_traits` rows whose source is
+`player_choice`. The row records the trait and nothing else, so when two nodes
+offer the same trait id the pick is credited to **both**. 78 trait ids in the
+pack are offered by more than one node.
+
+| Case | What happens |
+| --- | --- |
+| Fighter 1 / Ranger 2 who took `trait_fs_defense` once | Credited to `fighter_level_1_fighting_style` *and* `ranger_level_2_fighting_style` |
+| Battle Master 15 | The maneuver nodes at 3, 7, 10 and 15 share an option list, so all nine picks land on all four nodes |
+
+`resolveGrantedTraitIds` dedupes by `Set`, so no modifier is applied twice and
+no sheet number is wrong today. What is wrong is the **save**: its `selections`
+no longer describe what the player chose, and `collectSaveIssues` will report
+`wrong_selection_count` against a save the store itself just built. Both the
+server (`getAuthoritativeRuntimeContext`) and the web store rebuild selections
+this way, so they agree with each other and are wrong together.
+
+**The barbarian is unaffected** — the three Totem Warrior nodes have disjoint
+option sets — which is why the pass that introduced the helper did not see it.
+
+Two ways out: persist the answered `nodeId` on the `character_traits` row (a
+migration, and the honest fix), or scope the intersection to the lowest-level
+node that offers the id (no migration, wrong for a deliberate retake). Worth
+settling before the fighter or the ranger pass, both of which are fighting-style
+classes.
 
 ---
 
@@ -1123,6 +1177,11 @@ were marked, and the number now means "traits that are granted to a character
 and do nothing" rather than "traits the port happened to tag". The workable
 burndown is 462 rather than the 464 estimated, and every one of them is
 reachable.
+
+> Superseded later the same day by the barbarian pass: 587 traits became 585
+> when the two Primal Path signposts were deleted, and the 462 became **447**.
+> The table above is the state immediately after #57 and #51, kept as the
+> record of that cleanup; Tier 2 carries the current figure.
 
 #### #51's judgement call, made conservatively
 

@@ -3183,12 +3183,12 @@
             "name": "Totem Spirit: Eagle",
             "lore": {
                 "shortDescription": "While raging and not wearing heavy armour, other creatures have disadvantage on opportunity attack rolls against you, and you can use a bonus action on your turn to Dash.",
-                "fullText": "While you're raging and aren't wearing heavy armor, other creatures have disadvantage on opportunity attack rolls against you, and you can use the Dash action as a bonus action on your turn."
+                "fullText": "While you're raging and aren't wearing heavy armor, other creatures have disadvantage on opportunity attack rolls against you, and you can use the Dash action as a bonus action on your turn. The spirit of the eagle makes you into a predator who can weave through the fray with ease."
             },
             "isStartingProficiency": false,
             "implementation": {
                 "mode": "engine",
-                "summary": "The bonus-action Dash is gated on status_raging and forbidden under status_wearing_heavy_armor. The opportunity-attack half is a table note with the same gate.",
+                "summary": "The bonus-action Dash is action_eagle_dash: the standard Dash effect (SPEED x2 until the end of the turn, status_dashing) gated on status_raging and forbidden under status_wearing_heavy_armor. The opportunity-attack half lands on other creatures rolls, so it is a table note with the same gate. The heavy-armour gate holds on the sheet; the server composes action states from the effect manager alone, and status_wearing_heavy_armor comes from the inventory, so it does not block there.",
                 "blockedBy": [
                     "status_wearing_heavy_armor"
                 ]

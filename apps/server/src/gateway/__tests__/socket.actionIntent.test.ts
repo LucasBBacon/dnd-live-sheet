@@ -515,4 +515,52 @@ describe("socket gateway - ACTION_INTENT", () => {
     expect(resolved).toMatchObject({ executed: true, actionId: "action_eagle_dash" });
     expect(resolved["activeStates"]).toContain("status_dashing");
   });
+
+  it("does not allow Eagle Dash while wearing heavy armour", async () => {
+    harness = await setupGateway();
+    await joinCampaign(harness);
+    harness.db.seed(characters, [characterRow()]);
+    harness.db.seed(characterClasses, [
+      {
+        classId: "class_barbarian",
+        classLevel: 3,
+        subclassId: "subclass_barbarian_totem_warrior",
+      },
+    ]);
+    harness.db.seed(characterTraits, [
+      { traitId: "trait_totem_spirit_eagle", source: "player_choice" },
+    ]);
+    harness.db.seed(characterInventory, [
+      {
+        id: "armour-1",
+        itemId: "item_armor_plate",
+        quantity: 1,
+        slot: "body",
+        isAttuned: false,
+      },
+    ]);
+    harness.db.seed(characterResources, [
+      {
+        id: "resource_barbarian_rage",
+        characterId: "char-1",
+        name: "Rage",
+        current: 3,
+        max: 3,
+        resetCondition: "long_rest",
+      },
+    ]);
+
+    await harness.emit(
+      SOCKET_EVENTS.ACTION_INTENT,
+      intent({ actionId: "action_rage", requestId: "req-rage" }),
+    );
+    await harness.emit(
+      SOCKET_EVENTS.ACTION_INTENT,
+      intent({ actionId: "action_eagle_dash", requestId: "req-dash" }),
+    );
+
+    expect(lastResolved(harness)["activeStates"]).not.toContain(
+      "status_dashing",
+    );
+  });
 });

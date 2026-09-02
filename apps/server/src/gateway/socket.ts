@@ -472,6 +472,7 @@ const resolveItemAction = async (
     action: entry?.action ?? null,
     diceRules: resolved.diceRules,
     attacksPerAction: resolved.attacksPerAction,
+    baseStates: liveSheet.baseStates,
     inventory: resolved.inventory,
   };
 };
@@ -702,6 +703,9 @@ export function initializeWebSocketGateway(httpServer: any) {
             diceRules = resolved.diceRules;
             attacksPerAction = resolved.attacksPerAction;
             inventory = resolved.inventory;
+            actionStates = [
+              ...new Set([...actionStates, ...resolved.liveSheet.baseStates]),
+            ];
           } else if (payload.source === "item") {
             if (!payload.instanceId) {
               throw new Error("Item action intent missing instanceId.");
@@ -717,6 +721,9 @@ export function initializeWebSocketGateway(httpServer: any) {
             diceRules = resolved.diceRules;
             attacksPerAction = resolved.attacksPerAction;
             inventory = resolved.inventory;
+            actionStates = [
+              ...new Set([...actionStates, ...resolved.baseStates]),
+            ];
           } else {
             if (!payload.actorInstanceId) {
               throw new Error("Actor action intent missing actorInstanceId.");
