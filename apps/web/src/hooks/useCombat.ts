@@ -4,6 +4,8 @@ import { useCharacterSheetStore } from "../store/characterSheetStore";
 import { useAbilities, useDerivedStats } from "./useCharacterStats";
 import {
   CombatEngine,
+  dynamicAttackApplies,
+  dynamicAttackId,
   resolveWeaponDefinition,
   type Ability,
 } from "@project/engine";
@@ -21,6 +23,8 @@ export const useCombat = () => {
   const activeStates = useCharacterSheetStore((state) => state.activeStates);
   const classLevels = useCharacterSheetStore((state) => state.classLevels);
   const ruleSnapshot = useCharacterSheetStore((state) => state.ruleSnapshot);
+  const getActiveTraits = useCharacterSheetStore((state) => state.getActiveTraits);
+  const subclassIds = useCharacterSheetStore((state) => state.subclassIds);
 
   // compose the prerequisite math engines
   const { finalAbilities, totalMods } = useAbilities();
@@ -54,6 +58,13 @@ export const useCombat = () => {
     const criticalHitModifiers = activeTraits.flatMap(
       (trait) => trait.criticalHitModifiers ?? [],
     );
+
+    // read through the store's compile, the same traits the server
+    // synthesises its swings from, so a subclass feature like Frenzy is
+    // never missed here
+    const dynamicTemplates = getActiveTraits()
+      .flatMap((trait) => trait.actions ?? [])
+      .filter((action) => action.effect.type === "dynamic_weapon_attack");
 
     // 2 - map equipped items to their combat matrices
     const attacks = equippedHands.reduce((acc, item) => {
@@ -149,6 +160,28 @@ export const useCombat = () => {
         ammoInventoryId,
       });
 
+      // one further card per template that offers a swing with this weapon:
+      // the weapon card's own numbers, the template's activation, and the id
+      // the server gives the swing it synthesises, so pressing the card
+      // resolves it. Only melee weapons qualify, so there is no ammunition.
+      for (const template of dynamicTemplates) {
+        if (template.effect.type !== "dynamic_weapon_attack") continue;
+        if (!dynamicAttackApplies(template.effect, weaponDef, activeStates)) {
+          continue;
+        }
+
+        acc.push({
+          ...derivedAttack,
+          name: `${template.name}: ${weaponDef.name}`,
+          slot: item.slot,
+          activation: template.activation,
+          actionId: dynamicAttackId(template.id, item.id),
+          requiresAmmo: false,
+          currentAmmo: 0,
+          ammoInventoryId: null,
+        });
+      }
+
       return acc;
     }, [] as any[]);
 
@@ -164,5 +197,7 @@ export const useCombat = () => {
     profBonus,
     totalMods,
     ruleSnapshot,
+    getActiveTraits,
+    subclassIds,
   ]);
 };

@@ -20,6 +20,8 @@ let mockStoreState: {
   ruleSnapshot: {
     equipmentById?: Record<string, unknown>;
   } | null;
+  getActiveTraits: () => unknown[];
+  subclassIds: Record<string, string | null>;
 };
 
 let mockTotalMods: unknown[] = [];
@@ -66,6 +68,8 @@ describe("useCombat", () => {
       classLevels: {},
       // weapons resolve from the pack now; a null snapshot yields no attacks
       ruleSnapshot: packRuleSnapshot(),
+      getActiveTraits: () => [],
+      subclassIds: {},
     };
     mockTotalMods = [];
   });
@@ -226,5 +230,88 @@ describe("useCombat class-level scaling", () => {
 
     expect(attacks[0].damageBonus).toBe(5);
     expect(attacks[0].breakdown.damage).toContain("Rage (+2)");
+  });
+});
+
+describe("useCombat and dynamic weapon attacks", () => {
+  const packTrait = (id: string) => {
+    const trait = packRuleSnapshot().traitsById?.[id];
+    if (!trait) throw new Error(`${id} missing from the shipped pack`);
+    return trait;
+  };
+
+  const hold = (itemId: string) => {
+    mockStoreState.inventory = [
+      { id: "inv_1", itemId, quantity: 1, slot: "main_hand", isAttuned: false },
+    ];
+    mockStoreState.proficiencies = {
+      martial_melee: "proficient",
+      martial_ranged: "proficient",
+    };
+  };
+
+  beforeEach(() => {
+    const traits = [
+      packTrait("trait_berserker_frenzy"),
+      packTrait("trait_berserker_retaliation"),
+    ];
+    mockStoreState.getActiveTraits = () => traits;
+  });
+
+  it("adds a Frenzied Strike card for a held greataxe while frenzied", () => {
+    hold("item_weapon_greataxe");
+    mockStoreState.activeStates = ["status_frenzied"];
+
+    const card = useCombat().attacks.find(
+      (attack) => attack.actionId === "action_frenzied_strike:inv_1",
+    );
+
+    expect(card).toMatchObject({
+      name: "Frenzied Strike: Greataxe",
+      activation: "bonus_action",
+      slot: "main_hand",
+    });
+  });
+
+  it("adds no Frenzied Strike card once the frenzy is over", () => {
+    hold("item_weapon_greataxe");
+    mockStoreState.activeStates = [];
+
+    expect(
+      useCombat().attacks.some((attack) =>
+        String(attack.actionId).startsWith("action_frenzied_strike"),
+      ),
+    ).toBe(false);
+  });
+
+  it("adds no card of either kind for a bow", () => {
+    hold("item_weapon_longbow");
+    mockStoreState.activeStates = ["status_frenzied"];
+
+    expect(
+      useCombat().attacks.filter((attack) =>
+        String(attack.actionId).includes(":"),
+      ),
+    ).toEqual([]);
+  });
+
+  it("offers Retaliation as a reaction with the weapon card's own numbers", () => {
+    hold("item_weapon_greataxe");
+    mockStoreState.activeStates = [];
+
+    const { attacks } = useCombat();
+    const own = attacks.find(
+      (attack) => attack.actionId === "action_weapon_item_weapon_greataxe",
+    );
+    const retaliation = attacks.find(
+      (attack) => attack.actionId === "action_retaliation:inv_1",
+    );
+
+    expect(retaliation).toMatchObject({
+      name: "Retaliation: Greataxe",
+      activation: "reaction",
+      attackBonus: own.attackBonus,
+      damageExpression: own.damageExpression,
+    });
   });
 });

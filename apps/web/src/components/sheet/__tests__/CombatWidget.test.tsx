@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { createRoot } from "react-dom/client";
 import { act } from "react";
 import type { ActionGrant, ActorInstance } from "@project/shared";
@@ -614,5 +614,51 @@ describe("CombatWidget two-weapon fighting", () => {
     const container = await renderWidget();
 
     expect(container.textContent).not.toContain("Requires");
+  });
+});
+
+describe("CombatWidget activation badge", () => {
+  afterEach(() => {
+    mocks.attacks.current = null;
+  });
+
+  it("labels a reaction swing as a reaction", async () => {
+    mocks.attacks.current = [
+      {
+        weaponId: "item_weapon_longsword",
+        name: "Retaliation: Longsword",
+        attackBonus: 5,
+        rollState: "normal",
+        damageBonus: 3,
+        damageExpression: "1d8 +3 slashing",
+        criticalDamageExpression: "2d8 +3 slashing",
+        isProficient: true,
+        context: {
+          hand: "main_hand",
+          attackUsage: "standard",
+          isTwoHandedGrip: false,
+        },
+        breakdown: {
+          governingStat: "STR",
+          attack: ["STR (+3)", "Proficiency (+2)"],
+          damage: ["STR (+3)"],
+        },
+        slot: "main_hand",
+        activation: "reaction",
+        actionId: "action_retaliation:inv_1",
+        requiresAmmo: false,
+        currentAmmo: 0,
+        ammoInventoryId: null,
+      },
+    ];
+
+    const container = document.createElement("div");
+    document.body.appendChild(container);
+    const root = createRoot(container);
+    await act(async () => {
+      root.render(<CombatWidget />);
+    });
+
+    expect(container.textContent).toContain("REACTION");
   });
 });

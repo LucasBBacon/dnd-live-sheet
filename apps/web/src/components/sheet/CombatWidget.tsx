@@ -10,6 +10,13 @@ import { useRollStore } from "../../store/rollStore";
 
 const PROTECTION_TRAIT_ID = "trait_fs_protection";
 
+/** The activation badge on an attack card. Retaliation is the first reaction card. */
+const ACTIVATION_BADGE: Record<string, { short: string; long: string }> = {
+  action: { short: "ACTION", long: "Action" },
+  bonus_action: { short: "BONUS", long: "Bonus action" },
+  reaction: { short: "REACTION", long: "Reaction" },
+};
+
 const hasProtectionTrait = (
   traits: Array<{ id: string }>,
   traitGrants: Array<{ traitId: string }>,
@@ -520,9 +527,7 @@ export const CombatWidget = () => {
                     className="cursor-help"
                     onMouseEnter={(event) =>
                       showTooltip(event, "Action Type", [
-                        attack.activation === "bonus_action"
-                          ? "Bonus action"
-                          : "Action",
+                        ACTIVATION_BADGE[attack.activation]?.long ?? "Action",
                       ])
                     }
                     onMouseLeave={() => setTooltip(null)}
@@ -531,9 +536,7 @@ export const CombatWidget = () => {
                       ACT
                     </span>
                     <span className="font-bold text-gray-900">
-                      {attack.activation === "bonus_action"
-                        ? "BONUS"
-                        : "ACTION"}
+                      {ACTIVATION_BADGE[attack.activation]?.short ?? "ACTION"}
                     </span>
                   </div>
                   <div

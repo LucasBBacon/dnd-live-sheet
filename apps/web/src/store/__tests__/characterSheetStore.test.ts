@@ -1367,3 +1367,27 @@ describe("getActiveTraits with a subclass", () => {
     expect(ids).not.toContain("trait_totem_spirit_eagle");
   });
 });
+
+describe("getCharacterActions and dynamic templates", () => {
+  it("leaves the Berserker's swing templates to the attack cards", () => {
+    useCharacterSheetStore.getState().initialize({
+      id: "char_1",
+      level: 14,
+      classLevels: { class_barbarian: 14 },
+      subclassIds: { class_barbarian: "subclass_barbarian_berserker" },
+      traitGrants: [],
+      raceId: "race_human",
+      subraceId: null,
+      ruleSnapshot: packRuleSnapshot(),
+    });
+
+    const ids = useCharacterSheetStore
+      .getState()
+      .getCharacterActions()
+      .map((action) => action.id);
+
+    expect(ids).toContain("action_frenzied_rage");
+    expect(ids).not.toContain("action_frenzied_strike");
+    expect(ids).not.toContain("action_retaliation");
+  });
+});

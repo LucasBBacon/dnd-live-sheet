@@ -1261,7 +1261,11 @@ export const useCharacterSheetStore = create<CharacterSheetState>(
       return [
         ...STANDARD_ACTIONS,
         ...activeTraits.flatMap((trait) => trait.actions ?? []),
-      ];
+      ].filter(
+        // a dynamic_weapon_attack is a template: useCombat draws its concrete
+        // swings as attack cards, and the bare template has nothing to roll
+        (action) => action.effect.type !== "dynamic_weapon_attack",
+      );
     },
 
     executeCharacterAction: (actionId) => {
