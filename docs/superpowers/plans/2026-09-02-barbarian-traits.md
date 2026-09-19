@@ -3317,3 +3317,14 @@ other eleven classes carry 36 more; recorded in the backlog.
 
 Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>"
 ```
+
+---
+
+## Closing note (2026-09-19)
+
+This plan carried Slices 1 to 3. Slices 4 to 8 were never written here: they
+were implemented by hand, following the design spec directly, and committed as
+`46f2136`. The sheet surfaces those slices needed, and three corrections to
+that commit, are specified in
+`docs/superpowers/specs/2026-09-19-barbarian-sheet-surfaces-design.md` and
+planned in `docs/superpowers/plans/2026-09-19-barbarian-sheet-surfaces.md`.

@@ -178,7 +178,7 @@ burndown is large enough that an honest estimate is worth having.
 
 ### Tier 1 — make the burndown honest (hours, not days)
 
-**Tier 1 is closed as of 2026-09-02.** It found a live defect on the way — the elf race granted a stub and elves received no languages. **Tier 2 (#30) is now the top of the list**, and its first class is under way: `feat/barbarian-traits` closed 15 of the barbarian's 21 stubs and built the table-note surface, the affinity and table-rule reporters, and the resource-snapshot fixes that the other eleven classes inherit.
+**Tier 1 is closed as of 2026-09-02.** It found a live defect on the way — the elf race granted a stub and elves received no languages. **Tier 2 (#30) is now the top of the list**, and its first class is done: `feat/barbarian-traits` closed all 21 of the barbarian's stubs and built the table-note surface, the affinity and table-rule reporters, and the resource-snapshot fixes that the other eleven classes inherit.
 
 | Order | Item | Why first |
 | --- | --- | --- |
@@ -190,12 +190,12 @@ burndown is large enough that an honest estimate is worth having.
 
 | Order | Item | Scale | Why here |
 | --- | --- | --- | --- |
-| 4 | **#30** — reachable trait stubs | **447** | Re-measured 2026-09-02 after the barbarian pass, which closed 15 and deleted the two Primal Path signposts: 462 → 447, of 585 traits rather than 587. The earlier rise from 456 came from marking 119 silent stubs while deleting 113 unreferenced ones, so the number means "granted to a character and does nothing" rather than "tagged by the port". Every one is reachable. Per-class breakdown below. |
+| 4 | **#30** — reachable trait stubs | **441** | Re-measured 2026-09-19 after the barbarian pass closed all 21, two of them by deleting the Primal Path signposts: 462 → 441, of 585 traits rather than 587. The earlier rise from 456 came from marking 119 silent stubs while deleting 113 unreferenced ones, so the number means "granted to a character and does nothing" rather than "tagged by the port". Every one is reachable. Per-class breakdown below. |
 | 5 | **#31** — spells | **111 of 111** | Two passes, not one. `level` is `0` for every spell and `school` is `evocation` for every spell, so these need real **data** before they can carry rules — which is why this sits behind #30 despite the smaller number. |
 | 6 | **#36** — `SUMMON_ACTOR_DICTIONARY` into the pack | — | The last live rules content outside the pack, two real readers, re-verified 2026-09-02. Until it moves, "packs are the only source of rules" carries an asterisk. |
 
 **Where the remaining stubs sit**, so #30 can be picked up by whoever is
-playing what. Only the barbarian row was re-counted on 2026-09-02; the other
+playing what. Only the barbarian row was re-counted on 2026-09-19; the other
 eleven are as measured before that pass and each still carries its subclass
 signposts:
 
@@ -207,26 +207,24 @@ signposts:
 | cleric | 47 | paladin | 32 |
 | fighter | 41 | bard | 25 |
 | | | druid | 24 |
-| | | **barbarian** | **6** |
+| | | **barbarian** | **0** |
 
-Barbarian is the worked example and is now most of the way down. Fifteen of
-its 21 closed on `feat/barbarian-traits`: nine sheet helpers carrying table
-notes, Bear totem's twelve resistances, Primal Champion, Eagle totem, the
-Bear aspect, and the two Primal Path signposts deleted outright. Six remain,
-each waiting on engine vocabulary the branch specified but did not build:
+Barbarian is the worked example, and it is done: all 21 of its stubs closed
+on `feat/barbarian-traits`. Slices 1 to 3 built the table-note surface and
+closed fifteen: nine sheet helpers carrying table notes, Bear totem's
+twelve resistances, Primal Champion, Eagle totem, the Bear aspect, and the
+two Primal Path signposts deleted outright. The last six (Frenzy,
+Retaliation, Mindless Rage, Indomitable Might, Intimidating Presence and
+Relentless Rage) arrived with the engine vocabulary they needed: dynamic
+weapon attacks, condition suppression, the `minimum_total` dice rule, the
+`save` DC, `self_save` and uses-mode resources. Each reaches the sheet:
+attack cards, suspended conditions, a Relentless Rage save on the Rules
+panel, and a uses count in Class Features.
 
-| Trait | Waiting on |
-| --- | --- |
-| `trait_berserker_frenzy` | dynamic weapon attacks (spec §5) |
-| `trait_berserker_retaliation` | dynamic weapon attacks (spec §5) |
-| `trait_berserker_mindless_rage` | condition suppression (spec §4) |
-| `trait_indomitable_might` | the `minimum_total` dice rule (spec §4) |
-| `trait_berserker_intimidating_presence` | save modifiers in the resolver (spec §3) |
-| `trait_relentless_rage` | uses-mode resources and `self_save` (spec §3) |
+The designs are
+`docs/superpowers/specs/2026-09-02-barbarian-traits-design.md` and
+`docs/superpowers/specs/2026-09-19-barbarian-sheet-surfaces-design.md`.
 
-The design for all six is settled in
-`docs/superpowers/specs/2026-09-02-barbarian-traits-design.md` and planned as
-Slices 4 to 8 in `docs/superpowers/plans/2026-09-02-barbarian-traits.md`.
 Races are nearly done — 9 stubs across elf, halfling, gnome and the shared
 core file.
 

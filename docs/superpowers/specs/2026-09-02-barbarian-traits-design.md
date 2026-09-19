@@ -1,7 +1,9 @@
 # Barbarian Traits, and Rules the Engine Can Only Report
 
 Date: 2026-09-02
-Status: approved, ready to plan
+Status: implemented. Slices 1 to 3 from the plan, 4 to 8 by hand in
+`46f2136`; the sheet surfaces follow
+`2026-09-19-barbarian-sheet-surfaces-design.md`.
 Owner: Claude pair session
 
 ## Goal

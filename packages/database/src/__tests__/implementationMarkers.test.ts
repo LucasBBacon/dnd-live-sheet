@@ -137,8 +137,8 @@ describe("trait and spell implementation markers match their data", () => {
   it("records how much of the trait section carries no rules", async () => {
     const pack = await assembleCoreRulePack(SHIPPED_PACK);
 
-    // 447 of 585. The barbarian pass authored Primal Champion, Bear aspect
-    // and Eagle totem, then deleted the two obsolete Primal Path signposts.
+    // 441 of 585. The barbarian is at zero: all 21 of its stubs are authored
+    // or, for the two Primal Path signposts, deleted.
     expect(pack.traits.filter((trait) => !carriesRules(trait))).toHaveLength(
       441,
     );
