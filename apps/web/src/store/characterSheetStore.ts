@@ -11,13 +11,16 @@ import {
   suppressConditions,
   resolveEquipmentDefinition,
   collectGrantedResources,
+  getResourceMaxUses,
   materialiseMissingPools,
+  resolveResourceRule,
   slotsConsumedBy,
   type Ability,
   type ActionRollResult,
   type ItemActionGrant,
   type OperationalResource,
   type ProficiencyLevel,
+  type RuntimeResource,
   type SuspendedCondition,
 } from "@project/engine";
 import {
@@ -258,26 +261,97 @@ const hydrateRuntimeEffectsFromResolved = (
   return manager;
 };
 
-const alignRuntimeResources = (
+/**
+ * Puts the store's durable counts into the runtime resource manager.
+ *
+ * hydrateRuntimeManagers seeds pools from the trait grants at their defaults
+ * (a charges pool full, a uses pool at 0), and onto a manager that already
+ * holds a pool it adds the grant's maximum again and refills it. The counts
+ * the server sent are the record, so they have to win: seeded from grants, an
+ * hp change refilled a spent Rage and reset Relentless Rage's count, and a
+ * count could not be raised afterwards because restore clamps to a maximum
+ * a uses pool does not have. The server does the same with
+ * hydrateFromPersisted (getAuthoritativeRuntimeContext); the store keeps only
+ * the count, so name, maximum, reset and mode come from the rule snapshot,
+ * and from the grant for a pool the snapshot does not know.
+ *
+ * A granted pool the store does not hold yet keeps its default. A stored row
+ * with neither a rule nor a grant behind it stays out of the manager, and
+ * withRuntimeCounts leaves it as it is.
+ */
+const adoptStoredResources = (
   manager: ResourceManager,
-  targetResources: ActionResolvedPayload["resources"],
-) => {
-  const currentById = new Map(
-    manager
-      .getRuntimeResources()
-      .map((resource) => [resource.id, resource.currentCharges] as const),
+  stored: readonly OperationalResource[],
+  snapshot: SheetRuleSnapshot | null,
+  classLevels: Record<string, number>,
+): void => {
+  const granted = new Map(
+    manager.getRuntimeResources().map((pool) => [pool.id, pool] as const),
+  );
+  const counts = new Map(
+    stored.map((resource) => [resource.id, resource.current] as const),
+  );
+  // counted the way initialize counts, so a total-level pool agrees with it
+  const totalLevel = Object.values(classLevels).reduce(
+    (sum, level) => sum + level,
+    0,
   );
 
-  for (const target of targetResources) {
-    const current = currentById.get(target.id);
-    if (current === undefined) continue;
-
-    if (current > target.currentCharges) {
-      manager.consume(target.id, current - target.currentCharges);
-    } else if (current < target.currentCharges) {
-      manager.restore(target.id, target.currentCharges - current);
+  const pools: RuntimeResource[] = [];
+  for (const id of new Set([...counts.keys(), ...granted.keys()])) {
+    const rule = resolveResourceRule(id, snapshot ?? undefined);
+    const grant = granted.get(id);
+    if (rule) {
+      const maxCharges = getResourceMaxUses(rule, totalLevel, classLevels);
+      pools.push({
+        id,
+        name: rule.name,
+        maxCharges,
+        currentCharges:
+          counts.get(id) ?? (rule.mode === "uses" ? 0 : maxCharges),
+        resetOn: rule.resetCondition,
+        ...(rule.mode !== undefined && { mode: rule.mode }),
+      });
+    } else if (grant) {
+      pools.push({
+        ...grant,
+        currentCharges: counts.get(id) ?? grant.currentCharges,
+      });
     }
   }
+
+  manager.hydrateFromPersisted(pools);
+};
+
+/**
+ * The store's resources with the runtime manager's counts written back, and
+ * any pool the manager holds that the store did not yet, appended.
+ */
+const withRuntimeCounts = (
+  stored: readonly OperationalResource[],
+  manager: ResourceManager,
+): OperationalResource[] => {
+  const runtime = manager.getRuntimeResources();
+  const countById = new Map(
+    runtime.map((pool) => [pool.id, pool.currentCharges] as const),
+  );
+  const storedIds = new Set(stored.map((resource) => resource.id));
+
+  return [
+    ...stored.map((resource) => {
+      const count = countById.get(resource.id);
+      return count === undefined
+        ? resource
+        : { ...resource, current: count, currentCharges: count };
+    }),
+    ...runtime
+      .filter((pool) => !storedIds.has(pool.id))
+      .map((pool) => ({
+        id: pool.id,
+        current: pool.currentCharges,
+        currentCharges: pool.currentCharges,
+      })),
+  ];
 };
 
 /**
@@ -344,6 +418,12 @@ const dispatchAuthoredEvent = (
     runtimeResources,
     snapshot,
   );
+  adoptStoredResources(
+    runtimeResources,
+    state.resources,
+    state.ruleSnapshot,
+    state.classLevels,
+  );
 
   const activeTraits = CharacterBootstrapper.compileActiveTraits(
     nextSave,
@@ -404,11 +484,7 @@ const dispatchAuthoredEvent = (
       runtimeEffects,
       getConditionSuppressions(state),
     ),
-    resources: runtimeResources.getRuntimeResources().map((resource) => ({
-      id: resource.id,
-      current: resource.currentCharges,
-      currentCharges: resource.currentCharges,
-    })),
+    resources: withRuntimeCounts(state.resources, runtimeResources),
     runtimeEffects,
     runtimeResources,
   };
@@ -433,6 +509,14 @@ const resolveHealthTransition = (
       state.ruleSnapshot ?? undefined,
     );
   }
+  // a manager kept from an earlier hydration may hold counts the store has
+  // since moved past, so the store's are adopted either way
+  adoptStoredResources(
+    runtimeResources,
+    state.resources,
+    state.ruleSnapshot,
+    state.classLevels,
+  );
 
   let appliedHp = targetHp;
   let rollResults: ActionRollResult[] = [];
@@ -442,11 +526,7 @@ const resolveHealthTransition = (
     runtimeEffects,
     getConditionSuppressions(state),
   );
-  let resources = runtimeResources.getRuntimeResources().map((resource) => ({
-    id: resource.id,
-    current: resource.currentCharges,
-    currentCharges: resource.currentCharges,
-  }));
+  let resources = withRuntimeCounts(state.resources, runtimeResources);
 
   if (shouldDispatchTrigger) {
     const dispatched = dispatchAuthoredEvent(
@@ -1194,11 +1274,7 @@ export const useCharacterSheetStore = create<CharacterSheetState>(
       const runtimeResources = dispatched.runtimeResources;
 
       const updatedResources = RestEngine.applyRest(
-        runtimeResources.getRuntimeResources().map((resource) => ({
-          id: resource.id,
-          current: resource.currentCharges,
-          currentCharges: resource.currentCharges,
-        })),
+        dispatched.resources,
         restType,
         state.level,
         state.classLevels,
@@ -1369,7 +1445,12 @@ export const useCharacterSheetStore = create<CharacterSheetState>(
         state.ruleSnapshot ?? undefined,
       );
 
-      alignRuntimeResources(runtimeResources, payload.resources);
+      adoptStoredResources(
+        runtimeResources,
+        payload.resources,
+        state.ruleSnapshot,
+        state.classLevels,
+      );
 
       set((previous) => ({
         // the payload carries the server's effect states only, so the states
@@ -1520,7 +1601,12 @@ export const useCharacterSheetStore = create<CharacterSheetState>(
         state.ruleSnapshot ?? undefined,
       );
 
-      alignRuntimeResources(runtimeResources, payload.resources);
+      adoptStoredResources(
+        runtimeResources,
+        payload.resources,
+        state.ruleSnapshot,
+        state.classLevels,
+      );
 
       set((previous) => ({
         // conditions and base states are the player's, not the server's, so

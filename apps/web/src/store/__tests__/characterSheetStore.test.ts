@@ -1461,3 +1461,117 @@ describe("getCharacterActions and self-saves", () => {
     );
   });
 });
+
+describe("the store's resource counts survive runtime hydration", () => {
+  // Level 11: Rage has 4 charges and Relentless Rage is on the sheet. The
+  // counts are what the server sent, and nothing below should move them
+  // except a rest or the server's own resolution.
+  const RAGE = "resource_barbarian_rage";
+  const RELENTLESS = "resource_relentless_rage";
+
+  const countOf = (id: string) =>
+    useCharacterSheetStore
+      .getState()
+      .resources.find((resource) => resource.id === id)?.current;
+
+  beforeEach(() => {
+    vi.restoreAllMocks();
+    vi.spyOn(socketService, "emitHpModification").mockImplementation(() => {});
+    vi.spyOn(socketService, "emitRestCompleted").mockImplementation(() => {});
+    vi.spyOn(socketService, "emitRollResults").mockImplementation(() => {});
+
+    useCharacterSheetStore.setState({
+      runtimeEffects: null,
+      runtimeResources: null,
+      activeConditions: [],
+      baseStates: [],
+    });
+    useCharacterSheetStore.getState().initialize({
+      id: "char_1",
+      level: 11,
+      classLevels: { class_barbarian: 11 },
+      subclassIds: { class_barbarian: null },
+      traitGrants: [],
+      raceId: "race_human",
+      subraceId: null,
+      currentHp: 30,
+      maxHp: 100,
+      resources: [
+        { id: RAGE, current: 1 },
+        { id: RELENTLESS, current: 1 },
+      ],
+      ruleSnapshot: packRuleSnapshot(),
+    });
+  });
+
+  it("keeps a uses count through an hp change", () => {
+    useCharacterSheetStore.getState().applyHealthDelta(-5, "test");
+
+    expect(useCharacterSheetStore.getState().currentHp).toBe(25);
+    expect(countOf(RELENTLESS)).toBe(1);
+  });
+
+  it("keeps a spent charges pool through an hp change", () => {
+    useCharacterSheetStore.getState().applyHealthDelta(-5, "test");
+
+    expect(countOf(RAGE)).toBe(1);
+  });
+
+  it("keeps both counts through an authored event", () => {
+    useCharacterSheetStore.getState().dispatchAuthoredEvent("ON_ATTACK_HIT");
+
+    expect(countOf(RAGE)).toBe(1);
+    expect(countOf(RELENTLESS)).toBe(1);
+  });
+
+  it("keeps a count the server resolved through the next hp change", () => {
+    useCharacterSheetStore.getState().syncRemoteActionExecution({
+      characterId: "char_1",
+      requestId: "req_relentless",
+      actionId: "action_relentless_rage",
+      source: "character",
+      executed: true,
+      rollResults: [],
+      activeStates: [],
+      resources: [
+        { id: RAGE, current: 1, currentCharges: 1 },
+        { id: RELENTLESS, current: 2, currentCharges: 2 },
+      ],
+      effects: [],
+      actors: [],
+      combatContext: CombatContextSchema.parse({}),
+      timestamp: Date.now(),
+    });
+    useCharacterSheetStore.getState().applyHealthDelta(-5, "test");
+
+    expect(countOf(RAGE)).toBe(1);
+    expect(countOf(RELENTLESS)).toBe(2);
+  });
+
+  it("resets only the short-rest pool on a short rest", () => {
+    useCharacterSheetStore.getState().triggerRest("short");
+
+    expect(countOf(RAGE)).toBe(1);
+    expect(countOf(RELENTLESS)).toBe(0);
+  });
+
+  it("still resets both pools on a long rest", () => {
+    useCharacterSheetStore.getState().triggerRest("long");
+
+    expect(countOf(RAGE)).toBe(4);
+    expect(countOf(RELENTLESS)).toBe(0);
+  });
+
+  it("keeps a pack-level pool the traits do not carry through an hp change", () => {
+    useCharacterSheetStore.getState().initialize({
+      classLevels: { class_fighter: 2 },
+      subclassIds: { class_fighter: null },
+      level: 2,
+      resources: [{ id: "trait_action_surge", current: 0 }],
+    });
+
+    useCharacterSheetStore.getState().applyHealthDelta(-5, "test");
+
+    expect(countOf("trait_action_surge")).toBe(0);
+  });
+});
