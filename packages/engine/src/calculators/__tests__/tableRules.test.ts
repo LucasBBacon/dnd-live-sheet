@@ -74,6 +74,40 @@ describe("TableRulesEngine.describe", () => {
   });
 });
 
+describe("TableRulesEngine.describe: suppressions", () => {
+  it("reports each suspended condition by name, with what suspends it", () => {
+    expect(
+      TableRulesEngine.describe({
+        traits: [],
+        activeStates: [],
+        suspendedConditions: [{ condition: "frightened", source: "Mindless Rage" }],
+      }),
+    ).toEqual([
+      { kind: "suppression", source: "Mindless Rage", text: "Frightened is suspended." },
+    ]);
+  });
+
+  it("falls back to the id for a condition the map does not name", () => {
+    expect(
+      TableRulesEngine.describe({
+        traits: [],
+        activeStates: [],
+        suspendedConditions: [{ condition: "not_a_condition", source: "Test" }],
+      })[0]?.text,
+    ).toBe("not_a_condition is suspended.");
+  });
+
+  it("lists suppressions after notes and affinities", () => {
+    const lines = TableRulesEngine.describe({
+      traits: [resistor(), helper()],
+      activeStates: ["status_raging"],
+      suspendedConditions: [{ condition: "charmed", source: "Mindless Rage" }],
+    });
+
+    expect(lines.map((line) => line.kind)).toEqual(["note", "affinity", "suppression"]);
+  });
+});
+
 describe("predicateHolds", () => {
   it("treats a missing predicate half as empty", () => {
     expect(predicateHolds({}, ["anything"])).toBe(true);

@@ -1,5 +1,6 @@
-import type { TraitDefinition } from "@project/shared";
+import { CONDITION_MAP, type TraitDefinition } from "@project/shared";
 import { AffinityEngine } from "./affinities.js";
+import type { SuspendedCondition } from "./conditionSuppression.js";
 
 /**
  * The lines the "Rules at the table" panel shows.
@@ -7,10 +8,12 @@ import { AffinityEngine } from "./affinities.js";
  * A pure reporter beside SurpriseEngine: traits and states in, sentences out.
  * It never applies anything. A note is a rule the engine cannot enforce; an
  * affinity line is a rule the engine has no damage path to apply. Both are
- * things the player reads and acts on.
+ * things the player reads and acts on. A suppression line is a condition the
+ * player toggled that a trait is holding off, as Mindless Rage holds off
+ * frightened while raging.
  */
 
-export type TableRuleLineKind = "note" | "affinity";
+export type TableRuleLineKind = "note" | "affinity" | "suppression";
 
 export interface TableRuleLine {
   kind: TableRuleLineKind;
@@ -22,6 +25,8 @@ export interface TableRuleLine {
 export interface TableRulesInput {
   traits: TraitDefinition[];
   activeStates: string[];
+  /** Toggled conditions a trait is holding off, from suppressConditions. */
+  suspendedConditions?: SuspendedCondition[];
 }
 
 export interface StatePredicateLike {
@@ -37,7 +42,11 @@ export const predicateHolds = (
   !(predicate.forbiddenStates ?? []).some((state) => activeStates.includes(state));
 
 export class TableRulesEngine {
-  public static describe({ traits, activeStates }: TableRulesInput): TableRuleLine[] {
+  public static describe({
+    traits,
+    activeStates,
+    suspendedConditions = [],
+  }: TableRulesInput): TableRuleLine[] {
     const lines: TableRuleLine[] = [];
 
     for (const trait of traits) {
@@ -49,6 +58,11 @@ export class TableRulesEngine {
 
     for (const affinity of AffinityEngine.describe({ traits, activeStates })) {
       lines.push({ kind: "affinity", source: affinity.source, text: affinity.summary });
+    }
+
+    for (const { condition, source } of suspendedConditions) {
+      const name = CONDITION_MAP[condition]?.name ?? condition;
+      lines.push({ kind: "suppression", source, text: `${name} is suspended.` });
     }
 
     return lines;
