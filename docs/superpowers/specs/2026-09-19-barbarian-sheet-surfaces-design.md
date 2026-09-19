@@ -1,7 +1,7 @@
 # Barbarian Sheet Surfaces
 
 Date: 2026-09-19
-Status: approved, ready to plan
+Status: implemented
 Owner: Claude pair session
 
 ## Goal
@@ -83,9 +83,12 @@ zero reachable barbarian stubs, 441 of 585 traits rule-free.
    follows `getActiveTraits`: computed from state the store already keeps,
    so none of the four `composeActiveStates` call sites change.
 4. **One home per action.** A dynamic template lives on the attack cards and
-   a `self_save` action on the Rules panel; `getCharacterActions` drops both
-   kinds, so neither also sits in the generic list as a button that can be
-   pressed out of context.
+   Relentless Rage's `self_save` action on the Rules panel;
+   `getCharacterActions` drops every template and Relentless Rage's action by
+   its id, so neither also sits in the generic list as a button that can be
+   pressed out of context. The drop is by id, not by kind: the panel offers
+   only Relentless Rage's save, and any other `self_save` would otherwise be
+   reachable from nowhere.
 5. **Relentless Rage availability is reported, not enforced**, as the
    2026-09-02 spec settled. The server resolves the action at any HP.
 
@@ -103,9 +106,18 @@ export const dynamicAttackApplies = (
   activeStates: string[],
 ): boolean;
 
-/** The one place the `${template}:${inventoryId}` id format lives. */
-export const dynamicAttackId = (templateId: string, instanceId: string): string;
+/** The one place the `${template}:${hand}` id format lives. */
+export const dynamicAttackId = (
+  templateId: string,
+  hand: "main_hand" | "off_hand",
+): string;
 ```
+
+The id is keyed on the hand, not the inventory row. Equipping one item from a
+stack splits it into a row the sheet mints (`inv_<uuid>`) and the server never
+sees: the server moves the whole row, and `character_inventory` cannot hold a
+split. A row-keyed id sent from such a card named a swing the server's live
+sheet did not have. Both sides always agree on what is in each hand.
 
 `dynamicAttackApplies` carries `46f2136`'s checks from
 `characterEngine.ts:559-584` without change in behaviour: the state predicate,
@@ -117,19 +129,33 @@ The helpers are exported from the engine index.
 `CharacterEngine.buildLiveSheet`:
 
 - the trait-action gather excludes `dynamic_weapon_attack` templates;
-- the synthesis loop calls `dynamicAttackApplies` and `dynamicAttackId`
-  instead of its inline checks and template literal.
+- the synthesis loop considers only `main_hand` and `off_hand` rows, the two
+  hands `useCombat` draws cards for, and calls `dynamicAttackApplies` and
+  `dynamicAttackId(template.id, hand)` instead of its inline checks and
+  template literal;
+- a swing is always computed with a standard attack context
+  (`attackUsage: "standard"`, `hand` from the slot). Frenzied Strike and
+  Retaliation are ordinary melee weapon attacks, not two-weapon fighting, so
+  an off-hand swing keeps its ability modifier in its damage.
 
 The sheet:
 
 - `useCombat` reads the compiled traits through the store's `getActiveTraits`.
   For each held-weapon card it already builds, it appends one card per active
-  template that applies to that weapon: the weapon card's own numbers, name
+  template that applies to that weapon: name
   `${template.name}: ${weapon.name}`, the template's `activation`, and
-  `actionId: dynamicAttackId(template.id, item.id)`. An off-hand weapon's card
-  already reflects off-hand rules, matching the context the engine uses for
-  it.
+  `actionId: dynamicAttackId(template.id, item.slot)`. Its numbers are a
+  standard attack's, matching the context the engine uses: a main-hand
+  card's are the weapon card's own, and an off-hand card's are recomputed
+  with `attackUsage: "standard"`, since the off-hand weapon card is the
+  two-weapon bonus attack and drops the ability modifier from damage. So the
+  card carries no two-weapon usage for the widget's "Requires the Attack
+  action with a light weapon first" banner.
 - The store's `getCharacterActions` drops `dynamic_weapon_attack` templates.
+- `TurnControlsWidget` names a swing that spent a bonus action or reaction
+  by its template ("Frenzied Strike"), matching the spent id against each
+  active template's `dynamicAttackId` in either hand, since swings are not
+  among `getCharacterActions`.
 - `CombatWidget`'s activation badge maps `reaction` to "REACTION" beside the
   existing "BONUS" and "ACTION".
 
@@ -213,8 +239,7 @@ current HP and the resource count, which are foreign to the reporter's
   `CombatWidget` finds `PROTECTION_TRAIT_ID`;
 - reads the count from the store's `resources` entry whose id is the
   effect's `dcRule.resourceId`, 0 when absent;
-- shows the reporter line, labelled "Reporter", whenever the action is
-  present;
+- shows the reporter line, labelled "Save", whenever the action is present;
 - shows a "Make the save" button only while `available`, calling
   `executeCharacterAction(RELENTLESS_RAGE_ACTION_ID)`.
 
@@ -222,7 +247,7 @@ After the save, the resolution payload updates the count and a success's
 `HP_MODIFIED` updates HP, so the DC rises and the button goes away without
 further wiring.
 
-The store's `getCharacterActions` drops `self_save` actions.
+The store's `getCharacterActions` drops `RELENTLESS_RAGE_ACTION_ID`.
 
 ### 4. Uses pools in Class Features
 
@@ -275,9 +300,12 @@ Through `scripts/patchPackSegment.ts`:
 ## Web changes
 
 - `store/characterSheetStore.ts`: `getSuspendedConditions`;
-  `getCharacterActions` drops `dynamic_weapon_attack` and `self_save`
-  actions.
-- `hooks/useCombat.ts`: dynamic attack cards.
+  `getCharacterActions` drops `dynamic_weapon_attack` templates and
+  Relentless Rage's action.
+- `hooks/useCombat.ts`: dynamic attack cards, keyed on the hand and computed
+  as standard attacks.
+- `components/sheet/TurnControlsWidget.tsx`: a swing's spender named by its
+  template.
 - `components/sheet/CombatWidget.tsx`: the `reaction` badge.
 - `components/sheet/ConditionsWidget.tsx`: suspended rendering.
 - `components/sheet/TableRulesWidget.tsx`: the suppression lines, the
@@ -294,9 +322,11 @@ for every gated rule.
     predicate holds; refused when the required state is absent, when a
     forbidden state is present, for a ranged weapon, for a missing property,
     for the wrong category; an empty category list accepts any melee weapon;
-    the id format.
+    the hand-keyed id format.
   - `characterEngine.test.ts`: no template in `liveSheet.actions`; the
-    synthesised swings unchanged.
+    synthesised swings keyed on the hand; no swing with a weapon outside the
+    hands; an off-hand swing is a standard attack with the ability modifier
+    in its damage.
   - `saveDc.test.ts`: a fixed rule; an escalating rule at 0, 1 and 2 uses.
     The existing `self_save` resolver tests stay green as the regression.
   - `relentlessRage.test.ts`: available at 0 HP while raging; not at 1 HP;
@@ -306,9 +336,12 @@ for every gated rule.
 - **Web**
   - `useCombat`: a Frenzied Strike card for a held greataxe while frenzied;
     none without frenzy; none for a bow; Retaliation's card carries
-    `reaction` and the `template:instance` id.
+    `reaction` and the `template:hand` id; a weapon under a row id the
+    server never saw yields the same swing id as the engine's; an off-hand
+    card is a standard attack with the ability modifier in its damage.
   - `CombatWidget`: "REACTION".
-  - Store: `getCharacterActions` excludes templates and `self_save` actions;
+  - Store: `getCharacterActions` excludes templates and Relentless Rage, and
+    keeps any other `self_save`;
     `getSuspendedConditions` suspends frightened while raging with Mindless
     Rage, and not otherwise.
   - `ConditionsWidget`: a suspended chip is struck through with its title.
@@ -354,6 +387,9 @@ Before the branch is called done:
   card. The shared helpers guarantee they agree on which swings exist and
   what they are called, not that two separate calculations agree.
 - Relentless Rage's 0 HP trigger is reported, not enforced.
+- For the same reason, "Make the save" stays pressable after a failed save at
+  0 HP: availability is reported, not enforced, so each press re-rolls the
+  save at the next, higher DC.
 - Suppression applies on the sheet only; conditions never reach the server's
   action path.
 - Retaliation's trigger, taking damage from a creature within 5 feet, is the
