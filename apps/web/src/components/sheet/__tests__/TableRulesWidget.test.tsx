@@ -118,7 +118,12 @@ describe("TableRulesWidget and Relentless Rage", () => {
 
     const container = await renderWidget();
 
-    expect(container.textContent).toContain("Reporter");
+    // labelled for what it is to the player, not for the engine's reporter
+    const labels = Array.from(container.querySelectorAll("li span.font-mono")).map(
+      (label) => label.textContent,
+    );
+    expect(labels).toContain("Save");
+    expect(container.textContent).not.toContain("Reporter");
     expect(container.textContent).toContain("DC 15 Constitution saving throw");
     expect(makeTheSave(container)).toBeUndefined();
   });

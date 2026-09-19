@@ -1,5 +1,7 @@
-import { SurpriseEngine } from "@project/engine";
+import { SurpriseEngine, dynamicAttackId } from "@project/engine";
 import { useCharacterSheetStore } from "../../store/characterSheetStore";
+
+const HANDS = ["main_hand", "off_hand"] as const;
 
 /**
  * Turn controls and the action economy, tracked rather than policed.
@@ -19,20 +21,34 @@ export const TurnControlsWidget = () => {
   const getCharacterActions = useCharacterSheetStore(
     (state) => state.getCharacterActions,
   );
+  const getActiveTraits = useCharacterSheetStore(
+    (state) => state.getActiveTraits,
+  );
 
   /**
    * What spent this part of the economy, named rather than shown as an id.
    *
    * This is what keeps the plain actions honest: Disengage and Help carry no
    * state and no modifier, so the only trace they leave is here.
+   *
+   * A Frenzied Strike or Retaliation swing is not among the character's
+   * actions, which leave templates to the attack cards, so its id is matched
+   * against each template's swing in either hand and named by the template.
    */
   const spenderName = (sourceId: string | undefined): string | null => {
     if (!sourceId) return null;
 
-    return (
-      getCharacterActions().find((action) => action.id === sourceId)?.name ??
-      sourceId
-    );
+    const action = getCharacterActions().find((entry) => entry.id === sourceId);
+    if (action) return action.name;
+
+    const template = getActiveTraits()
+      .flatMap((trait) => trait.actions ?? [])
+      .find(
+        (entry) =>
+          entry.effect.type === "dynamic_weapon_attack" &&
+          HANDS.some((hand) => dynamicAttackId(entry.id, hand) === sourceId),
+      );
+    return template?.name ?? sourceId;
   };
 
   /**

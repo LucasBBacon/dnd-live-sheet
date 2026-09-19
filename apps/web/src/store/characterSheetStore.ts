@@ -13,6 +13,7 @@ import {
   collectGrantedResources,
   getResourceMaxUses,
   materialiseMissingPools,
+  RELENTLESS_RAGE_ACTION_ID,
   resolveResourceRule,
   slotsConsumedBy,
   type Ability,
@@ -1361,12 +1362,14 @@ export const useCharacterSheetStore = create<CharacterSheetState>(
         ...activeTraits.flatMap((trait) => trait.actions ?? []),
       ].filter(
         // A dynamic_weapon_attack is a template: useCombat draws its concrete
-        // swings as attack cards. A self_save answers a moment the Rules panel
-        // reports - Relentless Rage at 0 hit points - and lives there, not as
-        // a button that can be pressed at full health.
+        // swings as attack cards. Relentless Rage answers a moment the Rules
+        // panel reports - 0 hit points while raging - and lives there, not as
+        // a button that can be pressed at full health. Dropped by id, not as
+        // every self_save: the panel offers only this one, and any other
+        // self-save would otherwise be reachable from nowhere.
         (action) =>
           action.effect.type !== "dynamic_weapon_attack" &&
-          action.effect.type !== "self_save",
+          action.id !== RELENTLESS_RAGE_ACTION_ID,
       );
     },
 

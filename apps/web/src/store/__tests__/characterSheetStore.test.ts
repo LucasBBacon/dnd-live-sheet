@@ -1460,6 +1460,46 @@ describe("getCharacterActions and self-saves", () => {
       "action_relentless_rage",
     );
   });
+
+  it("keeps any other self-save in the list, since the Rules panel offers only Relentless Rage's", () => {
+    const compileSpy = vi
+      .spyOn(CharacterBootstrapper, "compileActiveTraits")
+      .mockReturnValue([
+        {
+          id: "trait_test_brace",
+          name: "Brace",
+          lore: { shortDescription: "A self-save no panel surfaces" },
+          modifiers: { fixed: [], choices: [] },
+          resources: [],
+          diceRules: [],
+          criticalHitModifiers: [],
+          triggers: [],
+          actions: [
+            {
+              id: "action_test_brace",
+              name: "Brace",
+              activation: "reaction",
+              effect: {
+                type: "self_save",
+                ability: "CON",
+                dcRule: { kind: "fixed", value: 10 },
+                requiredStates: [],
+                forbiddenStates: [],
+              },
+            },
+          ],
+        },
+      ]);
+
+    expect(
+      useCharacterSheetStore
+        .getState()
+        .getCharacterActions()
+        .map((action) => action.id),
+    ).toContain("action_test_brace");
+
+    compileSpy.mockRestore();
+  });
 });
 
 describe("the store's resource counts survive runtime hydration", () => {

@@ -20,6 +20,34 @@ const mocks = vi.hoisted(() => ({
     { id: "action_dodge", name: "Dodge", activation: "action" },
     { id: "action_rage", name: "Rage", activation: "bonus_action" },
   ],
+  // the traits behind them: a swing template lives here and not in the list
+  // above, which leaves templates to the attack cards
+  getActiveTraits: () => [
+    {
+      id: "trait_berserker_frenzy",
+      name: "Frenzy",
+      actions: [
+        {
+          id: "action_frenzied_strike",
+          name: "Frenzied Strike",
+          activation: "bonus_action",
+          effect: { type: "dynamic_weapon_attack" },
+        },
+      ],
+    },
+    {
+      id: "trait_berserker_retaliation",
+      name: "Retaliation",
+      actions: [
+        {
+          id: "action_retaliation",
+          name: "Retaliation",
+          activation: "reaction",
+          effect: { type: "dynamic_weapon_attack" },
+        },
+      ],
+    },
+  ],
 }));
 
 vi.mock("../../../store/characterSheetStore", () => ({
@@ -31,6 +59,7 @@ vi.mock("../../../store/characterSheetStore", () => ({
       endTurn: typeof mocks.endTurn;
       setSurprised: typeof mocks.setSurprised;
       getCharacterActions: typeof mocks.getCharacterActions;
+      getActiveTraits: typeof mocks.getActiveTraits;
     }) => unknown,
   ) =>
     selector({
@@ -40,6 +69,7 @@ vi.mock("../../../store/characterSheetStore", () => ({
       endTurn: mocks.endTurn,
       setSurprised: mocks.setSurprised,
       getCharacterActions: mocks.getCharacterActions,
+      getActiveTraits: mocks.getActiveTraits,
     }),
 }));
 
@@ -195,6 +225,25 @@ describe("TurnControlsWidget spender", () => {
     const container = await renderWidget();
 
     expect(container.textContent).toContain("Rage");
+  });
+
+  it("names a swing by its template, not its raw id", async () => {
+    mocks.combatContext.current = context({
+      economy: {
+        actionAvailable: true,
+        bonusActionAvailable: false,
+        reactionAvailable: false,
+        spentBonusActionSourceId: "action_frenzied_strike:main_hand",
+        spentReactionSourceId: "action_retaliation:off_hand",
+      },
+    });
+
+    const container = await renderWidget();
+
+    expect(container.textContent).toContain("Frenzied Strike");
+    expect(container.textContent).toContain("Retaliation");
+    expect(container.textContent).not.toContain("action_frenzied_strike");
+    expect(container.textContent).not.toContain("action_retaliation");
   });
 
   it("falls back to the raw id for something it cannot name", async () => {
