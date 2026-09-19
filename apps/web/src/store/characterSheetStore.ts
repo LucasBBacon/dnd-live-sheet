@@ -1284,9 +1284,13 @@ export const useCharacterSheetStore = create<CharacterSheetState>(
         ...STANDARD_ACTIONS,
         ...activeTraits.flatMap((trait) => trait.actions ?? []),
       ].filter(
-        // a dynamic_weapon_attack is a template: useCombat draws its concrete
-        // swings as attack cards, and the bare template has nothing to roll
-        (action) => action.effect.type !== "dynamic_weapon_attack",
+        // A dynamic_weapon_attack is a template: useCombat draws its concrete
+        // swings as attack cards. A self_save answers a moment the Rules panel
+        // reports - Relentless Rage at 0 hit points - and lives there, not as
+        // a button that can be pressed at full health.
+        (action) =>
+          action.effect.type !== "dynamic_weapon_attack" &&
+          action.effect.type !== "self_save",
       );
     },
 

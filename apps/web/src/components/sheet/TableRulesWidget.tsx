@@ -1,4 +1,10 @@
-import { TableRulesEngine, type TableRuleLine } from "@project/engine";
+import {
+  RELENTLESS_RAGE_ACTION_ID,
+  RelentlessRageEngine,
+  TableRulesEngine,
+  selfSaveCounterId,
+  type TableRuleLine,
+} from "@project/engine";
 import { useCharacterSheetStore } from "../../store/characterSheetStore";
 
 const KIND_LABEL: Record<TableRuleLine["kind"], string> = {
@@ -13,7 +19,12 @@ const KIND_LABEL: Record<TableRuleLine["kind"], string> = {
  *
  * Until this existed, a trait marked manual_sheet_helper reached nobody, and
  * Rage's resistances were authored data that no widget read. Every line here
- * comes from TableRulesEngine; the widget computes nothing itself.
+ * comes from an engine reporter; the widget computes nothing itself.
+ *
+ * Relentless Rage's line is composed here rather than by TableRulesEngine
+ * because it needs hit points and the save's counter, which that reporter's
+ * input does not carry. Its button fires the action like any other; the
+ * server resolves it, writes the healing and counts the attempt.
  */
 export const TableRulesWidget = () => {
   const activeStates = useCharacterSheetStore((state) => state.activeStates);
@@ -21,18 +32,51 @@ export const TableRulesWidget = () => {
   const getSuspendedConditions = useCharacterSheetStore(
     (state) => state.getSuspendedConditions,
   );
-  // read so a snapshot or progression change re-renders the panel; the
-  // compile itself reads them through the store
+  const currentHp = useCharacterSheetStore((state) => state.currentHp);
+  const resources = useCharacterSheetStore((state) => state.resources);
+  const executeCharacterAction = useCharacterSheetStore(
+    (state) => state.executeCharacterAction,
+  );
+  // read so a snapshot, progression or condition change re-renders the panel;
+  // the compile itself reads them through the store
   useCharacterSheetStore((state) => state.ruleSnapshot);
   useCharacterSheetStore((state) => state.classLevels);
   useCharacterSheetStore((state) => state.traitGrants);
   useCharacterSheetStore((state) => state.activeConditions);
 
-  const lines = TableRulesEngine.describe({
-    traits: getActiveTraits(),
+  const traits = getActiveTraits();
+  const lines: TableRuleLine[] = TableRulesEngine.describe({
+    traits,
     activeStates,
     suspendedConditions: getSuspendedConditions(),
   });
+
+  const relentless = traits
+    .flatMap((trait) => trait.actions ?? [])
+    .find((action) => action.id === RELENTLESS_RAGE_ACTION_ID);
+  const relentlessEffect =
+    relentless?.effect.type === "self_save" ? relentless.effect : undefined;
+  const counterId = relentlessEffect
+    ? selfSaveCounterId(relentlessEffect.dcRule)
+    : undefined;
+  const relentlessReport =
+    relentless && relentlessEffect
+      ? RelentlessRageEngine.describe({
+          currentHp,
+          activeStates,
+          action: relentless,
+          usesSinceRest:
+            resources.find((resource) => resource.id === counterId)?.current ?? 0,
+        })
+      : undefined;
+
+  if (relentless && relentlessReport) {
+    lines.push({
+      kind: "reporter",
+      source: relentless.name,
+      text: relentlessReport.summary,
+    });
+  }
 
   return (
     <div className="bg-gray-50 border p-3 rounded mt-2">
@@ -58,6 +102,15 @@ export const TableRulesWidget = () => {
                 </span>
               </div>
               <p className="mt-1 text-xs text-gray-700">{line.text}</p>
+              {line.kind === "reporter" && relentlessReport?.available && (
+                <button
+                  type="button"
+                  onClick={() => executeCharacterAction(RELENTLESS_RAGE_ACTION_ID)}
+                  className="mt-2 rounded bg-red-700 px-2.5 py-1 text-xs font-semibold text-white hover:bg-red-800"
+                >
+                  Make the save
+                </button>
+              )}
             </li>
           ))}
         </ul>

@@ -1438,3 +1438,26 @@ describe("getSuspendedConditions", () => {
     expect(useCharacterSheetStore.getState().getSuspendedConditions()).toEqual([]);
   });
 });
+
+describe("getCharacterActions and self-saves", () => {
+  it("leaves Relentless Rage to the Rules panel", () => {
+    useCharacterSheetStore.getState().initialize({
+      id: "char_1",
+      level: 11,
+      classLevels: { class_barbarian: 11 },
+      subclassIds: { class_barbarian: null },
+      traitGrants: [],
+      raceId: "race_human",
+      subraceId: null,
+      ruleSnapshot: packRuleSnapshot(),
+    });
+    const state = useCharacterSheetStore.getState();
+
+    expect(
+      state.getActiveTraits().flatMap((trait) => trait.actions.map((action) => action.id)),
+    ).toContain("action_relentless_rage");
+    expect(state.getCharacterActions().map((action) => action.id)).not.toContain(
+      "action_relentless_rage",
+    );
+  });
+});

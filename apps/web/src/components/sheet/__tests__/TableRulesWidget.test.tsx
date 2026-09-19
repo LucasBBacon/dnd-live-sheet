@@ -3,6 +3,7 @@ import { createRoot } from "react-dom/client";
 import { act } from "react";
 import type { TraitDefinition } from "@project/shared";
 import { TableRulesWidget } from "../TableRulesWidget";
+import { packRuleSnapshot } from "../../../store/__tests__/packFixture";
 
 const wolf: TraitDefinition = {
   id: "trait_totem_spirit_wolf",
@@ -26,6 +27,9 @@ const mocks = vi.hoisted(() => ({
   activeStates: { current: [] as string[] },
   traits: { current: [] as unknown[] },
   suspended: { current: [] as Array<{ condition: string; source: string }> },
+  currentHp: { current: 10 },
+  resources: { current: [] as Array<{ id: string; current: number }> },
+  executeCharacterAction: vi.fn(),
 }));
 
 vi.mock("../../../store/characterSheetStore", () => ({
@@ -35,6 +39,9 @@ vi.mock("../../../store/characterSheetStore", () => ({
       activeConditions: [],
       getActiveTraits: () => mocks.traits.current,
       getSuspendedConditions: () => mocks.suspended.current,
+      currentHp: mocks.currentHp.current,
+      resources: mocks.resources.current,
+      executeCharacterAction: mocks.executeCharacterAction,
       ruleSnapshot: null,
       classLevels: {},
       traitGrants: [],
@@ -88,5 +95,58 @@ describe("TableRulesWidget and suspended conditions", () => {
     expect(container.textContent).toContain("Frightened is suspended.");
 
     mocks.suspended.current = [];
+  });
+});
+
+describe("TableRulesWidget and Relentless Rage", () => {
+  const relentless = () => {
+    const trait = packRuleSnapshot().traitsById?.["trait_relentless_rage"];
+    if (!trait) throw new Error("trait_relentless_rage missing from the shipped pack");
+    return trait;
+  };
+
+  const makeTheSave = (container: HTMLElement) =>
+    Array.from(container.querySelectorAll("button")).find(
+      (button) => button.textContent === "Make the save",
+    );
+
+  it("reports the save and its current DC whenever the trait is granted", async () => {
+    mocks.traits.current = [relentless()];
+    mocks.activeStates.current = [];
+    mocks.currentHp.current = 10;
+    mocks.resources.current = [{ id: "resource_relentless_rage", current: 1 }];
+
+    const container = await renderWidget();
+
+    expect(container.textContent).toContain("Reporter");
+    expect(container.textContent).toContain("DC 15 Constitution saving throw");
+    expect(makeTheSave(container)).toBeUndefined();
+  });
+
+  it("offers the save at 0 hit points while raging", async () => {
+    mocks.traits.current = [relentless()];
+    mocks.activeStates.current = ["status_raging"];
+    mocks.currentHp.current = 0;
+    mocks.resources.current = [];
+
+    const container = await renderWidget();
+
+    expect(container.textContent).toContain("DC 10 Constitution saving throw");
+    expect(makeTheSave(container)).toBeDefined();
+  });
+
+  it("asks the server to resolve the save when pressed", async () => {
+    mocks.traits.current = [relentless()];
+    mocks.activeStates.current = ["status_raging"];
+    mocks.currentHp.current = 0;
+    mocks.resources.current = [];
+    mocks.executeCharacterAction.mockClear();
+
+    const container = await renderWidget();
+    await act(async () => {
+      makeTheSave(container)?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    });
+
+    expect(mocks.executeCharacterAction).toHaveBeenCalledWith("action_relentless_rage");
   });
 });
