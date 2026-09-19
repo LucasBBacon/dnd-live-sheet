@@ -11,6 +11,7 @@ import {
 import type { ActiveEffect, EffectManager } from "../calculators/effects.js";
 import type { CombatContextManager } from "../calculators/combatContext.js";
 import type { ResourceManager } from "../calculators/resources.js";
+import { resolveSelfSaveDc, selfSaveCounterId } from "../calculators/saveDc.js";
 import { DiceEngine } from "../utils/diceParser.js";
 import {
   resolveEquipmentDefinition,
@@ -634,22 +635,20 @@ export class ActionResolver {
 
       case "self_save": {
         const ability = effect.ability as Ability;
-        const escalatingRule = effect.dcRule.kind === "escalating_per_use"
-          ? effect.dcRule
-          : undefined;
-        const uses = escalatingRule
+        // the count before this attempt sets the DC; the Rules panel reads
+        // the same helper, so the DC the player saw is the DC rolled against
+        const counterId = selfSaveCounterId(effect.dcRule);
+        const uses = counterId
           ? context.resourceManager.getRuntimeResources().find(
-              (resource) => resource.id === escalatingRule.resourceId,
+              (resource) => resource.id === counterId,
             )?.currentCharges ?? 0
           : 0;
-        const dc = effect.dcRule.kind === "fixed"
-          ? effect.dcRule.value
-          : effect.dcRule.base + effect.dcRule.increasePerUse * uses;
+        const dc = resolveSelfSaveDc(effect.dcRule, uses);
         const roll = DiceEngine.rollDigital("1d20");
         const modifier = context.saveModifiers?.[ability] ?? 0;
         const total = roll.total + modifier;
-        if (escalatingRule) {
-          context.resourceManager.consume(escalatingRule.resourceId, 1);
+        if (counterId) {
+          context.resourceManager.consume(counterId, 1);
         }
         const results: ActionRollResult[] = [{
           total,

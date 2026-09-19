@@ -5,6 +5,7 @@ const KIND_LABEL: Record<TableRuleLine["kind"], string> = {
   note: "Rule",
   affinity: "Damage",
   suppression: "Suspended",
+  reporter: "Reporter",
 };
 
 /**

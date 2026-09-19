@@ -13,7 +13,12 @@ import type { SuspendedCondition } from "./conditionSuppression.js";
  * frightened while raging.
  */
 
-export type TableRuleLineKind = "note" | "affinity" | "suppression";
+/**
+ * `reporter` lines are composed by the widget from a trait-specific reporter
+ * such as RelentlessRageEngine, whose input (hit points, a resource count) is
+ * foreign to this one; describe never emits one.
+ */
+export type TableRuleLineKind = "note" | "affinity" | "suppression" | "reporter";
 
 export interface TableRuleLine {
   kind: TableRuleLineKind;

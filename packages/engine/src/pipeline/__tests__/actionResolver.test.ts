@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type {
   ActionGrant,
   CharacterSlot,
@@ -2073,5 +2073,94 @@ describe("ActionResolver and the eagle totem's Dash", () => {
     );
 
     expect(effectManager.getActiveStates()).toEqual([]);
+  });
+});
+
+describe("ActionResolver self_save (Relentless Rage)", () => {
+  const relentlessRage = (): ActionGrant => {
+    const action = corePackLookup()
+      .traitsById?.["trait_relentless_rage"]?.actions.find(
+        (entry) => entry.id === "action_relentless_rage",
+      );
+    if (!action) throw new Error("action_relentless_rage missing from the shipped pack");
+    return action;
+  };
+
+  const countedAt = (uses: number) => {
+    const resources = new ResourceManager();
+    resources.hydrateFromPersisted([
+      {
+        id: "resource_relentless_rage",
+        name: "Relentless Rage Uses",
+        maxCharges: 0,
+        currentCharges: uses,
+        resetOn: "short_rest",
+        mode: "uses",
+      },
+    ]);
+    return resources;
+  };
+
+  const run = (
+    resourceManager: ResourceManager,
+    saveModifiers?: Record<"STR" | "DEX" | "CON" | "INT" | "WIS" | "CHA", number>,
+  ) =>
+    ActionResolver.execute(
+      relentlessRage(),
+      { actionId: "action_relentless_rage", activeStates: ["status_raging"] },
+      {
+        effectManager: new EffectManager(),
+        resourceManager,
+        activeStates: ["status_raging"],
+        ...(saveModifiers && { saveModifiers }),
+      },
+    );
+
+  const count = (resources: ResourceManager) =>
+    resources.getRuntimeResources()[0]?.currentCharges;
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it("reads the DC from the count so far, then counts this attempt", () => {
+    vi.spyOn(Math, "random").mockReturnValue(0.999); // a natural 20
+    const resources = countedAt(1);
+
+    const result = run(resources);
+
+    expect(result.rollResults?.[0]?.summary).toContain("DC 15");
+    expect(count(resources)).toBe(2);
+  });
+
+  it("counts a failed attempt too", () => {
+    vi.spyOn(Math, "random").mockReturnValue(0); // a natural 1
+    const resources = countedAt(0);
+
+    const result = run(resources);
+
+    expect(result.rollResults?.[0]?.summary).toContain("failure");
+    expect(count(resources)).toBe(1);
+  });
+
+  it("reports the healing only on a success", () => {
+    vi.spyOn(Math, "random").mockReturnValue(0);
+    expect(run(countedAt(0)).rollResults?.map((roll) => roll.label)).toEqual([
+      "Relentless Rage",
+    ]);
+
+    vi.spyOn(Math, "random").mockReturnValue(0.999);
+    expect(run(countedAt(0)).rollResults?.map((roll) => roll.label)).toEqual([
+      "Relentless Rage",
+      "Healing",
+    ]);
+  });
+
+  it("adds the Constitution save modifier the server supplies", () => {
+    vi.spyOn(Math, "random").mockReturnValue(0.45); // a 10
+
+    const result = run(countedAt(0), { STR: 0, DEX: 0, CON: 3, INT: 0, WIS: 0, CHA: 0 });
+
+    expect(result.rollResults?.[0]).toMatchObject({ total: 13, modifier: 3 });
   });
 });

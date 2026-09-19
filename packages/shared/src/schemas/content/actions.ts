@@ -164,6 +164,8 @@ export const SaveDcRuleSchema = z.discriminatedUnion("kind", [
   }),
 ]);
 
+export type SaveDcRule = z.infer<typeof SaveDcRuleSchema>;
+
 export const SelfSaveEffectSchema = z.object({
   type: z.literal("self_save"),
   ability: ModifierTargetSchema,
