@@ -20,7 +20,10 @@ import type { EquipmentDefinition, WeaponCapability } from "@project/shared";
  * is the item half of the projection - EquipmentDefinition itself is what
  * item-facing code reads now.
  */
-export type WeaponView = Pick<EquipmentDefinition, "id" | "name"> &
+export type WeaponView = Pick<
+  EquipmentDefinition,
+  "id" | "name" | "categoryTags"
+> &
   WeaponCapability;
 
 export const toWeaponDefinition = (
@@ -33,6 +36,9 @@ export const toWeaponDefinition = (
   return {
     id: equipment.id,
     name: equipment.name,
+    // carried so itemProficiency.ts can decide whether a grant covers this
+    // weapon without reaching back to the equipment entry
+    categoryTags: equipment.categoryTags,
     ...equipment.weapon,
   };
 };

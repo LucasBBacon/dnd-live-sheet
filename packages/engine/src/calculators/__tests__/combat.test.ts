@@ -8,8 +8,9 @@ import type { WeaponView } from "../../rules/equipmentProjection.js";
 const makeWeapon = (
   overrides: Partial<WeaponView> = {},
 ): WeaponView => ({
-  id: "weapon_shortsword",
+  id: "item_weapon_shortsword",
   name: "Shortsword",
+  categoryTags: ["category_weapon_martial", "category_weapon_martial_melee"],
   category: "martial_melee",
   damageDice: "1d6",
   damageType: "piercing",
