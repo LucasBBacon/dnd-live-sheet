@@ -242,6 +242,8 @@ export const DynamicWeaponAttackSchema = z.object({
   requiredWeaponCategory: z.array(z.string()).default([]),
 });
 
+export type DynamicWeaponAttack = z.infer<typeof DynamicWeaponAttackSchema>;
+
 export const CoreEffectUnion = z.discriminatedUnion("type", [
   SaveEffectSchema,
   AbilityCheckEffectSchema,

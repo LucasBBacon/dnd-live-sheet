@@ -1,6 +1,7 @@
 export * from "./actionResolver.js";
 export * from "./characterBootstrapper.js";
 export * from "./characterEngine.js";
+export * from "./dynamicWeaponAttacks.js";
 export * from "./inventoryExtractor.js";
 export * from "./inventoryLedger.js";
 export * from "./rollContextBuilder.js";

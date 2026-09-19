@@ -26,6 +26,10 @@ import { ModifierExtractor } from "./modifierExtractor.js";
 import { ProficiencyExtractor } from "./proficiencyExtractor.js";
 import { StateExtractor } from "./stateExtractor.js";
 import { InventoryExtractor } from "./inventoryExtractor.js";
+import {
+  dynamicAttackApplies,
+  dynamicAttackId,
+} from "./dynamicWeaponAttacks.js";
 import { DerivedStatEngine } from "../calculators/derivedStats.js";
 import { SpeedEngine } from "../calculators/speed.js";
 import { WeaponSynthesizer } from "./weaponSynthesizer.js";
@@ -452,7 +456,16 @@ export class CharacterEngine {
     // not granted by anything - Dodge is not a trait, it is a rule
     const actions: ActionGrant[] = [
       ...STANDARD_ACTIONS,
-      ...activeTraits.flatMap((t) => t.actions || []),
+      // a dynamic_weapon_attack is a template, not a swing: the loop further
+      // down turns it into one concrete attack per held weapon it applies to,
+      // and the bare template has nothing to roll. Left in, it showed as a
+      // button that spent the activation and reached the resolver's default
+      // case.
+      ...activeTraits.flatMap((t) =>
+        (t.actions || []).filter(
+          (action) => action.effect.type !== "dynamic_weapon_attack",
+        ),
+      ),
     ];
 
     // Carried, not equipped: a vial in your pack is throwable. This is why the
@@ -557,29 +570,14 @@ export class CharacterEngine {
     for (const trait of activeTraits) {
       for (const dynamicAction of trait.actions ?? []) {
         if (dynamicAction.effect.type !== "dynamic_weapon_attack") continue;
-        const { requiredStates, forbiddenStates } = dynamicAction.effect;
-        if (
-          !requiredStates.every((state) => activeStates.includes(state)) ||
-          forbiddenStates.some((state) => activeStates.includes(state))
-        ) {
-          continue;
-        }
+        const template = dynamicAction.effect;
 
         for (const instance of inventory) {
           if (instance.slot === "backpack") continue;
           const weapon = resolveWeaponDefinition(instance.itemId, options.snapshot);
-          if (!weapon || weapon.category.includes("ranged")) continue;
-          if (
-            !dynamicAction.effect.requiredWeaponProperties.every((property) =>
-              weapon.properties.some((weaponProperty) => weaponProperty === property),
-            )
-          ) {
-            continue;
-          }
-          if (
-            dynamicAction.effect.requiredWeaponCategory.length > 0 &&
-            !dynamicAction.effect.requiredWeaponCategory.includes(weapon.category)
-          ) {
+          // the same question useCombat asks before it draws the card, so the
+          // sheet offers exactly the swings this synthesises
+          if (!weapon || !dynamicAttackApplies(template, weapon, activeStates)) {
             continue;
           }
 
@@ -629,7 +627,7 @@ export class CharacterEngine {
           );
           if (generated.effect.type !== "attack") continue;
 
-          generated.id = `${dynamicAction.id}:${instance.id}`;
+          generated.id = dynamicAttackId(dynamicAction.id, instance.id);
           generated.name = `${dynamicAction.name}: ${weapon.name}`;
           generated.activation = dynamicAction.activation;
           if (dynamicAction.tableNote !== undefined) {

@@ -1844,3 +1844,56 @@ describe("CharacterEngine.buildLiveSheet: Berserker dynamic attacks", () => {
     expect(sheet.actions.some((action) => action.id.startsWith("action_frenzied_strike:"))).toBe(false);
   });
 });
+
+describe("CharacterEngine.buildLiveSheet: dynamic templates", () => {
+  const berserkerAt = (level: number): CharacterSave =>
+    halfElfFighter({
+      classes: [
+        {
+          classId: "class_barbarian",
+          level,
+          subclassId: "subclass_barbarian_berserker",
+          selections: {},
+        },
+      ],
+    });
+
+  const longsword = {
+    id: "weapon-1",
+    itemId: "item_weapon_longsword",
+    quantity: 1,
+    slot: "main_hand" as const,
+    isAttuned: false,
+  };
+
+  it("never lists a bare template, which has no weapon behind it to roll", () => {
+    // left in, the template showed as a button that spent the bonus action or
+    // the reaction and reached the resolver's default case, doing nothing
+    const ids = CharacterEngine.buildLiveSheet(
+      berserkerAt(14),
+      [],
+      new EffectManager(),
+      new ResourceManager(),
+      { snapshot: corePackLookup() },
+    ).actions.map((action) => action.id);
+
+    expect(ids).toContain("action_frenzied_rage");
+    expect(ids).not.toContain("action_frenzied_strike");
+    expect(ids).not.toContain("action_retaliation");
+  });
+
+  it("offers Retaliation as a reaction swing with each held melee weapon", () => {
+    const swing = CharacterEngine.buildLiveSheet(
+      berserkerAt(14),
+      [longsword],
+      new EffectManager(),
+      new ResourceManager(),
+      { snapshot: corePackLookup() },
+    ).actions.find((action) => action.id === "action_retaliation:weapon-1");
+
+    expect(swing).toMatchObject({
+      name: "Retaliation: Longsword",
+      activation: "reaction",
+    });
+  });
+});
