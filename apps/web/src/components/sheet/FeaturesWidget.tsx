@@ -1,6 +1,12 @@
 import { useFeatures } from "../../hooks/useFeatures";
 import { useCharacterSheetStore } from "../../store/characterSheetStore";
 
+/** How a uses pool's count is qualified, by when it resets. */
+const SINCE: Record<string, string> = {
+  short_rest: "since your last rest",
+  long_rest: "since your last long rest",
+};
+
 export const FeaturesWidget = () => {
   const features = useFeatures();
   const consumeResource = useCharacterSheetStore(
@@ -18,30 +24,47 @@ export const FeaturesWidget = () => {
       </h2>
 
       <div className="flex flex-col gap-3">
-        {features.map((feature) => (
-          <div
-            key={feature.id}
-            className="flex justify-between items-center border border-gray-200 p-2 rounded bg-gray-50"
-          >
-            <div>
+        {features.map((feature) =>
+          feature.kind === "uses" ? (
+            // a count, not a charge: no Use button, because the action that
+            // counts it (Relentless Rage's save) is what spends it
+            <div
+              key={feature.id}
+              className="border border-gray-200 p-2 rounded bg-gray-50"
+            >
               <div className="font-bold text-gray-900 text-sm">
                 {feature.name}
               </div>
               <div className="text-xs text-gray-500 font-mono">
-                Uses: {feature.current} / {feature.max} • Resets:{" "}
-                {feature.resetCondition.replace("_", " ")}
+                Used {feature.used}{" "}
+                {SINCE[feature.resetCondition] ?? "since it last reset"}
               </div>
             </div>
-
-            <button
-              onClick={() => consumeResource(feature.id, 1)}
-              disabled={feature.isDepleted}
-              className={`px-4 py-1 text-xs uppercase rounded shadow-sm transition-colors ${feature.isDepleted ? "bg-gray-200 text-gray-400 cursor-not-allowed" : "bg-indigo-600 hover:bg-indigo-700 text-white"}`}
+          ) : (
+            <div
+              key={feature.id}
+              className="flex justify-between items-center border border-gray-200 p-2 rounded bg-gray-50"
             >
-              {feature.isDepleted ? "Expended" : "Use"}
-            </button>
-          </div>
-        ))}
+              <div>
+                <div className="font-bold text-gray-900 text-sm">
+                  {feature.name}
+                </div>
+                <div className="text-xs text-gray-500 font-mono">
+                  Uses: {feature.current} / {feature.max} • Resets:{" "}
+                  {feature.resetCondition.replace("_", " ")}
+                </div>
+              </div>
+
+              <button
+                onClick={() => consumeResource(feature.id, 1)}
+                disabled={feature.isDepleted}
+                className={`px-4 py-1 text-xs uppercase rounded shadow-sm transition-colors ${feature.isDepleted ? "bg-gray-200 text-gray-400 cursor-not-allowed" : "bg-indigo-600 hover:bg-indigo-700 text-white"}`}
+              >
+                {feature.isDepleted ? "Expended" : "Use"}
+              </button>
+            </div>
+          ),
+        )}
       </div>
     </div>
   );
