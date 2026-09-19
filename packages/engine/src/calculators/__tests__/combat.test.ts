@@ -35,7 +35,7 @@ const makeProf = (
   overrides: Partial<FixedProficiencyGrant>,
 ): FixedProficiencyGrant => ({
   category: "weapons",
-  proficiencyId: "martial_melee",
+  proficiencyId: "category_weapon_martial",
   level: "proficient",
   requiredStates: [],
   ...overrides,
@@ -233,12 +233,12 @@ describe("CombatEngine.calculateWeaponAttack - governing stat", () => {
 });
 
 describe("CombatEngine.calculateWeaponAttack - proficiency", () => {
-  it("grants proficiency bonus when the weapon category matches", () => {
+  it("grants proficiency bonus when a category tag matches", () => {
     const result = CombatEngine.calculateWeaponAttack(
-      makeWeapon({ category: "martial_melee" }),
+      makeWeapon(),
       makeScores(),
       3,
-      [makeProf({ proficiencyId: "martial_melee" })],
+      [makeProf({ proficiencyId: "category_weapon_martial" })],
       [],
     );
 
@@ -249,10 +249,10 @@ describe("CombatEngine.calculateWeaponAttack - proficiency", () => {
 
   it("grants proficiency bonus when the specific weapon id matches", () => {
     const result = CombatEngine.calculateWeaponAttack(
-      makeWeapon({ id: "weapon_net", category: "martial_melee" }),
+      makeWeapon({ id: "item_weapon_net" }),
       makeScores(),
       3,
-      [makeProf({ proficiencyId: "weapon_net" })],
+      [makeProf({ proficiencyId: "item_weapon_net" })],
       [],
     );
 
@@ -262,10 +262,10 @@ describe("CombatEngine.calculateWeaponAttack - proficiency", () => {
 
   it("does not grant proficiency from a non-weapons category, even with a matching id string", () => {
     const result = CombatEngine.calculateWeaponAttack(
-      makeWeapon({ category: "martial_melee" }),
+      makeWeapon(),
       makeScores(),
       3,
-      [makeProf({ category: "armor", proficiencyId: "martial_melee" })],
+      [makeProf({ category: "armor", proficiencyId: "category_weapon_martial" })],
       [],
     );
 
@@ -276,10 +276,23 @@ describe("CombatEngine.calculateWeaponAttack - proficiency", () => {
 
   it("does not grant proficiency when no proficiency entries match", () => {
     const result = CombatEngine.calculateWeaponAttack(
-      makeWeapon({ id: "weapon_longsword", category: "martial_melee" }),
+      makeWeapon({ id: "item_weapon_longsword" }),
       makeScores(),
       3,
-      [makeProf({ proficiencyId: "simple_melee" })],
+      [makeProf({ proficiencyId: "category_weapon_simple" })],
+      [],
+    );
+
+    expect(result.isProficient).toBe(false);
+    expect(result.attackBonus).toBe(0);
+  });
+
+  it("does not accept the weapon's mechanical category as a proficiency id", () => {
+    const result = CombatEngine.calculateWeaponAttack(
+      makeWeapon({ category: "martial_melee" }),
+      makeScores(),
+      3,
+      [makeProf({ proficiencyId: "martial_melee" })],
       [],
     );
 
