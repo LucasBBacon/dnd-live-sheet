@@ -435,3 +435,29 @@ describe("the Primal Path signposts are gone", () => {
     expect(() => findTrait("trait_primal_path")).toThrow();
   });
 });
+
+describe("the Berserker traits live beside the class", () => {
+  it.each([
+    "trait_berserker_frenzy",
+    "trait_berserker_mindless_rage",
+    "trait_berserker_intimidating_presence",
+    "trait_berserker_retaliation",
+  ])("%s is authored in the class segment, in engine mode", (id) => {
+    expect(findTrait(id).implementation?.mode).toBe("engine");
+  });
+});
+
+describe("trait_relentless_rage's counter", () => {
+  it("resets on either rest, as the DC does", () => {
+    // RAW: "When you finish a short or long rest, the DC resets to 10." In
+    // this engine a short_rest pool resets on both rests; a long_rest pool
+    // only on the long one, which left the DC escalated after a short rest.
+    expect(findTrait("trait_relentless_rage").resources).toEqual([
+      expect.objectContaining({
+        id: "resource_relentless_rage",
+        mode: "uses",
+        resetCondition: "short_rest",
+      }),
+    ]);
+  });
+});

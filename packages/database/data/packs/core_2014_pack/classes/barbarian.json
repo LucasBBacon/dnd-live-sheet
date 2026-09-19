@@ -697,7 +697,7 @@
             "isStartingProficiency": false,
             "implementation": {
                 "mode": "engine",
-                "summary": "A self Constitution save with an escalating DC driven by the uses-mode counter; a successful save reports one point of healing and increments the counter on every attempt.",
+                "summary": "A self Constitution save with an escalating DC: 10, plus 5 for each use counted by resource_relentless_rage. That pool is uses-mode and resets on short_rest, which in this engine resets on either rest, as RAW resets the DC after a short or long rest. A success reports one point of healing, which the server writes as HP, and the counter increments on every attempt.",
                 "blockedBy": []
             },
             "modifiers": {
@@ -708,7 +708,7 @@
                 {
                     "id": "resource_relentless_rage",
                     "name": "Relentless Rage Uses",
-                    "resetCondition": "long_rest",
+                    "resetCondition": "short_rest",
                     "mode": "uses"
                 }
             ],
@@ -911,6 +911,200 @@
             "diceRules": [],
             "criticalHitModifiers": [],
             "actions": []
+        },
+        {
+            "id": "trait_berserker_frenzy",
+            "name": "Frenzy",
+            "lore": {
+                "shortDescription": "You can enter a frenzy while raging, then make a single melee weapon attack as a bonus action on each of your subsequent turns.",
+                "fullText": "Starting when you choose this path at 3rd level, you can go into a frenzy when you rage. If you do so, for the duration of your rage you can make a single melee weapon attack as a bonus action on each of your turns after this one. When your rage ends, you suffer one level of exhaustion."
+            },
+            "isStartingProficiency": false,
+            "implementation": {
+                "mode": "engine",
+                "summary": "Frenzied Rage applies status_raging and status_frenzied while consuming the Rage pool; the dynamic weapon attack creates one melee bonus-action attack per equipped qualifying weapon while status_frenzied is active. Exhaustion remains a table note because it is not tracked.",
+                "blockedBy": []
+            },
+            "tableNotes": [
+                {
+                    "text": "When your frenzy ends, you suffer one level of exhaustion.",
+                    "requiredStates": [
+                        "status_frenzied"
+                    ],
+                    "forbiddenStates": []
+                }
+            ],
+            "modifiers": {
+                "fixed": [],
+                "choices": []
+            },
+            "resources": [],
+            "triggers": [],
+            "diceRules": [],
+            "criticalHitModifiers": [],
+            "actions": [
+                {
+                    "id": "action_frenzied_rage",
+                    "name": "Frenzied Rage",
+                    "activation": "bonus_action",
+                    "consumesResource": "resource_barbarian_rage",
+                    "effect": {
+                        "type": "apply_effect",
+                        "effectName": "Frenzied Rage",
+                        "effectTag": "rage",
+                        "durationType": "manual",
+                        "isSelfConcentration": false,
+                        "states": [
+                            "status_raging",
+                            "status_frenzied"
+                        ],
+                        "modifiers": []
+                    }
+                },
+                {
+                    "id": "action_frenzied_strike",
+                    "name": "Frenzied Strike",
+                    "activation": "bonus_action",
+                    "tableNote": "Only one frenzied strike can be made on each turn after the turn you enter your frenzy.",
+                    "effect": {
+                        "type": "dynamic_weapon_attack",
+                        "requiredStates": [
+                            "status_frenzied"
+                        ],
+                        "forbiddenStates": [],
+                        "requiredWeaponProperties": [],
+                        "requiredWeaponCategory": [
+                            "simple_melee",
+                            "martial_melee"
+                        ]
+                    }
+                }
+            ]
+        },
+        {
+            "id": "trait_berserker_mindless_rage",
+            "name": "Mindless Rage",
+            "lore": {
+                "shortDescription": "You cannot be charmed or frightened while raging. If you are charmed or frightened when you enter your rage, the effect is suspended for the duration.",
+                "fullText": "Beginning at 6th level, you can't be charmed or frightened while raging. If you are charmed or frightened when you enter your rage, the effect is suspended for the duration of the rage."
+            },
+            "isStartingProficiency": false,
+            "implementation": {
+                "mode": "engine",
+                "summary": "Suppresses the charmed and frightened condition states while status_raging, retaining the toggled conditions so they return when rage ends.",
+                "blockedBy": []
+            },
+            "conditionSuppressions": [
+                {
+                    "condition": "charmed",
+                    "requiredStates": [
+                        "status_raging"
+                    ],
+                    "forbiddenStates": []
+                },
+                {
+                    "condition": "frightened",
+                    "requiredStates": [
+                        "status_raging"
+                    ],
+                    "forbiddenStates": []
+                }
+            ],
+            "modifiers": {
+                "fixed": [],
+                "choices": []
+            },
+            "resources": [],
+            "triggers": [],
+            "diceRules": [],
+            "criticalHitModifiers": [],
+            "actions": []
+        },
+        {
+            "id": "trait_berserker_intimidating_presence",
+            "name": "Intimidating Presence",
+            "lore": {
+                "shortDescription": "You can use your action to frighten a creature within 30 feet that can see or hear you.",
+                "fullText": "Beginning at 10th level, you can use your action to frighten someone with your menacing presence. When you do so, choose one creature that you can see within 30 feet of you. If the creature can see or hear you, it must succeed on a Wisdom saving throw or be frightened of you until the end of your next turn. On subsequent turns, you can use your action to extend the duration until the end of your next turn. The effect ends if the creature ends its turn out of line of sight or more than 60 feet away from you. If the creature succeeds on its saving throw, you can't use this feature on that creature again for 24 hours."
+            },
+            "isStartingProficiency": false,
+            "implementation": {
+                "mode": "engine",
+                "summary": "An action with a Wisdom save using DC 8 + Charisma modifier + proficiency bonus; the resolver reports the computed DC and the target-side frightened effect remains a table rule.",
+                "blockedBy": []
+            },
+            "modifiers": {
+                "fixed": [],
+                "choices": []
+            },
+            "resources": [],
+            "triggers": [],
+            "diceRules": [],
+            "criticalHitModifiers": [],
+            "actions": [
+                {
+                    "id": "action_intimidating_presence",
+                    "name": "Intimidating Presence",
+                    "activation": "action",
+                    "tableNote": "Choose one creature you can see within 30 feet that can see or hear you. On a failed save it is frightened until the end of your next turn; you can extend the effect with an action. The effect ends beyond 60 feet or out of sight, and a successful save grants 24-hour immunity.",
+                    "effect": {
+                        "type": "save",
+                        "areaOfEffect": {
+                            "shape": "single_target",
+                            "size": 1
+                        },
+                        "savingThrow": {
+                            "targetStat": "WIS",
+                            "dcCalculation": {
+                                "base": 8,
+                                "scalingStat": "CHA",
+                                "includeProficiency": true
+                            },
+                            "saveEffect": "negates_effect"
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "id": "trait_berserker_retaliation",
+            "name": "Retaliation",
+            "lore": {
+                "shortDescription": "When you take damage from a creature within 5 feet of you, you can use your reaction to make a melee weapon attack against that creature.",
+                "fullText": "Starting at 14th level, when you take damage from a creature that is within 5 feet of you, you can use your reaction to make a melee weapon attack against that creature."
+            },
+            "isStartingProficiency": false,
+            "implementation": {
+                "mode": "engine",
+                "summary": "The reaction attack is dynamically synthesised for each equipped melee weapon. The external damage and five-foot trigger are carried as a table note because the current event model cannot target an external creature.",
+                "blockedBy": []
+            },
+            "modifiers": {
+                "fixed": [],
+                "choices": []
+            },
+            "resources": [],
+            "triggers": [],
+            "diceRules": [],
+            "criticalHitModifiers": [],
+            "actions": [
+                {
+                    "id": "action_retaliation",
+                    "name": "Retaliation",
+                    "activation": "reaction",
+                    "tableNote": "Use this reaction when a creature within 5 feet damages you; the attack targets that creature.",
+                    "effect": {
+                        "type": "dynamic_weapon_attack",
+                        "requiredStates": [],
+                        "forbiddenStates": [],
+                        "requiredWeaponProperties": [],
+                        "requiredWeaponCategory": [
+                            "simple_melee",
+                            "martial_melee"
+                        ]
+                    }
+                }
+            ]
         }
     ],
     "classes": [
