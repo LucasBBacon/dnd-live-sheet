@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { createRoot } from "react-dom/client";
 import { act } from "react";
 import { CONDITION_IDS } from "@project/shared";
@@ -6,18 +6,16 @@ import { ConditionsWidget } from "../ConditionsWidget";
 
 const mocks = vi.hoisted(() => ({
   activeConditions: { current: [] as string[] },
+  suspended: { current: [] as Array<{ condition: string; source: string }> },
   toggleCondition: vi.fn(),
 }));
 
 vi.mock("../../../store/characterSheetStore", () => ({
-  useCharacterSheetStore: (
-    selector: (state: {
-      activeConditions: string[];
-      toggleCondition: typeof mocks.toggleCondition;
-    }) => unknown,
-  ) =>
+  useCharacterSheetStore: (selector: (state: Record<string, unknown>) => unknown) =>
     selector({
       activeConditions: mocks.activeConditions.current,
+      activeStates: [],
+      getSuspendedConditions: () => mocks.suspended.current,
       toggleCondition: mocks.toggleCondition,
     }),
 }));
@@ -35,6 +33,10 @@ const renderWidget = async () => {
 };
 
 describe("ConditionsWidget", () => {
+  beforeEach(() => {
+    mocks.suspended.current = [];
+  });
+
   it("offers a chip for every condition the engine understands", async () => {
     mocks.activeConditions.current = [];
 
@@ -91,5 +93,38 @@ describe("ConditionsWidget", () => {
     );
 
     expect(blinded?.getAttribute("title")).toContain("cannot see");
+  });
+
+  it("strikes through a held condition a trait has suspended, and names the trait", async () => {
+    mocks.activeConditions.current = ["frightened"];
+    mocks.suspended.current = [{ condition: "frightened", source: "Mindless Rage" }];
+
+    const container = await renderWidget();
+
+    const frightened = Array.from(container.querySelectorAll("button")).find(
+      (button) => button.textContent?.includes("Frightened"),
+    );
+
+    expect(frightened?.className).toContain("line-through");
+    expect(frightened?.getAttribute("title")).toBe("Suspended by Mindless Rage");
+    // still held: the condition comes back when the rage ends
+    expect(frightened?.getAttribute("aria-pressed")).toBe("true");
+  });
+
+  it("leaves a suspended condition clickable, so the player can still clear it", async () => {
+    mocks.activeConditions.current = ["frightened"];
+    mocks.suspended.current = [{ condition: "frightened", source: "Mindless Rage" }];
+    mocks.toggleCondition.mockClear();
+
+    const container = await renderWidget();
+
+    const frightened = Array.from(container.querySelectorAll("button")).find(
+      (button) => button.textContent?.includes("Frightened"),
+    );
+    await act(async () => {
+      frightened?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    });
+
+    expect(mocks.toggleCondition).toHaveBeenCalledWith("frightened");
   });
 });

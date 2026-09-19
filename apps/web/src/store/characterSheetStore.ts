@@ -18,6 +18,7 @@ import {
   type ItemActionGrant,
   type OperationalResource,
   type ProficiencyLevel,
+  type SuspendedCondition,
 } from "@project/engine";
 import {
   CombatContextSchema,
@@ -697,6 +698,12 @@ export interface CharacterSheetState {
    * panel, the action list and the trigger dispatch cannot disagree.
    */
   getActiveTraits: () => TraitDefinition[];
+  /**
+   * Toggled conditions a trait is holding off, and what holds them.
+   * composeActiveStates already leaves these out of activeStates; this is the
+   * half it computes and discards, for the widgets that have to say so.
+   */
+  getSuspendedConditions: () => SuspendedCondition[];
   getCharacterActions: () => ActionGrant[];
   executeCharacterAction: (actionId: string) => void;
   selectActorInstance: (actorInstanceId: string | null) => void;
@@ -1240,6 +1247,21 @@ export const useCharacterSheetStore = create<CharacterSheetState>(
         toCharacterSave(state),
         state.ruleSnapshot ?? undefined,
       );
+    },
+
+    getSuspendedConditions: () => {
+      const state = get();
+      // the gates composeActiveStates uses: base states and effect states,
+      // never the conditions themselves
+      const gatingStates = [
+        ...state.baseStates,
+        ...(state.runtimeEffects?.getActiveStates() ?? []),
+      ];
+      return suppressConditions(
+        state.activeConditions,
+        getConditionSuppressions(state),
+        gatingStates,
+      ).suspended;
     },
 
     getCharacterActions: () => {

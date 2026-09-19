@@ -17,15 +17,20 @@ const KIND_LABEL: Record<TableRuleLine["kind"], string> = {
 export const TableRulesWidget = () => {
   const activeStates = useCharacterSheetStore((state) => state.activeStates);
   const getActiveTraits = useCharacterSheetStore((state) => state.getActiveTraits);
+  const getSuspendedConditions = useCharacterSheetStore(
+    (state) => state.getSuspendedConditions,
+  );
   // read so a snapshot or progression change re-renders the panel; the
   // compile itself reads them through the store
   useCharacterSheetStore((state) => state.ruleSnapshot);
   useCharacterSheetStore((state) => state.classLevels);
   useCharacterSheetStore((state) => state.traitGrants);
+  useCharacterSheetStore((state) => state.activeConditions);
 
   const lines = TableRulesEngine.describe({
     traits: getActiveTraits(),
     activeStates,
+    suspendedConditions: getSuspendedConditions(),
   });
 
   return (

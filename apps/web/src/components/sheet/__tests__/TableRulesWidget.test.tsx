@@ -25,21 +25,16 @@ const wolf: TraitDefinition = {
 const mocks = vi.hoisted(() => ({
   activeStates: { current: [] as string[] },
   traits: { current: [] as unknown[] },
+  suspended: { current: [] as Array<{ condition: string; source: string }> },
 }));
 
 vi.mock("../../../store/characterSheetStore", () => ({
-  useCharacterSheetStore: (
-    selector: (state: {
-      activeStates: string[];
-      getActiveTraits: () => unknown[];
-      ruleSnapshot: null;
-      classLevels: Record<string, number>;
-      traitGrants: unknown[];
-    }) => unknown,
-  ) =>
+  useCharacterSheetStore: (selector: (state: Record<string, unknown>) => unknown) =>
     selector({
       activeStates: mocks.activeStates.current,
+      activeConditions: [],
       getActiveTraits: () => mocks.traits.current,
+      getSuspendedConditions: () => mocks.suspended.current,
       ruleSnapshot: null,
       classLevels: {},
       traitGrants: [],
@@ -77,5 +72,21 @@ describe("TableRulesWidget", () => {
 
     expect(container.textContent).toContain("Totem Spirit: Wolf");
     expect(container.textContent).toContain("your friends have advantage");
+  });
+});
+
+describe("TableRulesWidget and suspended conditions", () => {
+  it("says which condition is suspended, and by what", async () => {
+    mocks.traits.current = [];
+    mocks.activeStates.current = [];
+    mocks.suspended.current = [{ condition: "frightened", source: "Mindless Rage" }];
+
+    const container = await renderWidget();
+
+    expect(container.textContent).toContain("Suspended");
+    expect(container.textContent).toContain("Mindless Rage");
+    expect(container.textContent).toContain("Frightened is suspended.");
+
+    mocks.suspended.current = [];
   });
 });

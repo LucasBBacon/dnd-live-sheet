@@ -1391,3 +1391,50 @@ describe("getCharacterActions and dynamic templates", () => {
     expect(ids).not.toContain("action_retaliation");
   });
 });
+
+describe("getSuspendedConditions", () => {
+  const raging = () => {
+    const effects = new EffectManager();
+    effects.addEffect({
+      instanceId: "rage",
+      sourceName: "Rage",
+      durationType: "manual",
+      isSelfConcentration: false,
+      modifiers: [],
+      grantedStates: ["status_raging"],
+    });
+    return effects;
+  };
+
+  const frightenedBerserker = (runtimeEffects: EffectManager) =>
+    useCharacterSheetStore.getState().initialize({
+      id: "char_1",
+      level: 6,
+      classLevels: { class_barbarian: 6 },
+      subclassIds: { class_barbarian: "subclass_barbarian_berserker" },
+      traitGrants: [],
+      raceId: "race_human",
+      subraceId: null,
+      ruleSnapshot: packRuleSnapshot(),
+      activeConditions: ["frightened"],
+      baseStates: [],
+      runtimeEffects,
+    });
+
+  it("suspends frightened while a Mindless Rage berserker rages", () => {
+    frightenedBerserker(raging());
+
+    expect(useCharacterSheetStore.getState().getSuspendedConditions()).toEqual([
+      {
+        condition: "frightened",
+        source: packRuleSnapshot().traitsById?.["trait_berserker_mindless_rage"]?.name,
+      },
+    ]);
+  });
+
+  it("suspends nothing while the berserker is not raging", () => {
+    frightenedBerserker(new EffectManager());
+
+    expect(useCharacterSheetStore.getState().getSuspendedConditions()).toEqual([]);
+  });
+});
