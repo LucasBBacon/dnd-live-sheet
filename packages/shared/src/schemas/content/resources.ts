@@ -43,14 +43,29 @@ export const ResourceMaxRuleSchema = z.discriminatedUnion("kind", [
  * `resetCondition`). `resetCondition` wins because that is the name every pack
  * file already authors.
  */
-export const ResourceSchema = z
+export const ChargesResourceSchema = z
   .object({
     id: z.string(),
     name: z.string(),
     resetCondition: ResourceResetSchema,
     maxRule: ResourceMaxRuleSchema,
+    mode: z.literal("charges").optional(),
   })
   .strict();
+
+export const UsesResourceSchema = z
+  .object({
+    id: z.string(),
+    name: z.string(),
+    resetCondition: ResourceResetSchema,
+    mode: z.literal("uses"),
+  })
+  .strict();
+
+export const ResourceSchema = z.union([
+  ChargesResourceSchema,
+  UsesResourceSchema,
+]);
 
 export type ResourceReset = z.infer<typeof ResourceResetSchema>;
 export type ResourceMaxRule = z.infer<typeof ResourceMaxRuleSchema>;

@@ -34,6 +34,7 @@ const carriesRules = (trait: PackTrait): boolean => {
     grants(t["spells"]) ||
     len("grantedStates") > 0 ||
     len("tableNotes") > 0 ||
+    len("conditionSuppressions") > 0 ||
     len("resources") > 0 ||
     len("triggers") > 0 ||
     len("diceRules") > 0 ||
@@ -139,7 +140,7 @@ describe("trait and spell implementation markers match their data", () => {
     // 447 of 585. The barbarian pass authored Primal Champion, Bear aspect
     // and Eagle totem, then deleted the two obsolete Primal Path signposts.
     expect(pack.traits.filter((trait) => !carriesRules(trait))).toHaveLength(
-      447,
+      441,
     );
     expect(pack.traits).toHaveLength(585);
   });

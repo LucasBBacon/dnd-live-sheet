@@ -1,10 +1,12 @@
-import type { DamageType, DiceRule, DiceRuleTarget } from "@project/shared";
+import type { Ability, DamageType, DiceRule, DiceRuleTarget } from "@project/shared";
 
 export interface DiceRuleContext {
   activeStates: string[];
   sides: number;
   rollFn?: (sides: number) => number;
   requiredDamageType?: DamageType;
+  ability?: Ability;
+  abilityScores?: Record<Ability, number>;
 }
 
 export interface ParsedDiceExpression {
@@ -13,28 +15,15 @@ export interface ParsedDiceExpression {
   modifier: number;
 }
 
-/**
- * DiceEngine class provides functionality to parse standard dice notation and execute digital rolls.
- */
 export class DiceEngine {
   public static parse(expression: string): ParsedDiceExpression {
     const cleanExpr = expression.replace(/\s+/g, "").toLowerCase();
-
-    // flat damage: a blowgun deals 1, an unarmed strike deals 1, and neither
-    // rolls anything. Reported as zero dice carrying the whole amount in the
-    // modifier, so every caller that loops `count` times rolls nothing and
-    // every caller that adds `modifier` still gets the damage.
     const flatMatch = cleanExpr.match(/^(\d+)$/);
     if (flatMatch?.[1]) {
-      return {
-        count: 0,
-        sides: 0,
-        modifier: Number.parseInt(flatMatch[1], 10),
-      };
+      return { count: 0, sides: 0, modifier: Number.parseInt(flatMatch[1], 10) };
     }
 
     const match = cleanExpr.match(/^(\d+)d(\d+)([+-]\d+)?$/);
-
     if (!match || !match[1] || !match[2]) {
       throw new Error(`Invalid dice expression: ${expression}`);
     }
@@ -47,31 +36,38 @@ export class DiceEngine {
   }
 
   public static applyDiceRulesToRollResult(
-    rollResult: {
-      total: number;
-      rolls: number[];
-      modifier: number;
-    },
+    rollResult: { total: number; rolls: number[]; modifier: number },
     rules: DiceRule[],
     target: DiceRuleTarget,
     context: DiceRuleContext,
-  ): {
-    total: number;
-    rolls: number[];
-    modifier: number;
-  } {
-    const appliedRolls = this.applyDiceRules(rollResult.rolls, rules, target, {
-      ...context,
-      sides: context.sides,
-    });
+  ): { total: number; rolls: number[]; modifier: number; flooredBy?: string } {
+    const appliedRolls = this.applyDiceRules(rollResult.rolls, rules, target, context);
+    let total = appliedRolls.reduce((sum, value) => sum + value, 0) + rollResult.modifier;
+    let flooredBy: string | undefined;
 
-    const total =
-      appliedRolls.reduce((sum, value) => sum + value, 0) + rollResult.modifier;
+    for (const rule of rules) {
+      if (
+        rule.target !== target ||
+        !this.matchesStateRequirements(rule, context) ||
+        rule.mutator.type !== "minimum_total"
+      ) continue;
+
+      const floor = rule.mutator.floorSource === "ability_score"
+        ? context.abilityScores?.[rule.requiredAbility ?? context.ability ?? "STR"]
+        : rule.mutator.floorValue;
+      if (floor !== undefined && total < floor) {
+        total = floor;
+        flooredBy = rule.mutator.floorSource === "ability_score"
+          ? `${rule.requiredAbility ?? context.ability ?? "ability"} score`
+          : "fixed floor";
+      }
+    }
 
     return {
       total: Math.max(0, total),
       rolls: appliedRolls,
       modifier: rollResult.modifier,
+      ...(flooredBy !== undefined && { flooredBy }),
     };
   }
 
@@ -80,11 +76,7 @@ export class DiceEngine {
     rules: DiceRule[],
     target: DiceRuleTarget,
     context: DiceRuleContext,
-  ): {
-    total: number;
-    rolls: number[];
-    modifier: number;
-  } {
+  ): { total: number; rolls: number[]; modifier: number; flooredBy?: string } {
     const baseRoll = this.rollDigital(expression);
     return this.applyDiceRulesToRollResult(baseRoll, rules, target, {
       ...context,
@@ -94,24 +86,19 @@ export class DiceEngine {
 
   private static matchesStateRequirements(
     rule: DiceRule,
-    activeStates: string[],
-    requiredDamageType?: string,
+    context: DiceRuleContext,
   ): boolean {
     if (
       rule.requiredStates &&
-      !rule.requiredStates.every((state) => activeStates.includes(state))
-    ) {
-      return false;
-    }
-
+      !rule.requiredStates.every((state) => context.activeStates.includes(state))
+    ) return false;
     if (
-      requiredDamageType &&
       rule.requiredDamageType &&
-      rule.requiredDamageType !== requiredDamageType
-    ) {
+      rule.requiredDamageType !== context.requiredDamageType
+    ) return false;
+    if (rule.requiredAbility !== undefined && rule.requiredAbility !== context.ability) {
       return false;
     }
-
     return true;
   }
 
@@ -121,24 +108,20 @@ export class DiceEngine {
     context: DiceRuleContext,
   ): number[] {
     const mutator = rule.mutator;
-
     if (mutator.type === "reroll_once") {
       const triggerValues = new Set(mutator.triggerOn ?? []);
-      return rolls.map((roll) => {
-        if (!triggerValues.has(roll)) return roll;
-        return context.rollFn ? context.rollFn(context.sides) : roll;
-      });
+      return rolls.map((roll) =>
+        triggerValues.has(roll)
+          ? context.rollFn
+            ? context.rollFn(context.sides)
+            : roll
+          : roll,
+      );
     }
-
     if (mutator.type === "minimum_value") {
       const floorValue = mutator.floorValue ?? 1;
       return rolls.map((roll) => Math.max(roll, floorValue));
     }
-
-    if (mutator.type === "explode") {
-      return rolls.map((roll) => roll);
-    }
-
     return rolls;
   }
 
@@ -149,50 +132,27 @@ export class DiceEngine {
     context: DiceRuleContext,
   ): number[] {
     let currentRolls = [...rolls];
-
     for (const rule of rules) {
-      if (rule.target !== target) continue;
-      if (
-        !this.matchesStateRequirements(
-          rule,
-          context.activeStates,
-          context.requiredDamageType,
-        )
-      )
-        continue;
+      if (rule.target !== target || !this.matchesStateRequirements(rule, context)) continue;
       currentRolls = this.applyMutator(currentRolls, rule, context);
     }
-
     return currentRolls;
   }
 
-  /**
-   * Parses standard notation and executes a digital roll.
-   * @param expression Standard roll notation (e.g., "2d6 + 3")
-   * @returns An object containing the total roll, individual rolls, and modifier
-   */
   public static rollDigital(expression: string): {
     total: number;
     rolls: number[];
     modifier: number;
   } {
     const { count, sides, modifier } = this.parse(expression);
-
     const rolls: number[] = [];
     let sum = 0;
-
     for (let i = 0; i < count; i++) {
-      // 1-indexed random roll
       const result = Math.floor(Math.random() * sides) + 1;
       rolls.push(result);
       sum += result;
     }
-
-    return {
-      total: Math.max(0, sum + modifier),
-      rolls,
-      modifier,
-    };
+    return { total: Math.max(0, sum + modifier), rolls, modifier };
   }
 
   public static rollMaximized(expression: string): {
@@ -202,11 +162,6 @@ export class DiceEngine {
   } {
     const { count, sides, modifier } = this.parse(expression);
     const rolls = Array.from({ length: count }, () => sides);
-
-    return {
-      total: Math.max(0, count * sides + modifier),
-      rolls,
-      modifier,
-    };
+    return { total: Math.max(0, count * sides + modifier), rolls, modifier };
   }
 }

@@ -316,6 +316,9 @@ const getAuthoritativeRuntimeContext = async (
     maxCharges: row.max,
     currentCharges: row.current,
     resetOn: row.resetCondition,
+    ...(snapshot.resourcesById[row.id]?.mode !== undefined && {
+      mode: snapshot.resourcesById[row.id]?.mode,
+    }),
   }));
 
   const existing = authoritativeRuntimeByCharacter.get(characterId);
@@ -473,6 +476,9 @@ const resolveItemAction = async (
     diceRules: resolved.diceRules,
     attacksPerAction: resolved.attacksPerAction,
     baseStates: liveSheet.baseStates,
+    saves: liveSheet.saves,
+    abilities: liveSheet.abilities,
+    proficiencyBonus: liveSheet.proficiencyBonus,
     inventory: resolved.inventory,
   };
 };
@@ -688,6 +694,9 @@ export function initializeWebSocketGateway(httpServer: any) {
           let attacksPerAction = 1;
           let actorInstanceId: string | undefined = payload.actorInstanceId;
           let actionStates = runtime.effectManager.getActiveStates();
+          let saveModifiers: Record<string, number> = {};
+          let abilityScores: Record<string, number> = {};
+          let proficiencyBonus = 0;
           // Both the character and item branches resolve through
           // resolveCharacterAction, so this is populated either way; the actor
           // branch leaves it empty, since a summoned actor carries nothing.
@@ -703,6 +712,19 @@ export function initializeWebSocketGateway(httpServer: any) {
             diceRules = resolved.diceRules;
             attacksPerAction = resolved.attacksPerAction;
             inventory = resolved.inventory;
+            saveModifiers = Object.fromEntries(
+              Object.entries(resolved.liveSheet.saves).map(([ability, save]) => [
+                ability,
+                save.totalModifier,
+              ]),
+            );
+            abilityScores = Object.fromEntries(
+              Object.entries(resolved.liveSheet.abilities).map(([ability, score]) => [
+                ability,
+                score.score,
+              ]),
+            );
+            proficiencyBonus = resolved.liveSheet.proficiencyBonus;
             actionStates = [
               ...new Set([...actionStates, ...resolved.liveSheet.baseStates]),
             ];
@@ -721,6 +743,19 @@ export function initializeWebSocketGateway(httpServer: any) {
             diceRules = resolved.diceRules;
             attacksPerAction = resolved.attacksPerAction;
             inventory = resolved.inventory;
+            saveModifiers = Object.fromEntries(
+              Object.entries(resolved.saves).map(([ability, save]) => [
+                ability,
+                save.totalModifier,
+              ]),
+            );
+            abilityScores = Object.fromEntries(
+              Object.entries(resolved.abilities).map(([ability, score]) => [
+                ability,
+                score.score,
+              ]),
+            );
+            proficiencyBonus = resolved.proficiencyBonus;
             actionStates = [
               ...new Set([...actionStates, ...resolved.baseStates]),
             ];
@@ -817,6 +852,9 @@ export function initializeWebSocketGateway(httpServer: any) {
                     economyPolicy: "track",
                     activeStates: runtime.effectManager.getActiveStates(),
                     diceRules: diceRules as any,
+                    saveModifiers: saveModifiers as any,
+                    abilityScores: abilityScores as any,
+                    proficiencyBonus,
                     inventoryLedger: ledger,
                     ...(payload.source === "item" &&
                       payload.instanceId !== undefined && {
@@ -913,10 +951,12 @@ export function initializeWebSocketGateway(httpServer: any) {
               // that potion just rolled actually becomes hit points.
               if (
                 action !== null &&
-                action.effect.type === "heal" &&
+                (action.effect.type === "heal" || action.effect.type === "self_save") &&
                 "rollResults" in execution
               ) {
-                const healRoll = execution.rollResults?.[0];
+                const healRoll = execution.rollResults?.find(
+                  (result) => result.label === "Healing",
+                ) ?? (action.effect.type === "heal" ? execution.rollResults?.[0] : undefined);
                 if (healRoll) {
                   // modifyCharacterHp already clamps to max HP - see
                   // combatService.ts - so healing past full is handled there,

@@ -130,6 +130,7 @@ export class RestEngine {
           resource.current,
           maxUses,
           isLongRest,
+          rule.mode === "uses",
         ),
       };
     });
@@ -147,14 +148,15 @@ const restedCharges = (
   current: number,
   maxUses: number,
   isLongRest: boolean,
+  usesMode = false,
 ): number => {
   switch (resetCondition) {
     case "short_rest":
       // short rest resources also come back on a long one
-      return maxUses;
+      return usesMode ? 0 : maxUses;
     case "long_rest":
     case "dawn":
-      return isLongRest ? maxUses : current;
+      return isLongRest ? (usesMode ? 0 : maxUses) : current;
     case "long_rest_half":
       return isLongRest
         ? Math.min(maxUses, current + Math.max(1, Math.floor(maxUses / 2)))

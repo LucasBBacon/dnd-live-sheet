@@ -6,6 +6,7 @@ import {
   type DiceRule,
   type EngineEvent,
   type TriggerGrant,
+  type Ability,
 } from "@project/shared";
 import type { ActiveEffect, EffectManager } from "../calculators/effects.js";
 import type { CombatContextManager } from "../calculators/combatContext.js";
@@ -107,6 +108,9 @@ export interface ActionExecutionContext {
    * DerivedStatEngine.calculateAttacksPerAction. Defaults to one.
    */
   attacksPerAction?: number;
+  saveModifiers?: Record<Ability, number>;
+  abilityScores?: Record<Ability, number>;
+  proficiencyBonus?: number;
 }
 
 const ok: ActionResult = { executed: true };
@@ -317,6 +321,9 @@ export class ActionResolver {
       {
         activeStates,
         sides,
+        ...(context.abilityScores !== undefined && {
+          abilityScores: context.abilityScores,
+        }),
         ...(requiredDamageType !== undefined ? { requiredDamageType } : {}),
         rollFn: (nextSides) => DiceEngine.rollDigital(`1d${nextSides}`).total,
       },
@@ -539,6 +546,7 @@ export class ActionResolver {
       }
 
       case "save": {
+        const saveAbility = effect.savingThrow.targetStat as Ability;
         const saveRoll = DiceEngine.rollDigital("1d20");
         const resolvedRoll = this.resolveTargetRoll(
           saveRoll,
@@ -548,7 +556,15 @@ export class ActionResolver {
           20,
         );
 
-        const total = resolvedRoll.total;
+        const modifier = context.saveModifiers?.[saveAbility] ?? 0;
+        const { base, scalingStat, includeProficiency } =
+          effect.savingThrow.dcCalculation;
+        const scalingScore = context.abilityScores?.[scalingStat as Ability] ?? 10;
+        const dc =
+          base +
+          Math.floor((scalingScore - 10) / 2) +
+          (includeProficiency ? context.proficiencyBonus ?? 0 : 0);
+        const total = resolvedRoll.total + modifier;
 
         return {
           ...ok,
@@ -556,8 +572,9 @@ export class ActionResolver {
             {
               total,
               rolls: resolvedRoll.rolls,
-              modifier: saveRoll.modifier,
+              modifier,
               target: "SAVING_THROW",
+              summary: `${saveAbility} saving throw, DC ${dc}`,
               ...(effect.damage?.[0]?.damageType !== undefined
                 ? { damageType: effect.damage[0].damageType }
                 : {}),
@@ -613,6 +630,46 @@ export class ActionResolver {
             },
           ],
         };
+      }
+
+      case "self_save": {
+        const ability = effect.ability as Ability;
+        const escalatingRule = effect.dcRule.kind === "escalating_per_use"
+          ? effect.dcRule
+          : undefined;
+        const uses = escalatingRule
+          ? context.resourceManager.getRuntimeResources().find(
+              (resource) => resource.id === escalatingRule.resourceId,
+            )?.currentCharges ?? 0
+          : 0;
+        const dc = effect.dcRule.kind === "fixed"
+          ? effect.dcRule.value
+          : effect.dcRule.base + effect.dcRule.increasePerUse * uses;
+        const roll = DiceEngine.rollDigital("1d20");
+        const modifier = context.saveModifiers?.[ability] ?? 0;
+        const total = roll.total + modifier;
+        if (escalatingRule) {
+          context.resourceManager.consume(escalatingRule.resourceId, 1);
+        }
+        const results: ActionRollResult[] = [{
+          total,
+          rolls: roll.rolls,
+          modifier,
+          target: "SAVING_THROW",
+          label: action.name,
+          summary: `${ability} saving throw, DC ${dc}: ${total >= dc ? "success" : "failure"}`,
+        }];
+        if (total >= dc && effect.onSuccess) {
+          const healing = DiceEngine.rollDigital(effect.onSuccess.dice);
+          results.push({
+            total: healing.total,
+            rolls: healing.rolls,
+            modifier: healing.modifier,
+            target: "DAMAGE_ROLL",
+            label: "Healing",
+          });
+        }
+        return { ...ok, rollResults: results };
       }
 
       default:

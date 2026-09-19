@@ -1,5 +1,6 @@
 import { useCheckRoll } from "../../hooks/useCheckRoll";
 import { useDerivedStats } from "../../hooks/useCharacterStats";
+import { SKILL_MAP } from "@project/shared";
 
 const signed = (value: number): string =>
   value >= 0 ? `+${value}` : `${value}`;
@@ -41,6 +42,7 @@ export const SkillsWidget = () => {
                   label: skill.name,
                   modifier: skill.totalModifier,
                   target: "ABILITY_CHECK",
+                  ability: SKILL_MAP[skill.id]?.ability as "STR" | "DEX" | "CON" | "INT" | "WIS" | "CHA",
                 })
               }
               className="rounded border border-gray-300 px-1.5 py-0.5 font-mono hover:bg-gray-100"

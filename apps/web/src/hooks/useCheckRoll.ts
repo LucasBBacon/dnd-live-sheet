@@ -1,11 +1,13 @@
 import { useCharacterSheetStore } from "../store/characterSheetStore";
 import { useRollStore } from "../store/rollStore";
+import { DiceEngine, type Ability } from "@project/engine";
 
 export interface CheckRollRequest {
   /** What is being rolled, for the prompt and the roll log. */
   label: string;
   modifier: number;
   target: "ABILITY_CHECK" | "SAVING_THROW";
+  ability?: Ability;
 }
 
 const signed = (value: number): string =>
@@ -28,8 +30,11 @@ export const useCheckRoll = () => {
     (state) => state.recordRollResult,
   );
   const characterId = useCharacterSheetStore((state) => state.id);
+  const activeStates = useCharacterSheetStore((state) => state.activeStates);
+  const getActiveTraits = useCharacterSheetStore((state) => state.getActiveTraits);
+  const baseScores = useCharacterSheetStore((state) => state.baseScores);
 
-  return async ({ label, modifier, target }: CheckRollRequest) => {
+  return async ({ label, modifier, target, ability }: CheckRollRequest) => {
     let rolled: number;
 
     try {
@@ -40,13 +45,23 @@ export const useCheckRoll = () => {
       return;
     }
 
+    const resolved = DiceEngine.applyDiceRulesToRollResult(
+      { total: rolled + modifier, rolls: [rolled], modifier },
+      getActiveTraits?.().flatMap((trait) => trait.diceRules ?? []) ?? [],
+      target,
+      {
+        activeStates,
+        sides: 20,
+        ...(ability !== undefined && { ability }),
+        abilityScores: baseScores,
+      },
+    );
+
     recordRollResult({
       characterId,
       rollResults: [
         {
-          total: rolled + modifier,
-          rolls: [rolled],
-          modifier,
+          ...resolved,
           target,
           label,
         },

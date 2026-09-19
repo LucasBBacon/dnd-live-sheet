@@ -92,6 +92,7 @@ export const SavingThrowsWidget = () => {
                     label: `${ABILITY_NAMES[save.ability] ?? save.ability} save`,
                     modifier: save.totalModifier,
                     target: "SAVING_THROW",
+                    ability: save.ability,
                   })
                 }
                 className="rounded border border-gray-300 px-1.5 py-0.5 font-mono hover:bg-gray-100"

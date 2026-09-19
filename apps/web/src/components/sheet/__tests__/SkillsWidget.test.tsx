@@ -100,6 +100,7 @@ describe("SkillsWidget", () => {
       label: "Stealth",
       modifier: 7,
       target: "ABILITY_CHECK",
+      ability: "DEX",
     });
   });
 });

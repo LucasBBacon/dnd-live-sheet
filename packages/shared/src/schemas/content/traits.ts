@@ -48,6 +48,13 @@ export const TableNoteSchema = z.object({
 
 export type TableNote = z.infer<typeof TableNoteSchema>;
 
+export const ConditionSuppressionSchema = z.object({
+  condition: z.string(),
+  ...StatePredicateSchema.shape,
+});
+
+export type ConditionSuppression = z.infer<typeof ConditionSuppressionSchema>;
+
 export const TraitDefinitionSchema = z.object({
   id: z.string(),
   name: z.string(),
@@ -79,6 +86,7 @@ export const TraitDefinitionSchema = z.object({
    * every hand-written trait literal.
    */
   tableNotes: z.array(TableNoteSchema).optional(),
+  conditionSuppressions: z.array(ConditionSuppressionSchema).optional(),
 
   proficiencies: z
     .object({

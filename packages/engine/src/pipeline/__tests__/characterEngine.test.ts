@@ -1775,3 +1775,72 @@ describe("CharacterEngine.buildLiveSheet: Totem Spirit (Eagle)", () => {
     ).toBe(false);
   });
 });
+
+describe("CharacterEngine.buildLiveSheet: Berserker dynamic attacks", () => {
+  const berserker = (level: number): CharacterSave =>
+    halfElfFighter({
+      classes: [
+        {
+          classId: "class_barbarian",
+          level,
+          subclassId: "subclass_barbarian_berserker",
+          selections: {},
+        },
+      ],
+    });
+
+  it("synthesises a frenzied melee weapon attack for an equipped weapon", () => {
+    const effects = new EffectManager();
+    effects.addEffect({
+      instanceId: "rage",
+      sourceName: "Frenzied Rage",
+      durationType: "manual",
+      isSelfConcentration: false,
+      modifiers: [],
+      grantedStates: ["status_raging", "status_frenzied"],
+    });
+
+    const sheet = CharacterEngine.buildLiveSheet(
+      berserker(3),
+      [{
+        id: "weapon-1",
+        itemId: "item_weapon_longsword",
+        quantity: 1,
+        slot: "main_hand",
+        isAttuned: false,
+      }],
+      effects,
+      new ResourceManager(),
+      { snapshot: corePackLookup() },
+    );
+
+    const attack = sheet.actions.find(
+      (action) => action.id === "action_frenzied_strike:weapon-1",
+    );
+    expect(attack).toMatchObject({ activation: "bonus_action" });
+    expect(attack?.effect).toMatchObject({
+      type: "attack",
+      attackType: "melee_weapon",
+      attackBonus: expect.any(Number),
+      damageBonus: expect.any(Number),
+    });
+  });
+
+  it("does not expose the frenzied attack without the frenzied state", () => {
+    const sheet = CharacterEngine.buildLiveSheet(
+      berserker(3),
+      [{
+        id: "weapon-1",
+        itemId: "item_weapon_longsword",
+        quantity: 1,
+        slot: "main_hand",
+        isAttuned: false,
+      }],
+      new EffectManager(),
+      new ResourceManager(),
+      { snapshot: corePackLookup() },
+    );
+
+    expect(sheet.actions.some((action) => action.id.startsWith("action_frenzied_strike:"))).toBe(false);
+  });
+});

@@ -26,6 +26,7 @@ export const getResourceMaxUses = (
   totalLevel: number,
   classLevels: Record<string, number>,
 ): number => {
+  if (rule.mode === "uses") return 0;
   switch (rule.maxRule.kind) {
     case "fixed":
       return rule.maxRule.value;
@@ -67,6 +68,7 @@ export interface MaterialisedPool {
   current: number;
   max: number;
   resetCondition: Resource["resetCondition"];
+  mode?: Resource["mode"];
 }
 
 /**
@@ -94,6 +96,7 @@ export const materialiseMissingPools = (
         current: max,
         max,
         resetCondition: resource.resetCondition,
+        ...(resource.mode !== undefined && { mode: resource.mode }),
       };
     });
 };

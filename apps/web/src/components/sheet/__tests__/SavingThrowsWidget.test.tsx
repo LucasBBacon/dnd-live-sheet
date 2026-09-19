@@ -165,6 +165,7 @@ describe("SavingThrowsWidget rolling", () => {
       label: "Dexterity save",
       modifier: 4,
       target: "SAVING_THROW",
+      ability: "DEX",
     });
   });
 });

@@ -554,6 +554,95 @@ export class CharacterEngine {
       actions.push(...synthesizedActions);
     }
 
+    for (const trait of activeTraits) {
+      for (const dynamicAction of trait.actions ?? []) {
+        if (dynamicAction.effect.type !== "dynamic_weapon_attack") continue;
+        const { requiredStates, forbiddenStates } = dynamicAction.effect;
+        if (
+          !requiredStates.every((state) => activeStates.includes(state)) ||
+          forbiddenStates.some((state) => activeStates.includes(state))
+        ) {
+          continue;
+        }
+
+        for (const instance of inventory) {
+          if (instance.slot === "backpack") continue;
+          const weapon = resolveWeaponDefinition(instance.itemId, options.snapshot);
+          if (!weapon || weapon.category.includes("ranged")) continue;
+          if (
+            !dynamicAction.effect.requiredWeaponProperties.every((property) =>
+              weapon.properties.some((weaponProperty) => weaponProperty === property),
+            )
+          ) {
+            continue;
+          }
+          if (
+            dynamicAction.effect.requiredWeaponCategory.length > 0 &&
+            !dynamicAction.effect.requiredWeaponCategory.includes(weapon.category)
+          ) {
+            continue;
+          }
+
+          const weaponAttackContext = {
+            hand:
+              instance.slot === "off_hand"
+                ? ("off_hand" as const)
+                : ("main_hand" as const),
+            attackUsage:
+              instance.slot === "off_hand"
+                ? ("two_weapon_bonus" as const)
+                : ("standard" as const),
+            isTwoHandedGrip: activeStates.includes("two_handed_grip"),
+          };
+          const attackAnalysis = CombatEngine.calculateWeaponAttack(
+            weapon,
+            {
+              STR: abilities.STR.score,
+              DEX: abilities.DEX.score,
+              CON: abilities.CON.score,
+              INT: abilities.INT.score,
+              WIS: abilities.WIS.score,
+              CHA: abilities.CHA.score,
+            },
+            profBonus,
+            proficiencies,
+            allModifiers,
+            activeStates,
+            criticalHitModifiers,
+            false,
+            undefined,
+            weaponAttackContext,
+            save.classes.reduce(
+              (levelsByClass, classState) => {
+                levelsByClass[classState.classId] = classState.level;
+                return levelsByClass;
+              },
+              {} as Record<string, number>,
+            ),
+          );
+          const governingStat = attackAnalysis.breakdown.governingStat as Ability;
+          const generated = WeaponSynthesizer.generateWeaponAction(
+            weapon,
+            governingStat,
+            weaponAttackContext,
+            attackAnalysis.criticalDamageMaximized,
+          );
+          if (generated.effect.type !== "attack") continue;
+
+          generated.id = `${dynamicAction.id}:${instance.id}`;
+          generated.name = `${dynamicAction.name}: ${weapon.name}`;
+          generated.activation = dynamicAction.activation;
+          if (dynamicAction.tableNote !== undefined) {
+            generated.tableNote = dynamicAction.tableNote;
+          }
+          generated.effect.attackBonus = attackAnalysis.attackBonus;
+          generated.effect.damageBonus = attackAnalysis.damageBonus;
+          generated.effect.criticalDamage = attackAnalysis.criticalDamage;
+          actions.push(generated);
+        }
+      }
+    }
+
     // endregion
 
     // region Snapshot

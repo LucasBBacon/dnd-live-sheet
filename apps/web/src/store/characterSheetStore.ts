@@ -8,6 +8,7 @@ import {
   ResourceManager,
   RestEngine,
   canEquipTo,
+  suppressConditions,
   resolveEquipmentDefinition,
   collectGrantedResources,
   materialiseMissingPools,
@@ -296,14 +297,33 @@ const composeActiveStates = (
   baseStates: string[] | undefined,
   activeConditions: string[] | undefined,
   effectManager: EffectManager,
-): string[] =>
-  Array.from(
-    new Set([
-      ...(baseStates ?? []),
-      ...(activeConditions ?? []),
-      ...effectManager.getActiveStates(),
-    ]),
+  suppressions: Array<{ condition: string; requiredStates: string[]; forbiddenStates: string[]; source?: string }> = [],
+): string[] => {
+  const effectStates = effectManager.getActiveStates();
+  const gatingStates = [...(baseStates ?? []), ...effectStates];
+  const active = suppressConditions(
+    activeConditions ?? [],
+    suppressions,
+    gatingStates,
+  ).active;
+
+  return Array.from(new Set([...gatingStates, ...active]));
+};
+
+const getConditionSuppressions = (state: Pick<CharacterSheetState, "ruleSnapshot" | "classLevels" | "subclassIds" | "baseScores" | "raceId" | "subraceId" | "currentHp" | "baseHpRolled" | "traitGrants" | "activeConditions">): Array<{ condition: string; requiredStates: string[]; forbiddenStates: string[]; source?: string }> => {
+  if (!state.ruleSnapshot) return [];
+  return CharacterBootstrapper.compileActiveTraits(
+    toCharacterSave(state as CharacterSheetState),
+    state.ruleSnapshot,
+  ).flatMap((trait) =>
+    (trait.conditionSuppressions ?? []).map((suppression) => ({
+      ...suppression,
+      requiredStates: suppression.requiredStates ?? [],
+      forbiddenStates: suppression.forbiddenStates ?? [],
+      source: trait.name,
+    })),
   );
+};
 
 const dispatchAuthoredEvent = (
   state: CharacterSheetState,
@@ -377,7 +397,12 @@ const dispatchAuthoredEvent = (
   return {
     results,
     rollResults: results.flatMap((result) => result.rollResults ?? []),
-    activeStates: composeActiveStates(state.baseStates, state.activeConditions, runtimeEffects),
+    activeStates: composeActiveStates(
+      state.baseStates,
+      state.activeConditions,
+      runtimeEffects,
+      getConditionSuppressions(state),
+    ),
     resources: runtimeResources.getRuntimeResources().map((resource) => ({
       id: resource.id,
       current: resource.currentCharges,
@@ -410,7 +435,12 @@ const resolveHealthTransition = (
 
   let appliedHp = targetHp;
   let rollResults: ActionRollResult[] = [];
-  let activeStates = composeActiveStates(state.baseStates, state.activeConditions, runtimeEffects);
+  let activeStates = composeActiveStates(
+    state.baseStates,
+    state.activeConditions,
+    runtimeEffects,
+    getConditionSuppressions(state),
+  );
   let resources = runtimeResources.getRuntimeResources().map((resource) => ({
     id: resource.id,
     current: resource.currentCharges,
@@ -1314,7 +1344,12 @@ export const useCharacterSheetStore = create<CharacterSheetState>(
       set((previous) => ({
         // the payload carries the server's effect states only, so the states
         // that do not come from effects have to be folded back in here
-        activeStates: composeActiveStates(previous.baseStates, previous.activeConditions, runtimeEffects),
+        activeStates: composeActiveStates(
+          previous.baseStates,
+          previous.activeConditions,
+          runtimeEffects,
+          getConditionSuppressions(previous),
+        ),
         resources: payload.resources,
         // one ACTION_RESOLVED reply is one action, so latestRollResults
         // and latestNotes are always decided together from this payload -
@@ -1464,6 +1499,7 @@ export const useCharacterSheetStore = create<CharacterSheetState>(
           previous.baseStates,
           previous.activeConditions,
           runtimeEffects,
+          getConditionSuppressions(previous),
         ),
         resources: payload.resources,
         latestRollResults:
@@ -1501,6 +1537,7 @@ export const useCharacterSheetStore = create<CharacterSheetState>(
             state.baseStates,
             activeConditions,
             state.runtimeEffects ?? new EffectManager(),
+            getConditionSuppressions({ ...state, activeConditions }),
           ),
         };
       });

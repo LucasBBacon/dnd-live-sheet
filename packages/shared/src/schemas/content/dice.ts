@@ -20,18 +20,21 @@ export const RNGMutatorTypeSchema = z.enum([
   "reroll_once",
   "minimum_value",
   "explode",
+  "minimum_total",
 ]);
 
 export const RNGMutatorSchema = z.object({
   type: RNGMutatorTypeSchema,
   triggerOn: z.array(z.number()).optional(),
   floorValue: z.number().optional(),
+  floorSource: z.enum(["fixed", "ability_score"]).optional(),
 });
 
 export const DiceRuleSchema = z.object({
   target: DiceRuleTargetSchema,
   requiredStates: z.array(z.string()).default([]),
   requiredDamageType: DamageTypeSchema.optional(),
+    requiredAbility: z.enum(["STR", "DEX", "CON", "INT", "WIS", "CHA"]).optional(),
   mutator: RNGMutatorSchema,
 });
 

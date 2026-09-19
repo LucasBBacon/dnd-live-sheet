@@ -154,6 +154,25 @@ export const HealEffectSchema = z.object({
   dice: DamageExpressionSchema,
 });
 
+export const SaveDcRuleSchema = z.discriminatedUnion("kind", [
+  z.object({ kind: z.literal("fixed"), value: z.number() }),
+  z.object({
+    kind: z.literal("escalating_per_use"),
+    base: z.number(),
+    increasePerUse: z.number(),
+    resourceId: z.string(),
+  }),
+]);
+
+export const SelfSaveEffectSchema = z.object({
+  type: z.literal("self_save"),
+  ability: ModifierTargetSchema,
+  dcRule: SaveDcRuleSchema,
+  onSuccess: HealEffectSchema.optional(),
+  onFailure: z.never().optional(),
+  ...StatePredicateSchema.shape,
+});
+
 export const AttackEffectSchema = z.object({
   type: z.literal("attack"),
   attackType: AttackTypeSchema,
@@ -218,6 +237,7 @@ export const RemoveEffectSchema = z.object({
 
 export const DynamicWeaponAttackSchema = z.object({
   type: z.literal("dynamic_weapon_attack"),
+  ...StatePredicateSchema.shape,
   requiredWeaponProperties: z.array(z.string()).default([]),
   requiredWeaponCategory: z.array(z.string()).default([]),
 });
@@ -233,6 +253,7 @@ export const CoreEffectUnion = z.discriminatedUnion("type", [
   RemoveEffectSchema,
   DynamicWeaponAttackSchema,
   HealEffectSchema,
+  SelfSaveEffectSchema,
 ]);
 
 export const MacroEffectSchema = z.object({

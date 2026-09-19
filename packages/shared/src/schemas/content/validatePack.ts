@@ -389,7 +389,7 @@ export const validateCoreRulePack = (
   });
 
   pack.resources.forEach((entry, index) => {
-    if (entry.maxRule.kind === "class_level_thresholds" && !classIds.has(entry.maxRule.classId)) {
+    if ("maxRule" in entry && entry.maxRule.kind === "class_level_thresholds" && !classIds.has(entry.maxRule.classId)) {
       pushReferenceIssue(issues, "unknown_class_reference", ["resources", index, "maxRule", "classId"], entry.maxRule.classId);
     }
   });
