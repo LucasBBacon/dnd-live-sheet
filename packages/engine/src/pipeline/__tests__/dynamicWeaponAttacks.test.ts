@@ -106,9 +106,12 @@ describe("dynamicAttackApplies", () => {
 });
 
 describe("dynamicAttackId", () => {
-  it("joins the template and the inventory row, as the server resolves it", () => {
-    expect(dynamicAttackId("action_frenzied_strike", "inv-1")).toBe(
-      "action_frenzied_strike:inv-1",
+  it("joins the template and the hand, as the server resolves it", () => {
+    expect(dynamicAttackId("action_frenzied_strike", "main_hand")).toBe(
+      "action_frenzied_strike:main_hand",
+    );
+    expect(dynamicAttackId("action_retaliation", "off_hand")).toBe(
+      "action_retaliation:off_hand",
     );
   });
 });

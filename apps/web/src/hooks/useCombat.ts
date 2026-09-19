@@ -9,7 +9,13 @@ import {
   resolveWeaponDefinition,
   type Ability,
 } from "@project/engine";
-import type { FixedProficiencyGrant, TraitDefinition } from "@project/shared";
+import type {
+  FixedProficiencyGrant,
+  InventoryInstance,
+  TraitDefinition,
+} from "@project/shared";
+
+type HeldItem = InventoryInstance & { slot: "main_hand" | "off_hand" };
 
 /**
  * A custom React hook that calculates the combat matrices for all equipped weapons in a character's inventory.
@@ -33,7 +39,8 @@ export const useCombat = () => {
   return useMemo(() => {
     // 1 - isolate items currently held in hands
     const equippedHands = inventory.filter(
-      (item) => item.slot === "main_hand" || item.slot === "off_hand",
+      (item): item is HeldItem =>
+        item.slot === "main_hand" || item.slot === "off_hand",
     );
 
     // flatten derived abilities back to raw scores for the engine
@@ -115,21 +122,23 @@ export const useCombat = () => {
       };
 
       // 5 - execute engine pipeline
-      const derivedAttack = CombatEngine.calculateWeaponAttack(
-        weaponDef,
-        abilityScores,
-        profBonus,
-        weaponProficiencies,
-        applicableMods,
-        activeStates,
-        criticalHitModifiers,
-        false,
-        undefined,
-        weaponAttackContext,
-        // without this a class_level_thresholds modifier resolves to zero, so
-        // Rage's damage bonus silently vanishes from the attack panel
-        classLevels,
-      );
+      const attackWith = (context: typeof weaponAttackContext) =>
+        CombatEngine.calculateWeaponAttack(
+          weaponDef,
+          abilityScores,
+          profBonus,
+          weaponProficiencies,
+          applicableMods,
+          activeStates,
+          criticalHitModifiers,
+          false,
+          undefined,
+          context,
+          // without this a class_level_thresholds modifier resolves to zero, so
+          // Rage's damage bonus silently vanishes from the attack panel
+          classLevels,
+        );
+      const derivedAttack = attackWith(weaponAttackContext);
 
       // 6 - ammo logic
       let currentAmmo = 0;
@@ -161,21 +170,30 @@ export const useCombat = () => {
       });
 
       // one further card per template that offers a swing with this weapon:
-      // the weapon card's own numbers, the template's activation, and the id
-      // the server gives the swing it synthesises, so pressing the card
-      // resolves it. Only melee weapons qualify, so there is no ammunition.
+      // the template's activation, and the id the server gives the swing it
+      // synthesises, so pressing the card resolves it. Only melee weapons
+      // qualify, so there is no ammunition. A swing is "a melee weapon
+      // attack", never two-weapon fighting, so its numbers are a standard
+      // attack's: the main-hand weapon card's own, or recomputed for the off
+      // hand, where the weapon card drops the ability modifier from damage.
+      let swingAttack: typeof derivedAttack | undefined;
       for (const template of dynamicTemplates) {
         if (template.effect.type !== "dynamic_weapon_attack") continue;
         if (!dynamicAttackApplies(template.effect, weaponDef, activeStates)) {
           continue;
         }
 
+        swingAttack ??=
+          item.slot === "off_hand"
+            ? attackWith({ ...weaponAttackContext, attackUsage: "standard" })
+            : derivedAttack;
+
         acc.push({
-          ...derivedAttack,
+          ...swingAttack,
           name: `${template.name}: ${weaponDef.name}`,
           slot: item.slot,
           activation: template.activation,
-          actionId: dynamicAttackId(template.id, item.id),
+          actionId: dynamicAttackId(template.id, item.slot),
           requiresAmmo: false,
           currentAmmo: 0,
           ammoInventoryId: null,

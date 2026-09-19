@@ -1,4 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import {
+  CharacterEngine,
+  EffectManager,
+  ResourceManager,
+} from "@project/engine";
 import { packRuleSnapshot } from "../../store/__tests__/packFixture";
 
 let mockStoreState: {
@@ -263,7 +268,7 @@ describe("useCombat and dynamic weapon attacks", () => {
     mockStoreState.activeStates = ["status_frenzied"];
 
     const card = useCombat().attacks.find(
-      (attack) => attack.actionId === "action_frenzied_strike:inv_1",
+      (attack) => attack.actionId === "action_frenzied_strike:main_hand",
     );
 
     expect(card).toMatchObject({
@@ -304,7 +309,7 @@ describe("useCombat and dynamic weapon attacks", () => {
       (attack) => attack.actionId === "action_weapon_item_weapon_greataxe",
     );
     const retaliation = attacks.find(
-      (attack) => attack.actionId === "action_retaliation:inv_1",
+      (attack) => attack.actionId === "action_retaliation:main_hand",
     );
 
     expect(retaliation).toMatchObject({
@@ -312,6 +317,106 @@ describe("useCombat and dynamic weapon attacks", () => {
       activation: "reaction",
       attackBonus: own.attackBonus,
       damageExpression: own.damageExpression,
+    });
+  });
+
+  it("keys a card on the hand, so a row the server never saw still names the server's swing", () => {
+    // equipping one axe from a stack mints this row id on the sheet alone;
+    // the server still holds the weapon under the original row
+    mockStoreState.inventory = [
+      {
+        id: "inv_3c9e2a70-split",
+        itemId: "item_weapon_greataxe",
+        quantity: 1,
+        slot: "main_hand",
+        isAttuned: false,
+      },
+    ];
+    mockStoreState.proficiencies = { martial_melee: "proficient" };
+    mockStoreState.activeStates = ["status_raging", "status_frenzied"];
+
+    const frenzied = new EffectManager();
+    frenzied.addEffect({
+      instanceId: "rage",
+      sourceName: "Frenzied Rage",
+      durationType: "manual",
+      isSelfConcentration: false,
+      modifiers: [],
+      grantedStates: ["status_raging", "status_frenzied"],
+    });
+    const serverSwingIds = CharacterEngine.buildLiveSheet(
+      {
+        attributes: { str: 16, dex: 12, con: 14, int: 10, wis: 14, cha: 8 },
+        race: { baseRaceId: "race_human", hasSubraces: false, subraceId: null },
+        classes: [
+          {
+            classId: "class_barbarian",
+            level: 3,
+            subclassId: "subclass_barbarian_berserker",
+            selections: {},
+          },
+        ],
+        traitSelections: {},
+        hp: { current: 30, temporary: 0, baseRolledHp: 12, hitDiceSpent: {} },
+      },
+      [
+        {
+          id: "row-original",
+          itemId: "item_weapon_greataxe",
+          quantity: 1,
+          slot: "main_hand",
+          isAttuned: false,
+        },
+      ],
+      frenzied,
+      new ResourceManager(),
+      { snapshot: packRuleSnapshot() },
+    )
+      .actions.map((action) => action.id)
+      .filter((id) => id.startsWith("action_frenzied_strike:"));
+
+    const cardIds = useCombat()
+      .attacks.map((attack) => String(attack.actionId))
+      .filter((id) => id.startsWith("action_frenzied_strike:"));
+
+    expect(cardIds).toEqual(["action_frenzied_strike:main_hand"]);
+    expect(serverSwingIds).toEqual(cardIds);
+  });
+
+  it("makes an off-hand swing an ordinary attack, keeping the ability modifier", () => {
+    mockStoreState.inventory = [
+      {
+        id: "inv_axe",
+        itemId: "item_weapon_handaxe",
+        quantity: 1,
+        slot: "off_hand",
+        isAttuned: false,
+      },
+    ];
+    mockStoreState.proficiencies = { simple_melee: "proficient" };
+    mockStoreState.activeStates = ["status_frenzied"];
+
+    const { attacks } = useCombat();
+    const offHand = attacks.find(
+      (attack) => attack.actionId === "action_weapon_item_weapon_handaxe_off_hand",
+    );
+    const frenziedStrike = attacks.find(
+      (attack) => attack.actionId === "action_frenzied_strike:off_hand",
+    );
+
+    // the weapon card is two-weapon fighting: no STR in its damage
+    expect(offHand).toMatchObject({
+      damageBonus: 0,
+      context: { attackUsage: "two_weapon_bonus" },
+    });
+    // Frenzied Strike is "a melee weapon attack": STR 16's +3 stays, and the
+    // card carries no two-weapon usage for the widget's banner to key on
+    expect(frenziedStrike).toMatchObject({
+      name: "Frenzied Strike: Handaxe",
+      activation: "bonus_action",
+      slot: "off_hand",
+      damageBonus: 3,
+      context: { hand: "off_hand", attackUsage: "standard" },
     });
   });
 });

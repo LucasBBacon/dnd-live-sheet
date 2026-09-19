@@ -1814,8 +1814,10 @@ describe("CharacterEngine.buildLiveSheet: Berserker dynamic attacks", () => {
       { snapshot: corePackLookup() },
     );
 
+    // keyed on the hand, not the row: the sheet can hold a split row the
+    // server never saw, and both sides agree on what is in each hand
     const attack = sheet.actions.find(
-      (action) => action.id === "action_frenzied_strike:weapon-1",
+      (action) => action.id === "action_frenzied_strike:main_hand",
     );
     expect(attack).toMatchObject({ activation: "bonus_action" });
     expect(attack?.effect).toMatchObject({
@@ -1889,11 +1891,64 @@ describe("CharacterEngine.buildLiveSheet: dynamic templates", () => {
       new EffectManager(),
       new ResourceManager(),
       { snapshot: corePackLookup() },
-    ).actions.find((action) => action.id === "action_retaliation:weapon-1");
+    ).actions.find((action) => action.id === "action_retaliation:main_hand");
 
     expect(swing).toMatchObject({
       name: "Retaliation: Longsword",
       activation: "reaction",
     });
+  });
+
+  it("offers no swing with a weapon outside the hands", () => {
+    const ids = CharacterEngine.buildLiveSheet(
+      berserkerAt(14),
+      [{ ...longsword, slot: "body" }],
+      new EffectManager(),
+      new ResourceManager(),
+      { snapshot: corePackLookup() },
+    ).actions.map((action) => action.id);
+
+    expect(ids.filter((id) => id.startsWith("action_retaliation:"))).toEqual([]);
+  });
+
+  it("makes an off-hand swing an ordinary attack, with the ability modifier in its damage", () => {
+    const frenzied = new EffectManager();
+    frenzied.addEffect({
+      instanceId: "rage",
+      sourceName: "Frenzied Rage",
+      durationType: "manual",
+      isSelfConcentration: false,
+      modifiers: [],
+      grantedStates: ["status_raging", "status_frenzied"],
+    });
+    const handaxe = (id: string, slot: "main_hand" | "off_hand") => ({
+      id,
+      itemId: "item_weapon_handaxe",
+      quantity: 1,
+      slot,
+      isAttuned: false,
+    });
+
+    const actions = CharacterEngine.buildLiveSheet(
+      berserkerAt(3),
+      [handaxe("axe-a", "main_hand"), handaxe("axe-b", "off_hand")],
+      frenzied,
+      new ResourceManager(),
+      { snapshot: corePackLookup() },
+    ).actions;
+    const swing = (hand: string) =>
+      actions.find((action) => action.id === `action_frenzied_strike:${hand}`);
+    const damageBonus = (hand: string) => {
+      const effect = swing(hand)?.effect;
+      return effect?.type === "attack" ? effect.damageBonus : undefined;
+    };
+
+    // Frenzied Strike is "a melee weapon attack", not two-weapon fighting:
+    // STR 15's +2 stays in the off hand's damage, as it does in the main hand
+    expect(swing("off_hand")?.effect).toMatchObject({
+      weaponContext: { hand: "off_hand", attackUsage: "standard" },
+    });
+    expect(damageBonus("off_hand")).toBe(damageBonus("main_hand"));
+    expect(damageBonus("off_hand")).toBeGreaterThanOrEqual(2);
   });
 });

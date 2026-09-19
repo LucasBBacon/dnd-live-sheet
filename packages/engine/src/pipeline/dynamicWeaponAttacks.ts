@@ -45,13 +45,18 @@ export const dynamicAttackApplies = (
 };
 
 /**
- * The id of the swing a template offers with one inventory row.
+ * The id of the swing a template offers with the weapon in one hand.
  *
  * The server finds the action it resolves by this id in `liveSheet.actions`,
  * and the sheet sends it in ACTION_INTENT, so it is spelled in one place.
+ * Keyed on the hand, not the inventory row: equipping one item from a stack
+ * splits it into a row the sheet mints and the server never sees, but both
+ * sides always agree on what is in each hand.
  * @param templateId The trait action carrying the template.
- * @param instanceId The inventory row holding the weapon.
- * @returns `${templateId}:${instanceId}`.
+ * @param hand The hand holding the weapon.
+ * @returns `${templateId}:${hand}`.
  */
-export const dynamicAttackId = (templateId: string, instanceId: string): string =>
-  `${templateId}:${instanceId}`;
+export const dynamicAttackId = (
+  templateId: string,
+  hand: "main_hand" | "off_hand",
+): string => `${templateId}:${hand}`;

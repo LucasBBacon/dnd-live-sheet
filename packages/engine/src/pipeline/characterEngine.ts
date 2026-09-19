@@ -573,23 +573,23 @@ export class CharacterEngine {
         const template = dynamicAction.effect;
 
         for (const instance of inventory) {
-          if (instance.slot === "backpack") continue;
+          // only a weapon in a hand is held, and useCombat draws cards for
+          // the two hands alone
+          const hand = instance.slot;
+          if (hand !== "main_hand" && hand !== "off_hand") continue;
           const weapon = resolveWeaponDefinition(instance.itemId, options.snapshot);
-          // the same question useCombat asks before it draws the card, so the
-          // sheet offers exactly the swings this synthesises
+          // the same question useCombat asks of the same two hands before it
+          // draws a card, so the sheet offers exactly the swings this
+          // synthesises
           if (!weapon || !dynamicAttackApplies(template, weapon, activeStates)) {
             continue;
           }
 
+          // "a melee weapon attack", never two-weapon fighting: an off-hand
+          // swing is an ordinary attack and keeps its ability modifier
           const weaponAttackContext = {
-            hand:
-              instance.slot === "off_hand"
-                ? ("off_hand" as const)
-                : ("main_hand" as const),
-            attackUsage:
-              instance.slot === "off_hand"
-                ? ("two_weapon_bonus" as const)
-                : ("standard" as const),
+            hand,
+            attackUsage: "standard" as const,
             isTwoHandedGrip: activeStates.includes("two_handed_grip"),
           };
           const attackAnalysis = CombatEngine.calculateWeaponAttack(
@@ -627,7 +627,7 @@ export class CharacterEngine {
           );
           if (generated.effect.type !== "attack") continue;
 
-          generated.id = dynamicAttackId(dynamicAction.id, instance.id);
+          generated.id = dynamicAttackId(dynamicAction.id, hand);
           generated.name = `${dynamicAction.name}: ${weapon.name}`;
           generated.activation = dynamicAction.activation;
           if (dynamicAction.tableNote !== undefined) {

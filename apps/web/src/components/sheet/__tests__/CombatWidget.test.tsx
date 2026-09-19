@@ -645,7 +645,7 @@ describe("CombatWidget activation badge", () => {
         },
         slot: "main_hand",
         activation: "reaction",
-        actionId: "action_retaliation:inv_1",
+        actionId: "action_retaliation:main_hand",
         requiresAmmo: false,
         currentAmmo: 0,
         ammoInventoryId: null,
