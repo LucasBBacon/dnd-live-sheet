@@ -1453,13 +1453,25 @@ because both counted stubs whose id matched a pattern — `prof_skills`,
 `prof_tools`, `prof_bonus` — and `trait_blessings_of_knowledge` carries none
 of those substrings. Searching by what a trait *does* rather than what it is
 called found it; that is a reason to distrust an id-pattern count generally,
-not only this one instance of it. The corrected breakdown, all closed
-2026-09-21:
+not only this one instance of it. The tools row's own class/background split
+was wrong too, in both the 35-count table above and originally here: it read
+"5 class, 4 background", counted by eye rather than checked against the pack.
+Checked directly against `proficiencies.fixed`/`proficiencies.choices` with
+`category: "tools"`, the true split is **6 class, 3 background** —
+`trait_bard_prof_tools`, `trait_bard_prof_mult_tools`, `trait_druid_prof_tools`,
+`trait_monk_prof_tools`, `trait_rogue_prof_tools` and
+`trait_rogue_mult_prof_tools` are the six class grants;
+`trait_noble_prof_tools`, `trait_soldier_prof_tools` and
+`trait_criminal_prof_tools` are the three background grants.
+`trait_rogue_assassin_bonus_prof` also grants tools but is a subclass bonus
+trait, already in that row below — counting it here too would make the tools
+row's own ids sum to more than 9. The corrected breakdown, all closed
+2026-09-21, checked the same way for every row rather than assumed:
 
 | Kind | Count | Ids |
 | --- | --- | --- |
 | skills | 17 | 13 class, 4 background |
-| tools | 9 | 5 class, 4 background |
+| tools | 9 | 6 class, 3 background |
 | languages | 2 | `trait_acolyte_languages`, `trait_noble_languages` |
 | subclass bonus proficiencies | 8 | `trait_cleric_{war,life,nature,tempest}_prof_bonus`, `trait_bard_lore_prof_bonus`, `trait_bard_valor_bonus_prof`, `trait_rogue_assassin_bonus_prof`, `trait_blessings_of_knowledge` |
 
