@@ -1,6 +1,10 @@
 import { useMemo } from "react";
 import { useCharacterSheetStore } from "../store/characterSheetStore";
-import { getResourceMaxUses, resolveResourceRule } from "@project/engine";
+import {
+  buildLevelContext,
+  getResourceMaxUses,
+  resolveResourceRule,
+} from "@project/engine";
 
 /** A pool spent down from a maximum and refilled on a rest, like Rage. */
 export interface ChargesFeature {
@@ -31,57 +35,56 @@ export const useFeatures = (): FeaturePool[] => {
   const operationalResources = useCharacterSheetStore(
     (state) => state.resources,
   );
-  const totalLevel = useCharacterSheetStore((state) => state.level);
-
   const classLevels = useCharacterSheetStore((state) => state.classLevels);
+  const subclassIds = useCharacterSheetStore((state) => state.subclassIds);
   const ruleSnapshot = useCharacterSheetStore((state) => state.ruleSnapshot);
 
-  return useMemo(
-    () =>
-      operationalResources.flatMap((opResource): FeaturePool[] => {
-        const definition = resolveResourceRule(
-          opResource.id,
-          ruleSnapshot ?? undefined,
-        );
+  return useMemo(() => {
+    const levels = buildLevelContext(
+      classLevels,
+      subclassIds,
+      ruleSnapshot ?? undefined,
+    );
 
-        // failsafe: if the dictionary lacks the feature, ignore it
-        if (!definition) return [];
+    return operationalResources.flatMap((opResource): FeaturePool[] => {
+      const definition = resolveResourceRule(
+        opResource.id,
+        ruleSnapshot ?? undefined,
+      );
 
-        // counted, not spent: its maximum is 0 by design, so the guard below
-        // hid it, and Relentless Rage's counter never rendered
-        if (definition.mode === "uses") {
-          return [
-            {
-              kind: "uses",
-              id: opResource.id,
-              name: definition.name,
-              used: opResource.current,
-              resetCondition: definition.resetCondition,
-            },
-          ];
-        }
+      // failsafe: if the dictionary lacks the feature, ignore it
+      if (!definition) return [];
 
-        const maxUses = getResourceMaxUses(
-          definition,
-          totalLevel,
-          classLevels,
-        );
-
-        // failsafe: if character lost levels or doesn't meet requirements, hide it
-        if (maxUses <= 0) return [];
-
+      // counted, not spent: its maximum is 0 by design, so the guard below
+      // hid it, and Relentless Rage's counter never rendered
+      if (definition.mode === "uses") {
         return [
           {
-            kind: "charges",
+            kind: "uses",
             id: opResource.id,
             name: definition.name,
-            current: Math.min(opResource.current, maxUses), // clamp to prevent overflow
-            max: maxUses,
+            used: opResource.current,
             resetCondition: definition.resetCondition,
-            isDepleted: opResource.current <= 0,
           },
         ];
-      }),
-    [operationalResources, totalLevel, classLevels, ruleSnapshot],
-  );
+      }
+
+      const maxUses = getResourceMaxUses(definition, levels);
+
+      // failsafe: if character lost levels or doesn't meet requirements, hide it
+      if (maxUses <= 0) return [];
+
+      return [
+        {
+          kind: "charges",
+          id: opResource.id,
+          name: definition.name,
+          current: Math.min(opResource.current, maxUses), // clamp to prevent overflow
+          max: maxUses,
+          resetCondition: definition.resetCondition,
+          isDepleted: opResource.current <= 0,
+        },
+      ];
+    });
+  }, [operationalResources, classLevels, subclassIds, ruleSnapshot]);
 };

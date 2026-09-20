@@ -42,6 +42,7 @@ import {
   RollContextBuilder,
   ATTUNEMENT_LIMIT,
   CARRIED_SLOT,
+  buildLevelContext,
   canEquipTo,
   collectGrantedResources,
   materialiseMissingPools,
@@ -287,12 +288,17 @@ const getAuthoritativeRuntimeContext = async (
   const classLevels = Object.fromEntries(
     classRows.map((row) => [row.classId, row.classLevel]),
   );
-  const totalLevel = classRows.reduce((sum, row) => sum + row.classLevel, 0);
+  const levels = buildLevelContext(
+    classLevels,
+    Object.fromEntries(
+      nextSave.classes.map((entry) => [entry.classId, entry.subclassId]),
+    ),
+    snapshot,
+  );
   const missingPools = materialiseMissingPools(
     resourceRows.map((row) => row.id),
     collectGrantedResources(activeTraits, snapshot),
-    totalLevel,
-    classLevels,
+    levels,
   );
 
   if (missingPools.length > 0) {
@@ -1487,6 +1493,7 @@ export function initializeWebSocketGateway(httpServer: any) {
               .select({
                 classId: characterClasses.classId,
                 classLevel: characterClasses.classLevel,
+                subclassId: characterClasses.subclassId,
               })
               .from(characterClasses)
               .where(eq(characterClasses.characterId, payload.characterId));
@@ -1494,21 +1501,23 @@ export function initializeWebSocketGateway(httpServer: any) {
             const classLevels = Object.fromEntries(
               classRows.map((row) => [row.classId, row.classLevel]),
             );
-            const totalLevel = classRows.reduce(
-              (sum, row) => sum + row.classLevel,
-              0,
-            );
 
             // 3 - calculate the swept state
             // the snapshot carries pack.resources; without it every resource
             // resolves to no rule and applyRest returns it untouched, so a
             // rest would silently restore nothing
             const { snapshot } = await getCachedRuleSnapshot();
+            const levels = buildLevelContext(
+              classLevels,
+              Object.fromEntries(
+                classRows.map((row) => [row.classId, row.subclassId]),
+              ),
+              snapshot,
+            );
             const updatedResources = RestEngine.applyRest(
               currentResources,
               payload.restType,
-              totalLevel,
-              classLevels,
+              levels,
               snapshot,
             );
 

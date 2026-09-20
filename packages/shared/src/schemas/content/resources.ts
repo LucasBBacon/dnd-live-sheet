@@ -34,6 +34,12 @@ export const ResourceMaxRuleSchema = z.discriminatedUnion("kind", [
       thresholds: z.array(ResourceThresholdSchema).min(1),
     })
     .strict(),
+  z
+    .object({
+      kind: z.literal("caster_level_thresholds"),
+      thresholds: z.array(ResourceThresholdSchema).min(1),
+    })
+    .strict(),
 ]);
 
 /**

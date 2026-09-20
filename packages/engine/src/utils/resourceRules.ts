@@ -1,5 +1,6 @@
 import type { Resource, ResourceMaxRule, TraitDefinition } from "@project/shared";
 import type { RuleSnapshotLookup } from "../rules/ruleLookup.js";
+import { casterLevel, collectCastingSources } from "../rules/casterLevel.js";
 
 type ThresholdRule = Extract<
   ResourceMaxRule,
@@ -21,21 +22,57 @@ const resolveThresholdValue = (
   return resolved;
 };
 
+/**
+ * Every level a resource rule can be measured against, in one argument.
+ *
+ * Three separate parameters were threaded through six call sites before
+ * caster level existed. A fourth, optional and defaulting to zero, would have
+ * let any site that forgot it resolve every spell slot pool to zero - a wizard
+ * whose slots quietly vanish, with nothing failing. One required argument puts
+ * that on the compiler instead.
+ */
+export interface LevelContext {
+  totalLevel: number;
+  classLevels: Record<string, number>;
+  /** 0 when the character casts nothing that uses slots. */
+  casterLevel: number;
+}
+
+/**
+ * The level context for a character, derived from what they have taken.
+ * @param classLevels Class id to level.
+ * @param subclassIds Class id to the subclass chosen for it, if any.
+ * @param snapshot Pack content, when the caller has any loaded.
+ * @returns totalLevel, classLevels and casterLevel together.
+ */
+export const buildLevelContext = (
+  classLevels: Record<string, number>,
+  subclassIds: Record<string, string | null | undefined> = {},
+  snapshot?: RuleSnapshotLookup,
+): LevelContext => ({
+  totalLevel: Object.values(classLevels).reduce((sum, level) => sum + level, 0),
+  classLevels,
+  casterLevel: casterLevel(
+    collectCastingSources(classLevels, subclassIds, snapshot),
+  ),
+});
+
 export const getResourceMaxUses = (
   rule: Resource,
-  totalLevel: number,
-  classLevels: Record<string, number>,
+  levels: LevelContext,
 ): number => {
   if (rule.mode === "uses") return 0;
   switch (rule.maxRule.kind) {
     case "fixed":
       return rule.maxRule.value;
     case "total_level_thresholds":
-      return resolveThresholdValue(rule.maxRule.thresholds, totalLevel);
+      return resolveThresholdValue(rule.maxRule.thresholds, levels.totalLevel);
     case "class_level_thresholds": {
-      const currentLevel = classLevels[rule.maxRule.classId] ?? 0;
+      const currentLevel = levels.classLevels[rule.maxRule.classId] ?? 0;
       return resolveThresholdValue(rule.maxRule.thresholds, currentLevel);
     }
+    case "caster_level_thresholds":
+      return resolveThresholdValue(rule.maxRule.thresholds, levels.casterLevel);
   }
 };
 
@@ -81,15 +118,14 @@ export interface MaterialisedPool {
 export const materialiseMissingPools = (
   existingIds: Iterable<string>,
   granted: Resource[],
-  totalLevel: number,
-  classLevels: Record<string, number>,
+  levels: LevelContext,
 ): MaterialisedPool[] => {
   const existing = new Set(existingIds);
 
   return granted
     .filter((resource) => !existing.has(resource.id))
     .map((resource) => {
-      const max = getResourceMaxUses(resource, totalLevel, classLevels);
+      const max = getResourceMaxUses(resource, levels);
       return {
         id: resource.id,
         name: resource.name,

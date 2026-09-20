@@ -7,6 +7,7 @@ import {
   EffectManager,
   ResourceManager,
   RestEngine,
+  buildLevelContext,
   canEquipTo,
   suppressConditions,
   resolveEquipmentDefinition,
@@ -20,6 +21,7 @@ import {
   type Ability,
   type ActionRollResult,
   type ItemActionGrant,
+  type LevelContext,
   type OperationalResource,
   type RuntimeResource,
   type SuspendedCondition,
@@ -285,7 +287,7 @@ const adoptStoredResources = (
   manager: ResourceManager,
   stored: readonly OperationalResource[],
   snapshot: SheetRuleSnapshot | null,
-  classLevels: Record<string, number>,
+  levels: LevelContext,
 ): void => {
   const granted = new Map(
     manager.getRuntimeResources().map((pool) => [pool.id, pool] as const),
@@ -293,18 +295,13 @@ const adoptStoredResources = (
   const counts = new Map(
     stored.map((resource) => [resource.id, resource.current] as const),
   );
-  // counted the way initialize counts, so a total-level pool agrees with it
-  const totalLevel = Object.values(classLevels).reduce(
-    (sum, level) => sum + level,
-    0,
-  );
 
   const pools: RuntimeResource[] = [];
   for (const id of new Set([...counts.keys(), ...granted.keys()])) {
     const rule = resolveResourceRule(id, snapshot ?? undefined);
     const grant = granted.get(id);
     if (rule) {
-      const maxCharges = getResourceMaxUses(rule, totalLevel, classLevels);
+      const maxCharges = getResourceMaxUses(rule, levels);
       pools.push({
         id,
         name: rule.name,
@@ -424,7 +421,7 @@ const dispatchAuthoredEvent = (
     runtimeResources,
     state.resources,
     state.ruleSnapshot,
-    state.classLevels,
+    buildLevelContext(state.classLevels, state.subclassIds, snapshot),
   );
 
   const activeTraits = CharacterBootstrapper.compileActiveTraits(
@@ -517,7 +514,11 @@ const resolveHealthTransition = (
     runtimeResources,
     state.resources,
     state.ruleSnapshot,
-    state.classLevels,
+    buildLevelContext(
+      state.classLevels,
+      state.subclassIds,
+      state.ruleSnapshot ?? undefined,
+    ),
   );
 
   let appliedHp = targetHp;
@@ -874,15 +875,15 @@ export const useCharacterSheetStore = create<CharacterSheetState>(
         );
         // the server counts the same way (getAuthoritativeRuntimeContext), so
         // the two materialisations agree on a class_level_thresholds pool
-        const totalLevel = Object.values(next.classLevels).reduce(
-          (sum, level) => sum + level,
-          0,
+        const levels = buildLevelContext(
+          next.classLevels,
+          next.subclassIds,
+          next.ruleSnapshot,
         );
         const missingPools = materialiseMissingPools(
           next.resources.map((resource) => resource.id),
           collectGrantedResources(activeTraits, next.ruleSnapshot),
-          totalLevel,
-          next.classLevels,
+          levels,
         );
 
         // Hand back the same array when nothing was added. useFeatures and
@@ -1283,8 +1284,11 @@ export const useCharacterSheetStore = create<CharacterSheetState>(
       const updatedResources = RestEngine.applyRest(
         dispatched.resources,
         restType,
-        state.level,
-        state.classLevels,
+        buildLevelContext(
+          state.classLevels,
+          state.subclassIds,
+          state.ruleSnapshot ?? undefined,
+        ),
         state.ruleSnapshot ?? undefined,
       );
       const updatedHp = restType === "long" ? state.maxHp : state.currentHp;
@@ -1471,7 +1475,11 @@ export const useCharacterSheetStore = create<CharacterSheetState>(
         runtimeResources,
         payload.resources,
         state.ruleSnapshot,
-        state.classLevels,
+        buildLevelContext(
+          state.classLevels,
+          state.subclassIds,
+          state.ruleSnapshot ?? undefined,
+        ),
       );
 
       set((previous) => ({
@@ -1627,7 +1635,11 @@ export const useCharacterSheetStore = create<CharacterSheetState>(
         runtimeResources,
         payload.resources,
         state.ruleSnapshot,
-        state.classLevels,
+        buildLevelContext(
+          state.classLevels,
+          state.subclassIds,
+          state.ruleSnapshot ?? undefined,
+        ),
       );
 
       set((previous) => ({

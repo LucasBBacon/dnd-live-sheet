@@ -1,6 +1,11 @@
 import type { Resource, ResourceMaxRule } from "@project/shared";
 
-export type ResourceLevelProfile = { total?: number; classes: Record<string, number> };
+export type ResourceLevelProfile = {
+  total?: number;
+  classes: Record<string, number>;
+  /** 0 (the default) when the caller has no caster level to offer. */
+  caster?: number;
+};
 
 export interface RuntimeResource {
   id: string;
@@ -57,6 +62,14 @@ export class ResourceManager {
       return maxRule.thresholds.reduce(
         (resolved, threshold) =>
           totalLevel >= threshold.minimumLevel ? threshold.value : resolved,
+        0,
+      );
+    }
+    if (maxRule.kind === "caster_level_thresholds") {
+      const casterLevel = levels.caster ?? 0;
+      return maxRule.thresholds.reduce(
+        (resolved, threshold) =>
+          casterLevel >= threshold.minimumLevel ? threshold.value : resolved,
         0,
       );
     }
