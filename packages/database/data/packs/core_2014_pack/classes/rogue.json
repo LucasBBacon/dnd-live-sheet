@@ -700,6 +700,62 @@
             "diceRules": [],
             "criticalHitModifiers": [],
             "actions": []
+        },
+        {
+            "id": "trait_rogue_prof_tools",
+            "name": "Tool Proficiency (Rogue)",
+            "lore": {
+                "shortDescription": "You have proficiency with thieves' tools.",
+                "fullText": "You have proficiency with thieves' tools."
+            },
+            "modifiers": {
+                "fixed": [],
+                "choices": []
+            },
+            "proficiencies": {
+                "fixed": [
+                    {
+                        "category": "tools",
+                        "proficiencyId": "thieves_tools",
+                        "level": "proficient",
+                        "requiredStates": []
+                    }
+                ],
+                "choices": []
+            },
+            "resources": [],
+            "triggers": [],
+            "diceRules": [],
+            "criticalHitModifiers": [],
+            "actions": []
+        },
+        {
+            "id": "trait_rogue_mult_prof_tools",
+            "name": "Multiclass Tool Proficiency (Rogue)",
+            "lore": {
+                "shortDescription": "Multiclassing into rogue grants proficiency with thieves' tools.",
+                "fullText": "Multiclassing into rogue grants proficiency with thieves' tools."
+            },
+            "modifiers": {
+                "fixed": [],
+                "choices": []
+            },
+            "proficiencies": {
+                "fixed": [
+                    {
+                        "category": "tools",
+                        "proficiencyId": "thieves_tools",
+                        "level": "proficient",
+                        "requiredStates": []
+                    }
+                ],
+                "choices": []
+            },
+            "resources": [],
+            "triggers": [],
+            "diceRules": [],
+            "criticalHitModifiers": [],
+            "actions": []
         }
     ]
 }

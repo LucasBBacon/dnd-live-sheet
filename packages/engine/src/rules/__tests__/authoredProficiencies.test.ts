@@ -89,3 +89,38 @@ describe("backgrounds grant their PHB proficiencies", () => {
     expect(pending("trait_soldier_prof_tools").availableOptions).toHaveLength(4);
   });
 });
+
+describe("class tool grants", () => {
+  it("offers the bard three instruments from ten", () => {
+    const choice = pending("trait_bard_prof_tools");
+
+    expect(choice.chooseAmount).toBe(3);
+    expect(choice.availableOptions).toHaveLength(10);
+    expect(choice.availableOptions).toContain("lute");
+  });
+
+  it("offers the monk artisan's tools and instruments together", () => {
+    const options = pending("trait_monk_prof_tools").availableOptions!;
+
+    expect(options).toHaveLength(27);
+    expect(options).toContain("smiths_tools");
+    expect(options).toContain("flute");
+    expect(options).not.toContain("thieves_tools");
+  });
+
+  it("gives the rogue thieves' tools outright", () => {
+    const grants = ProficiencyExtractor.extractProficiencies(
+      [traits["trait_rogue_prof_tools"]!],
+      {},
+    );
+
+    expect(grants).toEqual([
+      {
+        category: "tools",
+        proficiencyId: "thieves_tools",
+        level: "proficient",
+        requiredStates: [],
+      },
+    ]);
+  });
+});

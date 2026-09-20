@@ -726,6 +726,34 @@
             "diceRules": [],
             "criticalHitModifiers": [],
             "actions": []
+        },
+        {
+            "id": "trait_druid_prof_tools",
+            "name": "Tool Proficiency (Druid)",
+            "lore": {
+                "shortDescription": "You have proficiency with herbalism kits.",
+                "fullText": "You have proficiency with herbalism kits."
+            },
+            "modifiers": {
+                "fixed": [],
+                "choices": []
+            },
+            "proficiencies": {
+                "fixed": [
+                    {
+                        "category": "tools",
+                        "proficiencyId": "herbalism_kit",
+                        "level": "proficient",
+                        "requiredStates": []
+                    }
+                ],
+                "choices": []
+            },
+            "resources": [],
+            "triggers": [],
+            "diceRules": [],
+            "criticalHitModifiers": [],
+            "actions": []
         }
     ]
 }

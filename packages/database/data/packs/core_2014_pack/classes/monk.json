@@ -705,6 +705,64 @@
             "diceRules": [],
             "criticalHitModifiers": [],
             "actions": []
+        },
+        {
+            "id": "trait_monk_prof_tools",
+            "name": "Tool Proficiency (Monk)",
+            "lore": {
+                "shortDescription": "You have proficiency with one type of artisan's tools or one musical instrument of your choice.",
+                "fullText": "You have proficiency with one type of artisan's tools or one musical instrument of your choice."
+            },
+            "modifiers": {
+                "fixed": [],
+                "choices": []
+            },
+            "proficiencies": {
+                "fixed": [],
+                "choices": [
+                    {
+                        "id": "monk_starting_tool",
+                        "category": "tools",
+                        "chooseAmount": 1,
+                        "options": [
+                            "alchemists_supplies",
+                            "brewers_supplies",
+                            "calligraphers_supplies",
+                            "carpenters_tools",
+                            "cartographers_tools",
+                            "cobblers_tools",
+                            "cooks_utensils",
+                            "glassblowers_tools",
+                            "jewelers_tools",
+                            "leatherworkers_tools",
+                            "masons_tools",
+                            "painters_supplies",
+                            "potters_tools",
+                            "smiths_tools",
+                            "tinkers_tools",
+                            "weavers_tools",
+                            "woodcarvers_tools",
+                            "bagpipes",
+                            "drum",
+                            "dulcimer",
+                            "flute",
+                            "horn",
+                            "lute",
+                            "lyre",
+                            "pan_flute",
+                            "shawm",
+                            "viol"
+                        ],
+                        "level": "proficient",
+                        "requiredStates": []
+                    }
+                ]
+            },
+            "resources": [],
+            "triggers": [],
+            "diceRules": [],
+            "criticalHitModifiers": [],
+            "actions": []
         }
     ]
 }
