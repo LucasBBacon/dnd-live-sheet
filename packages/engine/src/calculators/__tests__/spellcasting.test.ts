@@ -113,35 +113,7 @@ describe("SpellcastingEngine.calculate", () => {
     expect(SpellcastingEngine.calculate([], scores, 3, [])).toEqual([]);
   });
 
-  it("agrees with the pack's authored pact_slot_level track at every warlock level", () => {
-    // The pack authors class_level_thresholds on warlock level: 1@1, 2@3,
-    // 3@5, 4@7, 5@9, capping at 5 (packages/database/data/packs/core_2014_pack/classes/warlock.json).
-    // pactSlotLevel is a second, independent expression of the same rule, so
-    // pin it against that track for every level a warlock can be.
-    const packTrack = (warlockLevel: number): number => {
-      const thresholds = [
-        { minimumLevel: 1, value: 1 },
-        { minimumLevel: 3, value: 2 },
-        { minimumLevel: 5, value: 3 },
-        { minimumLevel: 7, value: 4 },
-        { minimumLevel: 9, value: 5 },
-      ];
-      let value = 0;
-      for (const threshold of thresholds) {
-        if (warlockLevel >= threshold.minimumLevel) value = threshold.value;
-      }
-      return value;
-    };
-
-    for (let level = 1; level <= 20; level++) {
-      const [pact] = SpellcastingEngine.calculate(
-        [{ classId: "class_warlock", level, progression: "pact", ability: "CHA" }],
-        scores,
-        3,
-        [],
-      );
-      if (!pact) throw new Error(`expected one result for warlock level ${level}`);
-      expect(pact.pactSlotLevel).toBe(packTrack(level));
-    }
-  });
+  // The pin against the pack's authored pact_slot_level track lives in
+  // slotTables.test.ts, beside the other pack-driven cases: it needs to read
+  // the actual shipped resource, not a second hand-transcribed copy of it.
 });

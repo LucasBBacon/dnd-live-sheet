@@ -1,10 +1,13 @@
 import { describe, expect, it } from "vitest";
 import { corePackSnapshot } from "../../pipeline/__tests__/corePackFixture.js";
+import type { CastingSource } from "../../rules/casterLevel.js";
+import type { Ability } from "../../types/core.js";
 import {
   buildLevelContext,
   collectGrantedResources,
   getResourceMaxUses,
 } from "../../utils/resourceRules.js";
+import { SpellcastingEngine } from "../spellcasting.js";
 
 /**
  * The PHB tables, read out of the shipped pack rather than restated here.
@@ -151,5 +154,36 @@ describe("pact magic is its own table", () => {
         subclassesById: snapshot.subclassesById,
       }).casterLevel,
     ).toBe(5);
+  });
+
+  // SpellcastingEngine.pactSlotLevel restates this same PHB progression so the
+  // roll layer can read it without resolving a resource (see spellcasting.ts).
+  // That is a second, independent representation of the rule the pack authors
+  // as pact_slot_level above, so it is pinned here against the pack itself -
+  // not against a third hand-transcribed copy of the same numbers - for every
+  // level a warlock can be. A mis-authored threshold, or a formula that drifts
+  // from it, fails this.
+  it("SpellcastingEngine's pactSlotLevel agrees with the pack's authored pact_slot_level at every warlock level", () => {
+    const scores: Record<Ability, number> = {
+      STR: 10,
+      DEX: 10,
+      CON: 10,
+      INT: 10,
+      WIS: 10,
+      CHA: 10,
+    };
+
+    for (let level = 1; level <= 20; level++) {
+      const source: CastingSource = {
+        classId: "class_warlock",
+        level,
+        progression: "pact",
+        ability: "CHA",
+      };
+      const [result] = SpellcastingEngine.calculate([source], scores, 2, []);
+      if (!result) throw new Error(`expected one result for warlock level ${level}`);
+
+      expect(result.pactSlotLevel).toBe(pactPool("pact_slot_level", level));
+    }
   });
 });
