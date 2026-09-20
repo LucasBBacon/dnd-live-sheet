@@ -756,6 +756,40 @@
             "diceRules": [],
             "criticalHitModifiers": [],
             "actions": []
+        },
+        {
+            "id": "trait_rogue_assassin_bonus_prof",
+            "name": "Bonus Proficiencies (Assassin)",
+            "lore": {
+                "shortDescription": "You gain proficiency with the disguise kit and the poisoner's kit.",
+                "fullText": "You gain proficiency with the disguise kit and the poisoner's kit."
+            },
+            "modifiers": {
+                "fixed": [],
+                "choices": []
+            },
+            "proficiencies": {
+                "fixed": [
+                    {
+                        "category": "tools",
+                        "proficiencyId": "disguise_kit",
+                        "level": "proficient",
+                        "requiredStates": []
+                    },
+                    {
+                        "category": "tools",
+                        "proficiencyId": "poisoners_kit",
+                        "level": "proficient",
+                        "requiredStates": []
+                    }
+                ],
+                "choices": []
+            },
+            "resources": [],
+            "triggers": [],
+            "diceRules": [],
+            "criticalHitModifiers": [],
+            "actions": []
         }
     ]
 }

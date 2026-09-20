@@ -937,6 +937,185 @@
             "diceRules": [],
             "criticalHitModifiers": [],
             "actions": []
+        },
+        {
+            "id": "trait_cleric_life_prof_bonus",
+            "name": "Bonus Proficiency (Life Domain)",
+            "lore": {
+                "shortDescription": "You gain proficiency with heavy armor.",
+                "fullText": "You gain proficiency with heavy armor."
+            },
+            "modifiers": {
+                "fixed": [],
+                "choices": []
+            },
+            "proficiencies": {
+                "fixed": [
+                    {
+                        "category": "armor",
+                        "proficiencyId": "category_armor_heavy",
+                        "level": "proficient",
+                        "requiredStates": []
+                    }
+                ],
+                "choices": []
+            },
+            "resources": [],
+            "triggers": [],
+            "diceRules": [],
+            "criticalHitModifiers": [],
+            "actions": []
+        },
+        {
+            "id": "trait_cleric_war_prof_bonus",
+            "name": "Bonus Proficiency (War Domain)",
+            "lore": {
+                "shortDescription": "You gain proficiency with martial weapons and heavy armor.",
+                "fullText": "You gain proficiency with martial weapons and heavy armor."
+            },
+            "modifiers": {
+                "fixed": [],
+                "choices": []
+            },
+            "proficiencies": {
+                "fixed": [
+                    {
+                        "category": "weapons",
+                        "proficiencyId": "category_weapon_martial",
+                        "level": "proficient",
+                        "requiredStates": []
+                    },
+                    {
+                        "category": "armor",
+                        "proficiencyId": "category_armor_heavy",
+                        "level": "proficient",
+                        "requiredStates": []
+                    }
+                ],
+                "choices": []
+            },
+            "resources": [],
+            "triggers": [],
+            "diceRules": [],
+            "criticalHitModifiers": [],
+            "actions": []
+        },
+        {
+            "id": "trait_cleric_tempest_prof_bonus",
+            "name": "Bonus Proficiency (Tempest Domain)",
+            "lore": {
+                "shortDescription": "You gain proficiency with martial weapons and heavy armor.",
+                "fullText": "You gain proficiency with martial weapons and heavy armor."
+            },
+            "modifiers": {
+                "fixed": [],
+                "choices": []
+            },
+            "proficiencies": {
+                "fixed": [
+                    {
+                        "category": "weapons",
+                        "proficiencyId": "category_weapon_martial",
+                        "level": "proficient",
+                        "requiredStates": []
+                    },
+                    {
+                        "category": "armor",
+                        "proficiencyId": "category_armor_heavy",
+                        "level": "proficient",
+                        "requiredStates": []
+                    }
+                ],
+                "choices": []
+            },
+            "resources": [],
+            "triggers": [],
+            "diceRules": [],
+            "criticalHitModifiers": [],
+            "actions": []
+        },
+        {
+            "id": "trait_cleric_nature_prof_bonus",
+            "name": "Acolyte of Nature (Nature Domain)",
+            "lore": {
+                "shortDescription": "You gain proficiency with heavy armor and one skill from Animal Handling, Nature and Survival. The druid cantrip this feature also grants is not yet authored, because spell lists do not exist in the pack.",
+                "fullText": "You gain proficiency with heavy armor and one skill from Animal Handling, Nature and Survival. The druid cantrip this feature also grants is not yet authored, because spell lists do not exist in the pack."
+            },
+            "modifiers": {
+                "fixed": [],
+                "choices": []
+            },
+            "proficiencies": {
+                "fixed": [
+                    {
+                        "category": "armor",
+                        "proficiencyId": "category_armor_heavy",
+                        "level": "proficient",
+                        "requiredStates": []
+                    }
+                ],
+                "choices": [
+                    {
+                        "id": "nature_domain_skill",
+                        "category": "skills",
+                        "chooseAmount": 1,
+                        "options": [
+                            "animal_handling",
+                            "nature",
+                            "survival"
+                        ],
+                        "level": "proficient",
+                        "requiredStates": []
+                    }
+                ]
+            },
+            "resources": [],
+            "triggers": [],
+            "diceRules": [],
+            "criticalHitModifiers": [],
+            "actions": []
+        },
+        {
+            "id": "trait_blessings_of_knowledge",
+            "name": "Blessings of Knowledge (Knowledge Domain)",
+            "lore": {
+                "shortDescription": "You learn two languages of your choice, and gain proficiency with two skills from Arcana, History, Nature and Religion. Your proficiency bonus is doubled for any check you make with either skill.",
+                "fullText": "You learn two languages of your choice, and gain proficiency with two skills from Arcana, History, Nature and Religion. Your proficiency bonus is doubled for any check you make with either skill."
+            },
+            "modifiers": {
+                "fixed": [],
+                "choices": []
+            },
+            "proficiencies": {
+                "fixed": [],
+                "choices": [
+                    {
+                        "id": "knowledge_domain_languages",
+                        "category": "languages",
+                        "chooseAmount": 2,
+                        "level": "proficient",
+                        "requiredStates": []
+                    },
+                    {
+                        "id": "knowledge_domain_skills",
+                        "category": "skills",
+                        "chooseAmount": 2,
+                        "options": [
+                            "arcana",
+                            "history",
+                            "nature",
+                            "religion"
+                        ],
+                        "level": "expertise",
+                        "requiredStates": []
+                    }
+                ]
+            },
+            "resources": [],
+            "triggers": [],
+            "diceRules": [],
+            "criticalHitModifiers": [],
+            "actions": []
         }
     ]
 }

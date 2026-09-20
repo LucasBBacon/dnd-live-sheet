@@ -124,3 +124,65 @@ describe("class tool grants", () => {
     ]);
   });
 });
+
+describe("subclass bonus proficiencies", () => {
+  const grantsOf = (traitId: string) =>
+    ProficiencyExtractor.extractProficiencies([traits[traitId]!], {});
+
+  it("gives the War Domain martial weapons and heavy armour", () => {
+    expect(grantsOf("trait_cleric_war_prof_bonus").map((g) => g.proficiencyId).sort()).toEqual([
+      "category_armor_heavy",
+      "category_weapon_martial",
+    ]);
+  });
+
+  it("gives the College of Valor medium armour, shields and martial weapons", () => {
+    expect(
+      grantsOf("trait_bard_valor_bonus_prof").map((g) => g.proficiencyId).sort(),
+    ).toEqual([
+      "category_armor_medium",
+      "category_armor_shield",
+      "category_weapon_martial",
+    ]);
+  });
+
+  it("offers the Knowledge Domain two languages and two skills at expertise", () => {
+    const choices = ProficiencyExtractor.listPendingChoices(
+      [traits["trait_blessings_of_knowledge"]!],
+      {},
+    );
+
+    const languages = choices.find((choice) => choice.category === "languages")!;
+    const skills = choices.find((choice) => choice.category === "skills")!;
+
+    expect(languages.chooseAmount).toBe(2);
+    expect(skills.chooseAmount).toBe(2);
+    expect(skills.level).toBe("expertise");
+    expect(skills.availableOptions).toEqual([
+      "arcana",
+      "history",
+      "nature",
+      "religion",
+    ]);
+  });
+
+  it("gives the Assassin both kits", () => {
+    expect(
+      grantsOf("trait_rogue_assassin_bonus_prof").map((g) => g.proficiencyId).sort(),
+    ).toEqual(["disguise_kit", "poisoners_kit"]);
+  });
+});
+
+describe("the proficiency family is closed", () => {
+  it("leaves only the three stubs the schema cannot express", () => {
+    const remaining = Object.values(traits)
+      .filter((trait) => trait.implementation?.mode === "unimplemented")
+      .filter((trait) =>
+        /prof|languages|blessings_of_knowledge/.test(trait.id),
+      )
+      .map((trait) => trait.id)
+      .sort();
+
+    expect(remaining).toEqual([]);
+  });
+});

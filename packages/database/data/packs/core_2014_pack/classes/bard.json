@@ -906,6 +906,75 @@
             "diceRules": [],
             "criticalHitModifiers": [],
             "actions": []
+        },
+        {
+            "id": "trait_bard_lore_prof_bonus",
+            "name": "Bonus Proficiencies (College of Lore)",
+            "lore": {
+                "shortDescription": "You gain proficiency with three skills of your choice.",
+                "fullText": "You gain proficiency with three skills of your choice."
+            },
+            "modifiers": {
+                "fixed": [],
+                "choices": []
+            },
+            "proficiencies": {
+                "fixed": [],
+                "choices": [
+                    {
+                        "id": "lore_bonus_skills",
+                        "category": "skills",
+                        "chooseAmount": 3,
+                        "level": "proficient",
+                        "requiredStates": []
+                    }
+                ]
+            },
+            "resources": [],
+            "triggers": [],
+            "diceRules": [],
+            "criticalHitModifiers": [],
+            "actions": []
+        },
+        {
+            "id": "trait_bard_valor_bonus_prof",
+            "name": "Bonus Proficiencies (College of Valor)",
+            "lore": {
+                "shortDescription": "You gain proficiency with medium armor, shields and martial weapons.",
+                "fullText": "You gain proficiency with medium armor, shields and martial weapons."
+            },
+            "modifiers": {
+                "fixed": [],
+                "choices": []
+            },
+            "proficiencies": {
+                "fixed": [
+                    {
+                        "category": "armor",
+                        "proficiencyId": "category_armor_medium",
+                        "level": "proficient",
+                        "requiredStates": []
+                    },
+                    {
+                        "category": "armor",
+                        "proficiencyId": "category_armor_shield",
+                        "level": "proficient",
+                        "requiredStates": []
+                    },
+                    {
+                        "category": "weapons",
+                        "proficiencyId": "category_weapon_martial",
+                        "level": "proficient",
+                        "requiredStates": []
+                    }
+                ],
+                "choices": []
+            },
+            "resources": [],
+            "triggers": [],
+            "diceRules": [],
+            "criticalHitModifiers": [],
+            "actions": []
         }
     ]
 }

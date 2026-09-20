@@ -54,19 +54,6 @@
             }
         },
         {
-            "id": "trait_blessings_of_knowledge",
-            "name": "Blessings Of Knowledge",
-            "lore": {
-                "shortDescription": "Not yet authored in the pack.",
-                "fullText": "This trait exists so progressions can reference it. Its rules have not been authored yet."
-            },
-            "implementation": {
-                "mode": "unimplemented",
-                "summary": "Awaiting authoring.",
-                "blockedBy": []
-            }
-        },
-        {
             "id": "trait_cd_charm_animals_and_plants",
             "name": "Cd Charm Animals And Plants",
             "lore": {
@@ -197,60 +184,8 @@
             }
         },
         {
-            "id": "trait_cleric_war_prof_bonus",
-            "name": "Cleric War Prof Bonus",
-            "lore": {
-                "shortDescription": "Not yet authored in the pack.",
-                "fullText": "This trait exists so progressions can reference it. Its rules have not been authored yet."
-            },
-            "implementation": {
-                "mode": "unimplemented",
-                "summary": "Awaiting authoring.",
-                "blockedBy": []
-            }
-        },
-        {
-            "id": "trait_cleric_life_prof_bonus",
-            "name": "Cleric Life Prof Bonus",
-            "lore": {
-                "shortDescription": "Not yet authored in the pack.",
-                "fullText": "This trait exists so progressions can reference it. Its rules have not been authored yet."
-            },
-            "implementation": {
-                "mode": "unimplemented",
-                "summary": "Awaiting authoring.",
-                "blockedBy": []
-            }
-        },
-        {
             "id": "trait_cleric_light_bonus_cantrip",
             "name": "Cleric Light Bonus Cantrip",
-            "lore": {
-                "shortDescription": "Not yet authored in the pack.",
-                "fullText": "This trait exists so progressions can reference it. Its rules have not been authored yet."
-            },
-            "implementation": {
-                "mode": "unimplemented",
-                "summary": "Awaiting authoring.",
-                "blockedBy": []
-            }
-        },
-        {
-            "id": "trait_cleric_nature_prof_bonus",
-            "name": "Cleric Nature Prof Bonus",
-            "lore": {
-                "shortDescription": "Not yet authored in the pack.",
-                "fullText": "This trait exists so progressions can reference it. Its rules have not been authored yet."
-            },
-            "implementation": {
-                "mode": "unimplemented",
-                "summary": "Awaiting authoring.",
-                "blockedBy": []
-            }
-        },
-        {
-            "id": "trait_cleric_tempest_prof_bonus",
-            "name": "Cleric Tempest Prof Bonus",
             "lore": {
                 "shortDescription": "Not yet authored in the pack.",
                 "fullText": "This trait exists so progressions can reference it. Its rules have not been authored yet."
@@ -717,19 +652,6 @@
             }
         },
         {
-            "id": "trait_bard_lore_prof_bonus",
-            "name": "Bard Lore Prof Bonus",
-            "lore": {
-                "shortDescription": "Not yet authored in the pack.",
-                "fullText": "This trait exists so progressions can reference it. Its rules have not been authored yet."
-            },
-            "implementation": {
-                "mode": "unimplemented",
-                "summary": "Awaiting authoring.",
-                "blockedBy": []
-            }
-        },
-        {
             "id": "trait_cutting_words",
             "name": "Cutting Words",
             "lore": {
@@ -758,19 +680,6 @@
         {
             "id": "trait_peerless_skill",
             "name": "Peerless Skill",
-            "lore": {
-                "shortDescription": "Not yet authored in the pack.",
-                "fullText": "This trait exists so progressions can reference it. Its rules have not been authored yet."
-            },
-            "implementation": {
-                "mode": "unimplemented",
-                "summary": "Awaiting authoring.",
-                "blockedBy": []
-            }
-        },
-        {
-            "id": "trait_bard_valor_bonus_prof",
-            "name": "Bard Valor Bonus Prof",
             "lore": {
                 "shortDescription": "Not yet authored in the pack.",
                 "fullText": "This trait exists so progressions can reference it. Its rules have not been authored yet."
@@ -2370,19 +2279,6 @@
         {
             "id": "trait_spell_thief",
             "name": "Spell Thief",
-            "lore": {
-                "shortDescription": "Not yet authored in the pack.",
-                "fullText": "This trait exists so progressions can reference it. Its rules have not been authored yet."
-            },
-            "implementation": {
-                "mode": "unimplemented",
-                "summary": "Awaiting authoring.",
-                "blockedBy": []
-            }
-        },
-        {
-            "id": "trait_rogue_assassin_bonus_prof",
-            "name": "Rogue Assassin Bonus Prof",
             "lore": {
                 "shortDescription": "Not yet authored in the pack.",
                 "fullText": "This trait exists so progressions can reference it. Its rules have not been authored yet."
