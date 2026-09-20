@@ -1858,6 +1858,44 @@
             "diceRules": [],
             "criticalHitModifiers": [],
             "actions": []
+        },
+        {
+            "id": "trait_warlock_prof_skills",
+            "name": "Skill Proficiencies (Warlock)",
+            "lore": {
+                "shortDescription": "You gain proficiency with two skills from Arcana, Deception, History, Intimidation, Investigation, Nature and Religion.",
+                "fullText": "You gain proficiency with two skills from Arcana, Deception, History, Intimidation, Investigation, Nature and Religion."
+            },
+            "modifiers": {
+                "fixed": [],
+                "choices": []
+            },
+            "proficiencies": {
+                "fixed": [],
+                "choices": [
+                    {
+                        "id": "warlock_starting_skills",
+                        "category": "skills",
+                        "chooseAmount": 2,
+                        "options": [
+                            "arcana",
+                            "deception",
+                            "history",
+                            "intimidation",
+                            "investigation",
+                            "nature",
+                            "religion"
+                        ],
+                        "level": "proficient",
+                        "requiredStates": []
+                    }
+                ]
+            },
+            "resources": [],
+            "triggers": [],
+            "diceRules": [],
+            "criticalHitModifiers": [],
+            "actions": []
         }
     ]
 }

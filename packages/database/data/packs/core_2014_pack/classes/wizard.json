@@ -929,6 +929,43 @@
             "diceRules": [],
             "criticalHitModifiers": [],
             "actions": []
+        },
+        {
+            "id": "trait_wizard_prof_skills",
+            "name": "Skill Proficiencies (Wizard)",
+            "lore": {
+                "shortDescription": "You gain proficiency with two skills from Arcana, History, Insight, Investigation, Medicine and Religion.",
+                "fullText": "You gain proficiency with two skills from Arcana, History, Insight, Investigation, Medicine and Religion."
+            },
+            "modifiers": {
+                "fixed": [],
+                "choices": []
+            },
+            "proficiencies": {
+                "fixed": [],
+                "choices": [
+                    {
+                        "id": "wizard_starting_skills",
+                        "category": "skills",
+                        "chooseAmount": 2,
+                        "options": [
+                            "arcana",
+                            "history",
+                            "insight",
+                            "investigation",
+                            "medicine",
+                            "religion"
+                        ],
+                        "level": "proficient",
+                        "requiredStates": []
+                    }
+                ]
+            },
+            "resources": [],
+            "triggers": [],
+            "diceRules": [],
+            "criticalHitModifiers": [],
+            "actions": []
         }
     ]
 }

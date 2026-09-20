@@ -732,6 +732,43 @@
             "diceRules": [],
             "criticalHitModifiers": [],
             "actions": []
+        },
+        {
+            "id": "trait_sorcerer_prof_skills",
+            "name": "Skill Proficiencies (Sorcerer)",
+            "lore": {
+                "shortDescription": "You gain proficiency with two skills from Arcana, Deception, Insight, Intimidation, Persuasion and Religion.",
+                "fullText": "You gain proficiency with two skills from Arcana, Deception, Insight, Intimidation, Persuasion and Religion."
+            },
+            "modifiers": {
+                "fixed": [],
+                "choices": []
+            },
+            "proficiencies": {
+                "fixed": [],
+                "choices": [
+                    {
+                        "id": "sorcerer_starting_skills",
+                        "category": "skills",
+                        "chooseAmount": 2,
+                        "options": [
+                            "arcana",
+                            "deception",
+                            "insight",
+                            "intimidation",
+                            "persuasion",
+                            "religion"
+                        ],
+                        "level": "proficient",
+                        "requiredStates": []
+                    }
+                ]
+            },
+            "resources": [],
+            "triggers": [],
+            "diceRules": [],
+            "criticalHitModifiers": [],
+            "actions": []
         }
     ]
 }

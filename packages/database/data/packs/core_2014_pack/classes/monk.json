@@ -668,6 +668,43 @@
             "diceRules": [],
             "criticalHitModifiers": [],
             "actions": []
+        },
+        {
+            "id": "trait_monk_prof_skills",
+            "name": "Skill Proficiencies (Monk)",
+            "lore": {
+                "shortDescription": "You gain proficiency with two skills from Acrobatics, Athletics, History, Insight, Religion and Stealth.",
+                "fullText": "You gain proficiency with two skills from Acrobatics, Athletics, History, Insight, Religion and Stealth."
+            },
+            "modifiers": {
+                "fixed": [],
+                "choices": []
+            },
+            "proficiencies": {
+                "fixed": [],
+                "choices": [
+                    {
+                        "id": "monk_starting_skills",
+                        "category": "skills",
+                        "chooseAmount": 2,
+                        "options": [
+                            "acrobatics",
+                            "athletics",
+                            "history",
+                            "insight",
+                            "religion",
+                            "stealth"
+                        ],
+                        "level": "proficient",
+                        "requiredStates": []
+                    }
+                ]
+            },
+            "resources": [],
+            "triggers": [],
+            "diceRules": [],
+            "criticalHitModifiers": [],
+            "actions": []
         }
     ]
 }

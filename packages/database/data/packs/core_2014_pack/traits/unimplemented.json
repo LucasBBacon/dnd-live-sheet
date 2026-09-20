@@ -197,34 +197,8 @@
             }
         },
         {
-            "id": "trait_bard_prof_mult_skills",
-            "name": "Bard Prof Mult Skills",
-            "lore": {
-                "shortDescription": "Not yet authored in the pack.",
-                "fullText": "This trait exists so progressions can reference it. Its rules have not been authored yet."
-            },
-            "implementation": {
-                "mode": "unimplemented",
-                "summary": "Awaiting authoring.",
-                "blockedBy": []
-            }
-        },
-        {
             "id": "trait_bard_prof_mult_tools",
             "name": "Bard Prof Mult Tools",
-            "lore": {
-                "shortDescription": "Not yet authored in the pack.",
-                "fullText": "This trait exists so progressions can reference it. Its rules have not been authored yet."
-            },
-            "implementation": {
-                "mode": "unimplemented",
-                "summary": "Awaiting authoring.",
-                "blockedBy": []
-            }
-        },
-        {
-            "id": "trait_bard_prof_skills",
-            "name": "Bard Prof Skills",
             "lore": {
                 "shortDescription": "Not yet authored in the pack.",
                 "fullText": "This trait exists so progressions can reference it. Its rules have not been authored yet."
@@ -301,19 +275,6 @@
             }
         },
         {
-            "id": "trait_cleric_prof_skills",
-            "name": "Cleric Prof Skills",
-            "lore": {
-                "shortDescription": "Not yet authored in the pack.",
-                "fullText": "This trait exists so progressions can reference it. Its rules have not been authored yet."
-            },
-            "implementation": {
-                "mode": "unimplemented",
-                "summary": "Awaiting authoring.",
-                "blockedBy": []
-            }
-        },
-        {
             "id": "trait_cleric_tempest_prof_bonus",
             "name": "Cleric Tempest Prof Bonus",
             "lore": {
@@ -340,47 +301,8 @@
             }
         },
         {
-            "id": "trait_druid_prof_skills",
-            "name": "Druid Prof Skills",
-            "lore": {
-                "shortDescription": "Not yet authored in the pack.",
-                "fullText": "This trait exists so progressions can reference it. Its rules have not been authored yet."
-            },
-            "implementation": {
-                "mode": "unimplemented",
-                "summary": "Awaiting authoring.",
-                "blockedBy": []
-            }
-        },
-        {
             "id": "trait_druid_prof_tools",
             "name": "Druid Prof Tools",
-            "lore": {
-                "shortDescription": "Not yet authored in the pack.",
-                "fullText": "This trait exists so progressions can reference it. Its rules have not been authored yet."
-            },
-            "implementation": {
-                "mode": "unimplemented",
-                "summary": "Awaiting authoring.",
-                "blockedBy": []
-            }
-        },
-        {
-            "id": "trait_fighter_prof_skills",
-            "name": "Fighter Prof Skills",
-            "lore": {
-                "shortDescription": "Not yet authored in the pack.",
-                "fullText": "This trait exists so progressions can reference it. Its rules have not been authored yet."
-            },
-            "implementation": {
-                "mode": "unimplemented",
-                "summary": "Awaiting authoring.",
-                "blockedBy": []
-            }
-        },
-        {
-            "id": "trait_monk_prof_skills",
-            "name": "Monk Prof Skills",
             "lore": {
                 "shortDescription": "Not yet authored in the pack.",
                 "fullText": "This trait exists so progressions can reference it. Its rules have not been authored yet."
@@ -405,45 +327,6 @@
             }
         },
         {
-            "id": "trait_paladin_prof_skills",
-            "name": "Paladin Prof Skills",
-            "lore": {
-                "shortDescription": "Not yet authored in the pack.",
-                "fullText": "This trait exists so progressions can reference it. Its rules have not been authored yet."
-            },
-            "implementation": {
-                "mode": "unimplemented",
-                "summary": "Awaiting authoring.",
-                "blockedBy": []
-            }
-        },
-        {
-            "id": "trait_ranger_prof_skills",
-            "name": "Ranger Prof Skills",
-            "lore": {
-                "shortDescription": "Not yet authored in the pack.",
-                "fullText": "This trait exists so progressions can reference it. Its rules have not been authored yet."
-            },
-            "implementation": {
-                "mode": "unimplemented",
-                "summary": "Awaiting authoring.",
-                "blockedBy": []
-            }
-        },
-        {
-            "id": "trait_rogue_mult_prof_skills",
-            "name": "Rogue Mult Prof Skills",
-            "lore": {
-                "shortDescription": "Not yet authored in the pack.",
-                "fullText": "This trait exists so progressions can reference it. Its rules have not been authored yet."
-            },
-            "implementation": {
-                "mode": "unimplemented",
-                "summary": "Awaiting authoring.",
-                "blockedBy": []
-            }
-        },
-        {
             "id": "trait_rogue_mult_prof_tools",
             "name": "Rogue Mult Prof Tools",
             "lore": {
@@ -457,60 +340,8 @@
             }
         },
         {
-            "id": "trait_rogue_prof_skills",
-            "name": "Rogue Prof Skills",
-            "lore": {
-                "shortDescription": "Not yet authored in the pack.",
-                "fullText": "This trait exists so progressions can reference it. Its rules have not been authored yet."
-            },
-            "implementation": {
-                "mode": "unimplemented",
-                "summary": "Awaiting authoring.",
-                "blockedBy": []
-            }
-        },
-        {
             "id": "trait_rogue_prof_tools",
             "name": "Rogue Prof Tools",
-            "lore": {
-                "shortDescription": "Not yet authored in the pack.",
-                "fullText": "This trait exists so progressions can reference it. Its rules have not been authored yet."
-            },
-            "implementation": {
-                "mode": "unimplemented",
-                "summary": "Awaiting authoring.",
-                "blockedBy": []
-            }
-        },
-        {
-            "id": "trait_sorcerer_prof_skills",
-            "name": "Sorcerer Prof Skills",
-            "lore": {
-                "shortDescription": "Not yet authored in the pack.",
-                "fullText": "This trait exists so progressions can reference it. Its rules have not been authored yet."
-            },
-            "implementation": {
-                "mode": "unimplemented",
-                "summary": "Awaiting authoring.",
-                "blockedBy": []
-            }
-        },
-        {
-            "id": "trait_warlock_prof_skills",
-            "name": "Warlock Prof Skills",
-            "lore": {
-                "shortDescription": "Not yet authored in the pack.",
-                "fullText": "This trait exists so progressions can reference it. Its rules have not been authored yet."
-            },
-            "implementation": {
-                "mode": "unimplemented",
-                "summary": "Awaiting authoring.",
-                "blockedBy": []
-            }
-        },
-        {
-            "id": "trait_wizard_prof_skills",
-            "name": "Wizard Prof Skills",
             "lore": {
                 "shortDescription": "Not yet authored in the pack.",
                 "fullText": "This trait exists so progressions can reference it. Its rules have not been authored yet."

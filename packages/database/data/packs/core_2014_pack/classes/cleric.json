@@ -901,6 +901,42 @@
             "diceRules": [],
             "criticalHitModifiers": [],
             "actions": []
+        },
+        {
+            "id": "trait_cleric_prof_skills",
+            "name": "Skill Proficiencies (Cleric)",
+            "lore": {
+                "shortDescription": "You gain proficiency with two skills from History, Insight, Medicine, Persuasion and Religion.",
+                "fullText": "You gain proficiency with two skills from History, Insight, Medicine, Persuasion and Religion."
+            },
+            "modifiers": {
+                "fixed": [],
+                "choices": []
+            },
+            "proficiencies": {
+                "fixed": [],
+                "choices": [
+                    {
+                        "id": "cleric_starting_skills",
+                        "category": "skills",
+                        "chooseAmount": 2,
+                        "options": [
+                            "history",
+                            "insight",
+                            "medicine",
+                            "persuasion",
+                            "religion"
+                        ],
+                        "level": "proficient",
+                        "requiredStates": []
+                    }
+                ]
+            },
+            "resources": [],
+            "triggers": [],
+            "diceRules": [],
+            "criticalHitModifiers": [],
+            "actions": []
         }
     ]
 }

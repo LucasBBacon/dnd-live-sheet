@@ -720,6 +720,45 @@
             "diceRules": [],
             "criticalHitModifiers": [],
             "actions": []
+        },
+        {
+            "id": "trait_ranger_prof_skills",
+            "name": "Skill Proficiencies (Ranger)",
+            "lore": {
+                "shortDescription": "You gain proficiency with three skills from Animal Handling, Athletics, Insight, Investigation, Nature, Perception, Stealth and Survival.",
+                "fullText": "You gain proficiency with three skills from Animal Handling, Athletics, Insight, Investigation, Nature, Perception, Stealth and Survival."
+            },
+            "modifiers": {
+                "fixed": [],
+                "choices": []
+            },
+            "proficiencies": {
+                "fixed": [],
+                "choices": [
+                    {
+                        "id": "ranger_starting_skills",
+                        "category": "skills",
+                        "chooseAmount": 3,
+                        "options": [
+                            "animal_handling",
+                            "athletics",
+                            "insight",
+                            "investigation",
+                            "nature",
+                            "perception",
+                            "stealth",
+                            "survival"
+                        ],
+                        "level": "proficient",
+                        "requiredStates": []
+                    }
+                ]
+            },
+            "resources": [],
+            "triggers": [],
+            "diceRules": [],
+            "criticalHitModifiers": [],
+            "actions": []
         }
     ]
 }

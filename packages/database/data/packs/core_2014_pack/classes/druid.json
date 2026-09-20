@@ -687,6 +687,45 @@
             "diceRules": [],
             "criticalHitModifiers": [],
             "actions": []
+        },
+        {
+            "id": "trait_druid_prof_skills",
+            "name": "Skill Proficiencies (Druid)",
+            "lore": {
+                "shortDescription": "You gain proficiency with two skills from Arcana, Animal Handling, Insight, Medicine, Nature, Perception, Religion and Survival.",
+                "fullText": "You gain proficiency with two skills from Arcana, Animal Handling, Insight, Medicine, Nature, Perception, Religion and Survival."
+            },
+            "modifiers": {
+                "fixed": [],
+                "choices": []
+            },
+            "proficiencies": {
+                "fixed": [],
+                "choices": [
+                    {
+                        "id": "druid_starting_skills",
+                        "category": "skills",
+                        "chooseAmount": 2,
+                        "options": [
+                            "arcana",
+                            "animal_handling",
+                            "insight",
+                            "medicine",
+                            "nature",
+                            "perception",
+                            "religion",
+                            "survival"
+                        ],
+                        "level": "proficient",
+                        "requiredStates": []
+                    }
+                ]
+            },
+            "resources": [],
+            "triggers": [],
+            "diceRules": [],
+            "criticalHitModifiers": [],
+            "actions": []
         }
     ]
 }

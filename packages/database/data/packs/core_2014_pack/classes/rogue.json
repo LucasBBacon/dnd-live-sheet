@@ -616,6 +616,90 @@
             "diceRules": [],
             "criticalHitModifiers": [],
             "actions": []
+        },
+        {
+            "id": "trait_rogue_prof_skills",
+            "name": "Skill Proficiencies (Rogue)",
+            "lore": {
+                "shortDescription": "You gain proficiency with four skills from Acrobatics, Athletics, Deception, Insight, Intimidation, Investigation, Perception, Performance, Persuasion, Sleight of Hand and Stealth.",
+                "fullText": "You gain proficiency with four skills from Acrobatics, Athletics, Deception, Insight, Intimidation, Investigation, Perception, Performance, Persuasion, Sleight of Hand and Stealth."
+            },
+            "modifiers": {
+                "fixed": [],
+                "choices": []
+            },
+            "proficiencies": {
+                "fixed": [],
+                "choices": [
+                    {
+                        "id": "rogue_starting_skills",
+                        "category": "skills",
+                        "chooseAmount": 4,
+                        "options": [
+                            "acrobatics",
+                            "athletics",
+                            "deception",
+                            "insight",
+                            "intimidation",
+                            "investigation",
+                            "perception",
+                            "performance",
+                            "persuasion",
+                            "sleight_of_hand",
+                            "stealth"
+                        ],
+                        "level": "proficient",
+                        "requiredStates": []
+                    }
+                ]
+            },
+            "resources": [],
+            "triggers": [],
+            "diceRules": [],
+            "criticalHitModifiers": [],
+            "actions": []
+        },
+        {
+            "id": "trait_rogue_mult_prof_skills",
+            "name": "Multiclass Skill Proficiency (Rogue)",
+            "lore": {
+                "shortDescription": "Multiclassing into rogue grants proficiency with one skill from the rogue's list.",
+                "fullText": "Multiclassing into rogue grants proficiency with one skill from the rogue's list."
+            },
+            "modifiers": {
+                "fixed": [],
+                "choices": []
+            },
+            "proficiencies": {
+                "fixed": [],
+                "choices": [
+                    {
+                        "id": "rogue_multiclass_skill",
+                        "category": "skills",
+                        "chooseAmount": 1,
+                        "options": [
+                            "acrobatics",
+                            "athletics",
+                            "deception",
+                            "insight",
+                            "intimidation",
+                            "investigation",
+                            "perception",
+                            "performance",
+                            "persuasion",
+                            "sleight_of_hand",
+                            "stealth"
+                        ],
+                        "level": "proficient",
+                        "requiredStates": []
+                    }
+                ]
+            },
+            "resources": [],
+            "triggers": [],
+            "diceRules": [],
+            "criticalHitModifiers": [],
+            "actions": []
         }
     ]
 }

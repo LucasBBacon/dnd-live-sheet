@@ -913,6 +913,45 @@
             "diceRules": [],
             "criticalHitModifiers": [],
             "actions": []
+        },
+        {
+            "id": "trait_fighter_prof_skills",
+            "name": "Skill Proficiencies (Fighter)",
+            "lore": {
+                "shortDescription": "You gain proficiency with two skills from Acrobatics, Animal Handling, Athletics, History, Insight, Intimidation, Perception and Survival.",
+                "fullText": "You gain proficiency with two skills from Acrobatics, Animal Handling, Athletics, History, Insight, Intimidation, Perception and Survival."
+            },
+            "modifiers": {
+                "fixed": [],
+                "choices": []
+            },
+            "proficiencies": {
+                "fixed": [],
+                "choices": [
+                    {
+                        "id": "fighter_starting_skills",
+                        "category": "skills",
+                        "chooseAmount": 2,
+                        "options": [
+                            "acrobatics",
+                            "animal_handling",
+                            "athletics",
+                            "history",
+                            "insight",
+                            "intimidation",
+                            "perception",
+                            "survival"
+                        ],
+                        "level": "proficient",
+                        "requiredStates": []
+                    }
+                ]
+            },
+            "resources": [],
+            "triggers": [],
+            "diceRules": [],
+            "criticalHitModifiers": [],
+            "actions": []
         }
     ]
 }

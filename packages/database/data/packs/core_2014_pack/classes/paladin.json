@@ -660,6 +660,43 @@
             "diceRules": [],
             "criticalHitModifiers": [],
             "actions": []
+        },
+        {
+            "id": "trait_paladin_prof_skills",
+            "name": "Skill Proficiencies (Paladin)",
+            "lore": {
+                "shortDescription": "You gain proficiency with two skills from Athletics, Insight, Intimidation, Medicine, Persuasion and Religion.",
+                "fullText": "You gain proficiency with two skills from Athletics, Insight, Intimidation, Medicine, Persuasion and Religion."
+            },
+            "modifiers": {
+                "fixed": [],
+                "choices": []
+            },
+            "proficiencies": {
+                "fixed": [],
+                "choices": [
+                    {
+                        "id": "paladin_starting_skills",
+                        "category": "skills",
+                        "chooseAmount": 2,
+                        "options": [
+                            "athletics",
+                            "insight",
+                            "intimidation",
+                            "medicine",
+                            "persuasion",
+                            "religion"
+                        ],
+                        "level": "proficient",
+                        "requiredStates": []
+                    }
+                ]
+            },
+            "resources": [],
+            "triggers": [],
+            "diceRules": [],
+            "criticalHitModifiers": [],
+            "actions": []
         }
     ]
 }

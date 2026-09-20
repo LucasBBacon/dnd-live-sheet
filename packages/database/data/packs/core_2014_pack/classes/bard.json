@@ -766,6 +766,64 @@
             "diceRules": [],
             "criticalHitModifiers": [],
             "actions": []
+        },
+        {
+            "id": "trait_bard_prof_skills",
+            "name": "Skill Proficiencies (Bard)",
+            "lore": {
+                "shortDescription": "You gain proficiency with any three skills of your choice.",
+                "fullText": "You gain proficiency with any three skills of your choice."
+            },
+            "modifiers": {
+                "fixed": [],
+                "choices": []
+            },
+            "proficiencies": {
+                "fixed": [],
+                "choices": [
+                    {
+                        "id": "bard_starting_skills",
+                        "category": "skills",
+                        "chooseAmount": 3,
+                        "level": "proficient",
+                        "requiredStates": []
+                    }
+                ]
+            },
+            "resources": [],
+            "triggers": [],
+            "diceRules": [],
+            "criticalHitModifiers": [],
+            "actions": []
+        },
+        {
+            "id": "trait_bard_prof_mult_skills",
+            "name": "Multiclass Skill Proficiency (Bard)",
+            "lore": {
+                "shortDescription": "Multiclassing into bard grants proficiency with one skill of your choice.",
+                "fullText": "Multiclassing into bard grants proficiency with one skill of your choice."
+            },
+            "modifiers": {
+                "fixed": [],
+                "choices": []
+            },
+            "proficiencies": {
+                "fixed": [],
+                "choices": [
+                    {
+                        "id": "bard_multiclass_skill",
+                        "category": "skills",
+                        "chooseAmount": 1,
+                        "level": "proficient",
+                        "requiredStates": []
+                    }
+                ]
+            },
+            "resources": [],
+            "triggers": [],
+            "diceRules": [],
+            "criticalHitModifiers": [],
+            "actions": []
         }
     ]
 }
