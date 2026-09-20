@@ -197,7 +197,7 @@ burndown is large enough that an honest estimate is worth having.
 
 | Order | Item | Scale | Why here |
 | --- | --- | --- | --- |
-| 4 | **#30** — reachable trait stubs | **408** | Re-measured 2026-09-20, after `feat/item-proficiency` authored 32 weapon and armour stubs and deleted one: 441 → 408, of 584 traits. The barbarian pass before it took 462 → 441, two of those by deleting the Primal Path signposts. The earlier rise from 456 came from marking 119 silent stubs while deleting 113 unreferenced ones, so the number means "granted to a character and does nothing" rather than "tagged by the port". Every one is reachable. Per-class breakdown below, re-counted in full on 2026-09-20. **It counts stubs, not absences — see 8d.** |
+| 4 | **#30** — reachable trait stubs | **408** | Re-measured 2026-09-20, after `feat/item-proficiency` authored 32 weapon and armour stubs and deleted one: 441 → 408, of 584 traits. The barbarian pass before it took 462 → 441, two of those by deleting the Primal Path signposts. The earlier rise from 456 came from marking 119 silent stubs while deleting 113 unreferenced ones, so the number means "granted to a character and does nothing" rather than "tagged by the port". Every one is reachable. Per-class breakdown below, re-counted in full on 2026-09-20. **It is a count, not an estimate — see 8f.** |
 | 5 | **#31** — spells | **111 of 111** | Two passes, not one. `level` is `0` for every spell and `school` is `evocation` for every spell, so these need real **data** before they can carry rules — which is why this sits behind #30 despite the smaller number. |
 | 6 | **#36** — `SUMMON_ACTOR_DICTIONARY` into the pack | — | The last live rules content outside the pack, two real readers, re-verified 2026-09-02. Until it moves, "packs are the only source of rules" carries an asterisk. |
 
@@ -244,11 +244,12 @@ The designs are
 
 Races hold 6 stubs — Trance, Mask of the Wild and Sunlight Sensitivity on the
 elf, Halfling Nimbleness and Naturally Stealthy on the halfling, and Speak with
-Small Beasts on the gnome. The ten `trait_dragon_ancestor_*` stubs in
-`races/dragonborn.json` are **not** the dragonborn's: the only thing that
-references them is the sorcerer's Draconic Bloodline, so they count against the
-sorcerer row. What the dragonborn is actually missing is worse than a stub —
-see 8d.
+Small Beasts on the gnome. The ten `trait_dragon_ancestor_*` stubs that share
+`races/dragonborn.json` are **not** the dragonborn's: they are the sorcerer's
+Draconic Bloodline ancestry, referenced from `classes/sorcerer.json`, and they
+count against the sorcerer row. The dragonborn's own ancestry is authored in
+full on its ten subraces — resistance, breath charge and a scaling cone. See
+8d, which opened that as a defect and withdrew it the same day.
 
 ### Tier 3 — small, and each closes a loose end
 
@@ -1321,38 +1322,48 @@ never have been in the count of what is left. Tools have no items in the
 catalogue to resolve against and are out of scope here, same as they were for
 #59 — see 4c above for what that leaves `proficiencyDictionary.ts` holding.
 
-### 8d. #61 — the burndown counts stubs, not absences
+### 8d. #61 — withdrawn, and what the check found instead
 
-Found 2026-09-20 while re-counting #30 after this branch.
+**Opened and withdrawn on 2026-09-20, within the hour.** Recorded rather than
+deleted, because the way it was wrong is worth keeping.
 
-| # | Item | Scale | Notes |
-| --- | --- | --- | --- |
-| 61 | The dragonborn race grants no Draconic Ancestry, Breath Weapon or Damage Resistance | 3 traits | **Open.** They do not exist in the pack in any form, so no marker counts them and no guard catches them. |
+**The claim was:** `race_dragonborn` grants only an ability score increase and
+a language, so Draconic Ancestry, Breath Weapon and Damage Resistance are
+missing from the pack entirely; and the ten `trait_dragon_ancestor_*` traits
+in `races/dragonborn.json` belong to the sorcerer, not the race.
 
-`race_dragonborn` grants exactly `race_dragonborn_asi` and
-`race_dragonborn_languages`. Every other race in the pack grants its signature
-features: the halfling has Lucky and Brave, the tiefling has Hellish Resistance
-and Infernal Legacy, the half-orc has Relentless Endurance and Savage Attacks.
-The dragonborn has an ability score increase and a language, and that is the
-whole race.
+**Both halves are false.** The race declares `hasSubraces: true` and carries ten
+subraces, one per colour, each granting its own ancestry trait.
+`subrace_dragonborn_red` carries a `fire` resistance affinity, a
+`dragonborn_breath_charge` resource resetting on a short rest, and a complete
+`action_red_breath` — a 15-foot cone, DEX save against `8 + CON + proficiency`,
+half damage on a success, 2d6 scaling to 5d6 at levels 6, 11 and 16. It is more
+completely authored than most of the pack. The claim came from reading
+`grantedTraitIds` on the race and never walking `subraces`, where every racial
+grant past the ASI and languages actually lives.
 
-The ten `trait_dragon_ancestor_*` traits sitting in `races/dragonborn.json`
-look like the missing half and are not. Each is referenced exactly once, from
-the **sorcerer's** Draconic Bloodline choice list in `classes/sorcerer.json`;
-`race_dragonborn.grantedTraitIds` names none of them, and the file they live in
-is incidental. They count against the sorcerer's row in #30, not the race's.
+The ten `trait_dragon_ancestor_*` stubs are a different feature that shares a
+colour axis: the **sorcerer's** Draconic Bloodline ancestry, which grants
+Draconic literacy and doubled proficiency on Charisma checks with dragons. They
+are referenced by `classes/sorcerer.json` and by nothing else, they are counted
+against the sorcerer's row, and that attribution was right.
 
-**Why this matters beyond one race.** #30 counts traits that exist and carry no
-rules. It cannot count a rule that was never given a trait, and the reachability
-guard (#58) only runs the other way — it finds traits nothing references, not
-references to traits that were never written. A race, class or subclass can be
-missing a feature outright and every number in this file will stay green. The
-dragonborn is the case that proves it; nothing has measured whether there are
-others.
+**What the check found instead.** Looking for absences turned up none, and the
+structural signals that might have found them do not work here:
 
-The obvious check is cheap and does not exist: hold each race, class and
-subclass against its PHB feature list and report what is absent. That is a
-different guard from #58 and would want a source of truth #58 does not need.
+- Every one of the twelve classes has all 20 progression rows, and every
+  subclass's feature levels match the PHB (Berserker 3/6/10/14, cleric domains
+  1/2/6/8/17, wizard schools 2/6/10/14, and so on).
+- Twenty-two progression rows grant nothing and no ASI, which looks like a hole
+  and is not one: barbarian 6/10/14 are Path feature levels served by the
+  subclass, and cleric 3/7/9/13/15, druid 3/5/7/9/11/13/15/17, paladin 9/13/17
+  and sorcerer 11/13/15 are levels where the PHB grants only spellcasting
+  progression. Twenty-two false positives, no true ones.
+
+An expectation manifest listing each race, class and subclass's PHB features
+would find real absences, but it is the burndown written out a second time in
+order to measure the burndown. Not worth building. **#61 is closed as
+not-a-defect**; the real finding it led to is 8f.
 
 ### 8e. Proficiency stubs remaining, recounted
 
@@ -1374,3 +1385,54 @@ catalogue to resolve against, so they need a decision before they need work.
 The seven subclass entries are the domain and college bonus proficiencies,
 which grant a mix of armour, weapons and skills and are authorable now that the
 armour and weapon vocabulary resolves.
+
+### 8f. #62 — no class resource exists, and #30 cannot say so
+
+Found 2026-09-20, while checking #61.
+
+| # | Item | Scale | Notes |
+| --- | --- | --- | --- |
+| 62 | The pack defines 10 resources, none of them a class resource | 10 of ~40 | **Open.** Spell slots, ki points, sorcery points and pact slots do not exist in any form. |
+
+The complete list of resources the shipped pack defines:
+
+```
+dragonborn_breath_charge      drow_magic_darkness
+drow_magic_faerie_fire        infernal_legacy_darkness
+infernal_legacy_hellish_rebuke  resource_barbarian_rage
+resource_relentless_endurance   resource_relentless_rage
+trait_action_surge              trait_second_wind
+```
+
+There is **no spell slot anywhere** — not a table, not a pool, not a single
+`spell_slots_*` id. The same is true of ki points, sorcery points and pact
+magic slots. Every one of the ten spellcasting traits is a stub
+(`trait_spellcasting_{bard,cleric,druid,paladin,ranger,sorcerer,wizard}`, the
+eldritch knight's and arcane trickster's, and `trait_potent_spellcasting`), as
+are `trait_ki`, `trait_pact_magic`, `trait_font_of_magic`,
+`trait_wild_shape`, `trait_sneak_attack`, `trait_divine_smite` and
+`trait_channel_divinity`.
+
+Seven of the twelve classes cannot function at all as a result, and the class
+progressions already grant `spell_choice` nodes — a wizard picks six spells
+into a spellbook at level 1 and has nothing to cast them with.
+
+**Why this is a backlog finding and not just another stub.** #30 counts these
+as **17**, out of 408. That is arithmetically true and useless as an estimate:
+`trait_spellcasting_wizard` is a 20-by-9 slot table, a preparation rule, a save
+DC and an attack bonus, and it counts exactly the same as
+`trait_dragon_ancestor_red`, which is one resistance and a sentence of lore.
+**The unit #30 counts is the trait, and a trait is not a unit of work.**
+
+Two ways to make the number mean something, neither started:
+
+1. **Weight the marker.** `implementation` already carries `mode`, `summary`
+   and `blockedBy`; a size band beside them would make the burndown an estimate
+   rather than a tally, and it is authored once per stub by whoever marks it.
+2. **Track the blocked-on-a-system stubs separately.** The 17 above are not
+   small jobs waiting their turn, they are one system nobody has built. Counting
+   them with the 391 others hides both numbers.
+
+Neither is urgent on its own. What is worth saying plainly is that **#30 at 408
+is a count, not an estimate**, and the two should not be confused when
+sequencing work.
