@@ -57,6 +57,7 @@ vi.mock("../../../hooks/useCharacterStats", () => ({
     },
   }),
   useDerivedStats: () => ({ initiative: { total: 0 } }),
+  useSpellcasting: () => [],
 }));
 
 vi.mock("../../../store/levelUpStore", () => ({

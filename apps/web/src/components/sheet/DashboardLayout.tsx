@@ -16,6 +16,7 @@ import { ArmorClassWidget } from "./ArmorClassWidget";
 import { ConditionsWidget } from "./ConditionsWidget";
 import { SavingThrowsWidget } from "./SavingThrowsWidget";
 import { SkillsWidget } from "./SkillsWidget";
+import { SpellcastingWidget } from "./SpellcastingWidget";
 import { TableRulesWidget } from "./TableRulesWidget";
 
 export const DashboardLayout = () => {
@@ -242,6 +243,8 @@ export const DashboardLayout = () => {
               ))}
             </div>
           </div>
+
+          <SpellcastingWidget />
 
           <SavingThrowsWidget />
 

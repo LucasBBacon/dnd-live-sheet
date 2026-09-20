@@ -31,6 +31,16 @@ export interface UsesFeature {
 
 export type FeaturePool = ChargesFeature | UsesFeature;
 
+/**
+ * `pact_slot_level` has no `mode`, so without this it renders exactly like a
+ * real charges pool - complete with an enabled "Use" button that decrements a
+ * number representing cast level, not something spent, which can never come
+ * back (`resetCondition: "never"`). The SpellcastingWidget reports the same
+ * value via `pactSlotLevel`, so this id is hidden here rather than shown
+ * twice, once correctly and once as a misleading spendable resource.
+ */
+const HIDDEN_RESOURCE_IDS = new Set(["pact_slot_level"]);
+
 export const useFeatures = (): FeaturePool[] => {
   const operationalResources = useCharacterSheetStore(
     (state) => state.resources,
@@ -47,6 +57,8 @@ export const useFeatures = (): FeaturePool[] => {
     );
 
     return operationalResources.flatMap((opResource): FeaturePool[] => {
+      if (HIDDEN_RESOURCE_IDS.has(opResource.id)) return [];
+
       const definition = resolveResourceRule(
         opResource.id,
         ruleSnapshot ?? undefined,

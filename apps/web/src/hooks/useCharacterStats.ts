@@ -6,7 +6,10 @@ import {
   InventoryExtractor,
   SaveEngine,
   SkillEngine,
+  SpellcastingEngine,
+  collectCastingSources,
   type Ability,
+  type DerivedSpellcasting,
 } from "@project/engine";
 import { SKILL_MAP } from "@project/shared";
 
@@ -154,6 +157,50 @@ export const useDerivedStats = () => {
     getProficiencyGrants,
     classLevels,
     finalAbilities,
+    totalMods,
+    activeStates,
+  ]);
+};
+
+/**
+ * The save DC and attack bonus for each class the character casts with.
+ * Empty for a character that casts nothing, which is what lets the widget
+ * render nothing at all rather than an empty panel.
+ */
+export const useSpellcasting = (): DerivedSpellcasting[] => {
+  const classLevels = useCharacterSheetStore((state) => state.classLevels);
+  const subclassIds = useCharacterSheetStore((state) => state.subclassIds);
+  const ruleSnapshot = useCharacterSheetStore((state) => state.ruleSnapshot);
+  const activeStates = useCharacterSheetStore((state) => state.activeStates);
+
+  const { finalAbilities, totalMods } = useAbilities();
+  const { profBonus } = useDerivedStats();
+
+  return useMemo(() => {
+    const sources = collectCastingSources(
+      classLevels,
+      subclassIds,
+      ruleSnapshot ?? undefined,
+    );
+
+    return SpellcastingEngine.calculate(
+      sources,
+      Object.fromEntries(
+        Object.entries(finalAbilities).map(([ability, derived]) => [
+          ability,
+          derived.score,
+        ]),
+      ) as Record<Ability, number>,
+      profBonus,
+      totalMods,
+      activeStates,
+    );
+  }, [
+    classLevels,
+    subclassIds,
+    ruleSnapshot,
+    finalAbilities,
+    profBonus,
     totalMods,
     activeStates,
   ]);
