@@ -254,7 +254,7 @@ see 8d.
 
 | Order | Item | Why here |
 | --- | --- | --- |
-| 7 | 🟢 **#56** — pin engine's TypeScript | `packages/engine` declares `"typescript": "latest"` and resolves **7.0.2** while every other package is on 6.0.x. One package compiling on a different major than the rest, movable by any install, with no diff anyone reviews. Pin it or upgrade the workspace — but decide, rather than leave it floating. |
+| 7 | ✅ **#56** — pin engine's TypeScript | **Closed 2026-09-20.** Aligned to the workspace rather than frozen at 7.0.2: `packages/engine` now declares `^6.0.3`, the same range `@project/database` and `@project/server` use, and resolves 6.0.3. All five packages typecheck clean on it and the engine's 871 tests pass — the major-version gap cost nothing to close. |
 | 8 | 🟢 **#54** — confirm the reset-condition migration ran | `0013_add_reset_conditions.sql` is generated and journalled. Whether it has been applied to a live database cannot be checked from the tree. Until it has, the code accepts `initiative_roll` and `start_of_turn` and the database rejects them. |
 | 9 | **#53** — a unit test for the line-ending check | Sabotage-verified but with no permanent test, because nothing owns `scripts/`. Needs a root vitest project or a move into a package; `expectedEnding` and `classifyEndings` are pure and exported ready for it. |
 | 10 | **#52** — 71 project-source files are LF against a CRLF tree | Re-counted 2026-09-20 with `pnpm check:hygiene --report-eol`: 371 files reported, 300 of them vendored under `.claude/skills`, `.github/skills`, `.github/agents` and `.github/hooks`, which are not ours to normalise. The 71 that are: docs 19, `packages/engine` 17, `packages/database` 14, `apps/server` 11, `apps/web` 6, `packages/shared` 3, `skills-lock.json` 1. The count has gone **down** from 73, not up — the 80 previously recorded here counted the vendored directories inconsistently. Normalising changes no committed content. Not gated, deliberately — see 6b. |
@@ -1088,9 +1088,13 @@ to **7.0.2**, so the engine already compiles on a different major version than
 the rest of the workspace, and any `pnpm install` can move it again without a
 diff anyone reviews.
 
-Left as-is deliberately: it is committed state, and pinning it is a toolchain
-decision rather than a backlog cleanup. Recorded so the next unexplained
-engine-only type error has somewhere to start.
+**Closed 2026-09-20.** The decision the entry asked for was made in favour of
+alignment over freezing: `^6.0.3`, matching `@project/database` and
+`@project/server`. Pinning 7.0.2 would have stopped the drift while leaving
+one package on a different major indefinitely, which is the half of the problem
+that actually costs something — an engine-only type error with no obvious
+cause. Verified before committing: all five packages typecheck clean and the
+engine's 871 tests pass on 6.0.3, so nothing depended on the newer compiler.
 
 ---
 
