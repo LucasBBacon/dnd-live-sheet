@@ -94,25 +94,25 @@
                 "fixed": [
                     {
                         "category": "weapons",
-                        "proficiencyId": "weapon_battleaxe",
+                        "proficiencyId": "item_weapon_battleaxe",
                         "level": "proficient",
                         "requiredStates": []
                     },
                     {
                         "category": "weapons",
-                        "proficiencyId": "weapon_handaxe",
+                        "proficiencyId": "item_weapon_handaxe",
                         "level": "proficient",
                         "requiredStates": []
                     },
                     {
                         "category": "weapons",
-                        "proficiencyId": "weapon_light_hammer",
+                        "proficiencyId": "item_weapon_light_hammer",
                         "level": "proficient",
                         "requiredStates": []
                     },
                     {
                         "category": "weapons",
-                        "proficiencyId": "weapon_warhammer",
+                        "proficiencyId": "item_weapon_warhammer",
                         "level": "proficient",
                         "requiredStates": []
                     }
@@ -262,13 +262,13 @@
                 "fixed": [
                     {
                         "category": "armor",
-                        "proficiencyId": "armor_light",
+                        "proficiencyId": "category_armor_light",
                         "level": "proficient",
                         "requiredStates": []
                     },
                     {
                         "category": "armor",
-                        "proficiencyId": "armor_medium",
+                        "proficiencyId": "category_armor_medium",
                         "level": "proficient",
                         "requiredStates": []
                     }

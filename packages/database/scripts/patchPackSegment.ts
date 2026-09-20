@@ -9,11 +9,26 @@ import fs from "node:fs";
  * and re-printing with the file's own endings is lossless for every segment
  * (verified by round-tripping each one before this script was written).
  */
+type ProficiencyHolder = {
+  proficiencies?: {
+    fixed?: Array<{ category: string; proficiencyId: string }>;
+    choices?: Array<{ category: string; options?: string[] }>;
+  };
+};
+
 type Patch = {
   upsertTraits?: Array<{ id: string } & Record<string, unknown>>;
   deleteTraitIds?: string[];
   /** Class id -> trait ids to strip from every progression row's grants. */
   removeProgressionGrants?: Record<string, string[]>;
+  /**
+   * Proficiency category -> { old id: new id }. Applied to every trait in the
+   * segment, to fixed grants and to choice option lists, and only where the
+   * grant's own category matches. Scoped that way because ids are only unique
+   * within a category - "shield" is an armour proficiency and could equally be
+   * an item id somewhere else.
+   */
+  renameProficiencyIds?: Record<string, Record<string, string>>;
 };
 
 type Segment = {
@@ -48,6 +63,33 @@ for (const trait of patch.upsertTraits ?? []) {
   const index = segment.traits.findIndex((entry) => entry.id === trait.id);
   if (index === -1) segment.traits.push(trait);
   else segment.traits[index] = trait;
+}
+
+const renames = patch.renameProficiencyIds ?? {};
+let renamed = 0;
+
+for (const trait of (segment.traits ?? []) as Array<ProficiencyHolder>) {
+  for (const grant of trait.proficiencies?.fixed ?? []) {
+    const next = renames[grant.category]?.[grant.proficiencyId];
+    if (next) {
+      grant.proficiencyId = next;
+      renamed += 1;
+    }
+  }
+
+  for (const choice of trait.proficiencies?.choices ?? []) {
+    const table = renames[choice.category];
+    if (!table || !choice.options) continue;
+    choice.options = choice.options.map((option) => {
+      const next = table[option];
+      if (next) renamed += 1;
+      return next ?? option;
+    });
+  }
+}
+
+if (Object.keys(renames).length > 0) {
+  console.log(`renamed ${renamed} proficiency id(s)`);
 }
 
 for (const [classId, ids] of Object.entries(
