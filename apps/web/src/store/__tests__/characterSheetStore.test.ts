@@ -1615,3 +1615,55 @@ describe("the store's resource counts survive runtime hydration", () => {
     expect(countOf("trait_action_surge")).toBe(0);
   });
 });
+
+describe("useCharacterSheetStore proficiency grants", () => {
+  beforeEach(() => {
+    const baseState = useCharacterSheetStore.getState();
+
+    useCharacterSheetStore.setState({
+      ...baseState,
+      id: "char_prof",
+      campaignId: null,
+      level: 1,
+      classLevels: { class_barbarian: 1 },
+      subclassIds: {},
+      raceId: "race_human",
+      subraceId: null,
+      currentHp: 12,
+      maxHp: 12,
+      baseHpRolled: 12,
+      baseScores: { STR: 16, DEX: 12, CON: 14, INT: 10, WIS: 10, CHA: 10 },
+      traits: [],
+      traitGrants: [],
+      inventory: [],
+      activeModifiers: [],
+      resources: [],
+      ruleSnapshot: packRuleSnapshot(),
+      activeStates: [],
+    });
+  });
+
+  it("derives proficiency grants from the character's active traits", () => {
+    // a level 1 barbarian: trait_barbarian_prof_weapons grants both weapon
+    // categories, trait_barbarian_prof_armor grants light, medium and shields,
+    // trait_barbarian_prof_saving_throw grants STR and CON
+    const grants = useCharacterSheetStore.getState().getProficiencyGrants();
+    const idsIn = (category: string) =>
+      grants
+        .filter((grant) => grant.category === category)
+        .map((grant) => grant.proficiencyId);
+
+    expect(idsIn("weapons")).toEqual(
+      expect.arrayContaining([
+        "category_weapon_simple",
+        "category_weapon_martial",
+      ]),
+    );
+    expect(idsIn("armor")).toEqual(
+      expect.arrayContaining(["category_armor_shield"]),
+    );
+    expect(idsIn("saving_throws")).toEqual(
+      expect.arrayContaining(["STR", "CON"]),
+    );
+  });
+});

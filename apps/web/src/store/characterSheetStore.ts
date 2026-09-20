@@ -13,6 +13,7 @@ import {
   collectGrantedResources,
   getResourceMaxUses,
   materialiseMissingPools,
+  ProficiencyExtractor,
   RELENTLESS_RAGE_ACTION_ID,
   resolveResourceRule,
   slotsConsumedBy,
@@ -41,6 +42,7 @@ import {
   type CoreRulePackSnapshot,
   type DamageType,
   type EngineEvent,
+  type FixedProficiencyGrant,
   type HpModifiedPayload,
   type InventoryInstance,
   type RollResultsBroadcastPayload,
@@ -780,6 +782,15 @@ export interface CharacterSheetState {
    */
   getActiveTraits: () => TraitDefinition[];
   /**
+   * Every proficiency the character's traits grant, choice blocks resolved.
+   *
+   * The same call characterEngine.ts makes. The store used to keep a flat
+   * `proficiencies` record instead, hydrated from an API field that does not
+   * exist - the characters table has no such column - so it was `{}` for every
+   * character and no skill, save or attack ever gained a proficiency bonus.
+   */
+  getProficiencyGrants: () => FixedProficiencyGrant[];
+  /**
    * Toggled conditions a trait is holding off, and what holds them.
    * composeActiveStates already leaves these out of activeStates; this is the
    * half it computes and discards, for the widgets that have to say so.
@@ -1323,6 +1334,19 @@ export const useCharacterSheetStore = create<CharacterSheetState>(
       return CharacterBootstrapper.compileActiveTraits(
         toCharacterSave(state),
         state.ruleSnapshot ?? undefined,
+      );
+    },
+
+    getProficiencyGrants: () => {
+      const state = get();
+      const save = toCharacterSave(state);
+
+      return ProficiencyExtractor.extractProficiencies(
+        CharacterBootstrapper.compileActiveTraits(
+          save,
+          state.ruleSnapshot ?? undefined,
+        ),
+        CharacterBootstrapper.resolveSelections(save),
       );
     },
 
