@@ -9,7 +9,7 @@ const mocks = vi.hoisted(() => ({
       id: string;
       name: string;
       totalModifier: number;
-      multiplier: number;
+      isProficient: boolean;
     }>,
   },
   rollCheck: vi.fn(),
@@ -29,7 +29,7 @@ const skill = (
   id: "stealth",
   name: "Stealth",
   totalModifier: 5,
-  multiplier: 1,
+  isProficient: true,
   ...overrides,
 });
 
@@ -65,8 +65,8 @@ describe("SkillsWidget", () => {
 
   it("marks a proficient skill", async () => {
     mocks.skills.current = [
-      skill({ multiplier: 1 }),
-      skill({ id: "arcana", name: "Arcana", multiplier: 0 }),
+      skill({ isProficient: true }),
+      skill({ id: "arcana", name: "Arcana", isProficient: false }),
     ];
 
     const container = await renderWidget();

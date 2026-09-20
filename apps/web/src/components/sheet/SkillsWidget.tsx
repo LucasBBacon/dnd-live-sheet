@@ -26,11 +26,11 @@ export const SkillsWidget = () => {
         {skills.map((skill) => (
           <li
             key={skill.id}
-            data-proficient={skill.multiplier > 0 ? "true" : "false"}
+            data-proficient={skill.isProficient ? "true" : "false"}
             className="flex items-center justify-between border-b border-gray-100 py-1"
           >
             <span
-              className={skill.multiplier > 0 ? "font-bold" : "text-gray-600"}
+              className={skill.isProficient ? "font-bold" : "text-gray-600"}
             >
               {skill.name}
             </span>
