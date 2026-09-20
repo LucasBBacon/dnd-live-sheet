@@ -683,5 +683,59 @@
                 "fullText": "School of Transmutation"
             }
         }
+    ],
+    "traits": [
+        {
+            "id": "trait_wizard_prof_weapons",
+            "name": "Weapon Proficiency (Wizard)",
+            "lore": {
+                "shortDescription": "You are proficient with daggers, darts, slings, quarterstaffs, and light crossbows.",
+                "fullText": "You are proficient with daggers, darts, slings, quarterstaffs, and light crossbows."
+            },
+            "modifiers": {
+                "fixed": [],
+                "choices": []
+            },
+            "proficiencies": {
+                "fixed": [
+                    {
+                        "category": "weapons",
+                        "proficiencyId": "item_weapon_dagger",
+                        "level": "proficient",
+                        "requiredStates": []
+                    },
+                    {
+                        "category": "weapons",
+                        "proficiencyId": "item_weapon_dart",
+                        "level": "proficient",
+                        "requiredStates": []
+                    },
+                    {
+                        "category": "weapons",
+                        "proficiencyId": "item_weapon_sling",
+                        "level": "proficient",
+                        "requiredStates": []
+                    },
+                    {
+                        "category": "weapons",
+                        "proficiencyId": "item_weapon_quarterstaff",
+                        "level": "proficient",
+                        "requiredStates": []
+                    },
+                    {
+                        "category": "weapons",
+                        "proficiencyId": "item_weapon_crossbow_light",
+                        "level": "proficient",
+                        "requiredStates": []
+                    }
+                ],
+                "choices": []
+            },
+            "resources": [],
+            "triggers": [],
+            "diceRules": [],
+            "criticalHitModifiers": [],
+            "actions": []
+        }
     ]
 }

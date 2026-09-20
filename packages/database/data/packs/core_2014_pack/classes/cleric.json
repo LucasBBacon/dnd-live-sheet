@@ -129,8 +129,7 @@
                 ]
             },
             "multiclassTraitIds": [
-                "trait_cleric_mult_prof_armor",
-                "trait_cleric_mult_prof_weapons"
+                "trait_cleric_mult_prof_armor"
             ],
             "multiclassPrerequisites": {
                 "abilityMinimums": {
@@ -599,6 +598,116 @@
                 "shortDescription": "War Domain",
                 "fullText": "War Domain"
             }
+        }
+    ],
+    "traits": [
+        {
+            "id": "trait_cleric_prof_weapons",
+            "name": "Weapon Proficiency (Cleric)",
+            "lore": {
+                "shortDescription": "You are proficient with all simple weapons.",
+                "fullText": "You are proficient with all simple weapons."
+            },
+            "modifiers": {
+                "fixed": [],
+                "choices": []
+            },
+            "proficiencies": {
+                "fixed": [
+                    {
+                        "category": "weapons",
+                        "proficiencyId": "category_weapon_simple",
+                        "level": "proficient",
+                        "requiredStates": []
+                    }
+                ],
+                "choices": []
+            },
+            "resources": [],
+            "triggers": [],
+            "diceRules": [],
+            "criticalHitModifiers": [],
+            "actions": []
+        },
+        {
+            "id": "trait_cleric_prof_armor",
+            "name": "Armor Proficiency (Cleric)",
+            "lore": {
+                "shortDescription": "You are proficient with light armor, medium armor, and shields.",
+                "fullText": "You are proficient with light armor, medium armor, and shields."
+            },
+            "modifiers": {
+                "fixed": [],
+                "choices": []
+            },
+            "proficiencies": {
+                "fixed": [
+                    {
+                        "category": "armor",
+                        "proficiencyId": "category_armor_light",
+                        "level": "proficient",
+                        "requiredStates": []
+                    },
+                    {
+                        "category": "armor",
+                        "proficiencyId": "category_armor_medium",
+                        "level": "proficient",
+                        "requiredStates": []
+                    },
+                    {
+                        "category": "armor",
+                        "proficiencyId": "category_armor_shield",
+                        "level": "proficient",
+                        "requiredStates": []
+                    }
+                ],
+                "choices": []
+            },
+            "resources": [],
+            "triggers": [],
+            "diceRules": [],
+            "criticalHitModifiers": [],
+            "actions": []
+        },
+        {
+            "id": "trait_cleric_mult_prof_armor",
+            "name": "Multiclass Armor Proficiency (Cleric)",
+            "lore": {
+                "shortDescription": "Multiclassing into cleric grants proficiency with light armor, medium armor, and shields.",
+                "fullText": "Multiclassing into cleric grants proficiency with light armor, medium armor, and shields."
+            },
+            "modifiers": {
+                "fixed": [],
+                "choices": []
+            },
+            "proficiencies": {
+                "fixed": [
+                    {
+                        "category": "armor",
+                        "proficiencyId": "category_armor_light",
+                        "level": "proficient",
+                        "requiredStates": []
+                    },
+                    {
+                        "category": "armor",
+                        "proficiencyId": "category_armor_medium",
+                        "level": "proficient",
+                        "requiredStates": []
+                    },
+                    {
+                        "category": "armor",
+                        "proficiencyId": "category_armor_shield",
+                        "level": "proficient",
+                        "requiredStates": []
+                    }
+                ],
+                "choices": []
+            },
+            "resources": [],
+            "triggers": [],
+            "diceRules": [],
+            "criticalHitModifiers": [],
+            "actions": []
         }
     ]
 }

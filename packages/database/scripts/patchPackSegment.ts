@@ -29,11 +29,17 @@ type Patch = {
    * an item id somewhere else.
    */
   renameProficiencyIds?: Record<string, Record<string, string>>;
+  /** Class id -> trait ids to strip from that class's multiclassTraitIds. */
+  removeMulticlassTraitIds?: Record<string, string[]>;
 };
 
 type Segment = {
   traits?: Array<{ id: string }>;
-  classes?: Array<{ id: string; progression: Array<{ grants: unknown[] }> }>;
+  classes?: Array<{
+    id: string;
+    progression: Array<{ grants: unknown[] }>;
+    multiclassTraitIds?: string[];
+  }>;
 };
 
 const [segmentPath, patchPath] = process.argv.slice(2);
@@ -102,6 +108,16 @@ for (const [classId, ids] of Object.entries(
       (grant) => typeof grant !== "string" || !ids.includes(grant),
     );
   }
+}
+
+for (const [classId, ids] of Object.entries(
+  patch.removeMulticlassTraitIds ?? {},
+)) {
+  const entry = (segment.classes ?? []).find((cls) => cls.id === classId);
+  if (!entry) throw new Error(`${segmentPath} has no class '${classId}'`);
+  entry.multiclassTraitIds = (entry.multiclassTraitIds ?? []).filter(
+    (id) => !ids.includes(id),
+  );
 }
 
 const printed = JSON.stringify(segment, null, 4).split("\n").join(eol);

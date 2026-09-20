@@ -599,5 +599,75 @@
                 "fullText": "Way of Shadow"
             }
         }
+    ],
+    "traits": [
+        {
+            "id": "trait_monk_prof_weapons",
+            "name": "Weapon Proficiency (Monk)",
+            "lore": {
+                "shortDescription": "You are proficient with simple weapons and shortswords.",
+                "fullText": "You are proficient with simple weapons and shortswords."
+            },
+            "modifiers": {
+                "fixed": [],
+                "choices": []
+            },
+            "proficiencies": {
+                "fixed": [
+                    {
+                        "category": "weapons",
+                        "proficiencyId": "category_weapon_simple",
+                        "level": "proficient",
+                        "requiredStates": []
+                    },
+                    {
+                        "category": "weapons",
+                        "proficiencyId": "item_weapon_shortsword",
+                        "level": "proficient",
+                        "requiredStates": []
+                    }
+                ],
+                "choices": []
+            },
+            "resources": [],
+            "triggers": [],
+            "diceRules": [],
+            "criticalHitModifiers": [],
+            "actions": []
+        },
+        {
+            "id": "trait_monk_mult_prof_weapons",
+            "name": "Multiclass Weapon Proficiency (Monk)",
+            "lore": {
+                "shortDescription": "Multiclassing into monk grants proficiency with simple weapons and shortswords.",
+                "fullText": "Multiclassing into monk grants proficiency with simple weapons and shortswords."
+            },
+            "modifiers": {
+                "fixed": [],
+                "choices": []
+            },
+            "proficiencies": {
+                "fixed": [
+                    {
+                        "category": "weapons",
+                        "proficiencyId": "category_weapon_simple",
+                        "level": "proficient",
+                        "requiredStates": []
+                    },
+                    {
+                        "category": "weapons",
+                        "proficiencyId": "item_weapon_shortsword",
+                        "level": "proficient",
+                        "requiredStates": []
+                    }
+                ],
+                "choices": []
+            },
+            "resources": [],
+            "triggers": [],
+            "diceRules": [],
+            "criticalHitModifiers": [],
+            "actions": []
+        }
     ]
 }

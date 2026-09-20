@@ -197,19 +197,6 @@
             }
         },
         {
-            "id": "trait_bard_prof_armor",
-            "name": "Bard Prof Armor",
-            "lore": {
-                "shortDescription": "Not yet authored in the pack.",
-                "fullText": "This trait exists so progressions can reference it. Its rules have not been authored yet."
-            },
-            "implementation": {
-                "mode": "unimplemented",
-                "summary": "Awaiting authoring.",
-                "blockedBy": []
-            }
-        },
-        {
             "id": "trait_bard_prof_mult_skills",
             "name": "Bard Prof Mult Skills",
             "lore": {
@@ -251,19 +238,6 @@
         {
             "id": "trait_bard_prof_tools",
             "name": "Bard Prof Tools",
-            "lore": {
-                "shortDescription": "Not yet authored in the pack.",
-                "fullText": "This trait exists so progressions can reference it. Its rules have not been authored yet."
-            },
-            "implementation": {
-                "mode": "unimplemented",
-                "summary": "Awaiting authoring.",
-                "blockedBy": []
-            }
-        },
-        {
-            "id": "trait_bard_prof_weapons",
-            "name": "Bard Prof Weapons",
             "lore": {
                 "shortDescription": "Not yet authored in the pack.",
                 "fullText": "This trait exists so progressions can reference it. Its rules have not been authored yet."
@@ -340,47 +314,8 @@
             }
         },
         {
-            "id": "trait_cleric_prof_armor",
-            "name": "Cleric Prof Armor",
-            "lore": {
-                "shortDescription": "Not yet authored in the pack.",
-                "fullText": "This trait exists so progressions can reference it. Its rules have not been authored yet."
-            },
-            "implementation": {
-                "mode": "unimplemented",
-                "summary": "Awaiting authoring.",
-                "blockedBy": []
-            }
-        },
-        {
-            "id": "trait_cleric_mult_prof_armor",
-            "name": "Cleric Mult Prof Armor",
-            "lore": {
-                "shortDescription": "Not yet authored in the pack.",
-                "fullText": "This trait exists so progressions can reference it. Its rules have not been authored yet."
-            },
-            "implementation": {
-                "mode": "unimplemented",
-                "summary": "Awaiting authoring.",
-                "blockedBy": []
-            }
-        },
-        {
             "id": "trait_cleric_prof_skills",
             "name": "Cleric Prof Skills",
-            "lore": {
-                "shortDescription": "Not yet authored in the pack.",
-                "fullText": "This trait exists so progressions can reference it. Its rules have not been authored yet."
-            },
-            "implementation": {
-                "mode": "unimplemented",
-                "summary": "Awaiting authoring.",
-                "blockedBy": []
-            }
-        },
-        {
-            "id": "trait_cleric_prof_weapons",
-            "name": "Cleric Prof Weapons",
             "lore": {
                 "shortDescription": "Not yet authored in the pack.",
                 "fullText": "This trait exists so progressions can reference it. Its rules have not been authored yet."
@@ -431,32 +366,6 @@
             }
         },
         {
-            "id": "trait_druid_prof_armor",
-            "name": "Druid Prof Armor",
-            "lore": {
-                "shortDescription": "Not yet authored in the pack.",
-                "fullText": "This trait exists so progressions can reference it. Its rules have not been authored yet."
-            },
-            "implementation": {
-                "mode": "unimplemented",
-                "summary": "Awaiting authoring.",
-                "blockedBy": []
-            }
-        },
-        {
-            "id": "trait_druid_mult_prof_armor",
-            "name": "Druid Mult Prof Armor",
-            "lore": {
-                "shortDescription": "Not yet authored in the pack.",
-                "fullText": "This trait exists so progressions can reference it. Its rules have not been authored yet."
-            },
-            "implementation": {
-                "mode": "unimplemented",
-                "summary": "Awaiting authoring.",
-                "blockedBy": []
-            }
-        },
-        {
             "id": "trait_druid_prof_skills",
             "name": "Druid Prof Skills",
             "lore": {
@@ -472,19 +381,6 @@
         {
             "id": "trait_druid_prof_tools",
             "name": "Druid Prof Tools",
-            "lore": {
-                "shortDescription": "Not yet authored in the pack.",
-                "fullText": "This trait exists so progressions can reference it. Its rules have not been authored yet."
-            },
-            "implementation": {
-                "mode": "unimplemented",
-                "summary": "Awaiting authoring.",
-                "blockedBy": []
-            }
-        },
-        {
-            "id": "trait_druid_prof_weapons",
-            "name": "Druid Prof Weapons",
             "lore": {
                 "shortDescription": "Not yet authored in the pack.",
                 "fullText": "This trait exists so progressions can reference it. Its rules have not been authored yet."
@@ -522,73 +418,8 @@
             }
         },
         {
-            "id": "trait_fighter_prof_armor",
-            "name": "Fighter Prof Armor",
-            "lore": {
-                "shortDescription": "Not yet authored in the pack.",
-                "fullText": "This trait exists so progressions can reference it. Its rules have not been authored yet."
-            },
-            "implementation": {
-                "mode": "unimplemented",
-                "summary": "Awaiting authoring.",
-                "blockedBy": []
-            }
-        },
-        {
-            "id": "trait_fighter_mult_prof_armor",
-            "name": "Fighter Mult Prof Armor",
-            "lore": {
-                "shortDescription": "Not yet authored in the pack.",
-                "fullText": "This trait exists so progressions can reference it. Its rules have not been authored yet."
-            },
-            "implementation": {
-                "mode": "unimplemented",
-                "summary": "Awaiting authoring.",
-                "blockedBy": []
-            }
-        },
-        {
-            "id": "trait_fighter_mult_prof_weapons",
-            "name": "Fighter Mult Prof Weapons",
-            "lore": {
-                "shortDescription": "Not yet authored in the pack.",
-                "fullText": "This trait exists so progressions can reference it. Its rules have not been authored yet."
-            },
-            "implementation": {
-                "mode": "unimplemented",
-                "summary": "Awaiting authoring.",
-                "blockedBy": []
-            }
-        },
-        {
             "id": "trait_fighter_prof_skills",
             "name": "Fighter Prof Skills",
-            "lore": {
-                "shortDescription": "Not yet authored in the pack.",
-                "fullText": "This trait exists so progressions can reference it. Its rules have not been authored yet."
-            },
-            "implementation": {
-                "mode": "unimplemented",
-                "summary": "Awaiting authoring.",
-                "blockedBy": []
-            }
-        },
-        {
-            "id": "trait_fighter_prof_weapons",
-            "name": "Fighter Prof Weapons",
-            "lore": {
-                "shortDescription": "Not yet authored in the pack.",
-                "fullText": "This trait exists so progressions can reference it. Its rules have not been authored yet."
-            },
-            "implementation": {
-                "mode": "unimplemented",
-                "summary": "Awaiting authoring.",
-                "blockedBy": []
-            }
-        },
-        {
-            "id": "trait_monk_mult_prof_weapons",
-            "name": "Monk Mult Prof Weapons",
             "lore": {
                 "shortDescription": "Not yet authored in the pack.",
                 "fullText": "This trait exists so progressions can reference it. Its rules have not been authored yet."
@@ -626,73 +457,8 @@
             }
         },
         {
-            "id": "trait_monk_prof_weapons",
-            "name": "Monk Prof Weapons",
-            "lore": {
-                "shortDescription": "Not yet authored in the pack.",
-                "fullText": "This trait exists so progressions can reference it. Its rules have not been authored yet."
-            },
-            "implementation": {
-                "mode": "unimplemented",
-                "summary": "Awaiting authoring.",
-                "blockedBy": []
-            }
-        },
-        {
-            "id": "trait_paladin_prof_armor",
-            "name": "Paladin Prof Armor",
-            "lore": {
-                "shortDescription": "Not yet authored in the pack.",
-                "fullText": "This trait exists so progressions can reference it. Its rules have not been authored yet."
-            },
-            "implementation": {
-                "mode": "unimplemented",
-                "summary": "Awaiting authoring.",
-                "blockedBy": []
-            }
-        },
-        {
-            "id": "trait_paladin_mult_prof_armor",
-            "name": "Paladin Mult Prof Armor",
-            "lore": {
-                "shortDescription": "Not yet authored in the pack.",
-                "fullText": "This trait exists so progressions can reference it. Its rules have not been authored yet."
-            },
-            "implementation": {
-                "mode": "unimplemented",
-                "summary": "Awaiting authoring.",
-                "blockedBy": []
-            }
-        },
-        {
-            "id": "trait_paladin_mult_prof_weapons",
-            "name": "Paladin Mult Prof Weapons",
-            "lore": {
-                "shortDescription": "Not yet authored in the pack.",
-                "fullText": "This trait exists so progressions can reference it. Its rules have not been authored yet."
-            },
-            "implementation": {
-                "mode": "unimplemented",
-                "summary": "Awaiting authoring.",
-                "blockedBy": []
-            }
-        },
-        {
             "id": "trait_paladin_prof_skills",
             "name": "Paladin Prof Skills",
-            "lore": {
-                "shortDescription": "Not yet authored in the pack.",
-                "fullText": "This trait exists so progressions can reference it. Its rules have not been authored yet."
-            },
-            "implementation": {
-                "mode": "unimplemented",
-                "summary": "Awaiting authoring.",
-                "blockedBy": []
-            }
-        },
-        {
-            "id": "trait_paladin_prof_weapons",
-            "name": "Paladin Prof Weapons",
             "lore": {
                 "shortDescription": "Not yet authored in the pack.",
                 "fullText": "This trait exists so progressions can reference it. Its rules have not been authored yet."
@@ -717,45 +483,6 @@
             }
         },
         {
-            "id": "trait_ranger_prof_armor",
-            "name": "Ranger Prof Armor",
-            "lore": {
-                "shortDescription": "Not yet authored in the pack.",
-                "fullText": "This trait exists so progressions can reference it. Its rules have not been authored yet."
-            },
-            "implementation": {
-                "mode": "unimplemented",
-                "summary": "Awaiting authoring.",
-                "blockedBy": []
-            }
-        },
-        {
-            "id": "trait_ranger_mult_prof_armor",
-            "name": "Ranger Mult Prof Armor",
-            "lore": {
-                "shortDescription": "Not yet authored in the pack.",
-                "fullText": "This trait exists so progressions can reference it. Its rules have not been authored yet."
-            },
-            "implementation": {
-                "mode": "unimplemented",
-                "summary": "Awaiting authoring.",
-                "blockedBy": []
-            }
-        },
-        {
-            "id": "trait_ranger_mult_prof_weapons",
-            "name": "Ranger Mult Prof Weapons",
-            "lore": {
-                "shortDescription": "Not yet authored in the pack.",
-                "fullText": "This trait exists so progressions can reference it. Its rules have not been authored yet."
-            },
-            "implementation": {
-                "mode": "unimplemented",
-                "summary": "Awaiting authoring.",
-                "blockedBy": []
-            }
-        },
-        {
             "id": "trait_ranger_prof_skills",
             "name": "Ranger Prof Skills",
             "lore": {
@@ -769,47 +496,8 @@
             }
         },
         {
-            "id": "trait_ranger_prof_weapons",
-            "name": "Ranger Prof Weapons",
-            "lore": {
-                "shortDescription": "Not yet authored in the pack.",
-                "fullText": "This trait exists so progressions can reference it. Its rules have not been authored yet."
-            },
-            "implementation": {
-                "mode": "unimplemented",
-                "summary": "Awaiting authoring.",
-                "blockedBy": []
-            }
-        },
-        {
             "id": "trait_spellcasting_ranger",
             "name": "Spellcasting Ranger",
-            "lore": {
-                "shortDescription": "Not yet authored in the pack.",
-                "fullText": "This trait exists so progressions can reference it. Its rules have not been authored yet."
-            },
-            "implementation": {
-                "mode": "unimplemented",
-                "summary": "Awaiting authoring.",
-                "blockedBy": []
-            }
-        },
-        {
-            "id": "trait_rogue_prof_armor",
-            "name": "Rogue Prof Armor",
-            "lore": {
-                "shortDescription": "Not yet authored in the pack.",
-                "fullText": "This trait exists so progressions can reference it. Its rules have not been authored yet."
-            },
-            "implementation": {
-                "mode": "unimplemented",
-                "summary": "Awaiting authoring.",
-                "blockedBy": []
-            }
-        },
-        {
-            "id": "trait_rogue_mult_prof_armor",
-            "name": "Rogue Mult Prof Armor",
             "lore": {
                 "shortDescription": "Not yet authored in the pack.",
                 "fullText": "This trait exists so progressions can reference it. Its rules have not been authored yet."
@@ -873,34 +561,8 @@
             }
         },
         {
-            "id": "trait_rogue_prof_weapons",
-            "name": "Rogue Prof Weapons",
-            "lore": {
-                "shortDescription": "Not yet authored in the pack.",
-                "fullText": "This trait exists so progressions can reference it. Its rules have not been authored yet."
-            },
-            "implementation": {
-                "mode": "unimplemented",
-                "summary": "Awaiting authoring.",
-                "blockedBy": []
-            }
-        },
-        {
             "id": "trait_sorcerer_prof_skills",
             "name": "Sorcerer Prof Skills",
-            "lore": {
-                "shortDescription": "Not yet authored in the pack.",
-                "fullText": "This trait exists so progressions can reference it. Its rules have not been authored yet."
-            },
-            "implementation": {
-                "mode": "unimplemented",
-                "summary": "Awaiting authoring.",
-                "blockedBy": []
-            }
-        },
-        {
-            "id": "trait_sorcerer_prof_weapons",
-            "name": "Sorcerer Prof Weapons",
             "lore": {
                 "shortDescription": "Not yet authored in the pack.",
                 "fullText": "This trait exists so progressions can reference it. Its rules have not been authored yet."
@@ -925,45 +587,6 @@
             }
         },
         {
-            "id": "trait_warlock_prof_armor",
-            "name": "Warlock Prof Armor",
-            "lore": {
-                "shortDescription": "Not yet authored in the pack.",
-                "fullText": "This trait exists so progressions can reference it. Its rules have not been authored yet."
-            },
-            "implementation": {
-                "mode": "unimplemented",
-                "summary": "Awaiting authoring.",
-                "blockedBy": []
-            }
-        },
-        {
-            "id": "trait_warlock_mult_prof_armor",
-            "name": "Warlock Mult Prof Armor",
-            "lore": {
-                "shortDescription": "Not yet authored in the pack.",
-                "fullText": "This trait exists so progressions can reference it. Its rules have not been authored yet."
-            },
-            "implementation": {
-                "mode": "unimplemented",
-                "summary": "Awaiting authoring.",
-                "blockedBy": []
-            }
-        },
-        {
-            "id": "trait_warlock_mult_prof_weapons",
-            "name": "Warlock Mult Prof Weapons",
-            "lore": {
-                "shortDescription": "Not yet authored in the pack.",
-                "fullText": "This trait exists so progressions can reference it. Its rules have not been authored yet."
-            },
-            "implementation": {
-                "mode": "unimplemented",
-                "summary": "Awaiting authoring.",
-                "blockedBy": []
-            }
-        },
-        {
             "id": "trait_warlock_prof_skills",
             "name": "Warlock Prof Skills",
             "lore": {
@@ -977,34 +600,8 @@
             }
         },
         {
-            "id": "trait_warlock_prof_weapons",
-            "name": "Warlock Prof Weapons",
-            "lore": {
-                "shortDescription": "Not yet authored in the pack.",
-                "fullText": "This trait exists so progressions can reference it. Its rules have not been authored yet."
-            },
-            "implementation": {
-                "mode": "unimplemented",
-                "summary": "Awaiting authoring.",
-                "blockedBy": []
-            }
-        },
-        {
             "id": "trait_wizard_prof_skills",
             "name": "Wizard Prof Skills",
-            "lore": {
-                "shortDescription": "Not yet authored in the pack.",
-                "fullText": "This trait exists so progressions can reference it. Its rules have not been authored yet."
-            },
-            "implementation": {
-                "mode": "unimplemented",
-                "summary": "Awaiting authoring.",
-                "blockedBy": []
-            }
-        },
-        {
-            "id": "trait_wizard_prof_weapons",
-            "name": "Wizard Prof Weapons",
             "lore": {
                 "shortDescription": "Not yet authored in the pack.",
                 "fullText": "This trait exists so progressions can reference it. Its rules have not been authored yet."
@@ -1601,19 +1198,6 @@
             }
         },
         {
-            "id": "trait_bard_prof_mult_armor",
-            "name": "Bard Prof Mult Armor",
-            "lore": {
-                "shortDescription": "Not yet authored in the pack.",
-                "fullText": "This trait exists so progressions can reference it. Its rules have not been authored yet."
-            },
-            "implementation": {
-                "mode": "unimplemented",
-                "summary": "Awaiting authoring.",
-                "blockedBy": []
-            }
-        },
-        {
             "id": "trait_bard_lore_prof_bonus",
             "name": "Bard Lore Prof Bonus",
             "lore": {
@@ -1759,19 +1343,6 @@
         {
             "id": "trait_divine_intervention_improvement",
             "name": "Divine Intervention Improvement",
-            "lore": {
-                "shortDescription": "Not yet authored in the pack.",
-                "fullText": "This trait exists so progressions can reference it. Its rules have not been authored yet."
-            },
-            "implementation": {
-                "mode": "unimplemented",
-                "summary": "Awaiting authoring.",
-                "blockedBy": []
-            }
-        },
-        {
-            "id": "trait_cleric_mult_prof_weapons",
-            "name": "Cleric Mult Prof Weapons",
             "lore": {
                 "shortDescription": "Not yet authored in the pack.",
                 "fullText": "This trait exists so progressions can reference it. Its rules have not been authored yet."

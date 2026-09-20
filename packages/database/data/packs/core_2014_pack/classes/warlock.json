@@ -1660,5 +1660,119 @@
                 "fullText": "The Great Old One"
             }
         }
+    ],
+    "traits": [
+        {
+            "id": "trait_warlock_prof_weapons",
+            "name": "Weapon Proficiency (Warlock)",
+            "lore": {
+                "shortDescription": "You are proficient with all simple weapons.",
+                "fullText": "You are proficient with all simple weapons."
+            },
+            "modifiers": {
+                "fixed": [],
+                "choices": []
+            },
+            "proficiencies": {
+                "fixed": [
+                    {
+                        "category": "weapons",
+                        "proficiencyId": "category_weapon_simple",
+                        "level": "proficient",
+                        "requiredStates": []
+                    }
+                ],
+                "choices": []
+            },
+            "resources": [],
+            "triggers": [],
+            "diceRules": [],
+            "criticalHitModifiers": [],
+            "actions": []
+        },
+        {
+            "id": "trait_warlock_mult_prof_weapons",
+            "name": "Multiclass Weapon Proficiency (Warlock)",
+            "lore": {
+                "shortDescription": "Multiclassing into warlock grants proficiency with simple weapons.",
+                "fullText": "Multiclassing into warlock grants proficiency with simple weapons."
+            },
+            "modifiers": {
+                "fixed": [],
+                "choices": []
+            },
+            "proficiencies": {
+                "fixed": [
+                    {
+                        "category": "weapons",
+                        "proficiencyId": "category_weapon_simple",
+                        "level": "proficient",
+                        "requiredStates": []
+                    }
+                ],
+                "choices": []
+            },
+            "resources": [],
+            "triggers": [],
+            "diceRules": [],
+            "criticalHitModifiers": [],
+            "actions": []
+        },
+        {
+            "id": "trait_warlock_prof_armor",
+            "name": "Armor Proficiency (Warlock)",
+            "lore": {
+                "shortDescription": "You are proficient with light armor.",
+                "fullText": "You are proficient with light armor."
+            },
+            "modifiers": {
+                "fixed": [],
+                "choices": []
+            },
+            "proficiencies": {
+                "fixed": [
+                    {
+                        "category": "armor",
+                        "proficiencyId": "category_armor_light",
+                        "level": "proficient",
+                        "requiredStates": []
+                    }
+                ],
+                "choices": []
+            },
+            "resources": [],
+            "triggers": [],
+            "diceRules": [],
+            "criticalHitModifiers": [],
+            "actions": []
+        },
+        {
+            "id": "trait_warlock_mult_prof_armor",
+            "name": "Multiclass Armor Proficiency (Warlock)",
+            "lore": {
+                "shortDescription": "Multiclassing into warlock grants proficiency with light armor.",
+                "fullText": "Multiclassing into warlock grants proficiency with light armor."
+            },
+            "modifiers": {
+                "fixed": [],
+                "choices": []
+            },
+            "proficiencies": {
+                "fixed": [
+                    {
+                        "category": "armor",
+                        "proficiencyId": "category_armor_light",
+                        "level": "proficient",
+                        "requiredStates": []
+                    }
+                ],
+                "choices": []
+            },
+            "resources": [],
+            "triggers": [],
+            "diceRules": [],
+            "criticalHitModifiers": [],
+            "actions": []
+        }
     ]
 }

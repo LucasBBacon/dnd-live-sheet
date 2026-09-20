@@ -651,5 +651,161 @@
                 "fullText": "Eldritch Knight"
             }
         }
+    ],
+    "traits": [
+        {
+            "id": "trait_fighter_prof_weapons",
+            "name": "Weapon Proficiency (Fighter)",
+            "lore": {
+                "shortDescription": "You are proficient with all simple and martial weapons.",
+                "fullText": "You are proficient with all simple and martial weapons."
+            },
+            "modifiers": {
+                "fixed": [],
+                "choices": []
+            },
+            "proficiencies": {
+                "fixed": [
+                    {
+                        "category": "weapons",
+                        "proficiencyId": "category_weapon_simple",
+                        "level": "proficient",
+                        "requiredStates": []
+                    },
+                    {
+                        "category": "weapons",
+                        "proficiencyId": "category_weapon_martial",
+                        "level": "proficient",
+                        "requiredStates": []
+                    }
+                ],
+                "choices": []
+            },
+            "resources": [],
+            "triggers": [],
+            "diceRules": [],
+            "criticalHitModifiers": [],
+            "actions": []
+        },
+        {
+            "id": "trait_fighter_mult_prof_weapons",
+            "name": "Multiclass Weapon Proficiency (Fighter)",
+            "lore": {
+                "shortDescription": "Multiclassing into fighter grants proficiency with simple and martial weapons.",
+                "fullText": "Multiclassing into fighter grants proficiency with simple and martial weapons."
+            },
+            "modifiers": {
+                "fixed": [],
+                "choices": []
+            },
+            "proficiencies": {
+                "fixed": [
+                    {
+                        "category": "weapons",
+                        "proficiencyId": "category_weapon_simple",
+                        "level": "proficient",
+                        "requiredStates": []
+                    },
+                    {
+                        "category": "weapons",
+                        "proficiencyId": "category_weapon_martial",
+                        "level": "proficient",
+                        "requiredStates": []
+                    }
+                ],
+                "choices": []
+            },
+            "resources": [],
+            "triggers": [],
+            "diceRules": [],
+            "criticalHitModifiers": [],
+            "actions": []
+        },
+        {
+            "id": "trait_fighter_prof_armor",
+            "name": "Armor Proficiency (Fighter)",
+            "lore": {
+                "shortDescription": "You are proficient with all armor and shields.",
+                "fullText": "You are proficient with all armor and shields."
+            },
+            "modifiers": {
+                "fixed": [],
+                "choices": []
+            },
+            "proficiencies": {
+                "fixed": [
+                    {
+                        "category": "armor",
+                        "proficiencyId": "category_armor_light",
+                        "level": "proficient",
+                        "requiredStates": []
+                    },
+                    {
+                        "category": "armor",
+                        "proficiencyId": "category_armor_medium",
+                        "level": "proficient",
+                        "requiredStates": []
+                    },
+                    {
+                        "category": "armor",
+                        "proficiencyId": "category_armor_heavy",
+                        "level": "proficient",
+                        "requiredStates": []
+                    },
+                    {
+                        "category": "armor",
+                        "proficiencyId": "category_armor_shield",
+                        "level": "proficient",
+                        "requiredStates": []
+                    }
+                ],
+                "choices": []
+            },
+            "resources": [],
+            "triggers": [],
+            "diceRules": [],
+            "criticalHitModifiers": [],
+            "actions": []
+        },
+        {
+            "id": "trait_fighter_mult_prof_armor",
+            "name": "Multiclass Armor Proficiency (Fighter)",
+            "lore": {
+                "shortDescription": "Multiclassing into fighter grants proficiency with light armor, medium armor, and shields.",
+                "fullText": "Multiclassing into fighter grants proficiency with light armor, medium armor, and shields."
+            },
+            "modifiers": {
+                "fixed": [],
+                "choices": []
+            },
+            "proficiencies": {
+                "fixed": [
+                    {
+                        "category": "armor",
+                        "proficiencyId": "category_armor_light",
+                        "level": "proficient",
+                        "requiredStates": []
+                    },
+                    {
+                        "category": "armor",
+                        "proficiencyId": "category_armor_medium",
+                        "level": "proficient",
+                        "requiredStates": []
+                    },
+                    {
+                        "category": "armor",
+                        "proficiencyId": "category_armor_shield",
+                        "level": "proficient",
+                        "requiredStates": []
+                    }
+                ],
+                "choices": []
+            },
+            "resources": [],
+            "triggers": [],
+            "diceRules": [],
+            "criticalHitModifiers": [],
+            "actions": []
+        }
     ]
 }
