@@ -1,4 +1,4 @@
-import type { Spellcasting } from "@project/shared";
+import type { CharacterSave, Spellcasting } from "@project/shared";
 import type { RuleSnapshotLookup } from "./ruleLookup.js";
 
 /** One class that contributes to how many slots the character has. */
@@ -68,6 +68,31 @@ export const casterLevel = (sources: CastingSource[]): number => {
     0,
   );
 };
+
+/**
+ * The two lookups `collectCastingSources` reads, both keyed by class id and
+ * both built from the one place a save keeps them: `save.classes`.
+ *
+ * Pulled out because the pipeline needs this same shape from two different
+ * seams - hydrating the resource manager, and deriving the live sheet's
+ * spellcasting entries - and a save's class list is the only source either
+ * one should read it from.
+ * @param classes A save's classes, in save order.
+ * @returns Class id to level, and class id to the subclass chosen for it.
+ */
+export const classLevelsAndSubclassIds = (
+  classes: CharacterSave["classes"],
+): {
+  classLevels: Record<string, number>;
+  subclassIds: Record<string, string | null | undefined>;
+} => ({
+  classLevels: Object.fromEntries(
+    classes.map((classState) => [classState.classId, classState.level]),
+  ),
+  subclassIds: Object.fromEntries(
+    classes.map((classState) => [classState.classId, classState.subclassId]),
+  ),
+});
 
 /**
  * Which of the character's classes cast, and how.

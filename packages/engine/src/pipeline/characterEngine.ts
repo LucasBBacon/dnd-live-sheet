@@ -21,7 +21,10 @@ import {
   SpellcastingEngine,
   type DerivedSpellcasting,
 } from "../calculators/spellcasting.js";
-import { collectCastingSources } from "../rules/casterLevel.js";
+import {
+  classLevelsAndSubclassIds,
+  collectCastingSources,
+} from "../rules/casterLevel.js";
 import { CombatEngine } from "../calculators/combat.js";
 import type { EffectManager } from "../calculators/effects.js";
 import type { ResourceManager } from "../calculators/resources.js";
@@ -402,15 +405,18 @@ export class CharacterEngine {
 
     // belongs to stage two for the same reason encumbrance does: it tests the
     // *final* scores, so a belt of giant strength decides whether the wearer
-    // still pays for their plate
+    // still pays for their plate. Shared with the spellcasting calc below,
+    // which needs the same final-score record for the same reason.
+    const abilityScores = Object.fromEntries(
+      Object.entries(abilities).map(([ability, derived]) => [
+        ability,
+        derived.score,
+      ]),
+    ) as Record<Ability, number>;
+
     const equipmentRequirements = ItemRequirementEngine.evaluate({
       items: inventory,
-      abilityScores: Object.fromEntries(
-        Object.entries(abilities).map(([ability, derived]) => [
-          ability,
-          derived.score,
-        ]),
-      ) as Record<Ability, number>,
+      abilityScores,
       snapshot: options.snapshot,
     });
 
@@ -460,18 +466,9 @@ export class CharacterEngine {
     // belongs to stage two like the weapon attacks above: a SPELLCASTING_MOD
     // bonus can be gated on states, so this needs the final activeStates,
     // not the baseStates that saves and skills were computed with
-    const classLevels = Object.fromEntries(
-      save.classes.map((classState) => [classState.classId, classState.level]),
+    const { classLevels, subclassIds } = classLevelsAndSubclassIds(
+      save.classes,
     );
-    const subclassIds = Object.fromEntries(
-      save.classes.map((classState) => [classState.classId, classState.subclassId]),
-    );
-    const abilityScores = Object.fromEntries(
-      Object.entries(abilities).map(([ability, derived]) => [
-        ability,
-        derived.score,
-      ]),
-    ) as Record<Ability, number>;
     const castingSources = collectCastingSources(
       classLevels,
       subclassIds,

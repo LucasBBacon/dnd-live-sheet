@@ -9,7 +9,11 @@ import type {
 import { traitIdOfOption } from "@project/shared";
 import { EffectManager } from "../calculators/effects.js";
 import { ResourceManager } from "../calculators/resources.js";
-import { casterLevel, collectCastingSources } from "../rules/casterLevel.js";
+import {
+  casterLevel,
+  classLevelsAndSubclassIds,
+  collectCastingSources,
+} from "../rules/casterLevel.js";
 // Classes, races, subclasses and traits all come from the loaded pack, which
 // is the only source of rules content.
 import {
@@ -640,11 +644,8 @@ export class CharacterBootstrapper {
       });
     }
 
-    const classLevels = Object.fromEntries(
-      save.classes.map((classState) => [classState.classId, classState.level]),
-    );
-    const subclassIds = Object.fromEntries(
-      save.classes.map((classState) => [classState.classId, classState.subclassId]),
+    const { classLevels, subclassIds } = classLevelsAndSubclassIds(
+      save.classes,
     );
 
     resourceManager.initializeFromGrants(
