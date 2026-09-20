@@ -54,6 +54,12 @@ CLIENT_URL=http://localhost:5173
 Notes:
 
 - `DATABASE_URL` is required.
+- `CLIENT_URL` is required for the socket gateway. Unlike the Express layer,
+  which falls back to `http://localhost:5173`, `initializeWebSocketGateway`
+  reads `process.env.CLIENT_URL` with no default. Omit it and the REST API
+  works while every `socket.io` request fails with `net::ERR_FAILED`, so the
+  live session never connects - a split failure that looks like a client bug.
+  Tracked as backlog #64.
 - Web socket client expects `VITE_API_URL` in `apps/web/.env` when needed.
 
 ## Quick start
