@@ -5,6 +5,10 @@ import { EffectManager } from "../effects.js";
 import { ResourceManager } from "../resources.js";
 import type { RuntimeHealthState } from "../../types/combat.js";
 import type { HitDicePool } from "../../types/resources.js";
+import type { LevelContext } from "../../utils/resourceRules.js";
+
+// these tests exercise "fixed" maxRule grants and have no level to offer
+const noLevels: LevelContext = { totalLevel: 0, classLevels: {}, casterLevel: 0 };
 
 const makePool = (overrides: Partial<HitDicePool> = {}): HitDicePool => ({
   dieSize: 8,
@@ -155,7 +159,7 @@ describe("RestEngine.executeShortRest", () => {
           maxRule: { kind: "fixed", value: 2 },
           resetCondition: "short_rest",
         },
-      ]);
+      ], noLevels);
       context.resourceManager.consume("ki", 2);
 
       RestEngine.executeShortRest(context);
@@ -172,7 +176,7 @@ describe("RestEngine.executeShortRest", () => {
           maxRule: { kind: "fixed", value: 2 },
           resetCondition: "long_rest",
         },
-      ]);
+      ], noLevels);
       context.resourceManager.consume("rage", 2);
 
       RestEngine.executeShortRest(context);
@@ -341,7 +345,7 @@ describe("RestEngine.executeLongRest", () => {
           maxRule: { kind: "fixed", value: 1 },
           resetCondition: "dawn",
         },
-      ]);
+      ], noLevels);
       context.resourceManager.consume("ki", 2);
       context.resourceManager.consume("rage", 2);
       context.resourceManager.consume("channel_divinity", 1);

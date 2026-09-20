@@ -1,11 +1,5 @@
-import type { Resource, ResourceMaxRule } from "@project/shared";
-
-export type ResourceLevelProfile = {
-  total?: number;
-  classes: Record<string, number>;
-  /** 0 (the default) when the caller has no caster level to offer. */
-  caster?: number;
-};
+import type { Resource } from "@project/shared";
+import { getResourceMaxUses, type LevelContext } from "../utils/resourceRules.js";
 
 export interface RuntimeResource {
   id: string;
@@ -19,13 +13,9 @@ export interface RuntimeResource {
 export class ResourceManager {
   private resources: Map<string, RuntimeResource> = new Map();
 
-  public initializeFromGrants(
-    grants: Resource[],
-    levels: ResourceLevelProfile = { classes: {} },
-  ): void {
+  public initializeFromGrants(grants: Resource[], levels: LevelContext): void {
     for (const grant of grants) {
-      const maxCharges =
-        grant.mode === "uses" ? 0 : this.resolveMaxCharges(grant.maxRule, levels);
+      const maxCharges = getResourceMaxUses(grant, levels);
       if (this.resources.has(grant.id)) {
         const existing = this.resources.get(grant.id);
         if (existing) {
@@ -48,36 +38,6 @@ export class ResourceManager {
   public hydrateFromPersisted(persisted: RuntimeResource[]): void {
     this.resources = new Map(
       persisted.map((resource) => [resource.id, { ...resource }]),
-    );
-  }
-
-  private resolveMaxCharges(
-    maxRule: ResourceMaxRule | undefined,
-    levels: ResourceLevelProfile,
-  ): number {
-    if (!maxRule) return 0;
-    if (maxRule.kind === "fixed") return maxRule.value;
-    if (maxRule.kind === "total_level_thresholds") {
-      const totalLevel = levels.total ?? 0;
-      return maxRule.thresholds.reduce(
-        (resolved, threshold) =>
-          totalLevel >= threshold.minimumLevel ? threshold.value : resolved,
-        0,
-      );
-    }
-    if (maxRule.kind === "caster_level_thresholds") {
-      const casterLevel = levels.caster ?? 0;
-      return maxRule.thresholds.reduce(
-        (resolved, threshold) =>
-          casterLevel >= threshold.minimumLevel ? threshold.value : resolved,
-        0,
-      );
-    }
-    const classLevel = levels.classes[maxRule.classId] ?? 0;
-    return maxRule.thresholds.reduce(
-      (resolved, threshold) =>
-        classLevel >= threshold.minimumLevel ? threshold.value : resolved,
-      0,
     );
   }
 
