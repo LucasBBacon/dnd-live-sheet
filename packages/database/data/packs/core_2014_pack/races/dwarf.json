@@ -146,7 +146,7 @@
                         "options": [
                             "smiths_tools",
                             "brewers_supplies",
-                            "mason_tools"
+                            "masons_tools"
                         ],
                         "level": "proficient",
                         "requiredStates": []

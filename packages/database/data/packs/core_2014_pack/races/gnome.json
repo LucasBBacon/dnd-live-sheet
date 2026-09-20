@@ -285,7 +285,7 @@
                 "fixed": [
                     {
                         "category": "tools",
-                        "proficiencyId": "artisans_tools",
+                        "proficiencyId": "tinkers_tools",
                         "level": "proficient",
                         "requiredStates": []
                     }
