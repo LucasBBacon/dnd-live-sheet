@@ -30,11 +30,17 @@ const CONTRIBUTION: Record<
 > = {
   full: { alone: (level) => level, shared: (level) => level },
   half: {
-    alone: (level) => Math.ceil(level / 2),
+    // Math.ceil(level / 2) already matches the PHB from level 2 on; below
+    // that it would round a level-1 paladin up to caster level 1, granting
+    // slots a full level before the class actually has any spellcasting.
+    alone: (level) => (level < 2 ? 0 : Math.ceil(level / 2)),
     shared: (level) => Math.floor(level / 2),
   },
   third: {
-    alone: (level) => Math.ceil(level / 3),
+    // Same shape as half, at the Eldritch Knight/Arcane Trickster threshold:
+    // they cast nothing before level 3, but Math.ceil(level / 3) alone would
+    // round levels 1-2 up to caster level 1.
+    alone: (level) => (level < 3 ? 0 : Math.ceil(level / 3)),
     shared: (level) => Math.floor(level / 3),
   },
 };

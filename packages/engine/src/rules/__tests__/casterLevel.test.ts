@@ -27,11 +27,25 @@ describe("casterLevel - a single casting class reads its own table", () => {
     expect(casterLevel([source("class_paladin", 20, "half")])).toBe(10);
   });
 
+  // a level-1 paladin has no Spellcasting feature at all - the PHB table's
+  // first row is level 2. Math.ceil(1 / 2) alone would round that up to 1
+  // and hand out slots a level early, which is what this guards against.
+  it("gives a lone half-caster nothing before the class casts at all", () => {
+    expect(casterLevel([source("class_paladin", 1, "half")])).toBe(0);
+  });
+
   it("rounds a lone third-caster up", () => {
     expect(casterLevel([source("class_fighter", 3, "third")])).toBe(1);
     expect(casterLevel([source("class_fighter", 4, "third")])).toBe(2);
     expect(casterLevel([source("class_fighter", 7, "third")])).toBe(3);
     expect(casterLevel([source("class_fighter", 20, "third")])).toBe(7);
+  });
+
+  // same guard as the half-caster case, at the Eldritch Knight/Arcane
+  // Trickster threshold: nothing before level 3.
+  it("gives a lone third-caster nothing before the class casts at all", () => {
+    expect(casterLevel([source("class_fighter", 1, "third")])).toBe(0);
+    expect(casterLevel([source("class_fighter", 2, "third")])).toBe(0);
   });
 });
 
