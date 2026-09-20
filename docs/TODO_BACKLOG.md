@@ -162,6 +162,11 @@ Re-measured again **2026-09-20**, on `feat/spellcasting-slots` while it was
 still in review, not yet merged. #30 is **398**, all twelve class rows were
 re-counted again, and #62 is half-closed — see 8f.
 
+Re-measured again **2026-09-21**, after `feat/proficiency-family` closed. #30
+is **362**, all twelve class rows were re-counted again — see 10a. The
+proficiency family (8e) is closed bar three stubs the schema cannot express,
+across four traits — see #66.
+
 Previously refreshed **2026-09-02**, after the item-actions branch (49 commits)
 landed without touching this file. Every item below was re-measured against the
 working tree that day, and three entries changed state as a result.
@@ -201,37 +206,45 @@ burndown is large enough that an honest estimate is worth having.
 
 | Order | Item | Scale | Why here |
 | --- | --- | --- | --- |
-| 4 | **#30** — reachable trait stubs | **398** | Re-measured 2026-09-20, after `feat/spellcasting-slots` authored ten spellcasting stubs (the nine slot casters' `trait_spellcasting_*` and the warlock's `trait_pact_magic`), each replacing an `unimplemented` stub of the same id with real resources: 408 → 398, of 584 traits. `feat/item-proficiency` before it authored 32 weapon and armour stubs and deleted one: 441 → 408. The barbarian pass before that took 462 → 441, two of those by deleting the Primal Path signposts. The earlier rise from 456 came from marking 119 silent stubs while deleting 113 unreferenced ones, so the number means "granted to a character and does nothing" rather than "tagged by the port". Every one is reachable. Per-class breakdown below, re-counted in full on 2026-09-20. **It is a count, not an estimate — see 8f.** |
+| 4 | **#30** — reachable trait stubs | **362** | Re-measured 2026-09-21, after `feat/proficiency-family` authored 36 proficiency stubs — 17 skills, 9 tools, 2 languages and 8 subclass bonus grants (including `trait_blessings_of_knowledge`) — each moved out of the segment that carried it as a stub and into the class, subclass or background that owns it: 398 → 362, of 584 traits. Before it, `feat/spellcasting-slots` authored ten spellcasting stubs (the nine slot casters' `trait_spellcasting_*` and the warlock's `trait_pact_magic`), each replacing an `unimplemented` stub of the same id with real resources: 408 → 398. `feat/item-proficiency` before that authored 32 weapon and armour stubs and deleted one: 441 → 408. The barbarian pass before that took 462 → 441, two of those by deleting the Primal Path signposts. The earlier rise from 456 came from marking 119 silent stubs while deleting 113 unreferenced ones, so the number means "granted to a character and does nothing" rather than "tagged by the port". Every one is reachable. Per-class breakdown below, re-counted in full on 2026-09-21. **It is a count, not an estimate — see 8f.** The proficiency family itself is closed bar three stubs the schema cannot express — see 8e and #66. |
 | 5 | **#31** — spells | **111 of 111** | Two passes, not one. `level` is `0` for every spell and `school` is `evocation` for every spell, so these need real **data** before they can carry rules — which is why this sits behind #30 despite the smaller number. |
 | 6 | **#36** — `SUMMON_ACTOR_DICTIONARY` into the pack | — | The last live rules content outside the pack, two real readers, re-verified 2026-09-02. Until it moves, "packs are the only source of rules" carries an asterisk. |
 
 **Where the remaining stubs sit**, so #30 can be picked up by whoever is
-playing what. All twelve rows re-counted 2026-09-20, after
-`feat/spellcasting-slots` — the second full re-count since 2026-09-02. A row
-is every stub the class or one of its subclasses references, so each still
-carries its subclass signposts:
+playing what. All twelve rows re-counted 2026-09-21, after
+`feat/proficiency-family` — the third full re-count since 2026-09-02, by the
+same method as the previous two rather than by subtracting: walk each class's
+own progression grants and starting/multiclass trait ids, add every subclass
+whose `classId` matches it, and intersect with the trait ids the pack marks
+`implementation.mode: "unimplemented"` (see 10a for how). A row is every stub
+the class or one of its subclasses references, so each still carries its
+subclass signposts:
 
 | Class | Stubs | Class | Stubs |
 | --- | --- | --- | --- |
-| warlock | 58 | sorcerer | 31 |
-| wizard | 46 | ranger | 28 |
-| monk | 46 | paladin | 26 |
-| cleric | 42 | bard | 21 |
-| fighter | 35 | druid | 20 |
-| rogue | 31 | **barbarian** | **0** |
+| warlock | 57 | ranger | 27 |
+| wizard | 45 | rogue | 26 |
+| monk | 44 | paladin | 25 |
+| cleric | 36 | druid | 18 |
+| fighter | 34 | bard | 15 |
+| sorcerer | 30 | **barbarian** | **0** |
 
-Ten fewer than the previous re-count, one per class: `feat/spellcasting-slots`
-authored each class's own `trait_spellcasting_*` (the Eldritch Knight's and
-the Arcane Trickster's count against fighter and rogue, same as their other
-subclass signposts) and the warlock's `trait_pact_magic`. Monk and barbarian
-are unchanged — neither casts.
+Twenty-seven fewer than the previous re-count, spread across eleven of the
+twelve classes: `feat/proficiency-family` authored each class's own skill and
+tool choice blocks (13 skill picks, 6 tool grants) and every subclass's bonus
+proficiency grant (8, including Blessings of Knowledge on the Knowledge
+Domain). Barbarian is unchanged at 0 — it closed all of its proficiency stubs
+back on `feat/barbarian-traits`.
 
-The rows sum to 384 against 381 distinct traits: the same three-trait overlap
+The rows sum to 357 against 354 distinct traits: the same three-trait overlap
 as before (`trait_expertise` on bard/rogue, `trait_timeless_body` on
-druid/monk, `trait_lands_stride` on druid/ranger) is untouched by this branch.
-A further **17 stubs belong to no class at all** — 6 race (elf 3, halfling 2,
-gnome 1), 9 background (noble 3, acolyte 2, criminal 2, soldier 2) and 2 feats
-(Mobile, Skilled) — also untouched. 381 + 17 = 398.
+druid/monk, `trait_lands_stride` on druid/ranger) is untouched by this branch
+— `trait_expertise` is one of the three proficiency-family stubs the schema
+still cannot express, see #66. A further **8 stubs belong to no class at
+all** — 6 race (elf 3, halfling 2, gnome 1) and 2 feats (Mobile, Skilled) —
+also untouched. The 9 background stubs that used to sit in this line (noble 3,
+acolyte 2, criminal 2, soldier 2) are now authored: `feat/proficiency-family`
+closed every one of them, so background-only is 0. 354 + 8 = 362.
 
 Twenty-two of the class stubs are subclass signposts — `trait_divine_domain`,
 `trait_bard_college` and their `_feature` twins, one pair per class. They
@@ -748,7 +761,7 @@ cutover either created or made visible.
 
 | # | Item | Scale | Notes |
 | --- | --- | --- | --- |
-| 30 | Traits marked `implementation.mode: "unimplemented"` | **398 of 584** | Re-measured 2026-09-20, after `feat/spellcasting-slots`. The history: 456 of 700 at the cutover, then 119 silent stubs marked (#51) and 113 unreferenced ones deleted (#57) to give 462 reachable of 587, then 462 → 441 on `feat/barbarian-traits`, 441 → 408 on `feat/item-proficiency`, and 408 → 398 on `feat/spellcasting-slots`, which authored ten stubs: the nine slot casters' `trait_spellcasting_*` (bard, cleric, druid, paladin, ranger, sorcerer, wizard, the Eldritch Knight's and the Arcane Trickster's) and the warlock's `trait_pact_magic`. Each was deleted from `traits/unimplemented.json` and upserted with real resources into its own class segment — a wash on the total trait count, ten fewer rule-free. `implementationMarkers.test.ts`'s `records how much of the trait section carries no rules` pins 398 of 584. Every one is reachable — the guard added by #58 is what keeps that true. Per-class breakdown in the Recommended sequence, re-run in full on 2026-09-20. |
+| 30 | Traits marked `implementation.mode: "unimplemented"` | **362 of 584** | Re-measured 2026-09-21, after `feat/proficiency-family`. The history: 456 of 700 at the cutover, then 119 silent stubs marked (#51) and 113 unreferenced ones deleted (#57) to give 462 reachable of 587, then 462 → 441 on `feat/barbarian-traits`, 441 → 408 on `feat/item-proficiency`, 408 → 398 on `feat/spellcasting-slots`, and 398 → 362 on `feat/proficiency-family`, which authored 36 stubs across four commits: 13 class skill grants, 9 background traits (4 skill pairs, 2 languages, 3 tool grants — all now in `backgrounds/core.json`), 6 class tool grants and 8 subclass bonus grants (including `trait_blessings_of_knowledge`, missed by 8c and 8e's earlier id-pattern counts — see 8e). Every one moved out of `traits/unimplemented.json` and into the class, subclass or background segment that owns it. Two wrong tool ids were also corrected in place, on the gnome and the dwarf — not stubs, but see 8e for why the same branch found them. `implementationMarkers.test.ts`'s `records how much of the trait section carries no rules` pins 362 of 584. Every one is reachable — the guard added by #58 is what keeps that true. Per-class breakdown in the Recommended sequence, re-run in full on 2026-09-21 — see 10a for the method. |
 | 31 | Spells marked `unimplemented` | **111 of 111** | Every spell in the pack is a stub with a `no_effect` action; `level` and `school` are placeholders, which the marker's summary says outright. |
 
 This is the deliberate, accepted trade recorded in the design doc — a marked
@@ -1405,6 +1418,57 @@ The seven subclass entries are the domain and college bonus proficiencies,
 which grant a mix of armour, weapons and skills and are authorable now that the
 armour and weapon vocabulary resolves.
 
+**Both the count and the reasoning above were wrong, corrected on
+`feat/proficiency-family`, 2026-09-21.** "Tools have neither a roster nor any
+tool item in the catalogue to resolve against, so they need a decision before
+they need work" conflated two mechanisms, the same way the item-proficiency
+spec once did: weapons and armour resolve against the equipment catalogue,
+but **languages and skills resolve against a hand-written roster in
+`proficiencyDictionary.ts`, and tools are the same shape as languages** — a
+roster, not a catalogue. Languages have no catalogue either and were never
+blocked; nothing was blocking tools. `TOOL_DICTIONARY` (39 entries: 17
+artisan's tools, 4 gaming sets, 10 musical instruments, 6 kits and standalone
+tools, 2 vehicles) now sits beside the language and skill rosters, and
+`listProficiencyOptions("tools")` returns it.
+
+Giving tools a roster turned on `proficiencyRosterDrift.test.ts`'s drift guard
+for the `tools` category for the first time — it had silently skipped the
+category, per that test's own docstring, since #59. The guard went red
+immediately, on two ids that were already wrong in the shipped pack: the
+gnome's Tinker granted `artisans_tools` (a category id, where a specific tool
+belongs — its own lore says tinker's tools) rather than `tinkers_tools`, and
+the dwarf's third artisan option was spelled `mason_tools` beside
+correctly-spelled `smiths_tools` and `brewers_supplies`, rather than
+`masons_tools`. Both fixed in `races/gnome.json` and `races/dwarf.json`; the
+guard is green, and it was also sabotaged in both directions (a bad fixed
+grant, a bad choice option) to confirm it fails on new data and not only on
+the two ids it happened to find. Every category proficiency grant in the pack
+now resolves against a real roster or the equipment catalogue — the guard's
+own docstring says so as of this branch.
+
+The count above was short too, by one: **36**, not 35.
+`trait_blessings_of_knowledge` (the Knowledge Domain's two languages and two
+skills at expertise) was missed by both 8c and this section's own table,
+because both counted stubs whose id matched a pattern — `prof_skills`,
+`prof_tools`, `prof_bonus` — and `trait_blessings_of_knowledge` carries none
+of those substrings. Searching by what a trait *does* rather than what it is
+called found it; that is a reason to distrust an id-pattern count generally,
+not only this one instance of it. The corrected breakdown, all closed
+2026-09-21:
+
+| Kind | Count | Ids |
+| --- | --- | --- |
+| skills | 17 | 13 class, 4 background |
+| tools | 9 | 5 class, 4 background |
+| languages | 2 | `trait_acolyte_languages`, `trait_noble_languages` |
+| subclass bonus proficiencies | 8 | `trait_cleric_{war,life,nature,tempest}_prof_bonus`, `trait_bard_lore_prof_bonus`, `trait_bard_valor_bonus_prof`, `trait_rogue_assassin_bonus_prof`, `trait_blessings_of_knowledge` |
+
+17 + 9 + 2 + 8 = 36. **The proficiency family is closed bar three stubs the
+schema cannot express, across four traits** — one of them (`trait_expertise`)
+is what `trait_blessings_of_knowledge` needed and could not use, since its own
+options are a fixed list of four skills rather than "proficiencies you already
+hold". See #66.
+
 ### 8f. #62 — no class resource exists, and #30 cannot say so
 
 Found 2026-09-20, while checking #61.
@@ -1572,3 +1636,78 @@ so that one is already resolved.
 | d | [patchPackSegment.ts:132](packages/database/scripts/patchPackSegment.ts:132) | `setClassFields` / `setSubclassFields` apply with `Object.assign(entry, fields)` (also [:142](packages/database/scripts/patchPackSegment.ts:142)), which would silently overwrite `id` or `progression` if a patch ever named them. A key guard rejecting those two names would make a typo'd patch fail loudly instead of corrupting a segment. |
 | e | [slotTables.test.ts:77](packages/engine/src/calculators/__tests__/slotTables.test.ts:77) | The Eldritch Knight case asserts only `slots[0]`, so its 4-slot ceiling at level 20 is unchecked, and seven of the nine authored slot tables have no dedicated assertion in this file at all. The final branch reviewer verified out-of-band that all nine are byte-identical for every shared id, so the risk is low today; a structural test asserting that identity would be better than seven more hand-transcribed tables. |
 | f | [DashboardLayout.test.tsx](apps/web/src/components/sheet/__tests__/DashboardLayout.test.tsx) | Every other child widget in this suite is isolated with its own `vi.mock` returning a stub; `SpellcastingWidget` — rendered unmocked at [DashboardLayout.tsx:248](apps/web/src/components/sheet/DashboardLayout.tsx:248) — is the one exception, left real with the `useCharacterStats` mock extended with `useSpellcasting: () => []` instead. It works, but breaks the file's isolation convention, and the layout test ends up indirectly exercising the real widget's render logic. `FeaturesWidget`, added later in the same file, does follow the convention, so this is one inconsistent case rather than a pattern. |
+
+---
+
+## P10 — Closing the proficiency family (opened 2026-09-21)
+
+`feat/proficiency-family` closed 2026-09-21: `TOOL_DICTIONARY` gave tools a
+roster for the first time, `proficiencyRosterDrift.test.ts` now guards the
+`tools` category and caught the two wrong ids recorded in 8e, and the 36
+stubs 8e scoped out are authored. #30 falls from 398 to 362 — see the Tier 2
+row, 4a and 8e for the numbers and the corrected reasoning. What follows is
+the per-class recount and the one item the branch opened rather than closed.
+
+### 10a. #30's per-class counts, the method behind the 2026-09-21 recount
+
+Re-run in full rather than subtracted by hand, the same way as every previous
+recount of this row. The method, scripted against the assembled pack
+(`assembleCoreRulePack`, the real assembler — not a hand copy, see #45) rather
+than read off the JSON by eye:
+
+1. Collect every trait id the pack marks `implementation.mode: "unimplemented"`
+   — 362 of them, wherever in the pack they physically sit (mostly
+   `traits/unimplemented.json`, but also `traits/ported.json` and four race
+   files — see #51's point that a marker is not tied to a file).
+2. For each class, walk its own `progression` grants (including `trait_choice`
+   options and their prerequisites), `startingProficiencyTraitIds` and
+   `multiclassTraitIds` — the same walk `collectReferencedTraitIds` in
+   `validatePack.ts` does for the whole pack, scoped to one class.
+3. Add every subclass whose `classId` matches, walking its own `progression`
+   the same way, into the same set — a row is the class *and* its subclasses.
+4. Intersect each class's reached-trait set with the stub set from step 1 and
+   count.
+5. Separately, walk `races` (including subraces), `backgrounds` and `feats`
+   the same way, to find the stubs no class row reaches at all.
+
+The result matched the previous recount's structure exactly: 354 distinct
+class-reachable stubs, the same three traits double-counted across two
+classes each, and every one of the 362 accounted for by a class, a race, a
+background or a feat, with nothing orphaned. That agreement is what makes the
+numbers in the Tier 2 row and section 4a trustworthy rather than merely
+computed.
+
+### 10b. #66 — three proficiency-family stubs the schema still cannot express, across four traits
+
+| # | Item | Notes |
+| --- | --- | --- |
+| 66 | Three schema concepts are missing, and they block four traits, not three | Opened 2026-09-21, on closing `feat/proficiency-family`. |
+
+The design doc's "Out of scope" section named these at design time; this is
+the backlog record now that everything else in the family is authored. Each
+needs a schema concept `ChoiceProficiencyGrant` does not have today, and
+authoring any of them with the current schema would encode the rule wrongly
+rather than leave it honestly stubbed:
+
+| Concept | Trait(s) | Where the stub lives | Why the current schema can't say it |
+| --- | --- | --- | --- |
+| Options drawn from proficiencies already held | `trait_expertise` (bard, rogue) | `traits/unimplemented.json` | Expertise's options are "proficiencies you already hold". `ChoiceProficiencyGrant.options` is a static array; a block with no `options` falls back to the whole skill roster, so a rogue could take expertise in a skill they don't have. `ProficiencyExtractor.isWorthTaking` already compares held levels — half of what this needs — but nothing lets a choice block say its roster is the character's own proficiencies. |
+| A choice spanning two categories | `trait_feat_skilled` (the Skilled feat) | `traits/ported.json`, referenced from `feats/core.json` — **not** `unimplemented.json`; it is a ported stub, not an unimplemented one, though it carries the same `implementation.mode: "unimplemented"` marker | The Skilled feat grants three picks spanning skills *or* tools, and a choice block carries exactly one `category`. Splitting it into two blocks would grant three of each instead of three total. |
+| Blanket half-proficiency | `trait_jack_of_all_trades` (bard), `trait_remarkable_athlete` (fighter, Champion) | `traits/unimplemented.json` | Half proficiency on every ability check you are *not* already proficient in is a blanket rule over the whole roster, not a grant naming specific ids — there is nothing for a `ChoiceProficiencyGrant` to enumerate. |
+
+**Three concepts, four traits.** Two locations, not one: `trait_expertise`,
+`trait_jack_of_all_trades` and `trait_remarkable_athlete` are the three stubs
+actually inside `traits/unimplemented.json` — that file's stub count (257
+entries) is right to call them three. `trait_feat_skilled` is not among them;
+it lives in `traits/ported.json`, which carries 89 stubs of its own — 88 of
+them nothing to do with proficiencies, and `trait_feat_mobile` (the Mobile
+feat, unrelated to this finding, simply not yet authored) is the only other
+proficiency-adjacent one. `trait_feat_skilled` is reached from
+`feats/core.json`'s `grantedTraitIds`, not from any class, race or background
+walk. Both files mark their stubs the same way
+(`implementation.mode: "unimplemented"`), which is why the pack-wide 362 count
+already includes all four; only a file-specific count sees three.
+
+Whoever picks this up needs a schema decision before authoring, not more
+authoring effort — the same class of problem `trait_ki` and `trait_sneak_attack`
+(#62) turned out to be, not a queue of small jobs.

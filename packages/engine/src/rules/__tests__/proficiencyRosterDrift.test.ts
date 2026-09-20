@@ -18,10 +18,10 @@ import {
  * with nothing anywhere to say so. Both cases below were live bugs found by
  * this check.
  *
- * Tools and ability checks are skipped: the pack has no tool items, so there
- * is nothing for a tool grant to be checked against. Weapons and armour are
- * covered by the second describe below, which checks coverage against the
- * catalogue instead of membership of a roster.
+ * Every category is now covered. Skills, languages and tools resolve against
+ * the rosters in proficiencyDictionary.ts; weapons and armour resolve against
+ * the equipment catalogue, in the second describe below. Only ability_check
+ * has no roster, and it has one authored grant and no stubs.
  */
 describe("trait proficiency ids stay on their category roster", () => {
   const traits = Object.values(TRAIT_DICTIONARY);
