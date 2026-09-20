@@ -137,14 +137,14 @@ describe("trait and spell implementation markers match their data", () => {
   it("records how much of the trait section carries no rules", async () => {
     const pack = await assembleCoreRulePack(SHIPPED_PACK);
 
-    // 385 of 584. The class skill grants task authored eleven class
-    // starting-skill choice blocks plus two multiclass skill grants, each
-    // replacing an "unimplemented" stub of the same id (deleted from
-    // traits/unimplemented.json, upserted with a real choice block into its
-    // own class's segment) - a wash on the total count, thirteen fewer
+    // 376 of 584. The backgrounds task authored four skill-pair fixed grants,
+    // two language choice blocks and three tool grants (nine traits total),
+    // each replacing an "unimplemented" stub of the same id (deleted from
+    // traits/unimplemented.json, upserted with a real grant or choice block
+    // into backgrounds/core.json) - a wash on the total count, nine fewer
     // rule-free.
     expect(pack.traits.filter((trait) => !carriesRules(trait))).toHaveLength(
-      385,
+      376,
     );
     expect(pack.traits).toHaveLength(584);
   });
