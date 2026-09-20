@@ -44,7 +44,11 @@ const fighter = (
     },
   ],
   // the dwarf's Tool Proficiency block is a trait choice, not a class node
-  traitSelections: { dwarf_artisan_tools: ["smiths_tools"] },
+  traitSelections: {
+    dwarf_artisan_tools: ["smiths_tools"],
+    // the fighter's own Skill Proficiencies choice block, now authored
+    fighter_starting_skills: ["athletics", "perception"],
+  },
   hp: baseHp,
 });
 
@@ -63,8 +67,12 @@ const warlock = (
       selections,
     },
   ],
-  // humans get one extra language of their choice
-  traitSelections: { human_language_choice: ["dwarvish"] },
+  // humans get one extra language of their choice, plus the warlock's own
+  // Skill Proficiencies choice block, now authored
+  traitSelections: {
+    human_language_choice: ["dwarvish"],
+    warlock_starting_skills: ["arcana", "history"],
+  },
   hp: baseHp,
 });
 
@@ -337,6 +345,8 @@ describe("CharacterBootstrapper.collectSaveIssues - trait choice blocks", () => 
     half_elf_asi_choice: ["DEX", "CON"],
     skill_versatility_choice: ["stealth", "perception"],
     half_elf_language_choice: ["dwarvish"],
+    // the fighter's own Skill Proficiencies choice block, now authored
+    fighter_starting_skills: ["athletics", "history"],
   };
 
   it("accepts a save with every trait block answered", () => {
@@ -350,8 +360,10 @@ describe("CharacterBootstrapper.collectSaveIssues - trait choice blocks", () => 
       "missing_selection",
       "missing_selection",
       "missing_selection",
+      "missing_selection",
     ]);
     expect(issues.map((i) => i.nodeId)).toContain("half_elf_asi_choice");
+    expect(issues.map((i) => i.nodeId)).toContain("fighter_starting_skills");
   });
 
   it("rejects a pick the block does not offer", () => {
