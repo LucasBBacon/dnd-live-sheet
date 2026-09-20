@@ -111,6 +111,27 @@ export const ClassLevelFeatureSchema = z.object({
   grantsASI: z.boolean().default(false),
 });
 
+/**
+ * How a class casts, for the classes that cast.
+ *
+ * Two fields, not three. A `preparation: "prepared" | "known"` belongs here
+ * eventually and is deliberately absent: nothing reads it until spell lists
+ * exist, and a field authored before it has a reader is the dead-data pattern
+ * ruleSnapshot.ts warns about in its own docstring.
+ *
+ * `progression` drives caster level, which is what the slot tables read. Pact
+ * magic is listed here but never contributes to that sum - it is its own pool
+ * on its own table, which is what the PHB means by keeping it separate.
+ */
+export const SpellcastingSchema = z
+  .object({
+    ability: z.enum(["INT", "WIS", "CHA"]),
+    progression: z.enum(["full", "half", "third", "pact"]),
+  })
+  .strict();
+
+export type Spellcasting = z.infer<typeof SpellcastingSchema>;
+
 export const ClassDefinitionSchema = z.object({
   id: z.string(),
   name: z.string(),
@@ -130,6 +151,9 @@ export const ClassDefinitionSchema = z.object({
 
   // ability minimums required to multiclass into this class
   multiclassPrerequisites: ClassMulticlassPrerequisitesSchema.optional(),
+
+  // absent on a class that does not cast, which is the statement
+  spellcasting: SpellcastingSchema.optional(),
 
   // 1-20 progression track
   progression: z.array(ClassLevelFeatureSchema),

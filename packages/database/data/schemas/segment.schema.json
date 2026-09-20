@@ -3981,6 +3981,33 @@
             },
             "additionalProperties": false
           },
+          "spellcasting": {
+            "type": "object",
+            "properties": {
+              "ability": {
+                "type": "string",
+                "enum": [
+                  "INT",
+                  "WIS",
+                  "CHA"
+                ]
+              },
+              "progression": {
+                "type": "string",
+                "enum": [
+                  "full",
+                  "half",
+                  "third",
+                  "pact"
+                ]
+              }
+            },
+            "required": [
+              "ability",
+              "progression"
+            ],
+            "additionalProperties": false
+          },
           "progression": {
             "type": "array",
             "items": {
@@ -4405,6 +4432,33 @@
                 "level"
               ]
             }
+          },
+          "spellcasting": {
+            "type": "object",
+            "properties": {
+              "ability": {
+                "type": "string",
+                "enum": [
+                  "INT",
+                  "WIS",
+                  "CHA"
+                ]
+              },
+              "progression": {
+                "type": "string",
+                "enum": [
+                  "full",
+                  "half",
+                  "third",
+                  "pact"
+                ]
+              }
+            },
+            "required": [
+              "ability",
+              "progression"
+            ],
+            "additionalProperties": false
           }
         },
         "required": [
