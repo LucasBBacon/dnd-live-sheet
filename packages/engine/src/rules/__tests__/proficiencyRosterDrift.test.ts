@@ -1,8 +1,15 @@
 import { describe, expect, it } from "vitest";
-import { corePackSnapshot } from "../../pipeline/__tests__/corePackFixture.js";
+import {
+  corePackEquipment,
+  corePackSnapshot,
+} from "../../pipeline/__tests__/corePackFixture.js";
 
 const TRAIT_DICTIONARY = corePackSnapshot().traitsById;
 import { listProficiencyOptions } from "../proficiencyDictionary.js";
+import {
+  armorProficiencyIds,
+  weaponProficiencyIds,
+} from "../itemProficiency.js";
 
 /**
  * A proficiency id that is not on its category's roster is invisible: the
@@ -11,7 +18,10 @@ import { listProficiencyOptions } from "../proficiencyDictionary.js";
  * with nothing anywhere to say so. Both cases below were live bugs found by
  * this check.
  *
- * Categories with no roster yet (tools, weapons, armour) are skipped.
+ * Tools and ability checks are skipped: the pack has no tool items, so there
+ * is nothing for a tool grant to be checked against. Weapons and armour are
+ * covered by the second describe below, which checks coverage against the
+ * catalogue instead of membership of a roster.
  */
 describe("trait proficiency ids stay on their category roster", () => {
   const traits = Object.values(TRAIT_DICTIONARY);
@@ -42,5 +52,63 @@ describe("trait proficiency ids stay on their category roster", () => {
     );
 
     expect(offRoster).toEqual([]);
+  });
+});
+
+/**
+ * Weapons and armour have no roster and do not need one: an item names its own
+ * proficiency ids, so the legal vocabulary is whatever the catalogue answers
+ * to. Asserting coverage rather than membership is deliberately the stronger
+ * check - it fails on an id that is spelled plausibly and matches nothing,
+ * which is exactly the state the pack shipped in.
+ *
+ * This derives its verdict from the same helper `combat.ts` matches with, so a
+ * grant cannot pass here and fail in play.
+ */
+describe("weapon and armour grants cover something in the catalogue", () => {
+  const traits = Object.values(TRAIT_DICTIONARY);
+  const { equipmentById, weaponsById } = corePackEquipment();
+  const weapons = Object.values(weaponsById);
+  const equipment = Object.values(equipmentById);
+
+  const coversAWeapon = (proficiencyId: string) =>
+    weapons.some((weapon) =>
+      weaponProficiencyIds(weapon).includes(proficiencyId),
+    );
+
+  const coversAnArmor = (proficiencyId: string) =>
+    equipment.some((item) => armorProficiencyIds(item).includes(proficiencyId));
+
+  const covers: Record<string, (id: string) => boolean> = {
+    weapons: coversAWeapon,
+    armor: coversAnArmor,
+  };
+
+  it("every fixed weapon or armour grant covers at least one item", () => {
+    const uncovered = traits.flatMap((trait) =>
+      (trait.proficiencies?.fixed ?? [])
+        .filter((grant) => {
+          const test = covers[grant.category];
+          return test ? !test(grant.proficiencyId) : false;
+        })
+        .map((grant) => `${trait.id}: ${grant.category}/${grant.proficiencyId}`),
+    );
+
+    expect(uncovered).toEqual([]);
+  });
+
+  it("every listed weapon or armour choice option covers at least one item", () => {
+    const uncovered = traits.flatMap((trait) =>
+      (trait.proficiencies?.choices ?? []).flatMap((choice) => {
+        const test = covers[choice.category];
+        if (!test) return [];
+
+        return (choice.options ?? [])
+          .filter((option) => !test(option))
+          .map((option) => `${trait.id}/${choice.id}: ${option}`);
+      }),
+    );
+
+    expect(uncovered).toEqual([]);
   });
 });
