@@ -1548,3 +1548,27 @@ immediately.
 The obvious fix for whoever picks this up: give the gateway the same fallback
 `index.ts` already has, or fail loudly at startup when `CLIENT_URL` is unset
 rather than silently refusing every socket connection.
+
+### 9c. #65 — six small items the branch's own reviews deferred as fix-later
+
+`feat/spellcasting-slots`'s own per-task code reviews raised these as Minor
+findings across the branch and deliberately left each one open for the final
+whole-branch review to triage as must-fix, fix-later or drop before merge.
+That triage's must-fix findings were fixed on the branch and its drops are
+gone; these six came back fix-later, from a scratch ledger that would
+otherwise not have survived. None blocks anything — they are recorded
+together as one item because each is small polish, not a defect.
+
+A seventh item from that same ledger — `slotTables.test.ts` sitting LF while
+its siblings in the directory were CRLF — is not included below: as of this
+check the file is CRLF like the rest of `packages/engine/src/calculators/__tests__/`,
+so that one is already resolved.
+
+| Item | Location | Finding |
+| --- | --- | --- |
+| a | [RestModal.tsx:101](apps/web/src/components/sheet/modals/RestModal.tsx:101) | The `recoveryPreview` `useMemo` depends on `levels` — built a few lines above from `classLevels`, `subclassIds` and `ruleSnapshot` — but lists those three inputs instead of `levels` itself, a missing-dependency lint warning newly introduced by the level-context refactor. The behaviour is correct, since `levels` is a pure function of the listed deps, but the suppression is implicit. Wrapping `levels`'s construction in its own `useMemo` over the same three deps would satisfy the rule honestly and stop rebuilding the context every render. |
+| b | [useFeatures.test.ts](apps/web/src/hooks/__tests__/useFeatures.test.ts) | The mock store's `subclassIds` field exists, but every case in the file leaves it `{}`, and the mock's `level` field is never read by `useFeatures.ts` at all. No web-layer test exercises a subclass changing a caster's level — the Eldritch-Knight-shaped case — so the `subclassIds` → caster-level path is threaded here but only covered by the engine's own tests. |
+| c | [patchPackSegment.ts:42](packages/database/scripts/patchPackSegment.ts:42) | The `Segment.classes` shape doesn't declare `multiclassTraitIds?: string[]`, so the pre-existing `removeMulticlassTraitIds` pass casts it inline at [:124](packages/database/scripts/patchPackSegment.ts:124) instead. Restoring `multiclassTraitIds?: string[]` to the intersection would remove the cast. |
+| d | [patchPackSegment.ts:132](packages/database/scripts/patchPackSegment.ts:132) | `setClassFields` / `setSubclassFields` apply with `Object.assign(entry, fields)` (also [:142](packages/database/scripts/patchPackSegment.ts:142)), which would silently overwrite `id` or `progression` if a patch ever named them. A key guard rejecting those two names would make a typo'd patch fail loudly instead of corrupting a segment. |
+| e | [slotTables.test.ts:77](packages/engine/src/calculators/__tests__/slotTables.test.ts:77) | The Eldritch Knight case asserts only `slots[0]`, so its 4-slot ceiling at level 20 is unchecked, and seven of the nine authored slot tables have no dedicated assertion in this file at all. The final branch reviewer verified out-of-band that all nine are byte-identical for every shared id, so the risk is low today; a structural test asserting that identity would be better than seven more hand-transcribed tables. |
+| f | [DashboardLayout.test.tsx](apps/web/src/components/sheet/__tests__/DashboardLayout.test.tsx) | Every other child widget in this suite is isolated with its own `vi.mock` returning a stub; `SpellcastingWidget` — rendered unmocked at [DashboardLayout.tsx:248](apps/web/src/components/sheet/DashboardLayout.tsx:248) — is the one exception, left real with the `useCharacterStats` mock extended with `useSpellcasting: () => []` instead. It works, but breaks the file's isolation convention, and the layout test ends up indirectly exercising the real widget's render logic. `FeaturesWidget`, added later in the same file, does follow the convention, so this is one inconsistent case rather than a pattern. |
