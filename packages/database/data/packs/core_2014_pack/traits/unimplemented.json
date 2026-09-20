@@ -730,19 +730,6 @@
             }
         },
         {
-            "id": "trait_pact_magic",
-            "name": "Pact Magic",
-            "lore": {
-                "shortDescription": "Not yet authored in the pack.",
-                "fullText": "This trait exists so progressions can reference it. Its rules have not been authored yet."
-            },
-            "implementation": {
-                "mode": "unimplemented",
-                "summary": "Awaiting authoring.",
-                "blockedBy": []
-            }
-        },
-        {
             "id": "trait_potent_spellcasting",
             "name": "Potent Spellcasting",
             "lore": {

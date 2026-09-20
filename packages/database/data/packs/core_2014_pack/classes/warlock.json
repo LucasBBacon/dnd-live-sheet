@@ -1548,6 +1548,10 @@
             "lore": {
                 "shortDescription": "Warlock",
                 "fullText": "Warlock"
+            },
+            "spellcasting": {
+                "ability": "CHA",
+                "progression": "pact"
             }
         }
     ],
@@ -1769,6 +1773,86 @@
                 "choices": []
             },
             "resources": [],
+            "triggers": [],
+            "diceRules": [],
+            "criticalHitModifiers": [],
+            "actions": []
+        },
+        {
+            "id": "trait_pact_magic",
+            "name": "Pact Magic",
+            "lore": {
+                "shortDescription": "Your patron grants you a small number of spell slots that all come back on a short rest, and every one of them is cast at the same level.",
+                "fullText": "Your patron grants you a small number of spell slots that all come back on a short rest, and every one of them is cast at the same level. Pact magic is separate from other spellcasting: a warlock's levels never combine with another class's to determine slots."
+            },
+            "modifiers": {
+                "fixed": [],
+                "choices": []
+            },
+            "proficiencies": {
+                "fixed": [],
+                "choices": []
+            },
+            "resources": [
+                {
+                    "id": "pact_slots",
+                    "name": "Pact Magic Slots",
+                    "resetCondition": "short_rest",
+                    "maxRule": {
+                        "kind": "class_level_thresholds",
+                        "classId": "class_warlock",
+                        "thresholds": [
+                            {
+                                "minimumLevel": 1,
+                                "value": 1
+                            },
+                            {
+                                "minimumLevel": 2,
+                                "value": 2
+                            },
+                            {
+                                "minimumLevel": 11,
+                                "value": 3
+                            },
+                            {
+                                "minimumLevel": 17,
+                                "value": 4
+                            }
+                        ]
+                    }
+                },
+                {
+                    "id": "pact_slot_level",
+                    "name": "Pact Slot Level",
+                    "resetCondition": "never",
+                    "maxRule": {
+                        "kind": "class_level_thresholds",
+                        "classId": "class_warlock",
+                        "thresholds": [
+                            {
+                                "minimumLevel": 1,
+                                "value": 1
+                            },
+                            {
+                                "minimumLevel": 3,
+                                "value": 2
+                            },
+                            {
+                                "minimumLevel": 5,
+                                "value": 3
+                            },
+                            {
+                                "minimumLevel": 7,
+                                "value": 4
+                            },
+                            {
+                                "minimumLevel": 9,
+                                "value": 5
+                            }
+                        ]
+                    }
+                }
+            ],
             "triggers": [],
             "diceRules": [],
             "criticalHitModifiers": [],

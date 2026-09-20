@@ -88,3 +88,46 @@ describe("the authored slot tables match the PHB", () => {
     ).toEqual([0, 0, 0, 0, 0, 0, 0, 0, 0]);
   });
 });
+
+describe("pact magic is its own table", () => {
+  const pactPool = (poolId: string, level: number): number => {
+    const trait = snapshot.traitsById["trait_pact_magic"];
+    const granted = collectGrantedResources([trait], { resourcesById: {} });
+    const pool = granted.find((entry) => entry.id === poolId);
+    if (!pool) throw new Error(`trait_pact_magic grants no ${poolId}`);
+
+    return getResourceMaxUses(
+      pool,
+      buildLevelContext({ class_warlock: level }, {}, {
+        classesById: snapshot.classesById,
+        subclassesById: snapshot.subclassesById,
+      }),
+    );
+  };
+
+  it("gives one slot at 1, two at 2, three at 11 and four at 17", () => {
+    expect(pactPool("pact_slots", 1)).toBe(1);
+    expect(pactPool("pact_slots", 2)).toBe(2);
+    expect(pactPool("pact_slots", 10)).toBe(2);
+    expect(pactPool("pact_slots", 11)).toBe(3);
+    expect(pactPool("pact_slots", 17)).toBe(4);
+  });
+
+  it("raises the slot level every two warlock levels to a cap of five", () => {
+    expect(pactPool("pact_slot_level", 1)).toBe(1);
+    expect(pactPool("pact_slot_level", 3)).toBe(2);
+    expect(pactPool("pact_slot_level", 5)).toBe(3);
+    expect(pactPool("pact_slot_level", 7)).toBe(4);
+    expect(pactPool("pact_slot_level", 9)).toBe(5);
+    expect(pactPool("pact_slot_level", 20)).toBe(5);
+  });
+
+  it("does not contribute to caster level", () => {
+    expect(
+      buildLevelContext({ class_warlock: 20 }, {}, {
+        classesById: snapshot.classesById,
+        subclassesById: snapshot.subclassesById,
+      }).casterLevel,
+    ).toBe(0);
+  });
+});

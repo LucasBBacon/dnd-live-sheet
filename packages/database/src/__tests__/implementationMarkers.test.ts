@@ -137,13 +137,13 @@ describe("trait and spell implementation markers match their data", () => {
   it("records how much of the trait section carries no rules", async () => {
     const pack = await assembleCoreRulePack(SHIPPED_PACK);
 
-    // 399 of 584. The spellcasting slots task authored the nine slot-casting
-    // classes' Spellcasting traits, each replacing an "unimplemented" stub of
-    // the same id (deleted from traits/unimplemented.json, upserted with real
-    // resources into its class's own segment) - a wash on the total count,
-    // nine fewer rule-free.
+    // 398 of 584. The spellcasting slots task authored the nine slot-casting
+    // classes' Spellcasting traits plus the warlock's Pact Magic, each
+    // replacing an "unimplemented" stub of the same id (deleted from
+    // traits/unimplemented.json, upserted with real resources into its
+    // class's own segment) - a wash on the total count, ten fewer rule-free.
     expect(pack.traits.filter((trait) => !carriesRules(trait))).toHaveLength(
-      399,
+      398,
     );
     expect(pack.traits).toHaveLength(584);
   });
