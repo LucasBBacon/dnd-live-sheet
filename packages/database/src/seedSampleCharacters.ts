@@ -1158,7 +1158,7 @@ const ROSTER: SampleCharacter[] = [
       featureDescription:
         "The Tinkers' Concord vouches for you. Its halls will shelter you, and its members will speak on your behalf to local authorities.",
     },
-    customTraitIds: ["trait_extra_language", "trait_noble_prof_tools"],
+    customTraitIds: ["trait_noble_languages", "trait_noble_prof_tools"],
     alignment: "Neutral Good",
     str: 8,
     dex: 14,
