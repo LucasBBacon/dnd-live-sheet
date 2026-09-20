@@ -187,10 +187,14 @@ export const TraitWidget = () => {
     [selectedTraits],
   );
 
-  const heldProficiencies = useMemo(
-    () => getProficiencyGrants(),
-    [getProficiencyGrants],
-  );
+  // Not memoized: getProficiencyGrants is a stable store-method reference
+  // (initialize's `{...state, ...payload}` merge carries it forward
+  // unchanged), so a dependency array keyed on that reference alone would
+  // never re-run once traits/race/class hydrate after first mount. The
+  // widget already subscribes to traitGrants/ruleSnapshot/classLevels/
+  // raceId/subraceId, which is what actually re-renders this component, so
+  // recomputing on every render just tracks that instead of caching stale.
+  const heldProficiencies = getProficiencyGrants();
 
   const projectedProficiencyCount = useMemo(() => {
     const baseEntries = heldProficiencies.map(
