@@ -1,7 +1,7 @@
 # Item Proficiency Resolution
 
 Date: 2026-09-19
-Status: designed
+Status: implemented
 Owner: Claude pair session
 
 ## Goal
@@ -237,8 +237,8 @@ starting skill instead of two.
 | `classes/barbarian.json` | 3 weapon + 4 armour grants respelled; `chooseAmount: 2` |
 | `races/dwarf.json` | 4 weapon + 2 armour grants respelled |
 | `races/elf.json` | 7 weapon grants respelled (elf + drow) |
-| `classes/{bard,cleric,druid,fighter,monk,paladin,ranger,rogue,sorcerer,warlock,wizard}.json` | 33 proficiency traits authored, moved in from `traits/unimplemented.json` |
-| `traits/unimplemented.json` | those 33 removed, minus any deleted outright |
+| `classes/{bard,cleric,druid,fighter,monk,paladin,ranger,rogue,sorcerer,warlock,wizard}.json` | 32 proficiency traits authored, moved in from `traits/unimplemented.json` |
+| `traits/unimplemented.json` | 33 removed: 32 into the class files above, one (`trait_cleric_mult_prof_weapons`) deleted outright — the PHB's cleric multiclass table grants no weapons |
 
 ## Engine changes
 
@@ -266,9 +266,12 @@ greataxe yields its id and both its tags, a shield yields
 `category_armor_shield`, plate yields `category_armor_heavy`. `combat.test.ts`
 is rewritten onto real ids, and gains the pair that matters - a barbarian
 holding a greataxe adds `Proficiency (+2)`, a wizard holding the same greataxe
-does not. One table-driven test walks every class in the pack and asserts a
-level 1 character of that class is proficient with what the PHB grants it and
-nothing more.
+does not. What was actually built is narrower than a full table-driven PHB
+check, on purpose: four cases across three named classes (barbarian, wizard,
+rogue) are checked precisely, against real pack ids, and a fifth sweeps every
+class in the pack and asserts none of them is left proficient with nothing it
+can hold. Restating the PHB table a second time here would duplicate the one
+the class-authoring task already keeps, and a copy drifts.
 
 **Guard.** The two new drift cases, each sabotaged in both directions before
 being trusted.
@@ -307,8 +310,10 @@ Sabotage is required, not optional, on both guard cases - the comparison in
 
 ## Out of scope
 
-- The 18 skill stubs. Their consumer already works once section 5 lands; they
-  are a separate authoring spec.
+- The 17 skill stubs (not 18 — `trait_barbarian_prof_skills` was already
+  authored on `feat/barbarian-traits`, before this branch's baseline, and does
+  not belong in the count of what is left). Their consumer already works once
+  section 5 lands; they are a separate authoring spec.
 - A consumer for armour proficiency.
-- A tool roster and the tool stubs.
+- A tool roster and the 9 tool stubs.
 - Filling the pack's empty `proficiencies` section.

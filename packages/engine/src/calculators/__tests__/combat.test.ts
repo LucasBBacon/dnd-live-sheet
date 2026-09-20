@@ -4,6 +4,9 @@ import type { Ability } from "../../types/core.js";
 import type { FixedProficiencyGrant, RuntimeModifier } from "@project/shared";
 import type { WeaponAttackContext } from "../../types/combat.js";
 import type { WeaponView } from "../../rules/equipmentProjection.js";
+import { corePackEquipment, corePackSnapshot } from "../../pipeline/__tests__/corePackFixture.js";
+import { ProficiencyExtractor } from "../../pipeline/proficiencyExtractor.js";
+import { isProficientWithWeapon } from "../../rules/itemProficiency.js";
 
 const makeWeapon = (
   overrides: Partial<WeaponView> = {},
@@ -1183,5 +1186,85 @@ describe("CombatEngine.calculateWeaponAttack - scaled critical dice", () => {
     const flatPair = { type: "add_base_die", dieCount: 2 };
 
     expect(critAt(1, [flatPair])).toBe("4d6 piercing");
+  });
+});
+
+/**
+ * The end of the bug this branch exists for. Every id here comes from the
+ * shipped pack, so a regression in either the vocabulary or the predicate
+ * fails this rather than passing against invented data the way the unit tests
+ * above used to.
+ */
+describe("a class's authored proficiencies reach the attack roll", () => {
+  const { weaponsById } = corePackEquipment();
+  const traits = corePackSnapshot().traitsById;
+
+  const attackWith = (traitIds: string[], weaponId: string) =>
+    CombatEngine.calculateWeaponAttack(
+      weaponsById[weaponId]!,
+      makeScores(),
+      2,
+      ProficiencyExtractor.extractProficiencies(
+        traitIds.map((id) => traits[id]!),
+        {},
+      ),
+      [],
+    );
+
+  it("a barbarian is proficient with a greataxe", () => {
+    const result = attackWith(
+      ["trait_barbarian_prof_weapons"],
+      "item_weapon_greataxe",
+    );
+
+    expect(result.isProficient).toBe(true);
+    expect(result.breakdown.attack).toContain("Proficiency (+2)");
+  });
+
+  it("a wizard is not proficient with a greataxe", () => {
+    const result = attackWith(
+      ["trait_wizard_prof_weapons"],
+      "item_weapon_greataxe",
+    );
+
+    expect(result.isProficient).toBe(false);
+  });
+
+  it("a wizard is proficient with a quarterstaff, which its trait names outright", () => {
+    const result = attackWith(
+      ["trait_wizard_prof_weapons"],
+      "item_weapon_quarterstaff",
+    );
+
+    expect(result.isProficient).toBe(true);
+  });
+
+  it("a rogue is proficient with a rapier but not a greatsword", () => {
+    expect(
+      attackWith(["trait_rogue_prof_weapons"], "item_weapon_rapier").isProficient,
+    ).toBe(true);
+    expect(
+      attackWith(["trait_rogue_prof_weapons"], "item_weapon_greatsword")
+        .isProficient,
+    ).toBe(false);
+  });
+
+  it("every class in the pack is proficient with something it can hold", () => {
+    const weapons = Object.values(weaponsById);
+
+    const barren = Object.values(corePackSnapshot().classesById)
+      .filter((cls) => {
+        const grants = ProficiencyExtractor.extractProficiencies(
+          (cls.startingProficiencyTraitIds ?? []).map((id) => traits[id]!),
+          {},
+        );
+
+        return !weapons.some((weapon) =>
+          isProficientWithWeapon(grants, weapon),
+        );
+      })
+      .map((cls) => cls.id);
+
+    expect(barren).toEqual([]);
   });
 });

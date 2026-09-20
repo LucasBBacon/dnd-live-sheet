@@ -128,7 +128,7 @@ Neither is a small fix — they change what a `RuntimeModifier` can address.
 | # | Item | Location | Missing concept |
 | --- | --- | --- | --- |
 | 23 | Fighting Style: Protection | `trait_fs_protection` in [traits/ported.json](packages/database/data/packs/core_2014_pack/traits/ported.json) | Reactions targeting *another creature's* roll |
-| 24 | ✅ Resolved | `trait_fs_dueling` in the same segment | Implemented via hand-aware damage modifiers and a governing-stat modifier source |
+| 24 | Fighting Style: Dueling | `trait_fs_dueling` in the same segment | Hand-aware damage modifiers and a governing-stat modifier source exist and the trait is authored against them, but nothing emits `status_wielding_one_handed_only` — the gate the trait requires is never satisfied at runtime. Previously marked Resolved in error; reopened here, not fixed. |
 
 Both locations moved: `fightingStyleDictionary.ts` was deleted in the pack
 cutover (P4 below) and the fighting styles are pack content now.
@@ -743,6 +743,11 @@ feats, backgrounds, equipment, spells and resources. Three files in
 
 `proficiencyDictionary.ts` is deliberately excluded: it is a roster of valid
 proficiency ids consumed by the extractors and calculators, not authored rules.
+Since `feat/item-proficiency` (2026-09-20) it is a smaller roster than it was —
+weapons and armour resolve against the equipment catalogue itself
+(`itemProficiency.ts`) and need no hand-kept list. `proficiencyDictionary.ts`
+still is the roster for languages and skills, which have no catalogue to
+resolve against.
 
 ### 4d. Loose ends
 
@@ -1213,3 +1218,70 @@ keeps it honest either way.
 
 All three sabotage-verified: an added orphan, a stripped marker and a reverted
 elf id each turned the suite red.
+
+---
+
+## P8 — Item proficiency resolution (closed 2026-09-20)
+
+`feat/item-proficiency` closed two live defects that had sat underneath the
+proficiency system since the pack cutover, and authored the largest remaining
+slice of the weapon and armour stubs.
+
+### 8a. #59 — no weapon proficiency grant in the pack matched any weapon
+
+| # | Item | Notes |
+| --- | --- | --- |
+| 59 | Every weapon proficiency grant named an id no weapon answered to | **Closed 2026-09-20.** |
+
+Every weapon grant in the shipped pack spelled either a category
+(`simple_weapons`, `martial_weapons`) or an item id (`weapon_battleaxe`) that
+no weapon in the catalogue carried — `combat.ts` matched against
+`weapon.category` or `weapon.id`, and neither vocabulary lined up with what
+the pack actually authored. `combat.test.ts`'s own proficiency cases granted
+the calculator's invented spellings and passed, so the bug was invisible to
+its own tests, and `proficiencyRosterDrift.test.ts` said outright in a comment
+that weapons and armour were skipped "for want of a roster" — the guard's
+blind spot sat exactly where the bug did.
+
+Fixed by giving each item its own vocabulary
+([itemProficiency.ts](packages/engine/src/rules/itemProficiency.ts)'s
+`weaponProficiencyIds` / `armorProficiencyIds` / `isProficientWithWeapon`,
+derived from the catalogue rather than kept by hand) and pointing both
+`combat.ts` and the guard at it. The guard now derives its legal set from the
+same helper the calculator matches with, so a grant cannot pass one and fail
+the other; two new cases require every grant to also cover at least one real
+item, both sabotage-verified in each direction.
+
+### 8b. #60 — the web store's `proficiencies` record was never populated
+
+| # | Item | Notes |
+| --- | --- | --- |
+| 60 | `character.proficiencies` read an API field the `characters` table never had | **Closed 2026-09-20.** |
+
+`characterSheetRouteData.ts` read `character.proficiencies || {}` off a
+payload that is a spread of the `characters` row, and that table has no such
+column — so `store.proficiencies` was always `{}` for every character, and
+every consumer of it was inert: not only weapon proficiency in `useCombat`,
+but every skill and every saving throw in `useCharacterStats`. The live sheet
+had never added a proficiency bonus to anything. The dead record and the two
+id-guessing workarounds built to cope with it being empty are gone;
+`getProficiencyGrants()` on `characterSheetStore` now derives grants from the
+character's own traits through `ProficiencyExtractor`, the same call the
+server already made.
+
+### 8c. Stub counts, corrected
+
+Of the weapon and armour proficiency stubs counted into #30, the **17 weapon
+and 16 armour stubs are closed** — moved out of `traits/unimplemented.json`
+into their owning class files and authored against the PHB, following the
+pattern the barbarian set. One, `trait_cleric_mult_prof_weapons`, is deleted
+rather than authored: the PHB's cleric multiclass table grants no weapons,
+only armour and shields, so there was nothing to write for it.
+
+The remaining proficiency stubs are **17 skills and 9 tools** in
+`traits/unimplemented.json` — not 18 skills, the figure the design spec
+carried in from its own scoping. `trait_barbarian_prof_skills` was already
+authored on `feat/barbarian-traits`, before this branch's baseline; it should
+never have been in the count of what is left. Tools have no items in the
+catalogue to resolve against and are out of scope here, same as they were for
+#59 — see 4c above for what that leaves `proficiencyDictionary.ts` holding.
