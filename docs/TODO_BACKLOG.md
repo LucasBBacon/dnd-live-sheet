@@ -158,9 +158,9 @@ anyone closing it. One new item was opened by the re-count: **8d**, the
 dragonborn race, which is missing three signature features that were never
 stubs and so were never in #30's number.
 
-Re-measured again **2026-09-20**, after `feat/spellcasting-slots` merged later
-the same day. #30 is **398**, all twelve class rows were re-counted again, and
-#62 is half-closed — see 8f.
+Re-measured again **2026-09-20**, on `feat/spellcasting-slots` while it was
+still in review, not yet merged. #30 is **398**, all twelve class rows were
+re-counted again, and #62 is half-closed — see 8f.
 
 Previously refreshed **2026-09-02**, after the item-actions branch (49 commits)
 landed without touching this file. Every item below was re-measured against the
