@@ -97,6 +97,9 @@ describe("weapon and armour grants cover something in the catalogue", () => {
     expect(uncovered).toEqual([]);
   });
 
+  // The shipped pack has no weapons or armour choice grants today, so this
+  // case is a standing guard for when one is added rather than live coverage
+  // now - the fixed-grant case above is the one exercising real data.
   it("every listed weapon or armour choice option covers at least one item", () => {
     const uncovered = traits.flatMap((trait) =>
       (trait.proficiencies?.choices ?? []).flatMap((choice) => {
