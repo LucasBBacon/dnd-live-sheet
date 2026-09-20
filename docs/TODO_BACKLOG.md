@@ -158,6 +158,10 @@ anyone closing it. One new item was opened by the re-count: **8d**, the
 dragonborn race, which is missing three signature features that were never
 stubs and so were never in #30's number.
 
+Re-measured again **2026-09-20**, after `feat/spellcasting-slots` merged later
+the same day. #30 is **398**, all twelve class rows were re-counted again, and
+#62 is half-closed — see 8f.
+
 Previously refreshed **2026-09-02**, after the item-actions branch (49 commits)
 landed without touching this file. Every item below was re-measured against the
 working tree that day, and three entries changed state as a result.
@@ -197,29 +201,37 @@ burndown is large enough that an honest estimate is worth having.
 
 | Order | Item | Scale | Why here |
 | --- | --- | --- | --- |
-| 4 | **#30** — reachable trait stubs | **408** | Re-measured 2026-09-20, after `feat/item-proficiency` authored 32 weapon and armour stubs and deleted one: 441 → 408, of 584 traits. The barbarian pass before it took 462 → 441, two of those by deleting the Primal Path signposts. The earlier rise from 456 came from marking 119 silent stubs while deleting 113 unreferenced ones, so the number means "granted to a character and does nothing" rather than "tagged by the port". Every one is reachable. Per-class breakdown below, re-counted in full on 2026-09-20. **It is a count, not an estimate — see 8f.** |
+| 4 | **#30** — reachable trait stubs | **398** | Re-measured 2026-09-20, after `feat/spellcasting-slots` authored ten spellcasting stubs (the nine slot casters' `trait_spellcasting_*` and the warlock's `trait_pact_magic`), each replacing an `unimplemented` stub of the same id with real resources: 408 → 398, of 584 traits. `feat/item-proficiency` before it authored 32 weapon and armour stubs and deleted one: 441 → 408. The barbarian pass before that took 462 → 441, two of those by deleting the Primal Path signposts. The earlier rise from 456 came from marking 119 silent stubs while deleting 113 unreferenced ones, so the number means "granted to a character and does nothing" rather than "tagged by the port". Every one is reachable. Per-class breakdown below, re-counted in full on 2026-09-20. **It is a count, not an estimate — see 8f.** |
 | 5 | **#31** — spells | **111 of 111** | Two passes, not one. `level` is `0` for every spell and `school` is `evocation` for every spell, so these need real **data** before they can carry rules — which is why this sits behind #30 despite the smaller number. |
 | 6 | **#36** — `SUMMON_ACTOR_DICTIONARY` into the pack | — | The last live rules content outside the pack, two real readers, re-verified 2026-09-02. Until it moves, "packs are the only source of rules" carries an asterisk. |
 
 **Where the remaining stubs sit**, so #30 can be picked up by whoever is
-playing what. All twelve rows re-counted 2026-09-20 — the first full re-count
-since 2026-09-02. A row is every stub the class or one of its subclasses
-references, so each still carries its subclass signposts:
+playing what. All twelve rows re-counted 2026-09-20, after
+`feat/spellcasting-slots` — the second full re-count since 2026-09-02. A row
+is every stub the class or one of its subclasses references, so each still
+carries its subclass signposts:
 
 | Class | Stubs | Class | Stubs |
 | --- | --- | --- | --- |
-| warlock | 59 | sorcerer | 32 |
-| wizard | 47 | ranger | 29 |
-| monk | 46 | paladin | 27 |
-| cleric | 43 | bard | 22 |
-| fighter | 36 | druid | 21 |
-| rogue | 32 | **barbarian** | **0** |
+| warlock | 58 | sorcerer | 31 |
+| wizard | 46 | ranger | 28 |
+| monk | 46 | paladin | 26 |
+| cleric | 42 | bard | 21 |
+| fighter | 35 | druid | 20 |
+| rogue | 31 | **barbarian** | **0** |
 
-The rows sum to 394 against 391 distinct traits: the three-trait overlap is
-multiclass proficiency traits that two classes both reference. A further **17
-stubs belong to no class at all** — 6 race (elf 3, halfling 2, gnome 1), 9
-background (noble 3, acolyte 2, criminal 2, soldier 2) and 2 feats (Mobile,
-Skilled). 391 + 17 = 408.
+Ten fewer than the previous re-count, one per class: `feat/spellcasting-slots`
+authored each class's own `trait_spellcasting_*` (the Eldritch Knight's and
+the Arcane Trickster's count against fighter and rogue, same as their other
+subclass signposts) and the warlock's `trait_pact_magic`. Monk and barbarian
+are unchanged — neither casts.
+
+The rows sum to 384 against 381 distinct traits: the same three-trait overlap
+as before (`trait_expertise` on bard/rogue, `trait_timeless_body` on
+druid/monk, `trait_lands_stride` on druid/ranger) is untouched by this branch.
+A further **17 stubs belong to no class at all** — 6 race (elf 3, halfling 2,
+gnome 1), 9 background (noble 3, acolyte 2, criminal 2, soldier 2) and 2 feats
+(Mobile, Skilled) — also untouched. 381 + 17 = 398.
 
 Twenty-two of the class stubs are subclass signposts — `trait_divine_domain`,
 `trait_bard_college` and their `_feature` twins, one pair per class. They
@@ -736,13 +748,20 @@ cutover either created or made visible.
 
 | # | Item | Scale | Notes |
 | --- | --- | --- | --- |
-| 30 | Traits marked `implementation.mode: "unimplemented"` | **408 of 584** | Re-measured 2026-09-20. The history: 456 of 700 at the cutover, then 119 silent stubs marked (#51) and 113 unreferenced ones deleted (#57) to give 462 reachable of 587, then 462 → 441 on `feat/barbarian-traits` and 441 → 408 on `feat/item-proficiency`. Every one is reachable — the guard added by #58 is what keeps that true. Per-class breakdown in the Recommended sequence. |
+| 30 | Traits marked `implementation.mode: "unimplemented"` | **398 of 584** | Re-measured 2026-09-20, after `feat/spellcasting-slots`. The history: 456 of 700 at the cutover, then 119 silent stubs marked (#51) and 113 unreferenced ones deleted (#57) to give 462 reachable of 587, then 462 → 441 on `feat/barbarian-traits`, 441 → 408 on `feat/item-proficiency`, and 408 → 398 on `feat/spellcasting-slots`, which authored ten stubs: the nine slot casters' `trait_spellcasting_*` (bard, cleric, druid, paladin, ranger, sorcerer, wizard, the Eldritch Knight's and the Arcane Trickster's) and the warlock's `trait_pact_magic`. Each was deleted from `traits/unimplemented.json` and upserted with real resources into its own class segment — a wash on the total trait count, ten fewer rule-free. `implementationMarkers.test.ts`'s `records how much of the trait section carries no rules` pins 398 of 584. Every one is reachable — the guard added by #58 is what keeps that true. Per-class breakdown in the Recommended sequence, re-run in full on 2026-09-20. |
 | 31 | Spells marked `unimplemented` | **111 of 111** | Every spell in the pack is a stub with a `no_effect` action; `level` and `school` are placeholders, which the marker's summary says outright. |
 
 This is the deliberate, accepted trade recorded in the design doc — a marked
 stub is honest, a half-faithful transform is not. The marker is what makes it a
 measurable burndown rather than the silent `effects: []` placeholders it
 replaced.
+
+**`SPELLCASTING_MOD` has a reader for the first time.** It has existed in
+`ModifierTargetSchema` since the schema did, reachable by nothing —
+`feat/spellcasting-slots`'s `SpellcastingEngine.calculate` in
+`packages/engine/src/calculators/spellcasting.ts` is the first code that
+reads it, folding any active `SPELLCASTING_MOD` bonus into a casting class's
+modifier before deriving its save DC and attack bonus.
 
 ### 4b. Content the port could not carry
 
@@ -1392,7 +1411,7 @@ Found 2026-09-20, while checking #61.
 
 | # | Item | Scale | Notes |
 | --- | --- | --- | --- |
-| 62 | The pack defines 10 resources, none of them a class resource | 10 of ~40 | **Open.** Spell slots, ki points, sorcery points and pact slots do not exist in any form. |
+| 62 | The pack defines 10 resources, none of them a class resource | **21 of ~40** | **Half-closed 2026-09-20.** `feat/spellcasting-slots` authored spell slots, a save DC and a spell attack bonus for every slot caster, and pact slots for the warlock. Ki points and sorcery points do not exist in any form, and the entry stays open for them. |
 
 The complete list of resources the shipped pack defines:
 
@@ -1404,35 +1423,57 @@ resource_relentless_endurance   resource_relentless_rage
 trait_action_surge              trait_second_wind
 ```
 
-There is **no spell slot anywhere** — not a table, not a pool, not a single
-`spell_slots_*` id. The same is true of ki points, sorcery points and pact
-magic slots. Every one of the ten spellcasting traits is a stub
+There was **no spell slot anywhere** — not a table, not a pool, not a single
+`spell_slots_*` id. The same was true of ki points, sorcery points and pact
+magic slots. Every one of the ten spellcasting traits was a stub
 (`trait_spellcasting_{bard,cleric,druid,paladin,ranger,sorcerer,wizard}`, the
 eldritch knight's and arcane trickster's, and `trait_potent_spellcasting`), as
-are `trait_ki`, `trait_pact_magic`, `trait_font_of_magic`,
+were `trait_ki`, `trait_pact_magic`, `trait_font_of_magic`,
 `trait_wild_shape`, `trait_sneak_attack`, `trait_divine_smite` and
 `trait_channel_divinity`.
 
-Seven of the twelve classes cannot function at all as a result, and the class
-progressions already grant `spell_choice` nodes — a wizard picks six spells
-into a spellbook at level 1 and has nothing to cast them with.
+Seven of the twelve classes could not function at all as a result, and the
+class progressions already granted `spell_choice` nodes — a wizard picks six
+spells into a spellbook at level 1 and had nothing to cast them with.
 
-**Why this is a backlog finding and not just another stub.** #30 counts these
-as **17**, out of 408. That is arithmetically true and useless as an estimate:
-`trait_spellcasting_wizard` is a 20-by-9 slot table, a preparation rule, a save
-DC and an attack bonus, and it counts exactly the same as
-`trait_dragon_ancestor_red`, which is one resistance and a sentence of lore.
-**The unit #30 counts is the trait, and a trait is not a unit of work.**
+**Closed for slots, DC and attack — 2026-09-20.** `feat/spellcasting-slots`
+authored the nine class spellcasting stubs above
+(`trait_spellcasting_{bard,cleric,druid,paladin,ranger,sorcerer,wizard}` and
+the eldritch knight's and arcane trickster's) plus `trait_pact_magic` — ten of
+the seventeen. Each was deleted from `traits/unimplemented.json` and upserted
+with real resources into its own class segment: nine of the pack's eleven new
+resources are the `spell_slots_1`..`spell_slots_9` pools (`resetCondition:
+long_rest`, a `caster_level_thresholds` max rule keyed to `LevelContext`'s
+`casterLevel`), and the other two are the warlock's own `pact_slots` and
+`pact_slot_level` on a short-rest table. The pack's resource count moved from
+**10 to 21**. `SpellcastingEngine.calculate` reads the slot tables and derives
+the save DC and spell attack bonus from `SPELLCASTING_MOD`.
+
+`trait_potent_spellcasting`, `trait_ki`, `trait_font_of_magic`,
+`trait_wild_shape`, `trait_sneak_attack`, `trait_divine_smite` and
+`trait_channel_divinity` — the other seven — are untouched. Ki points and
+sorcery points still do not exist in any form, and #62 stays open for them.
+
+**Why this was a backlog finding and not just another stub.** #30 counted
+these as **17**, out of 408 (now 7, out of 398 — see #30 in 4a). That was
+arithmetically true and useless as an estimate: `trait_spellcasting_wizard`
+was a 20-by-9 slot table, a preparation rule, a save DC and an attack bonus,
+and it counted exactly the same as `trait_dragon_ancestor_red`, which is one
+resistance and a sentence of lore. **The unit #30 counts is the trait, and a
+trait is not a unit of work.**
 
 Two ways to make the number mean something, neither started:
 
 1. **Weight the marker.** `implementation` already carries `mode`, `summary`
    and `blockedBy`; a size band beside them would make the burndown an estimate
    rather than a tally, and it is authored once per stub by whoever marks it.
-2. **Track the blocked-on-a-system stubs separately.** The 17 above are not
-   small jobs waiting their turn, they are one system nobody has built. Counting
-   them with the 391 others hides both numbers.
+2. **Track the blocked-on-a-system stubs separately.** The 17 above (now 7)
+   were never small jobs waiting their turn, they were one system nobody had
+   built. Counting them with the rest hid both numbers — which is exactly what
+   closing ten of them this way demonstrated: #30 moved by ten while the
+   actual work was two systems (slot casters, pact magic), not ten
+   independent stubs.
 
-Neither is urgent on its own. What is worth saying plainly is that **#30 at 408
-is a count, not an estimate**, and the two should not be confused when
-sequencing work.
+Neither is urgent on its own for the seven still open. What is worth saying
+plainly is that **#30 at 398 is a count, not an estimate**, and the two should
+not be confused when sequencing work.

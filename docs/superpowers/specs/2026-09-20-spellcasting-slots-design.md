@@ -1,7 +1,7 @@
 # Spellcasting: Slots, DC and Attack
 
 Date: 2026-09-20
-Status: designed
+Status: implemented
 Owner: Claude pair session
 
 ## Goal
@@ -125,18 +125,29 @@ New `packages/engine/src/rules/casterLevel.ts`:
 export interface CastingSource {
   classId: string;
   level: number;
-  progression: "full" | "half" | "third" | "pact";
+  progression: Spellcasting["progression"];
+  ability: Spellcasting["ability"];
 }
 
 export const casterLevel = (sources: CastingSource[]): number => { /* below */ };
 ```
 
+(`ability` rides along on the source because `SpellcastingEngine` needs it per
+class later in the pipeline; `casterLevel` itself never reads it.)
+
 Pact sources are filtered out first — they never contribute. Of what remains:
 
 - **Exactly one source:** `full` gives its level, `half` gives
-  `Math.ceil(level / 2)`, `third` gives `Math.ceil(level / 3)`.
+  `Math.ceil(level / 2)`, `third` gives `Math.ceil(level / 3)` — **but only
+  from the level that progression actually grants spellcasting.** A half-caster
+  casts nothing before class level 2 and a third-caster nothing before class
+  level 3, so below that threshold the `alone` branch returns `0` rather than
+  rounding up. Without the floor, `ceil(1 / 2)` is `1`, which would hand a
+  level-1 paladin two first-level slots a full class level before the PHB
+  gives it any.
 - **More than one:** sum of `full` levels, plus `Math.floor(level / 2)` per
-  half, plus `Math.floor(level / 3)` per third.
+  half, plus `Math.floor(level / 3)` per third. This branch has no floor to
+  add, because `floor` already returns `0` below the threshold.
 
 The two branches are not a rounding preference, they are two rules. Check
 either against the PHB tables: a lone paladin 5 has four first-level and two
@@ -146,7 +157,13 @@ levels rounded down, so paladin 5 / fighter 1 is caster level 2 and gets
 *fewer* slots than paladin 5 alone. Both are what the book says.
 
 An Eldritch Knight 3 is `ceil(3 / 3) = 1`, giving two first-level slots, which
-is what the subclass table prints.
+is what the subclass table prints. An Eldritch Knight 1 or 2 is caster level
+`0` — the subclass grants no spellcasting yet, and the guard above is what
+keeps that true rather than rounding it up to 1.
+
+See [`packages/engine/src/rules/casterLevel.ts`](../../../packages/engine/src/rules/casterLevel.ts)
+for the implementation — the `CONTRIBUTION` table's `alone` functions carry
+the level guard as an inline comment at each threshold.
 
 ### 3. `caster_level_thresholds`
 
@@ -162,12 +179,55 @@ z.object({
 It carries no `classId`, unlike `class_level_thresholds`, because caster level
 is a property of the whole character.
 
-`getResourceMaxUses(rule, totalLevel, classLevels)` gains a fourth parameter,
-`casterLevel`, defaulting to `0`. Existing callers keep working and a
-`caster_level_thresholds` pool resolves to zero until they pass it — which is
-visible rather than wrong, since a pool with a maximum of zero is already
-hidden by `useFeatures`'s own guard. The callers that matter —
-`characterEngine`, `useFeatures`, the server's resource paths — pass it.
+**This is not what shipped, and the difference matters.** `getResourceMaxUses`
+did not gain a fourth, defaulted parameter. Instead `totalLevel` and
+`classLevels` — previously two separate positional arguments — were replaced
+by a single **required** `LevelContext`:
+
+```ts
+export interface LevelContext {
+  totalLevel: number;
+  classLevels: Record<string, number>;
+  /** 0 when the character casts nothing that uses slots. */
+  casterLevel: number;
+}
+
+export const getResourceMaxUses = (rule: Resource, levels: LevelContext): number
+```
+
+The default-of-zero design above was rejected because it is silent in exactly
+the wrong direction: every call site already in the codebase compiles and
+passes without change, and every one of them then resolves any
+`caster_level_thresholds` pool to zero — a wizard whose spell slots quietly
+never appear, with nothing failing loudly enough to say why. `useFeatures`
+hiding a zero-maximum pool, cited above as the reason this would be "visible
+rather than wrong," instead makes it *invisible*: a caster with no slots looks
+identical to a caster with none authored, and the two bugs are indistinguishable
+on the sheet. A required field puts the same guarantee on the compiler instead
+— a call site built before caster level existed fails to typecheck rather than
+running with a wrong answer.
+
+`buildLevelContext(classLevels, subclassIds?, snapshot?)`, also new in
+`utils/resourceRules.ts`, is the one place a `LevelContext` gets built for
+`getResourceMaxUses` and `materialiseMissingPools`: it derives `totalLevel` by
+summing `classLevels`, and `casterLevel` by resolving each class's (or, for
+the Eldritch Knight and Arcane Trickster, its chosen subclass's)
+`Spellcasting["progression"]` through `collectCastingSources` and
+`casterLevel()` from `rules/casterLevel.ts`. The server's socket gateway and
+the web store's `characterSheetStore`, `RestModal` and `useFeatures` all call
+it rather than assembling a `LevelContext` by hand.
+
+`SpellcastingEngine.calculate` itself does not go through `LevelContext` at
+all — it, and `characterBootstrapper`'s own resource materialisation, read
+`classLevelsAndSubclassIds` and `collectCastingSources` /
+`casterLevel()` directly. `LevelContext` and `getResourceMaxUses` are the
+`resolveResourceRule`-facing path the sheet's Features widget and the rest
+pipeline read pool maximums through; the calculators that derive spellcasting
+itself and the bootstrapper's own `ResourceManager` path are separate
+call graphs over the same underlying `casterLevel()` primitive, not the same
+function.
+
+See [`packages/engine/src/utils/resourceRules.ts`](../../../packages/engine/src/utils/resourceRules.ts).
 
 Thresholds resolve through the existing `resolveThresholdValue`, which takes
 the last rung whose `minimumLevel` is at or below the level, so every table
@@ -271,7 +331,7 @@ casting class, since a multiclass caster has more than one.
 | File | Change |
 | --- | --- |
 | `rules/casterLevel.ts` | new — `CastingSource`, `casterLevel` |
-| `utils/resourceRules.ts` | `getResourceMaxUses` gains a `casterLevel` parameter and the new case |
+| `utils/resourceRules.ts` | `totalLevel`/`classLevels` replaced by a required `LevelContext` (adds `casterLevel`); new `buildLevelContext` helper; `getResourceMaxUses` handles the new case |
 | `calculators/spellcasting.ts` | new — `SpellcastingEngine` |
 | `pipeline/characterEngine.ts` | collects casting sources, passes caster level, returns the spellcasting result |
 
@@ -325,9 +385,20 @@ data is live, and it truncates the reference tables `CASCADE`.
 - **No preparation or known-spell limits.** A prepared caster's daily limit and
   a known caster's list length both need the spell data first.
 - **No concentration, upcasting or rituals.**
-- **`pact_slot_level` is a number wearing a resource's clothes.** It is
-  authored as a pool because that is the path that already exists; if it reads
-  badly on the sheet it wants a different home rather than a special case.
+- **`pact_slot_level` is a number wearing a resource's clothes, and it did
+  read badly.** It is authored as a pool because that is the path that
+  already exists — but it shipped with no `mode`, so on the sheet it rendered
+  exactly like a real charges pool, complete with an enabled "Use" button that
+  decremented a number representing cast level rather than something spent,
+  and which can never come back (`resetCondition: "never"`). Rather than the
+  "different home" this section speculated about, it got exactly the special
+  case that was meant to be avoided: `HIDDEN_RESOURCE_IDS` in
+  [`apps/web/src/hooks/useFeatures.ts`](../../../apps/web/src/hooks/useFeatures.ts)
+  filters `pact_slot_level` out of the Features widget by id, and
+  `SpellcastingWidget` reports the same value through `pactSlotLevel` instead
+  — correctly once, rather than twice, once correctly and once as a misleading
+  spendable resource. `useFeatures.test.ts` pins that it never renders as a
+  pool.
 - **Ki and sorcery points stay absent.** They are class resources like slots
   and would fit the same shape, but they are not spellcasting and are not in
   this slice.
