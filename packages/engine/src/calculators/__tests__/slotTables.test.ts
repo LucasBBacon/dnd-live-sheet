@@ -92,6 +92,7 @@ describe("the authored slot tables match the PHB", () => {
 describe("pact magic is its own table", () => {
   const pactPool = (poolId: string, level: number): number => {
     const trait = snapshot.traitsById["trait_pact_magic"];
+    if (!trait) throw new Error("trait_pact_magic missing from the shipped pack");
     const granted = collectGrantedResources([trait], { resourcesById: {} });
     const pool = granted.find((entry) => entry.id === poolId);
     if (!pool) throw new Error(`trait_pact_magic grants no ${poolId}`);
