@@ -644,7 +644,11 @@ describe("CharacterBootstrapper.hydrateRuntimeManagers caster level", () => {
         startingProficiencyTraitIds: [],
         multiclassTraitIds: [],
         progression: [{ level: 1, grants: ["trait_spell_slots"], grantsASI: false }],
-        spellcasting: { ability: "INT" as const, progression: "full" as const },
+        spellcasting: {
+          ability: "INT" as const,
+          progression: "full" as const,
+          startsAtLevel: 1,
+        },
       },
     },
     traitsById: {

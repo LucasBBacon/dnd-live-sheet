@@ -336,7 +336,8 @@
             },
             "spellcasting": {
                 "ability": "WIS",
-                "progression": "half"
+                "progression": "half",
+                "startsAtLevel": 2
             }
         }
     ],

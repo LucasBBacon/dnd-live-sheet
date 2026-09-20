@@ -258,7 +258,8 @@
             },
             "spellcasting": {
                 "ability": "CHA",
-                "progression": "half"
+                "progression": "half",
+                "startsAtLevel": 2
             }
         }
     ],

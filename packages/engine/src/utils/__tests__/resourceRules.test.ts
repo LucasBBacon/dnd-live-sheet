@@ -94,7 +94,7 @@ describe("buildLevelContext", () => {
     classesById: {
       class_wizard: {
         id: "class_wizard",
-        spellcasting: { ability: "INT", progression: "full" },
+        spellcasting: { ability: "INT", progression: "full", startsAtLevel: 1 },
       },
       class_barbarian: { id: "class_barbarian" },
     },

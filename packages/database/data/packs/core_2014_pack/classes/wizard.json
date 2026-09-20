@@ -394,7 +394,8 @@
             },
             "spellcasting": {
                 "ability": "INT",
-                "progression": "full"
+                "progression": "full",
+                "startsAtLevel": 1
             }
         }
     ],

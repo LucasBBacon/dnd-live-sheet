@@ -652,7 +652,8 @@
             },
             "spellcasting": {
                 "ability": "INT",
-                "progression": "third"
+                "progression": "third",
+                "startsAtLevel": 3
             }
         }
     ],

@@ -299,7 +299,8 @@
             },
             "spellcasting": {
                 "ability": "WIS",
-                "progression": "full"
+                "progression": "full",
+                "startsAtLevel": 1
             }
         }
     ],

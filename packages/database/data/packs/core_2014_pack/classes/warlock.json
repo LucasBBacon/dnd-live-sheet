@@ -1551,7 +1551,8 @@
             },
             "spellcasting": {
                 "ability": "CHA",
-                "progression": "pact"
+                "progression": "pact",
+                "startsAtLevel": 1
             }
         }
     ],

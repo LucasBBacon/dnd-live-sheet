@@ -179,6 +179,7 @@ describe("pact magic is its own table", () => {
         level,
         progression: "pact",
         ability: "CHA",
+        startsAtLevel: 1,
       };
       const [result] = SpellcastingEngine.calculate([source], scores, 2, []);
       if (!result) throw new Error(`expected one result for warlock level ${level}`);

@@ -397,7 +397,8 @@
             },
             "spellcasting": {
                 "ability": "CHA",
-                "progression": "full"
+                "progression": "full",
+                "startsAtLevel": 1
             }
         }
     ],

@@ -4076,11 +4076,17 @@
                   "third",
                   "pact"
                 ]
+              },
+              "startsAtLevel": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 20
               }
             },
             "required": [
               "ability",
-              "progression"
+              "progression",
+              "startsAtLevel"
             ],
             "additionalProperties": false
           },
@@ -4528,11 +4534,17 @@
                   "third",
                   "pact"
                 ]
+              },
+              "startsAtLevel": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 20
               }
             },
             "required": [
               "ability",
-              "progression"
+              "progression",
+              "startsAtLevel"
             ],
             "additionalProperties": false
           }

@@ -18,6 +18,7 @@ const wizard: CastingSource = {
   level: 5,
   progression: "full",
   ability: "INT",
+  startsAtLevel: 1,
 };
 
 const cleric: CastingSource = {
@@ -25,6 +26,7 @@ const cleric: CastingSource = {
   level: 3,
   progression: "full",
   ability: "WIS",
+  startsAtLevel: 1,
 };
 
 const modifier = (overrides: Partial<RuntimeModifier>): RuntimeModifier => ({
@@ -96,7 +98,15 @@ describe("SpellcastingEngine.calculate", () => {
 
   it("reports the pact slot level for a warlock and omits it otherwise", () => {
     const [pact] = SpellcastingEngine.calculate(
-      [{ classId: "class_warlock", level: 9, progression: "pact", ability: "CHA" }],
+      [
+        {
+          classId: "class_warlock",
+          level: 9,
+          progression: "pact",
+          ability: "CHA",
+          startsAtLevel: 1,
+        },
+      ],
       scores,
       3,
       [],

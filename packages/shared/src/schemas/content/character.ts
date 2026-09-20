@@ -114,7 +114,7 @@ export const ClassLevelFeatureSchema = z.object({
 /**
  * How a class casts, for the classes that cast.
  *
- * Two fields, not three. A `preparation: "prepared" | "known"` belongs here
+ * Three fields. A `preparation: "prepared" | "known"` belongs here
  * eventually and is deliberately absent: nothing reads it until spell lists
  * exist, and a field authored before it has a reader is the dead-data pattern
  * ruleSnapshot.ts warns about in its own docstring.
@@ -122,11 +122,20 @@ export const ClassLevelFeatureSchema = z.object({
  * `progression` drives caster level, which is what the slot tables read. Pact
  * magic is listed here but never contributes to that sum - it is its own pool
  * on its own table, which is what the PHB means by keeping it separate.
+ *
+ * `startsAtLevel` is the class level at which the Spellcasting (or Pact Magic)
+ * feature is actually gained: 1 for full and pact casters, 2 for half casters,
+ * 3 for third casters (Eldritch Knight, Arcane Trickster). Required rather
+ * than derived from `progression`, in keeping with this pack's habit of
+ * naming every site rather than letting a class silently inherit a default -
+ * a class or subclass without an explicit answer here fails to validate
+ * instead of quietly reading as "casts from level 1".
  */
 export const SpellcastingSchema = z
   .object({
     ability: z.enum(["INT", "WIS", "CHA"]),
     progression: z.enum(["full", "half", "third", "pact"]),
+    startsAtLevel: z.number().int().min(1).max(20),
   })
   .strict();
 
