@@ -25,6 +25,7 @@ import { eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
 import { randomUUID } from "node:crypto";
+import { pathToFileURL } from "node:url";
 import type {
   EquipmentDefinition,
   ResourceReset,
@@ -1757,13 +1758,33 @@ const run = async () => {
   );
 };
 
-run()
-  .catch((error) => {
-    console.error("Sample character seed failed:", error);
-    process.exitCode = 1;
-  })
-  .finally(async () => {
-    await client.end();
-  });
+/**
+ * Only seed when this file is the process entry point.
+ *
+ * Without the guard, `import`ing this module for its ROSTER - which is the
+ * only way to check the roster against the pack - writes to the developer's
+ * database as a side effect. A module that seeds on import cannot be tested.
+ */
+const isEntryPoint =
+  process.argv[1] !== undefined &&
+  import.meta.url === pathToFileURL(process.argv[1]).href;
 
-export { ROSTER, SAMPLE_ITEMS, SAMPLE_PACK_ID, SHEET_URL_BASE };
+if (isEntryPoint) {
+  run()
+    .catch((error) => {
+      console.error("Sample character seed failed:", error);
+      process.exitCode = 1;
+    })
+    .finally(async () => {
+      await client.end();
+    });
+}
+
+export {
+  ROSTER,
+  SAMPLE_BACKGROUNDS,
+  SAMPLE_ITEMS,
+  SAMPLE_PACK_ID,
+  SAMPLE_SUBCLASSES,
+  SHEET_URL_BASE,
+};
