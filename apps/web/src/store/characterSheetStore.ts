@@ -21,7 +21,6 @@ import {
   type ActionRollResult,
   type ItemActionGrant,
   type OperationalResource,
-  type ProficiencyLevel,
   type RuntimeResource,
   type SuspendedCondition,
 } from "@project/engine";
@@ -696,9 +695,6 @@ export interface CharacterSheetState {
   // base attributes (no items or buffs)
   baseScores: Record<Ability, number>;
 
-  // skill and save proficiencies (mapped by id)
-  proficiencies: Record<string, ProficiencyLevel>;
-
   traits: TraitDefinition[];
   traitGrants: Array<{
     id: string;
@@ -842,7 +838,6 @@ export const useCharacterSheetStore = create<CharacterSheetState>(
     baseHpRolled: 1,
 
     baseScores: { STR: 10, DEX: 10, CON: 10, INT: 10, WIS: 10, CHA: 10 },
-    proficiencies: {},
     traits: [],
     traitGrants: [],
     inventory: [],

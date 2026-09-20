@@ -89,7 +89,9 @@ export const TraitWidget = () => {
   const currentHp = useCharacterSheetStore((state) => state.currentHp);
   const storedMaxHp = useCharacterSheetStore((state) => state.maxHp);
   const inventory = useCharacterSheetStore((state) => state.inventory);
-  const proficiencies = useCharacterSheetStore((state) => state.proficiencies);
+  const getProficiencyGrants = useCharacterSheetStore(
+    (state) => state.getProficiencyGrants,
+  );
   const resources = useCharacterSheetStore((state) => state.resources);
   const traitGrants = useCharacterSheetStore((state) => state.traitGrants);
 
@@ -185,14 +187,21 @@ export const TraitWidget = () => {
     [selectedTraits],
   );
 
+  const heldProficiencies = useMemo(
+    () => getProficiencyGrants(),
+    [getProficiencyGrants],
+  );
+
   const projectedProficiencyCount = useMemo(() => {
-    const baseEntries = Object.keys(proficiencies).map((id) => `existing:${id}`);
+    const baseEntries = heldProficiencies.map(
+      (grant) => `${grant.category}:${grant.proficiencyId}`,
+    );
     const gainedEntries = selectedTraitProficiencyGrants.map(
       (grant) => `${grant.category}:${grant.proficiencyId}`,
     );
 
     return new Set([...baseEntries, ...gainedEntries]).size;
-  }, [proficiencies, selectedTraitProficiencyGrants]);
+  }, [heldProficiencies, selectedTraitProficiencyGrants]);
 
   useEffect(() => {
     if (!data?.character || !hasHydratedFixtureRef.current) {
@@ -367,7 +376,7 @@ export const TraitWidget = () => {
               <div>Armour Class: {armorClass.total}</div>
               <div>Initiative: {initiative.total >= 0 ? `+${initiative.total}` : initiative.total}</div>
               <div>
-                Proficiencies: {Object.keys(proficiencies).length} | Projected with selected
+                Proficiencies: {heldProficiencies.length} | Projected with selected
                 traits: {projectedProficiencyCount}
               </div>
               <div>Total Active Modifiers in Engine: {totalMods.length}</div>
