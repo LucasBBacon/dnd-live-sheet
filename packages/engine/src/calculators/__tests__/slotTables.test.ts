@@ -130,4 +130,25 @@ describe("pact magic is its own table", () => {
       }).casterLevel,
     ).toBe(0);
   });
+
+  // A solo warlock reads caster level 0 for two different reasons depending
+  // on whether class_warlock.spellcasting is authored at all: with no
+  // spellcasting field, collectCastingSources never produces a source in the
+  // first place; with it authored (this task), casterLevel's own pact filter
+  // is what drops the source. The assertion above cannot tell those apart.
+  // A multiclass warlock/wizard can: only casterLevel's pact filter, not the
+  // presence check, keeps a second (pact) source out of the sum, so a
+  // warlock 20 / wizard 5 must read caster level 5 - the wizard's alone
+  // contribution - not 25, and not a wizard contribution computed under the
+  // "shared" branch (moot here, since a full caster's alone and shared
+  // formulas are identical, but the point is that only one source is summed
+  // at all).
+  it("does not join a wizard's levels into caster level on a multiclass warlock", () => {
+    expect(
+      buildLevelContext({ class_warlock: 20, class_wizard: 5 }, {}, {
+        classesById: snapshot.classesById,
+        subclassesById: snapshot.subclassesById,
+      }).casterLevel,
+    ).toBe(5);
+  });
 });
