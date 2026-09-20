@@ -629,6 +629,77 @@ describe("CharacterBootstrapper pack resolution", () => {
   });
 });
 
+describe("CharacterBootstrapper.hydrateRuntimeManagers caster level", () => {
+  // a class that declares spellcasting and grants a trait carrying a
+  // caster_level_thresholds resource - the pack shape a real spellcaster
+  // needs before ResourceManager can size their slots
+  const wizardPack = {
+    classesById: {
+      class_wizard: {
+        id: "class_wizard",
+        name: "Wizard",
+        hitDie: 6,
+        subclassUnlockLevel: 2,
+        startingEquipment: { given: [], choices: [] },
+        startingProficiencyTraitIds: [],
+        multiclassTraitIds: [],
+        progression: [{ level: 1, grants: ["trait_spell_slots"], grantsASI: false }],
+        spellcasting: { ability: "INT" as const, progression: "full" as const },
+      },
+    },
+    traitsById: {
+      trait_spell_slots: {
+        id: "trait_spell_slots",
+        name: "Spell Slots",
+        modifiers: { fixed: [], choices: [] },
+        resources: [
+          {
+            id: "resource_spell_slots_3",
+            name: "3rd-Level Slots",
+            resetCondition: "long_rest" as const,
+            maxRule: {
+              kind: "caster_level_thresholds" as const,
+              thresholds: [{ minimumLevel: 5, value: 2 }],
+            },
+          },
+        ],
+        triggers: [],
+        diceRules: [],
+        criticalHitModifiers: [],
+        actions: [],
+      },
+    },
+  };
+
+  const wizard5 = (): CharacterSave => ({
+    attributes: baseAttributes,
+    race: { baseRaceId: "race_human", hasSubraces: false, subraceId: null },
+    classes: [{ classId: "class_wizard", level: 5, selections: {} }],
+    traitSelections: {},
+    hp: baseHp,
+  });
+
+  it("resolves a caster_level_thresholds pool from the character's real caster level", () => {
+    const resourceManager = new ResourceManager();
+
+    CharacterBootstrapper.hydrateRuntimeManagers(
+      wizard5(),
+      new EffectManager(),
+      resourceManager,
+      wizardPack,
+    );
+
+    const pool = resourceManager
+      .getRuntimeResources()
+      .find((resource) => resource.id === "resource_spell_slots_3");
+
+    // a wizard 5 is caster level 5: two third-level slots. Left unpopulated,
+    // ResourceManager has no caster level to read and this silently resolves
+    // to 0 - the exact failure mode this test exists to catch.
+    expect(pool?.maxCharges).toBe(2);
+  });
+});
+
 describe("CharacterBootstrapper.selectionsFromChosenTraitIds", () => {
   const totem = (level: number) => [
     {
