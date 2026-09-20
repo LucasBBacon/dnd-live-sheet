@@ -53,3 +53,39 @@ describe("class skill grants offer the PHB's list", () => {
     }
   });
 });
+
+describe("backgrounds grant their PHB proficiencies", () => {
+  const grantsOf = (traitId: string) =>
+    ProficiencyExtractor.extractProficiencies([traits[traitId]!], {});
+
+  const idsIn = (traitId: string, category: string) =>
+    grantsOf(traitId)
+      .filter((grant) => grant.category === category)
+      .map((grant) => grant.proficiencyId)
+      .sort();
+
+  it("gives each background its two skills", () => {
+    expect(idsIn("trait_acolyte_prof_skills", "skills")).toEqual(["insight", "religion"]);
+    expect(idsIn("trait_criminal_prof_skills", "skills")).toEqual(["deception", "stealth"]);
+    expect(idsIn("trait_noble_prof_skills", "skills")).toEqual(["history", "persuasion"]);
+    expect(idsIn("trait_soldier_prof_skills", "skills")).toEqual(["athletics", "intimidation"]);
+  });
+
+  it("owes the acolyte two languages and the noble one", () => {
+    expect(pending("trait_acolyte_languages").chooseAmount).toBe(2);
+    expect(pending("trait_noble_languages").chooseAmount).toBe(1);
+  });
+
+  it("excludes the secret languages from an open pick", () => {
+    const options = pending("trait_acolyte_languages").availableOptions;
+
+    expect(options).toContain("dwarvish");
+    expect(options).not.toContain("druidic");
+    expect(options).not.toContain("thieves_cant");
+  });
+
+  it("gives the soldier land vehicles outright and a gaming set to choose", () => {
+    expect(idsIn("trait_soldier_prof_tools", "tools")).toEqual(["vehicles_land"]);
+    expect(pending("trait_soldier_prof_tools").availableOptions).toHaveLength(4);
+  });
+});

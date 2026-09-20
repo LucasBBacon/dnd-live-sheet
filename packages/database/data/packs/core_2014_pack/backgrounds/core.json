@@ -206,5 +206,320 @@
                 "fullText": "You learned to exploit social and physical gaps in the law, and you still carry contacts and instincts from that world."
             }
         }
+    ],
+    "traits": [
+        {
+            "id": "trait_acolyte_prof_skills",
+            "name": "Skill Proficiencies (Acolyte)",
+            "lore": {
+                "shortDescription": "You have proficiency with Insight and Religion.",
+                "fullText": "You have proficiency with Insight and Religion."
+            },
+            "modifiers": {
+                "fixed": [],
+                "choices": []
+            },
+            "proficiencies": {
+                "fixed": [
+                    {
+                        "category": "skills",
+                        "proficiencyId": "insight",
+                        "level": "proficient",
+                        "requiredStates": []
+                    },
+                    {
+                        "category": "skills",
+                        "proficiencyId": "religion",
+                        "level": "proficient",
+                        "requiredStates": []
+                    }
+                ],
+                "choices": []
+            },
+            "resources": [],
+            "triggers": [],
+            "diceRules": [],
+            "criticalHitModifiers": [],
+            "actions": []
+        },
+        {
+            "id": "trait_criminal_prof_skills",
+            "name": "Skill Proficiencies (Criminal)",
+            "lore": {
+                "shortDescription": "You have proficiency with Deception and Stealth.",
+                "fullText": "You have proficiency with Deception and Stealth."
+            },
+            "modifiers": {
+                "fixed": [],
+                "choices": []
+            },
+            "proficiencies": {
+                "fixed": [
+                    {
+                        "category": "skills",
+                        "proficiencyId": "deception",
+                        "level": "proficient",
+                        "requiredStates": []
+                    },
+                    {
+                        "category": "skills",
+                        "proficiencyId": "stealth",
+                        "level": "proficient",
+                        "requiredStates": []
+                    }
+                ],
+                "choices": []
+            },
+            "resources": [],
+            "triggers": [],
+            "diceRules": [],
+            "criticalHitModifiers": [],
+            "actions": []
+        },
+        {
+            "id": "trait_noble_prof_skills",
+            "name": "Skill Proficiencies (Noble)",
+            "lore": {
+                "shortDescription": "You have proficiency with History and Persuasion.",
+                "fullText": "You have proficiency with History and Persuasion."
+            },
+            "modifiers": {
+                "fixed": [],
+                "choices": []
+            },
+            "proficiencies": {
+                "fixed": [
+                    {
+                        "category": "skills",
+                        "proficiencyId": "history",
+                        "level": "proficient",
+                        "requiredStates": []
+                    },
+                    {
+                        "category": "skills",
+                        "proficiencyId": "persuasion",
+                        "level": "proficient",
+                        "requiredStates": []
+                    }
+                ],
+                "choices": []
+            },
+            "resources": [],
+            "triggers": [],
+            "diceRules": [],
+            "criticalHitModifiers": [],
+            "actions": []
+        },
+        {
+            "id": "trait_soldier_prof_skills",
+            "name": "Skill Proficiencies (Soldier)",
+            "lore": {
+                "shortDescription": "You have proficiency with Athletics and Intimidation.",
+                "fullText": "You have proficiency with Athletics and Intimidation."
+            },
+            "modifiers": {
+                "fixed": [],
+                "choices": []
+            },
+            "proficiencies": {
+                "fixed": [
+                    {
+                        "category": "skills",
+                        "proficiencyId": "athletics",
+                        "level": "proficient",
+                        "requiredStates": []
+                    },
+                    {
+                        "category": "skills",
+                        "proficiencyId": "intimidation",
+                        "level": "proficient",
+                        "requiredStates": []
+                    }
+                ],
+                "choices": []
+            },
+            "resources": [],
+            "triggers": [],
+            "diceRules": [],
+            "criticalHitModifiers": [],
+            "actions": []
+        },
+        {
+            "id": "trait_acolyte_languages",
+            "name": "Languages (Acolyte)",
+            "lore": {
+                "shortDescription": "You know two languages of your choice.",
+                "fullText": "You know two languages of your choice."
+            },
+            "modifiers": {
+                "fixed": [],
+                "choices": []
+            },
+            "proficiencies": {
+                "fixed": [],
+                "choices": [
+                    {
+                        "id": "acolyte_languages",
+                        "category": "languages",
+                        "chooseAmount": 2,
+                        "level": "proficient",
+                        "requiredStates": []
+                    }
+                ]
+            },
+            "resources": [],
+            "triggers": [],
+            "diceRules": [],
+            "criticalHitModifiers": [],
+            "actions": []
+        },
+        {
+            "id": "trait_noble_languages",
+            "name": "Languages (Noble)",
+            "lore": {
+                "shortDescription": "You know one language of your choice.",
+                "fullText": "You know one language of your choice."
+            },
+            "modifiers": {
+                "fixed": [],
+                "choices": []
+            },
+            "proficiencies": {
+                "fixed": [],
+                "choices": [
+                    {
+                        "id": "noble_language",
+                        "category": "languages",
+                        "chooseAmount": 1,
+                        "level": "proficient",
+                        "requiredStates": []
+                    }
+                ]
+            },
+            "resources": [],
+            "triggers": [],
+            "diceRules": [],
+            "criticalHitModifiers": [],
+            "actions": []
+        },
+        {
+            "id": "trait_noble_prof_tools",
+            "name": "Tool Proficiency (Noble)",
+            "lore": {
+                "shortDescription": "You have proficiency with one gaming set of your choice.",
+                "fullText": "You have proficiency with one gaming set of your choice."
+            },
+            "modifiers": {
+                "fixed": [],
+                "choices": []
+            },
+            "proficiencies": {
+                "fixed": [],
+                "choices": [
+                    {
+                        "id": "noble_gaming_set",
+                        "category": "tools",
+                        "chooseAmount": 1,
+                        "options": [
+                            "dice_set",
+                            "dragonchess_set",
+                            "playing_card_set",
+                            "three_dragon_ante_set"
+                        ],
+                        "level": "proficient",
+                        "requiredStates": []
+                    }
+                ]
+            },
+            "resources": [],
+            "triggers": [],
+            "diceRules": [],
+            "criticalHitModifiers": [],
+            "actions": []
+        },
+        {
+            "id": "trait_soldier_prof_tools",
+            "name": "Tool Proficiencies (Soldier)",
+            "lore": {
+                "shortDescription": "You have proficiency with one gaming set of your choice, and with land vehicles.",
+                "fullText": "You have proficiency with one gaming set of your choice, and with land vehicles."
+            },
+            "modifiers": {
+                "fixed": [],
+                "choices": []
+            },
+            "proficiencies": {
+                "fixed": [
+                    {
+                        "category": "tools",
+                        "proficiencyId": "vehicles_land",
+                        "level": "proficient",
+                        "requiredStates": []
+                    }
+                ],
+                "choices": [
+                    {
+                        "id": "soldier_gaming_set",
+                        "category": "tools",
+                        "chooseAmount": 1,
+                        "options": [
+                            "dice_set",
+                            "dragonchess_set",
+                            "playing_card_set",
+                            "three_dragon_ante_set"
+                        ],
+                        "level": "proficient",
+                        "requiredStates": []
+                    }
+                ]
+            },
+            "resources": [],
+            "triggers": [],
+            "diceRules": [],
+            "criticalHitModifiers": [],
+            "actions": []
+        },
+        {
+            "id": "trait_criminal_prof_tools",
+            "name": "Tool Proficiencies (Criminal)",
+            "lore": {
+                "shortDescription": "You have proficiency with one gaming set of your choice, and with thieves' tools.",
+                "fullText": "You have proficiency with one gaming set of your choice, and with thieves' tools."
+            },
+            "modifiers": {
+                "fixed": [],
+                "choices": []
+            },
+            "proficiencies": {
+                "fixed": [
+                    {
+                        "category": "tools",
+                        "proficiencyId": "thieves_tools",
+                        "level": "proficient",
+                        "requiredStates": []
+                    }
+                ],
+                "choices": [
+                    {
+                        "id": "criminal_gaming_set",
+                        "category": "tools",
+                        "chooseAmount": 1,
+                        "options": [
+                            "dice_set",
+                            "dragonchess_set",
+                            "playing_card_set",
+                            "three_dragon_ante_set"
+                        ],
+                        "level": "proficient",
+                        "requiredStates": []
+                    }
+                ]
+            },
+            "resources": [],
+            "triggers": [],
+            "diceRules": [],
+            "criticalHitModifiers": [],
+            "actions": []
+        }
     ]
 }
