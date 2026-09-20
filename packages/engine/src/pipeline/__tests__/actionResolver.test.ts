@@ -16,9 +16,13 @@ import { CombatContextManager } from "../../calculators/combatContext.js";
 import { EffectManager } from "../../calculators/effects.js";
 import { ResourceManager } from "../../calculators/resources.js";
 import { corePackLookup } from "./corePackFixture.js";
+import type { LevelContext } from "../../utils/resourceRules.js";
 
 const ARROW = "item_ammo_arrow";
 const MAGIC_ARROW = "item_ammo_arrow_plus_one";
+
+// these tests exercise "fixed" maxRule grants and have no level to offer
+const noLevels: LevelContext = { totalLevel: 0, classLevels: {}, casterLevel: 0 };
 
 /** An in-memory ledger standing in for the web store's inventory. */
 const makeLedger = (
@@ -1083,7 +1087,7 @@ describe("ActionResolver trigger dispatch", () => {
         maxRule: { kind: "fixed", value: 1 },
         resetCondition: "long_rest",
       },
-    ]);
+    ], noLevels);
   });
 
   it("dispatches a trigger to a macro action and spends its resource", () => {
@@ -1147,7 +1151,7 @@ describe("ActionResolver cost settlement", () => {
         maxRule: { kind: "fixed", value: 2 },
         resetCondition: "short_rest",
       },
-    ]);
+    ], noLevels);
   });
 
   const kiShot: ActionGrant = { ...bowShot, consumesResource: "pool_ki" };

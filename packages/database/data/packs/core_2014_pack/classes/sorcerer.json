@@ -394,6 +394,11 @@
             "lore": {
                 "shortDescription": "Sorcerer",
                 "fullText": "Sorcerer"
+            },
+            "spellcasting": {
+                "ability": "CHA",
+                "progression": "full",
+                "startsAtLevel": 1
             }
         }
     ],
@@ -535,6 +540,194 @@
                 "choices": []
             },
             "resources": [],
+            "triggers": [],
+            "diceRules": [],
+            "criticalHitModifiers": [],
+            "actions": []
+        },
+        {
+            "id": "trait_spellcasting_sorcerer",
+            "name": "Spellcasting (Sorcerer)",
+            "lore": {
+                "shortDescription": "You can cast spells, using Charisma as your spellcasting ability. Your spell slots are shown beside your other resources.",
+                "fullText": "You can cast spells, using Charisma as your spellcasting ability. Your spell slots are shown beside your other resources."
+            },
+            "modifiers": {
+                "fixed": [],
+                "choices": []
+            },
+            "proficiencies": {
+                "fixed": [],
+                "choices": []
+            },
+            "resources": [
+                {
+                    "id": "spell_slots_1",
+                    "name": "1st-Level Spell Slots",
+                    "resetCondition": "long_rest",
+                    "maxRule": {
+                        "kind": "caster_level_thresholds",
+                        "thresholds": [
+                            {
+                                "minimumLevel": 1,
+                                "value": 2
+                            },
+                            {
+                                "minimumLevel": 2,
+                                "value": 3
+                            },
+                            {
+                                "minimumLevel": 3,
+                                "value": 4
+                            }
+                        ]
+                    }
+                },
+                {
+                    "id": "spell_slots_2",
+                    "name": "2nd-Level Spell Slots",
+                    "resetCondition": "long_rest",
+                    "maxRule": {
+                        "kind": "caster_level_thresholds",
+                        "thresholds": [
+                            {
+                                "minimumLevel": 3,
+                                "value": 2
+                            },
+                            {
+                                "minimumLevel": 4,
+                                "value": 3
+                            }
+                        ]
+                    }
+                },
+                {
+                    "id": "spell_slots_3",
+                    "name": "3rd-Level Spell Slots",
+                    "resetCondition": "long_rest",
+                    "maxRule": {
+                        "kind": "caster_level_thresholds",
+                        "thresholds": [
+                            {
+                                "minimumLevel": 5,
+                                "value": 2
+                            },
+                            {
+                                "minimumLevel": 6,
+                                "value": 3
+                            }
+                        ]
+                    }
+                },
+                {
+                    "id": "spell_slots_4",
+                    "name": "4th-Level Spell Slots",
+                    "resetCondition": "long_rest",
+                    "maxRule": {
+                        "kind": "caster_level_thresholds",
+                        "thresholds": [
+                            {
+                                "minimumLevel": 7,
+                                "value": 1
+                            },
+                            {
+                                "minimumLevel": 8,
+                                "value": 2
+                            },
+                            {
+                                "minimumLevel": 9,
+                                "value": 3
+                            }
+                        ]
+                    }
+                },
+                {
+                    "id": "spell_slots_5",
+                    "name": "5th-Level Spell Slots",
+                    "resetCondition": "long_rest",
+                    "maxRule": {
+                        "kind": "caster_level_thresholds",
+                        "thresholds": [
+                            {
+                                "minimumLevel": 9,
+                                "value": 1
+                            },
+                            {
+                                "minimumLevel": 10,
+                                "value": 2
+                            },
+                            {
+                                "minimumLevel": 18,
+                                "value": 3
+                            }
+                        ]
+                    }
+                },
+                {
+                    "id": "spell_slots_6",
+                    "name": "6th-Level Spell Slots",
+                    "resetCondition": "long_rest",
+                    "maxRule": {
+                        "kind": "caster_level_thresholds",
+                        "thresholds": [
+                            {
+                                "minimumLevel": 11,
+                                "value": 1
+                            },
+                            {
+                                "minimumLevel": 19,
+                                "value": 2
+                            }
+                        ]
+                    }
+                },
+                {
+                    "id": "spell_slots_7",
+                    "name": "7th-Level Spell Slots",
+                    "resetCondition": "long_rest",
+                    "maxRule": {
+                        "kind": "caster_level_thresholds",
+                        "thresholds": [
+                            {
+                                "minimumLevel": 13,
+                                "value": 1
+                            },
+                            {
+                                "minimumLevel": 20,
+                                "value": 2
+                            }
+                        ]
+                    }
+                },
+                {
+                    "id": "spell_slots_8",
+                    "name": "8th-Level Spell Slots",
+                    "resetCondition": "long_rest",
+                    "maxRule": {
+                        "kind": "caster_level_thresholds",
+                        "thresholds": [
+                            {
+                                "minimumLevel": 15,
+                                "value": 1
+                            }
+                        ]
+                    }
+                },
+                {
+                    "id": "spell_slots_9",
+                    "name": "9th-Level Spell Slots",
+                    "resetCondition": "long_rest",
+                    "maxRule": {
+                        "kind": "caster_level_thresholds",
+                        "thresholds": [
+                            {
+                                "minimumLevel": 17,
+                                "value": 1
+                            }
+                        ]
+                    }
+                }
+            ],
             "triggers": [],
             "diceRules": [],
             "criticalHitModifiers": [],

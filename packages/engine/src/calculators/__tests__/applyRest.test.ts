@@ -28,8 +28,10 @@ const snapshot = {
 
 const spent = (id: string, current = 0): OperationalResource => ({ id, current });
 
+const levels = { totalLevel: 5, classLevels: {}, casterLevel: 0 };
+
 const rest = (resources: OperationalResource[], type: "short" | "long") =>
-  RestEngine.applyRest(resources, type, 5, {}, snapshot);
+  RestEngine.applyRest(resources, type, levels, snapshot);
 
 const chargesOf = (resources: OperationalResource[], id: string) =>
   resources.find((resource) => resource.id === id)?.current;
@@ -82,7 +84,7 @@ describe("RestEngine.applyRest", () => {
       resourcesById: { half: rule("half", "long_rest_half", 1) },
     };
 
-    const result = RestEngine.applyRest([spent("half")], "long", 5, {}, tiny);
+    const result = RestEngine.applyRest([spent("half")], "long", levels, tiny);
     expect(chargesOf(result, "half")).toBe(1);
   });
 

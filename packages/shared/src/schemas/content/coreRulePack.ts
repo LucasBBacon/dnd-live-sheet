@@ -3,6 +3,7 @@ import {
   BackgroundDefinitionSchema,
   ClassDefinitionSchema,
   ClassLevelFeatureSchema,
+  SpellcastingSchema,
 } from "./character.js";
 import { EquipmentDefinitionSchema } from "./equipment.js";
 import { FeatPrerequisitesSchema } from "./prerequisites.js";
@@ -53,6 +54,8 @@ const CoreSubclassSchema = z
     name: z.string().min(1).max(255),
     lore: LoreSchema,
     progression: z.array(ClassLevelFeatureSchema).default([]),
+    // the Eldritch Knight and the Arcane Trickster cast; fighter and rogue do not
+    spellcasting: SpellcastingSchema.optional(),
   })
   .strict();
 

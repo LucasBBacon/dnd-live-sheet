@@ -107,6 +107,18 @@ const halfElfBarbarian = (level: number): CharacterSave =>
   });
 
 /**
+ * A human wizard, for the spellcasting derivation: INT 16 gives a clean
+ * modifier to check the save DC and attack bonus against.
+ */
+const humanWizard = (level: number): CharacterSave => ({
+  attributes: { str: 10, dex: 10, con: 10, int: 16, wis: 10, cha: 10 },
+  race: { baseRaceId: "race_human", hasSubraces: false, subraceId: null },
+  classes: [{ classId: "class_wizard", level, selections: {} }],
+  traitSelections: {},
+  hp: { current: 10, temporary: 0, baseRolledHp: 6, hitDiceSpent: {} },
+});
+
+/**
  * An EffectManager carrying exactly one modifier, so a test can aim a bonus at
  * one output and gate it on whatever states it likes.
  *
@@ -496,6 +508,22 @@ describe("CharacterEngine.buildLiveSheet", () => {
     expect(sheet.skills.stealth!.multiplier).toBe(1);
     expect(sheet.skills.stealth!.totalModifier).toBe(4); // +2 DEX, +2 prof
     expect(sheet.skills.athletics!.multiplier).toBe(0);
+  });
+
+  it("puts a wizard's spell save DC and attack bonus on the live sheet", () => {
+    const sheet = buildSheet(humanWizard(5));
+    const wizard = sheet.spellcasting.find(
+      (entry) => entry.classId === "class_wizard",
+    );
+
+    // proficiency is +3 at level 5, and INT 16 is +3
+    expect(wizard?.ability).toBe("INT");
+    expect(wizard?.saveDc).toBe(14);
+    expect(wizard?.attackBonus).toBe(6);
+  });
+
+  it("gives a barbarian no spellcasting entries at all", () => {
+    expect(buildSheet(halfElfBarbarian(5)).spellcasting).toEqual([]);
   });
 
   it("hydrates the chosen two-weapon fighting style state into the live sheet", () => {

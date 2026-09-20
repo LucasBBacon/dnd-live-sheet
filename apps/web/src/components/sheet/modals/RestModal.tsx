@@ -2,6 +2,7 @@
 import { useState, useMemo } from "react";
 import { useCharacterSheetStore } from "../../../store/characterSheetStore";
 import {
+  buildLevelContext,
   getResourceMaxUses,
   resolveResourceRule,
   RestEngine,
@@ -18,8 +19,8 @@ export const RestModal = ({ onClose }: RestModalProps) => {
   const [restType, setRestType] = useState<"short" | "long">("short");
 
   const resources = useCharacterSheetStore((state) => state.resources);
-  const level = useCharacterSheetStore((state) => state.level);
   const classLevels = useCharacterSheetStore((state) => state.classLevels);
+  const subclassIds = useCharacterSheetStore((state) => state.subclassIds);
   const currentHp = useCharacterSheetStore((state) => state.currentHp);
   const maxHp = useCharacterSheetStore((state) => state.maxHp);
   const triggerRest = useCharacterSheetStore((state) => state.triggerRest);
@@ -34,6 +35,12 @@ export const RestModal = ({ onClose }: RestModalProps) => {
   );
   const { finalAbilities } = useAbilities();
   const conMod = finalAbilities.CON.modifier;
+
+  const levels = buildLevelContext(
+    classLevels,
+    subclassIds,
+    ruleSnapshot ?? undefined,
+  );
 
   const hitDiceResources = resources.filter((r) => r.id.startsWith("hd_"));
 
@@ -60,8 +67,7 @@ export const RestModal = ({ onClose }: RestModalProps) => {
     const futureResources = RestEngine.applyRest(
       resources,
       restType,
-      level,
-      classLevels,
+      levels,
       ruleSnapshot ?? undefined,
     );
 
@@ -78,7 +84,7 @@ export const RestModal = ({ onClose }: RestModalProps) => {
           ruleSnapshot ?? undefined,
         );
         const maxUses = definition
-          ? getResourceMaxUses(definition, level, classLevels)
+          ? getResourceMaxUses(definition, levels)
           : future.current;
 
         return {
@@ -92,7 +98,7 @@ export const RestModal = ({ onClose }: RestModalProps) => {
       .filter((item) => item !== null);
 
     return recoveredItems;
-  }, [resources, restType, level, classLevels, ruleSnapshot]);
+  }, [resources, restType, classLevels, subclassIds, ruleSnapshot]);
 
   // 2. Handle the Commit
   const handleConfirm = () => {
@@ -154,7 +160,7 @@ export const RestModal = ({ onClose }: RestModalProps) => {
                     ruleSnapshot ?? undefined,
                   );
                   const maxUses = definition
-                    ? getResourceMaxUses(definition, level, classLevels)
+                    ? getResourceMaxUses(definition, levels)
                     : hd.current;
 
                   return (

@@ -2,7 +2,7 @@ import type { ResourceReset } from "@project/shared";
 import type { RuntimeHealthState } from "../types/combat.js";
 import type { OperationalResource } from "../types/resources.js";
 import { resolveResourceRule, type RuleSnapshotLookup } from "../rules/ruleLookup.js";
-import { getResourceMaxUses } from "../utils/resourceRules.js";
+import { getResourceMaxUses, type LevelContext } from "../utils/resourceRules.js";
 import type { EffectManager } from "./effects.js";
 import type { ResourceManager } from "./resources.js";
 
@@ -109,8 +109,7 @@ export class RestEngine {
   public static applyRest(
     resources: OperationalResource[],
     restType: "short" | "long",
-    totalLevel: number,
-    classLevels: Record<string, number>,
+    levels: LevelContext,
     snapshot?: RuleSnapshotLookup,
   ): OperationalResource[] {
     const isLongRest = restType === "long";
@@ -121,7 +120,7 @@ export class RestEngine {
       // a resource with no rule behind it is left exactly as it is
       if (!rule) return resource;
 
-      const maxUses = getResourceMaxUses(rule, totalLevel, classLevels);
+      const maxUses = getResourceMaxUses(rule, levels);
 
       return {
         ...resource,

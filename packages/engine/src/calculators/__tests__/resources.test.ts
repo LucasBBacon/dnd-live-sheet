@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import { ResourceManager } from "../resources.js";
 import type { Resource } from "@project/shared";
+import type { LevelContext } from "../../utils/resourceRules.js";
 
 // ResourceManager exposes no getter for raw charge counts, so these tests
 // verify state indirectly through consume()'s boolean return value: e.g.
@@ -15,6 +16,10 @@ const makeGrant = (overrides: Partial<Resource> = {}): Resource => ({
   ...overrides,
 });
 
+// initializeFromGrants takes a required LevelContext - most of these tests
+// exercise "fixed" maxRule grants and have no level to offer at all.
+const noLevels: LevelContext = { totalLevel: 0, classLevels: {}, casterLevel: 0 };
+
 let manager: ResourceManager;
 
 beforeEach(() => {
@@ -27,7 +32,7 @@ describe("ResourceManager.initializeFromGrants", () => {
   it("creates a resource with currentCharges starting at maxCharges", () => {
     manager.initializeFromGrants([
       makeGrant({ id: "ki", maxRule: { kind: "fixed", value: 3 } }),
-    ]);
+    ], noLevels);
 
     expect(manager.consume("ki", 3)).toBe(true);
     expect(manager.consume("ki", 1)).toBe(false);
@@ -51,7 +56,7 @@ describe("ResourceManager.initializeFromGrants", () => {
           resetCondition: "long_rest",
         },
       ],
-      { classes: { class_barbarian: 6 } },
+      { totalLevel: 6, classLevels: { class_barbarian: 6 }, casterLevel: 0 },
     );
 
     expect(manager.getRuntimeResources()).toContainEqual(
@@ -67,7 +72,7 @@ describe("ResourceManager.initializeFromGrants", () => {
         maxRule: { kind: "fixed", value: 3 },
         resetCondition: "long_rest",
       }),
-    ]);
+    ], noLevels);
 
     expect(manager.consume("ki", 2)).toBe(true);
     expect(manager.consume("ki", 1)).toBe(false);
@@ -78,10 +83,10 @@ describe("ResourceManager.initializeFromGrants", () => {
   it("sums maxCharges when the same resource id is granted again (e.g. multiclass spell slot accumulation)", () => {
     manager.initializeFromGrants([
       makeGrant({ id: "spell_slots_1", maxRule: { kind: "fixed", value: 2 } }),
-    ]);
+    ], noLevels);
     manager.initializeFromGrants([
       makeGrant({ id: "spell_slots_1", maxRule: { kind: "fixed", value: 1 } }),
-    ]);
+    ], noLevels);
 
     // combined max is 2 + 1 = 3
     expect(manager.consume("spell_slots_1", 3)).toBe(true);
@@ -91,7 +96,7 @@ describe("ResourceManager.initializeFromGrants", () => {
   it("refills currentCharges to the new combined max on re-grant, even if charges had already been spent (current implementation)", () => {
     manager.initializeFromGrants([
       makeGrant({ id: "spell_slots_1", maxRule: { kind: "fixed", value: 2 } }),
-    ]);
+    ], noLevels);
     manager.consume("spell_slots_1", 2);
     expect(manager.consume("spell_slots_1", 1)).toBe(false); // confirm depleted
 
@@ -99,7 +104,7 @@ describe("ResourceManager.initializeFromGrants", () => {
     // resets currentCharges to the new full max - prior consumption is lost.
     manager.initializeFromGrants([
       makeGrant({ id: "spell_slots_1", maxRule: { kind: "fixed", value: 1 } }),
-    ]);
+    ], noLevels);
 
     expect(manager.consume("spell_slots_1", 3)).toBe(true); // 2 + 1, fully refilled
   });
@@ -113,7 +118,7 @@ describe("ResourceManager.consume", () => {
   it("consumes a single charge by default when no amount is given", () => {
     manager.initializeFromGrants([
       makeGrant({ id: "ki", maxRule: { kind: "fixed", value: 2 } }),
-    ]);
+    ], noLevels);
 
     expect(manager.consume("ki")).toBe(true);
     expect(manager.consume("ki")).toBe(true);
@@ -123,7 +128,7 @@ describe("ResourceManager.consume", () => {
   it("consumes a specified amount at once", () => {
     manager.initializeFromGrants([
       makeGrant({ id: "ki", maxRule: { kind: "fixed", value: 5 } }),
-    ]);
+    ], noLevels);
 
     expect(manager.consume("ki", 3)).toBe(true);
     expect(manager.consume("ki", 2)).toBe(true);
@@ -133,7 +138,7 @@ describe("ResourceManager.consume", () => {
   it("allows consuming exactly the remaining charges down to zero", () => {
     manager.initializeFromGrants([
       makeGrant({ id: "ki", maxRule: { kind: "fixed", value: 3 } }),
-    ]);
+    ], noLevels);
 
     expect(manager.consume("ki", 3)).toBe(true);
     expect(manager.consume("ki", 1)).toBe(false);
@@ -142,7 +147,7 @@ describe("ResourceManager.consume", () => {
   it("fails and leaves charges unchanged when the requested amount exceeds what is available", () => {
     manager.initializeFromGrants([
       makeGrant({ id: "ki", maxRule: { kind: "fixed", value: 2 } }),
-    ]);
+    ], noLevels);
 
     expect(manager.consume("ki", 3)).toBe(false);
     // the failed attempt above must not have partially deducted anything
@@ -163,7 +168,7 @@ describe("ResourceManager.restore", () => {
   it("restores a partial amount of spent charges", () => {
     manager.initializeFromGrants([
       makeGrant({ id: "ki", maxRule: { kind: "fixed", value: 4 } }),
-    ]);
+    ], noLevels);
     manager.consume("ki", 3); // 1 remaining
 
     manager.restore("ki", 2); // 1 + 2 = 3
@@ -175,7 +180,7 @@ describe("ResourceManager.restore", () => {
   it("caps restored charges at maxCharges rather than overflowing", () => {
     manager.initializeFromGrants([
       makeGrant({ id: "ki", maxRule: { kind: "fixed", value: 4 } }),
-    ]);
+    ], noLevels);
     manager.consume("ki", 1); // 3 remaining
 
     manager.restore("ki", 10); // should cap at 4, not 13
@@ -201,7 +206,7 @@ describe("ResourceManager.tickRest", () => {
         maxRule: { kind: "fixed", value: 2 },
         resetCondition: "short_rest",
       }),
-    ]);
+    ], noLevels);
     manager.consume("ki", 2);
     expect(manager.consume("ki", 1)).toBe(false);
 
@@ -217,7 +222,7 @@ describe("ResourceManager.tickRest", () => {
         maxRule: { kind: "fixed", value: 2 },
         resetCondition: "long_rest",
       }),
-    ]);
+    ], noLevels);
     manager.consume("rage", 2);
 
     manager.tickRest(false);
@@ -232,7 +237,7 @@ describe("ResourceManager.tickRest", () => {
         maxRule: { kind: "fixed", value: 1 },
         resetCondition: "dawn",
       }),
-    ]);
+    ], noLevels);
     manager.consume("channel_divinity", 1);
 
     manager.tickRest(false);
@@ -252,7 +257,7 @@ describe("ResourceManager.tickRest", () => {
         maxRule: { kind: "fixed", value: 1 },
         resetCondition: "initiative_roll",
       }),
-    ]);
+    ], noLevels);
     manager.consume("bardic_die", 1);
     manager.consume("lucky_points", 1);
 
@@ -269,7 +274,7 @@ describe("ResourceManager.tickRest", () => {
         maxRule: { kind: "fixed", value: 4 },
         resetCondition: "long_rest_half",
       }),
-    ]);
+    ], noLevels);
     manager.consume("font_of_inspiration", 4);
 
     manager.tickRest(false);
@@ -284,7 +289,7 @@ describe("ResourceManager.tickRest", () => {
         maxRule: { kind: "fixed", value: 5 },
         resetCondition: "long_rest_half",
       }),
-    ]);
+    ], noLevels);
     manager.consume("font_of_inspiration", 3); // 2 remaining
 
     manager.tickRest(true);
@@ -301,7 +306,7 @@ describe("ResourceManager.tickRest", () => {
         maxRule: { kind: "fixed", value: 1 },
         resetCondition: "long_rest_half",
       }),
-    ]);
+    ], noLevels);
     manager.consume("font_of_inspiration", 1);
 
     manager.tickRest(true);
@@ -316,7 +321,7 @@ describe("ResourceManager.tickRest", () => {
         maxRule: { kind: "fixed", value: 4 },
         resetCondition: "long_rest_half",
       }),
-    ]);
+    ], noLevels);
     manager.consume("font_of_inspiration", 1); // 3 remaining, half-recovery would be 3 + 2 = 5
 
     manager.tickRest(true);
@@ -343,7 +348,7 @@ describe("ResourceManager.tickRest", () => {
         maxRule: { kind: "fixed", value: 1 },
         resetCondition: "dawn",
       }),
-    ]);
+    ], noLevels);
     manager.consume("ki", 2);
     manager.consume("rage", 2);
     manager.consume("channel_divinity", 1);
@@ -368,7 +373,7 @@ describe("ResourceManager.tickStartOfTurn", () => {
         maxRule: { kind: "fixed", value: 1 },
         resetCondition: "start_of_turn",
       }),
-    ]);
+    ], noLevels);
     manager.consume("bardic_die", 1);
     expect(manager.consume("bardic_die", 1)).toBe(false);
 
@@ -399,7 +404,7 @@ describe("ResourceManager.tickStartOfTurn", () => {
         maxRule: { kind: "fixed", value: 1 },
         resetCondition: "initiative_roll",
       }),
-    ]);
+    ], noLevels);
     manager.consume("ki", 1);
     manager.consume("rage", 1);
     manager.consume("channel_divinity", 1);
@@ -438,7 +443,7 @@ describe("hydrateFromPersisted", () => {
     // initializeFromGrants sums max charges for overlapping pools, so a
     // repeated hydrate would otherwise grow the pool without bound - the
     // defect that made the server refill every resource on every request.
-    manager.initializeFromGrants([makeGrant({ id: "resource_barbarian_rage", maxRule: { kind: "fixed", value: 3 } })]);
+    manager.initializeFromGrants([makeGrant({ id: "resource_barbarian_rage", maxRule: { kind: "fixed", value: 3 } })], noLevels);
     manager.hydrateFromPersisted([persisted()]);
     manager.hydrateFromPersisted([persisted()]);
 
@@ -449,7 +454,7 @@ describe("hydrateFromPersisted", () => {
   });
 
   it("drops pools the persisted state no longer carries", () => {
-    manager.initializeFromGrants([makeGrant({ id: "resource_gone" })]);
+    manager.initializeFromGrants([makeGrant({ id: "resource_gone" })], noLevels);
     manager.hydrateFromPersisted([persisted()]);
 
     expect(manager.getRuntimeResources().map((r) => r.id)).toEqual([

@@ -38,6 +38,9 @@ const mocks = vi.hoisted(() => ({
 vi.mock("../ArmorClassWidget", () => ({ ArmorClassWidget: () => null }));
 vi.mock("../ConditionsWidget", () => ({ ConditionsWidget: () => null }));
 vi.mock("../ActiveEffectsWidget", () => ({ ActiveEffectsWidget: () => null }));
+vi.mock("../FeaturesWidget", () => ({
+  FeaturesWidget: () => <div data-testid="features-widget-stub" />,
+}));
 vi.mock("../SavingThrowsWidget", () => ({ SavingThrowsWidget: () => null }));
 vi.mock("../SkillsWidget", () => ({ SkillsWidget: () => null }));
 vi.mock("../TableRulesWidget", () => ({ TableRulesWidget: () => null }));
@@ -57,6 +60,7 @@ vi.mock("../../../hooks/useCharacterStats", () => ({
     },
   }),
   useDerivedStats: () => ({ initiative: { total: 0 } }),
+  useSpellcasting: () => [],
 }));
 
 vi.mock("../../../store/levelUpStore", () => ({
@@ -146,6 +150,24 @@ const findButton = (container: HTMLElement, label: string) =>
   Array.from(container.querySelectorAll("button")).find(
     (candidate) => candidate.textContent === label,
   );
+
+describe("DashboardLayout widgets", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    storeState = baseStoreState;
+  });
+
+  it("mounts the Features widget so granted resource pools reach the sheet", async () => {
+    const { container, root } = await renderDashboard();
+
+    expect(
+      container.querySelector('[data-testid="features-widget-stub"]'),
+    ).not.toBeNull();
+
+    root.unmount();
+    container.remove();
+  });
+});
 
 describe("DashboardLayout inventory actions", () => {
   beforeEach(() => {

@@ -23,7 +23,7 @@
   "devDependencies": {
     "@project/database": "workspace:^",
     "@vitest/coverage-v8": "^4.1.9",
-    "typescript": "latest",
+    "typescript": "^6.0.3",
     "vitest": "^4.1.9"
   }
 }

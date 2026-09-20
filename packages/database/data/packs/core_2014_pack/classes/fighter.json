@@ -649,6 +649,11 @@
             "lore": {
                 "shortDescription": "Eldritch Knight",
                 "fullText": "Eldritch Knight"
+            },
+            "spellcasting": {
+                "ability": "INT",
+                "progression": "third",
+                "startsAtLevel": 3
             }
         }
     ],
@@ -802,6 +807,108 @@
                 "choices": []
             },
             "resources": [],
+            "triggers": [],
+            "diceRules": [],
+            "criticalHitModifiers": [],
+            "actions": []
+        },
+        {
+            "id": "trait_fighter_eldritch_knight_spellcasting",
+            "name": "Spellcasting (Eldritch Knight)",
+            "lore": {
+                "shortDescription": "You can cast spells, using Intelligence as your spellcasting ability. Your spell slots are shown beside your other resources.",
+                "fullText": "You can cast spells, using Intelligence as your spellcasting ability. Your spell slots are shown beside your other resources."
+            },
+            "modifiers": {
+                "fixed": [],
+                "choices": []
+            },
+            "proficiencies": {
+                "fixed": [],
+                "choices": []
+            },
+            "resources": [
+                {
+                    "id": "spell_slots_1",
+                    "name": "1st-Level Spell Slots",
+                    "resetCondition": "long_rest",
+                    "maxRule": {
+                        "kind": "caster_level_thresholds",
+                        "thresholds": [
+                            {
+                                "minimumLevel": 1,
+                                "value": 2
+                            },
+                            {
+                                "minimumLevel": 2,
+                                "value": 3
+                            },
+                            {
+                                "minimumLevel": 3,
+                                "value": 4
+                            }
+                        ]
+                    }
+                },
+                {
+                    "id": "spell_slots_2",
+                    "name": "2nd-Level Spell Slots",
+                    "resetCondition": "long_rest",
+                    "maxRule": {
+                        "kind": "caster_level_thresholds",
+                        "thresholds": [
+                            {
+                                "minimumLevel": 3,
+                                "value": 2
+                            },
+                            {
+                                "minimumLevel": 4,
+                                "value": 3
+                            }
+                        ]
+                    }
+                },
+                {
+                    "id": "spell_slots_3",
+                    "name": "3rd-Level Spell Slots",
+                    "resetCondition": "long_rest",
+                    "maxRule": {
+                        "kind": "caster_level_thresholds",
+                        "thresholds": [
+                            {
+                                "minimumLevel": 5,
+                                "value": 2
+                            },
+                            {
+                                "minimumLevel": 6,
+                                "value": 3
+                            }
+                        ]
+                    }
+                },
+                {
+                    "id": "spell_slots_4",
+                    "name": "4th-Level Spell Slots",
+                    "resetCondition": "long_rest",
+                    "maxRule": {
+                        "kind": "caster_level_thresholds",
+                        "thresholds": [
+                            {
+                                "minimumLevel": 7,
+                                "value": 1
+                            },
+                            {
+                                "minimumLevel": 8,
+                                "value": 2
+                            },
+                            {
+                                "minimumLevel": 9,
+                                "value": 3
+                            }
+                        ]
+                    }
+                }
+            ],
             "triggers": [],
             "diceRules": [],
             "criticalHitModifiers": [],

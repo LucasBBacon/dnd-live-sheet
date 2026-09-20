@@ -14,8 +14,10 @@ import { LevelUpWizard } from "../wizard/LevelUpWizard";
 import { ActiveEffectsWidget } from "./ActiveEffectsWidget";
 import { ArmorClassWidget } from "./ArmorClassWidget";
 import { ConditionsWidget } from "./ConditionsWidget";
+import { FeaturesWidget } from "./FeaturesWidget";
 import { SavingThrowsWidget } from "./SavingThrowsWidget";
 import { SkillsWidget } from "./SkillsWidget";
+import { SpellcastingWidget } from "./SpellcastingWidget";
 import { TableRulesWidget } from "./TableRulesWidget";
 
 export const DashboardLayout = () => {
@@ -243,9 +245,13 @@ export const DashboardLayout = () => {
             </div>
           </div>
 
+          <SpellcastingWidget />
+
           <SavingThrowsWidget />
 
           <SkillsWidget />
+
+          <FeaturesWidget />
         </section>
       </div>
 

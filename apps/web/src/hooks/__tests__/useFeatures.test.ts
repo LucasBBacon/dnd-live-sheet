@@ -5,6 +5,7 @@ let mockStoreState: {
   resources: Array<{ id: string; current: number }>;
   level: number;
   classLevels: Record<string, number>;
+  subclassIds: Record<string, string | null>;
   ruleSnapshot: unknown;
 };
 
@@ -30,6 +31,7 @@ describe("useFeatures", () => {
       resources: [],
       level: 11,
       classLevels: { class_barbarian: 11 },
+      subclassIds: {},
       ruleSnapshot: packRuleSnapshot(),
     };
   });
@@ -70,5 +72,44 @@ describe("useFeatures", () => {
     mockStoreState.resources = [{ id: "resource_barbarian_rage", current: 0 }];
 
     expect(useFeatures()).toEqual([]);
+  });
+
+  it("shows a level 5 wizard only the slot pools they can fill", () => {
+    mockStoreState.level = 5;
+    mockStoreState.classLevels = { class_wizard: 5 };
+    mockStoreState.subclassIds = {};
+    mockStoreState.resources = [
+      { id: "spell_slots_1", current: 4 },
+      { id: "spell_slots_2", current: 3 },
+      { id: "spell_slots_3", current: 2 },
+      { id: "spell_slots_4", current: 0 },
+    ];
+
+    const pools = useFeatures();
+
+    // the fourth-level pool has a maximum of zero at caster level 5 and the
+    // hook's own guard drops it
+    expect(pools.map((pool) => pool.id)).toEqual([
+      "spell_slots_1",
+      "spell_slots_2",
+      "spell_slots_3",
+    ]);
+    expect(pools[0]).toMatchObject({ kind: "charges", max: 4 });
+    expect(pools[2]).toMatchObject({ kind: "charges", max: 2 });
+  });
+
+  it("does not render pact_slot_level as a spendable pool", () => {
+    mockStoreState.level = 9;
+    mockStoreState.classLevels = { class_warlock: 9 };
+    mockStoreState.subclassIds = {};
+    mockStoreState.resources = [
+      { id: "pact_slots", current: 2 },
+      { id: "pact_slot_level", current: 5 },
+    ];
+
+    const pools = useFeatures();
+
+    expect(pools.map((pool) => pool.id)).toContain("pact_slots");
+    expect(pools.map((pool) => pool.id)).not.toContain("pact_slot_level");
   });
 });

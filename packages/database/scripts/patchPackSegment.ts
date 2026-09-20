@@ -31,15 +31,21 @@ type Patch = {
   renameProficiencyIds?: Record<string, Record<string, string>>;
   /** Class id -> trait ids to strip from that class's multiclassTraitIds. */
   removeMulticlassTraitIds?: Record<string, string[]>;
+  /** Class id -> fields to set on that class, shallow. */
+  setClassFields?: Record<string, Record<string, unknown>>;
+  /** Subclass id -> fields to set on that subclass, shallow. */
+  setSubclassFields?: Record<string, Record<string, unknown>>;
 };
 
 type Segment = {
   traits?: Array<{ id: string }>;
-  classes?: Array<{
-    id: string;
-    progression: Array<{ grants: unknown[] }>;
-    multiclassTraitIds?: string[];
-  }>;
+  classes?: Array<
+    Record<string, unknown> & {
+      id: string;
+      progression: Array<{ grants: unknown[] }>;
+    }
+  >;
+  subclasses?: Array<Record<string, unknown> & { id: string }>;
 };
 
 const [segmentPath, patchPath] = process.argv.slice(2);
@@ -115,9 +121,25 @@ for (const [classId, ids] of Object.entries(
 )) {
   const entry = (segment.classes ?? []).find((cls) => cls.id === classId);
   if (!entry) throw new Error(`${segmentPath} has no class '${classId}'`);
-  entry.multiclassTraitIds = (entry.multiclassTraitIds ?? []).filter(
-    (id) => !ids.includes(id),
+  entry.multiclassTraitIds = (
+    (entry.multiclassTraitIds as string[] | undefined) ?? []
+  ).filter((id) => !ids.includes(id));
+}
+
+for (const [classId, fields] of Object.entries(patch.setClassFields ?? {})) {
+  const entry = (segment.classes ?? []).find((cls) => cls.id === classId);
+  if (!entry) throw new Error(`${segmentPath} has no class '${classId}'`);
+  Object.assign(entry, fields);
+}
+
+for (const [subclassId, fields] of Object.entries(
+  patch.setSubclassFields ?? {},
+)) {
+  const entry = (segment.subclasses ?? []).find(
+    (sub) => sub.id === subclassId,
   );
+  if (!entry) throw new Error(`${segmentPath} has no subclass '${subclassId}'`);
+  Object.assign(entry, fields);
 }
 
 const printed = JSON.stringify(segment, null, 4).split("\n").join(eol);

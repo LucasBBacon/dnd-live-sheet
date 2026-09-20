@@ -158,6 +158,10 @@ anyone closing it. One new item was opened by the re-count: **8d**, the
 dragonborn race, which is missing three signature features that were never
 stubs and so were never in #30's number.
 
+Re-measured again **2026-09-20**, on `feat/spellcasting-slots` while it was
+still in review, not yet merged. #30 is **398**, all twelve class rows were
+re-counted again, and #62 is half-closed — see 8f.
+
 Previously refreshed **2026-09-02**, after the item-actions branch (49 commits)
 landed without touching this file. Every item below was re-measured against the
 working tree that day, and three entries changed state as a result.
@@ -197,29 +201,37 @@ burndown is large enough that an honest estimate is worth having.
 
 | Order | Item | Scale | Why here |
 | --- | --- | --- | --- |
-| 4 | **#30** — reachable trait stubs | **408** | Re-measured 2026-09-20, after `feat/item-proficiency` authored 32 weapon and armour stubs and deleted one: 441 → 408, of 584 traits. The barbarian pass before it took 462 → 441, two of those by deleting the Primal Path signposts. The earlier rise from 456 came from marking 119 silent stubs while deleting 113 unreferenced ones, so the number means "granted to a character and does nothing" rather than "tagged by the port". Every one is reachable. Per-class breakdown below, re-counted in full on 2026-09-20. **It counts stubs, not absences — see 8d.** |
+| 4 | **#30** — reachable trait stubs | **398** | Re-measured 2026-09-20, after `feat/spellcasting-slots` authored ten spellcasting stubs (the nine slot casters' `trait_spellcasting_*` and the warlock's `trait_pact_magic`), each replacing an `unimplemented` stub of the same id with real resources: 408 → 398, of 584 traits. `feat/item-proficiency` before it authored 32 weapon and armour stubs and deleted one: 441 → 408. The barbarian pass before that took 462 → 441, two of those by deleting the Primal Path signposts. The earlier rise from 456 came from marking 119 silent stubs while deleting 113 unreferenced ones, so the number means "granted to a character and does nothing" rather than "tagged by the port". Every one is reachable. Per-class breakdown below, re-counted in full on 2026-09-20. **It is a count, not an estimate — see 8f.** |
 | 5 | **#31** — spells | **111 of 111** | Two passes, not one. `level` is `0` for every spell and `school` is `evocation` for every spell, so these need real **data** before they can carry rules — which is why this sits behind #30 despite the smaller number. |
 | 6 | **#36** — `SUMMON_ACTOR_DICTIONARY` into the pack | — | The last live rules content outside the pack, two real readers, re-verified 2026-09-02. Until it moves, "packs are the only source of rules" carries an asterisk. |
 
 **Where the remaining stubs sit**, so #30 can be picked up by whoever is
-playing what. All twelve rows re-counted 2026-09-20 — the first full re-count
-since 2026-09-02. A row is every stub the class or one of its subclasses
-references, so each still carries its subclass signposts:
+playing what. All twelve rows re-counted 2026-09-20, after
+`feat/spellcasting-slots` — the second full re-count since 2026-09-02. A row
+is every stub the class or one of its subclasses references, so each still
+carries its subclass signposts:
 
 | Class | Stubs | Class | Stubs |
 | --- | --- | --- | --- |
-| warlock | 59 | sorcerer | 32 |
-| wizard | 47 | ranger | 29 |
-| monk | 46 | paladin | 27 |
-| cleric | 43 | bard | 22 |
-| fighter | 36 | druid | 21 |
-| rogue | 32 | **barbarian** | **0** |
+| warlock | 58 | sorcerer | 31 |
+| wizard | 46 | ranger | 28 |
+| monk | 46 | paladin | 26 |
+| cleric | 42 | bard | 21 |
+| fighter | 35 | druid | 20 |
+| rogue | 31 | **barbarian** | **0** |
 
-The rows sum to 394 against 391 distinct traits: the three-trait overlap is
-multiclass proficiency traits that two classes both reference. A further **17
-stubs belong to no class at all** — 6 race (elf 3, halfling 2, gnome 1), 9
-background (noble 3, acolyte 2, criminal 2, soldier 2) and 2 feats (Mobile,
-Skilled). 391 + 17 = 408.
+Ten fewer than the previous re-count, one per class: `feat/spellcasting-slots`
+authored each class's own `trait_spellcasting_*` (the Eldritch Knight's and
+the Arcane Trickster's count against fighter and rogue, same as their other
+subclass signposts) and the warlock's `trait_pact_magic`. Monk and barbarian
+are unchanged — neither casts.
+
+The rows sum to 384 against 381 distinct traits: the same three-trait overlap
+as before (`trait_expertise` on bard/rogue, `trait_timeless_body` on
+druid/monk, `trait_lands_stride` on druid/ranger) is untouched by this branch.
+A further **17 stubs belong to no class at all** — 6 race (elf 3, halfling 2,
+gnome 1), 9 background (noble 3, acolyte 2, criminal 2, soldier 2) and 2 feats
+(Mobile, Skilled) — also untouched. 381 + 17 = 398.
 
 Twenty-two of the class stubs are subclass signposts — `trait_divine_domain`,
 `trait_bard_college` and their `_feature` twins, one pair per class. They
@@ -244,17 +256,18 @@ The designs are
 
 Races hold 6 stubs — Trance, Mask of the Wild and Sunlight Sensitivity on the
 elf, Halfling Nimbleness and Naturally Stealthy on the halfling, and Speak with
-Small Beasts on the gnome. The ten `trait_dragon_ancestor_*` stubs in
-`races/dragonborn.json` are **not** the dragonborn's: the only thing that
-references them is the sorcerer's Draconic Bloodline, so they count against the
-sorcerer row. What the dragonborn is actually missing is worse than a stub —
-see 8d.
+Small Beasts on the gnome. The ten `trait_dragon_ancestor_*` stubs that share
+`races/dragonborn.json` are **not** the dragonborn's: they are the sorcerer's
+Draconic Bloodline ancestry, referenced from `classes/sorcerer.json`, and they
+count against the sorcerer row. The dragonborn's own ancestry is authored in
+full on its ten subraces — resistance, breath charge and a scaling cone. See
+8d, which opened that as a defect and withdrew it the same day.
 
 ### Tier 3 — small, and each closes a loose end
 
 | Order | Item | Why here |
 | --- | --- | --- |
-| 7 | 🟢 **#56** — pin engine's TypeScript | `packages/engine` declares `"typescript": "latest"` and resolves **7.0.2** while every other package is on 6.0.x. One package compiling on a different major than the rest, movable by any install, with no diff anyone reviews. Pin it or upgrade the workspace — but decide, rather than leave it floating. |
+| 7 | ✅ **#56** — pin engine's TypeScript | **Closed 2026-09-20.** Aligned to the workspace rather than frozen at 7.0.2: `packages/engine` now declares `^6.0.3`, the same range `@project/database` and `@project/server` use, and resolves 6.0.3. All five packages typecheck clean on it and the engine's 871 tests pass — the major-version gap cost nothing to close. |
 | 8 | 🟢 **#54** — confirm the reset-condition migration ran | `0013_add_reset_conditions.sql` is generated and journalled. Whether it has been applied to a live database cannot be checked from the tree. Until it has, the code accepts `initiative_roll` and `start_of_turn` and the database rejects them. |
 | 9 | **#53** — a unit test for the line-ending check | Sabotage-verified but with no permanent test, because nothing owns `scripts/`. Needs a root vitest project or a move into a package; `expectedEnding` and `classifyEndings` are pure and exported ready for it. |
 | 10 | **#52** — 71 project-source files are LF against a CRLF tree | Re-counted 2026-09-20 with `pnpm check:hygiene --report-eol`: 371 files reported, 300 of them vendored under `.claude/skills`, `.github/skills`, `.github/agents` and `.github/hooks`, which are not ours to normalise. The 71 that are: docs 19, `packages/engine` 17, `packages/database` 14, `apps/server` 11, `apps/web` 6, `packages/shared` 3, `skills-lock.json` 1. The count has gone **down** from 73, not up — the 80 previously recorded here counted the vendored directories inconsistently. Normalising changes no committed content. Not gated, deliberately — see 6b. |
@@ -735,13 +748,20 @@ cutover either created or made visible.
 
 | # | Item | Scale | Notes |
 | --- | --- | --- | --- |
-| 30 | Traits marked `implementation.mode: "unimplemented"` | **408 of 584** | Re-measured 2026-09-20. The history: 456 of 700 at the cutover, then 119 silent stubs marked (#51) and 113 unreferenced ones deleted (#57) to give 462 reachable of 587, then 462 → 441 on `feat/barbarian-traits` and 441 → 408 on `feat/item-proficiency`. Every one is reachable — the guard added by #58 is what keeps that true. Per-class breakdown in the Recommended sequence. |
+| 30 | Traits marked `implementation.mode: "unimplemented"` | **398 of 584** | Re-measured 2026-09-20, after `feat/spellcasting-slots`. The history: 456 of 700 at the cutover, then 119 silent stubs marked (#51) and 113 unreferenced ones deleted (#57) to give 462 reachable of 587, then 462 → 441 on `feat/barbarian-traits`, 441 → 408 on `feat/item-proficiency`, and 408 → 398 on `feat/spellcasting-slots`, which authored ten stubs: the nine slot casters' `trait_spellcasting_*` (bard, cleric, druid, paladin, ranger, sorcerer, wizard, the Eldritch Knight's and the Arcane Trickster's) and the warlock's `trait_pact_magic`. Each was deleted from `traits/unimplemented.json` and upserted with real resources into its own class segment — a wash on the total trait count, ten fewer rule-free. `implementationMarkers.test.ts`'s `records how much of the trait section carries no rules` pins 398 of 584. Every one is reachable — the guard added by #58 is what keeps that true. Per-class breakdown in the Recommended sequence, re-run in full on 2026-09-20. |
 | 31 | Spells marked `unimplemented` | **111 of 111** | Every spell in the pack is a stub with a `no_effect` action; `level` and `school` are placeholders, which the marker's summary says outright. |
 
 This is the deliberate, accepted trade recorded in the design doc — a marked
 stub is honest, a half-faithful transform is not. The marker is what makes it a
 measurable burndown rather than the silent `effects: []` placeholders it
 replaced.
+
+**`SPELLCASTING_MOD` has a reader for the first time.** It has existed in
+`ModifierTargetSchema` since the schema did, reachable by nothing —
+`feat/spellcasting-slots`'s `SpellcastingEngine.calculate` in
+`packages/engine/src/calculators/spellcasting.ts` is the first code that
+reads it, folding any active `SPELLCASTING_MOD` bonus into a casting class's
+modifier before deriving its save DC and attack bonus.
 
 ### 4b. Content the port could not carry
 
@@ -1088,9 +1108,13 @@ to **7.0.2**, so the engine already compiles on a different major version than
 the rest of the workspace, and any `pnpm install` can move it again without a
 diff anyone reviews.
 
-Left as-is deliberately: it is committed state, and pinning it is a toolchain
-decision rather than a backlog cleanup. Recorded so the next unexplained
-engine-only type error has somewhere to start.
+**Closed 2026-09-20.** The decision the entry asked for was made in favour of
+alignment over freezing: `^6.0.3`, matching `@project/database` and
+`@project/server`. Pinning 7.0.2 would have stopped the drift while leaving
+one package on a different major indefinitely, which is the half of the problem
+that actually costs something — an engine-only type error with no obvious
+cause. Verified before committing: all five packages typecheck clean and the
+engine's 871 tests pass on 6.0.3, so nothing depended on the newer compiler.
 
 ---
 
@@ -1317,38 +1341,48 @@ never have been in the count of what is left. Tools have no items in the
 catalogue to resolve against and are out of scope here, same as they were for
 #59 — see 4c above for what that leaves `proficiencyDictionary.ts` holding.
 
-### 8d. #61 — the burndown counts stubs, not absences
+### 8d. #61 — withdrawn, and what the check found instead
 
-Found 2026-09-20 while re-counting #30 after this branch.
+**Opened and withdrawn on 2026-09-20, within the hour.** Recorded rather than
+deleted, because the way it was wrong is worth keeping.
 
-| # | Item | Scale | Notes |
-| --- | --- | --- | --- |
-| 61 | The dragonborn race grants no Draconic Ancestry, Breath Weapon or Damage Resistance | 3 traits | **Open.** They do not exist in the pack in any form, so no marker counts them and no guard catches them. |
+**The claim was:** `race_dragonborn` grants only an ability score increase and
+a language, so Draconic Ancestry, Breath Weapon and Damage Resistance are
+missing from the pack entirely; and the ten `trait_dragon_ancestor_*` traits
+in `races/dragonborn.json` belong to the sorcerer, not the race.
 
-`race_dragonborn` grants exactly `race_dragonborn_asi` and
-`race_dragonborn_languages`. Every other race in the pack grants its signature
-features: the halfling has Lucky and Brave, the tiefling has Hellish Resistance
-and Infernal Legacy, the half-orc has Relentless Endurance and Savage Attacks.
-The dragonborn has an ability score increase and a language, and that is the
-whole race.
+**Both halves are false.** The race declares `hasSubraces: true` and carries ten
+subraces, one per colour, each granting its own ancestry trait.
+`subrace_dragonborn_red` carries a `fire` resistance affinity, a
+`dragonborn_breath_charge` resource resetting on a short rest, and a complete
+`action_red_breath` — a 15-foot cone, DEX save against `8 + CON + proficiency`,
+half damage on a success, 2d6 scaling to 5d6 at levels 6, 11 and 16. It is more
+completely authored than most of the pack. The claim came from reading
+`grantedTraitIds` on the race and never walking `subraces`, where every racial
+grant past the ASI and languages actually lives.
 
-The ten `trait_dragon_ancestor_*` traits sitting in `races/dragonborn.json`
-look like the missing half and are not. Each is referenced exactly once, from
-the **sorcerer's** Draconic Bloodline choice list in `classes/sorcerer.json`;
-`race_dragonborn.grantedTraitIds` names none of them, and the file they live in
-is incidental. They count against the sorcerer's row in #30, not the race's.
+The ten `trait_dragon_ancestor_*` stubs are a different feature that shares a
+colour axis: the **sorcerer's** Draconic Bloodline ancestry, which grants
+Draconic literacy and doubled proficiency on Charisma checks with dragons. They
+are referenced by `classes/sorcerer.json` and by nothing else, they are counted
+against the sorcerer's row, and that attribution was right.
 
-**Why this matters beyond one race.** #30 counts traits that exist and carry no
-rules. It cannot count a rule that was never given a trait, and the reachability
-guard (#58) only runs the other way — it finds traits nothing references, not
-references to traits that were never written. A race, class or subclass can be
-missing a feature outright and every number in this file will stay green. The
-dragonborn is the case that proves it; nothing has measured whether there are
-others.
+**What the check found instead.** Looking for absences turned up none, and the
+structural signals that might have found them do not work here:
 
-The obvious check is cheap and does not exist: hold each race, class and
-subclass against its PHB feature list and report what is absent. That is a
-different guard from #58 and would want a source of truth #58 does not need.
+- Every one of the twelve classes has all 20 progression rows, and every
+  subclass's feature levels match the PHB (Berserker 3/6/10/14, cleric domains
+  1/2/6/8/17, wizard schools 2/6/10/14, and so on).
+- Twenty-two progression rows grant nothing and no ASI, which looks like a hole
+  and is not one: barbarian 6/10/14 are Path feature levels served by the
+  subclass, and cleric 3/7/9/13/15, druid 3/5/7/9/11/13/15/17, paladin 9/13/17
+  and sorcerer 11/13/15 are levels where the PHB grants only spellcasting
+  progression. Twenty-two false positives, no true ones.
+
+An expectation manifest listing each race, class and subclass's PHB features
+would find real absences, but it is the burndown written out a second time in
+order to measure the burndown. Not worth building. **#61 is closed as
+not-a-defect**; the real finding it led to is 8f.
 
 ### 8e. Proficiency stubs remaining, recounted
 
@@ -1370,3 +1404,171 @@ catalogue to resolve against, so they need a decision before they need work.
 The seven subclass entries are the domain and college bonus proficiencies,
 which grant a mix of armour, weapons and skills and are authorable now that the
 armour and weapon vocabulary resolves.
+
+### 8f. #62 — no class resource exists, and #30 cannot say so
+
+Found 2026-09-20, while checking #61.
+
+| # | Item | Scale | Notes |
+| --- | --- | --- | --- |
+| 62 | The pack defines 10 resources, none of them a class resource | **21 of ~40** | **Half-closed 2026-09-20.** `feat/spellcasting-slots` authored spell slots, a save DC and a spell attack bonus for every slot caster, and pact slots for the warlock. Ki points and sorcery points do not exist in any form, and the entry stays open for them. |
+
+The complete list of resources the shipped pack defines:
+
+```
+dragonborn_breath_charge      drow_magic_darkness
+drow_magic_faerie_fire        infernal_legacy_darkness
+infernal_legacy_hellish_rebuke  resource_barbarian_rage
+resource_relentless_endurance   resource_relentless_rage
+trait_action_surge              trait_second_wind
+```
+
+There was **no spell slot anywhere** — not a table, not a pool, not a single
+`spell_slots_*` id. The same was true of ki points, sorcery points and pact
+magic slots. Every one of the ten spellcasting traits was a stub
+(`trait_spellcasting_{bard,cleric,druid,paladin,ranger,sorcerer,wizard}`, the
+eldritch knight's and arcane trickster's, and `trait_potent_spellcasting`), as
+were `trait_ki`, `trait_pact_magic`, `trait_font_of_magic`,
+`trait_wild_shape`, `trait_sneak_attack`, `trait_divine_smite` and
+`trait_channel_divinity`.
+
+Seven of the twelve classes could not function at all as a result, and the
+class progressions already granted `spell_choice` nodes — a wizard picks six
+spells into a spellbook at level 1 and had nothing to cast them with.
+
+**Closed for slots, DC and attack — 2026-09-20.** `feat/spellcasting-slots`
+authored the nine class spellcasting stubs above
+(`trait_spellcasting_{bard,cleric,druid,paladin,ranger,sorcerer,wizard}` and
+the eldritch knight's and arcane trickster's) plus `trait_pact_magic` — ten of
+the seventeen. Each was deleted from `traits/unimplemented.json` and upserted
+with real resources into its own class segment: nine of the pack's eleven new
+resources are the `spell_slots_1`..`spell_slots_9` pools (`resetCondition:
+long_rest`, a `caster_level_thresholds` max rule keyed to `LevelContext`'s
+`casterLevel`), and the other two are the warlock's own `pact_slots` and
+`pact_slot_level` on a short-rest table. The pack's resource count moved from
+**10 to 21**. `SpellcastingEngine.calculate` reads the slot tables and derives
+the save DC and spell attack bonus from `SPELLCASTING_MOD`.
+
+`trait_potent_spellcasting`, `trait_ki`, `trait_font_of_magic`,
+`trait_wild_shape`, `trait_sneak_attack`, `trait_divine_smite` and
+`trait_channel_divinity` — the other seven — are untouched. Ki points and
+sorcery points still do not exist in any form, and #62 stays open for them.
+
+**Why this was a backlog finding and not just another stub.** #30 counted
+these as **17**, out of 408 (now 7, out of 398 — see #30 in 4a). That was
+arithmetically true and useless as an estimate: `trait_spellcasting_wizard`
+was a 20-by-9 slot table, a preparation rule, a save DC and an attack bonus,
+and it counted exactly the same as `trait_dragon_ancestor_red`, which is one
+resistance and a sentence of lore. **The unit #30 counts is the trait, and a
+trait is not a unit of work.**
+
+Two ways to make the number mean something, neither started:
+
+1. **Weight the marker.** `implementation` already carries `mode`, `summary`
+   and `blockedBy`; a size band beside them would make the burndown an estimate
+   rather than a tally, and it is authored once per stub by whoever marks it.
+2. **Track the blocked-on-a-system stubs separately.** The 17 above (now 7)
+   were never small jobs waiting their turn, they were one system nobody had
+   built. Counting them with the rest hid both numbers — which is exactly what
+   closing ten of them this way demonstrated: #30 moved by ten while the
+   actual work was two systems (slot casters, pact magic), not ten
+   independent stubs.
+
+Neither is urgent on its own for the seven still open. What is worth saying
+plainly is that **#30 at 398 is a count, not an estimate**, and the two should
+not be confused when sequencing work.
+
+---
+
+## P9 — Findings from a hand-driven check of the spellcasting-slots branch (opened 2026-09-20)
+
+`feat/spellcasting-slots` itself is finished and green (2027 tests, typecheck
+clean). Both findings below turned up while checking its work by hand against
+a running app and a real database. Neither is caused by this branch — both are
+pre-existing — and both are recorded here as follow-up rather than fixed on
+the branch.
+
+### 9a. #63 — resource pools are only created lazily, never on join
+
+| # | Item | Notes |
+| --- | --- | --- |
+| 63 | `character_resources` rows are materialised only inside `getAuthoritativeRuntimeContext`, which `ROOM_JOIN` never calls | Verified 2026-09-20 against a real server and database. |
+
+`collectGrantedResources`'s pools — spell slots, hit dice, Rage, Ki, anything a
+character's traits grant — reach `character_resources` only through
+`getAuthoritativeRuntimeContext` in
+[socket.ts:215](apps/server/src/gateway/socket.ts:215). That function runs on
+`ACTION_INTENT`, `TURN_STARTED`, `TURN_ENDED` and `SURPRISE_DECLARED` (the
+latter two through the shared `handleTurnIntent` helper) — confirmed by
+reading each handler — but **not** on `ROOM_JOIN`, whose handler emits only
+`INVENTORY_SYNC` and never calls it.
+
+A character whose pools have never been materialised opens their sheet to an
+empty Features widget and a rest modal whose Recovery Manifest reads "No
+resources will be recovered during this rest", even though the character
+demonstrably has pools. One turn or action event fixes it permanently — every
+subsequent load is correct once that first materialisation has happened.
+
+**Evidence**, verified by hand on 2026-09-20 against a real server and
+database, with character `00000000-0000-0000-0000-000000000117` (Thistle
+Quickfoot, wizard 14): on first load `character_resources` held 3 rows (hit
+dice, wand charges, Arcane Recovery) and no `spell_slots_*` rows at all; after
+clicking "Begin turn" once it held 12, with `spell_slots_1..9` at
+4/3/3/3/2/1/1/0/0 — the correct PHB wizard-14 row. `GET /api/character/:id`
+returns no `resources` key, so `character.resources || []` in
+[characterSheetRouteData.ts:99](apps/web/src/pages/characterSheetRouteData.ts:99)
+falls back to `[]`; the pools reach the client through the socket once they
+exist.
+
+Worth recording: this is why #62 (8f) could assume slots would need no web
+work to appear on the sheet. They do appear — but only after that first event,
+not on join.
+
+### 9b. #64 — the socket gateway's CORS origin has no fallback
+
+| # | Item | Notes |
+| --- | --- | --- |
+| 64 | `initializeWebSocketGateway`'s `cors.origin` reads `process.env.CLIENT_URL` with no default | Verified 2026-09-20 by adding `CLIENT_URL` to a local `.env`. |
+
+[socket.ts:494](apps/server/src/gateway/socket.ts:494) builds the Socket.IO
+server with `cors: { origin: process.env.CLIENT_URL, methods: ["GET", "POST"] }`
+— no fallback.
+[index.ts:20](apps/server/src/index.ts:20) does the same job for Express with
+`cors({ origin: process.env.CLIENT_URL || "http://localhost:5173" })` —
+**with** one. `.env` is gitignored and untracked, and the repo carries no
+server-side `.env.example` that sets `CLIENT_URL` (only `apps/web/.env.example`
+exists), so a fresh clone has nothing establishing the value.
+
+A developer who clones the repo and runs `pnpm dev` gets every `socket.io`
+request failing with `net::ERR_FAILED`, so the live session never connects,
+while the REST API works fine — a confusing split failure. Verified by hand on
+2026-09-20: adding `CLIENT_URL=http://localhost:5173` to `.env` fixed it
+immediately.
+
+The obvious fix for whoever picks this up: give the gateway the same fallback
+`index.ts` already has, or fail loudly at startup when `CLIENT_URL` is unset
+rather than silently refusing every socket connection.
+
+### 9c. #65 — six small items the branch's own reviews deferred as fix-later
+
+`feat/spellcasting-slots`'s own per-task code reviews raised these as Minor
+findings across the branch and deliberately left each one open for the final
+whole-branch review to triage as must-fix, fix-later or drop before merge.
+That triage's must-fix findings were fixed on the branch and its drops are
+gone; these six came back fix-later, from a scratch ledger that would
+otherwise not have survived. None blocks anything — they are recorded
+together as one item because each is small polish, not a defect.
+
+A seventh item from that same ledger — `slotTables.test.ts` sitting LF while
+its siblings in the directory were CRLF — is not included below: as of this
+check the file is CRLF like the rest of `packages/engine/src/calculators/__tests__/`,
+so that one is already resolved.
+
+| Item | Location | Finding |
+| --- | --- | --- |
+| a | [RestModal.tsx:101](apps/web/src/components/sheet/modals/RestModal.tsx:101) | The `recoveryPreview` `useMemo` depends on `levels` — built a few lines above from `classLevels`, `subclassIds` and `ruleSnapshot` — but lists those three inputs instead of `levels` itself, a missing-dependency lint warning newly introduced by the level-context refactor. The behaviour is correct, since `levels` is a pure function of the listed deps, but the suppression is implicit. Wrapping `levels`'s construction in its own `useMemo` over the same three deps would satisfy the rule honestly and stop rebuilding the context every render. |
+| b | [useFeatures.test.ts](apps/web/src/hooks/__tests__/useFeatures.test.ts) | The mock store's `subclassIds` field exists, but every case in the file leaves it `{}`, and the mock's `level` field is never read by `useFeatures.ts` at all. No web-layer test exercises a subclass changing a caster's level — the Eldritch-Knight-shaped case — so the `subclassIds` → caster-level path is threaded here but only covered by the engine's own tests. |
+| c | [patchPackSegment.ts:42](packages/database/scripts/patchPackSegment.ts:42) | The `Segment.classes` shape doesn't declare `multiclassTraitIds?: string[]`, so the pre-existing `removeMulticlassTraitIds` pass casts it inline at [:124](packages/database/scripts/patchPackSegment.ts:124) instead. Restoring `multiclassTraitIds?: string[]` to the intersection would remove the cast. |
+| d | [patchPackSegment.ts:132](packages/database/scripts/patchPackSegment.ts:132) | `setClassFields` / `setSubclassFields` apply with `Object.assign(entry, fields)` (also [:142](packages/database/scripts/patchPackSegment.ts:142)), which would silently overwrite `id` or `progression` if a patch ever named them. A key guard rejecting those two names would make a typo'd patch fail loudly instead of corrupting a segment. |
+| e | [slotTables.test.ts:77](packages/engine/src/calculators/__tests__/slotTables.test.ts:77) | The Eldritch Knight case asserts only `slots[0]`, so its 4-slot ceiling at level 20 is unchecked, and seven of the nine authored slot tables have no dedicated assertion in this file at all. The final branch reviewer verified out-of-band that all nine are byte-identical for every shared id, so the risk is low today; a structural test asserting that identity would be better than seven more hand-transcribed tables. |
+| f | [DashboardLayout.test.tsx](apps/web/src/components/sheet/__tests__/DashboardLayout.test.tsx) | Every other child widget in this suite is isolated with its own `vi.mock` returning a stub; `SpellcastingWidget` — rendered unmocked at [DashboardLayout.tsx:248](apps/web/src/components/sheet/DashboardLayout.tsx:248) — is the one exception, left real with the `useCharacterStats` mock extended with `useSpellcasting: () => []` instead. It works, but breaks the file's isolation convention, and the layout test ends up indirectly exercising the real widget's render logic. `FeaturesWidget`, added later in the same file, does follow the convention, so this is one inconsistent case rather than a pattern. |

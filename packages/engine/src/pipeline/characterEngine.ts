@@ -17,6 +17,14 @@ import { SKILL_MAP } from "@project/shared";
 import type { Ability } from "../types/core.js";
 import { SkillEngine, type DerivedSkill } from "../calculators/skills.js";
 import { SaveEngine, type DerivedSave } from "../calculators/saves.js";
+import {
+  SpellcastingEngine,
+  type DerivedSpellcasting,
+} from "../calculators/spellcasting.js";
+import {
+  classLevelsAndSubclassIds,
+  collectCastingSources,
+} from "../rules/casterLevel.js";
 import { CombatEngine } from "../calculators/combat.js";
 import type { EffectManager } from "../calculators/effects.js";
 import type { ResourceManager } from "../calculators/resources.js";
@@ -125,6 +133,12 @@ export interface LiveCharacterSheet {
   // skills and saves
   skills: Record<string, DerivedSkill>; // keyed by skillId
   saves: Record<string, DerivedSave>; // keyed by Ability (STR, DEX, …)
+  /**
+   * The save DC and attack bonus for each class that casts, empty for a
+   * character that casts nothing. One entry per class, because a wizard/cleric
+   * has two of each and one number would be wrong for half their spells.
+   */
+  spellcasting: DerivedSpellcasting[];
 
   // load
   encumbrance: EncumbranceResult;
@@ -391,15 +405,18 @@ export class CharacterEngine {
 
     // belongs to stage two for the same reason encumbrance does: it tests the
     // *final* scores, so a belt of giant strength decides whether the wearer
-    // still pays for their plate
+    // still pays for their plate. Shared with the spellcasting calc below,
+    // which needs the same final-score record for the same reason.
+    const abilityScores = Object.fromEntries(
+      Object.entries(abilities).map(([ability, derived]) => [
+        ability,
+        derived.score,
+      ]),
+    ) as Record<Ability, number>;
+
     const equipmentRequirements = ItemRequirementEngine.evaluate({
       items: inventory,
-      abilityScores: Object.fromEntries(
-        Object.entries(abilities).map(([ability, derived]) => [
-          ability,
-          derived.score,
-        ]),
-      ) as Record<Ability, number>,
+      abilityScores,
       snapshot: options.snapshot,
     });
 
@@ -429,20 +446,36 @@ export class CharacterEngine {
       })),
     );
 
+    // shared by both stat blocks below - a save's classes are the only
+    // source either one should read a class-id-to-level map from
+    const { classLevels, subclassIds } = classLevelsAndSubclassIds(
+      save.classes,
+    );
+
     // reads only modifiers and levels, so it has no stake in the two-stage
     // seam; it sits here because this is where the turn's shape is reasoned about
     const attacksPerAction = DerivedStatEngine.calculateAttacksPerAction(
       allModifiers,
       {
         total: totalLevel,
-        classes: save.classes.reduce(
-          (levelsByClass, classState) => {
-            levelsByClass[classState.classId] = classState.level;
-            return levelsByClass;
-          },
-          {} as Record<string, number>,
-        ),
+        classes: classLevels,
       },
+      activeStates,
+    );
+
+    // belongs to stage two like the weapon attacks above: a SPELLCASTING_MOD
+    // bonus can be gated on states, so this needs the final activeStates,
+    // not the baseStates that saves and skills were computed with
+    const castingSources = collectCastingSources(
+      classLevels,
+      subclassIds,
+      options.snapshot,
+    );
+    const spellcasting = SpellcastingEngine.calculate(
+      castingSources,
+      abilityScores,
+      profBonus,
+      allModifiers,
       activeStates,
     );
 
@@ -666,6 +699,7 @@ export class CharacterEngine {
       activeActors,
       summons,
       saves,
+      spellcasting,
       baseStates,
       activeStates,
     };
