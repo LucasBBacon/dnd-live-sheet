@@ -7,6 +7,7 @@ export interface DerivedSkill {
   name: string;
   totalModifier: number;
   multiplier: number;
+  isProficient: boolean;
   breakdown: string; // UI tooltips
 }
 
@@ -103,6 +104,7 @@ export class SkillEngine {
       name: def.name,
       totalModifier,
       multiplier: maxMultiplier,
+      isProficient: maxMultiplier > 0,
       breakdown: breakdown.join(" + "),
     };
   }

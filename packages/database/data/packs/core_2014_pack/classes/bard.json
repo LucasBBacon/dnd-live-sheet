@@ -464,5 +464,115 @@
                 "fullText": "College of Valor"
             }
         }
+    ],
+    "traits": [
+        {
+            "id": "trait_bard_prof_weapons",
+            "name": "Weapon Proficiency (Bard)",
+            "lore": {
+                "shortDescription": "You are proficient with simple weapons, hand crossbows, longswords, rapiers, and shortswords.",
+                "fullText": "You are proficient with simple weapons, hand crossbows, longswords, rapiers, and shortswords."
+            },
+            "modifiers": {
+                "fixed": [],
+                "choices": []
+            },
+            "proficiencies": {
+                "fixed": [
+                    {
+                        "category": "weapons",
+                        "proficiencyId": "category_weapon_simple",
+                        "level": "proficient",
+                        "requiredStates": []
+                    },
+                    {
+                        "category": "weapons",
+                        "proficiencyId": "item_weapon_crossbow_hand",
+                        "level": "proficient",
+                        "requiredStates": []
+                    },
+                    {
+                        "category": "weapons",
+                        "proficiencyId": "item_weapon_longsword",
+                        "level": "proficient",
+                        "requiredStates": []
+                    },
+                    {
+                        "category": "weapons",
+                        "proficiencyId": "item_weapon_rapier",
+                        "level": "proficient",
+                        "requiredStates": []
+                    },
+                    {
+                        "category": "weapons",
+                        "proficiencyId": "item_weapon_shortsword",
+                        "level": "proficient",
+                        "requiredStates": []
+                    }
+                ],
+                "choices": []
+            },
+            "resources": [],
+            "triggers": [],
+            "diceRules": [],
+            "criticalHitModifiers": [],
+            "actions": []
+        },
+        {
+            "id": "trait_bard_prof_armor",
+            "name": "Armor Proficiency (Bard)",
+            "lore": {
+                "shortDescription": "You are proficient with light armor.",
+                "fullText": "You are proficient with light armor."
+            },
+            "modifiers": {
+                "fixed": [],
+                "choices": []
+            },
+            "proficiencies": {
+                "fixed": [
+                    {
+                        "category": "armor",
+                        "proficiencyId": "category_armor_light",
+                        "level": "proficient",
+                        "requiredStates": []
+                    }
+                ],
+                "choices": []
+            },
+            "resources": [],
+            "triggers": [],
+            "diceRules": [],
+            "criticalHitModifiers": [],
+            "actions": []
+        },
+        {
+            "id": "trait_bard_prof_mult_armor",
+            "name": "Multiclass Armor Proficiency (Bard)",
+            "lore": {
+                "shortDescription": "Multiclassing into bard grants proficiency with light armor.",
+                "fullText": "Multiclassing into bard grants proficiency with light armor."
+            },
+            "modifiers": {
+                "fixed": [],
+                "choices": []
+            },
+            "proficiencies": {
+                "fixed": [
+                    {
+                        "category": "armor",
+                        "proficiencyId": "category_armor_light",
+                        "level": "proficient",
+                        "requiredStates": []
+                    }
+                ],
+                "choices": []
+            },
+            "resources": [],
+            "triggers": [],
+            "diceRules": [],
+            "criticalHitModifiers": [],
+            "actions": []
+        }
     ]
 }

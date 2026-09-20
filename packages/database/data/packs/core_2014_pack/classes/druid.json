@@ -331,5 +331,169 @@
                 "fullText": "Circle of the Moon"
             }
         }
+    ],
+    "traits": [
+        {
+            "id": "trait_druid_prof_weapons",
+            "name": "Weapon Proficiency (Druid)",
+            "lore": {
+                "shortDescription": "You are proficient with clubs, daggers, darts, javelins, maces, quarterstaffs, scimitars, sickles, slings, and spears.",
+                "fullText": "You are proficient with clubs, daggers, darts, javelins, maces, quarterstaffs, scimitars, sickles, slings, and spears."
+            },
+            "modifiers": {
+                "fixed": [],
+                "choices": []
+            },
+            "proficiencies": {
+                "fixed": [
+                    {
+                        "category": "weapons",
+                        "proficiencyId": "item_weapon_club",
+                        "level": "proficient",
+                        "requiredStates": []
+                    },
+                    {
+                        "category": "weapons",
+                        "proficiencyId": "item_weapon_dagger",
+                        "level": "proficient",
+                        "requiredStates": []
+                    },
+                    {
+                        "category": "weapons",
+                        "proficiencyId": "item_weapon_dart",
+                        "level": "proficient",
+                        "requiredStates": []
+                    },
+                    {
+                        "category": "weapons",
+                        "proficiencyId": "item_weapon_javelin",
+                        "level": "proficient",
+                        "requiredStates": []
+                    },
+                    {
+                        "category": "weapons",
+                        "proficiencyId": "item_weapon_mace",
+                        "level": "proficient",
+                        "requiredStates": []
+                    },
+                    {
+                        "category": "weapons",
+                        "proficiencyId": "item_weapon_quarterstaff",
+                        "level": "proficient",
+                        "requiredStates": []
+                    },
+                    {
+                        "category": "weapons",
+                        "proficiencyId": "item_weapon_scimitar",
+                        "level": "proficient",
+                        "requiredStates": []
+                    },
+                    {
+                        "category": "weapons",
+                        "proficiencyId": "item_weapon_sickle",
+                        "level": "proficient",
+                        "requiredStates": []
+                    },
+                    {
+                        "category": "weapons",
+                        "proficiencyId": "item_weapon_sling",
+                        "level": "proficient",
+                        "requiredStates": []
+                    },
+                    {
+                        "category": "weapons",
+                        "proficiencyId": "item_weapon_spear",
+                        "level": "proficient",
+                        "requiredStates": []
+                    }
+                ],
+                "choices": []
+            },
+            "resources": [],
+            "triggers": [],
+            "diceRules": [],
+            "criticalHitModifiers": [],
+            "actions": []
+        },
+        {
+            "id": "trait_druid_prof_armor",
+            "name": "Armor Proficiency (Druid)",
+            "lore": {
+                "shortDescription": "You are proficient with light armor, medium armor, and shields. Druids will not wear armor or use shields made of metal; that restriction is a table ruling and is not enforced here.",
+                "fullText": "You are proficient with light armor, medium armor, and shields. Druids will not wear armor or use shields made of metal; that restriction is a table ruling and is not enforced here."
+            },
+            "modifiers": {
+                "fixed": [],
+                "choices": []
+            },
+            "proficiencies": {
+                "fixed": [
+                    {
+                        "category": "armor",
+                        "proficiencyId": "category_armor_light",
+                        "level": "proficient",
+                        "requiredStates": []
+                    },
+                    {
+                        "category": "armor",
+                        "proficiencyId": "category_armor_medium",
+                        "level": "proficient",
+                        "requiredStates": []
+                    },
+                    {
+                        "category": "armor",
+                        "proficiencyId": "category_armor_shield",
+                        "level": "proficient",
+                        "requiredStates": []
+                    }
+                ],
+                "choices": []
+            },
+            "resources": [],
+            "triggers": [],
+            "diceRules": [],
+            "criticalHitModifiers": [],
+            "actions": []
+        },
+        {
+            "id": "trait_druid_mult_prof_armor",
+            "name": "Multiclass Armor Proficiency (Druid)",
+            "lore": {
+                "shortDescription": "Multiclassing into druid grants proficiency with light armor, medium armor, and shields. The non-metal restriction is not enforced here.",
+                "fullText": "Multiclassing into druid grants proficiency with light armor, medium armor, and shields. The non-metal restriction is not enforced here."
+            },
+            "modifiers": {
+                "fixed": [],
+                "choices": []
+            },
+            "proficiencies": {
+                "fixed": [
+                    {
+                        "category": "armor",
+                        "proficiencyId": "category_armor_light",
+                        "level": "proficient",
+                        "requiredStates": []
+                    },
+                    {
+                        "category": "armor",
+                        "proficiencyId": "category_armor_medium",
+                        "level": "proficient",
+                        "requiredStates": []
+                    },
+                    {
+                        "category": "armor",
+                        "proficiencyId": "category_armor_shield",
+                        "level": "proficient",
+                        "requiredStates": []
+                    }
+                ],
+                "choices": []
+            },
+            "resources": [],
+            "triggers": [],
+            "diceRules": [],
+            "criticalHitModifiers": [],
+            "actions": []
+        }
     ]
 }

@@ -6,8 +6,9 @@ import type { WeaponView } from "../../rules/equipmentProjection.js";
 const makeWeapon = (
   overrides: Partial<WeaponView> = {},
 ): WeaponView => ({
-  id: "weapon_greataxe",
+  id: "item_weapon_greataxe",
   name: "Greataxe",
+  categoryTags: ["category_weapon_martial", "category_weapon_martial_melee"],
   category: "martial_melee",
   damageDice: "1d12",
   damageType: "slashing",
@@ -237,6 +238,7 @@ describe("flat damage survives the critical-hit maths", () => {
   const blowgun = makeWeapon({
     id: "item_weapon_blowgun",
     name: "Blowgun",
+    categoryTags: ["category_weapon_simple", "category_weapon_simple_ranged"],
     category: "simple_ranged",
     damageDice: "1",
     damageType: "piercing",

@@ -13,6 +13,7 @@ import {
   collectGrantedResources,
   getResourceMaxUses,
   materialiseMissingPools,
+  ProficiencyExtractor,
   RELENTLESS_RAGE_ACTION_ID,
   resolveResourceRule,
   slotsConsumedBy,
@@ -20,7 +21,6 @@ import {
   type ActionRollResult,
   type ItemActionGrant,
   type OperationalResource,
-  type ProficiencyLevel,
   type RuntimeResource,
   type SuspendedCondition,
 } from "@project/engine";
@@ -41,6 +41,7 @@ import {
   type CoreRulePackSnapshot,
   type DamageType,
   type EngineEvent,
+  type FixedProficiencyGrant,
   type HpModifiedPayload,
   type InventoryInstance,
   type RollResultsBroadcastPayload,
@@ -694,9 +695,6 @@ export interface CharacterSheetState {
   // base attributes (no items or buffs)
   baseScores: Record<Ability, number>;
 
-  // skill and save proficiencies (mapped by id)
-  proficiencies: Record<string, ProficiencyLevel>;
-
   traits: TraitDefinition[];
   traitGrants: Array<{
     id: string;
@@ -780,6 +778,15 @@ export interface CharacterSheetState {
    */
   getActiveTraits: () => TraitDefinition[];
   /**
+   * Every proficiency the character's traits grant, choice blocks resolved.
+   *
+   * The same call characterEngine.ts makes. The store used to keep a flat
+   * `proficiencies` record instead, hydrated from an API field that does not
+   * exist - the characters table has no such column - so it was `{}` for every
+   * character and no skill, save or attack ever gained a proficiency bonus.
+   */
+  getProficiencyGrants: () => FixedProficiencyGrant[];
+  /**
    * Toggled conditions a trait is holding off, and what holds them.
    * composeActiveStates already leaves these out of activeStates; this is the
    * half it computes and discards, for the widgets that have to say so.
@@ -831,7 +838,6 @@ export const useCharacterSheetStore = create<CharacterSheetState>(
     baseHpRolled: 1,
 
     baseScores: { STR: 10, DEX: 10, CON: 10, INT: 10, WIS: 10, CHA: 10 },
-    proficiencies: {},
     traits: [],
     traitGrants: [],
     inventory: [],
@@ -1323,6 +1329,19 @@ export const useCharacterSheetStore = create<CharacterSheetState>(
       return CharacterBootstrapper.compileActiveTraits(
         toCharacterSave(state),
         state.ruleSnapshot ?? undefined,
+      );
+    },
+
+    getProficiencyGrants: () => {
+      const state = get();
+      const save = toCharacterSave(state);
+
+      return ProficiencyExtractor.extractProficiencies(
+        CharacterBootstrapper.compileActiveTraits(
+          save,
+          state.ruleSnapshot ?? undefined,
+        ),
+        CharacterBootstrapper.resolveSelections(save),
       );
     },
 

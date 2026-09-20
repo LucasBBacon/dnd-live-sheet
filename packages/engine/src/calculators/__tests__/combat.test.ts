@@ -4,12 +4,16 @@ import type { Ability } from "../../types/core.js";
 import type { FixedProficiencyGrant, RuntimeModifier } from "@project/shared";
 import type { WeaponAttackContext } from "../../types/combat.js";
 import type { WeaponView } from "../../rules/equipmentProjection.js";
+import { corePackEquipment, corePackSnapshot } from "../../pipeline/__tests__/corePackFixture.js";
+import { ProficiencyExtractor } from "../../pipeline/proficiencyExtractor.js";
+import { isProficientWithWeapon } from "../../rules/itemProficiency.js";
 
 const makeWeapon = (
   overrides: Partial<WeaponView> = {},
 ): WeaponView => ({
-  id: "weapon_shortsword",
+  id: "item_weapon_shortsword",
   name: "Shortsword",
+  categoryTags: ["category_weapon_martial", "category_weapon_martial_melee"],
   category: "martial_melee",
   damageDice: "1d6",
   damageType: "piercing",
@@ -34,7 +38,7 @@ const makeProf = (
   overrides: Partial<FixedProficiencyGrant>,
 ): FixedProficiencyGrant => ({
   category: "weapons",
-  proficiencyId: "martial_melee",
+  proficiencyId: "category_weapon_martial",
   level: "proficient",
   requiredStates: [],
   ...overrides,
@@ -232,12 +236,12 @@ describe("CombatEngine.calculateWeaponAttack - governing stat", () => {
 });
 
 describe("CombatEngine.calculateWeaponAttack - proficiency", () => {
-  it("grants proficiency bonus when the weapon category matches", () => {
+  it("grants proficiency bonus when a category tag matches", () => {
     const result = CombatEngine.calculateWeaponAttack(
-      makeWeapon({ category: "martial_melee" }),
+      makeWeapon(),
       makeScores(),
       3,
-      [makeProf({ proficiencyId: "martial_melee" })],
+      [makeProf({ proficiencyId: "category_weapon_martial" })],
       [],
     );
 
@@ -248,10 +252,10 @@ describe("CombatEngine.calculateWeaponAttack - proficiency", () => {
 
   it("grants proficiency bonus when the specific weapon id matches", () => {
     const result = CombatEngine.calculateWeaponAttack(
-      makeWeapon({ id: "weapon_net", category: "martial_melee" }),
+      makeWeapon({ id: "item_weapon_net" }),
       makeScores(),
       3,
-      [makeProf({ proficiencyId: "weapon_net" })],
+      [makeProf({ proficiencyId: "item_weapon_net" })],
       [],
     );
 
@@ -261,10 +265,10 @@ describe("CombatEngine.calculateWeaponAttack - proficiency", () => {
 
   it("does not grant proficiency from a non-weapons category, even with a matching id string", () => {
     const result = CombatEngine.calculateWeaponAttack(
-      makeWeapon({ category: "martial_melee" }),
+      makeWeapon(),
       makeScores(),
       3,
-      [makeProf({ category: "armor", proficiencyId: "martial_melee" })],
+      [makeProf({ category: "armor", proficiencyId: "category_weapon_martial" })],
       [],
     );
 
@@ -275,10 +279,23 @@ describe("CombatEngine.calculateWeaponAttack - proficiency", () => {
 
   it("does not grant proficiency when no proficiency entries match", () => {
     const result = CombatEngine.calculateWeaponAttack(
-      makeWeapon({ id: "weapon_longsword", category: "martial_melee" }),
+      makeWeapon({ id: "item_weapon_longsword" }),
       makeScores(),
       3,
-      [makeProf({ proficiencyId: "simple_melee" })],
+      [makeProf({ proficiencyId: "category_weapon_simple" })],
+      [],
+    );
+
+    expect(result.isProficient).toBe(false);
+    expect(result.attackBonus).toBe(0);
+  });
+
+  it("does not accept the weapon's mechanical category as a proficiency id", () => {
+    const result = CombatEngine.calculateWeaponAttack(
+      makeWeapon({ category: "martial_melee" }),
+      makeScores(),
+      3,
+      [makeProf({ proficiencyId: "martial_melee" })],
       [],
     );
 
@@ -1169,5 +1186,85 @@ describe("CombatEngine.calculateWeaponAttack - scaled critical dice", () => {
     const flatPair = { type: "add_base_die", dieCount: 2 };
 
     expect(critAt(1, [flatPair])).toBe("4d6 piercing");
+  });
+});
+
+/**
+ * The end of the bug this branch exists for. Every id here comes from the
+ * shipped pack, so a regression in either the vocabulary or the predicate
+ * fails this rather than passing against invented data the way the unit tests
+ * above used to.
+ */
+describe("a class's authored proficiencies reach the attack roll", () => {
+  const { weaponsById } = corePackEquipment();
+  const traits = corePackSnapshot().traitsById;
+
+  const attackWith = (traitIds: string[], weaponId: string) =>
+    CombatEngine.calculateWeaponAttack(
+      weaponsById[weaponId]!,
+      makeScores(),
+      2,
+      ProficiencyExtractor.extractProficiencies(
+        traitIds.map((id) => traits[id]!),
+        {},
+      ),
+      [],
+    );
+
+  it("a barbarian is proficient with a greataxe", () => {
+    const result = attackWith(
+      ["trait_barbarian_prof_weapons"],
+      "item_weapon_greataxe",
+    );
+
+    expect(result.isProficient).toBe(true);
+    expect(result.breakdown.attack).toContain("Proficiency (+2)");
+  });
+
+  it("a wizard is not proficient with a greataxe", () => {
+    const result = attackWith(
+      ["trait_wizard_prof_weapons"],
+      "item_weapon_greataxe",
+    );
+
+    expect(result.isProficient).toBe(false);
+  });
+
+  it("a wizard is proficient with a quarterstaff, which its trait names outright", () => {
+    const result = attackWith(
+      ["trait_wizard_prof_weapons"],
+      "item_weapon_quarterstaff",
+    );
+
+    expect(result.isProficient).toBe(true);
+  });
+
+  it("a rogue is proficient with a rapier but not a greatsword", () => {
+    expect(
+      attackWith(["trait_rogue_prof_weapons"], "item_weapon_rapier").isProficient,
+    ).toBe(true);
+    expect(
+      attackWith(["trait_rogue_prof_weapons"], "item_weapon_greatsword")
+        .isProficient,
+    ).toBe(false);
+  });
+
+  it("every class in the pack is proficient with something it can hold", () => {
+    const weapons = Object.values(weaponsById);
+
+    const barren = Object.values(corePackSnapshot().classesById)
+      .filter((cls) => {
+        const grants = ProficiencyExtractor.extractProficiencies(
+          (cls.startingProficiencyTraitIds ?? []).map((id) => traits[id]!),
+          {},
+        );
+
+        return !weapons.some((weapon) =>
+          isProficientWithWeapon(grants, weapon),
+        );
+      })
+      .map((cls) => cls.id);
+
+    expect(barren).toEqual([]);
   });
 });

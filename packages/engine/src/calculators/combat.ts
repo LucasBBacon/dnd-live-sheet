@@ -10,6 +10,7 @@ import type { Ability } from "../types/core.js";
 import type { WeaponAttackContext } from "../types/combat.js";
 import type { WeaponView } from "../rules/equipmentProjection.js";
 import { DiceEngine } from "../utils/diceParser.js";
+import { isProficientWithWeapon } from "../rules/itemProficiency.js";
 
 /**
  * Whether the d20 for this attack is rolled twice, and which half counts.
@@ -547,11 +548,7 @@ export class CombatEngine {
     );
 
     // 2 - check proficiencies
-    const isProficient = proficiencies.some(
-      (p) =>
-        p.category === "weapons" &&
-        (p.proficiencyId === weapon.category || p.proficiencyId === weapon.id),
-    );
+    const isProficient = isProficientWithWeapon(proficiencies, weapon);
 
     // this attack's own classification, resolved before the modifier filter so
     // the states it implies can gate that filter

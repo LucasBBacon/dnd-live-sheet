@@ -16,7 +16,7 @@
                 "fixed": [
                     {
                         "category": "armor",
-                        "proficiencyId": "shield",
+                        "proficiencyId": "category_armor_shield",
                         "level": "proficient",
                         "requiredStates": []
                     }
@@ -44,7 +44,7 @@
                 "fixed": [
                     {
                         "category": "weapons",
-                        "proficiencyId": "simple_weapons",
+                        "proficiencyId": "category_weapon_simple",
                         "level": "proficient",
                         "requiredStates": []
                     }
@@ -72,19 +72,19 @@
                 "fixed": [
                     {
                         "category": "armor",
-                        "proficiencyId": "light_armor",
+                        "proficiencyId": "category_armor_light",
                         "level": "proficient",
                         "requiredStates": []
                     },
                     {
                         "category": "armor",
-                        "proficiencyId": "medium_armor",
+                        "proficiencyId": "category_armor_medium",
                         "level": "proficient",
                         "requiredStates": []
                     },
                     {
                         "category": "armor",
-                        "proficiencyId": "shield",
+                        "proficiencyId": "category_armor_shield",
                         "level": "proficient",
                         "requiredStates": []
                     }
@@ -112,13 +112,13 @@
                 "fixed": [
                     {
                         "category": "weapons",
-                        "proficiencyId": "simple_weapons",
+                        "proficiencyId": "category_weapon_simple",
                         "level": "proficient",
                         "requiredStates": []
                     },
                     {
                         "category": "weapons",
-                        "proficiencyId": "martial_weapons",
+                        "proficiencyId": "category_weapon_martial",
                         "level": "proficient",
                         "requiredStates": []
                     }
@@ -182,6 +182,7 @@
                     {
                         "id": "barbarian_starting_skills",
                         "category": "skills",
+                        "chooseAmount": 2,
                         "options": [
                             "animal_handling",
                             "athletics",

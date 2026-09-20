@@ -18,6 +18,7 @@ describe("WeaponSynthesizer", () => {
     const longbow: WeaponView = {
       id: "item_weapon_longbow",
       name: "Longbow",
+      categoryTags: ["category_weapon_martial", "category_weapon_martial_ranged"],
       category: "martial_ranged",
       damageDice: "1d8",
       damageType: "piercing",
@@ -39,6 +40,7 @@ describe("WeaponSynthesizer", () => {
     const dagger: WeaponView = {
       id: "item_weapon_dagger",
       name: "Dagger",
+      categoryTags: ["category_weapon_simple", "category_weapon_simple_melee"],
       category: "simple_melee",
       damageDice: "1d4",
       damageType: "piercing",
@@ -68,6 +70,7 @@ describe("WeaponSynthesizer", () => {
     const shortsword: WeaponView = {
       id: "item_weapon_shortsword",
       name: "Shortsword",
+      categoryTags: ["category_weapon_martial", "category_weapon_martial_melee"],
       category: "martial_melee",
       damageDice: "1d6",
       damageType: "piercing",
@@ -103,6 +106,7 @@ describe("WeaponSynthesizer activation", () => {
   const longsword: WeaponView = {
     id: "item_weapon_longsword",
     name: "Longsword",
+    categoryTags: ["category_weapon_martial", "category_weapon_martial_melee"],
     category: "martial_melee",
     damageDice: "1d8",
     damageType: "slashing",
@@ -114,6 +118,7 @@ describe("WeaponSynthesizer activation", () => {
   const handaxe: WeaponView = {
     id: "item_weapon_handaxe",
     name: "Handaxe",
+    categoryTags: ["category_weapon_simple", "category_weapon_simple_melee"],
     category: "simple_melee",
     damageDice: "1d6",
     damageType: "slashing",
@@ -133,6 +138,7 @@ describe("WeaponSynthesizer activation", () => {
     const longbow: WeaponView = {
       id: "item_weapon_longbow",
       name: "Longbow",
+      categoryTags: ["category_weapon_martial", "category_weapon_martial_ranged"],
       category: "martial_ranged",
       damageDice: "1d8",
       damageType: "piercing",
@@ -176,6 +182,7 @@ describe("WeaponSynthesizer carries unenforced weapon rules to the player", () =
     const net: WeaponView = {
       id: "item_weapon_net",
       name: "Net",
+      categoryTags: ["category_weapon_martial", "category_weapon_martial_ranged"],
       category: "martial_ranged",
       damageDice: "1d4",
       damageType: "bludgeoning",
@@ -198,6 +205,7 @@ describe("WeaponSynthesizer carries unenforced weapon rules to the player", () =
     const club: WeaponView = {
       id: "item_weapon_club",
       name: "Club",
+      categoryTags: ["category_weapon_simple", "category_weapon_simple_melee"],
       category: "simple_melee",
       damageDice: "1d4",
       damageType: "bludgeoning",
@@ -232,6 +240,7 @@ describe("WeaponSynthesizer handles weapons that deal no damage", () => {
     const net: WeaponView = {
       id: "item_weapon_net",
       name: "Net",
+      categoryTags: ["category_weapon_martial", "category_weapon_martial_ranged"],
       category: "martial_ranged",
       properties: ["special", "thrown"],
       range: 5,
@@ -253,6 +262,7 @@ describe("WeaponSynthesizer handles weapons that deal no damage", () => {
     const blowgun: WeaponView = {
       id: "item_weapon_blowgun",
       name: "Blowgun",
+      categoryTags: ["category_weapon_simple", "category_weapon_simple_ranged"],
       category: "simple_ranged",
       damageDice: "1",
       damageType: "piercing",

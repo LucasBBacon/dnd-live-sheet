@@ -4,7 +4,15 @@ import {
   EffectManager,
   ResourceManager,
 } from "@project/engine";
+import type { FixedProficiencyGrant } from "@project/shared";
 import { packRuleSnapshot } from "../../store/__tests__/packFixture";
+
+const weaponGrant = (proficiencyId: string): FixedProficiencyGrant => ({
+  category: "weapons",
+  proficiencyId,
+  level: "proficient",
+  requiredStates: [],
+});
 
 let mockStoreState: {
   inventory: Array<{
@@ -14,7 +22,7 @@ let mockStoreState: {
     slot: string;
     isAttuned: boolean;
   }>;
-  proficiencies: Record<string, string>;
+  getProficiencyGrants: () => FixedProficiencyGrant[];
   traitGrants: Array<{
     id: string;
     traitId: string;
@@ -67,7 +75,7 @@ describe("useCombat", () => {
   beforeEach(() => {
     mockStoreState = {
       inventory: [],
-      proficiencies: {},
+      getProficiencyGrants: () => [],
       traitGrants: [],
       activeStates: [],
       classLevels: {},
@@ -89,9 +97,9 @@ describe("useCombat", () => {
         isAttuned: false,
       },
     ];
-    mockStoreState.proficiencies = {
-      martial_melee: "proficient",
-    };
+    mockStoreState.getProficiencyGrants = () => [
+      weaponGrant("category_weapon_martial"),
+    ];
 
     const { attacks } = useCombat();
 
@@ -117,9 +125,9 @@ describe("useCombat", () => {
         isAttuned: false,
       },
     ];
-    mockStoreState.proficiencies = {
-      martial_melee: "proficient",
-    };
+    mockStoreState.getProficiencyGrants = () => [
+      weaponGrant("category_weapon_martial"),
+    ];
     mockStoreState.traitGrants = [
       {
         id: "grant_savage_attacks",
@@ -149,9 +157,9 @@ describe("useCombat", () => {
         isAttuned: false,
       },
     ];
-    mockStoreState.proficiencies = {
-      martial_melee: "proficient",
-    };
+    mockStoreState.getProficiencyGrants = () => [
+      weaponGrant("category_weapon_martial"),
+    ];
     mockStoreState.activeStates = ["shillelagh"];
 
     const { attacks } = useCombat();
@@ -176,6 +184,26 @@ describe("useCombat", () => {
 
     expect(attacks).toEqual([]);
   });
+
+  it("adds the proficiency bonus to a weapon a grant covers", () => {
+    mockStoreState.inventory = [
+      {
+        id: "inv_axe",
+        itemId: "item_weapon_greataxe",
+        quantity: 1,
+        slot: "main_hand",
+        isAttuned: false,
+      },
+    ];
+    mockStoreState.getProficiencyGrants = () => [
+      weaponGrant("category_weapon_martial"),
+    ];
+
+    const { attacks } = useCombat();
+
+    expect(attacks[0].isProficient).toBe(true);
+    expect(attacks[0].breakdown.attack).toContain("Proficiency (+2)");
+  });
 });
 
 describe("useCombat class-level scaling", () => {
@@ -189,7 +217,9 @@ describe("useCombat class-level scaling", () => {
         isAttuned: false,
       },
     ];
-    mockStoreState.proficiencies = { martial_melee: "proficient" };
+    mockStoreState.getProficiencyGrants = () => [
+      weaponGrant("category_weapon_martial"),
+    ];
     mockStoreState.activeStates = ["status_raging"];
     mockTotalMods = [
       {
@@ -249,10 +279,9 @@ describe("useCombat and dynamic weapon attacks", () => {
     mockStoreState.inventory = [
       { id: "inv_1", itemId, quantity: 1, slot: "main_hand", isAttuned: false },
     ];
-    mockStoreState.proficiencies = {
-      martial_melee: "proficient",
-      martial_ranged: "proficient",
-    };
+    mockStoreState.getProficiencyGrants = () => [
+      weaponGrant("category_weapon_martial"),
+    ];
   };
 
   beforeEach(() => {
@@ -332,7 +361,9 @@ describe("useCombat and dynamic weapon attacks", () => {
         isAttuned: false,
       },
     ];
-    mockStoreState.proficiencies = { martial_melee: "proficient" };
+    mockStoreState.getProficiencyGrants = () => [
+      weaponGrant("category_weapon_martial"),
+    ];
     mockStoreState.activeStates = ["status_raging", "status_frenzied"];
 
     const frenzied = new EffectManager();
@@ -393,7 +424,9 @@ describe("useCombat and dynamic weapon attacks", () => {
         isAttuned: false,
       },
     ];
-    mockStoreState.proficiencies = { simple_melee: "proficient" };
+    mockStoreState.getProficiencyGrants = () => [
+      weaponGrant("category_weapon_simple"),
+    ];
     mockStoreState.activeStates = ["status_frenzied"];
 
     const { attacks } = useCombat();

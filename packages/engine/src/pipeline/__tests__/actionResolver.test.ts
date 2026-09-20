@@ -68,6 +68,7 @@ const bowShot: ActionGrant = {
 const legacyBow: WeaponView = {
   id: "item_weapon_old_bow",
   name: "Old Bow",
+  categoryTags: ["category_weapon_martial", "category_weapon_martial_ranged"],
   category: "martial_ranged",
   damageDice: "1d8",
   damageType: "piercing",
@@ -1846,6 +1847,7 @@ describe("a weapon that deals no damage still resolves", () => {
     const net: WeaponView = {
       id: "item_weapon_net",
       name: "Net",
+      categoryTags: ["category_weapon_martial", "category_weapon_martial_ranged"],
       category: "martial_ranged",
       properties: ["special", "thrown"],
       range: 5,

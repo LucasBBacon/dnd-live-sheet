@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import type { FixedProficiencyGrant } from "@project/shared";
 
 vi.mock("react", async () => {
   const actual = await vi.importActual<typeof import("react")>("react");
@@ -23,7 +24,7 @@ let mockStoreState: {
   ruleSnapshot: null;
   level: number;
   classLevels: Record<string, number>;
-  proficiencies: Record<string, string>;
+  getProficiencyGrants: () => FixedProficiencyGrant[];
   baseHpRolled: number;
 };
 
@@ -65,7 +66,19 @@ vi.mock("@project/engine", async () => {
       extractModifiers: () => [],
     },
     SkillEngine: {
-      calculateSkill: () => ({ id: "skill_test", totalModifier: 0 }),
+      calculateSkill: (
+        skillId: string,
+        _score: number,
+        _profBonus: number,
+        proficiencies: Array<{ category: string; proficiencyId: string }>,
+      ) => ({
+        id: skillId,
+        totalModifier: 0,
+        isProficient: proficiencies.some(
+          (grant) =>
+            grant.category === "skills" && grant.proficiencyId === skillId,
+        ),
+      }),
     },
   };
 });
@@ -83,7 +96,7 @@ describe("useAbilities", () => {
       ruleSnapshot: null,
       level: 1,
       classLevels: {},
-      proficiencies: {},
+      getProficiencyGrants: () => [],
       baseHpRolled: 10,
     };
   });
@@ -116,7 +129,7 @@ describe("useDerivedStats saving throws", () => {
       ruleSnapshot: null,
       level: 2,
       classLevels: { class_barbarian: 2 },
-      proficiencies: {},
+      getProficiencyGrants: () => [],
       baseHpRolled: 1,
     };
   });
@@ -142,7 +155,20 @@ describe("useDerivedStats saving throws", () => {
   });
 
   it("adds the proficiency bonus for a save the character is proficient in", () => {
-    mockStoreState.proficiencies = { STR: "proficient", CON: "proficient" };
+    mockStoreState.getProficiencyGrants = () => [
+      {
+        category: "saving_throws",
+        proficiencyId: "STR",
+        level: "proficient",
+        requiredStates: [],
+      },
+      {
+        category: "saving_throws",
+        proficiencyId: "CON",
+        level: "proficient",
+        requiredStates: [],
+      },
+    ];
 
     const { saves } = useDerivedStats();
 
@@ -152,11 +178,54 @@ describe("useDerivedStats saving throws", () => {
   });
 
   it("does not mistake a skill proficiency for a saving throw proficiency", () => {
-    mockStoreState.proficiencies = { athletics: "proficient" };
+    mockStoreState.getProficiencyGrants = () => [
+      {
+        category: "skills",
+        proficiencyId: "athletics",
+        level: "proficient",
+        requiredStates: [],
+      },
+    ];
 
     const { saves } = useDerivedStats();
 
     expect(saves.STR.isProficient).toBe(false);
+  });
+
+  it("passes skill grants to the skill engine with their category intact", () => {
+    mockStoreState.getProficiencyGrants = () => [
+      {
+        category: "skills",
+        proficiencyId: "athletics",
+        level: "proficient",
+        requiredStates: [],
+      },
+    ];
+
+    const { skills } = useDerivedStats();
+
+    expect(skills.find((skill) => skill.id === "athletics")?.isProficient).toBe(
+      true,
+    );
+    expect(skills.find((skill) => skill.id === "stealth")?.isProficient).toBe(
+      false,
+    );
+  });
+
+  it("adds proficiency to a saving throw the class grants", () => {
+    mockStoreState.getProficiencyGrants = () => [
+      {
+        category: "saving_throws",
+        proficiencyId: "STR",
+        level: "proficient",
+        requiredStates: [],
+      },
+    ];
+
+    const { saves } = useDerivedStats();
+
+    expect(saves.STR.isProficient).toBe(true);
+    expect(saves.INT.isProficient).toBe(false);
   });
 
   it("reports advantage granted by an unconditional modifier", () => {
@@ -258,7 +327,7 @@ describe("useDerivedStats attacks per action", () => {
       ruleSnapshot: null,
       level: 5,
       classLevels: { class_barbarian: 5 },
-      proficiencies: {},
+      getProficiencyGrants: () => [],
       baseHpRolled: 1,
     };
   });

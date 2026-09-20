@@ -137,11 +137,12 @@ describe("trait and spell implementation markers match their data", () => {
   it("records how much of the trait section carries no rules", async () => {
     const pack = await assembleCoreRulePack(SHIPPED_PACK);
 
-    // 441 of 585. The barbarian is at zero: all 21 of its stubs are authored
-    // or, for the two Primal Path signposts, deleted.
+    // 408 of 584. Task 6 authored the class weapon and armour proficiencies:
+    // 32 of the 33 remaining stubs are authored, and the 33rd
+    // (trait_cleric_mult_prof_weapons) is deleted outright.
     expect(pack.traits.filter((trait) => !carriesRules(trait))).toHaveLength(
-      441,
+      408,
     );
-    expect(pack.traits).toHaveLength(585);
+    expect(pack.traits).toHaveLength(584);
   });
 });

@@ -1,7 +1,4 @@
-import type {
-  OperationalResource,
-  ProficiencyLevel,
-} from "@project/engine";
+import type { OperationalResource } from "@project/engine";
 import type { RuleSnapshot } from "@project/shared";
 import { apiClient, fetchRulesSnapshot } from "../api/client";
 import {
@@ -36,7 +33,6 @@ export type CharacterSheetPayload = {
     isAttuned: boolean;
     customName?: string;
   }>;
-  proficiencies?: Record<string, ProficiencyLevel>;
   currentHp: number;
   maxHp: number;
   resources?: OperationalResource[];
@@ -98,7 +94,6 @@ export const hydrateCharacterSheet = (
     },
     // normalize slots at the boundary, translating any legacy names
     inventory: character.inventory.map(toInventoryInstance),
-    proficiencies: character.proficiencies || {},
     currentHp: character.currentHp,
     maxHp: character.maxHp,
     resources: character.resources || [],

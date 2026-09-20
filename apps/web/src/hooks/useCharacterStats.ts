@@ -8,7 +8,7 @@ import {
   SkillEngine,
   type Ability,
 } from "@project/engine";
-import { SKILL_MAP, type FixedProficiencyGrant } from "@project/shared";
+import { SKILL_MAP } from "@project/shared";
 
 const ABILITY_KEYS: Ability[] = ["STR", "DEX", "CON", "INT", "WIS", "CHA"];
 
@@ -59,7 +59,9 @@ export const useAbilities = () => {
 export const useDerivedStats = () => {
   const level = useCharacterSheetStore((state) => state.level);
   const classLevels = useCharacterSheetStore((state) => state.classLevels);
-  const proficiencies = useCharacterSheetStore((state) => state.proficiencies);
+  const getProficiencyGrants = useCharacterSheetStore(
+    (state) => state.getProficiencyGrants,
+  );
   const baseHpRolled = useCharacterSheetStore((state) => state.baseHpRolled);
   const activeStates = useCharacterSheetStore((state) => state.activeStates);
 
@@ -67,15 +69,10 @@ export const useDerivedStats = () => {
 
   return useMemo(() => {
     const profBonus = AbilityEngine.getProficiencyBonus(level);
-    const skillAndInitiativeProficiencies: FixedProficiencyGrant[] =
-      Object.entries(proficiencies)
-        .filter(([, value]) => value !== "none")
-        .map(([proficiencyId, value]) => ({
-          category: "skills",
-          proficiencyId,
-          level: value as FixedProficiencyGrant["level"],
-          requiredStates: [],
-        }));
+    const grants = getProficiencyGrants();
+    const skillAndInitiativeProficiencies = grants.filter(
+      (grant) => grant.category === "skills",
+    );
 
     // hp calc
     const maxHp = DerivedStatEngine.calculateMaxHp(
@@ -122,25 +119,8 @@ export const useDerivedStats = () => {
       );
     });
 
-    // the store keeps proficiencies as a flat id -> level record with no
-    // category, so saving-throw grants are recovered by matching ability names;
-    // this is the same recovery useCombat performs for weapon proficiencies
-    const saveProficiencies: FixedProficiencyGrant[] = ABILITY_KEYS.flatMap(
-      (ability) => {
-        const level =
-          proficiencies[ability] ?? proficiencies[ability.toLowerCase()];
-
-        if (level === undefined || level === "none") return [];
-
-        return [
-          {
-            category: "saving_throws" as const,
-            proficiencyId: ability,
-            level: level as FixedProficiencyGrant["level"],
-            requiredStates: [],
-          },
-        ];
-      },
+    const saveProficiencies = grants.filter(
+      (grant) => grant.category === "saving_throws",
     );
 
     const saves = SaveEngine.calculateSaves(
@@ -171,7 +151,7 @@ export const useDerivedStats = () => {
   }, [
     level,
     baseHpRolled,
-    proficiencies,
+    getProficiencyGrants,
     classLevels,
     finalAbilities,
     totalMods,

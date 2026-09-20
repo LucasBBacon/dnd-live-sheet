@@ -9,11 +9,7 @@ import {
   resolveWeaponDefinition,
   type Ability,
 } from "@project/engine";
-import type {
-  FixedProficiencyGrant,
-  InventoryInstance,
-  TraitDefinition,
-} from "@project/shared";
+import type { InventoryInstance, TraitDefinition } from "@project/shared";
 
 type HeldItem = InventoryInstance & { slot: "main_hand" | "off_hand" };
 
@@ -23,7 +19,9 @@ type HeldItem = InventoryInstance & { slot: "main_hand" | "off_hand" };
  */
 export const useCombat = () => {
   const inventory = useCharacterSheetStore((state) => state.inventory);
-  const proficiencies = useCharacterSheetStore((state) => state.proficiencies);
+  const getProficiencyGrants = useCharacterSheetStore(
+    (state) => state.getProficiencyGrants,
+  );
   const traitGrants = useCharacterSheetStore((state) => state.traitGrants);
   const availableTraits = useCharacterSheetStore((state) => state.traits);
   const activeStates = useCharacterSheetStore((state) => state.activeStates);
@@ -73,6 +71,12 @@ export const useCombat = () => {
       .flatMap((trait) => trait.actions ?? [])
       .filter((action) => action.effect.type === "dynamic_weapon_attack");
 
+    // every weapons grant the character holds; the engine decides per weapon
+    // whether one of them covers it
+    const weaponProficiencies = getProficiencyGrants().filter(
+      (grant) => grant.category === "weapons",
+    );
+
     // 2 - map equipped items to their combat matrices
     const attacks = equippedHands.reduce((acc, item) => {
       const weaponDef = resolveWeaponDefinition(
@@ -83,25 +87,7 @@ export const useCombat = () => {
       // if equipped item is not a weapon, skip it
       if (!weaponDef) return acc;
 
-      // 3 - translate the store's flat proficiency record into the grant shape
-      // the engine expects. Only the two ids it tests for are relevant here;
-      // the record carries no category, so nothing else can be classified.
-      const weaponProficiencies: FixedProficiencyGrant[] = [
-        weaponDef.category,
-        weaponDef.id,
-      ]
-        .filter((id) => {
-          const level = proficiencies[id];
-          return level !== undefined && level !== "none";
-        })
-        .map((id) => ({
-          category: "weapons" as const,
-          proficiencyId: id,
-          level: proficiencies[id] as "proficient" | "expertise",
-          requiredStates: [],
-        }));
-
-      // 4 - scope modifiers to this weapon
+      // 3 - scope modifiers to this weapon
       // instance-scoped mods (magic weapons) only apply to their own item;
       // anything not bound to an inventory row is global and applies to all.
       const applicableMods = totalMods.filter((m) => {
@@ -121,7 +107,7 @@ export const useCombat = () => {
         isTwoHandedGrip: activeStates.includes("two_handed_grip"),
       };
 
-      // 5 - execute engine pipeline
+      // 4 - execute engine pipeline
       const attackWith = (context: typeof weaponAttackContext) =>
         CombatEngine.calculateWeaponAttack(
           weaponDef,
@@ -140,7 +126,7 @@ export const useCombat = () => {
         );
       const derivedAttack = attackWith(weaponAttackContext);
 
-      // 6 - ammo logic
+      // 5 - ammo logic
       let currentAmmo = 0;
       let ammoInventoryId = null;
 
@@ -206,7 +192,7 @@ export const useCombat = () => {
     return { attacks };
   }, [
     inventory,
-    proficiencies,
+    getProficiencyGrants,
     traitGrants,
     availableTraits,
     activeStates,
