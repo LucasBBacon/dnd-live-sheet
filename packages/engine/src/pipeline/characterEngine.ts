@@ -17,6 +17,11 @@ import { SKILL_MAP } from "@project/shared";
 import type { Ability } from "../types/core.js";
 import { SkillEngine, type DerivedSkill } from "../calculators/skills.js";
 import { SaveEngine, type DerivedSave } from "../calculators/saves.js";
+import {
+  SpellcastingEngine,
+  type DerivedSpellcasting,
+} from "../calculators/spellcasting.js";
+import { collectCastingSources } from "../rules/casterLevel.js";
 import { CombatEngine } from "../calculators/combat.js";
 import type { EffectManager } from "../calculators/effects.js";
 import type { ResourceManager } from "../calculators/resources.js";
@@ -125,6 +130,12 @@ export interface LiveCharacterSheet {
   // skills and saves
   skills: Record<string, DerivedSkill>; // keyed by skillId
   saves: Record<string, DerivedSave>; // keyed by Ability (STR, DEX, …)
+  /**
+   * The save DC and attack bonus for each class that casts, empty for a
+   * character that casts nothing. One entry per class, because a wizard/cleric
+   * has two of each and one number would be wrong for half their spells.
+   */
+  spellcasting: DerivedSpellcasting[];
 
   // load
   encumbrance: EncumbranceResult;
@@ -446,6 +457,34 @@ export class CharacterEngine {
       activeStates,
     );
 
+    // belongs to stage two like the weapon attacks above: a SPELLCASTING_MOD
+    // bonus can be gated on states, so this needs the final activeStates,
+    // not the baseStates that saves and skills were computed with
+    const classLevels = Object.fromEntries(
+      save.classes.map((classState) => [classState.classId, classState.level]),
+    );
+    const subclassIds = Object.fromEntries(
+      save.classes.map((classState) => [classState.classId, classState.subclassId]),
+    );
+    const abilityScores = Object.fromEntries(
+      Object.entries(abilities).map(([ability, derived]) => [
+        ability,
+        derived.score,
+      ]),
+    ) as Record<Ability, number>;
+    const castingSources = collectCastingSources(
+      classLevels,
+      subclassIds,
+      options.snapshot,
+    );
+    const spellcasting = SpellcastingEngine.calculate(
+      castingSources,
+      abilityScores,
+      profBonus,
+      allModifiers,
+      activeStates,
+    );
+
     // endregion
 
     // region State Synthesis
@@ -666,6 +705,7 @@ export class CharacterEngine {
       activeActors,
       summons,
       saves,
+      spellcasting,
       baseStates,
       activeStates,
     };
