@@ -1477,3 +1477,74 @@ Two ways to make the number mean something, neither started:
 Neither is urgent on its own for the seven still open. What is worth saying
 plainly is that **#30 at 398 is a count, not an estimate**, and the two should
 not be confused when sequencing work.
+
+---
+
+## P9 — Findings from a hand-driven check of the spellcasting-slots branch (opened 2026-09-20)
+
+`feat/spellcasting-slots` itself is finished and green (2027 tests, typecheck
+clean). Both findings below turned up while checking its work by hand against
+a running app and a real database. Neither is caused by this branch — both are
+pre-existing — and both are recorded here as follow-up rather than fixed on
+the branch.
+
+### 9a. #63 — resource pools are only created lazily, never on join
+
+| # | Item | Notes |
+| --- | --- | --- |
+| 63 | `character_resources` rows are materialised only inside `getAuthoritativeRuntimeContext`, which `ROOM_JOIN` never calls | Verified 2026-09-20 against a real server and database. |
+
+`collectGrantedResources`'s pools — spell slots, hit dice, Rage, Ki, anything a
+character's traits grant — reach `character_resources` only through
+`getAuthoritativeRuntimeContext` in
+[socket.ts:215](apps/server/src/gateway/socket.ts:215). That function runs on
+`ACTION_INTENT`, `TURN_STARTED`, `TURN_ENDED` and `SURPRISE_DECLARED` (the
+latter two through the shared `handleTurnIntent` helper) — confirmed by
+reading each handler — but **not** on `ROOM_JOIN`, whose handler emits only
+`INVENTORY_SYNC` and never calls it.
+
+A character whose pools have never been materialised opens their sheet to an
+empty Features widget and a rest modal whose Recovery Manifest reads "No
+resources will be recovered during this rest", even though the character
+demonstrably has pools. One turn or action event fixes it permanently — every
+subsequent load is correct once that first materialisation has happened.
+
+**Evidence**, verified by hand on 2026-09-20 against a real server and
+database, with character `00000000-0000-0000-0000-000000000117` (Thistle
+Quickfoot, wizard 14): on first load `character_resources` held 3 rows (hit
+dice, wand charges, Arcane Recovery) and no `spell_slots_*` rows at all; after
+clicking "Begin turn" once it held 12, with `spell_slots_1..9` at
+4/3/3/3/2/1/1/0/0 — the correct PHB wizard-14 row. `GET /api/character/:id`
+returns no `resources` key, so `character.resources || []` in
+[characterSheetRouteData.ts:99](apps/web/src/pages/characterSheetRouteData.ts:99)
+falls back to `[]`; the pools reach the client through the socket once they
+exist.
+
+Worth recording: this is why #62 (8f) could assume slots would need no web
+work to appear on the sheet. They do appear — but only after that first event,
+not on join.
+
+### 9b. #64 — the socket gateway's CORS origin has no fallback
+
+| # | Item | Notes |
+| --- | --- | --- |
+| 64 | `initializeWebSocketGateway`'s `cors.origin` reads `process.env.CLIENT_URL` with no default | Verified 2026-09-20 by adding `CLIENT_URL` to a local `.env`. |
+
+[socket.ts:494](apps/server/src/gateway/socket.ts:494) builds the Socket.IO
+server with `cors: { origin: process.env.CLIENT_URL, methods: ["GET", "POST"] }`
+— no fallback.
+[index.ts:20](apps/server/src/index.ts:20) does the same job for Express with
+`cors({ origin: process.env.CLIENT_URL || "http://localhost:5173" })` —
+**with** one. `.env` is gitignored and untracked, and the repo carries no
+server-side `.env.example` that sets `CLIENT_URL` (only `apps/web/.env.example`
+exists), so a fresh clone has nothing establishing the value.
+
+A developer who clones the repo and runs `pnpm dev` gets every `socket.io`
+request failing with `net::ERR_FAILED`, so the live session never connects,
+while the REST API works fine — a confusing split failure. Verified by hand on
+2026-09-20: adding `CLIENT_URL=http://localhost:5173` to `.env` fixed it
+immediately.
+
+The obvious fix for whoever picks this up: give the gateway the same fallback
+`index.ts` already has, or fail loudly at startup when `CLIENT_URL` is unset
+rather than silently refusing every socket connection.
