@@ -446,19 +446,19 @@ export class CharacterEngine {
       })),
     );
 
+    // shared by both stat blocks below - a save's classes are the only
+    // source either one should read a class-id-to-level map from
+    const { classLevels, subclassIds } = classLevelsAndSubclassIds(
+      save.classes,
+    );
+
     // reads only modifiers and levels, so it has no stake in the two-stage
     // seam; it sits here because this is where the turn's shape is reasoned about
     const attacksPerAction = DerivedStatEngine.calculateAttacksPerAction(
       allModifiers,
       {
         total: totalLevel,
-        classes: save.classes.reduce(
-          (levelsByClass, classState) => {
-            levelsByClass[classState.classId] = classState.level;
-            return levelsByClass;
-          },
-          {} as Record<string, number>,
-        ),
+        classes: classLevels,
       },
       activeStates,
     );
@@ -466,9 +466,6 @@ export class CharacterEngine {
     // belongs to stage two like the weapon attacks above: a SPELLCASTING_MOD
     // bonus can be gated on states, so this needs the final activeStates,
     // not the baseStates that saves and skills were computed with
-    const { classLevels, subclassIds } = classLevelsAndSubclassIds(
-      save.classes,
-    );
     const castingSources = collectCastingSources(
       classLevels,
       subclassIds,
