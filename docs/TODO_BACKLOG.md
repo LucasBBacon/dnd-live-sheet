@@ -151,8 +151,15 @@ structural.
 
 ## Recommended sequence
 
-Refreshed **2026-09-02**, after the item-actions branch (49 commits) landed
-without touching this file. Every item below was re-measured against the
+Re-measured **2026-09-20**, after `feat/item-proficiency` merged. #30 is
+**408**, all twelve class rows were re-counted, #52 is **71**, E2 now covers 38
+weapons rather than 26, and S6 turned out to have been fixed months ago without
+anyone closing it. One new item was opened by the re-count: **8d**, the
+dragonborn race, which is missing three signature features that were never
+stubs and so were never in #30's number.
+
+Previously refreshed **2026-09-02**, after the item-actions branch (49 commits)
+landed without touching this file. Every item below was re-measured against the
 working tree that day, and three entries changed state as a result.
 
 **Closed since the last pass, by that branch rather than by a backlog run:**
@@ -190,24 +197,34 @@ burndown is large enough that an honest estimate is worth having.
 
 | Order | Item | Scale | Why here |
 | --- | --- | --- | --- |
-| 4 | **#30** — reachable trait stubs | **441** | Re-measured 2026-09-19 after the barbarian pass closed all 21, two of them by deleting the Primal Path signposts: 462 → 441, of 585 traits rather than 587. The earlier rise from 456 came from marking 119 silent stubs while deleting 113 unreferenced ones, so the number means "granted to a character and does nothing" rather than "tagged by the port". Every one is reachable. Per-class breakdown below. |
+| 4 | **#30** — reachable trait stubs | **408** | Re-measured 2026-09-20, after `feat/item-proficiency` authored 32 weapon and armour stubs and deleted one: 441 → 408, of 584 traits. The barbarian pass before it took 462 → 441, two of those by deleting the Primal Path signposts. The earlier rise from 456 came from marking 119 silent stubs while deleting 113 unreferenced ones, so the number means "granted to a character and does nothing" rather than "tagged by the port". Every one is reachable. Per-class breakdown below, re-counted in full on 2026-09-20. **It counts stubs, not absences — see 8d.** |
 | 5 | **#31** — spells | **111 of 111** | Two passes, not one. `level` is `0` for every spell and `school` is `evocation` for every spell, so these need real **data** before they can carry rules — which is why this sits behind #30 despite the smaller number. |
 | 6 | **#36** — `SUMMON_ACTOR_DICTIONARY` into the pack | — | The last live rules content outside the pack, two real readers, re-verified 2026-09-02. Until it moves, "packs are the only source of rules" carries an asterisk. |
 
 **Where the remaining stubs sit**, so #30 can be picked up by whoever is
-playing what. Only the barbarian row was re-counted on 2026-09-19; the other
-eleven are as measured before that pass and each still carries its subclass
-signposts:
+playing what. All twelve rows re-counted 2026-09-20 — the first full re-count
+since 2026-09-02. A row is every stub the class or one of its subclasses
+references, so each still carries its subclass signposts:
 
 | Class | Stubs | Class | Stubs |
 | --- | --- | --- | --- |
-| warlock | 63 | rogue | 35 |
-| monk | 48 | ranger | 33 |
-| wizard | 48 | sorcerer | 33 |
-| cleric | 47 | paladin | 32 |
-| fighter | 41 | bard | 25 |
-| | | druid | 24 |
-| | | **barbarian** | **0** |
+| warlock | 59 | sorcerer | 32 |
+| wizard | 47 | ranger | 29 |
+| monk | 46 | paladin | 27 |
+| cleric | 43 | bard | 22 |
+| fighter | 36 | druid | 21 |
+| rogue | 32 | **barbarian** | **0** |
+
+The rows sum to 394 against 391 distinct traits: the three-trait overlap is
+multiclass proficiency traits that two classes both reference. A further **17
+stubs belong to no class at all** — 6 race (elf 3, halfling 2, gnome 1), 9
+background (noble 3, acolyte 2, criminal 2, soldier 2) and 2 feats (Mobile,
+Skilled). 391 + 17 = 408.
+
+Twenty-two of the class stubs are subclass signposts — `trait_divine_domain`,
+`trait_bard_college` and their `_feature` twins, one pair per class. They
+carry no rules by design; the barbarian pass deleted its two rather than
+authoring them, and the same call is available to every other class.
 
 Barbarian is the worked example, and it is done: all 21 of its stubs closed
 on `feat/barbarian-traits`. Slices 1 to 3 built the table-note surface and
@@ -225,8 +242,13 @@ The designs are
 `docs/superpowers/specs/2026-09-02-barbarian-traits-design.md` and
 `docs/superpowers/specs/2026-09-19-barbarian-sheet-surfaces-design.md`.
 
-Races are nearly done — 9 stubs across elf, halfling, gnome and the shared
-core file.
+Races hold 6 stubs — Trance, Mask of the Wild and Sunlight Sensitivity on the
+elf, Halfling Nimbleness and Naturally Stealthy on the halfling, and Speak with
+Small Beasts on the gnome. The ten `trait_dragon_ancestor_*` stubs in
+`races/dragonborn.json` are **not** the dragonborn's: the only thing that
+references them is the sorcerer's Draconic Bloodline, so they count against the
+sorcerer row. What the dragonborn is actually missing is worse than a stub —
+see 8d.
 
 ### Tier 3 — small, and each closes a loose end
 
@@ -235,7 +257,7 @@ core file.
 | 7 | 🟢 **#56** — pin engine's TypeScript | `packages/engine` declares `"typescript": "latest"` and resolves **7.0.2** while every other package is on 6.0.x. One package compiling on a different major than the rest, movable by any install, with no diff anyone reviews. Pin it or upgrade the workspace — but decide, rather than leave it floating. |
 | 8 | 🟢 **#54** — confirm the reset-condition migration ran | `0013_add_reset_conditions.sql` is generated and journalled. Whether it has been applied to a live database cannot be checked from the tree. Until it has, the code accepts `initiative_roll` and `start_of_turn` and the database rejects them. |
 | 9 | **#53** — a unit test for the line-ending check | Sabotage-verified but with no permanent test, because nothing owns `scripts/`. Needs a root vitest project or a move into a package; `expectedEnding` and `classifyEndings` are pure and exported ready for it. |
-| 10 | **#52** — 80 project-source files are LF against a CRLF tree | Was 73 on 2026-08-24; the item-actions branch added 7 more, which is the argument for doing it rather than watching it grow. Normalising changes no committed content. Not gated, deliberately — see 6b. |
+| 10 | **#52** — 71 project-source files are LF against a CRLF tree | Re-counted 2026-09-20 with `pnpm check:hygiene --report-eol`: 371 files reported, 300 of them vendored under `.claude/skills`, `.github/skills`, `.github/agents` and `.github/hooks`, which are not ours to normalise. The 71 that are: docs 19, `packages/engine` 17, `packages/database` 14, `apps/server` 11, `apps/web` 6, `packages/shared` 3, `skills-lock.json` 1. The count has gone **down** from 73, not up — the 80 previously recorded here counted the vendored directories inconsistently. Normalising changes no committed content. Not gated, deliberately — see 6b. |
 
 ### Tier 4 — design passes
 
@@ -370,7 +392,15 @@ right treatment is probably page-level — the route knows it asked for a
 character in a campaign and got refused — but that is a UI design decision
 rather than a defect, so it is recorded rather than guessed at.
 
-### S6 — `ITEM_ATTUNED` is emitted by the client and bound by nobody
+### S6 — `ITEM_ATTUNED` is emitted by the client and bound by nobody ✅
+
+**Closed, recorded 2026-09-20.** The finding below stood open in this file long
+after it was fixed. `apps/server/src/gateway/socket.ts:1274` binds the event,
+writes `character_inventory` scoped by `character_id` and broadcasts to the
+room, and `socket.attunement.test.ts` covers it — its own docstring opens by
+quoting this entry's title in the past tense. Nothing re-checked the backlog
+when the fix landed, which is the same failure mode as #32 and #33: work
+closing an item without closing the item. The record below is left as written.
 
 Promoted 2026-08-24 from the "two smaller findings" list below, where it was
 recorded as "a client emitting it is talking to nobody" and rated lower value.
@@ -421,7 +451,8 @@ either way.
 
 ### E2 — no weapon can be held in the off hand, so two-weapon fighting is unreachable
 
-Found 2026-08-21 while fixing E1. All 26 pack weapons are authored
+Found 2026-08-21 while fixing E1, re-confirmed 2026-09-20 — the catalogue has
+grown to 38 weapons and **every one of them** is still authored
 `equipSlot: "main_hand"`, and `SLOT_INSTANCES.main_hand` is `["main_hand"]`, so
 `canEquipTo` refuses any weapon in `off_hand`. Only the shield reaches that slot.
 
@@ -704,7 +735,7 @@ cutover either created or made visible.
 
 | # | Item | Scale | Notes |
 | --- | --- | --- | --- |
-| 30 | Traits marked `implementation.mode: "unimplemented"` | **456 of 700** — but the workable figure is **464** | Re-measured 2026-09-02. Two corrections in opposite directions. **Up:** 119 further traits carry no rules and no marker (#51), so 576 of 700 are rule-free. **Down:** 112 of those 576 are referenced by nothing at all and should simply be deleted (#57). What is left — traits that are both rule-free and actually reachable — is **464**, and that is the number the burndown should quote. Per-class breakdown in the Recommended sequence. |
+| 30 | Traits marked `implementation.mode: "unimplemented"` | **408 of 584** | Re-measured 2026-09-20. The history: 456 of 700 at the cutover, then 119 silent stubs marked (#51) and 113 unreferenced ones deleted (#57) to give 462 reachable of 587, then 462 → 441 on `feat/barbarian-traits` and 441 → 408 on `feat/item-proficiency`. Every one is reachable — the guard added by #58 is what keeps that true. Per-class breakdown in the Recommended sequence. |
 | 31 | Spells marked `unimplemented` | **111 of 111** | Every spell in the pack is a stub with a `no_effect` action; `level` and `school` are placeholders, which the marker's summary says outright. |
 
 This is the deliberate, accepted trade recorded in the design doc — a marked
@@ -913,7 +944,7 @@ burned down.
 
 | # | Item | Scale | Notes |
 | --- | --- | --- | --- |
-| 52 | Files pure LF where this checkout's convention is CRLF | **73** in project source | 24 `apps`, 36 `packages`, 17 `docs`, plus `skills-lock.json`. A further ~300 sit in vendored `.claude/` and `.github/skills`, which are not ours to normalize. |
+| 52 | Files pure LF where this checkout's convention is CRLF | **71** in project source | Re-counted 2026-09-20: 17 `apps`, 34 `packages`, 19 `docs`, plus `skills-lock.json`. A further 300 sit in vendored `.claude/` and `.github/`, which are not ours to normalize. |
 
 Reported by the #47 check, **deliberately not gated**. A whole file that is pure
 LF cannot be told apart from a legitimate checkout made while `core.autocrlf`
@@ -1285,3 +1316,57 @@ authored on `feat/barbarian-traits`, before this branch's baseline; it should
 never have been in the count of what is left. Tools have no items in the
 catalogue to resolve against and are out of scope here, same as they were for
 #59 — see 4c above for what that leaves `proficiencyDictionary.ts` holding.
+
+### 8d. #61 — the burndown counts stubs, not absences
+
+Found 2026-09-20 while re-counting #30 after this branch.
+
+| # | Item | Scale | Notes |
+| --- | --- | --- | --- |
+| 61 | The dragonborn race grants no Draconic Ancestry, Breath Weapon or Damage Resistance | 3 traits | **Open.** They do not exist in the pack in any form, so no marker counts them and no guard catches them. |
+
+`race_dragonborn` grants exactly `race_dragonborn_asi` and
+`race_dragonborn_languages`. Every other race in the pack grants its signature
+features: the halfling has Lucky and Brave, the tiefling has Hellish Resistance
+and Infernal Legacy, the half-orc has Relentless Endurance and Savage Attacks.
+The dragonborn has an ability score increase and a language, and that is the
+whole race.
+
+The ten `trait_dragon_ancestor_*` traits sitting in `races/dragonborn.json`
+look like the missing half and are not. Each is referenced exactly once, from
+the **sorcerer's** Draconic Bloodline choice list in `classes/sorcerer.json`;
+`race_dragonborn.grantedTraitIds` names none of them, and the file they live in
+is incidental. They count against the sorcerer's row in #30, not the race's.
+
+**Why this matters beyond one race.** #30 counts traits that exist and carry no
+rules. It cannot count a rule that was never given a trait, and the reachability
+guard (#58) only runs the other way — it finds traits nothing references, not
+references to traits that were never written. A race, class or subclass can be
+missing a feature outright and every number in this file will stay green. The
+dragonborn is the case that proves it; nothing has measured whether there are
+others.
+
+The obvious check is cheap and does not exist: hold each race, class and
+subclass against its PHB feature list and report what is absent. That is a
+different guard from #58 and would want a source of truth #58 does not need.
+
+### 8e. Proficiency stubs remaining, recounted
+
+8c above records "17 skills and 9 tools" left. That is the count of stubs whose
+ids match `prof_skills` or `prof_tools`, and it misses two more groups in the
+same family. The full remainder on 2026-09-20 is **35**:
+
+| Kind | Count | Ids |
+| --- | --- | --- |
+| skills | 17 | 13 class, 4 background |
+| tools | 9 | 5 class, 4 background |
+| languages | 2 | `trait_acolyte_languages`, `trait_noble_languages` |
+| subclass bonus proficiencies | 7 | `trait_cleric_{war,life,nature,tempest}_prof_bonus`, `trait_bard_lore_prof_bonus`, `trait_bard_valor_bonus_prof`, `trait_rogue_assassin_bonus_prof` |
+
+Skills and languages both have a roster in `proficiencyDictionary.ts` and a
+working consumer, so they are authorable today — they are the cheapest
+remaining slice of #30. Tools have neither a roster nor any tool item in the
+catalogue to resolve against, so they need a decision before they need work.
+The seven subclass entries are the domain and college bonus proficiencies,
+which grant a mix of armour, weapons and skills and are authorable now that the
+armour and weapon vocabulary resolves.
