@@ -137,16 +137,19 @@ describe("trait and spell implementation markers match their data", () => {
   it("records how much of the trait section carries no rules", async () => {
     const pack = await assembleCoreRulePack(SHIPPED_PACK);
 
-    // 370 of 584. The class tool grants task authored three fixed tool grants
-    // (the druid's, and the rogue's own and multiclass grants) and three tool
-    // choice blocks (the bard's own and multiclass instrument picks, the
-    // monk's artisan's-tools-or-instrument pick) - six traits total, each
-    // replacing an "unimplemented" stub of the same id (deleted from
+    // 362 of 584. The subclass bonus grants task authored eight traits: five
+    // fixed-or-mixed armour/weapon grants on the cleric's Life, War, Tempest
+    // and Nature domains, a language-and-expertise-skills choice block on the
+    // cleric's Knowledge domain (Blessings of Knowledge), a three-skill
+    // choice block on the bard's College of Lore, a fixed armour/weapon grant
+    // on the bard's College of Valor, and a fixed two-tool grant on the
+    // rogue's Assassin archetype - eight traits total, each replacing an
+    // "unimplemented" stub of the same id (deleted from
     // traits/unimplemented.json, upserted with a real grant or choice block
-    // into classes/{bard,druid,monk,rogue}.json) - a wash on the total count,
-    // six fewer rule-free.
+    // into classes/{bard,cleric,rogue}.json) - a wash on the total count,
+    // eight fewer rule-free.
     expect(pack.traits.filter((trait) => !carriesRules(trait))).toHaveLength(
-      370,
+      362,
     );
     expect(pack.traits).toHaveLength(584);
   });
