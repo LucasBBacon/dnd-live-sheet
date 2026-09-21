@@ -46,13 +46,21 @@ import {
   characters,
 } from "./schema/operational.js";
 
-dotenv.config({ path: "../../.env" });
+// Opened by connect(), only when this file runs as a script. Importing the
+// module for its ROSTER - which invariant tests do, in CI, with no
+// DATABASE_URL - must not need a database.
+let client: ReturnType<typeof postgres> | undefined;
+let db!: ReturnType<typeof drizzle>;
 
-const connectionString = process.env.DATABASE_URL;
-if (!connectionString) throw new Error("DATABASE_URL is missing");
+const connect = () => {
+  dotenv.config({ path: "../../.env" });
 
-const client = postgres(connectionString);
-const db = drizzle(client);
+  const connectionString = process.env.DATABASE_URL;
+  if (!connectionString) throw new Error("DATABASE_URL is missing");
+
+  client = postgres(connectionString);
+  db = drizzle(client);
+};
 
 // #region Constants
 
@@ -1922,13 +1930,17 @@ const isEntryPoint =
   import.meta.url === pathToFileURL(process.argv[1]).href;
 
 if (isEntryPoint) {
-  run()
+  Promise.resolve()
+    .then(() => {
+      connect();
+      return run();
+    })
     .catch((error) => {
       console.error("Sample character seed failed:", error);
       process.exitCode = 1;
     })
     .finally(async () => {
-      await client.end();
+      await client?.end();
     });
 }
 
