@@ -1,9 +1,10 @@
 import { useEffect, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { useShallow } from "zustand/react/shallow";
 import { listChoiceQuestions } from "@project/engine";
 import { useWizardStore } from "../../store/wizardStore";
 import { fetchFullRulesSnapshot } from "../../api/client";
-import { buildDraftSave } from "../../utils/draftSave";
+import { buildDraftSave, type DraftSaveInputs } from "../../utils/draftSave";
 import { ChoiceQuestionList } from "./choices/ChoiceQuestionList";
 import { isQuestionAnswered } from "./choices/ChoicePicker";
 
@@ -11,13 +12,33 @@ export const ChoicesStepContainer = () => {
   const currentStep = useWizardStore((state) => state.currentStep);
   const setStep = useWizardStore((state) => state.setStep);
   const campaignId = useWizardStore((state) => state.campaignId);
-  const choiceAnswers = useWizardStore((state) => state.choiceAnswers);
   const setChoiceAnswer = useWizardStore((state) => state.setChoiceAnswer);
   const pruneChoiceAnswers = useWizardStore(
     (state) => state.pruneChoiceAnswers,
   );
-  const state = useWizardStore();
   const isActiveStep = currentStep === 6;
+
+  // Only the fields buildDraftSave actually reads - selected together with
+  // useShallow so this hook (and everything derived from it below) is inert
+  // to any other store change, e.g. typing the character name at step 1.
+  // Zustand keeps returning the same object reference across renders unless
+  // one of these fields itself changed.
+  const draftInputs = useWizardStore(
+    useShallow(
+      (state): DraftSaveInputs => ({
+        raceId: state.raceId,
+        subraceId: state.subraceId,
+        raceRequiresSubrace: state.raceRequiresSubrace,
+        classId: state.classId,
+        subclassId: state.subclassId,
+        backgroundType: state.backgroundType,
+        backgroundId: state.backgroundId,
+        baseAbilityScores: state.baseAbilityScores,
+        choiceAnswers: state.choiceAnswers,
+      }),
+    ),
+  );
+  const choiceAnswers = draftInputs.choiceAnswers;
 
   const { data } = useQuery({
     queryKey: ["reference", "rules-snapshot-full", campaignId],
@@ -26,22 +47,33 @@ export const ChoicesStepContainer = () => {
     enabled: isActiveStep,
   });
 
-  const save = buildDraftSave(state);
+  const save = useMemo(() => buildDraftSave(draftInputs), [draftInputs]);
 
   // Answers only ever fill `selected` - a class trait_choice pick can itself
   // unlock further questions (e.g. a subclass feature choosing its own
   // sub-options), which is correct: the save is rebuilt from the store on
   // every answer, so the question list settles once nothing new unlocks.
+  // Gated on isActiveStep too: no engine work happens while this step is
+  // hidden, even if a race, class and snapshot are already in hand.
   const questions = useMemo(
-    () => (save && data ? listChoiceQuestions(save, data.snapshot) : []),
-    [save, data],
+    () =>
+      isActiveStep && save && data
+        ? listChoiceQuestions(save, data.snapshot)
+        : [],
+    [isActiveStep, save, data],
   );
 
   useEffect(() => {
+    // do not prune while hidden: `questions` collapses to `[]` above whenever
+    // this step is inactive, and pruning against that would wipe every
+    // stored answer the moment the wizard leaves step 6.
+    if (!isActiveStep) return;
     pruneChoiceAnswers(questions.map((question) => question.id));
-  }, [questions, pruneChoiceAnswers]);
+  }, [isActiveStep, questions, pruneChoiceAnswers]);
 
-  // guard clause so react does not evaluate hidden steps
+  // Hooks above must still run on every render regardless of step (that is
+  // what isActiveStep guards inside them are for) - this only skips
+  // rendering the step's own markup while it is hidden.
   if (!isActiveStep) return null;
 
   const answers = Object.fromEntries(

@@ -2,6 +2,26 @@ import type { CharacterChoices, CharacterSave } from "@project/shared";
 import type { WizardState } from "../store/wizardStore";
 
 /**
+ * The exact slice of `WizardState` that `buildDraftSave` reads - named so a
+ * caller (the Choices step) can select just these fields from the store
+ * instead of subscribing to the whole thing, which would rebuild the draft
+ * save - and re-run `listChoiceQuestions` - on every unrelated store change
+ * app-wide (e.g. a keystroke in the character name at step 1).
+ */
+export type DraftSaveInputs = Pick<
+  WizardState,
+  | "raceId"
+  | "subraceId"
+  | "raceRequiresSubrace"
+  | "classId"
+  | "subclassId"
+  | "backgroundType"
+  | "backgroundId"
+  | "baseAbilityScores"
+  | "choiceAnswers"
+>;
+
+/**
  * A placeholder hp block for a save that only exists to ask
  * `listChoiceQuestions` what is left to answer - the wizard has not rolled hp
  * yet at this point in character creation, and nothing choice-question
@@ -45,7 +65,9 @@ export const choicesFromAnswers = (
  * `null` until a race and class are both chosen: before that, there is no
  * character to ask questions about yet.
  */
-export const buildDraftSave = (state: WizardState): CharacterSave | null => {
+export const buildDraftSave = (
+  state: DraftSaveInputs,
+): CharacterSave | null => {
   if (!state.raceId || !state.classId) return null;
 
   const { classSelections, traitSelections } = choicesFromAnswers(

@@ -1,6 +1,7 @@
 import { describe, expect, it, vi, beforeEach } from "vitest";
 import { createRoot } from "react-dom/client";
 import { act } from "react";
+import { listChoiceQuestions } from "@project/engine";
 import { useWizardStore } from "../../../store/wizardStore";
 import { packRuleSnapshot } from "../../../store/__tests__/packFixture";
 import { ChoicesStepContainer } from "../ChoicesStepContainer";
@@ -16,6 +17,19 @@ vi.mock("@tanstack/react-query", () => ({
     isError: false,
   }),
 }));
+
+// A real, spyable listChoiceQuestions - everything else from the module
+// passes through untouched. This is what proves the container does not call
+// into the engine on every unrelated store change (see the "does not re-run"
+// test below), and that it calls into the engine at all while hidden (the
+// "is inert" test).
+vi.mock("@project/engine", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@project/engine")>();
+  return {
+    ...actual,
+    listChoiceQuestions: vi.fn(actual.listChoiceQuestions),
+  };
+});
 
 // packRuleSnapshot() reads the real shipped pack, exactly what the
 // production endpoint this step queries would serve.
@@ -73,12 +87,16 @@ const setHumanFighterState = () => {
 describe("ChoicesStepContainer", () => {
   beforeEach(() => {
     setHumanFighterState();
+    vi.mocked(listChoiceQuestions).mockClear();
   });
 
   it("is inert while not the active step", async () => {
     useWizardStore.setState({ currentStep: 5 });
     const container = await renderContainer();
     expect(container.textContent).toBe("");
+    // no engine work while hidden, even though a race, class and snapshot
+    // are all already in hand
+    expect(listChoiceQuestions).not.toHaveBeenCalled();
   });
 
   it("lists the human's language block and the fighter's fighting-style node", async () => {
@@ -141,5 +159,22 @@ describe("ChoicesStepContainer", () => {
 
     expect(container.textContent).toContain("Nothing to choose");
     expect(findButtonByText(container, "►")?.disabled).toBe(false);
+  });
+
+  it("does not re-run listChoiceQuestions when an unrelated store field changes", async () => {
+    await renderContainer();
+
+    const callsAfterMount = vi.mocked(listChoiceQuestions).mock.calls.length;
+    expect(callsAfterMount).toBeGreaterThan(0);
+
+    // characterName is not one of the fields buildDraftSave reads - typing
+    // it anywhere else in the wizard must not re-run engine work here
+    await act(async () => {
+      useWizardStore.getState().setName("A totally different name");
+    });
+
+    expect(vi.mocked(listChoiceQuestions).mock.calls.length).toBe(
+      callsAfterMount,
+    );
   });
 });
