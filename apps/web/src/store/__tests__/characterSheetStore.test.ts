@@ -1345,9 +1345,14 @@ describe("getActiveTraits with a subclass", () => {
       level: 3,
       classLevels: { class_barbarian: 3 },
       subclassIds: { class_barbarian: "subclass_barbarian_totem_warrior" },
-      traitGrants: [
-        { id: "grant_1", traitId: "trait_totem_spirit_bear", source: "player_choice" },
-      ],
+      choices: {
+        classSelections: {
+          class_barbarian: {
+            barbarian_totem_level_3_totem_spirit: ["trait_totem_spirit_bear"],
+          },
+        },
+        traitSelections: {},
+      },
       raceId: "race_human",
       subraceId: null,
       ruleSnapshot: packRuleSnapshot(),
@@ -1673,5 +1678,23 @@ describe("useCharacterSheetStore proficiency grants", () => {
       .map((grant) => grant.proficiencyId);
 
     expect(skills).toEqual(expect.arrayContaining(["deception", "stealth"]));
+  });
+
+  it("includes the skills the character chose", () => {
+    useCharacterSheetStore.setState({
+      raceId: "race_half_elf",
+      choices: {
+        classSelections: {},
+        traitSelections: { skill_versatility_choice: ["perception", "insight"] },
+      },
+    });
+
+    const skills = useCharacterSheetStore
+      .getState()
+      .getProficiencyGrants()
+      .filter((grant) => grant.category === "skills")
+      .map((grant) => grant.proficiencyId);
+
+    expect(skills).toEqual(expect.arrayContaining(["perception", "insight"]));
   });
 });
