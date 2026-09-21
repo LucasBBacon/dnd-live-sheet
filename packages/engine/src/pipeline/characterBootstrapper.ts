@@ -3,7 +3,6 @@ import type {
   TraitChoiceOption,
   TraitDefinition,
 } from "@project/shared";
-import { traitIdOfOption } from "@project/shared";
 import { EffectManager } from "../calculators/effects.js";
 import { ResourceManager } from "../calculators/resources.js";
 import { classLevelsAndSubclassIds } from "../rules/casterLevel.js";
@@ -19,10 +18,10 @@ import {
 } from "../rules/ruleLookup.js";
 import {
   backgroundTraitIds,
+  classChoiceNodes,
   classTraitIds,
   featTraitIds,
   isSpellChoice,
-  isTraitChoice,
   raceTraitIds,
   unlockedGrants,
   type ClassState,
@@ -312,6 +311,12 @@ export class CharacterBootstrapper {
 
       // #region choice nodes
       const grants = unlockedGrants(classState, snapshot);
+      const choiceNodesByNodeId = new Map(
+        classChoiceNodes(classState, snapshot).map((node) => [
+          node.nodeId,
+          node,
+        ]),
+      );
       const traitIds = new Set([
         ...raceTraitIds(save.race, snapshot),
         ...classTraitIds(classState, classIndex === 0, snapshot),
@@ -353,10 +358,11 @@ export class CharacterBootstrapper {
 
         // a spell_choice can only be checked for shape: there is no spell list
         // data yet to check membership against
-        if (!isTraitChoice(grant)) continue;
+        const choiceNode = choiceNodesByNodeId.get(grant.nodeId);
+        if (!choiceNode) continue;
 
         const optionsById = new Map(
-          grant.options.map((option) => [traitIdOfOption(option), option]),
+          choiceNode.options.map(({ id, option }) => [id, option]),
         );
 
         for (const choice of selected) {

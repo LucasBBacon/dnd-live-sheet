@@ -3,7 +3,9 @@ import type {
   FeatureGrant,
   SpellChoiceNode,
   TraitChoiceNode,
+  TraitChoiceOption,
 } from "@project/shared";
+import { traitIdOfOption } from "@project/shared";
 // Classes, races, subclasses and traits all come from the loaded pack, which
 // is the only source of rules content.
 import {
@@ -80,6 +82,42 @@ export const classTraitIds = (
 
   return ids;
 };
+
+export interface ClassChoiceNodeOption {
+  /** the id a picker or a prerequisite check reads this option by */
+  id: string;
+  /** the raw option, for callers that need its own prerequisites */
+  option: TraitChoiceOption;
+}
+
+export interface ClassChoiceNode {
+  nodeId: string;
+  pickCount: number;
+  options: ClassChoiceNodeOption[];
+}
+
+/**
+ * A class's unlocked trait_choice nodes - not spell_choice, which has no
+ * trait vocabulary to offer - walked the one way both save validation and
+ * listChoiceQuestions need: filtered down from every unlocked grant, each
+ * option paired with the id it is picked by (traitIdOfOption) and the raw
+ * option it came from, which is all a prerequisite check needs and a picker
+ * simply ignores.
+ */
+export const classChoiceNodes = (
+  classState: ClassState,
+  snapshot?: RuleSnapshotLookup,
+): ClassChoiceNode[] =>
+  unlockedGrants(classState, snapshot)
+    .filter(isTraitChoice)
+    .map((grant) => ({
+      nodeId: grant.nodeId,
+      pickCount: grant.pickCount,
+      options: grant.options.map((option) => ({
+        id: traitIdOfOption(option),
+        option,
+      })),
+    }));
 
 /** The subrace's own granted traits. Empty when the race has none selected. */
 export const subraceTraitIds = (

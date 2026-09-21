@@ -1,5 +1,4 @@
 import type { CharacterSave } from "@project/shared";
-import { traitIdOfOption } from "@project/shared";
 import {
   LANGUAGE_DICTIONARY,
   listProficiencyOptions,
@@ -17,11 +16,10 @@ import { CharacterBootstrapper } from "./characterBootstrapper.js";
 import {
   backgroundTraitIds,
   baseRaceTraitIds,
+  classChoiceNodes,
   classTraitIds,
   featTraitIds,
-  isTraitChoice,
   subraceTraitIds,
-  unlockedGrants,
 } from "./grantSources.js";
 import { ModifierExtractor } from "./modifierExtractor.js";
 import { ProficiencyExtractor } from "./proficiencyExtractor.js";
@@ -191,22 +189,23 @@ const classQuestions = (
     };
     const rank = rankOf.get(`class:${classState.classId}`) ?? Number.MAX_SAFE_INTEGER;
 
-    return unlockedGrants(classState, snapshot)
-      .filter(isTraitChoice)
-      .map((grant) => ({
-        rank,
-        question: {
-          id: grant.nodeId,
-          target: "class" as const,
-          classId: classState.classId,
-          source,
-          prompt: `${source.name}: choose ${grant.pickCount} (${humanise(grant.nodeId)})`,
-          pickCount: grant.pickCount,
-          options: optionsOf(grant.options.map(traitIdOfOption), snapshot),
-          selected: classState.selections[grant.nodeId] ?? [],
-          held: [],
-        },
-      }));
+    return classChoiceNodes(classState, snapshot).map((node) => ({
+      rank,
+      question: {
+        id: node.nodeId,
+        target: "class" as const,
+        classId: classState.classId,
+        source,
+        prompt: `${source.name}: choose ${node.pickCount} (${humanise(node.nodeId)})`,
+        pickCount: node.pickCount,
+        options: optionsOf(
+          node.options.map((option) => option.id),
+          snapshot,
+        ),
+        selected: classState.selections[node.nodeId] ?? [],
+        held: [],
+      },
+    }));
   });
 
 /**
