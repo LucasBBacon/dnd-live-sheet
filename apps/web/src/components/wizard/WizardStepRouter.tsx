@@ -30,12 +30,8 @@ export const WizardStepRouter = ({ stepType, decisions }: RouterProps) => {
       return <SubclassStep context={getDecisionContext("subclass")!} />;
     case "asi_or_feat":
       return <AsiFeatStep context={getDecisionContext("asi_or_feat")!} />;
-    case "trait_selection":
-      return (
-        <ChoicesStep
-          decisions={decisions.filter((d) => d.type === "trait_selection")}
-        />
-      );
+    case "choices":
+      return <ChoicesStep />;
     case "spell_selection":
       return <SpellChoiceUnsupportedStep />;
     case "review":

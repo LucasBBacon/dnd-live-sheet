@@ -275,6 +275,17 @@ describe("API Client", () => {
       );
     });
 
+    it("should pass a featId to the level-up options endpoint", () => {
+      const endpoint = buildLevelUpOptionsEndpoint(
+        { campaignId: "11111111-1111-1111-1111-111111111111" },
+        { classId: "class_fighter", featId: "feat_skilled" },
+      );
+
+      expect(endpoint).toBe(
+        "/reference/level-up/options?classId=class_fighter&featId=feat_skilled&campaignId=11111111-1111-1111-1111-111111111111",
+      );
+    });
+
     it("should omit scoped character id in level-up endpoint when campaign is missing", () => {
       const endpoint = buildLevelUpOptionsEndpoint(
         {

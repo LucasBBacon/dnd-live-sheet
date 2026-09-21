@@ -1,13 +1,15 @@
 import { useMemo, useState } from "react";
 import { useLevelUpStore } from "../../store/levelUpStore";
 import { WizardStepRouter } from "./WizardStepRouter";
-import { isStepComplete } from "../../utils/wizardValidation";
+import { isStepComplete, levelUpSteps } from "../../utils/wizardValidation";
 
 export const LevelUpWizard = () => {
   const {
     isActive,
     progressionContext,
     draftPayload,
+    choiceQuestions,
+    questionsStatus,
     cancelLevelUp,
     validateAndSubmit,
   } = useLevelUpStore();
@@ -18,25 +20,10 @@ export const LevelUpWizard = () => {
   );
 
   // dynamically generate the required steps for this specific level
-  const wizardSteps = useMemo(() => {
-    if (!progressionContext) return [];
-
-    const steps: string[] = ["overview", "hp_increase"]; // always required
-
-    // inject dynamic decisions from the engine - one step per decision
-    // *type*, in first-seen order, so several trait_selection decisions
-    // (e.g. a fighting style plus a multiclass skill pick) still collapse
-    // onto a single Choices step
-    const seenTypes = new Set<string>();
-    progressionContext.decisions.forEach((decision) => {
-      if (seenTypes.has(decision.type)) return;
-      seenTypes.add(decision.type);
-      steps.push(decision.type); // e.g., 'subclass', 'asi_or_feat'
-    });
-
-    steps.push("review"); // always final step
-    return steps;
-  }, [progressionContext]);
+  const wizardSteps = useMemo(
+    () => (progressionContext ? levelUpSteps(progressionContext.decisions) : []),
+    [progressionContext],
+  );
 
   if (!isActive || !progressionContext) return null;
 
@@ -45,6 +32,7 @@ export const LevelUpWizard = () => {
     activeStepType,
     draftPayload,
     progressionContext.decisions,
+    { questions: choiceQuestions, ready: questionsStatus === "ready" },
   );
   const isLastStep = currentStepIndex === wizardSteps.length - 1;
 

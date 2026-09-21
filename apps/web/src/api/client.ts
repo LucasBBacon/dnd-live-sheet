@@ -16,6 +16,8 @@ export type ReferenceScope = {
 export type LevelUpOptionsParams = {
   classId?: string | null;
   subclassId?: string | null;
+  /** a feat the level-up would take: its own questions are asked too */
+  featId?: string | null;
   currentClassLevel?: number | null;
 };
 
@@ -87,6 +89,7 @@ export const buildLevelUpOptionsEndpoint = (
   buildScopedReferenceEndpoint("/reference/level-up/options", scope, {
     classId: params.classId ?? undefined,
     subclassId: params.subclassId ?? undefined,
+    featId: params.featId ?? undefined,
     currentClassLevel: params.currentClassLevel ?? undefined,
   });
 
