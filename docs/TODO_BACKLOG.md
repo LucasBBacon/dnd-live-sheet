@@ -1,7 +1,7 @@
 # TODO Backlog
 
 **Status as of 2026-09-21**, on `fix/sheet-modifiers`, after #73
-closed. The workspace is green — **2142
+closed. The workspace is green — **2143
 tests**, 0 failures, and typecheck clean per package (6f explains why "per
 package" matters). Nothing below is breaking a build; these are gaps, debt and
 content.
@@ -182,8 +182,9 @@ things the last three branches showed replace it:
 | 4b | ✅ **#74** — a multiclass character's first class is whatever order Postgres returns | small–medium | **Closed 2026-09-21** on `fix/class-order`: `character_classes.position` records the order a class was taken, `classLedgerOrder` orders every ledger read, and all writers were updated to keep it. Migration `0015_add_class_position` is applied to the dev database. The hand check reproduced #74's exact failure condition on Lyra Silverstring and the sheet stayed correct. See the "11e. #74" section below. |
 | 5 | **#68 (choice half) — Branch B** — a proficiency-choice wizard step, now that storage exists | medium, UI | Storage landed as `feat/character-choices`'s Branch A: `characters.choices` holds a class's `selections` and a trait's `traitSelections`, keyed by the question, but nothing collects them from a player yet. Widened from 21 proficiency blocks to all 31 choice-block traits in the pack — every class's skill picks, background tools and languages, plus the race picks that predate #68: the half-elf's ability-score choice, Skill Versatility and extra language, the human's and high elf's extra language, and the dwarf's artisan's tools. `ProficiencyExtractor.listPendingChoices` has no caller outside tests. Brainstorm the wizard step first; it is the first new UI surface since the barbarian's table notes. Inherits two findings from the same final review, 2026-09-21: a **custom background's choice blocks cannot be answered at creation** — a custom background's traits live outside `CharacterSave` entirely (the gateway included), so Branch B needs a home for them before a custom-background player can answer anything; and **level-up may re-answer a question already answered at creation or an earlier level** — `applyLevelUp`'s merge (#69, hardened by this review) overwrites a stored pick with whatever the payload sends and validates the new value, but nothing stops a later answer from changing an earlier one, so Branch B needs to decide whether re-answering is allowed. |
 | 5a | **#71** — the sheet ignores a refused resource spend | small–medium | Found by the final review of `fix/tier1-reach-the-player`, 2026-09-21. `RESOURCE_CONSUMED`'s refusal (item 2's fix) is not in `SHEET_ERROR_EVENTS`, so `consumeResource`'s optimistic decrement never rolls back. Same family as item 2: a spend the server refused should not be the spend the player sees. See P11's 11d. |
-| 5b | **#75** — feat-granted traits reach no sheet's modifiers | small–medium | Found while implementing `fix/sheet-modifiers`, 2026-09-21: a feat is stored as a `feat_selection` `character_traits` row, and that row never enters the web store's save or the server's `CharacterBootstrapper.resolveGrantedTraitIds`, which reads a character's race, background and classes only. Same gap #73 closed, one grant source short. See the "11g. #75" section below. |
-| 5c | **#76** — the web store's composed `activeStates` still lacks trait and equipment states | small–medium | Found by `fix/sheet-modifiers`'s hand check, 2026-09-21: `composeActiveStates` still composes only over `baseStates`, which the store always sets to `[]`; trigger and dice-rule gating in `dispatchAuthoredEvent`, `useCheckRoll`, and the `ArmorClassWidget`, `TableRulesWidget`, `TurnControlsWidget` and `ConditionsWidget` widgets still read it, even though #73 moved the derived-stat hooks to `getSheetStates()`. If the branch's final review fixes this first, it closes #76 rather than leaving it recorded here. See the "11g. #76" section below. |
+| 5b | **#75** — feat-granted traits reach no sheet's modifiers | small–medium | Found while implementing `fix/sheet-modifiers`, 2026-09-21: a feat is stored as a `feat_selection` `character_traits` row, and that row never enters the web store's save or the server's `CharacterBootstrapper.resolveGrantedTraitIds`, which reads a character's race, background and classes only. Same gap #73 closed, one grant source short. See the "11g. #75 and #76" section below. |
+| 5c | **#76** — the web store's composed `activeStates` still lacks trait and equipment states | small–medium | Found by `fix/sheet-modifiers`'s hand check, 2026-09-21: `composeActiveStates` still composes only over `baseStates`, which the store always sets to `[]`; trigger and dice-rule gating in `dispatchAuthoredEvent`, `useCheckRoll`, and the `ArmorClassWidget`, `TableRulesWidget`, `TurnControlsWidget` and `ConditionsWidget` widgets still read it, even though #73 moved the derived-stat hooks to `getSheetStates()`. If the branch's final review fixes this first, it closes #76 rather than leaving it recorded here. See the "11g. #75 and #76" section below. |
+| 5d | **#77** — stored ability scores are pre-racial, and two readers use them directly | small–medium | Found by the final review of `fix/sheet-modifiers`, 2026-09-21: character creation, and now the samples (#73's `fix(database)` commit), store the pre-racial score, but D&D 5e wants the final, post-racial one for both readers below. Multiclass prerequisite validation (`validateMulticlassPrerequisites`, called from `applyLevelUp` in `apps/server/src/controllers/characterController.ts` with `character.str`, `character.dex`, `character.con`, `character.int`, `character.wis`, `character.cha`) reads the stored score directly — it would now refuse e.g. Sister Aveline (stored STR 12, final 13 as a human) a fighter or barbarian dip that `main` allowed. `useCheckRoll` (`apps/web/src/hooks/useCheckRoll.ts`) has the same gap on the client: it passes `baseScores` as `abilityScores` to dice rules such as Indomitable Might's floor, where the server's attack path already uses final scores. |
 
 ### Tier 2 — the burndown, one system per pass
 
@@ -2212,3 +2213,19 @@ Test totals: shared 227, engine 958, database 198, server 404, web 355 =
   `ConditionsWidget` widgets. If `fix/sheet-modifiers`'s final review fixes
   this before the branch closes, that review closes #76 rather than leaving
   it recorded here.
+
+  Two concrete symptoms the final review found, 2026-09-21. Totem Spirit
+  (Eagle)'s bonus-action Dash (`action_eagle_dash`) and its
+  opportunity-attack table note are both
+  `forbiddenStates: ["status_wearing_heavy_armor"]`, and the pack's own
+  `trait_totem_spirit_eagle` summary
+  (`packages/database/data/packs/core_2014_pack/traits/ported.json`) claims
+  "the heavy-armour gate holds on the sheet" — it does not: the web store's
+  raw `activeStates` never carries equipment states, so a raging barbarian in
+  heavy armour still sees and can use the Dash action and the table note both
+  claim is blocked. Separately, `useCheckRoll`
+  (`apps/web/src/hooks/useCheckRoll.ts`) is not only a trigger-gating gap —
+  its dice rules (`DiceEngine.applyDiceRulesToRollResult`) are handed the
+  same raw `state.activeStates`, so any dice rule keyed to a trait or
+  equipment state, not only a condition, rolls as though that state is never
+  active.
