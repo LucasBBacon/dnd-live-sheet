@@ -528,6 +528,7 @@ const ROSTER: SampleCharacter[] = [
     classes: [{ classId: "class_rogue", classLevel: 1 }],
     backgroundId: "background_criminal",
     choices: {
+      feats: [],
       classSelections: {},
       traitSelections: {
         criminal_gaming_set: ["dice_set"],
@@ -611,6 +612,7 @@ const ROSTER: SampleCharacter[] = [
     ],
     backgroundId: "background_acolyte",
     choices: {
+      feats: [],
       classSelections: {},
       traitSelections: {
         human_language_choice: ["celestial"],
@@ -695,6 +697,7 @@ const ROSTER: SampleCharacter[] = [
     ],
     backgroundId: "background_soldier",
     choices: {
+      feats: [],
       classSelections: {},
       traitSelections: {
         dwarf_artisan_tools: ["smiths_tools"],
@@ -808,6 +811,7 @@ const ROSTER: SampleCharacter[] = [
     ],
     backgroundId: "background_noble",
     choices: {
+      feats: [],
       classSelections: {},
       traitSelections: {
         half_elf_asi_choice: ["DEX", "CON"],
@@ -912,6 +916,7 @@ const ROSTER: SampleCharacter[] = [
     ],
     backgroundId: "background_noble",
     choices: {
+      feats: [],
       classSelections: {
         class_paladin: { paladin_level_2_fighting_style: ["trait_fs_defense"] },
       },
@@ -1030,6 +1035,7 @@ const ROSTER: SampleCharacter[] = [
     ],
     backgroundId: "background_charlatan",
     choices: {
+      feats: [],
       classSelections: {
         class_warlock: {
           warlock_level_2_invocations: [
@@ -1159,6 +1165,7 @@ const ROSTER: SampleCharacter[] = [
     ],
     backgroundId: "background_folk_hero",
     choices: {
+      feats: [],
       classSelections: {},
       traitSelections: {
         human_language_choice: ["elvish"],
@@ -1266,6 +1273,7 @@ const ROSTER: SampleCharacter[] = [
     },
     customTraitIds: ["trait_noble_languages", "trait_noble_prof_tools"],
     choices: {
+      feats: [],
       classSelections: {},
       traitSelections: {
         wizard_starting_skills: ["arcana", "investigation"],
@@ -1377,6 +1385,7 @@ const ROSTER: SampleCharacter[] = [
     ],
     backgroundId: "background_outlander",
     choices: {
+      feats: [],
       classSelections: {
         class_ranger: {
           ranger_level_2_fighting_style: ["trait_fs_archery"],
@@ -1504,6 +1513,7 @@ const ROSTER: SampleCharacter[] = [
     ],
     backgroundId: "background_soldier",
     choices: {
+      feats: [],
       classSelections: {
         class_fighter: {
           fighter_level_1_fighting_style: ["trait_fs_defense"],

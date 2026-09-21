@@ -102,7 +102,7 @@ export const characters = pgTable("characters", {
   choices: jsonb("choices")
     .$type<CharacterChoices>()
     .notNull()
-    .default({ classSelections: {}, traitSelections: {} }),
+    .default({ classSelections: {}, traitSelections: {}, feats: [] }),
 
   // flavor text
   personalityTraits: text("personality_traits"),

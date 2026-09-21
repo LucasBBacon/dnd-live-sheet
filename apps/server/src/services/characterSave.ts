@@ -63,6 +63,8 @@ export const toCharacterSave = (
         }))
       : [{ classId: "class_fighter", level: 1, selections: {} }],
   traitSelections: choices.traitSelections,
+  // TODO(#75, task 2): wire choices.feats through here.
+  feats: [],
   hp: {
     current: character.currentHp ?? character.maxHp ?? 1,
     temporary: 0,

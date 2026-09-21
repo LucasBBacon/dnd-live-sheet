@@ -14,6 +14,7 @@ const halfElfBard: CharacterSave = {
   race: { baseRaceId: "race_half_elf", hasSubraces: false, subraceId: null },
   classes: [{ classId: "class_bard", level: 1, selections: {} }],
   traitSelections: { half_elf_asi_choice: ["DEX", "CON"] },
+  feats: [],
   hp: { current: 8, temporary: 0, baseRolledHp: 8, hitDiceSpent: {} },
 };
 

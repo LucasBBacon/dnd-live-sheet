@@ -133,6 +133,8 @@ export const applyLevelUp = async (req: Request, res: Response) => {
           ...storedChoices.traitSelections,
           ...(traitSelections ?? {}),
         },
+        // carried through unchanged; feat picks join this in a later task (#75)
+        feats: storedChoices.feats,
       };
 
       if (selectedTraits || traitSelections) {

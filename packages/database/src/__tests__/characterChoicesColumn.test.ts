@@ -10,6 +10,10 @@ describe("characters.choices", () => {
 
     expect(column?.getSQLType()).toBe("jsonb");
     expect(column?.notNull).toBe(true);
-    expect(column?.default).toEqual({ classSelections: {}, traitSelections: {} });
+    expect(column?.default).toEqual({
+      classSelections: {},
+      traitSelections: {},
+      feats: [],
+    });
   });
 });

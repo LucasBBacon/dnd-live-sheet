@@ -16,6 +16,7 @@ import { buildLevelContext } from "../utils/resourceRules.js";
 import {
   resolveBackgroundDefinition,
   resolveClassDefinition,
+  resolveFeatDefinition,
   resolveRaceDefinition,
   resolveSubclassDefinition,
   resolveTraitDefinition,
@@ -223,6 +224,15 @@ const backgroundTraitIds = (
     : (resolveBackgroundDefinition(backgroundId, snapshot)?.backgroundTraitIds ??
       []);
 
+/** The traits of every feat taken. An unknown feat grants nothing (#75). */
+const featTraitIds = (
+  featIds: string[],
+  snapshot?: RuleSnapshotLookup,
+): string[] =>
+  featIds.flatMap(
+    (featId) => resolveFeatDefinition(featId, snapshot)?.grantedTraitIds ?? [],
+  );
+
 const knownSpellIds = (
   classState: ClassState,
   traitIds: Iterable<string>,
@@ -288,6 +298,7 @@ export class CharacterBootstrapper {
     const ids = [
       ...raceTraitIds(save.race, snapshot),
       ...backgroundTraitIds(save.backgroundId, snapshot),
+      ...featTraitIds(save.feats, snapshot),
       ...save.classes.flatMap((classState, index) =>
         classTraitIds(classState, index === 0, snapshot),
       ),

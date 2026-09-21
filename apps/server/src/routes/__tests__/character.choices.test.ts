@@ -83,6 +83,7 @@ describe("POST /api/character choices", () => {
         half_elf_asi_choice: ["DEX", "CON"],
         skill_versatility_choice: ["perception", "insight"],
       },
+      feats: [],
     };
 
     const response = await request(app)
@@ -101,7 +102,7 @@ describe("POST /api/character choices", () => {
     expect(response.status).toBe(201);
     expect(values).toHaveBeenCalledWith(
       expect.objectContaining({
-        choices: { classSelections: {}, traitSelections: {} },
+        choices: { classSelections: {}, traitSelections: {}, feats: [] },
       }),
     );
   });
@@ -351,6 +352,7 @@ describe("applyLevelUp choices", () => {
             },
           },
           traitSelections: { fighter_starting_skills: ["athletics", "perception"] },
+          feats: [],
         },
       }),
     );
@@ -538,6 +540,7 @@ describe("applyLevelUp choices", () => {
     expect(setCall.choices).toEqual({
       classSelections: {},
       traitSelections: { fighter_starting_skills: ["athletics", "perception"] },
+      feats: [],
     });
   });
 

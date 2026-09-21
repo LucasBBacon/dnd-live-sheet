@@ -12,6 +12,7 @@ const save: CharacterSave = {
   race: { baseRaceId: "race_human", hasSubraces: false, subraceId: null },
   classes: [{ classId: "class_fighter", level: 1, selections: {} }],
   traitSelections: {},
+  feats: [],
   hp: { current: 10, temporary: 0, baseRolledHp: 10, hitDiceSpent: {} },
 };
 

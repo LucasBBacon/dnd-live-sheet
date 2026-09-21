@@ -197,6 +197,8 @@ const toCharacterSave = (state: CharacterSheetState): CharacterSave => ({
         }))
       : [{ classId: "class_fighter", level: 1, selections: {} }],
   traitSelections: state.choices.traitSelections,
+  // TODO(#75, task 2): wire state.choices.feats through here.
+  feats: [],
   hp: {
     current: state.currentHp,
     temporary: 0,

@@ -393,6 +393,7 @@ describe("useCombat and dynamic weapon attacks", () => {
           },
         ],
         traitSelections: {},
+        feats: [],
         hp: { current: 30, temporary: 0, baseRolledHp: 12, hitDiceSpent: {} },
       },
       [

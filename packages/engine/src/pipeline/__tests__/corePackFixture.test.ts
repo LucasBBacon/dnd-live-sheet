@@ -82,6 +82,7 @@ describe("a barbarian resolving its pack features", () => {
       skill_versatility_choice: ["stealth", "perception"],
       half_elf_language_choice: ["dwarvish"],
     },
+    feats: [],
     hp: { current: 12, temporary: 0, baseRolledHp: 10, hitDiceSpent: {} },
   });
 

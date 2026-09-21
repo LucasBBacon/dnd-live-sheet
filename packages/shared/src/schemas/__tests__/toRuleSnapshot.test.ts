@@ -143,4 +143,22 @@ describe("toRuleSnapshot", () => {
       snapshot.backgroundsById["background_sage"]?.backgroundTraitIds,
     ).toEqual(["trait_sage_prof_skills"]);
   });
+
+  it("keys feats by their id", () => {
+    const snapshot = toRuleSnapshot(
+      pack({
+        feats: [
+          {
+            id: "feat_alert",
+            name: "Alert",
+            grantedTraitIds: ["feat_alert"],
+          },
+        ],
+      } as never),
+    );
+
+    expect(snapshot.featsById["feat_alert"]?.grantedTraitIds).toEqual([
+      "feat_alert",
+    ]);
+  });
 });

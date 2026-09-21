@@ -39,7 +39,9 @@ describe("hydrateCharacterSheet", () => {
 
     hydrateCharacterSheet(initialize, payload({ choices }));
 
-    expect(initialize).toHaveBeenCalledWith(expect.objectContaining({ choices }));
+    expect(initialize).toHaveBeenCalledWith(
+      expect.objectContaining({ choices: { ...choices, feats: [] } }),
+    );
   });
 
   it("hands the store no answers when the stored value is corrupt", () => {
@@ -50,7 +52,7 @@ describe("hydrateCharacterSheet", () => {
 
     expect(initialize).toHaveBeenCalledWith(
       expect.objectContaining({
-        choices: { classSelections: {}, traitSelections: {} },
+        choices: { classSelections: {}, traitSelections: {}, feats: [] },
       }),
     );
     expect(error).toHaveBeenCalled();

@@ -41,6 +41,7 @@ describe("toCharacterSave", () => {
         class_fighter: { fighter_level_1_fighting_style: ["trait_fs_defense"] },
       },
       traitSelections: { fighter_starting_skills: ["athletics", "perception"] },
+      feats: [],
     });
 
     expect(save.classes[0]?.selections).toEqual({
@@ -70,13 +71,14 @@ describe("readStoredChoices", () => {
       traitSelections: { half_elf_asi_choice: ["DEX", "CON"] },
     };
 
-    expect(readStoredChoices(stored, "char-1")).toEqual(stored);
+    expect(readStoredChoices(stored, "char-1")).toEqual({ ...stored, feats: [] });
   });
 
   it("treats a missing value as no answers", () => {
     expect(readStoredChoices(undefined, "char-1")).toEqual({
       classSelections: {},
       traitSelections: {},
+      feats: [],
     });
   });
 
@@ -87,6 +89,7 @@ describe("readStoredChoices", () => {
     expect(readStoredChoices({ classSelections: "nope" }, "char-9")).toEqual({
       classSelections: {},
       traitSelections: {},
+      feats: [],
     });
     expect(error).toHaveBeenCalledWith(
       expect.stringContaining("char-9"),
