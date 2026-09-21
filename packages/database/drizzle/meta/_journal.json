@@ -106,6 +106,13 @@
       "when": 1789987126378,
       "tag": "0014_add_character_choices",
       "breakpoints": true
+    },
+    {
+      "idx": 15,
+      "version": "7",
+      "when": 1789993836548,
+      "tag": "0015_add_class_position",
+      "breakpoints": true
     }
   ]
 }

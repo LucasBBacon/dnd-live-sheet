@@ -23,6 +23,7 @@ import { applyLevelUp } from "../controllers/characterController.js";
 import { isUserCampaignMember } from "../services/campaignAccess.js";
 import { getCachedRuleSnapshot } from "../services/ruleSnapshotCache.js";
 import { toCharacterSave } from "../services/characterSave.js";
+import { classLedgerOrder } from "../services/classLedger.js";
 
 const router: ExpressRouter = Router();
 /**
@@ -89,7 +90,8 @@ const fetchCharacterPayload = async (userId: string, characterId: string) => {
   const classLedger = await db
     .select()
     .from(characterClasses)
-    .where(eq(characterClasses.characterId, characterId));
+    .where(eq(characterClasses.characterId, characterId))
+    .orderBy(...classLedgerOrder);
 
   const traitGrants = await db
     .select({
@@ -269,6 +271,8 @@ router.post("/", async (req, res, next) => {
         classId: payload.classId,
         subclassId: payload.subclassId ?? undefined,
         classLevel: 1,
+        // the class chosen at creation is always the first class taken (#74)
+        position: 0,
       });
 
       // handle custom background traits

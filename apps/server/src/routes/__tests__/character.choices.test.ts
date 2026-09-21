@@ -143,6 +143,21 @@ describe("POST /api/character choices", () => {
     expect(response.status).toBe(400);
     expect(transaction).not.toHaveBeenCalled();
   });
+
+  it("records the creation class as the first class taken (#74)", async () => {
+    const { app, values } = await setupApp();
+
+    const response = await request(app).post("/api/character").send(lyra);
+
+    expect(response.status).toBe(201);
+    expect(values).toHaveBeenCalledWith(
+      expect.objectContaining({
+        classId: "class_bard",
+        classLevel: 1,
+        position: 0,
+      }),
+    );
+  });
 });
 
 describe("applyLevelUp choices", () => {
@@ -182,13 +197,23 @@ describe("applyLevelUp choices", () => {
           classId: "class_fighter",
           classLevel: 2,
           subclassId: ledgerSubclassId,
+          position: 0,
         },
       ],
     ];
+    const orderBy = vi.fn();
     const tx = {
       select: vi.fn().mockReturnThis(),
       from: vi.fn().mockReturnThis(),
-      where: vi.fn().mockImplementation(async () => selectResults.shift() ?? []),
+      where: vi.fn().mockImplementation(() => {
+        const rows = selectResults.shift() ?? [];
+        return Object.assign(Promise.resolve(rows), {
+          orderBy: (...args: unknown[]) => {
+            orderBy(...args);
+            return Promise.resolve(rows);
+          },
+        });
+      }),
       update: vi.fn().mockReturnThis(),
       set: vi.fn().mockReturnThis(),
       insert: vi.fn().mockReturnThis(),
@@ -222,7 +247,7 @@ describe("applyLevelUp choices", () => {
     const { applyLevelUp } = await import(
       "../../controllers/characterController.js"
     );
-    return { applyLevelUp, tx };
+    return { applyLevelUp, tx, orderBy };
   };
 
   /**
@@ -237,10 +262,19 @@ describe("applyLevelUp choices", () => {
   ) => {
     vi.resetModules();
     const selectResults: unknown[][] = [[characterRow], existingClassRows];
+    const orderBy = vi.fn();
     const tx = {
       select: vi.fn().mockReturnThis(),
       from: vi.fn().mockReturnThis(),
-      where: vi.fn().mockImplementation(async () => selectResults.shift() ?? []),
+      where: vi.fn().mockImplementation(() => {
+        const rows = selectResults.shift() ?? [];
+        return Object.assign(Promise.resolve(rows), {
+          orderBy: (...args: unknown[]) => {
+            orderBy(...args);
+            return Promise.resolve(rows);
+          },
+        });
+      }),
       update: vi.fn().mockReturnThis(),
       set: vi.fn().mockReturnThis(),
       insert: vi.fn().mockReturnThis(),
@@ -270,7 +304,7 @@ describe("applyLevelUp choices", () => {
     const { applyLevelUp } = await import(
       "../../controllers/characterController.js"
     );
-    return { applyLevelUp, tx };
+    return { applyLevelUp, tx, orderBy };
   };
 
   const levelUp = (body: Record<string, unknown>) =>
@@ -369,6 +403,7 @@ describe("applyLevelUp choices", () => {
           classId: "class_fighter",
           classLevel: 2,
           subclassId: null,
+          position: 0,
         },
       ],
       dexterousFighter,
@@ -394,6 +429,45 @@ describe("applyLevelUp choices", () => {
           }),
         }),
       }),
+    );
+    expect(tx.values).toHaveBeenCalledWith(
+      expect.objectContaining({ classId: "class_rogue", position: 1 }),
+    );
+  });
+
+  it("dips into the next place after the highest position, not the class count (#74)", async () => {
+    // stored fighter sits at position 2 (a gap below it, e.g. from a removed
+    // class); the dip must land at 3, the next place after the highest
+    // existing position, not at 1 (existingClasses.length)
+    const dexterousFighter = { ...storedFighter, dex: 14 };
+    const { applyLevelUp, tx } = await setupLevelUpWithRealValidation(
+      [
+        {
+          id: "ledger-1",
+          characterId: "char-1",
+          classId: "class_fighter",
+          classLevel: 2,
+          subclassId: null,
+          position: 2,
+        },
+      ],
+      dexterousFighter,
+    );
+    const { res, status } = response();
+
+    await applyLevelUp(
+      levelUp({
+        targetClassId: "class_rogue",
+        newTotalLevel: 3,
+        subclassId: undefined,
+        traitSelections: { rogue_multiclass_skill: ["stealth"] },
+      }),
+      res,
+    );
+
+    expect(status).toHaveBeenCalledWith(200);
+    expect(tx.values).toHaveBeenCalledWith(
+      expect.objectContaining({ classId: "class_rogue", position: 3 }),
     );
   });
 
@@ -483,5 +557,19 @@ describe("applyLevelUp choices", () => {
     expect(tx.set).toHaveBeenCalledWith(
       expect.objectContaining({ subclassId: "subclass_fighter_battle_master" }),
     );
+  });
+
+  it("reads the class ledger in the order the classes were taken (#74)", async () => {
+    const { applyLevelUp, orderBy } = await setupLevelUp();
+    const { res } = response();
+
+    await applyLevelUp(levelUp({}), res);
+
+    // Imported after setupLevelUp's vi.resetModules() so this is the same
+    // module instance applyLevelUp itself resolved classLedgerOrder from -
+    // importing it statically at file scope compares against a stale
+    // pre-reset instance and fails equality despite being value-identical.
+    const { classLedgerOrder } = await import("../../services/classLedger.js");
+    expect(orderBy).toHaveBeenCalledWith(...classLedgerOrder);
   });
 });

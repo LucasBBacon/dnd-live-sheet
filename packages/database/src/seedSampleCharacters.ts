@@ -1798,11 +1798,13 @@ const seedCharacter = async (character: SampleCharacter) => {
       .where(eq(characterClasses.characterId, character.id));
 
     await tx.insert(characterClasses).values(
-      character.classes.map((entry) => ({
+      character.classes.map((entry, position) => ({
         characterId: character.id,
         classId: entry.classId,
         classLevel: entry.classLevel,
         subclassId: entry.subclassId ?? null,
+        // each sample lists its classes primary-first (#74)
+        position,
       })),
     );
 

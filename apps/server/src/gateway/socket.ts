@@ -52,6 +52,7 @@ import { resolvePlayerTurn } from "../services/turnResolution.js";
 import { getCachedRuleSnapshot } from "../services/ruleSnapshotCache.js";
 import { modifyCharacterHp } from "../services/combatService.js";
 import { readStoredChoices, toCharacterSave } from "../services/characterSave.js";
+import { classLedgerOrder } from "../services/classLedger.js";
 import {
   getCampaignMembershipRole,
   getUserIdFromSocket,
@@ -199,7 +200,8 @@ const getAuthoritativeRuntimeContext = async (
       subclassId: characterClasses.subclassId,
     })
     .from(characterClasses)
-    .where(eq(characterClasses.characterId, characterId));
+    .where(eq(characterClasses.characterId, characterId))
+    .orderBy(...classLedgerOrder);
 
   const { snapshot } = await getCachedRuleSnapshot();
 
@@ -1458,7 +1460,8 @@ export function initializeWebSocketGateway(httpServer: any) {
                 subclassId: characterClasses.subclassId,
               })
               .from(characterClasses)
-              .where(eq(characterClasses.characterId, payload.characterId));
+              .where(eq(characterClasses.characterId, payload.characterId))
+              .orderBy(...classLedgerOrder);
 
             const classLevels = Object.fromEntries(
               classRows.map((row) => [row.classId, row.classLevel]),

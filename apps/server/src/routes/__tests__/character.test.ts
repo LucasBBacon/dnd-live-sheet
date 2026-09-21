@@ -54,6 +54,7 @@ describe("Character Routes", () => {
         classId: "class_fighter",
         classLevel: 2,
         subclassId: null,
+        position: 0,
       },
     ],
     multiclassValidationErrorMessage,
@@ -73,6 +74,7 @@ describe("Character Routes", () => {
       classId: string;
       classLevel: number;
       subclassId: string | null;
+      position: number;
     }>;
     multiclassValidationErrorMessage?: string;
   }) => {
@@ -97,9 +99,11 @@ describe("Character Routes", () => {
     const tx = {
       select: vi.fn().mockReturnThis(),
       from: vi.fn().mockReturnThis(),
-      where: vi.fn().mockImplementation(async () => {
-        const nextResult = selectResults.shift();
-        return nextResult ?? [];
+      where: vi.fn().mockImplementation(() => {
+        const rows = selectResults.shift() ?? [];
+        return Object.assign(Promise.resolve(rows), {
+          orderBy: () => Promise.resolve(rows),
+        });
       }),
       update: vi.fn().mockReturnThis(),
       set: vi.fn().mockReturnThis(),
@@ -777,6 +781,7 @@ describe("Character Routes", () => {
             classId: "class_rogue",
             classLevel: 2,
             subclassId: null,
+            position: 0,
           },
         ],
         multiclassValidationErrorMessage:
@@ -815,6 +820,7 @@ describe("Character Routes", () => {
             classId: "class_rogue",
             classLevel: 2,
             subclassId: null,
+            position: 0,
           },
         ],
         resolverContextOverrides: {
@@ -842,6 +848,9 @@ describe("Character Routes", () => {
         }),
       );
       expect(validateMulticlassPrerequisitesMock).toHaveBeenCalled();
+      expect(tx.values).toHaveBeenCalledWith(
+        expect.objectContaining({ classId: "class_fighter", position: 1 }),
+      );
       expect(tx.values).toHaveBeenCalledWith([
         {
           characterId: "char-1",

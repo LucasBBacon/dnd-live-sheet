@@ -141,6 +141,10 @@ export const characterClasses = pgTable(
     subclassId: varchar("subclass_id", { length: 100 }).references(
       () => subclasses.id,
     ),
+    // the order the classes were taken in: 0 for the class chosen at creation,
+    // then each multiclass dip in turn. The engine grants starting
+    // proficiencies to the first class only, so this order is load-bearing (#74)
+    position: integer("position").notNull().default(0),
   },
   (table) => ({
     idIdx: uniqueIndex("character_classes_id_idx").on(table.id),
