@@ -101,6 +101,14 @@ export const applyLevelUp = async (req: Request, res: Response) => {
 
       // 3 - SERVER VALIDATION
       if (isMulticlassDip) {
+        // isMulticlassDip is one of the conditions the fetch above is
+        // guarded on, so snapshot is always loaded here; this guard gives
+        // TypeScript that same narrowing without a non-null assertion
+        if (!snapshot) {
+          throw new Error("Rule snapshot failed to load.");
+        }
+        const loadedSnapshot = snapshot;
+
         // the character as it is before this level: the stored ledger and
         // choices, not this level-up's changes - a multiclass prerequisite
         // is checked against final scores, not the pre-racial ones stored on
@@ -109,7 +117,7 @@ export const applyLevelUp = async (req: Request, res: Response) => {
           classId: targetClassId,
           currentBaseScores: finalAbilityScores(
             toCharacterSave(character, existingClasses, storedChoices),
-            snapshot!,
+            loadedSnapshot,
           ),
         });
       }
@@ -154,7 +162,34 @@ export const applyLevelUp = async (req: Request, res: Response) => {
         feats: storedChoices.feats,
       };
 
-      if (selectedTraits || traitSelections) {
+      if (payload.featId) {
+        // a feat is a choice like any other: it lives in choices.feats and the
+        // bootstrapper grants its traits. It used to become feat_selection
+        // rows that no save ever read, so it did nothing (#75)
+        //
+        // Validated and appended to mergedChoices BEFORE the choice
+        // validation below: a feat whose traits carry their own choice block
+        // must already be in mergedChoices.feats when that validation runs,
+        // or the same-payload answer to its choice block has no matching
+        // decision yet and is rejected as an orphan_selection (#75 latent)
+        const feat = snapshot?.featsById?.[payload.featId];
+        if (!feat) {
+          throw new Error(
+            `Invalid character choices: unknown feat ${payload.featId}`,
+          );
+        }
+        if (!feat.repeatable && mergedChoices.feats.includes(payload.featId)) {
+          throw new Error(
+            `Invalid character choices: ${payload.featId} already taken`,
+          );
+        }
+        mergedChoices = {
+          ...mergedChoices,
+          feats: [...mergedChoices.feats, payload.featId],
+        };
+      }
+
+      if (selectedTraits || traitSelections || payload.featId) {
         const ledgerAfterLevel = existingClasses.map((entry) => ({
           classId: entry.classId,
           classLevel:
@@ -181,27 +216,6 @@ export const applyLevelUp = async (req: Request, res: Response) => {
             `Invalid character choices: ${issues.map((issue) => issue.message).join("; ")}`,
           );
         }
-      }
-
-      if (payload.featId) {
-        // a feat is a choice like any other: it lives in choices.feats and the
-        // bootstrapper grants its traits. It used to become feat_selection
-        // rows that no save ever read, so it did nothing (#75)
-        const feat = snapshot?.featsById?.[payload.featId];
-        if (!feat) {
-          throw new Error(
-            `Invalid character choices: unknown feat ${payload.featId}`,
-          );
-        }
-        if (!feat.repeatable && mergedChoices.feats.includes(payload.featId)) {
-          throw new Error(
-            `Invalid character choices: ${payload.featId} already taken`,
-          );
-        }
-        mergedChoices = {
-          ...mergedChoices,
-          feats: [...mergedChoices.feats, payload.featId],
-        };
       }
 
       // 4 - update class ledger

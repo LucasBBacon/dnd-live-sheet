@@ -17,16 +17,67 @@ beforeAll(async () => {
   snapshot = toRuleSnapshot(await assembleCoreRulePack(PACK_DIR));
 });
 
-const mockRuleSnapshot = () => {
+const mockRuleSnapshot = (snapshotOverride: CoreRulePackSnapshot = snapshot) => {
   vi.doMock("../../services/ruleSnapshotCache.js", () => ({
     getCachedRuleSnapshot: async () => ({
       cacheVersion: 1,
       loadedAt: 0,
-      snapshot,
+      snapshot: snapshotOverride,
     }),
     invalidateRuleSnapshotCache: () => undefined,
   }));
 };
+
+/**
+ * The shipped pack has no feat that grants a trait with its own choice
+ * block, so this clones the real snapshot and adds one: a feat that grants a
+ * trait carrying a single-pick choice block, keyed the same way a real
+ * choice block is (Important 3 - a feat's own choice block answered in the
+ * same level-up payload).
+ */
+const withFeatChoiceBlock = (): CoreRulePackSnapshot => ({
+  ...snapshot,
+  featsById: {
+    ...snapshot.featsById,
+    feat_test_choice: {
+      id: "feat_test_choice",
+      name: "Test Choice Feat",
+      category: "general",
+      repeatable: false,
+      lore: {
+        shortDescription: "A test-only feat whose trait carries a choice block.",
+      },
+      grantedTraitIds: ["trait_test_choice_block"],
+      tags: [],
+    },
+  },
+  traitsById: {
+    ...snapshot.traitsById,
+    trait_test_choice_block: {
+      id: "trait_test_choice_block",
+      name: "Test Choice Trait",
+      lore: { shortDescription: "Grants a test-only ability score choice." },
+      isStartingProficiency: false,
+      modifiers: {
+        fixed: [],
+        choices: [
+          {
+            id: "trait_test_choice_block_pick",
+            chooseAmount: 1,
+            options: ["STR"],
+            modifierTemplate: { type: "add", value: 1, scalingFactor: "none" },
+            allowDuplicates: false,
+          },
+        ],
+      },
+      resources: [],
+      triggers: [],
+      diceRules: [],
+      criticalHitModifiers: [],
+      actions: [],
+    },
+  },
+});
 
 describe("POST /api/character choices", () => {
   const setupApp = async () => {
@@ -190,12 +241,14 @@ describe("applyLevelUp choices", () => {
       ledgerSubclassId?: string | null;
       characterRow?: unknown;
       storedFeats?: string[];
+      snapshotOverride?: CoreRulePackSnapshot;
     } = {},
   ) => {
     const {
       ledgerSubclassId = null,
       characterRow: baseCharacterRow = storedFighter,
       storedFeats,
+      snapshotOverride,
     } = options;
     // storedFeats layers onto whichever character row this call already
     // provides, rather than replacing it - the harness's own defaults (and a
@@ -264,7 +317,7 @@ describe("applyLevelUp choices", () => {
     vi.doMock("../../services/effectiveReferenceResolver.js", () => ({
       getEffectiveReferenceSnapshot: vi.fn().mockResolvedValue({ classes: [] }),
     }));
-    mockRuleSnapshot();
+    mockRuleSnapshot(snapshotOverride);
 
     const { applyLevelUp } = await import(
       "../../controllers/characterController.js"
@@ -697,6 +750,36 @@ describe("applyLevelUp choices", () => {
     expect(json).toHaveBeenCalledWith(
       expect.objectContaining({
         error: "Invalid character choices: feat_alert already taken",
+      }),
+    );
+  });
+
+  it("accepts a same-payload answer to a feat's own choice block (#75 latent)", async () => {
+    // the feat must be validated and appended to mergedChoices.feats before
+    // choice validation runs, or its trait is not yet active and the answer
+    // to its own choice block is rejected as an orphan_selection
+    const { applyLevelUp, tx } = await setupLevelUp({
+      snapshotOverride: withFeatChoiceBlock(),
+    });
+    const { res, status } = response();
+
+    await applyLevelUp(
+      levelUp({
+        featId: "feat_test_choice",
+        traitSelections: { trait_test_choice_block_pick: ["STR"] },
+      }),
+      res,
+    );
+
+    expect(status).toHaveBeenCalledWith(200);
+    expect(tx.set).toHaveBeenCalledWith(
+      expect.objectContaining({
+        choices: expect.objectContaining({
+          feats: ["feat_test_choice"],
+          traitSelections: expect.objectContaining({
+            trait_test_choice_block_pick: ["STR"],
+          }),
+        }),
       }),
     );
   });

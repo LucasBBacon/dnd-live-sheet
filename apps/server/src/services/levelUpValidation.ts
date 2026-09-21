@@ -496,6 +496,24 @@ export const validateLevelUpPayloadFromResolver = ({
     );
   }
 
+  // strict validation: a feat or ASI can only be selected at a level that
+  // actually offers the asi_or_feat decision - otherwise the payload takes
+  // effect (the controller applies both) with nothing having offered it
+  const hasAsiOrFeatDecision = context.decisions.some(
+    (decision) => decision.type === "asi_or_feat",
+  );
+  if (!hasAsiOrFeatDecision) {
+    const hasASI = Boolean(
+      payload.asiChoices && payload.asiChoices.length > 0,
+    );
+    const hasFeat = Boolean(payload.featId);
+    if (hasASI || hasFeat) {
+      throw new Error(
+        "This level has no Ability Score Improvement or Feat decision.",
+      );
+    }
+  }
+
   for (const decision of context.decisions) {
     // skip validation for non-required decisions
     if (!decision.isRequired) {
