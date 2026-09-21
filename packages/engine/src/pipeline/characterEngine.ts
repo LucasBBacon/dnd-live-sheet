@@ -30,10 +30,10 @@ import type { EffectManager } from "../calculators/effects.js";
 import type { ResourceManager } from "../calculators/resources.js";
 import { CharacterBootstrapper } from "./characterBootstrapper.js";
 import { ActionResolver } from "./actionResolver.js";
-import { ModifierExtractor } from "./modifierExtractor.js";
 import { ProficiencyExtractor } from "./proficiencyExtractor.js";
 import { StateExtractor } from "./stateExtractor.js";
 import { InventoryExtractor } from "./inventoryExtractor.js";
+import { gatherSheetModifiers } from "./sheetModifiers.js";
 import {
   dynamicAttackApplies,
   dynamicAttackId,
@@ -296,10 +296,6 @@ export class CharacterEngine {
     // blocks and class progression nodes share one namespace once the traits
     // have been compiled and no longer remember who granted them
     const selections = CharacterBootstrapper.resolveSelections(save);
-    const staticModifiers = ModifierExtractor.extractModifiers(
-      activeTraits,
-      selections,
-    );
     const proficiencies = ProficiencyExtractor.extractProficiencies(
       activeTraits,
       selections,
@@ -336,16 +332,13 @@ export class CharacterEngine {
         }));
       });
     const activeActors = buildActiveActors(effectManager);
-    const inventoryModifiers = InventoryExtractor.extractModifiers(
+    const allModifiers = gatherSheetModifiers({
+      activeTraits,
+      selections,
       inventory,
-      options.snapshot,
-    );
-    const liveModifiers = effectManager.getActiveModifiers();
-    const allModifiers = [
-      ...staticModifiers,
-      ...inventoryModifiers,
-      ...liveModifiers,
-    ];
+      effectManager,
+      ...(options.snapshot !== undefined && { snapshot: options.snapshot }),
+    });
 
     // endregion
 
