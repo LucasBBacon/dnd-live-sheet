@@ -1,7 +1,7 @@
 # TODO Backlog
 
-**Status as of 2026-09-21**, at `8d9e642` on `fix/tier1-reach-the-player`,
-after #64, #63 and #68's fixed half closed. The workspace is green — **2067
+**Status as of 2026-09-21**, on `fix/tier1-reach-the-player`, after #64, #63
+and #68's fixed half closed. The workspace is green — **2068
 tests**, 0 failures, and typecheck clean per package (6f explains why "per
 package" matters). Nothing below is breaking a build; these are gaps, debt and
 content.
@@ -179,6 +179,7 @@ things the last three branches showed replace it:
 | 3 | ✅ **#68 (fixed half)** — backgrounds reach the live sheet | small–medium | **Closed 2026-09-21** on `fix/tier1-reach-the-player`: `CharacterSaveSchema` gained `backgroundId`, the bootstrapper resolves a background's granted traits, and the server and web store thread it through. A preset background's fixed skill and tool grants (Criminal's Deception, Stealth and thieves' tools, and the like) now reach the live sheet. The choice half is unchanged — see item 5 below and 10d. |
 | 4 | **#69** — record which node a trait choice answered | medium, needs a decision | Newly numbered (it sat unnumbered since 2026-09-02). Must land **before the fighter or ranger pass**, and before #68's choice half, because the proficiency-choice step will write more `player_choice` rows through the same lossy path. Recommend the honest fix: persist `node_id` on `character_traits` (one migration). |
 | 5 | **#68 (choice half)** — a proficiency-choice step in character creation | medium, UI | `ProficiencyExtractor.listPendingChoices` has no caller outside tests. 21 authored choice blocks wait on this. Brainstorm the wizard step first; it is the first new UI surface since the barbarian's table notes. |
+| 5a | **#71** — the sheet ignores a refused resource spend | small–medium | Found by the final review of `fix/tier1-reach-the-player`, 2026-09-21. `RESOURCE_CONSUMED`'s refusal (item 2's fix) is not in `SHEET_ERROR_EVENTS`, so `consumeResource`'s optimistic decrement never rolls back. Same family as item 2: a spend the server refused should not be the spend the player sees. See P11's 11d. |
 
 ### Tier 2 — the burndown, one system per pass
 
@@ -200,6 +201,7 @@ things the last three branches showed replace it:
 | 12 | ✅ **Repo hygiene** — branches and worktrees (P11) | **Done 2026-09-21** — see 11b. |
 | 13 | **#53** — a unit test for the line-ending check | Needs a root vitest project or a move into a package. |
 | 14 | **#52** — 71 LF files against a CRLF tree | One normalising commit, no content change. Do it on a quiet day, not mid-branch. |
+| 14a | **#72** — verify whether any gameplay path needs the authoritative runtime's missing rule snapshot | Pre-existing, found by the final review of `fix/tier1-reach-the-player`, 2026-09-21. `getAuthoritativeRuntimeContext` hydrates with no snapshot in either branch, so trait-granted states and grant-derived resources never reach it. Verify-first: check whether anything reachable depends on those states before scoping a fix. See P11's 11d. |
 
 ### Tier 4 — design passes
 
@@ -1997,3 +1999,33 @@ Two separate findings from the same file,
   background, the same as an unknown id. `background_sage` is a fourth row the
   seeder creates that no sample character uses at all. Four backgrounds to
   author, for the backlog — tracked as Tier 2 item 7a.
+
+### 11d. #71 and #72 — found by the final review of `fix/tier1-reach-the-player`
+
+| # | Item | Notes |
+| --- | --- | --- |
+| 71 | The sheet ignores a refused resource spend | Found by the final review of `fix/tier1-reach-the-player`, 2026-09-21. See below. |
+| 72 | The server's authoritative runtime is hydrated without the rule snapshot | Pre-existing, noticed by the same review. See below. |
+
+- **#71 — the sheet ignores a refused resource spend.** Since this branch,
+  `RESOURCE_CONSUMED` answers a spend that matched no `character_resources`
+  row with `action_error` ("Unknown resource for this character.") and does
+  not broadcast. But `SHEET_ERROR_EVENTS`
+  (`apps/web/src/components/sheet/sheetErrorEvents.ts`) does not list
+  `RESOURCE_CONSUMED`, so the sheet drops the error, and `consumeResource` in
+  `apps/web/src/store/characterSheetStore.ts` never rolls back its optimistic
+  decrement: the spender sees the spend until reload. Reachable now by a
+  click during page load before the join's insert lands, or by client/server
+  grant drift. Needs a rollback plus a notice; the inventory-scoped banner
+  that `SHEET_ERROR_EVENTS` feeds is the wrong surface (compare S5). The
+  server now logs the refusal (#63's follow-up fix).
+- **#72 — the server's authoritative runtime is hydrated without the rule
+  snapshot.** Pre-existing, noticed by the same review.
+  `getAuthoritativeRuntimeContext` in `apps/server/src/gateway/socket.ts`
+  calls `CharacterBootstrapper.hydrateRuntimeManagers(save, effectManager,
+  resourceManager)` with no snapshot, in both its cached and fresh branches,
+  so `compileActiveTraits` resolves no traits there and the cached runtime
+  gets no trait-granted states or grant-derived resources; only
+  `hydrateFromPersisted` supplies resources. `ROOM_JOIN` now reaches this
+  path too. Needs checking whether any gameplay path depends on those states
+  before deciding the fix.
