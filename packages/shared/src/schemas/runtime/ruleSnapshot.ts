@@ -34,10 +34,10 @@ export type RuleSnapshot = z.infer<typeof RuleSnapshotSchema>;
  * The rulebook content a loaded pack contributes to the engine's lookups.
  *
  * Deliberately only what the engine resolves by id. Everything else in a pack
- * - feats, spells, proficiencies - reaches the runtime by other routes, and
- * adding them here before anything reads them would be the dead-data pattern
- * this project keeps having to unpick. Backgrounds joined once the
- * bootstrapper began resolving a save's backgroundId.
+ * - spells, proficiencies - reaches the runtime by other routes, and adding
+ * them here before anything reads them would be the dead-data pattern this
+ * project keeps having to unpick. Backgrounds joined once the bootstrapper
+ * began resolving a save's backgroundId; feats joined the same way (#75).
  */
 export interface CoreRulePackSnapshot {
   traitsById: Record<string, CoreRulePack["traits"][number]>;
@@ -54,6 +54,11 @@ export interface CoreRulePackSnapshot {
    * the background grants, the same way it resolves a race.
    */
   backgroundsById: Record<string, CoreRulePack["backgrounds"][number]>;
+  /**
+   * Keyed so the bootstrapper can grant a save's feats, the same way it
+   * grants a background's traits (#75).
+   */
+  featsById: Record<string, CoreRulePack["feats"][number]>;
   /**
    * Every resource a character can hold, keyed by id: the pack's own section
    * plus every pool a trait declares. Trait pools were missing from every
@@ -81,6 +86,7 @@ export const toRuleSnapshot = (pack: CoreRulePack): CoreRulePackSnapshot => ({
   classesById: byId(pack.classes),
   subclassesById: byId(pack.subclasses),
   backgroundsById: byId(pack.backgrounds),
+  featsById: byId(pack.feats),
   resourcesById: byId([
     ...pack.resources,
     ...pack.traits.flatMap((trait) => trait.resources),

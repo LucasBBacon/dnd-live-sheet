@@ -197,6 +197,7 @@ const toCharacterSave = (state: CharacterSheetState): CharacterSave => ({
         }))
       : [{ classId: "class_fighter", level: 1, selections: {} }],
   traitSelections: state.choices.traitSelections,
+  feats: state.choices.feats,
   hp: {
     current: state.currentHp,
     temporary: 0,

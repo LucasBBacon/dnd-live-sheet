@@ -50,6 +50,7 @@ const fighter = (
     // the fighter's own Skill Proficiencies choice block, now authored
     fighter_starting_skills: ["athletics", "perception"],
   },
+  feats: [],
   hp: baseHp,
 });
 
@@ -74,6 +75,7 @@ const warlock = (
     human_language_choice: ["dwarvish"],
     warlock_starting_skills: ["arcana", "history"],
   },
+  feats: [],
   hp: baseHp,
 });
 
@@ -339,6 +341,7 @@ describe("CharacterBootstrapper.collectSaveIssues - trait choice blocks", () => 
       },
     ],
     traitSelections,
+    feats: [],
     hp: baseHp,
   });
 
@@ -482,6 +485,28 @@ describe("CharacterBootstrapper.resolveGrantedTraitIds", () => {
     );
   });
 
+  it("includes the traits of every feat taken", () => {
+    const ids = CharacterBootstrapper.resolveGrantedTraitIds(
+      { ...fighter(), feats: ["feat_alert", "feat_mobile"] },
+      corePackSnapshot(),
+    );
+
+    expect(ids).toEqual(
+      expect.arrayContaining(["feat_alert", "trait_feat_mobile"]),
+    );
+  });
+
+  it("grants nothing for a feat the pack does not define", () => {
+    expect(
+      CharacterBootstrapper.resolveGrantedTraitIds(
+        { ...fighter(), feats: ["feat_not_real"] },
+        corePackSnapshot(),
+      ),
+    ).toEqual(
+      CharacterBootstrapper.resolveGrantedTraitIds(fighter(), corePackSnapshot()),
+    );
+  });
+
   // three sample characters carry backgrounds the pack does not define
   it("grants nothing for a background the pack does not define", () => {
     const withUnknown = CharacterBootstrapper.resolveGrantedTraitIds(
@@ -569,6 +594,7 @@ describe("CharacterBootstrapper pack resolution", () => {
     race: { baseRaceId: "race_dwarf", hasSubraces: false, subraceId: null },
     classes: [{ classId: "class_barbarian", level: 1, selections: {} }],
     traitSelections: {},
+    feats: [],
     hp: baseHp,
   });
 
@@ -731,6 +757,7 @@ describe("CharacterBootstrapper.hydrateRuntimeManagers caster level", () => {
     race: { baseRaceId: "race_human", hasSubraces: false, subraceId: null },
     classes: [{ classId: "class_wizard", level: 5, selections: {} }],
     traitSelections: {},
+    feats: [],
     hp: baseHp,
   });
 

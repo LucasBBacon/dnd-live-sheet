@@ -522,6 +522,7 @@ describe("useCharacterSheetStore hp trigger handling", () => {
       race: { baseRaceId: "race_human", hasSubraces: false, subraceId: null },
       classes: [{ classId: "class_fighter", level: 1, selections: {} }],
       traitSelections: {},
+      feats: [],
       hp: { current: 10, temporary: 0, baseRolledHp: 10, hitDiceSpent: {} },
     };
 
@@ -1362,6 +1363,7 @@ describe("getActiveTraits with a subclass", () => {
           },
         },
         traitSelections: {},
+        feats: [],
       },
       raceId: "race_human",
       subraceId: null,
@@ -1696,6 +1698,7 @@ describe("useCharacterSheetStore proficiency grants", () => {
       choices: {
         classSelections: {},
         traitSelections: { skill_versatility_choice: ["perception", "insight"] },
+        feats: [],
       },
     });
 
@@ -1722,6 +1725,7 @@ describe("getSheetModifiers", () => {
       choices: {
         classSelections: {},
         traitSelections: { half_elf_asi_choice: ["DEX", "CON"] },
+        feats: [],
       },
       inventory: [],
       resources: [],
@@ -1743,11 +1747,26 @@ describe("getSheetModifiers", () => {
     expect(score(9, "STR")).toBe(9);
   });
 
+  it("applies a stored feat's traits", () => {
+    init({
+      classLevels: { class_fighter: 4 },
+      raceId: "race_human",
+      choices: { classSelections: {}, traitSelections: {}, feats: ["feat_alert"] },
+    });
+
+    expect(
+      useCharacterSheetStore
+        .getState()
+        .getActiveTraits()
+        .map((trait) => trait.id),
+    ).toContain("feat_alert");
+  });
+
   it("gives an unarmoured barbarian Unarmored Defense", () => {
     init({
       classLevels: { class_barbarian: 1 },
       raceId: "race_human",
-      choices: { classSelections: {}, traitSelections: {} },
+      choices: { classSelections: {}, traitSelections: {}, feats: [] },
     });
     const modifiers = useCharacterSheetStore.getState().getSheetModifiers();
 
@@ -1798,6 +1817,7 @@ describe("getSheetModifiers", () => {
           class_fighter: { fighter_level_1_fighting_style: ["trait_fs_defense"] },
         },
         traitSelections: {},
+        feats: [],
       },
       inventory: [plate],
     });
@@ -1817,7 +1837,7 @@ describe("getSheetModifiers", () => {
     init({
       classLevels: { class_barbarian: 1 },
       raceId: "race_human",
-      choices: { classSelections: {}, traitSelections: {} },
+      choices: { classSelections: {}, traitSelections: {}, feats: [] },
       inventory: [plate],
     });
     const state = useCharacterSheetStore.getState();
@@ -1843,6 +1863,7 @@ describe("getSheetModifiers", () => {
           },
         },
         traitSelections: {},
+        feats: [],
       },
       inventory: [
         {

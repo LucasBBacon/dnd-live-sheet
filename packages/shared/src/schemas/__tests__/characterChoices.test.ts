@@ -14,7 +14,7 @@ describe("CharacterChoicesSchema", () => {
       traitSelections: { fighter_starting_skills: ["athletics", "perception"] },
     };
 
-    expect(CharacterChoicesSchema.parse(choices)).toEqual(choices);
+    expect(CharacterChoicesSchema.parse(choices)).toEqual({ ...choices, feats: [] });
   });
 
   it("defaults both maps, so an empty stored value is a valid one", () => {
@@ -22,6 +22,7 @@ describe("CharacterChoicesSchema", () => {
     expect(emptyCharacterChoices()).toEqual({
       classSelections: {},
       traitSelections: {},
+      feats: [],
     });
   });
 
@@ -30,6 +31,12 @@ describe("CharacterChoicesSchema", () => {
       CharacterChoicesSchema.safeParse({ classSelections: { class_fighter: "x" } })
         .success,
     ).toBe(false);
+  });
+
+  it("keeps the feats taken, in order", () => {
+    expect(
+      CharacterChoicesSchema.parse({ feats: ["feat_alert", "feat_tough"] }).feats,
+    ).toEqual(["feat_alert", "feat_tough"]);
   });
 });
 
@@ -58,6 +65,6 @@ describe("CreateCharacterPayloadSchema choices", () => {
 
     expect(
       CreateCharacterPayloadSchema.parse({ ...payload, choices }).choices,
-    ).toEqual(choices);
+    ).toEqual({ ...choices, feats: [] });
   });
 });

@@ -1,0 +1,1 @@
+ALTER TABLE "characters" ALTER COLUMN "choices" SET DEFAULT '{"classSelections":{},"traitSelections":{},"feats":[]}'::jsonb;

@@ -4,7 +4,6 @@ import {
   characters,
   characterTraits,
 } from "@project/database/src/schema/operational.js";
-import { featTraits, traits } from "@project/database/src/schema/reference.js";
 import type { CharacterChoices, LevelUpPayload } from "@project/shared";
 import type { Request, Response } from "express";
 import { eq, sql } from "drizzle-orm";
@@ -15,7 +14,11 @@ import {
   validateLevelUpPayloadFromResolver,
 } from "../services/levelUpValidation.js";
 import { getCachedRuleSnapshot } from "../services/ruleSnapshotCache.js";
-import { readStoredChoices, toCharacterSave } from "../services/characterSave.js";
+import {
+  finalAbilityScores,
+  readStoredChoices,
+  toCharacterSave,
+} from "../services/characterSave.js";
 import { classLedgerOrder } from "../services/classLedger.js";
 import { z } from "zod";
 
@@ -82,18 +85,40 @@ export const applyLevelUp = async (req: Request, res: Response) => {
       const isMulticlassDip = !targetClassRecord && existingClasses.length > 0;
       const targetClassLevel = (targetClassRecord?.classLevel || 0) + 1;
 
+      // the character's answers before this level, read early: the
+      // multiclass prerequisite check below needs them to build the save
+      // finalAbilityScores reads from (#77)
+      const storedChoices = readStoredChoices(character.choices, characterId);
+
+      // loaded once and reused by whichever validation below needs it, rather
+      // than fetched separately by choice validation and feat validation
+      let snapshot:
+        | Awaited<ReturnType<typeof getCachedRuleSnapshot>>["snapshot"]
+        | undefined;
+      if (isMulticlassDip || selectedTraits || traitSelections || payload.featId) {
+        ({ snapshot } = await getCachedRuleSnapshot());
+      }
+
       // 3 - SERVER VALIDATION
       if (isMulticlassDip) {
+        // isMulticlassDip is one of the conditions the fetch above is
+        // guarded on, so snapshot is always loaded here; this guard gives
+        // TypeScript that same narrowing without a non-null assertion
+        if (!snapshot) {
+          throw new Error("Rule snapshot failed to load.");
+        }
+        const loadedSnapshot = snapshot;
+
+        // the character as it is before this level: the stored ledger and
+        // choices, not this level-up's changes - a multiclass prerequisite
+        // is checked against final scores, not the pre-racial ones stored on
+        // the row (#77)
         validateMulticlassPrerequisites({
           classId: targetClassId,
-          currentBaseScores: {
-            str: character.str,
-            dex: character.dex,
-            con: character.con,
-            int: character.int,
-            wis: character.wis,
-            cha: character.cha,
-          },
+          currentBaseScores: finalAbilityScores(
+            toCharacterSave(character, existingClasses, storedChoices),
+            loadedSnapshot,
+          ),
         });
       }
 
@@ -113,9 +138,9 @@ export const applyLevelUp = async (req: Request, res: Response) => {
         context: resolverContext,
       });
 
-      // the character's answers after this level: the stored ones plus this
+      // the character's answers after this level: the stored ones (read
+      // above, ahead of the multiclass prerequisite check) plus this
       // payload's, each keyed by the question it answers (#69)
-      const storedChoices = readStoredChoices(character.choices, characterId);
       const existingClassPicks = storedChoices.classSelections[targetClassId];
       const classSelections = { ...storedChoices.classSelections };
       // only stake out a classSelections entry for this class when there is
@@ -127,15 +152,44 @@ export const applyLevelUp = async (req: Request, res: Response) => {
           ...(selectedTraits ?? {}),
         };
       }
-      const mergedChoices: CharacterChoices = {
+      let mergedChoices: CharacterChoices = {
         classSelections,
         traitSelections: {
           ...storedChoices.traitSelections,
           ...(traitSelections ?? {}),
         },
+        // carried through as-is here; a feat picked this level joins it below
+        feats: storedChoices.feats,
       };
 
-      if (selectedTraits || traitSelections) {
+      if (payload.featId) {
+        // a feat is a choice like any other: it lives in choices.feats and the
+        // bootstrapper grants its traits. It used to become feat_selection
+        // rows that no save ever read, so it did nothing (#75)
+        //
+        // Validated and appended to mergedChoices BEFORE the choice
+        // validation below: a feat whose traits carry their own choice block
+        // must already be in mergedChoices.feats when that validation runs,
+        // or the same-payload answer to its choice block has no matching
+        // decision yet and is rejected as an orphan_selection (#75 latent)
+        const feat = snapshot?.featsById?.[payload.featId];
+        if (!feat) {
+          throw new Error(
+            `Invalid character choices: unknown feat ${payload.featId}`,
+          );
+        }
+        if (!feat.repeatable && mergedChoices.feats.includes(payload.featId)) {
+          throw new Error(
+            `Invalid character choices: ${payload.featId} already taken`,
+          );
+        }
+        mergedChoices = {
+          ...mergedChoices,
+          feats: [...mergedChoices.feats, payload.featId],
+        };
+      }
+
+      if (selectedTraits || traitSelections || payload.featId) {
         const ledgerAfterLevel = existingClasses.map((entry) => ({
           classId: entry.classId,
           classLevel:
@@ -153,7 +207,6 @@ export const applyLevelUp = async (req: Request, res: Response) => {
           });
         }
 
-        const { snapshot } = await getCachedRuleSnapshot();
         const issues = CharacterBootstrapper.collectChoiceIssues(
           toCharacterSave(character, ledgerAfterLevel, mergedChoices),
           snapshot,
@@ -211,42 +264,10 @@ export const applyLevelUp = async (req: Request, res: Response) => {
           asiUpdates[choice.stat] =
             sql`${characters[choice.stat as keyof typeof characters]} + ${choice.value}`;
         }
-      } else if (payload.featId) {
-        const featTraitRows = await tx
-          .select({ traitId: featTraits.traitId })
-          .from(featTraits)
-          .where(eq(featTraits.featId, payload.featId));
-
-        const mappedTraitIds = featTraitRows.map((row) => row.traitId);
-
-        // Backward-compatible fallback: some packs model feat ids directly as
-        // trait ids. Prefer explicit feat->trait mappings whenever present.
-        if (mappedTraitIds.length === 0) {
-          const [directTrait] = await tx
-            .select({ id: traits.id })
-            .from(traits)
-            .where(eq(traits.id, payload.featId))
-            .limit(1);
-
-          if (directTrait) {
-            mappedTraitIds.push(payload.featId);
-          }
-        }
-
-        if (mappedTraitIds.length === 0) {
-          throw new Error(
-            `Feat ${payload.featId} has no mapped trait grants and cannot be applied.`,
-          );
-        }
-
-        await tx.insert(characterTraits).values(
-          mappedTraitIds.map((traitId) => ({
-            characterId,
-            traitId,
-            source: "feat_selection",
-          })),
-        );
       }
+      // a picked feat already joined mergedChoices above, ahead of any write;
+      // the bootstrapper grants its traits from choices.feats at read time,
+      // so no trait row is written for it here
 
       // 7 - mutate top level character state
       await tx

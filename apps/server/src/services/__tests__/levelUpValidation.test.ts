@@ -124,6 +124,40 @@ describe("validateLevelUpPayloadFromResolver", () => {
     ).toThrow("You cannot select both Ability Score Improvements and a Feat");
   });
 
+  it("rejects a featId when the level has no asi_or_feat decision", () => {
+    expect(() =>
+      validateLevelUpPayloadFromResolver({
+        payload: { ...basePayload, featId: "feat_alert" },
+        context: configuredContext([]),
+      }),
+    ).toThrow();
+  });
+
+  it("rejects non-empty asiChoices when the level has no asi_or_feat decision", () => {
+    expect(() =>
+      validateLevelUpPayloadFromResolver({
+        payload: {
+          ...basePayload,
+          asiChoices: [{ stat: "STR", value: 2 }],
+        },
+        context: configuredContext([]),
+      }),
+    ).toThrow();
+  });
+
+  it("rejects featId and asiChoices together when the level has no asi_or_feat decision", () => {
+    expect(() =>
+      validateLevelUpPayloadFromResolver({
+        payload: {
+          ...basePayload,
+          featId: "feat_alert",
+          asiChoices: [{ stat: "STR", value: 2 }],
+        },
+        context: configuredContext([]),
+      }),
+    ).toThrow();
+  });
+
   it("validates trait_selection quantity from decision-keyed selectedTraits", () => {
     expect(() =>
       validateLevelUpPayloadFromResolver({

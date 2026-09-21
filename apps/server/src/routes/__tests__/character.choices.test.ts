@@ -17,16 +17,67 @@ beforeAll(async () => {
   snapshot = toRuleSnapshot(await assembleCoreRulePack(PACK_DIR));
 });
 
-const mockRuleSnapshot = () => {
+const mockRuleSnapshot = (snapshotOverride: CoreRulePackSnapshot = snapshot) => {
   vi.doMock("../../services/ruleSnapshotCache.js", () => ({
     getCachedRuleSnapshot: async () => ({
       cacheVersion: 1,
       loadedAt: 0,
-      snapshot,
+      snapshot: snapshotOverride,
     }),
     invalidateRuleSnapshotCache: () => undefined,
   }));
 };
+
+/**
+ * The shipped pack has no feat that grants a trait with its own choice
+ * block, so this clones the real snapshot and adds one: a feat that grants a
+ * trait carrying a single-pick choice block, keyed the same way a real
+ * choice block is (Important 3 - a feat's own choice block answered in the
+ * same level-up payload).
+ */
+const withFeatChoiceBlock = (): CoreRulePackSnapshot => ({
+  ...snapshot,
+  featsById: {
+    ...snapshot.featsById,
+    feat_test_choice: {
+      id: "feat_test_choice",
+      name: "Test Choice Feat",
+      category: "general",
+      repeatable: false,
+      lore: {
+        shortDescription: "A test-only feat whose trait carries a choice block.",
+      },
+      grantedTraitIds: ["trait_test_choice_block"],
+      tags: [],
+    },
+  },
+  traitsById: {
+    ...snapshot.traitsById,
+    trait_test_choice_block: {
+      id: "trait_test_choice_block",
+      name: "Test Choice Trait",
+      lore: { shortDescription: "Grants a test-only ability score choice." },
+      isStartingProficiency: false,
+      modifiers: {
+        fixed: [],
+        choices: [
+          {
+            id: "trait_test_choice_block_pick",
+            chooseAmount: 1,
+            options: ["STR"],
+            modifierTemplate: { type: "add", value: 1, scalingFactor: "none" },
+            allowDuplicates: false,
+          },
+        ],
+      },
+      resources: [],
+      triggers: [],
+      diceRules: [],
+      criticalHitModifiers: [],
+      actions: [],
+    },
+  },
+});
 
 describe("POST /api/character choices", () => {
   const setupApp = async () => {
@@ -83,6 +134,7 @@ describe("POST /api/character choices", () => {
         half_elf_asi_choice: ["DEX", "CON"],
         skill_versatility_choice: ["perception", "insight"],
       },
+      feats: [],
     };
 
     const response = await request(app)
@@ -101,7 +153,7 @@ describe("POST /api/character choices", () => {
     expect(response.status).toBe(201);
     expect(values).toHaveBeenCalledWith(
       expect.objectContaining({
-        choices: { classSelections: {}, traitSelections: {} },
+        choices: { classSelections: {}, traitSelections: {}, feats: [] },
       }),
     );
   });
@@ -180,13 +232,36 @@ describe("applyLevelUp choices", () => {
         class_fighter: { fighter_level_1_fighting_style: ["trait_fs_defense"] },
       },
       traitSelections: { fighter_starting_skills: ["athletics", "perception"] },
+      feats: [],
     },
   };
 
   const setupLevelUp = async (
-    ledgerSubclassId: string | null = null,
-    characterRow: unknown = storedFighter,
+    options: {
+      ledgerSubclassId?: string | null;
+      characterRow?: unknown;
+      storedFeats?: string[];
+      snapshotOverride?: CoreRulePackSnapshot;
+    } = {},
   ) => {
+    const {
+      ledgerSubclassId = null,
+      characterRow: baseCharacterRow = storedFighter,
+      storedFeats,
+      snapshotOverride,
+    } = options;
+    // storedFeats layers onto whichever character row this call already
+    // provides, rather than replacing it - the harness's own defaults (and a
+    // caller's characterRow override) still take effect around it
+    const characterRow = storedFeats
+      ? {
+          ...(baseCharacterRow as typeof storedFighter),
+          choices: {
+            ...(baseCharacterRow as typeof storedFighter).choices,
+            feats: storedFeats,
+          },
+        }
+      : baseCharacterRow;
     vi.resetModules();
     const selectResults: unknown[][] = [
       [characterRow],
@@ -242,7 +317,7 @@ describe("applyLevelUp choices", () => {
     vi.doMock("../../services/effectiveReferenceResolver.js", () => ({
       getEffectiveReferenceSnapshot: vi.fn().mockResolvedValue({ classes: [] }),
     }));
-    mockRuleSnapshot();
+    mockRuleSnapshot(snapshotOverride);
 
     const { applyLevelUp } = await import(
       "../../controllers/characterController.js"
@@ -295,7 +370,11 @@ describe("applyLevelUp choices", () => {
 
     // levelUpValidation.js is NOT mocked here - prime its module-level
     // rulebook from the same real pack the route's own snapshot mock uses,
-    // exactly as packFixture.usePackRulebook does for its unit tests
+    // exactly as packFixture.usePackRulebook does for its unit tests. A
+    // doMock registered by setupLevelUp above survives vi.resetModules(), so
+    // it has to be undone explicitly or a real-validation test run after a
+    // mocked one would silently import the earlier test's mock instead.
+    vi.doUnmock("../../services/levelUpValidation.js");
     const { setPackRulebookForTests } = await import(
       "../../services/packRulebook.js"
     );
@@ -351,6 +430,7 @@ describe("applyLevelUp choices", () => {
             },
           },
           traitSelections: { fighter_starting_skills: ["athletics", "perception"] },
+          feats: [],
         },
       }),
     );
@@ -432,6 +512,54 @@ describe("applyLevelUp choices", () => {
     );
     expect(tx.values).toHaveBeenCalledWith(
       expect.objectContaining({ classId: "class_rogue", position: 1 }),
+    );
+  });
+
+  it("checks a multiclass prerequisite against final scores, not stored pre-racial ones (#77)", async () => {
+    // stored STR 12 fails fighter's STR 13-or-DEX 13 prerequisite; race_human's
+    // +1 to every score brings STR to 13, which the check must see
+    const humanCleric = {
+      ...storedFighter,
+      raceId: "race_human",
+      str: 12,
+      dex: 9,
+      con: 14,
+      int: 10,
+      wis: 16,
+      cha: 11,
+      choices: {
+        classSelections: {},
+        traitSelections: {},
+        feats: [],
+      },
+    };
+    const { applyLevelUp, tx } = await setupLevelUpWithRealValidation(
+      [
+        {
+          id: "ledger-1",
+          characterId: "char-1",
+          classId: "class_cleric",
+          classLevel: 3,
+          subclassId: null,
+          position: 0,
+        },
+      ],
+      humanCleric,
+    );
+    const { res, status } = response();
+
+    await applyLevelUp(
+      levelUp({
+        targetClassId: "class_fighter",
+        newTotalLevel: 4,
+        subclassId: undefined,
+      }),
+      res,
+    );
+
+    expect(status).toHaveBeenCalledWith(200);
+    expect(tx.values).toHaveBeenCalledWith(
+      expect.objectContaining({ classId: "class_fighter" }),
     );
   });
 
@@ -527,7 +655,9 @@ describe("applyLevelUp choices", () => {
         traitSelections: { fighter_starting_skills: ["athletics", "perception"] },
       },
     };
-    const { applyLevelUp, tx } = await setupLevelUp(null, fighterWithNoClassPicks);
+    const { applyLevelUp, tx } = await setupLevelUp({
+      characterRow: fighterWithNoClassPicks,
+    });
     const { res, status } = response();
 
     await applyLevelUp(levelUp({}), res);
@@ -538,11 +668,14 @@ describe("applyLevelUp choices", () => {
     expect(setCall.choices).toEqual({
       classSelections: {},
       traitSelections: { fighter_starting_skills: ["athletics", "perception"] },
+      feats: [],
     });
   });
 
   it("validates against the persisted subclass when the payload's subclassId is blank", async () => {
-    const { applyLevelUp, tx } = await setupLevelUp("subclass_fighter_battle_master");
+    const { applyLevelUp, tx } = await setupLevelUp({
+      ledgerSubclassId: "subclass_fighter_battle_master",
+    });
     const { res, status } = response();
 
     await applyLevelUp(
@@ -571,5 +704,83 @@ describe("applyLevelUp choices", () => {
     // pre-reset instance and fails equality despite being value-identical.
     const { classLedgerOrder } = await import("../../services/classLedger.js");
     expect(orderBy).toHaveBeenCalledWith(...classLedgerOrder);
+  });
+
+  it("stores a picked feat in choices and writes no trait row for it", async () => {
+    const { applyLevelUp, tx } = await setupLevelUp();
+    const { res, status } = response();
+
+    await applyLevelUp(levelUp({ featId: "feat_alert" }), res);
+
+    expect(status).toHaveBeenCalledWith(200);
+    expect(tx.set).toHaveBeenCalledWith(
+      expect.objectContaining({
+        choices: expect.objectContaining({ feats: ["feat_alert"] }),
+      }),
+    );
+    const rows = tx.values.mock.calls.flatMap(([arg]) =>
+      Array.isArray(arg) ? arg : [arg],
+    );
+    expect(rows).not.toContainEqual(
+      expect.objectContaining({ source: "feat_selection" }),
+    );
+  });
+
+  it("rejects a feat the pack does not define", async () => {
+    const { applyLevelUp } = await setupLevelUp();
+    const { res, status, json } = response();
+
+    await applyLevelUp(levelUp({ featId: "feat_not_real" }), res);
+
+    expect(status).toHaveBeenCalledWith(400);
+    expect(json).toHaveBeenCalledWith(
+      expect.objectContaining({
+        error: "Invalid character choices: unknown feat feat_not_real",
+      }),
+    );
+  });
+
+  it("rejects a feat the character already has", async () => {
+    const { applyLevelUp } = await setupLevelUp({ storedFeats: ["feat_alert"] });
+    const { res, status, json } = response();
+
+    await applyLevelUp(levelUp({ featId: "feat_alert" }), res);
+
+    expect(status).toHaveBeenCalledWith(400);
+    expect(json).toHaveBeenCalledWith(
+      expect.objectContaining({
+        error: "Invalid character choices: feat_alert already taken",
+      }),
+    );
+  });
+
+  it("accepts a same-payload answer to a feat's own choice block (#75 latent)", async () => {
+    // the feat must be validated and appended to mergedChoices.feats before
+    // choice validation runs, or its trait is not yet active and the answer
+    // to its own choice block is rejected as an orphan_selection
+    const { applyLevelUp, tx } = await setupLevelUp({
+      snapshotOverride: withFeatChoiceBlock(),
+    });
+    const { res, status } = response();
+
+    await applyLevelUp(
+      levelUp({
+        featId: "feat_test_choice",
+        traitSelections: { trait_test_choice_block_pick: ["STR"] },
+      }),
+      res,
+    );
+
+    expect(status).toHaveBeenCalledWith(200);
+    expect(tx.set).toHaveBeenCalledWith(
+      expect.objectContaining({
+        choices: expect.objectContaining({
+          feats: ["feat_test_choice"],
+          traitSelections: expect.objectContaining({
+            trait_test_choice_block_pick: ["STR"],
+          }),
+        }),
+      }),
+    );
   });
 });

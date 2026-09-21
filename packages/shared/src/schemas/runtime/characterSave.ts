@@ -28,6 +28,8 @@ export const CharacterChoicesSchema = z.object({
     .record(z.string(), z.record(z.string(), z.array(z.string())))
     .default({}),
   traitSelections: z.record(z.string(), z.array(z.string())).default({}),
+  // the feats taken, in order (#75)
+  feats: z.array(z.string()).default([]),
 });
 
 export type CharacterChoices = z.infer<typeof CharacterChoicesSchema>;
@@ -36,6 +38,7 @@ export type CharacterChoices = z.infer<typeof CharacterChoicesSchema>;
 export const emptyCharacterChoices = (): CharacterChoices => ({
   classSelections: {},
   traitSelections: {},
+  feats: [],
 });
 
 export const CharacterSaveSchema = z.object({
@@ -50,6 +53,7 @@ export const CharacterSaveSchema = z.object({
    * backgrounds reached the engine have none.
    */
   backgroundId: z.string().min(1).optional(),
+  feats: z.array(z.string()).default([]),
   classes: z.array(CharacterClassStateSchema).min(1), // multiclass
 
   /**

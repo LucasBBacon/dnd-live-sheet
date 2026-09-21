@@ -32,7 +32,11 @@ type RuleSnapshotLookup = {
     | Record<string, CoreRulePackSnapshot["subclassesById"][string]>
     | undefined;
   backgroundsById?: Record<string, BackgroundDefinition> | undefined;
+  featsById?: Record<string, FeatDefinition> | undefined;
 };
+
+/** A feat, keyed the way the pack authors it. */
+type FeatDefinition = CoreRulePackSnapshot["featsById"][string];
 
 export type { RuleSnapshotLookup };
 
@@ -114,6 +118,17 @@ export const resolveBackgroundDefinition = (
   backgroundId: string,
   snapshot?: RuleSnapshotLookup,
 ): BackgroundDefinition | undefined => snapshot?.backgroundsById?.[backgroundId];
+
+/**
+ * A feat, from the pack.
+ * @param featId The authored feat id
+ * @param snapshot Pack content, when the caller has any loaded
+ * @returns The feat definition, or undefined
+ */
+export const resolveFeatDefinition = (
+  featId: string,
+  snapshot?: RuleSnapshotLookup,
+): FeatDefinition | undefined => snapshot?.featsById?.[featId];
 
 /**
  * A class blueprint, from the pack.

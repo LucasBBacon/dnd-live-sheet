@@ -46,6 +46,7 @@ const halfElfFighter = (
     skill_versatility_choice: ["stealth", "perception"],
     half_elf_language_choice: ["dwarvish"],
   },
+  feats: [],
   hp: { current: 12, temporary: 0, baseRolledHp: 10, hitDiceSpent: {} },
   ...overrides,
 });
@@ -115,6 +116,7 @@ const humanWizard = (level: number): CharacterSave => ({
   race: { baseRaceId: "race_human", hasSubraces: false, subraceId: null },
   classes: [{ classId: "class_wizard", level, selections: {} }],
   traitSelections: {},
+  feats: [],
   hp: { current: 10, temporary: 0, baseRolledHp: 6, hitDiceSpent: {} },
 });
 
@@ -468,6 +470,7 @@ describe("CharacterEngine.dispatchTraitEvent", () => {
         },
       ],
       traitSelections: {},
+      feats: [],
       hp: { current: 10, temporary: 0, baseRolledHp: 10, hitDiceSpent: {} },
     };
 
@@ -1138,6 +1141,7 @@ const woodElfFighter = (): CharacterSave => ({
     },
   ],
   traitSelections: {},
+  feats: [],
   hp: { current: 12, temporary: 0, baseRolledHp: 10, hitDiceSpent: {} },
 });
 
@@ -1343,6 +1347,7 @@ describe("CharacterEngine.buildLiveSheet: pack content", () => {
     race: { baseRaceId: "race_dwarf", hasSubraces: false, subraceId: null },
     classes: [{ classId: "class_barbarian", level: 1, selections: {} }],
     traitSelections: {},
+    feats: [],
     hp: { current: 12, temporary: 0, baseRolledHp: 12, hitDiceSpent: {} },
   });
 

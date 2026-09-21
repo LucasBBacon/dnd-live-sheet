@@ -1,14 +1,35 @@
+import path from "node:path";
 import express from "express";
 import request from "supertest";
-import { describe, expect, it, vi, beforeEach, afterAll } from "vitest";
-import { CreateCharacterPayloadSchema } from "@project/shared";
+import { describe, expect, it, vi, beforeAll, beforeEach, afterAll } from "vitest";
+import { assembleCoreRulePack } from "@project/database/pack";
+import {
+  CreateCharacterPayloadSchema,
+  toRuleSnapshot,
+  type CoreRulePackSnapshot,
+} from "@project/shared";
 import type { Request, Response } from "express";
 import { globalErrorHandler } from "../../middleware/errorHandler.js";
+
+const PACK_DIR = path.join(
+  process.cwd(),
+  "../../packages/database/data/packs/core_2014_pack",
+);
 
 describe("Character Routes", () => {
   const consoleErrorSpy = vi
     .spyOn(console, "error")
     .mockImplementation(() => undefined);
+
+  // the level-up harness's applyLevelUp calls now load a rule snapshot for
+  // every multiclass dip (#77), not just when trait/feat picks are sent, so
+  // that harness needs a real snapshot to hand back rather than hitting the
+  // mocked db (which only stubs transaction, not select)
+  let ruleSnapshot: CoreRulePackSnapshot;
+
+  beforeAll(async () => {
+    ruleSnapshot = toRuleSnapshot(await assembleCoreRulePack(PACK_DIR));
+  });
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -159,6 +180,15 @@ describe("Character Routes", () => {
 
     vi.doMock("../../services/effectiveReferenceResolver.js", () => ({
       getEffectiveReferenceSnapshot: effectiveReferenceMock,
+    }));
+
+    vi.doMock("../../services/ruleSnapshotCache.js", () => ({
+      getCachedRuleSnapshot: async () => ({
+        cacheVersion: 1,
+        loadedAt: 0,
+        snapshot: ruleSnapshot,
+      }),
+      invalidateRuleSnapshotCache: () => undefined,
     }));
 
     const { applyLevelUp } =

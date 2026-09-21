@@ -146,6 +146,7 @@ const storeState = {
       class_fighter: { fighter_level_1_fighting_style: ["trait_fs_protection"] },
     },
     traitSelections: {},
+    feats: [],
   } as CharacterChoices,
   getActiveTraits: () => {
     const pickedTraitIds = Object.values(storeState.choices.classSelections)
@@ -241,7 +242,7 @@ describe("CombatWidget", () => {
 
   it("shows no Protection helper when no fighting style has been chosen", async () => {
     const originalChoices = storeState.choices;
-    storeState.choices = { classSelections: {}, traitSelections: {} };
+    storeState.choices = { classSelections: {}, traitSelections: {}, feats: [] };
 
     const container = document.createElement("div");
     document.body.appendChild(container);
