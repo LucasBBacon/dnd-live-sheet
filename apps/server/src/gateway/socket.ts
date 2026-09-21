@@ -1434,9 +1434,9 @@ export function initializeWebSocketGateway(httpServer: any) {
             payload.characterId,
           );
 
-          await db.transaction(async (tx) => {
-            // decrement resource automatically, prevent neg values
-            await tx
+          // decrement resource automatically, prevent neg values
+          const consumed = await db.transaction(async (tx) =>
+            tx
               .update(characterResources)
               .set({
                 current: sql`GREATEST(${characterResources.current} - ${payload.amount}, 0)`,
@@ -1446,8 +1446,20 @@ export function initializeWebSocketGateway(httpServer: any) {
                   eq(characterResources.id, payload.resourceId),
                   eq(characterResources.characterId, payload.characterId),
                 ),
-              );
-          });
+              )
+              .returning({ id: characterResources.id }),
+          );
+
+          // An update that matched nothing still succeeds. Broadcasting it
+          // told the table about a spend the database never recorded (#63).
+          if (consumed.length === 0) {
+            socket.emit("action_error", {
+              event: SOCKET_EVENTS.RESOURCE_CONSUMED,
+              error: "Unknown resource for this character.",
+              payload,
+            });
+            return;
+          }
 
           // broadcast to room
           socket
