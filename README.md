@@ -146,7 +146,7 @@ Base URL: `http://localhost:3000/api`
 - `GET /api/character/:characterId` - fetch by path id
 - `POST /api/character/:characterId/level-up` - apply one level (hit points, subclass, ability score improvement or feat, class and trait choices, spells), validated before any write; questions new at that level must be answered, and a stored answer can never be changed
 
-Both wizards ask every choice question: the creation wizard in a Choices step, the level-up wizard in one Choices step per level (spell picks are not supported by the wizard yet). The engine's `listChoiceQuestions(save, snapshot)` defines what a question is, for the client and the server alike.
+Both wizards ask every choice question, and the engine's `listChoiceQuestions(save, snapshot)` is the one definition of a question for both wizards and the server. The creation wizard runs it client-side in its Choices step. The level-up wizard asks the questions the server sends in `choiceQuestions` (the character's questions after the level minus those before it, for the chosen subclass and feat) in one Choices step per level; the server builds that list with the same before/after helper its required-answer check uses, so the wizard always offers exactly what the level requires. Spell picks are not supported by the wizard yet.
 
 A character's choices live in `characters.choices` (JSONB): `classSelections` (class progression picks, keyed by class and node), `traitSelections` (trait choice-block picks, keyed by block) and `feats` (feats taken, in order). The engine's bootstrapper grants traits from race, background, classes and feats, so a feat picked at level-up reaches both the server's sheet and the web sheet. Multiclass prerequisites are checked against final ability scores (stored scores are pre-racial; racial and other trait bonuses are applied on top, magic items are not).
 
@@ -155,7 +155,7 @@ A character's choices live in `characters.choices` (JSONB): `classSelections` (c
 - `GET /api/reference/races`
 - `GET /api/reference/classes`
 - `GET /api/reference/feats`
-- `GET /api/reference/level-up/options` - the level-up wizard's class options, including multiclass prerequisite previews
+- `GET /api/reference/level-up/options` - the level-up wizard's class options, including multiclass prerequisite previews; with a `characterId` it also returns `choiceQuestions`, the questions this level newly asks (`subclassId` and `featId` narrow it to that pick; the stored subclass is used when none is given)
 - `GET /api/reference/classes/:id/subclasses`
 - `GET /api/reference/classes/:id/timeline`
 - `GET /api/reference/backgrounds`
