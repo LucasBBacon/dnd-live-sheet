@@ -317,7 +317,11 @@ describe("applyLevelUp choices", () => {
 
     // levelUpValidation.js is NOT mocked here - prime its module-level
     // rulebook from the same real pack the route's own snapshot mock uses,
-    // exactly as packFixture.usePackRulebook does for its unit tests
+    // exactly as packFixture.usePackRulebook does for its unit tests. A
+    // doMock registered by setupLevelUp above survives vi.resetModules(), so
+    // it has to be undone explicitly or a real-validation test run after a
+    // mocked one would silently import the earlier test's mock instead.
+    vi.doUnmock("../../services/levelUpValidation.js");
     const { setPackRulebookForTests } = await import(
       "../../services/packRulebook.js"
     );
@@ -455,6 +459,54 @@ describe("applyLevelUp choices", () => {
     );
     expect(tx.values).toHaveBeenCalledWith(
       expect.objectContaining({ classId: "class_rogue", position: 1 }),
+    );
+  });
+
+  it("checks a multiclass prerequisite against final scores, not stored pre-racial ones (#77)", async () => {
+    // stored STR 12 fails fighter's STR 13-or-DEX 13 prerequisite; race_human's
+    // +1 to every score brings STR to 13, which the check must see
+    const humanCleric = {
+      ...storedFighter,
+      raceId: "race_human",
+      str: 12,
+      dex: 9,
+      con: 14,
+      int: 10,
+      wis: 16,
+      cha: 11,
+      choices: {
+        classSelections: {},
+        traitSelections: {},
+        feats: [],
+      },
+    };
+    const { applyLevelUp, tx } = await setupLevelUpWithRealValidation(
+      [
+        {
+          id: "ledger-1",
+          characterId: "char-1",
+          classId: "class_cleric",
+          classLevel: 3,
+          subclassId: null,
+          position: 0,
+        },
+      ],
+      humanCleric,
+    );
+    const { res, status } = response();
+
+    await applyLevelUp(
+      levelUp({
+        targetClassId: "class_fighter",
+        newTotalLevel: 4,
+        subclassId: undefined,
+      }),
+      res,
+    );
+
+    expect(status).toHaveBeenCalledWith(200);
+    expect(tx.values).toHaveBeenCalledWith(
+      expect.objectContaining({ classId: "class_fighter" }),
     );
   });
 

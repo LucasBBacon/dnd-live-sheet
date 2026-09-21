@@ -14,7 +14,11 @@ import {
   validateLevelUpPayloadFromResolver,
 } from "../services/levelUpValidation.js";
 import { getCachedRuleSnapshot } from "../services/ruleSnapshotCache.js";
-import { readStoredChoices, toCharacterSave } from "../services/characterSave.js";
+import {
+  finalAbilityScores,
+  readStoredChoices,
+  toCharacterSave,
+} from "../services/characterSave.js";
 import { classLedgerOrder } from "../services/classLedger.js";
 import { z } from "zod";
 
@@ -81,18 +85,32 @@ export const applyLevelUp = async (req: Request, res: Response) => {
       const isMulticlassDip = !targetClassRecord && existingClasses.length > 0;
       const targetClassLevel = (targetClassRecord?.classLevel || 0) + 1;
 
+      // the character's answers before this level, read early: the
+      // multiclass prerequisite check below needs them to build the save
+      // finalAbilityScores reads from (#77)
+      const storedChoices = readStoredChoices(character.choices, characterId);
+
+      // loaded once and reused by whichever validation below needs it, rather
+      // than fetched separately by choice validation and feat validation
+      let snapshot:
+        | Awaited<ReturnType<typeof getCachedRuleSnapshot>>["snapshot"]
+        | undefined;
+      if (isMulticlassDip || selectedTraits || traitSelections || payload.featId) {
+        ({ snapshot } = await getCachedRuleSnapshot());
+      }
+
       // 3 - SERVER VALIDATION
       if (isMulticlassDip) {
+        // the character as it is before this level: the stored ledger and
+        // choices, not this level-up's changes - a multiclass prerequisite
+        // is checked against final scores, not the pre-racial ones stored on
+        // the row (#77)
         validateMulticlassPrerequisites({
           classId: targetClassId,
-          currentBaseScores: {
-            str: character.str,
-            dex: character.dex,
-            con: character.con,
-            int: character.int,
-            wis: character.wis,
-            cha: character.cha,
-          },
+          currentBaseScores: finalAbilityScores(
+            toCharacterSave(character, existingClasses, storedChoices),
+            snapshot!,
+          ),
         });
       }
 
@@ -112,9 +130,9 @@ export const applyLevelUp = async (req: Request, res: Response) => {
         context: resolverContext,
       });
 
-      // the character's answers after this level: the stored ones plus this
+      // the character's answers after this level: the stored ones (read
+      // above, ahead of the multiclass prerequisite check) plus this
       // payload's, each keyed by the question it answers (#69)
-      const storedChoices = readStoredChoices(character.choices, characterId);
       const existingClassPicks = storedChoices.classSelections[targetClassId];
       const classSelections = { ...storedChoices.classSelections };
       // only stake out a classSelections entry for this class when there is
@@ -135,15 +153,6 @@ export const applyLevelUp = async (req: Request, res: Response) => {
         // carried through as-is here; a feat picked this level joins it below
         feats: storedChoices.feats,
       };
-
-      // loaded once and reused by whichever validation below needs it, rather
-      // than fetched separately by choice validation and feat validation
-      let snapshot:
-        | Awaited<ReturnType<typeof getCachedRuleSnapshot>>["snapshot"]
-        | undefined;
-      if (selectedTraits || traitSelections || payload.featId) {
-        ({ snapshot } = await getCachedRuleSnapshot());
-      }
 
       if (selectedTraits || traitSelections) {
         const ledgerAfterLevel = existingClasses.map((entry) => ({

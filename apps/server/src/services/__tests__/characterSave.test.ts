@@ -1,5 +1,17 @@
-import { afterEach, describe, expect, it, vi } from "vitest";
-import { readStoredChoices, toCharacterSave } from "../characterSave.js";
+import path from "node:path";
+import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
+import { assembleCoreRulePack } from "@project/database/pack";
+import { toRuleSnapshot, type CoreRulePackSnapshot } from "@project/shared";
+import {
+  finalAbilityScores,
+  readStoredChoices,
+  toCharacterSave,
+} from "../characterSave.js";
+
+const PACK_DIR = path.join(
+  process.cwd(),
+  "../../packages/database/data/packs/core_2014_pack",
+);
 
 const row = (overrides: Record<string, unknown> = {}) => ({
   raceId: "race_dwarf",
@@ -105,5 +117,38 @@ describe("readStoredChoices", () => {
       expect.stringContaining("char-9"),
       expect.anything(),
     );
+  });
+});
+
+describe("finalAbilityScores", () => {
+  let snapshot: CoreRulePackSnapshot;
+
+  beforeAll(async () => {
+    snapshot = toRuleSnapshot(await assembleCoreRulePack(PACK_DIR));
+  });
+
+  it("adds racial bonuses to the stored, pre-racial scores", async () => {
+    const save = toCharacterSave(
+      row({
+        raceId: "race_human",
+        subraceId: null,
+        str: 12,
+        dex: 9,
+        con: 14,
+        int: 10,
+        wis: 16,
+        cha: 11,
+      }),
+      [{ classId: "class_cleric", classLevel: 3, subclassId: null }],
+    );
+
+    expect(finalAbilityScores(save, snapshot)).toEqual({
+      str: 13,
+      dex: 10,
+      con: 15,
+      int: 11,
+      wis: 17,
+      cha: 12,
+    });
   });
 });

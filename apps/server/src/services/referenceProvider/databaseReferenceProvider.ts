@@ -23,6 +23,11 @@ import {
 import { getCachedRuleSnapshot } from "../ruleSnapshotCache.js";
 import { primePackRulebook } from "../packRulebook.js";
 import { classLedgerOrder } from "../classLedger.js";
+import {
+  finalAbilityScores,
+  readStoredChoices,
+  toCharacterSave,
+} from "../characterSave.js";
 import type {
   LevelUpOptionsInput,
   ReferenceProvider,
@@ -244,7 +249,15 @@ const loadCharacterClassLevels = async ({
   );
 };
 
-const loadCharacterBaseScores = async ({
+/**
+ * A character's ability scores as the sheet actually shows them: the stored,
+ * pre-racial scores plus every trait modifier, not just the row's raw
+ * columns. The dip preview used to assess prerequisites against the stored
+ * scores directly, which is what a human (or any race with an ability bonus)
+ * stores before racial bonuses are applied - understating exactly the
+ * characters a bonus would qualify (#77).
+ */
+const loadCharacterFinalScores = async ({
   characterId,
   campaignId,
 }: {
@@ -268,18 +281,45 @@ const loadCharacterBaseScores = async ({
 
   const [character] = await db
     .select({
+      raceId: characters.raceId,
+      subraceId: characters.subraceId,
+      backgroundId: characters.backgroundId,
+      choices: characters.choices,
       str: characters.str,
       dex: characters.dex,
       con: characters.con,
       int: characters.int,
       wis: characters.wis,
       cha: characters.cha,
+      currentHp: characters.currentHp,
+      maxHp: characters.maxHp,
     })
     .from(characters)
     .where(characterScopeFilter)
     .limit(1);
 
-  return character ?? null;
+  if (!character) {
+    return null;
+  }
+
+  const classLedger = await db
+    .select({
+      classId: characterClasses.classId,
+      classLevel: characterClasses.classLevel,
+      subclassId: characterClasses.subclassId,
+    })
+    .from(characterClasses)
+    .where(eq(characterClasses.characterId, characterId))
+    .orderBy(...classLedgerOrder);
+
+  const { snapshot } = await getCachedRuleSnapshot();
+  const save = toCharacterSave(
+    character,
+    classLedger,
+    readStoredChoices(character.choices, characterId),
+  );
+
+  return finalAbilityScores(save, snapshot);
 };
 
 export class DatabaseReferenceProvider implements ReferenceProvider {
@@ -347,7 +387,7 @@ export class DatabaseReferenceProvider implements ReferenceProvider {
       characterId: scope.characterId,
       campaignId: scope.campaignId,
     });
-    const currentBaseScores = await loadCharacterBaseScores({
+    const currentBaseScores = await loadCharacterFinalScores({
       characterId: scope.characterId,
       campaignId: scope.campaignId,
     });

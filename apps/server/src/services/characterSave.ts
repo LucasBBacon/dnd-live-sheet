@@ -4,6 +4,14 @@ import {
   type CharacterChoices,
   type CharacterSave,
 } from "@project/shared";
+import {
+  AbilityEngine,
+  CharacterBootstrapper,
+  EffectManager,
+  gatherSheetModifiers,
+  type Ability,
+  type RuleSnapshotLookup,
+} from "@project/engine";
 
 /** The columns of a characters row that a save is built from. */
 export interface CharacterSaveSource {
@@ -71,6 +79,37 @@ export const toCharacterSave = (
     hitDiceSpent: {},
   },
 });
+
+/**
+ * A character's actual ability scores: the stored, pre-racial scores plus
+ * every trait modifier - racial bonuses, feats, class features - through the
+ * same gather the sheet uses. Magic items are deliberately left out: callers
+ * here do not load inventory, and whether an item counts toward a
+ * prerequisite is a table ruling (#77).
+ */
+export const finalAbilityScores = (
+  save: CharacterSave,
+  snapshot: RuleSnapshotLookup,
+) => {
+  const modifiers = gatherSheetModifiers({
+    activeTraits: CharacterBootstrapper.compileActiveTraits(save, snapshot),
+    selections: CharacterBootstrapper.resolveSelections(save),
+    inventory: [],
+    effectManager: new EffectManager(),
+    snapshot,
+  });
+  const score = (base: number, ability: Ability) =>
+    AbilityEngine.calculateScore(base, ability, modifiers, []).score;
+
+  return {
+    str: score(save.attributes.str, "STR"),
+    dex: score(save.attributes.dex, "DEX"),
+    con: score(save.attributes.con, "CON"),
+    int: score(save.attributes.int, "INT"),
+    wis: score(save.attributes.wis, "WIS"),
+    cha: score(save.attributes.cha, "CHA"),
+  };
+};
 
 /**
  * A character's stored choices, validated.
