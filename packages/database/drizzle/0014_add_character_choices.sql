@@ -1,0 +1,1 @@
+ALTER TABLE "characters" ADD COLUMN "choices" jsonb DEFAULT '{"classSelections":{},"traitSelections":{}}'::jsonb NOT NULL;

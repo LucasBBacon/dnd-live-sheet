@@ -1,6 +1,7 @@
 import {
   CharacterSlotSchema,
   ResourceResetSchema,
+  type CharacterChoices,
   type InventoryInstance,
 } from "@project/shared";
 import {
@@ -95,6 +96,13 @@ export const characters = pgTable("characters", {
     featureName: string;
     featureDescription: string;
   } | null>(),
+
+  // every answer the character has given, keyed by the question it answers -
+  // class picks by class and node, trait choice-block picks by block (#69)
+  choices: jsonb("choices")
+    .$type<CharacterChoices>()
+    .notNull()
+    .default({ classSelections: {}, traitSelections: {} }),
 
   // flavor text
   personalityTraits: text("personality_traits"),
