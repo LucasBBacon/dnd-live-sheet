@@ -24,7 +24,7 @@ disagrees with itself.
 
 ### Design
 
-- New module `apps/server/src/config/clientOrigin.ts` exporting
+- New module `apps/server/src/utils/clientOrigin.ts` exporting
   `clientOrigin(): string`, returning `process.env.CLIENT_URL ||
   "http://localhost:5173"`. Read at call time, not at module load, so tests can
   vary the environment.
