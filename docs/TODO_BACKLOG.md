@@ -1,6 +1,6 @@
 # TODO Backlog
 
-**Status as of 2026-09-21**, on `feat/character-choices`, after #69 and #54
+**Status as of 2026-09-21**, on `fix/class-order`, after #69 and #54
 closed. The workspace is green — **2120
 tests**, 0 failures, and typecheck clean per package (6f explains why "per
 package" matters). Nothing below is breaking a build; these are gaps, debt and
@@ -2104,15 +2104,26 @@ otherwise inherit the same bug — hence landing this first.
 **Closed 2026-09-21** on `fix/class-order`. `character_classes` gained a
 `position` column recording the order a class was taken, and
 `classLedgerOrder` now orders every ledger read — `getAuthoritativeRuntimeContext`
-(`apps/server/src/gateway/socket.ts`), `fetchCharacterPayload`
-(`apps/server/src/routes/character.ts`) and `applyLevelUp`
-(`apps/server/src/controllers/characterController.ts`) — with the writers
-that populate `character_classes` (creation, level-up and the sample seeder)
-updated to keep it. Migration `0015_add_class_position` is applied to the dev
-database. The hand check reproduced #74's exact failure condition on Lyra
-Silverstring (bard 6 / rogue 1): after an `UPDATE` on her bard row, an
-unordered `select` returned `class_rogue, class_bard` — rogue first, the
-trap this section describes — while the ordered read still returned
-`class_bard, class_rogue`. With the server restarted, Lyra's sheet loaded
-correctly: socket joined and synced with no `action_error`, and her bard
-starting skills (Performance, Acrobatics, Arcana) remained proficient.
+and the `REST_COMPLETED` handler (both in `apps/server/src/gateway/socket.ts`),
+`fetchCharacterPayload` (`apps/server/src/routes/character.ts`), `applyLevelUp`
+(`apps/server/src/controllers/characterController.ts`) and
+`loadCharacterClassLevels`
+(`apps/server/src/services/referenceProvider/databaseReferenceProvider.ts`) —
+with the writers that populate `character_classes` (creation, level-up and
+the sample seeder) updated to keep it. Migration `0015_add_class_position` is
+applied to the dev database. The hand check reproduced #74's exact failure
+condition on Lyra Silverstring (bard 6 / rogue 1): after an `UPDATE` on her
+bard row, an unordered `select` returned `class_rogue, class_bard` — rogue
+first, the trap this section describes — while the ordered read still
+returned `class_bard, class_rogue`. With the server restarted, Lyra's sheet
+loaded correctly: socket joined and synced with no `action_error`, and her
+bard starting skills (Performance, Acrobatics, Arcana) remained proficient.
+
+Every row that existed before migration `0015_add_class_position` took the
+column's default of 0, so a multiclass character created before the
+migration and never re-seeded would have all its classes at position 0 and
+fall back to the `class_id` tiebreak, which can be the wrong class. Verified
+2026-09-21 by a read-only query against the dev database: it holds no
+characters outside the ten samples, and the three multiclass samples (Lyra,
+Nyx, Kaelen) each have distinct positions after the re-seed — so no stored
+character is affected.
