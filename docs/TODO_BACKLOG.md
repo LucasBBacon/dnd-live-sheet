@@ -1,7 +1,7 @@
 # TODO Backlog
 
 **Status as of 2026-09-21**, on `feat/choice-step`, after #68's choice half
-closed (Branch B). The workspace is green — **2238
+closed (Branch B). The workspace is green — **2266
 tests**, 0 failures, and typecheck clean per package (6f explains why "per
 package" matters). Nothing below is breaking a build; these are gaps, debt and
 content.
@@ -2194,6 +2194,7 @@ Test totals: shared 227, engine 958, database 198, server 404, web 355 =
 | 78 | A level's hit points skip the Constitution modifier on the server | Found by `fix/levelup-correctness`'s hand check, 2026-09-21. See below. |
 | 79 | The level-up wizard has no spell step, so a level with a spell choice cannot be submitted | Found by `fix/levelup-correctness`'s hand check, 2026-09-21. Since `feat/choice-step` the wizard shows a step naming #79 and blocks submit instead of "Unhandled Step Type". See below. |
 | 80 | A custom background's choice blocks cannot be answered | Inherited by `feat/choice-step` from the final review of `fix/sheet-modifiers`, 2026-09-21. See below. |
+| 81 | A choice question offers options whose prerequisites the character does not meet | Found by the final review of `feat/choice-step`, 2026-09-22. See below. |
 
 - **#75 — feat-granted traits never reach either sheet's modifiers.** A feat
   is stored as a `feat_selection` `character_traits` row. That row never
@@ -2279,3 +2280,11 @@ Test totals: shared 227, engine 958, database 198, server 404, web 355 =
   Choices step and no answer. Needs a home for custom-background traits in
   the save before the player can answer anything. Carried over from row 5's
   inherited findings when `feat/choice-step` closed #68's choice half.
+- **#81 — a choice question offers options whose prerequisites are unmet.**
+  `ChoiceQuestion` options carry no prerequisites, so the pickers offer
+  every option on a class node; the server then rejects an unmet one with
+  `unmet_prerequisite`. Example: a warlock 1 → 2 is offered Agonizing Blast
+  without knowing Eldritch Blast and gets `trait_invocation_agonizing_blast
+  needs spell_eldritch_blast` at submit. Older than `feat/choice-step` (the
+  resolver never filtered either). Fix: mark such options unavailable in
+  `listChoiceQuestions` (reuse `unmetPrerequisites`) the way `held` is.
