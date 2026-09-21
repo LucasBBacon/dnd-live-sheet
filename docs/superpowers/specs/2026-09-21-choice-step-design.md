@@ -140,14 +140,27 @@ In `applyLevelUp`, before any write:
 
 ### Web — level-up wizard
 
-- `levelUpStore` reads `nextLevel.decisions` (the server's full list) instead
-  of synthesising decisions from `decisionTypes`; the response type is
-  widened to the real shape.
-- All `trait_selection` decisions collapse into one **Choices** step using
-  `ChoiceQuestionList`; option labels resolve from the rule snapshot the same
-  way as the engine's labels (reuse the engine's label helper). Answers go to
-  `selectedTraits[nodeId]` or, for `source: "trait_choice_block"`,
-  `traitSelections[blockId]`.
+*Revised after the final review (owner, 2026-09-21): the server sends the
+level-up questions, so the wizard and the required check share one
+definition.*
+
+- `GET /reference/level-up/options` (with `characterId`) returns
+  `choiceQuestions: ChoiceQuestion[]` — `listChoiceQuestions` of the character
+  after this level minus the ids present before it. "After" uses the
+  requested `subclassId`, else the character's stored subclass for that
+  class, and an optional `featId`. Without a character it returns `[]`.
+- `applyLevelUp` resolves the payload against the stored subclass when the
+  payload names none, so the resolver and the required check see the same
+  subclass track.
+- `levelUpStore` keeps the server's full `nextLevel.decisions` (subclass,
+  ASI/feat, spells) and the `choiceQuestions`; it refetches the questions
+  when the draft's `subclassId` or `featId` changes.
+- One **Choices** step, always present before Review, renders
+  `choiceQuestions` through `ChoiceQuestionList` (labels, full rosters and
+  `held` come with them); with none it says "Nothing to choose". Answers go
+  to `selectedTraits[id]` for class questions and `traitSelections[id]` for
+  trait questions. The resolver's `trait_selection` decisions are no longer
+  rendered as their own step.
 - A `spell_selection` decision renders a step stating spell picks are not
   supported yet (#79), and blocks submission, instead of "Unhandled Step
   Type".
