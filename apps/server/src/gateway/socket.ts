@@ -60,6 +60,7 @@ import {
   buildInventoryLedger,
   flushInventoryLedger,
 } from "../services/inventoryLedgerService.js";
+import { clientOrigin } from "../utils/clientOrigin.js";
 
 const EQUIPMENT_SLOT_SET = new Set<string>(EQUIPMENT_SLOTS);
 
@@ -491,7 +492,7 @@ const resolveItemAction = async (
 
 export function initializeWebSocketGateway(httpServer: any) {
   const io = new Server(httpServer, {
-    cors: { origin: process.env.CLIENT_URL, methods: ["GET", "POST"] },
+    cors: { origin: clientOrigin(), methods: ["GET", "POST"] },
   });
 
   io.on("connection", (socket: Socket) => {

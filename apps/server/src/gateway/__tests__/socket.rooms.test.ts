@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { SOCKET_EVENTS } from "@project/shared";
 import {
   campaignMembers,
@@ -238,5 +238,29 @@ describe("socket gateway - ROOM_JOIN", () => {
       userId: "user-1",
     });
     expect(second.data).toEqual({ campaignId: "camp-2", userId: "user-2" });
+  });
+});
+
+/**
+ * Express has always defaulted its CORS origin; the socket server did not, so
+ * a clone without CLIENT_URL served REST and refused every socket (#64).
+ */
+describe("socket gateway - CORS origin", () => {
+  let harness: GatewayHarness | undefined;
+
+  afterEach(() => {
+    harness?.restore();
+    vi.unstubAllEnvs();
+  });
+
+  it("falls back to the same origin Express uses when CLIENT_URL is unset", async () => {
+    vi.stubEnv("CLIENT_URL", "");
+    harness = await setupGateway();
+
+    expect(harness.serverOptions).toEqual(
+      expect.objectContaining({
+        cors: expect.objectContaining({ origin: "http://localhost:5173" }),
+      }),
+    );
   });
 });
