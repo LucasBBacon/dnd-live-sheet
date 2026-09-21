@@ -45,6 +45,8 @@
 | `apps/web/src/store/characterSheetStore.ts` | `backgroundId` state + save | 5 |
 | `apps/web/src/pages/characterSheetRouteData.ts` | Hydrate `backgroundId` | 5 |
 | `apps/web/src/store/__tests__/characterSheetStore.test.ts` | Background proficiency test | 5 |
+| `apps/server/src/routes/character.ts` | Payload carries `resources` | 5b |
+| `apps/server/src/routes/__tests__/character.get.test.ts` | Create | 5b |
 | `docs/TODO_BACKLOG.md` | Close items, record findings | 6 |
 
 ---
@@ -824,6 +826,131 @@ Expected: no errors. If `tsc -b` reports a web test building `CharacterSheetStat
 ```bash
 git add apps/server/src/gateway/socket.ts apps/server/src/gateway/__tests__/socket.characterSave.test.ts apps/web/src/store/characterSheetStore.ts apps/web/src/pages/characterSheetRouteData.ts apps/web/src/store/__tests__/characterSheetStore.test.ts
 git commit -m "feat: the server and the sheet carry a character's background (#68)"
+```
+
+---
+
+### Task 5b: #63, part 3 — the sheet loads a character's persisted pool counts
+
+Added 2026-09-21 after Task 6's hand check: with Tasks 2 and 3 in, a spend persists (`spell_slots_1 = 3/4` in the database), but the sheet still showed 4 / 4 after a reload. `fetchCharacterPayload` in `apps/server/src/routes/character.ts` never reads `character_resources`, so the web store hydrates `resources: []` and `materialiseMissingPools` rebuilds every pool at its maximum. The web side needs no change: `hydrateCharacterSheet` already passes `character.resources || []` into the store, and `initialize` only materialises pools the payload lacks (pinned by the existing store test "keeps a pool the payload already carried, without duplicating it").
+
+**Files:**
+- Modify: `apps/server/src/routes/character.ts` (import list ~line 3; `fetchCharacterPayload` ~line 73)
+- Create: `apps/server/src/routes/__tests__/character.get.test.ts`
+
+**Interfaces:**
+- Consumes: `FakeDb` and `renderSql` from `apps/server/src/gateway/__tests__/fakeDb.ts` (seed rows per table; `opsFor(table, kind)` lists recorded statements; an awaited chain resolves to the seeded rows).
+- Produces: `GET /api/character/:characterId` responds `{ character: { ..., resources: Array<{ id: string; name: string; current: number }> } }`.
+
+- [ ] **Step 1: Write the failing test**
+
+Create `apps/server/src/routes/__tests__/character.get.test.ts` (CRLF):
+
+```ts
+import express, { type Request } from "express";
+import request from "supertest";
+import { describe, expect, it, vi } from "vitest";
+import {
+  characterResources,
+  characters,
+} from "@project/database/src/schema/operational.js";
+import { FakeDb, renderSql } from "../../gateway/__tests__/fakeDb.js";
+import { globalErrorHandler } from "../../middleware/errorHandler.js";
+
+/**
+ * The sheet hydrates its resource pools from this payload. Without the
+ * persisted rows it rebuilt every pool at full, so a spent slot came back on
+ * reload even though character_resources held the spend (#63).
+ */
+describe("GET /api/character/:characterId", () => {
+  const setupApp = async (db: FakeDb) => {
+    vi.resetModules();
+    vi.doMock("@project/database", () => ({ db }));
+    vi.doMock("../../services/campaignAccess.js", () => ({
+      isUserCampaignMember: vi.fn().mockResolvedValue(true),
+    }));
+
+    const { default: characterRoutes } = await import("../character.js");
+
+    const app = express();
+    app.use((req, _res, next) => {
+      (req as Request & { user?: { id: string } }).user = { id: "user-1" };
+      next();
+    });
+    app.use("/api/character", characterRoutes);
+    app.use(globalErrorHandler);
+    return app;
+  };
+
+  const seededDb = () =>
+    new FakeDb()
+      .seed(characters, [{ id: "char-1", campaignId: "camp-1" }])
+      .seed(characterResources, [
+        { id: "spell_slots_1", name: "1st-Level Spell Slots", current: 3 },
+      ]);
+
+  it("returns the character's persisted resource counts", async () => {
+    const app = await setupApp(seededDb());
+
+    const response = await request(app).get("/api/character/char-1");
+
+    expect(response.status).toBe(200);
+    expect(response.body.character.resources).toEqual([
+      { id: "spell_slots_1", name: "1st-Level Spell Slots", current: 3 },
+    ]);
+  });
+
+  it("reads resources for the requested character only", async () => {
+    const db = seededDb();
+    const app = await setupApp(db);
+
+    await request(app).get("/api/character/char-1");
+
+    const [read] = db.opsFor(characterResources, "select");
+    expect(renderSql(read?.where).sql).toContain(
+      '"character_resources"."character_id"',
+    );
+  });
+});
+```
+
+- [ ] **Step 2: Run it to verify it fails**
+
+Run: `pnpm --filter @project/server exec vitest run src/routes/__tests__/character.get.test.ts`
+Expected: both tests FAIL — `resources` is undefined, and no `character_resources` select is recorded.
+
+- [ ] **Step 3: Read the pools in the payload**
+
+In `apps/server/src/routes/character.ts`, add `characterResources` to the import from `@project/database/src/schema/operational.js` (alphabetically, after `characterInventory`). In `fetchCharacterPayload`, after the `inventory` query and before the `return`, add:
+
+```ts
+  // The sheet hydrates its pools from these. Without them it rebuilt every
+  // pool at full, so a spend RESOURCE_CONSUMED had persisted still came back
+  // on reload (#63).
+  const resources = await db
+    .select({
+      id: characterResources.id,
+      name: characterResources.name,
+      current: characterResources.current,
+    })
+    .from(characterResources)
+    .where(eq(characterResources.characterId, characterId));
+```
+
+and add `resources,` to the returned object after `inventory,`.
+
+- [ ] **Step 4: Run it to verify it passes**
+
+Run: `pnpm --filter @project/server exec vitest run src/routes/__tests__/character.get.test.ts`
+Expected: PASS, both tests.
+
+- [ ] **Step 5: Full suite, typecheck, line endings, commit**
+
+Run: `pnpm test:all` — expected PASS. Run: `pnpm --filter @project/server exec tsc --noEmit` — expected no errors. Restore CRLF on both files and confirm with `file`.
+
+```bash
+git add apps/server/src/routes/character.ts apps/server/src/routes/__tests__/character.get.test.ts
+git commit -m "fix(server): the character payload carries persisted pool counts (#63)"
 ```
 
 ---

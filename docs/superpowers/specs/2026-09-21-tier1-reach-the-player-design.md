@@ -9,7 +9,7 @@
 
 Each is a place where content or state the pack already carries fails to
 reach, or stay on, a player's sheet. None needs new authoring. Each lands
-test-first in its own commits: one for #64, two each for #63 and #68.
+test-first in its own commits: one for #64, three for #63 and two for #68.
 
 ## #64 — one client origin for Express and the socket gateway
 
@@ -82,6 +82,14 @@ rows, succeeds silently, and **broadcasts the spend to the room** anyway.
    `getAuthoritativeRuntimeContext` gains `.onConflictDoNothing()`; the table's
    primary key is `(character_id, id)` (`operational.ts:265`), so the second
    insert is a no-op rather than an error.
+
+4. **Load the persisted counts.** *Added 2026-09-21 after the hand check.*
+   With 1-3 in, the spend persisted but the sheet still showed a full pool on
+   reload: `GET /api/character/:id` (`fetchCharacterPayload`) never read
+   `character_resources`, so the store hydrated `resources: []` and rebuilt
+   every pool at its maximum. The payload now carries the character's rows
+   (`id`, `name`, `current`); the web store already hydrates from
+   `character.resources` and only materialises pools the payload lacks.
 
 ### Tests (gateway harness)
 
