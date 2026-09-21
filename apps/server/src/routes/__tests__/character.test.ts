@@ -54,6 +54,7 @@ describe("Character Routes", () => {
         classId: "class_fighter",
         classLevel: 2,
         subclassId: null,
+        position: 0,
       },
     ],
     multiclassValidationErrorMessage,
@@ -73,6 +74,7 @@ describe("Character Routes", () => {
       classId: string;
       classLevel: number;
       subclassId: string | null;
+      position: number;
     }>;
     multiclassValidationErrorMessage?: string;
   }) => {
@@ -779,6 +781,7 @@ describe("Character Routes", () => {
             classId: "class_rogue",
             classLevel: 2,
             subclassId: null,
+            position: 0,
           },
         ],
         multiclassValidationErrorMessage:
@@ -817,6 +820,7 @@ describe("Character Routes", () => {
             classId: "class_rogue",
             classLevel: 2,
             subclassId: null,
+            position: 0,
           },
         ],
         resolverContextOverrides: {
@@ -844,6 +848,9 @@ describe("Character Routes", () => {
         }),
       );
       expect(validateMulticlassPrerequisitesMock).toHaveBeenCalled();
+      expect(tx.values).toHaveBeenCalledWith(
+        expect.objectContaining({ classId: "class_fighter", position: 1 }),
+      );
       expect(tx.values).toHaveBeenCalledWith([
         {
           characterId: "char-1",

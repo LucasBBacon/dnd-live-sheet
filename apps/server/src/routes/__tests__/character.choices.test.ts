@@ -197,6 +197,7 @@ describe("applyLevelUp choices", () => {
           classId: "class_fighter",
           classLevel: 2,
           subclassId: ledgerSubclassId,
+          position: 0,
         },
       ],
     ];
