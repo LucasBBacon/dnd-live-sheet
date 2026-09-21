@@ -1747,6 +1747,21 @@ describe("getSheetModifiers", () => {
     expect(score(9, "STR")).toBe(9);
   });
 
+  it("applies a stored feat's traits", () => {
+    init({
+      classLevels: { class_fighter: 4 },
+      raceId: "race_human",
+      choices: { classSelections: {}, traitSelections: {}, feats: ["feat_alert"] },
+    });
+
+    expect(
+      useCharacterSheetStore
+        .getState()
+        .getActiveTraits()
+        .map((trait) => trait.id),
+    ).toContain("feat_alert");
+  });
+
   it("gives an unarmoured barbarian Unarmored Defense", () => {
     init({
       classLevels: { class_barbarian: 1 },

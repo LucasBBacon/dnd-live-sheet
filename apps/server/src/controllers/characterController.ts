@@ -4,7 +4,6 @@ import {
   characters,
   characterTraits,
 } from "@project/database/src/schema/operational.js";
-import { featTraits, traits } from "@project/database/src/schema/reference.js";
 import type { CharacterChoices, LevelUpPayload } from "@project/shared";
 import type { Request, Response } from "express";
 import { eq, sql } from "drizzle-orm";
@@ -127,15 +126,24 @@ export const applyLevelUp = async (req: Request, res: Response) => {
           ...(selectedTraits ?? {}),
         };
       }
-      const mergedChoices: CharacterChoices = {
+      let mergedChoices: CharacterChoices = {
         classSelections,
         traitSelections: {
           ...storedChoices.traitSelections,
           ...(traitSelections ?? {}),
         },
-        // carried through unchanged; feat picks join this in a later task (#75)
+        // carried through as-is here; a feat picked this level joins it below
         feats: storedChoices.feats,
       };
+
+      // loaded once and reused by whichever validation below needs it, rather
+      // than fetched separately by choice validation and feat validation
+      let snapshot:
+        | Awaited<ReturnType<typeof getCachedRuleSnapshot>>["snapshot"]
+        | undefined;
+      if (selectedTraits || traitSelections || payload.featId) {
+        ({ snapshot } = await getCachedRuleSnapshot());
+      }
 
       if (selectedTraits || traitSelections) {
         const ledgerAfterLevel = existingClasses.map((entry) => ({
@@ -155,7 +163,6 @@ export const applyLevelUp = async (req: Request, res: Response) => {
           });
         }
 
-        const { snapshot } = await getCachedRuleSnapshot();
         const issues = CharacterBootstrapper.collectChoiceIssues(
           toCharacterSave(character, ledgerAfterLevel, mergedChoices),
           snapshot,
@@ -165,6 +172,27 @@ export const applyLevelUp = async (req: Request, res: Response) => {
             `Invalid character choices: ${issues.map((issue) => issue.message).join("; ")}`,
           );
         }
+      }
+
+      if (payload.featId) {
+        // a feat is a choice like any other: it lives in choices.feats and the
+        // bootstrapper grants its traits. It used to become feat_selection
+        // rows that no save ever read, so it did nothing (#75)
+        const feat = snapshot?.featsById?.[payload.featId];
+        if (!feat) {
+          throw new Error(
+            `Invalid character choices: unknown feat ${payload.featId}`,
+          );
+        }
+        if (!feat.repeatable && mergedChoices.feats.includes(payload.featId)) {
+          throw new Error(
+            `Invalid character choices: ${payload.featId} already taken`,
+          );
+        }
+        mergedChoices = {
+          ...mergedChoices,
+          feats: [...mergedChoices.feats, payload.featId],
+        };
       }
 
       // 4 - update class ledger
@@ -213,42 +241,10 @@ export const applyLevelUp = async (req: Request, res: Response) => {
           asiUpdates[choice.stat] =
             sql`${characters[choice.stat as keyof typeof characters]} + ${choice.value}`;
         }
-      } else if (payload.featId) {
-        const featTraitRows = await tx
-          .select({ traitId: featTraits.traitId })
-          .from(featTraits)
-          .where(eq(featTraits.featId, payload.featId));
-
-        const mappedTraitIds = featTraitRows.map((row) => row.traitId);
-
-        // Backward-compatible fallback: some packs model feat ids directly as
-        // trait ids. Prefer explicit feat->trait mappings whenever present.
-        if (mappedTraitIds.length === 0) {
-          const [directTrait] = await tx
-            .select({ id: traits.id })
-            .from(traits)
-            .where(eq(traits.id, payload.featId))
-            .limit(1);
-
-          if (directTrait) {
-            mappedTraitIds.push(payload.featId);
-          }
-        }
-
-        if (mappedTraitIds.length === 0) {
-          throw new Error(
-            `Feat ${payload.featId} has no mapped trait grants and cannot be applied.`,
-          );
-        }
-
-        await tx.insert(characterTraits).values(
-          mappedTraitIds.map((traitId) => ({
-            characterId,
-            traitId,
-            source: "feat_selection",
-          })),
-        );
       }
+      // a picked feat already joined mergedChoices above, ahead of any write;
+      // the bootstrapper grants its traits from choices.feats at read time,
+      // so no trait row is written for it here
 
       // 7 - mutate top level character state
       await tx

@@ -181,13 +181,34 @@ describe("applyLevelUp choices", () => {
         class_fighter: { fighter_level_1_fighting_style: ["trait_fs_defense"] },
       },
       traitSelections: { fighter_starting_skills: ["athletics", "perception"] },
+      feats: [],
     },
   };
 
   const setupLevelUp = async (
-    ledgerSubclassId: string | null = null,
-    characterRow: unknown = storedFighter,
+    options: {
+      ledgerSubclassId?: string | null;
+      characterRow?: unknown;
+      storedFeats?: string[];
+    } = {},
   ) => {
+    const {
+      ledgerSubclassId = null,
+      characterRow: baseCharacterRow = storedFighter,
+      storedFeats,
+    } = options;
+    // storedFeats layers onto whichever character row this call already
+    // provides, rather than replacing it - the harness's own defaults (and a
+    // caller's characterRow override) still take effect around it
+    const characterRow = storedFeats
+      ? {
+          ...(baseCharacterRow as typeof storedFighter),
+          choices: {
+            ...(baseCharacterRow as typeof storedFighter).choices,
+            feats: storedFeats,
+          },
+        }
+      : baseCharacterRow;
     vi.resetModules();
     const selectResults: unknown[][] = [
       [characterRow],
@@ -529,7 +550,9 @@ describe("applyLevelUp choices", () => {
         traitSelections: { fighter_starting_skills: ["athletics", "perception"] },
       },
     };
-    const { applyLevelUp, tx } = await setupLevelUp(null, fighterWithNoClassPicks);
+    const { applyLevelUp, tx } = await setupLevelUp({
+      characterRow: fighterWithNoClassPicks,
+    });
     const { res, status } = response();
 
     await applyLevelUp(levelUp({}), res);
@@ -545,7 +568,9 @@ describe("applyLevelUp choices", () => {
   });
 
   it("validates against the persisted subclass when the payload's subclassId is blank", async () => {
-    const { applyLevelUp, tx } = await setupLevelUp("subclass_fighter_battle_master");
+    const { applyLevelUp, tx } = await setupLevelUp({
+      ledgerSubclassId: "subclass_fighter_battle_master",
+    });
     const { res, status } = response();
 
     await applyLevelUp(
@@ -574,5 +599,53 @@ describe("applyLevelUp choices", () => {
     // pre-reset instance and fails equality despite being value-identical.
     const { classLedgerOrder } = await import("../../services/classLedger.js");
     expect(orderBy).toHaveBeenCalledWith(...classLedgerOrder);
+  });
+
+  it("stores a picked feat in choices and writes no trait row for it", async () => {
+    const { applyLevelUp, tx } = await setupLevelUp();
+    const { res, status } = response();
+
+    await applyLevelUp(levelUp({ featId: "feat_alert" }), res);
+
+    expect(status).toHaveBeenCalledWith(200);
+    expect(tx.set).toHaveBeenCalledWith(
+      expect.objectContaining({
+        choices: expect.objectContaining({ feats: ["feat_alert"] }),
+      }),
+    );
+    const rows = tx.values.mock.calls.flatMap(([arg]) =>
+      Array.isArray(arg) ? arg : [arg],
+    );
+    expect(rows).not.toContainEqual(
+      expect.objectContaining({ source: "feat_selection" }),
+    );
+  });
+
+  it("rejects a feat the pack does not define", async () => {
+    const { applyLevelUp } = await setupLevelUp();
+    const { res, status, json } = response();
+
+    await applyLevelUp(levelUp({ featId: "feat_not_real" }), res);
+
+    expect(status).toHaveBeenCalledWith(400);
+    expect(json).toHaveBeenCalledWith(
+      expect.objectContaining({
+        error: "Invalid character choices: unknown feat feat_not_real",
+      }),
+    );
+  });
+
+  it("rejects a feat the character already has", async () => {
+    const { applyLevelUp } = await setupLevelUp({ storedFeats: ["feat_alert"] });
+    const { res, status, json } = response();
+
+    await applyLevelUp(levelUp({ featId: "feat_alert" }), res);
+
+    expect(status).toHaveBeenCalledWith(400);
+    expect(json).toHaveBeenCalledWith(
+      expect.objectContaining({
+        error: "Invalid character choices: feat_alert already taken",
+      }),
+    );
   });
 });

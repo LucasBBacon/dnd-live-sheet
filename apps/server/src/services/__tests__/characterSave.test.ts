@@ -58,6 +58,16 @@ describe("toCharacterSave", () => {
     expect(save.classes[0]?.selections).toEqual({});
     expect(save.traitSelections).toEqual({});
   });
+
+  it("carries the feats taken into the save", () => {
+    const save = toCharacterSave(row(), fighterLedger, {
+      classSelections: {},
+      traitSelections: {},
+      feats: ["feat_alert"],
+    });
+
+    expect(save.feats).toEqual(["feat_alert"]);
+  });
 });
 
 describe("readStoredChoices", () => {
