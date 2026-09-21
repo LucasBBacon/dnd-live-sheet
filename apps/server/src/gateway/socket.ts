@@ -1465,6 +1465,9 @@ export function initializeWebSocketGateway(httpServer: any) {
           // An update that matched nothing still succeeds. Broadcasting it
           // told the table about a spend the database never recorded (#63).
           if (consumed.length === 0) {
+            console.warn(
+              `RESOURCE_CONSUMED matched no row: ${payload.characterId}/${payload.resourceId}`,
+            );
             socket.emit("action_error", {
               event: SOCKET_EVENTS.RESOURCE_CONSUMED,
               error: "Unknown resource for this character.",

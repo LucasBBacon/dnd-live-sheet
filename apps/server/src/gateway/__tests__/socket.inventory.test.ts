@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { SOCKET_EVENTS } from "@project/shared";
 import {
   characterClasses,
@@ -379,6 +379,7 @@ describe("socket gateway - RESOURCE_CONSUMED", () => {
   it("reports an error and does not broadcast when no row matched", async () => {
     await ready();
     harness.db.seed(characterResources, []);
+    const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => undefined);
 
     await harness.emit(SOCKET_EVENTS.RESOURCE_CONSUMED, payload);
 
@@ -393,6 +394,8 @@ describe("socket gateway - RESOURCE_CONSUMED", () => {
         },
       },
     ]);
+    expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining("res-1"));
+    warnSpy.mockRestore();
   });
 });
 
