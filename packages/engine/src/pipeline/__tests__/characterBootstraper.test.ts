@@ -466,6 +466,44 @@ describe("CharacterBootstrapper.resolveGrantedTraitIds", () => {
     );
     expect(ids).toContain("trait_improved_critical");
   });
+
+  it("includes the traits a preset background grants", () => {
+    const ids = CharacterBootstrapper.resolveGrantedTraitIds(
+      { ...fighter(), backgroundId: "background_criminal" },
+      corePackSnapshot(),
+    );
+
+    expect(ids).toEqual(
+      expect.arrayContaining([
+        "trait_criminal_prof_skills",
+        "trait_criminal_prof_tools",
+      ]),
+    );
+  });
+
+  // three sample characters carry backgrounds the pack does not define
+  it("grants nothing for a background the pack does not define", () => {
+    const withUnknown = CharacterBootstrapper.resolveGrantedTraitIds(
+      { ...fighter(), backgroundId: "background_charlatan" },
+      corePackSnapshot(),
+    );
+
+    expect(withUnknown).toEqual(
+      CharacterBootstrapper.resolveGrantedTraitIds(fighter(), corePackSnapshot()),
+    );
+  });
+
+  it("carries a background's fixed skills through to proficiency grants", () => {
+    const save = { ...fighter(), backgroundId: "background_criminal" };
+    const skills = ProficiencyExtractor.extractProficiencies(
+      CharacterBootstrapper.compileActiveTraits(save, corePackSnapshot()),
+      CharacterBootstrapper.resolveSelections(save),
+    )
+      .filter((grant) => grant.category === "skills")
+      .map((grant) => grant.proficiencyId);
+
+    expect(skills).toEqual(expect.arrayContaining(["deception", "stealth"]));
+  });
 });
 
 describe("CharacterBootstrapper.hydrateRuntimeManagers effect kinds", () => {

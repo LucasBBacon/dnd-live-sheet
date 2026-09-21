@@ -117,4 +117,30 @@ describe("toRuleSnapshot", () => {
     expect(snapshot.racesById).toEqual({});
     expect(snapshot.classesById).toEqual({});
   });
+
+  it("keys backgrounds by their id", () => {
+    const snapshot = toRuleSnapshot(
+      pack({
+        backgrounds: [
+          {
+            id: "background_sage",
+            name: "Sage",
+            featureName: "Researcher",
+            featureDescription: "You know where to look.",
+            ideals: [],
+            bonds: [],
+            flaws: [],
+            personalityTraits: [],
+            backgroundTraitIds: ["trait_sage_prof_skills"],
+            startingEquipment: { given: [], choices: [] },
+            lore: { shortDescription: "A scholar." },
+          },
+        ],
+      } as never),
+    );
+
+    expect(
+      snapshot.backgroundsById["background_sage"]?.backgroundTraitIds,
+    ).toEqual(["trait_sage_prof_skills"]);
+  });
 });

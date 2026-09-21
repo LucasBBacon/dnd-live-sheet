@@ -20,6 +20,12 @@ export const CharacterSaveSchema = z.object({
 
   // progressions
   race: RaceConfigurationSchema,
+  /**
+   * The preset background, by id. Optional: a custom background carries its
+   * traits as character_custom_traits rows instead, and saves built before
+   * backgrounds reached the engine have none.
+   */
+  backgroundId: z.string().min(1).optional(),
   classes: z.array(CharacterClassStateSchema).min(1), // multiclass
 
   /**
