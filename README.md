@@ -82,7 +82,19 @@ pnpm --filter @project/database db:push
 pnpm --filter @project/database db:seed
 ```
 
-4. Start development:
+An existing database created before a schema change needs its migrations applied instead:
+
+```bash
+pnpm --filter @project/database db:migrate
+```
+
+4. Optionally seed the ten sample characters (fixed UUIDs, campaign `00000000-0000-0000-0000-000000000001`; re-running resets them):
+
+```bash
+pnpm --filter @project/database db:seed:samples
+```
+
+5. Start development:
 
 ```bash
 pnpm dev
@@ -97,7 +109,7 @@ Default local endpoints:
 
 - `pnpm dev` - run workspace development tasks
 - `pnpm build` - run workspace builds
-- `pnpm test:all` - shared, database, server, and web tests (serial)
+- `pnpm test:all` - source hygiene check (including line endings), then shared, engine, database, server, and web tests (serial). Extra arguments are forwarded to vitest, so turbo flags such as `--force` do not apply.
 - `pnpm test:coverage` - workspace coverage runs
 
 Package-specific examples:
@@ -107,6 +119,9 @@ Package-specific examples:
 - `pnpm --filter @project/server seed:dev-inventory -- --characterId=<uuid>`
 - `pnpm --filter @project/web test`
 - `pnpm --filter @project/database db:studio`
+- `pnpm --filter @project/database db:generate` - generate a migration from schema changes (writes files only)
+- `pnpm --filter @project/database db:migrate` - apply pending migrations
+- `pnpm --filter @project/database db:seed:samples` - reset the sample characters
 
 Dev inventory fixture notes:
 
@@ -129,11 +144,16 @@ Base URL: `http://localhost:3000/api`
 - `POST /api/character` - create character transactionally
 - `GET /api/character?characterId=<id>` - fetch by query id
 - `GET /api/character/:characterId` - fetch by path id
+- `POST /api/character/:characterId/level-up` - apply one level (hit points, subclass, ability score improvement or feat, class and trait choices, spells), validated before any write
+
+A character's choices live in `characters.choices` (JSONB): `classSelections` (class progression picks, keyed by class and node), `traitSelections` (trait choice-block picks, keyed by block) and `feats` (feats taken, in order). The engine's bootstrapper grants traits from race, background, classes and feats, so a feat picked at level-up reaches both the server's sheet and the web sheet. Multiclass prerequisites are checked against final ability scores (stored scores are pre-racial; racial and other trait bonuses are applied on top, magic items are not).
 
 ### Reference routes
 
 - `GET /api/reference/races`
 - `GET /api/reference/classes`
+- `GET /api/reference/feats`
+- `GET /api/reference/level-up/options` - the level-up wizard's class options, including multiclass prerequisite previews
 - `GET /api/reference/classes/:id/subclasses`
 - `GET /api/reference/classes/:id/timeline`
 - `GET /api/reference/backgrounds`
@@ -141,6 +161,7 @@ Base URL: `http://localhost:3000/api`
 - `GET /api/reference/traits/:id`
 - `GET /api/reference/items`
 - `GET /api/reference/version`
+- `GET /api/reference/rules/snapshot`
 
 Optional scoped query parameters:
 
