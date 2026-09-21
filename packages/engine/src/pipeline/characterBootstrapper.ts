@@ -298,7 +298,7 @@ export class CharacterBootstrapper {
     const ids = [
       ...raceTraitIds(save.race, snapshot),
       ...backgroundTraitIds(save.backgroundId, snapshot),
-      ...featTraitIds(save.feats, snapshot),
+      ...featTraitIds(save.feats ?? [], snapshot),
       ...save.classes.flatMap((classState, index) =>
         classTraitIds(classState, index === 0, snapshot),
       ),
