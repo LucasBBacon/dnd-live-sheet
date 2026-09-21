@@ -1,5 +1,5 @@
 // Centralized fetch wrapper to ensure mock auth header is always present
-import type { RuleSnapshot } from "@project/shared";
+import type { CoreRulePackSnapshot, RuleSnapshot } from "@project/shared";
 
 export const API_ORIGIN = (
   import.meta.env.VITE_API_URL ?? "http://localhost:3000"
@@ -23,6 +23,22 @@ export type RulesSnapshotResponse = {
   version: number;
   loadedAt: number;
   snapshot: Pick<RuleSnapshot, "equipmentById" | "resourcesById">;
+};
+
+/**
+ * What `/reference/rules/snapshot` actually serves: the same equipment and
+ * resource maps as `RulesSnapshotResponse`, plus every other rulebook map a
+ * loaded pack contributes (races, classes, subclasses, backgrounds, feats,
+ * traits) - each one optional, since a database with no imported pack serves
+ * none of them. Shaped to be handed straight to `listChoiceQuestions`, whose
+ * `RuleSnapshotLookup` parameter wants exactly this: equipment/resources
+ * required, everything else optional.
+ */
+export type FullRulesSnapshotResponse = {
+  version: number;
+  loadedAt: number;
+  snapshot: Pick<RuleSnapshot, "equipmentById" | "resourcesById"> &
+    Partial<CoreRulePackSnapshot>;
 };
 
 type QueryValue = string | number | boolean | null | undefined;
@@ -101,3 +117,13 @@ export const fetchRulesSnapshot = (scope: ReferenceScope = {}) =>
   apiClient(
     buildScopedReferenceEndpoint("/reference/rules/snapshot", scope),
   ) as Promise<RulesSnapshotResponse>;
+
+// Same endpoint as fetchRulesSnapshot - the server already returns the whole
+// snapshot - just typed for a caller that needs the rest of it too (the
+// Choices step, which needs races/classes/backgrounds to resolve question
+// sources and option labels). fetchRulesSnapshot stays narrow for its
+// existing callers.
+export const fetchFullRulesSnapshot = (scope: ReferenceScope = {}) =>
+  apiClient(
+    buildScopedReferenceEndpoint("/reference/rules/snapshot", scope),
+  ) as Promise<FullRulesSnapshotResponse>;
