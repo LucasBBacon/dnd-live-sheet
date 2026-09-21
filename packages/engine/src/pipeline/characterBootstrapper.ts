@@ -67,6 +67,19 @@ export interface SaveValidationIssue {
 }
 
 /**
+ * The issues that mean a stored answer is wrong. missing_selection is not
+ * among them: an unanswered question is expected until the UI asks it.
+ */
+const CHOICE_ISSUE_CODES: ReadonlySet<SaveValidationCode> = new Set([
+  "wrong_selection_count",
+  "invalid_option",
+  "duplicate_selection",
+  "unmet_prerequisite",
+  "orphan_selection",
+  "redundant_selection",
+]);
+
+/**
  * How an extractor's refusal reads as a validation issue. `over_limit` maps to
  * nothing because the selection count check already covers it, and reporting
  * both would name the same mistake twice.
@@ -531,6 +544,22 @@ export class CharacterBootstrapper {
     }
 
     return issues;
+  }
+
+  /**
+   * The choice problems in a save, for the endpoints that store choices.
+   *
+   * collectSaveIssues judges the whole save; a write only needs to know
+   * whether the answers it is storing are valid, so everything else - and an
+   * unanswered question - is left out.
+   */
+  public static collectChoiceIssues(
+    save: CharacterSave,
+    snapshot?: RuleSnapshotLookup,
+  ): SaveValidationIssue[] {
+    return CharacterBootstrapper.collectSaveIssues(save, snapshot).filter(
+      (issue) => CHOICE_ISSUE_CODES.has(issue.code),
+    );
   }
 
   /**
