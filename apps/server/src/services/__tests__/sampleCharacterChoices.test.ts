@@ -1,0 +1,87 @@
+import path from "node:path";
+import { beforeAll, describe, expect, it } from "vitest";
+import { assembleCoreRulePack } from "@project/database/pack";
+import { ROSTER } from "@project/database/src/seedSampleCharacters.js";
+import { CharacterBootstrapper } from "@project/engine";
+import {
+  emptyCharacterChoices,
+  toRuleSnapshot,
+  type CharacterSave,
+  type CoreRulePackSnapshot,
+} from "@project/shared";
+import { toCharacterSave } from "../characterSave.js";
+
+const PACK_DIR = path.join(
+  process.cwd(),
+  "../../packages/database/data/packs/core_2014_pack",
+);
+
+/**
+ * The spell_choice nodes a save's classes and subclasses carry. They list no
+ * options until spell lists exist in the pack (#31, #67), so there is nothing
+ * valid to seed for them.
+ */
+const spellChoiceNodeIds = (
+  snapshot: CoreRulePackSnapshot,
+  save: CharacterSave,
+): Set<string> => {
+  const ids = new Set<string>();
+  for (const entry of save.classes) {
+    const rows = [
+      ...(snapshot.classesById[entry.classId]?.progression ?? []),
+      ...(entry.subclassId
+        ? (snapshot.subclassesById[entry.subclassId]?.progression ?? [])
+        : []),
+    ];
+    for (const row of rows) {
+      for (const grant of row.grants) {
+        if (typeof grant !== "string" && grant.type === "spell_choice") {
+          ids.add(grant.nodeId);
+        }
+      }
+    }
+  }
+  return ids;
+};
+
+describe("sample character choices", () => {
+  let snapshot: CoreRulePackSnapshot;
+
+  beforeAll(async () => {
+    snapshot = toRuleSnapshot(await assembleCoreRulePack(PACK_DIR));
+  });
+
+  it.each(ROSTER.map((character) => [character.name, character] as const))(
+    "%s answers every question the pack offers options for",
+    (_name, character) => {
+      const save = toCharacterSave(
+        {
+          ...character,
+          subraceId: character.subraceId ?? null,
+          backgroundId: character.backgroundId ?? null,
+        },
+        character.classes.map((entry) => ({
+          classId: entry.classId,
+          classLevel: entry.classLevel,
+          subclassId: entry.subclassId ?? null,
+        })),
+        character.choices ?? emptyCharacterChoices(),
+      );
+      const spellNodes = spellChoiceNodeIds(snapshot, save);
+
+      const issues = CharacterBootstrapper.collectSaveIssues(
+        save,
+        snapshot,
+      ).filter(
+        (issue) =>
+          !(
+            issue.code === "missing_selection" &&
+            issue.nodeId !== undefined &&
+            spellNodes.has(issue.nodeId)
+          ),
+      );
+
+      expect(issues).toEqual([]);
+    },
+  );
+});

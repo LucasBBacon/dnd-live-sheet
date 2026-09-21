@@ -26,11 +26,13 @@ import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
 import { randomUUID } from "node:crypto";
 import { pathToFileURL } from "node:url";
-import type {
-  EquipmentDefinition,
-  ResourceReset,
-  StartingEquipmentDefinition,
-  WeaponCapability,
+import {
+  emptyCharacterChoices,
+  type CharacterChoices,
+  type EquipmentDefinition,
+  type ResourceReset,
+  type StartingEquipmentDefinition,
+  type WeaponCapability,
 } from "@project/shared";
 import { backgrounds, items, subclasses } from "./schema/reference.js";
 import {
@@ -472,6 +474,13 @@ interface SampleCharacter {
   };
   /** Real trait ids only - this table does carry a foreign key. */
   customTraitIds?: string[];
+  /**
+   * The answers to every question the character's progression and traits ask
+   * that the pack lists options for - spell_choice nodes have none until spell
+   * lists exist (#31, #67). sampleCharacterChoices.test.ts holds this to zero
+   * validation issues.
+   */
+  choices?: CharacterChoices;
   alignment: string;
   str: number;
   dex: number;
@@ -507,6 +516,18 @@ const ROSTER: SampleCharacter[] = [
     subraceId: "subrace_halfling_lightfoot",
     classes: [{ classId: "class_rogue", classLevel: 1 }],
     backgroundId: "background_criminal",
+    choices: {
+      classSelections: {},
+      traitSelections: {
+        criminal_gaming_set: ["dice_set"],
+        rogue_starting_skills: [
+          "acrobatics",
+          "investigation",
+          "perception",
+          "sleight_of_hand",
+        ],
+      },
+    },
     alignment: "Chaotic Neutral",
     str: 8,
     dex: 17,
@@ -578,6 +599,14 @@ const ROSTER: SampleCharacter[] = [
       },
     ],
     backgroundId: "background_acolyte",
+    choices: {
+      classSelections: {},
+      traitSelections: {
+        human_language_choice: ["celestial"],
+        acolyte_languages: ["draconic", "dwarvish"],
+        cleric_starting_skills: ["medicine", "persuasion"],
+      },
+    },
     alignment: "Lawful Good",
     str: 13,
     dex: 10,
@@ -654,6 +683,14 @@ const ROSTER: SampleCharacter[] = [
       },
     ],
     backgroundId: "background_soldier",
+    choices: {
+      classSelections: {},
+      traitSelections: {
+        dwarf_artisan_tools: ["smiths_tools"],
+        soldier_gaming_set: ["dice_set"],
+        barbarian_starting_skills: ["perception", "survival"],
+      },
+    },
     alignment: "Chaotic Good",
     str: 18,
     dex: 14,
@@ -759,6 +796,20 @@ const ROSTER: SampleCharacter[] = [
       },
     ],
     backgroundId: "background_noble",
+    choices: {
+      classSelections: {},
+      traitSelections: {
+        half_elf_asi_choice: ["DEX", "CON"],
+        skill_versatility_choice: ["perception", "insight"],
+        half_elf_language_choice: ["sylvan"],
+        noble_gaming_set: ["playing_card_set"],
+        noble_language: ["draconic"],
+        bard_starting_instruments: ["lute", "flute", "viol"],
+        bard_starting_skills: ["performance", "acrobatics", "arcana"],
+        lore_bonus_skills: ["investigation", "medicine", "nature"],
+        rogue_multiclass_skill: ["stealth"],
+      },
+    },
     alignment: "Chaotic Good",
     str: 9,
     dex: 16,
@@ -849,6 +900,16 @@ const ROSTER: SampleCharacter[] = [
       },
     ],
     backgroundId: "background_noble",
+    choices: {
+      classSelections: {
+        class_paladin: { paladin_level_2_fighting_style: ["trait_fs_defense"] },
+      },
+      traitSelections: {
+        noble_gaming_set: ["dragonchess_set"],
+        noble_language: ["elvish"],
+        paladin_starting_skills: ["athletics", "religion"],
+      },
+    },
     alignment: "Lawful Good",
     str: 18,
     dex: 10,
@@ -957,6 +1018,31 @@ const ROSTER: SampleCharacter[] = [
       },
     ],
     backgroundId: "background_charlatan",
+    choices: {
+      classSelections: {
+        class_warlock: {
+          warlock_level_2_invocations: [
+            "trait_invocation_armor_of_shadows",
+            "trait_invocation_devils_sight",
+          ],
+          warlock_level_3_pact_boon: ["trait_pact_of_the_tome"],
+          warlock_level_5_invocations: [
+            "trait_invocation_beguiling_influence",
+          ],
+          warlock_level_7_invocations: ["trait_invocation_mask_of_many_faces"],
+        },
+        class_sorcerer: {
+          sorcerer_level_3_metamagic: [
+            "trait_metamagic_quickened_spell",
+            "trait_metamagic_twinned_spell",
+          ],
+          sorcerer_draconic_level_1_ancestor: ["trait_dragon_ancestor_red"],
+        },
+      },
+      traitSelections: {
+        warlock_starting_skills: ["arcana", "intimidation"],
+      },
+    },
     alignment: "Neutral Evil",
     str: 8,
     dex: 14,
@@ -1061,6 +1147,14 @@ const ROSTER: SampleCharacter[] = [
       },
     ],
     backgroundId: "background_folk_hero",
+    choices: {
+      classSelections: {},
+      traitSelections: {
+        human_language_choice: ["elvish"],
+        monk_starting_tool: ["calligraphers_supplies"],
+        monk_starting_skills: ["acrobatics", "insight"],
+      },
+    },
     alignment: "Lawful Neutral",
     str: 12,
     dex: 20,
@@ -1160,6 +1254,12 @@ const ROSTER: SampleCharacter[] = [
         "The Tinkers' Concord vouches for you. Its halls will shelter you, and its members will speak on your behalf to local authorities.",
     },
     customTraitIds: ["trait_noble_languages", "trait_noble_prof_tools"],
+    choices: {
+      classSelections: {},
+      traitSelections: {
+        wizard_starting_skills: ["arcana", "investigation"],
+      },
+    },
     alignment: "Neutral Good",
     str: 8,
     dex: 14,
@@ -1265,6 +1365,24 @@ const ROSTER: SampleCharacter[] = [
       },
     ],
     backgroundId: "background_outlander",
+    choices: {
+      classSelections: {
+        class_ranger: {
+          ranger_level_2_fighting_style: ["trait_fs_archery"],
+          ranger_hunter_level_3_prey: ["trait_hunters_prey_colossus_slayer"],
+          ranger_hunter_level_7_defensive_tactics: [
+            "trait_defensive_tactics_escape_the_horde",
+          ],
+          ranger_hunter_level_11_multiattack: ["trait_multiattack_volley"],
+        },
+        class_druid: {
+          druid_land_level_3_circle_land: ["trait_land_circle_spells_forest"],
+        },
+      },
+      traitSelections: {
+        ranger_starting_skills: ["nature", "stealth", "survival"],
+      },
+    },
     alignment: "True Neutral",
     str: 14,
     dex: 18,
@@ -1374,6 +1492,34 @@ const ROSTER: SampleCharacter[] = [
       },
     ],
     backgroundId: "background_soldier",
+    choices: {
+      classSelections: {
+        class_fighter: {
+          fighter_level_1_fighting_style: ["trait_fs_defense"],
+          fighter_bm_level_3_maneuvers: [
+            "trait_maneuver_precision_attack",
+            "trait_maneuver_riposte",
+            "trait_maneuver_trip_attack",
+          ],
+          fighter_bm_level_7_maneuvers: [
+            "trait_maneuver_parry",
+            "trait_maneuver_rally",
+          ],
+          fighter_bm_level_10_maneuvers: [
+            "trait_maneuver_menacing_attack",
+            "trait_maneuver_pushing_attack",
+          ],
+          fighter_bm_level_15_maneuvers: [
+            "trait_maneuver_disarming_attack",
+            "trait_maneuver_goading_attack",
+          ],
+        },
+      },
+      traitSelections: {
+        soldier_gaming_set: ["playing_card_set"],
+        fighter_starting_skills: ["history", "perception"],
+      },
+    },
     alignment: "Lawful Neutral",
     str: 20,
     dex: 14,
@@ -1619,6 +1765,7 @@ const seedCharacter = async (character: SampleCharacter) => {
     alignment: character.alignment,
     backgroundId: character.backgroundId ?? null,
     customBackgroundData: character.customBackgroundData ?? null,
+    choices: character.choices ?? emptyCharacterChoices(),
     personalityTraits: character.personalityTraits,
     ideals: character.ideals,
     bonds: character.bonds,
