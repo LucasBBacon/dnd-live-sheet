@@ -22,12 +22,15 @@ const ABILITY_KEYS: Ability[] = ["STR", "DEX", "CON", "INT", "WIS", "CHA"];
  */
 export const useAbilities = () => {
   const baseScores = useCharacterSheetStore((state) => state.baseScores);
-  const activeStates = useCharacterSheetStore((state) => state.activeStates);
   const getSheetModifiers = useCharacterSheetStore(
     (state) => state.getSheetModifiers,
   );
-  // getSheetModifiers is a stable reference, so subscribe to everything it
-  // reads - otherwise the memo below would never recompute (#73)
+  const getSheetStates = useCharacterSheetStore(
+    (state) => state.getSheetStates,
+  );
+  // getSheetModifiers and getSheetStates are stable references, so subscribe
+  // to everything they read - otherwise the memo below would never recompute
+  // (#73)
   const raceId = useCharacterSheetStore((state) => state.raceId);
   const subraceId = useCharacterSheetStore((state) => state.subraceId);
   const backgroundId = useCharacterSheetStore((state) => state.backgroundId);
@@ -43,6 +46,7 @@ export const useAbilities = () => {
 
   return useMemo(() => {
     const totalMods = getSheetModifiers();
+    const activeStates = getSheetStates();
 
     const finalAbilities = {} as Record<
       Ability,
@@ -62,11 +66,11 @@ export const useAbilities = () => {
       };
     });
 
-    return { finalAbilities, totalMods };
+    return { finalAbilities, totalMods, activeStates };
   }, [
     baseScores,
-    activeStates,
     getSheetModifiers,
+    getSheetStates,
     raceId,
     subraceId,
     backgroundId,
@@ -87,9 +91,8 @@ export const useDerivedStats = () => {
     (state) => state.getProficiencyGrants,
   );
   const baseHpRolled = useCharacterSheetStore((state) => state.baseHpRolled);
-  const activeStates = useCharacterSheetStore((state) => state.activeStates);
 
-  const { finalAbilities, totalMods } = useAbilities();
+  const { finalAbilities, totalMods, activeStates } = useAbilities();
 
   return useMemo(() => {
     const profBonus = AbilityEngine.getProficiencyBonus(level);
@@ -192,9 +195,8 @@ export const useSpellcasting = (): DerivedSpellcasting[] => {
   const classLevels = useCharacterSheetStore((state) => state.classLevels);
   const subclassIds = useCharacterSheetStore((state) => state.subclassIds);
   const ruleSnapshot = useCharacterSheetStore((state) => state.ruleSnapshot);
-  const activeStates = useCharacterSheetStore((state) => state.activeStates);
 
-  const { finalAbilities, totalMods } = useAbilities();
+  const { finalAbilities, totalMods, activeStates } = useAbilities();
   const { profBonus } = useDerivedStats();
 
   return useMemo(() => {

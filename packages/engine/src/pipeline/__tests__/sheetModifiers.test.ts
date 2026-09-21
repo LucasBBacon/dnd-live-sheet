@@ -1,8 +1,12 @@
 import { describe, expect, it } from "vitest";
-import type { CharacterSave, RuntimeModifier } from "@project/shared";
+import type {
+  CharacterSave,
+  InventoryInstance,
+  RuntimeModifier,
+} from "@project/shared";
 import { EffectManager } from "../../calculators/effects.js";
 import { CharacterBootstrapper } from "../characterBootstrapper.js";
-import { gatherSheetModifiers } from "../sheetModifiers.js";
+import { gatherBaseStates, gatherSheetModifiers } from "../sheetModifiers.js";
 import { corePackLookup } from "./corePackFixture.js";
 
 const halfElfBard: CharacterSave = {
@@ -89,6 +93,48 @@ describe("gatherSheetModifiers", () => {
 
     expect(modifiers.at(-1)).toEqual(
       expect.objectContaining({ id: "mod_live", instanceId: "effect_1" }),
+    );
+  });
+});
+
+describe("gatherBaseStates", () => {
+  const plate: InventoryInstance = {
+    id: "inv-plate",
+    itemId: "item_armor_plate",
+    quantity: 1,
+    slot: "body",
+    isAttuned: false,
+  };
+
+  it("includes the states worn armour puts on the sheet", () => {
+    const states = gatherBaseStates({
+      activeTraits: [],
+      inventory: [plate],
+      snapshot: corePackLookup(),
+    });
+
+    expect(states).toEqual(
+      expect.arrayContaining(["status_wearing_armor", "status_wearing_heavy_armor"]),
+    );
+  });
+
+  it("includes live effect states only when an effect manager is given", () => {
+    const effectManager = new EffectManager();
+    effectManager.addEffect({
+      instanceId: "effect_rage",
+      sourceName: "Rage",
+      durationType: "manual",
+      durationRemaining: undefined,
+      isSelfConcentration: false,
+      modifiers: [],
+      grantedStates: ["status_raging"],
+    });
+
+    expect(
+      gatherBaseStates({ activeTraits: [], inventory: [], effectManager }),
+    ).toContain("status_raging");
+    expect(gatherBaseStates({ activeTraits: [], inventory: [] })).not.toContain(
+      "status_raging",
     );
   });
 });

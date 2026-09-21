@@ -22,7 +22,6 @@ export const useCombat = () => {
   const getProficiencyGrants = useCharacterSheetStore(
     (state) => state.getProficiencyGrants,
   );
-  const activeStates = useCharacterSheetStore((state) => state.activeStates);
   const classLevels = useCharacterSheetStore((state) => state.classLevels);
   const ruleSnapshot = useCharacterSheetStore((state) => state.ruleSnapshot);
   const getActiveTraits = useCharacterSheetStore((state) => state.getActiveTraits);
@@ -33,7 +32,7 @@ export const useCombat = () => {
   const choices = useCharacterSheetStore((state) => state.choices);
 
   // compose the prerequisite math engines
-  const { finalAbilities, totalMods } = useAbilities();
+  const { finalAbilities, totalMods, activeStates } = useAbilities();
   const { profBonus } = useDerivedStats();
 
   return useMemo(() => {

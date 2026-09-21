@@ -65,6 +65,7 @@ vi.mock("../useCharacterStats", () => ({
       WIS: { score: 14, modifier: 2 },
     },
     totalMods: mockTotalMods,
+    activeStates: mockStoreState.activeStates,
   }),
   useDerivedStats: () => ({
     profBonus: 2,

@@ -14,6 +14,7 @@ let mockStoreState: {
   baseScores: Record<string, number>;
   activeModifiers: unknown[];
   getSheetModifiers: () => unknown[];
+  getSheetStates: () => string[];
   inventory: Array<{
     id: string;
     itemId: string;
@@ -99,6 +100,7 @@ describe("useAbilities", () => {
       baseScores: { STR: 18, DEX: 10, CON: 10, INT: 10, WIS: 10, CHA: 10 },
       activeModifiers: [],
       getSheetModifiers: () => mockStoreState.activeModifiers,
+      getSheetStates: () => mockStoreState.activeStates,
       inventory: [],
       activeStates: [],
       ruleSnapshot: null,
@@ -139,6 +141,7 @@ describe("useDerivedStats saving throws", () => {
       baseScores: { STR: 16, DEX: 14, CON: 14, INT: 10, WIS: 10, CHA: 10 },
       activeModifiers: [],
       getSheetModifiers: () => mockStoreState.activeModifiers,
+      getSheetStates: () => mockStoreState.activeStates,
       inventory: [],
       activeStates: [],
       ruleSnapshot: null,
@@ -344,6 +347,7 @@ describe("useDerivedStats attacks per action", () => {
       baseScores: { STR: 16, DEX: 14, CON: 14, INT: 10, WIS: 10, CHA: 10 },
       activeModifiers: [],
       getSheetModifiers: () => mockStoreState.activeModifiers,
+      getSheetStates: () => mockStoreState.activeStates,
       inventory: [],
       activeStates: [],
       ruleSnapshot: null,

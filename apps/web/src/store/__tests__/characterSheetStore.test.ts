@@ -9,6 +9,7 @@ import {
 import {
   CombatContextSchema,
   type ActorInstance,
+  type InventoryInstance,
   type RuntimeModifier,
 } from "@project/shared";
 import { socketService } from "../../services/socketService";
@@ -1777,5 +1778,56 @@ describe("getSheetModifiers", () => {
     expect(useCharacterSheetStore.getState().getSheetModifiers()).toContainEqual(
       devModifier,
     );
+  });
+
+  const plate: InventoryInstance = {
+    id: "inv-plate",
+    itemId: "item_armor_plate",
+    quantity: 1,
+    slot: "body",
+    isAttuned: false,
+  };
+  const noAbilityMods = { STR: 0, DEX: 0, CON: 0, INT: 0, WIS: 0, CHA: 0 };
+
+  it("applies Defense to a fighter wearing armour", () => {
+    init({
+      classLevels: { class_fighter: 1 },
+      raceId: "race_human",
+      choices: {
+        classSelections: {
+          class_fighter: { fighter_level_1_fighting_style: ["trait_fs_defense"] },
+        },
+        traitSelections: {},
+      },
+      inventory: [plate],
+    });
+    const state = useCharacterSheetStore.getState();
+
+    expect(state.getSheetStates()).toContain("status_wearing_armor");
+    expect(
+      DerivedStatEngine.calculateAC(
+        noAbilityMods,
+        state.getSheetModifiers(),
+        state.getSheetStates(),
+      ).total,
+    ).toBe(19); // plate 18 + Defense 1
+  });
+
+  it("does not give a barbarian in armour Unarmored Defense", () => {
+    init({
+      classLevels: { class_barbarian: 1 },
+      raceId: "race_human",
+      choices: { classSelections: {}, traitSelections: {} },
+      inventory: [plate],
+    });
+    const state = useCharacterSheetStore.getState();
+
+    expect(
+      DerivedStatEngine.calculateAC(
+        { ...noAbilityMods, DEX: 2, CON: 3 },
+        state.getSheetModifiers(),
+        state.getSheetStates(),
+      ).total,
+    ).toBe(18); // plate, not 10 + DEX + CON
   });
 });

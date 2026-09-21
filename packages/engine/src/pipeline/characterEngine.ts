@@ -31,9 +31,7 @@ import type { ResourceManager } from "../calculators/resources.js";
 import { CharacterBootstrapper } from "./characterBootstrapper.js";
 import { ActionResolver } from "./actionResolver.js";
 import { ProficiencyExtractor } from "./proficiencyExtractor.js";
-import { StateExtractor } from "./stateExtractor.js";
-import { InventoryExtractor } from "./inventoryExtractor.js";
-import { gatherSheetModifiers } from "./sheetModifiers.js";
+import { gatherBaseStates, gatherSheetModifiers } from "./sheetModifiers.js";
 import {
   dynamicAttackApplies,
   dynamicAttackId,
@@ -303,13 +301,12 @@ export class CharacterEngine {
 
     // 3 - merge static trait math with worn equipment and dynamic live math
     // (spells, conditions)
-    const baseStates = Array.from(
-      new Set([
-        ...StateExtractor.extractStates(activeTraits),
-        ...effectManager.getActiveStates(),
-        ...InventoryExtractor.extractStates(inventory, options.snapshot),
-      ]),
-    );
+    const baseStates = gatherBaseStates({
+      activeTraits,
+      inventory,
+      effectManager,
+      ...(options.snapshot !== undefined && { snapshot: options.snapshot }),
+    });
     const summons = effectManager
       .getActiveEffects()
       .filter((effect) => effect.kind === "summon")
