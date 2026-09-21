@@ -61,6 +61,7 @@ export interface ChoiceQuestion {
   pickCount: number;
   options: ChoiceOption[];
   selected: string[];                 // the save's stored answer, [] if none
+  held: string[];                     // options already held at an equal or better level
 }
 export const listChoiceQuestions: (save: CharacterSave, snapshot: RuleSnapshotLookup) => ChoiceQuestion[];
 ```
@@ -77,11 +78,13 @@ export const listChoiceQuestions: (save: CharacterSave, snapshot: RuleSnapshotLo
 - Order: race, subrace, background, class (ledger order), subclass, feat;
   within a source, authoring order. Deterministic, so the UI is stable.
 - Labels: trait options by `traitsById[id].name`; languages and tools by
-  `LANGUAGE_DICTIONARY` / `TOOL_DICTIONARY` names; skills by humanising the `SKILL_MAP` key; abilities by their full name; otherwise the id
-  humanised (`sleight_of_hand` → "Sleight of hand").
-- Options are the block's full roster, not filtered by what the character
-  already holds — validation (`redundant_selection`) already refuses a wasted
-  pick, and the UI marks held options (see Web) rather than hiding them.
+  `LANGUAGE_DICTIONARY` / `TOOL_DICTIONARY` names; skills by humanising the
+  `SKILL_MAP` key; abilities by their full name; otherwise the id humanised (`sleight_of_hand` → "Sleight of hand").
+- Options are the block's full roster. `held` lists the options the
+  character already holds at an equal or better level from other sources (the
+  same rule as `ProficiencyExtractor`'s `isWorthTaking`, excluding the
+  question's own answer), so the UI can disable them; validation
+  (`redundant_selection`) still refuses such a pick server-side.
 
 ### Server — creation
 
@@ -111,7 +114,8 @@ In `applyLevelUp`, before any write:
 `apps/web/src/components/wizard/choices/`:
 
 - `ChoicePicker` — one question: heading (`prompt`, source name), a checkbox
-  list of `options`, a "k / N" counter; unchecked boxes disable once k = N.
+  list of `options`, a "k / N" counter; unchecked boxes disable once k = N;
+  `held` options render disabled with "already known".
   Tailwind, matching the level-up wizard's styling.
 - `ChoiceQuestionList` — questions grouped under source headings; reports
   `onChange(questionId, selected)` and whether all are complete.
