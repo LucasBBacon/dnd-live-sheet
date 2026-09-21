@@ -1038,8 +1038,8 @@
             "id": "trait_cleric_nature_prof_bonus",
             "name": "Acolyte of Nature (Nature Domain)",
             "lore": {
-                "shortDescription": "You gain proficiency with heavy armor and one skill from Animal Handling, Nature and Survival. The druid cantrip this feature also grants is not yet authored, because spell lists do not exist in the pack.",
-                "fullText": "You gain proficiency with heavy armor and one skill from Animal Handling, Nature and Survival. The druid cantrip this feature also grants is not yet authored, because spell lists do not exist in the pack."
+                "shortDescription": "You gain proficiency with heavy armor and one skill from Animal Handling, Nature and Survival.",
+                "fullText": "You gain proficiency with heavy armor and one skill from Animal Handling, Nature and Survival."
             },
             "modifiers": {
                 "fixed": [],

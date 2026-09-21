@@ -1658,7 +1658,10 @@ roster for the first time, `proficiencyRosterDrift.test.ts` now guards the
 `tools` category and caught the two wrong ids recorded in 8e, and the 36
 stubs 8e scoped out are authored. #30 falls from 398 to 362 — see the Tier 2
 row, 4a and 8e for the numbers and the corrected reasoning. What follows is
-the per-class recount and the one item the branch opened rather than closed.
+the per-class recount and the items the branch opened rather than closed:
+three unauthorable stubs (10b), one authored feature with no content to
+finish it (10c), and the gap between authored data and what a player can
+actually reach (10d).
 
 ### 10a. #30's per-class counts, the method behind the 2026-09-21 recount
 
@@ -1723,3 +1726,59 @@ already includes all four; only a file-specific count sees three.
 Whoever picks this up needs a schema decision before authoring, not more
 authoring effort — the same class of problem `trait_ki` and `trait_sneak_attack`
 (#62) turned out to be, not a queue of small jobs.
+
+### 10c. #67 — the Nature Domain's druid cantrip has nowhere to go; spell lists don't exist in the pack
+
+| # | Item | Notes |
+| --- | --- | --- |
+| 67 | Nature Domain's Acolyte of Nature grants a druid cantrip of the player's choice; the pack has no spell lists to draw it from | Opened 2026-09-21, on closing `feat/proficiency-family`, moved out of the trait's own lore text (see below) rather than left there. |
+
+`trait_cleric_nature_prof_bonus` (`classes/cleric.json`) authors the heavy
+armour and skill-choice halves of Acolyte of Nature; the druid cantrip half is
+blocked on spell lists as a pack concept, which do not exist anywhere in the
+pack yet. That is a different and larger gap than #66's three: #66 is missing
+`ChoiceProficiencyGrant` concepts, this is a missing content type entirely, so
+it does not belong in that table.
+
+Until 2026-09-21 the gap was recorded in the trait's own `lore.shortDescription`
+and `lore.fullText` — "The druid cantrip this feature also grants is not yet
+authored, because spell lists do not exist in the pack." — which
+`ClassDetailView.tsx` renders to players, making an engineering note into
+player-facing rules text, and the only trait of 505 whose lore admitted an
+unimplemented sub-part. It was also invisible to #30: the trait carries no
+`implementation.mode` marker (its armour and skill halves are real), so
+nothing counted this. Fixed 2026-09-21 by trimming the lore back to the rules
+text the pack actually delivers; this item is where the gap lives now instead.
+
+### 10d. #68 — authored proficiency data has no consumer outside tests, and backgrounds reach no live sheet at all
+
+| # | Item | Notes |
+| --- | --- | --- |
+| 68 | 28 of the 36 traits `feat/proficiency-family` authored are data with no UI or save-shape to reach a player | Opened 2026-09-21, on closing `feat/proficiency-family`. |
+
+The design doc claimed "skills, languages and tools all already have
+consumers; this branch gives them data" (corrected in place, see its Engine
+changes section). Verified against the working tree at close:
+
+- **Choice blocks have no consumer.** 21 of the 36 traits this branch
+  authored are choice blocks. `ProficiencyExtractor.listPendingChoices` and
+  `PendingProficiencyChoice` are referenced only by this branch's own tests
+  (`authoredProficiencies.test.ts`, `characterEngine.test.ts`) and by
+  `proficiencyExtractor.ts` itself — nothing in `apps/web/src` or the server
+  calls or references either. The character-creation wizard has no
+  proficiency step to offer a rogue's four-from-eleven or an acolyte's two
+  languages.
+- **Backgrounds reach no live sheet at all, fixed or chosen.**
+  `CharacterSaveSchema` (`packages/shared/src/schemas/runtime/characterSave.ts`)
+  has no `background` field, so `CharacterBootstrapper.resolveGrantedTraitIds`
+  builds its granted-trait id list from `race` and `classes` only. A
+  background's proficiencies — fixed or choice, all four backgrounds this
+  branch authored — never enter `compileActiveTraits`.
+
+Net effect: of the 36 traits authored, roughly 8 reach a live sheet today —
+the fixed tool/armour/weapon grants hanging off classes and subclasses. The
+other ~28 are correct pack data waiting on a UI (a proficiency-choice step in
+character creation) and a schema change (a `background` field on
+`CharacterSaveSchema`) that this branch did not build, because building them
+was never in its scope. Whoever picks up character-creation UI or the
+background gap should start here rather than rediscovering it.

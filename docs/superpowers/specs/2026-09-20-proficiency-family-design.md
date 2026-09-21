@@ -4,6 +4,13 @@ Date: 2026-09-20
 Status: implemented
 Owner: Claude pair session
 
+**Post-merge correction (2026-09-21):** "offered" below describes the pack
+data this branch authored, not an experience a player has today. The rogue's
+four-from-eleven and the acolyte's two languages are choice blocks with no UI
+to present them; only the fixed grant, "a War Domain cleric wears heavy
+armour", is true end to end. See the corrected "No calculator changes"
+paragraph under Engine changes for what actually reaches a live sheet.
+
 ## Goal
 
 Author every remaining proficiency stub the schema can express, and give tools
@@ -182,8 +189,20 @@ through `packages/database/scripts/patchPackSegment.ts`.
 | `rules/proficiencyDictionary.ts` | `TOOL_DICTIONARY` and the `tools` case in `listProficiencyOptions` |
 | `rules/__tests__/proficiencyRosterDrift.test.ts` | the docstring, which currently names tools as roster-less |
 
-No calculator changes. Skills, languages and tools all already have consumers;
-this branch gives them data.
+No calculator changes. That is true for fixed grants, which the calculators
+already consume through `ProficiencyExtractor.extractProficiencies`; this
+branch gives them data. It is not true for choice blocks, which are 21 of the
+36 traits authored here: nothing outside this branch's own tests calls
+`listPendingChoices` or references `PendingProficiencyChoice` anywhere in
+`apps/web/src` or the server, and the character-creation wizard has no
+proficiency step. Background proficiencies reach no live sheet at all today,
+fixed or chosen - `CharacterSaveSchema`
+(`packages/shared/src/schemas/runtime/characterSave.ts`) has no background
+field, so `CharacterBootstrapper.resolveGrantedTraitIds` builds its id list
+from race and class traits only. In practice, roughly 8 of the 36 traits this
+branch authored reach a live sheet today: the fixed tool/armour/weapon grants
+hanging off classes and subclasses. The rest is data authored ahead of a UI
+that does not exist yet.
 
 ## Testing
 

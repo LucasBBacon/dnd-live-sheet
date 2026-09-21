@@ -21,7 +21,9 @@ import {
  * Every category is now covered. Skills, languages and tools resolve against
  * the rosters in proficiencyDictionary.ts; weapons and armour resolve against
  * the equipment catalogue, in the second describe below. Only ability_check
- * has no roster, and it has one authored grant and no stubs.
+ * has no roster, and it has no stubs: two authored grants (the dwarf's
+ * Stonecutting and the gnome's Artificer's Lore), both naming the same one
+ * distinct id, int_history.
  */
 describe("trait proficiency ids stay on their category roster", () => {
   const traits = Object.values(TRAIT_DICTIONARY);

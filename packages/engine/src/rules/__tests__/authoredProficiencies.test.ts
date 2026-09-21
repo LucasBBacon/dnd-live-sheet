@@ -38,6 +38,7 @@ describe("class skill grants offer the PHB's list", () => {
 
   it("leaves no class skill grant carrying the schema's default of one", () => {
     const classSkillTraits = [
+      "trait_barbarian_prof_skills",
       "trait_cleric_prof_skills",
       "trait_druid_prof_skills",
       "trait_fighter_prof_skills",
@@ -174,7 +175,7 @@ describe("subclass bonus proficiencies", () => {
 });
 
 describe("the proficiency family is closed", () => {
-  it("leaves only the three stubs the schema cannot express", () => {
+  it("leaves no proficiency-shaped trait unimplemented, other than the four pinned below", () => {
     const remaining = Object.values(traits)
       .filter((trait) => trait.implementation?.mode === "unimplemented")
       .filter((trait) =>
@@ -184,5 +185,28 @@ describe("the proficiency family is closed", () => {
       .sort();
 
     expect(remaining).toEqual([]);
+  });
+
+  it("pins the four traits still unimplemented for a schema reason, not an oversight", () => {
+    // Each needs a ChoiceProficiencyGrant concept the schema does not have
+    // yet (see the design doc's "Out of scope" section and backlog #66):
+    // options drawn from proficiencies already held (trait_expertise), a
+    // choice spanning two categories (trait_feat_skilled, the Skilled feat),
+    // and blanket half-proficiency (trait_jack_of_all_trades,
+    // trait_remarkable_athlete). None of their ids match
+    // /prof|languages|blessings_of_knowledge/, so the negative assertion
+    // above is blind to them regardless of whether they exist - this pins
+    // them by id instead, so authoring one of them, or losing track of one,
+    // fails here rather than nowhere.
+    const outOfScopeIds = [
+      "trait_expertise",
+      "trait_feat_skilled",
+      "trait_jack_of_all_trades",
+      "trait_remarkable_athlete",
+    ];
+
+    for (const traitId of outOfScopeIds) {
+      expect(traits[traitId]?.implementation?.mode).toBe("unimplemented");
+    }
   });
 });
