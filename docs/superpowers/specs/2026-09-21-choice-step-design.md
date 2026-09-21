@@ -56,7 +56,7 @@ export interface ChoiceQuestion {
   id: string;                         // nodeId (class) or block id (trait)
   target: "class" | "trait";          // classSelections vs traitSelections
   classId?: string;                   // set when target is "class"
-  source: { kind: "race" | "subrace" | "background" | "class" | "subclass" | "feat"; id: string; name: string };
+  source: { kind: "race" | "subrace" | "background" | "class" | "feat"; id: string; name: string };
   prompt: string;                     // e.g. "Choose 2 skills"
   pickCount: number;
   options: ChoiceOption[];
@@ -75,8 +75,10 @@ export const listChoiceQuestions: (save: CharacterSave, snapshot: RuleSnapshotLo
   whatever `compileActiveTraits` yields). Proficiency options come from the
   block's own list or the category roster (`listProficiencyOptions`);
   modifier options from the block's `options`.
-- Order: race, subrace, background, class (ledger order), subclass, feat;
-  within a source, authoring order. Deterministic, so the UI is stable.
+- Order: race, subrace, background, class (ledger order), feat; within a
+  source, authoring order. Traits a subclass track grants are credited to
+  their class (the engine merges the two tracks). Spell-choice class nodes
+  are not questions here (spells are #79). Deterministic, so the UI is stable.
 - Labels: trait options by `traitsById[id].name`; languages and tools by
   `LANGUAGE_DICTIONARY` / `TOOL_DICTIONARY` names; skills by humanising the
   `SKILL_MAP` key; abilities by their full name; otherwise the id humanised (`sleight_of_hand` → "Sleight of hand").
@@ -104,7 +106,9 @@ In `applyLevelUp`, before any write:
   whose question already has a stored answer is rejected:
   `Invalid character choices: <id> already answered`.
 - **Required:** every question in `after` whose id is not in `before` must
-  have an answer; otherwise 400 with `missing_selection` issues. Questions open
+  have an answer; otherwise the level-up fails the way choice validation
+  already does: `Invalid character choices: <trait or class name>: nothing
+  selected for <id>` (400). Questions open
   in `before` may be answered now but are not required (older characters with
   gaps can still level up).
 - Existing `collectChoiceIssues` validation is unchanged.
@@ -122,8 +126,8 @@ In `applyLevelUp`, before any write:
 
 ### Web — creation wizard
 
-- New **Choices** step between Background and Finalize (steps become 1–7;
-  the step is skipped when there are no questions).
+- New **Choices** step between Background and Finalize (steps become 1–7).
+  With no questions it says "Nothing to choose" and Next is enabled.
 - It builds the draft `CharacterSave` from `wizardStore` (the same builder
   `compileCharacterPayload` feeds) and calls `listChoiceQuestions` against the
   rule snapshot the wizard already fetches (`/reference/rules/snapshot`).
