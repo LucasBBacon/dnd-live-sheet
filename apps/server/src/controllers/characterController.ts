@@ -5,14 +5,17 @@ import {
   characterTraits,
 } from "@project/database/src/schema/operational.js";
 import { featTraits, traits } from "@project/database/src/schema/reference.js";
-import type { LevelUpPayload } from "@project/shared";
+import type { CharacterChoices, LevelUpPayload } from "@project/shared";
 import type { Request, Response } from "express";
 import { eq, sql } from "drizzle-orm";
+import { CharacterBootstrapper } from "@project/engine";
 import {
   resolveNextLevelValidationContext,
   validateMulticlassPrerequisites,
   validateLevelUpPayloadFromResolver,
 } from "../services/levelUpValidation.js";
+import { getCachedRuleSnapshot } from "../services/ruleSnapshotCache.js";
+import { readStoredChoices, toCharacterSave } from "../services/characterSave.js";
 
 /**
  * Applies a level-up to a character.
@@ -75,6 +78,53 @@ export const applyLevelUp = async (req: Request, res: Response) => {
         context: resolverContext,
       });
 
+      // the character's answers after this level: the stored ones plus this
+      // payload's, each keyed by the question it answers (#69)
+      const storedChoices = readStoredChoices(character.choices, characterId);
+      const mergedChoices: CharacterChoices = {
+        classSelections: {
+          ...storedChoices.classSelections,
+          [targetClassId]: {
+            ...(storedChoices.classSelections[targetClassId] ?? {}),
+            ...(payload.selectedTraits ?? {}),
+          },
+        },
+        traitSelections: {
+          ...storedChoices.traitSelections,
+          ...(payload.traitSelections ?? {}),
+        },
+      };
+
+      if (payload.selectedTraits || payload.traitSelections) {
+        const ledgerAfterLevel = existingClasses.map((entry) => ({
+          classId: entry.classId,
+          classLevel:
+            entry.classId === targetClassId ? targetClassLevel : entry.classLevel,
+          subclassId:
+            entry.classId === targetClassId
+              ? (payload.subclassId ?? entry.subclassId)
+              : entry.subclassId,
+        }));
+        if (!targetClassRecord) {
+          ledgerAfterLevel.push({
+            classId: targetClassId,
+            classLevel: targetClassLevel,
+            subclassId: payload.subclassId ?? null,
+          });
+        }
+
+        const { snapshot } = await getCachedRuleSnapshot();
+        const issues = CharacterBootstrapper.collectChoiceIssues(
+          toCharacterSave(character, ledgerAfterLevel, mergedChoices),
+          snapshot,
+        );
+        if (issues.length > 0) {
+          throw new Error(
+            `Invalid character choices: ${issues.map((issue) => issue.message).join("; ")}`,
+          );
+        }
+      }
+
       // 4 - update class ledger
       if (targetClassRecord) {
         await tx
@@ -105,19 +155,6 @@ export const applyLevelUp = async (req: Request, res: Response) => {
         traitId,
         source: grantedTraitSource,
       }));
-
-      // append manually selected traits
-      if (payload.selectedTraits) {
-        Object.values(payload.selectedTraits)
-          .flat()
-          .forEach((traitId) => {
-            traitsToInsert.push({
-              characterId,
-              traitId,
-              source: "player_choice",
-            });
-          });
-      }
 
       if (traitsToInsert.length > 0) {
         await tx.insert(characterTraits).values(traitsToInsert);
@@ -176,6 +213,7 @@ export const applyLevelUp = async (req: Request, res: Response) => {
           maxHp: sql`${characters.maxHp} + ${payload.hpRoll}`,
           currentHp: sql`${characters.currentHp} + ${payload.hpRoll}`,
           ...asiUpdates,
+          choices: mergedChoices,
         })
         .where(eq(characters.id, characterId));
     });

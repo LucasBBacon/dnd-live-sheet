@@ -144,3 +144,165 @@ describe("POST /api/character choices", () => {
     expect(transaction).not.toHaveBeenCalled();
   });
 });
+
+describe("applyLevelUp choices", () => {
+  const storedFighter = {
+    id: "char-1",
+    campaignId: "camp-1",
+    raceId: "race_human",
+    subraceId: null,
+    backgroundId: null,
+    str: 16,
+    dex: 12,
+    con: 14,
+    int: 10,
+    wis: 10,
+    cha: 8,
+    currentHp: 20,
+    maxHp: 20,
+    choices: {
+      classSelections: {
+        class_fighter: { fighter_level_1_fighting_style: ["trait_fs_defense"] },
+      },
+      traitSelections: { fighter_starting_skills: ["athletics", "perception"] },
+    },
+  };
+
+  const setupLevelUp = async () => {
+    vi.resetModules();
+    const selectResults: unknown[][] = [
+      [storedFighter],
+      [
+        {
+          id: "ledger-1",
+          characterId: "char-1",
+          classId: "class_fighter",
+          classLevel: 2,
+          subclassId: null,
+        },
+      ],
+    ];
+    const tx = {
+      select: vi.fn().mockReturnThis(),
+      from: vi.fn().mockReturnThis(),
+      where: vi.fn().mockImplementation(async () => selectResults.shift() ?? []),
+      update: vi.fn().mockReturnThis(),
+      set: vi.fn().mockReturnThis(),
+      insert: vi.fn().mockReturnThis(),
+      values: vi.fn().mockResolvedValue(undefined),
+    };
+
+    vi.doMock("@project/database", () => ({
+      db: {
+        transaction: vi.fn(
+          async (callback: (trx: unknown) => Promise<unknown>) => callback(tx),
+        ),
+      },
+    }));
+    vi.doMock("../../services/levelUpValidation.js", () => ({
+      resolveNextLevelValidationContext: vi.fn().mockReturnValue({
+        targetLevel: 3,
+        isConfigured: true,
+        reason: null,
+        grantedTraitIds: [],
+        decisionTypes: [],
+        decisions: [],
+      }),
+      validateMulticlassPrerequisites: vi.fn(),
+      validateLevelUpPayloadFromResolver: vi.fn(),
+    }));
+    vi.doMock("../../services/effectiveReferenceResolver.js", () => ({
+      getEffectiveReferenceSnapshot: vi.fn().mockResolvedValue({ classes: [] }),
+    }));
+    mockRuleSnapshot();
+
+    const { applyLevelUp } = await import(
+      "../../controllers/characterController.js"
+    );
+    return { applyLevelUp, tx };
+  };
+
+  const levelUp = (body: Record<string, unknown>) =>
+    ({
+      body: {
+        characterId: "char-1",
+        targetClassId: "class_fighter",
+        newTotalLevel: 3,
+        hpRoll: 7,
+        subclassId: "subclass_fighter_battle_master",
+        ...body,
+      },
+    }) as Request;
+
+  const response = () => {
+    const status = vi.fn().mockReturnThis();
+    const json = vi.fn();
+    return { res: { status, json } as unknown as express.Response, status, json };
+  };
+
+  const maneuvers = [
+    "trait_maneuver_precision_attack",
+    "trait_maneuver_riposte",
+    "trait_maneuver_trip_attack",
+  ];
+
+  it("merges this level's picks into the stored choices, keyed by node", async () => {
+    const { applyLevelUp, tx } = await setupLevelUp();
+    const { res, status } = response();
+
+    await applyLevelUp(
+      levelUp({ selectedTraits: { fighter_bm_level_3_maneuvers: maneuvers } }),
+      res,
+    );
+
+    expect(status).toHaveBeenCalledWith(200);
+    expect(tx.set).toHaveBeenCalledWith(
+      expect.objectContaining({
+        choices: {
+          classSelections: {
+            class_fighter: {
+              fighter_level_1_fighting_style: ["trait_fs_defense"],
+              fighter_bm_level_3_maneuvers: maneuvers,
+            },
+          },
+          traitSelections: { fighter_starting_skills: ["athletics", "perception"] },
+        },
+      }),
+    );
+  });
+
+  it("no longer writes the picks as player_choice trait rows", async () => {
+    const { applyLevelUp, tx } = await setupLevelUp();
+    const { res } = response();
+
+    await applyLevelUp(
+      levelUp({ selectedTraits: { fighter_bm_level_3_maneuvers: maneuvers } }),
+      res,
+    );
+
+    const rows = tx.values.mock.calls.flatMap(([arg]) =>
+      Array.isArray(arg) ? arg : [arg],
+    );
+    expect(rows).not.toContainEqual(
+      expect.objectContaining({ source: "player_choice" }),
+    );
+  });
+
+  it("rejects a trait selection the character is not offered", async () => {
+    const { applyLevelUp } = await setupLevelUp();
+    const { res, status, json } = response();
+
+    await applyLevelUp(
+      levelUp({ traitSelections: { fighter_starting_skills: ["arcana", "history"] } }),
+      res,
+    );
+
+    expect(status).toHaveBeenCalledWith(400);
+    expect(json).toHaveBeenCalledWith(
+      expect.objectContaining({
+        success: false,
+        error: expect.stringMatching(/^Invalid character choices: .*arcana/),
+      }),
+    );
+  });
+});
