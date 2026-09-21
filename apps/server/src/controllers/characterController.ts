@@ -7,7 +7,7 @@ import {
 import type { CharacterChoices, LevelUpPayload } from "@project/shared";
 import type { Request, Response } from "express";
 import { eq, sql } from "drizzle-orm";
-import { CharacterBootstrapper } from "@project/engine";
+import { CharacterBootstrapper, listChoiceQuestions } from "@project/engine";
 import {
   resolveNextLevelValidationContext,
   validateMulticlassPrerequisites,
@@ -90,25 +90,12 @@ export const applyLevelUp = async (req: Request, res: Response) => {
       // finalAbilityScores reads from (#77)
       const storedChoices = readStoredChoices(character.choices, characterId);
 
-      // loaded once and reused by whichever validation below needs it, rather
-      // than fetched separately by choice validation and feat validation
-      let snapshot:
-        | Awaited<ReturnType<typeof getCachedRuleSnapshot>>["snapshot"]
-        | undefined;
-      if (isMulticlassDip || selectedTraits || traitSelections || payload.featId) {
-        ({ snapshot } = await getCachedRuleSnapshot());
-      }
+      // loaded unconditionally: the lock and required-answer checks below
+      // (#69) need it for every level-up, not only ones that send picks
+      const { snapshot } = await getCachedRuleSnapshot();
 
       // 3 - SERVER VALIDATION
       if (isMulticlassDip) {
-        // isMulticlassDip is one of the conditions the fetch above is
-        // guarded on, so snapshot is always loaded here; this guard gives
-        // TypeScript that same narrowing without a non-null assertion
-        if (!snapshot) {
-          throw new Error("Rule snapshot failed to load.");
-        }
-        const loadedSnapshot = snapshot;
-
         // the character as it is before this level: the stored ledger and
         // choices, not this level-up's changes - a multiclass prerequisite
         // is checked against final scores, not the pre-racial ones stored on
@@ -117,7 +104,7 @@ export const applyLevelUp = async (req: Request, res: Response) => {
           classId: targetClassId,
           currentBaseScores: finalAbilityScores(
             toCharacterSave(character, existingClasses, storedChoices),
-            loadedSnapshot,
+            snapshot,
           ),
         });
       }
@@ -137,6 +124,19 @@ export const applyLevelUp = async (req: Request, res: Response) => {
         payload,
         context: resolverContext,
       });
+
+      // an answer already on the character's row is locked: this level-up
+      // cannot resend it, whether or not the new value would differ (#69)
+      for (const nodeId of Object.keys(selectedTraits ?? {})) {
+        if (storedChoices.classSelections[targetClassId]?.[nodeId]?.length) {
+          throw new Error(`Invalid character choices: ${nodeId} already answered`);
+        }
+      }
+      for (const blockId of Object.keys(traitSelections ?? {})) {
+        if (storedChoices.traitSelections[blockId]?.length) {
+          throw new Error(`Invalid character choices: ${blockId} already answered`);
+        }
+      }
 
       // the character's answers after this level: the stored ones (read
       // above, ahead of the multiclass prerequisite check) plus this
@@ -172,7 +172,7 @@ export const applyLevelUp = async (req: Request, res: Response) => {
         // must already be in mergedChoices.feats when that validation runs,
         // or the same-payload answer to its choice block has no matching
         // decision yet and is rejected as an orphan_selection (#75 latent)
-        const feat = snapshot?.featsById?.[payload.featId];
+        const feat = snapshot.featsById?.[payload.featId];
         if (!feat) {
           throw new Error(
             `Invalid character choices: unknown feat ${payload.featId}`,
@@ -189,33 +189,57 @@ export const applyLevelUp = async (req: Request, res: Response) => {
         };
       }
 
-      if (selectedTraits || traitSelections || payload.featId) {
-        const ledgerAfterLevel = existingClasses.map((entry) => ({
-          classId: entry.classId,
-          classLevel:
-            entry.classId === targetClassId ? targetClassLevel : entry.classLevel,
-          subclassId:
-            entry.classId === targetClassId
-              ? payload.subclassId || entry.subclassId
-              : entry.subclassId,
-        }));
-        if (!targetClassRecord) {
-          ledgerAfterLevel.push({
-            classId: targetClassId,
-            classLevel: targetClassLevel,
-            subclassId: payload.subclassId ?? null,
-          });
-        }
+      // the class ledger as it will read after this level - built
+      // unconditionally, not only when this payload sends picks, so a
+      // level-up that answers nothing is still checked against whatever it
+      // newly unlocks (#69)
+      const ledgerAfterLevel = existingClasses.map((entry) => ({
+        classId: entry.classId,
+        classLevel:
+          entry.classId === targetClassId ? targetClassLevel : entry.classLevel,
+        subclassId:
+          entry.classId === targetClassId
+            ? payload.subclassId || entry.subclassId
+            : entry.subclassId,
+      }));
+      if (!targetClassRecord) {
+        ledgerAfterLevel.push({
+          classId: targetClassId,
+          classLevel: targetClassLevel,
+          subclassId: payload.subclassId ?? null,
+        });
+      }
 
-        const issues = CharacterBootstrapper.collectChoiceIssues(
-          toCharacterSave(character, ledgerAfterLevel, mergedChoices),
-          snapshot,
-        );
-        if (issues.length > 0) {
-          throw new Error(
-            `Invalid character choices: ${issues.map((issue) => issue.message).join("; ")}`,
-          );
-        }
+      const issues = CharacterBootstrapper.collectChoiceIssues(
+        toCharacterSave(character, ledgerAfterLevel, mergedChoices),
+        snapshot,
+      );
+
+      // a question that exists both before and after this level (an open
+      // question carried over from creation, or an earlier level) is never
+      // required here - only one this level newly unlocks and still has no
+      // answer for (#69)
+      const before = listChoiceQuestions(
+        toCharacterSave(character, existingClasses, storedChoices),
+        snapshot,
+      );
+      const after = listChoiceQuestions(
+        toCharacterSave(character, ledgerAfterLevel, mergedChoices),
+        snapshot,
+      );
+      const beforeIds = new Set(before.map((question) => question.id));
+      const missing = after.filter(
+        (question) => !beforeIds.has(question.id) && question.selected.length === 0,
+      );
+
+      const messages = [
+        ...issues.map((issue) => issue.message),
+        ...missing.map(
+          (question) => `${question.source.name}: nothing selected for ${question.id}`,
+        ),
+      ];
+      if (messages.length > 0) {
+        throw new Error(`Invalid character choices: ${messages.join("; ")}`);
       }
 
       // 4 - update class ledger

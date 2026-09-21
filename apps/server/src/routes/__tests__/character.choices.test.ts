@@ -539,11 +539,25 @@ describe("applyLevelUp choices", () => {
   });
 
   it("rejects a trait selection the character is not offered", async () => {
-    const { applyLevelUp } = await setupLevelUp();
+    // fighter_starting_skills is answered on storedFighter already, so an
+    // unrelated character row is used here - otherwise the lock (#69) would
+    // reject this payload for being already answered, not for the option it
+    // offers. The default subclass and its maneuvers answer stay as they
+    // were - dropping the subclass would leave the class foundationless
+    // (missing_subclass), which suppresses trait choice validation entirely
+    // and hides the very issue this test checks for
+    const characterRow = {
+      ...storedFighter,
+      choices: { ...storedFighter.choices, traitSelections: {} },
+    };
+    const { applyLevelUp } = await setupLevelUp({ characterRow });
     const { res, status, json } = response();
 
     await applyLevelUp(
-      levelUp({ traitSelections: { fighter_starting_skills: ["arcana", "history"] } }),
+      levelUp({
+        selectedTraits: { fighter_bm_level_3_maneuvers: maneuvers },
+        traitSelections: { fighter_starting_skills: ["arcana", "history"] },
+      }),
       res,
     );
 
@@ -638,6 +652,11 @@ describe("applyLevelUp choices", () => {
         targetClassId: "class_fighter",
         newTotalLevel: 4,
         subclassId: undefined,
+        // fighter's level-1 fighting-style node is unlocked purely by class
+        // level - present even on a multiclass dip - so it is a newly
+        // required answer under the check this test's title is not about
+        // (#69)
+        selectedTraits: { fighter_level_1_fighting_style: ["trait_fs_defense"] },
       }),
       res,
     );
@@ -745,7 +764,10 @@ describe("applyLevelUp choices", () => {
     });
     const { res, status } = response();
 
-    await applyLevelUp(levelUp({}), res);
+    // no subclass this level-up: the default battle-master subclass would
+    // otherwise unlock fighter_bm_level_3_maneuvers, a newly-required
+    // question unrelated to what this test checks (#69)
+    await applyLevelUp(levelUp({ subclassId: undefined }), res);
 
     expect(status).toHaveBeenCalledWith(200);
     const setCall = tx.set.mock.calls.at(-1)?.[0];
@@ -781,7 +803,8 @@ describe("applyLevelUp choices", () => {
     const { applyLevelUp, orderBy } = await setupLevelUp();
     const { res } = response();
 
-    await applyLevelUp(levelUp({}), res);
+    // no subclass this level-up, same reason as above (#69)
+    await applyLevelUp(levelUp({ subclassId: undefined }), res);
 
     // Imported after setupLevelUp's vi.resetModules() so this is the same
     // module instance applyLevelUp itself resolved classLedgerOrder from -
@@ -795,7 +818,8 @@ describe("applyLevelUp choices", () => {
     const { applyLevelUp, tx } = await setupLevelUp();
     const { res, status } = response();
 
-    await applyLevelUp(levelUp({ featId: "feat_alert" }), res);
+    // no subclass this level-up, same reason as above (#69)
+    await applyLevelUp(levelUp({ subclassId: undefined, featId: "feat_alert" }), res);
 
     expect(status).toHaveBeenCalledWith(200);
     expect(tx.set).toHaveBeenCalledWith(
@@ -850,6 +874,8 @@ describe("applyLevelUp choices", () => {
 
     await applyLevelUp(
       levelUp({
+        // no subclass this level-up, same reason as above (#69)
+        subclassId: undefined,
         featId: "feat_test_choice",
         traitSelections: { trait_test_choice_block_pick: ["STR"] },
       }),
@@ -867,5 +893,141 @@ describe("applyLevelUp choices", () => {
         }),
       }),
     );
+  });
+
+  describe("locked and required answers (#69)", () => {
+    it("rejects a level-up that resends an already-answered class node", async () => {
+      const { applyLevelUp, tx } = await setupLevelUp();
+      const { res, status, json } = response();
+
+      await applyLevelUp(
+        levelUp({
+          subclassId: undefined,
+          selectedTraits: { fighter_level_1_fighting_style: ["trait_fs_dueling"] },
+        }),
+        res,
+      );
+
+      expect(status).toHaveBeenCalledWith(400);
+      expect(json).toHaveBeenCalledWith(
+        expect.objectContaining({
+          success: false,
+          error: "Invalid character choices: fighter_level_1_fighting_style already answered",
+        }),
+      );
+      expect(tx.set).not.toHaveBeenCalled();
+    });
+
+    it("rejects a level-up that resends an already-answered trait choice block", async () => {
+      const { applyLevelUp, tx } = await setupLevelUp();
+      const { res, status, json } = response();
+
+      await applyLevelUp(
+        levelUp({
+          subclassId: undefined,
+          traitSelections: { fighter_starting_skills: ["athletics", "perception"] },
+        }),
+        res,
+      );
+
+      expect(status).toHaveBeenCalledWith(400);
+      expect(json).toHaveBeenCalledWith(
+        expect.objectContaining({
+          success: false,
+          error: "Invalid character choices: fighter_starting_skills already answered",
+        }),
+      );
+      expect(tx.set).not.toHaveBeenCalled();
+    });
+
+    it("rejects a level-up that leaves a newly-unlocked class node unanswered (resolver-covered)", async () => {
+      // the resolver already rejects this - fighter_bm_level_3_maneuvers is a
+      // required trait_selection decision at battle master level 3 - so this
+      // only proves the request is refused and nothing is written; the
+      // required-answer check under test is proven by the feat case below,
+      // which the resolver does not cover
+      const { applyLevelUp, tx } = await setupLevelUpWithRealValidation([
+        {
+          id: "ledger-1",
+          characterId: "char-1",
+          classId: "class_fighter",
+          classLevel: 2,
+          subclassId: null,
+          position: 0,
+        },
+      ]);
+      const { res, status, json } = response();
+
+      await applyLevelUp(levelUp({}), res);
+
+      expect(status).toHaveBeenCalledWith(400);
+      expect(json).toHaveBeenCalledWith(
+        expect.objectContaining({
+          success: false,
+          error: expect.stringMatching(/Battle Master/),
+        }),
+      );
+      expect(tx.set).not.toHaveBeenCalled();
+    });
+
+    it("rejects a level-up that takes a feat without answering its own choice block (not resolver-covered)", async () => {
+      // the resolver has no idea a feat's trait carries a choice block - it
+      // only resolves decisions from class/subclass progression grants - so
+      // only the required-answer check under test catches this
+      const { applyLevelUp, tx } = await setupLevelUp({
+        snapshotOverride: withFeatChoiceBlock(),
+      });
+      const { res, status, json } = response();
+
+      await applyLevelUp(
+        levelUp({ subclassId: undefined, featId: "feat_test_choice" }),
+        res,
+      );
+
+      expect(status).toHaveBeenCalledWith(400);
+      expect(json).toHaveBeenCalledWith(
+        expect.objectContaining({
+          success: false,
+          error:
+            "Invalid character choices: Test Choice Feat: nothing selected for trait_test_choice_block_pick",
+        }),
+      );
+      expect(tx.set).not.toHaveBeenCalled();
+    });
+
+    it("stores an answer to an open question from creation that this level-up does not require", async () => {
+      const { applyLevelUp, tx } = await setupLevelUp();
+      const { res, status } = response();
+
+      await applyLevelUp(
+        levelUp({
+          subclassId: undefined,
+          traitSelections: { human_language_choice: ["elvish"] },
+        }),
+        res,
+      );
+
+      expect(status).toHaveBeenCalledWith(200);
+      expect(tx.set).toHaveBeenCalledWith(
+        expect.objectContaining({
+          choices: expect.objectContaining({
+            traitSelections: expect.objectContaining({
+              human_language_choice: ["elvish"],
+              fighter_starting_skills: ["athletics", "perception"],
+            }),
+          }),
+        }),
+      );
+    });
+
+    it("lets an open question from creation go unanswered when this level-up does not require it", async () => {
+      const { applyLevelUp, tx } = await setupLevelUp();
+      const { res, status } = response();
+
+      await applyLevelUp(levelUp({ subclassId: undefined }), res);
+
+      expect(status).toHaveBeenCalledWith(200);
+      expect(tx.set).toHaveBeenCalled();
+    });
   });
 });
