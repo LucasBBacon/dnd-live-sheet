@@ -652,10 +652,10 @@ describe("applyLevelUp choices", () => {
         targetClassId: "class_fighter",
         newTotalLevel: 4,
         subclassId: undefined,
-        // fighter's level-1 fighting-style node is unlocked purely by class
-        // level - present even on a multiclass dip - so it is a newly
-        // required answer under the check this test's title is not about
-        // (#69)
+        // a fighter dip offers Fighting Style just like a level-1 fighter
+        // does (5e-correct) - the resolver now requires it and the
+        // required-answer check (#69) would too, so this dip must answer
+        // it, unrelated as it is to what this test's title checks
         selectedTraits: { fighter_level_1_fighting_style: ["trait_fs_defense"] },
       }),
       res,
@@ -665,6 +665,55 @@ describe("applyLevelUp choices", () => {
     expect(tx.values).toHaveBeenCalledWith(
       expect.objectContaining({ classId: "class_fighter" }),
     );
+  });
+
+  it("rejects a multiclass dip that leaves the class's own level-1 trait_choice unanswered", async () => {
+    // same dip as above, but without answering fighter_level_1_fighting_style
+    // - a dip now offers the class's own level-1 picks (5e-correct: a
+    // fighter dip gets Fighting Style), so the resolver itself rejects a
+    // dip that leaves it unanswered
+    const humanCleric = {
+      ...storedFighter,
+      raceId: "race_human",
+      str: 12,
+      dex: 9,
+      con: 14,
+      int: 10,
+      wis: 16,
+      cha: 11,
+      choices: {
+        classSelections: {},
+        traitSelections: {},
+        feats: [],
+      },
+    };
+    const { applyLevelUp, tx } = await setupLevelUpWithRealValidation(
+      [
+        {
+          id: "ledger-1",
+          characterId: "char-1",
+          classId: "class_cleric",
+          classLevel: 3,
+          subclassId: null,
+          position: 0,
+        },
+      ],
+      humanCleric,
+    );
+    const { res, status } = response();
+
+    await applyLevelUp(
+      levelUp({
+        targetClassId: "class_fighter",
+        newTotalLevel: 4,
+        subclassId: undefined,
+      }),
+      res,
+    );
+
+    expect(status).toHaveBeenCalledWith(400);
+    expect(tx.set).not.toHaveBeenCalled();
+    expect(tx.values).not.toHaveBeenCalled();
   });
 
   it("dips into the next place after the highest position, not the class count (#74)", async () => {

@@ -330,21 +330,27 @@ describe("resolveNextLevelValidationContext", () => {
       isMulticlassDip: true,
     });
 
+    // the reduced multiclass proficiency set, plus the level's own string
+    // feature grants - a dip still gets those (5e-correct)
     expect(context.grantedTraitIds).toEqual([
       "trait_fighter_mult_prof_armor",
       "trait_fighter_mult_prof_weapons",
+      "trait_second_wind",
     ]);
     expect(context.grantedTraits[0]?.grantSourceType).toBe("multiclass_grant");
   });
 
-  it("returns no grants when a class has no multiclass traits", () => {
+  it("returns only the level's own feature grants when a class has no multiclass traits", () => {
     const context = resolveNextLevelValidationContext({
       classId: "class_wizard",
       currentClassLevel: 0,
       isMulticlassDip: true,
     });
 
-    expect(context.grantedTraitIds).toEqual([]);
+    expect(context.grantedTraitIds).toEqual([
+      "trait_spellcasting_wizard",
+      "trait_arcane_recovery",
+    ]);
   });
 
   it("marks levels outside 1-20 as not configured", () => {
@@ -475,17 +481,57 @@ describe("resolveNextLevelValidationContext", () => {
       ).toBe(false);
     });
 
-    it("raises no ASI or node decisions for a level-1 dip", () => {
+    it("raises no ASI decision for a level-1 dip", () => {
       const context = resolveNextLevelValidationContext({
         classId: "class_fighter",
         currentClassLevel: 0,
         isMulticlassDip: true,
       });
 
+      expect(context.decisionTypes).not.toContain("asi_or_feat");
+    });
+
+    // a dip still gets the class's own level-1 picks, which is 5e-correct -
+    // a fighter dip gets Fighting Style just like a level-1 fighter does
+    it("offers the class's own level-1 trait_choice decision and features on a dip", () => {
+      const context = resolveNextLevelValidationContext({
+        classId: "class_fighter",
+        currentClassLevel: 0,
+        isMulticlassDip: true,
+      });
+
+      const decision = context.decisions.find(
+        (d) => d.id === "fighter_level_1_fighting_style",
+      );
+      expect(decision?.type).toBe("trait_selection");
+      expect(decision?.quantity).toBe(1);
+      expect(decision?.options).toContain("trait_fs_archery");
+
+      expect(context.grantedTraitIds).toEqual(
+        expect.arrayContaining([
+          "trait_fighter_mult_prof_armor",
+          "trait_fighter_mult_prof_weapons",
+          "trait_second_wind",
+        ]),
+      );
       expect(
-        context.decisions.some(
-          (d) => d.id === "fighter_level_1_fighting_style",
-        ),
+        context.grantedTraits.find((t) => t.id === "trait_second_wind")
+          ?.grantSourceType,
+      ).toBe("class_progression");
+    });
+
+    // spell picks on a dip stay skipped until the wizard can answer them
+    // (#79) - a dip into a caster (wizard's level 1 is spell_choice only)
+    // must not 400 on a decision nothing can satisfy
+    it("excludes spell_choice decisions from a level-1 dip", () => {
+      const context = resolveNextLevelValidationContext({
+        classId: "class_wizard",
+        currentClassLevel: 0,
+        isMulticlassDip: true,
+      });
+
+      expect(
+        context.decisions.some((d) => d.type === "spell_selection"),
       ).toBe(false);
     });
   });

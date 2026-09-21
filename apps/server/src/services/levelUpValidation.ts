@@ -319,9 +319,14 @@ export const resolveNextLevelValidationContext = ({
   const decisions: ResolverDecision[] = [];
   const grantedTraits: ResolvedGrantedTrait[] = [];
 
-  // a dip grants the reduced multiclass proficiency set instead of the full
-  // level-1 package. Note this also skips the level's own features, which
-  // mirrors how the reference data has always modelled it.
+  // a dip grants the reduced multiclass proficiency set, plus the level's
+  // own string feature grants - a fighter dip still gets Fighting Style,
+  // which is 5e-correct. Its trait_choice picks become a decision below
+  // (the "#region decisions" branch for a dip); its spell_choice grants, if
+  // the class has any at level 1, are left out of both the granted-trait
+  // list and the decisions - the wizard cannot answer a spell pick yet
+  // (#79), and a dip into a caster must keep working rather than 400 on a
+  // decision nothing can satisfy.
   if (isMulticlassDip && targetLevel === 1) {
     for (const traitId of blueprint.multiclassTraitIds) {
       grantedTraits.push({
@@ -329,6 +334,15 @@ export const resolveNextLevelValidationContext = ({
         name: traitName(traitId),
         grantSourceType: "multiclass_grant",
       });
+    }
+    for (const grant of classGrantsAtLevel(blueprint, targetLevel)) {
+      if (typeof grant === "string") {
+        grantedTraits.push({
+          id: grant,
+          name: traitName(grant),
+          grantSourceType: "class_progression",
+        });
+      }
     }
   } else {
     for (const grant of classGrantsAtLevel(blueprint, targetLevel)) {
@@ -402,6 +416,18 @@ export const resolveNextLevelValidationContext = ({
         ),
       );
     }
+  } else {
+    // a dip offers the class's own level-1 trait_choice picks (Fighting
+    // Style for a fighter dip) - but not spell_choice grants, which stay
+    // skipped until the wizard can answer them (#79)
+    decisions.push(
+      ...grantDrivenDecisions(
+        classGrantsAtLevel(blueprint, targetLevel).filter(
+          (grant) => typeof grant !== "string" && grant.type === "trait_choice",
+        ),
+        blueprint.name,
+      ),
+    );
   }
 
   decisions.push(
