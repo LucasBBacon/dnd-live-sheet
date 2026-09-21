@@ -23,8 +23,14 @@ export const LevelUpWizard = () => {
 
     const steps: string[] = ["overview", "hp_increase"]; // always required
 
-    // inject dynamic decisions from the engine
+    // inject dynamic decisions from the engine - one step per decision
+    // *type*, in first-seen order, so several trait_selection decisions
+    // (e.g. a fighting style plus a multiclass skill pick) still collapse
+    // onto a single Choices step
+    const seenTypes = new Set<string>();
     progressionContext.decisions.forEach((decision) => {
+      if (seenTypes.has(decision.type)) return;
+      seenTypes.add(decision.type);
       steps.push(decision.type); // e.g., 'subclass', 'asi_or_feat'
     });
 

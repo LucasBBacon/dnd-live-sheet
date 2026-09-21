@@ -18,6 +18,15 @@ export interface LevelDecision {
   options?: string[]; // id of available choices, if restricted
   isRequired: boolean; // strictly enforces selection
   quantity?: number; // how many choices to make (e.g., choose 2 skills)
+  /**
+   * Where this decision's answer travels in the level-up payload. A trait's
+   * own choice block (e.g. the rogue multiclass skill pick, Lore's bonus
+   * skills) is answered through `payload.traitSelections`, keyed by block id.
+   * Everything else (class progression picks such as a fighting style) is
+   * answered through `payload.selectedTraits`, keyed by nodeId. Mirrors the
+   * server's `ResolverDecision.source` (apps/server/src/services/levelUpValidation.ts).
+   */
+  source?: "trait_choice_block";
 }
 
 /**

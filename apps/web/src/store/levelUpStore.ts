@@ -23,6 +23,9 @@ type LevelUpOptionsResponse = {
         | "subclass_progression";
     }>;
     decisionTypes: Array<"subclass" | "asi_or_feat">;
+    // the server's full decision list (Task 3). Kept optional so a stubbed
+    // or stale response falls back to mapServerDecisions below.
+    decisions?: Array<LevelDecision>;
   } | null;
 };
 
@@ -65,6 +68,22 @@ const mapServerDecisions = (
       quantity: 1,
     };
   });
+
+/**
+ * The server's full decision list (Task 3), with a subclass decision that
+ * carries no options filled in from the response's own `subclasses` list -
+ * mirrors what mapServerDecisions already does for the old decisionTypes
+ * shape, so a subclass step always has something to pick from.
+ */
+const resolveDecisions = (
+  decisions: LevelDecision[],
+  subclasses: Array<{ id: string }>,
+): LevelDecision[] =>
+  decisions.map((decision) =>
+    decision.type === "subclass" && !decision.options?.length
+      ? { ...decision, options: subclasses.map((subclass) => subclass.id) }
+      : decision,
+  );
 
 interface LevelUpState {
   isActive: boolean;
@@ -147,7 +166,9 @@ export const useLevelUpStore = create<LevelUpState>((set, get) => ({
           classId,
           level: nextLevel.targetLevel,
           grantedTraits: nextLevel.grantedTraitIds,
-          decisions: mapServerDecisions(nextLevel.decisionTypes, subclasses),
+          decisions: nextLevel.decisions
+            ? resolveDecisions(nextLevel.decisions, subclasses)
+            : mapServerDecisions(nextLevel.decisionTypes, subclasses),
         },
         grantedTraitDetails:
           nextLevel.grantedTraits ??

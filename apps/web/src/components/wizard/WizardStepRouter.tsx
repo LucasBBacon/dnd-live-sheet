@@ -4,6 +4,8 @@ import { HpRollStep } from "./steps/HpRollStep";
 import { ReviewStep } from "./steps/ReviewStep";
 import { OverviewStep } from "./steps/OverviewStep";
 import { SubclassStep } from "./steps/SubclassStep";
+import { ChoicesStep } from "./steps/ChoicesStep";
+import { SpellChoiceUnsupportedStep } from "./steps/SpellChoiceUnsupportedStep";
 
 interface RouterProps {
   stepType: string;
@@ -28,6 +30,14 @@ export const WizardStepRouter = ({ stepType, decisions }: RouterProps) => {
       return <SubclassStep context={getDecisionContext("subclass")!} />;
     case "asi_or_feat":
       return <AsiFeatStep context={getDecisionContext("asi_or_feat")!} />;
+    case "trait_selection":
+      return (
+        <ChoicesStep
+          decisions={decisions.filter((d) => d.type === "trait_selection")}
+        />
+      );
+    case "spell_selection":
+      return <SpellChoiceUnsupportedStep />;
     case "review":
       return <ReviewStep />;
     default:

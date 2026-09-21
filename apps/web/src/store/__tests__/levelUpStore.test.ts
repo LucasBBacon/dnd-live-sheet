@@ -159,4 +159,115 @@ describe("useLevelUpStore", () => {
     expect(nextState.draftPayload).toEqual({});
     expect(nextState.errorMessage).toBeNull();
   });
+
+  it("keeps every decision from nextLevel.decisions, filling subclass options from the response's subclasses", async () => {
+    vi.mocked(apiClient).mockResolvedValueOnce({
+      subclasses: [{ id: "subclass_thief" }, { id: "subclass_assassin" }],
+      nextLevel: {
+        targetLevel: 3,
+        isConfigured: true,
+        reason: null,
+        grantedTraitIds: [],
+        decisionTypes: ["subclass"],
+        decisions: [
+          {
+            id: "rogue_multiclass_skill",
+            type: "trait_selection",
+            description: "Choose a bonus skill.",
+            options: ["skill_stealth", "skill_deception"],
+            isRequired: true,
+            quantity: 1,
+            source: "trait_choice_block",
+          },
+          {
+            id: "fighter_level_1_fighting_style",
+            type: "trait_selection",
+            description: "Choose a fighting style.",
+            options: ["trait_fs_archery", "trait_fs_defense"],
+            isRequired: true,
+            quantity: 1,
+          },
+          {
+            id: "node_spell_pick",
+            type: "spell_selection",
+            description: "Choose a spell.",
+            isRequired: true,
+            quantity: 2,
+          },
+          {
+            id: "dec_asi",
+            type: "asi_or_feat",
+            description: "Increase an ability score or choose a feat.",
+            isRequired: true,
+            quantity: 1,
+          },
+          {
+            id: "dec_subclass",
+            type: "subclass",
+            description: "Choose a subclass.",
+            isRequired: true,
+            quantity: 1,
+          },
+        ],
+      },
+    });
+
+    await useLevelUpStore
+      .getState()
+      .beginLevelUp("character-1", "class_rogue", 2, 3, {
+        campaignId: "campaign-1",
+      });
+
+    const decisions =
+      useLevelUpStore.getState().progressionContext?.decisions ?? [];
+
+    expect(decisions).toHaveLength(5);
+
+    expect(decisions.find((d) => d.id === "rogue_multiclass_skill")).toEqual({
+      id: "rogue_multiclass_skill",
+      type: "trait_selection",
+      description: "Choose a bonus skill.",
+      options: ["skill_stealth", "skill_deception"],
+      isRequired: true,
+      quantity: 1,
+      source: "trait_choice_block",
+    });
+
+    expect(
+      decisions.find((d) => d.id === "fighter_level_1_fighting_style"),
+    ).toEqual({
+      id: "fighter_level_1_fighting_style",
+      type: "trait_selection",
+      description: "Choose a fighting style.",
+      options: ["trait_fs_archery", "trait_fs_defense"],
+      isRequired: true,
+      quantity: 1,
+    });
+
+    expect(decisions.find((d) => d.id === "node_spell_pick")).toEqual({
+      id: "node_spell_pick",
+      type: "spell_selection",
+      description: "Choose a spell.",
+      isRequired: true,
+      quantity: 2,
+    });
+
+    expect(decisions.find((d) => d.id === "dec_asi")).toEqual({
+      id: "dec_asi",
+      type: "asi_or_feat",
+      description: "Increase an ability score or choose a feat.",
+      isRequired: true,
+      quantity: 1,
+    });
+
+    // a subclass decision with no options gets the response's subclasses ids
+    expect(decisions.find((d) => d.id === "dec_subclass")).toEqual({
+      id: "dec_subclass",
+      type: "subclass",
+      description: "Choose a subclass.",
+      isRequired: true,
+      quantity: 1,
+      options: ["subclass_thief", "subclass_assassin"],
+    });
+  });
 });
