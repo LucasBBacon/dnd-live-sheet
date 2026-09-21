@@ -1,7 +1,7 @@
 # TODO Backlog
 
-**Status as of 2026-09-21**, on `fix/sheet-modifiers`, after #73
-closed. The workspace is green — **2143
+**Status as of 2026-09-21**, on `fix/levelup-correctness`, after #75 and #77
+closed. The workspace is green — **2156
 tests**, 0 failures, and typecheck clean per package (6f explains why "per
 package" matters). Nothing below is breaking a build; these are gaps, debt and
 content.
@@ -182,9 +182,9 @@ things the last three branches showed replace it:
 | 4b | ✅ **#74** — a multiclass character's first class is whatever order Postgres returns | small–medium | **Closed 2026-09-21** on `fix/class-order`: `character_classes.position` records the order a class was taken, `classLedgerOrder` orders every ledger read, and all writers were updated to keep it. Migration `0015_add_class_position` is applied to the dev database. The hand check reproduced #74's exact failure condition on Lyra Silverstring and the sheet stayed correct. See the "11e. #74" section below. |
 | 5 | **#68 (choice half) — Branch B** — a proficiency-choice wizard step, now that storage exists | medium, UI | Storage landed as `feat/character-choices`'s Branch A: `characters.choices` holds a class's `selections` and a trait's `traitSelections`, keyed by the question, but nothing collects them from a player yet. Widened from 21 proficiency blocks to all 31 choice-block traits in the pack — every class's skill picks, background tools and languages, plus the race picks that predate #68: the half-elf's ability-score choice, Skill Versatility and extra language, the human's and high elf's extra language, and the dwarf's artisan's tools. `ProficiencyExtractor.listPendingChoices` has no caller outside tests. Brainstorm the wizard step first; it is the first new UI surface since the barbarian's table notes. Inherits two findings from the same final review, 2026-09-21: a **custom background's choice blocks cannot be answered at creation** — a custom background's traits live outside `CharacterSave` entirely (the gateway included), so Branch B needs a home for them before a custom-background player can answer anything; and **level-up may re-answer a question already answered at creation or an earlier level** — `applyLevelUp`'s merge (#69, hardened by this review) overwrites a stored pick with whatever the payload sends and validates the new value, but nothing stops a later answer from changing an earlier one, so Branch B needs to decide whether re-answering is allowed. |
 | 5a | **#71** — the sheet ignores a refused resource spend | small–medium | Found by the final review of `fix/tier1-reach-the-player`, 2026-09-21. `RESOURCE_CONSUMED`'s refusal (item 2's fix) is not in `SHEET_ERROR_EVENTS`, so `consumeResource`'s optimistic decrement never rolls back. Same family as item 2: a spend the server refused should not be the spend the player sees. See P11's 11d. |
-| 5b | **#75** — feat-granted traits reach no sheet's modifiers | small–medium | Found while implementing `fix/sheet-modifiers`, 2026-09-21: a feat is stored as a `feat_selection` `character_traits` row, and that row never enters the web store's save or the server's `CharacterBootstrapper.resolveGrantedTraitIds`, which reads a character's race, background and classes only. Same gap #73 closed, one grant source short. See the "11g. #75 and #76" section below. |
-| 5c | **#76** — the web store's composed `activeStates` still lacks trait and equipment states | small–medium | Found by `fix/sheet-modifiers`'s hand check, 2026-09-21: `composeActiveStates` still composes only over `baseStates`, which the store always sets to `[]`; trigger and dice-rule gating in `dispatchAuthoredEvent`, `useCheckRoll`, and the `ArmorClassWidget`, `TableRulesWidget`, `TurnControlsWidget` and `ConditionsWidget` widgets still read it, even though #73 moved the derived-stat hooks to `getSheetStates()`. If the branch's final review fixes this first, it closes #76 rather than leaving it recorded here. See the "11g. #75 and #76" section below. |
-| 5d | **#77** — stored ability scores are pre-racial, and two readers use them directly | small–medium | Found by the final review of `fix/sheet-modifiers`, 2026-09-21: character creation, and now the samples (#73's `fix(database)` commit), store the pre-racial score, but D&D 5e wants the final, post-racial one for both readers below. Multiclass prerequisite validation (`validateMulticlassPrerequisites`, called from `applyLevelUp` in `apps/server/src/controllers/characterController.ts` with `character.str`, `character.dex`, `character.con`, `character.int`, `character.wis`, `character.cha`) reads the stored score directly — it would now refuse e.g. Sister Aveline (stored STR 12, final 13 as a human) a fighter or barbarian dip that `main` allowed. `useCheckRoll` (`apps/web/src/hooks/useCheckRoll.ts`) has the same gap on the client: it passes `baseScores` as `abilityScores` to dice rules such as Indomitable Might's floor, where the server's attack path already uses final scores. |
+| 5b | ✅ **#75** — feat-granted traits reach no sheet's modifiers | small–medium | **Closed 2026-09-21** on `fix/levelup-correctness`: a feat pick now lives in `characters.choices.feats` (and `CharacterSave.feats`); `CharacterBootstrapper.resolveGrantedTraitIds` grants each feat's `grantedTraitIds` from the snapshot's new `featsById`, so both sheets pick feats up. `applyLevelUp` rejects an unknown feat or a repeat of a non-repeatable one before any write, appends the pick to `choices.feats`, and no longer writes `feat_selection` rows. Hand check: Sister Aveline, cleric 3 → 4 taking Alert, initiative +0 → +5, `choices.feats` `["feat_alert"]`, no `feat_selection` rows. See the "11g" section below. |
+| 5c | **#76** — the web store's composed `activeStates` still lacks trait and equipment states | small–medium | Found by `fix/sheet-modifiers`'s hand check, 2026-09-21: `composeActiveStates` still composes only over `baseStates`, which the store always sets to `[]`; trigger and dice-rule gating in `dispatchAuthoredEvent`, `useCheckRoll`, and the `ArmorClassWidget`, `TableRulesWidget`, `TurnControlsWidget` and `ConditionsWidget` widgets still read it, even though #73 moved the derived-stat hooks to `getSheetStates()`. If the branch's final review fixes this first, it closes #76 rather than leaving it recorded here. See the "11g. #75 and #76" section below. **`useCheckRoll`'s symptom fixed 2026-09-21** on `fix/levelup-correctness` (it now reads `useAbilities().activeStates`); the rest stays open. |
+| 5d | ✅ **#77** — stored ability scores are pre-racial, and two readers use them directly | small–medium | **Closed 2026-09-21** on `fix/levelup-correctness`: `finalAbilityScores(save, snapshot)` (`apps/server/src/services/characterSave.ts`) runs the stored scores through `AbilityEngine.calculateScore` with the gathered trait modifiers (magic items deliberately excluded). `applyLevelUp`'s multiclass check and `databaseReferenceProvider`'s dip preview both use it; `useCheckRoll` hands dice rules the sheet's final scores and states. Hand check: the wizard offers Sister Aveline (human, stored STR 12, final 13) a fighter dip. See the "11g" section below. |
 
 ### Tier 2 — the burndown, one system per pass
 
@@ -2184,12 +2184,15 @@ the samples re-seeded, and every AC matched the spec's expected values.
 Test totals: shared 227, engine 958, database 198, server 404, web 355 =
 **2142**, hygiene passed.
 
-### 11g. #75 and #76 — found while implementing `fix/sheet-modifiers`
+### 11g. #75, #76 and #77 — found while implementing `fix/sheet-modifiers`
 
 | # | Item | Notes |
 | --- | --- | --- |
-| 75 | Feat-granted traits never reach either sheet's modifiers | Found while designing `fix/sheet-modifiers`, 2026-09-21; recorded as out of scope rather than fixed. See below. |
-| 76 | The web store's composed `activeStates` still lacks trait and equipment states, so trigger and dice-rule gating still miss them | Found by `fix/sheet-modifiers`'s hand check, 2026-09-21; recorded rather than fixed. See below. |
+| 75 | ✅ Feat-granted traits never reach either sheet's modifiers | Found while designing `fix/sheet-modifiers`, 2026-09-21; recorded as out of scope rather than fixed. See below. |
+| 76 | The web store's composed `activeStates` still lacks trait and equipment states, so trigger and dice-rule gating still miss them | Found by `fix/sheet-modifiers`'s hand check, 2026-09-21; recorded rather than fixed; `useCheckRoll`'s symptom fixed on `fix/levelup-correctness`. See below. |
+| 77 | ✅ Stored ability scores are pre-racial, and multiclass prerequisites and `useCheckRoll` read them directly | Found by the final review of `fix/sheet-modifiers`, 2026-09-21; closed on `fix/levelup-correctness`. See the Recommended-sequence row 5d. |
+| 78 | A level's hit points skip the Constitution modifier on the server | Found by `fix/levelup-correctness`'s hand check, 2026-09-21. See below. |
+| 79 | The level-up wizard has no spell step, so a level with a spell choice cannot be submitted | Found by `fix/levelup-correctness`'s hand check, 2026-09-21. See below. |
 
 - **#75 — feat-granted traits never reach either sheet's modifiers.** A feat
   is stored as a `feat_selection` `character_traits` row. That row never
@@ -2202,6 +2205,14 @@ Test totals: shared 227, engine 958, database 198, server 404, web 355 =
   and live-effect modifiers, one grant source short. `CharacterSave` itself
   has no feat field, so the fix needs a decision on where a feat pick is
   stored and read from before either side can pick it up.
+
+  **Closed 2026-09-21** on `fix/levelup-correctness`. Feats live in
+  `characters.choices.feats`, the save carries them, and the bootstrapper
+  grants their traits; level-up validates the pick and stops writing
+  `feat_selection` rows (rows written before this branch are now inert).
+  Hand check: Sister Aveline levelled from cleric 3 to 4 taking Alert, and
+  her initiative rose from +0 to +5 on a fresh load. The level-up went
+  through the API rather than the wizard because of #79.
 - **#76 — the web store's composed `activeStates` still lacks trait and
   equipment states.** #73's fix routes the derived-stat hooks through the new
   `getSheetStates()`, but the store's existing `composeActiveStates` still
@@ -2229,3 +2240,21 @@ Test totals: shared 227, engine 958, database 198, server 404, web 355 =
   same raw `state.activeStates`, so any dice rule keyed to a trait or
   equipment state, not only a condition, rolls as though that state is never
   active.
+
+  **`useCheckRoll`'s symptom fixed 2026-09-21** on `fix/levelup-correctness`:
+  its dice rules now receive `useAbilities().activeStates` (the sheet's
+  states) and the final ability scores. The Eagle Dash gate and the other
+  readers above are still open.
+- **#78 — a level's hit points skip the Constitution modifier on the
+  server.** The wizard's hit-point step previews the roll plus the CON
+  modifier ("Total +CON: 7"), and the review step shows the maximum rising
+  by that total, but `applyLevelUp` adds `payload.hpRoll` alone to `maxHp`
+  and `currentHp`. Sister Aveline (CON +2) went from 24 to 29 maximum hit
+  points where the wizard promised 31. Older than `fix/levelup-correctness`;
+  recorded, not fixed.
+- **#79 — the level-up wizard has no spell step.** `validateLevelUpPayload`
+  rejects a level whose progression carries a `spell_selection` decision
+  unless `addedSpells` holds enough spells, but the wizard
+  (`apps/web/src/components/wizard/steps/`) has no step that fills
+  `addedSpells`. Cleric 3 → 4 ("Choose 1 spell(s) for Cleric") fails with a
+  400 at the review step. Sits beside Branch B's choice-step UI.
