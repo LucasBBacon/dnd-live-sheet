@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { describe, expect, it } from "vitest";
 import { compileCharacterPayload } from "../compileCharacter";
+import { choicesFromAnswers } from "../draftSave";
 
 describe("compileCharacterPayload", () => {
   const validState: any = {
@@ -46,6 +47,7 @@ describe("compileCharacterPayload", () => {
       ],
       1: [{ kind: "item", refId: "crossbow_bolt", quantity: 20 }],
     },
+    choiceAnswers: {},
   };
 
   it("compiles valid wizard state to character payload", () => {
@@ -84,6 +86,35 @@ describe("compileCharacterPayload", () => {
         ],
         choices: [],
       },
+      choices: { classSelections: {}, traitSelections: {}, feats: [] },
+    });
+  });
+
+  it("includes choices equal to choicesFromAnswers(state.choiceAnswers)", () => {
+    const state = {
+      ...validState,
+      choiceAnswers: {
+        fighter_level_1_fighting_style: {
+          target: "class",
+          classId: "fighter",
+          selected: ["trait_fs_archery"],
+        },
+        human_language_choice: {
+          target: "trait",
+          selected: ["dwarvish"],
+        },
+      },
+    };
+
+    const result = compileCharacterPayload(state);
+
+    expect(result.choices).toEqual(choicesFromAnswers(state.choiceAnswers));
+    expect(result.choices).toEqual({
+      classSelections: {
+        fighter: { fighter_level_1_fighting_style: ["trait_fs_archery"] },
+      },
+      traitSelections: { human_language_choice: ["dwarvish"] },
+      feats: [],
     });
   });
 

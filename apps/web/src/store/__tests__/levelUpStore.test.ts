@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { useLevelUpStore } from "../levelUpStore";
-import { apiClient } from "../../api/client";
+import type { ChoiceQuestion } from "@project/engine";
+import { apiClient, buildLevelUpOptionsEndpoint } from "../../api/client";
 
 vi.mock("../../api/client", () => ({
   apiClient: vi.fn(),
@@ -158,5 +159,290 @@ describe("useLevelUpStore", () => {
     expect(nextState.grantedTraitDetails).toEqual([]);
     expect(nextState.draftPayload).toEqual({});
     expect(nextState.errorMessage).toBeNull();
+  });
+
+  it("keeps every decision from nextLevel.decisions, filling subclass options from the response's subclasses", async () => {
+    vi.mocked(apiClient).mockResolvedValueOnce({
+      subclasses: [{ id: "subclass_thief" }, { id: "subclass_assassin" }],
+      nextLevel: {
+        targetLevel: 3,
+        isConfigured: true,
+        reason: null,
+        grantedTraitIds: [],
+        decisionTypes: ["subclass"],
+        decisions: [
+          {
+            id: "rogue_multiclass_skill",
+            type: "trait_selection",
+            description: "Choose a bonus skill.",
+            options: ["skill_stealth", "skill_deception"],
+            isRequired: true,
+            quantity: 1,
+            source: "trait_choice_block",
+          },
+          {
+            id: "fighter_level_1_fighting_style",
+            type: "trait_selection",
+            description: "Choose a fighting style.",
+            options: ["trait_fs_archery", "trait_fs_defense"],
+            isRequired: true,
+            quantity: 1,
+          },
+          {
+            id: "node_spell_pick",
+            type: "spell_selection",
+            description: "Choose a spell.",
+            isRequired: true,
+            quantity: 2,
+          },
+          {
+            id: "dec_asi",
+            type: "asi_or_feat",
+            description: "Increase an ability score or choose a feat.",
+            isRequired: true,
+            quantity: 1,
+          },
+          {
+            id: "dec_subclass",
+            type: "subclass",
+            description: "Choose a subclass.",
+            isRequired: true,
+            quantity: 1,
+          },
+        ],
+      },
+    });
+
+    await useLevelUpStore
+      .getState()
+      .beginLevelUp("character-1", "class_rogue", 2, 3, {
+        campaignId: "campaign-1",
+      });
+
+    const decisions =
+      useLevelUpStore.getState().progressionContext?.decisions ?? [];
+
+    expect(decisions).toHaveLength(5);
+
+    expect(decisions.find((d) => d.id === "rogue_multiclass_skill")).toEqual({
+      id: "rogue_multiclass_skill",
+      type: "trait_selection",
+      description: "Choose a bonus skill.",
+      options: ["skill_stealth", "skill_deception"],
+      isRequired: true,
+      quantity: 1,
+      source: "trait_choice_block",
+    });
+
+    expect(
+      decisions.find((d) => d.id === "fighter_level_1_fighting_style"),
+    ).toEqual({
+      id: "fighter_level_1_fighting_style",
+      type: "trait_selection",
+      description: "Choose a fighting style.",
+      options: ["trait_fs_archery", "trait_fs_defense"],
+      isRequired: true,
+      quantity: 1,
+    });
+
+    expect(decisions.find((d) => d.id === "node_spell_pick")).toEqual({
+      id: "node_spell_pick",
+      type: "spell_selection",
+      description: "Choose a spell.",
+      isRequired: true,
+      quantity: 2,
+    });
+
+    expect(decisions.find((d) => d.id === "dec_asi")).toEqual({
+      id: "dec_asi",
+      type: "asi_or_feat",
+      description: "Increase an ability score or choose a feat.",
+      isRequired: true,
+      quantity: 1,
+    });
+
+    // a subclass decision with no options gets the response's subclasses ids
+    expect(decisions.find((d) => d.id === "dec_subclass")).toEqual({
+      id: "dec_subclass",
+      type: "subclass",
+      description: "Choose a subclass.",
+      isRequired: true,
+      quantity: 1,
+      options: ["subclass_thief", "subclass_assassin"],
+    });
+  });
+});
+describe("useLevelUpStore choice questions", () => {
+  const question = (
+    id: string,
+    target: "class" | "trait",
+    overrides: Partial<ChoiceQuestion> = {},
+  ): ChoiceQuestion => ({
+    id,
+    target,
+    ...(target === "class" ? { classId: "class_fighter" } : {}),
+    source: { kind: "class", id: "class_fighter", name: "Fighter" },
+    prompt: `Choose for ${id}`,
+    pickCount: 1,
+    options: [
+      { id: "opt_a", label: "A" },
+      { id: "opt_b", label: "B" },
+    ],
+    selected: [],
+    held: [],
+    ...overrides,
+  });
+
+  const optionsResponse = (choiceQuestions: ChoiceQuestion[]) => ({
+    subclasses: [{ id: "subclass_fighter_battle_master" }],
+    nextLevel: {
+      targetLevel: 3,
+      isConfigured: true,
+      reason: null,
+      grantedTraitIds: [],
+      decisionTypes: ["subclass"],
+      decisions: [
+        {
+          id: "dec_class_fighter_subclass_3",
+          type: "subclass",
+          description: "Choose a subclass.",
+          isRequired: true,
+          quantity: 1,
+        },
+      ],
+    },
+    choiceQuestions,
+  });
+
+  const begin = async (choiceQuestions: ChoiceQuestion[]) => {
+    vi.mocked(apiClient).mockResolvedValueOnce(optionsResponse(choiceQuestions));
+    await useLevelUpStore
+      .getState()
+      .beginLevelUp("character-1", "class_fighter", 2, 3, {
+        campaignId: "campaign-1",
+      });
+  };
+
+  // lets a pending refetch settle
+  const flush = () => new Promise((resolve) => setTimeout(resolve, 0));
+
+  beforeEach(() => {
+    vi.mocked(apiClient).mockReset();
+    vi.mocked(buildLevelUpOptionsEndpoint).mockClear();
+    useLevelUpStore.setState({
+      isActive: false,
+      progressionContext: null,
+      draftPayload: {},
+      errorMessage: null,
+      choiceQuestions: [],
+    });
+  });
+
+  it("keeps the server's choiceQuestions from the options response", async () => {
+    const skills = question("fighter_starting_skills", "trait");
+    await begin([skills]);
+
+    expect(useLevelUpStore.getState().choiceQuestions).toEqual([skills]);
+  });
+
+  it("refetches the questions with the draft's subclassId once the subclass is picked", async () => {
+    await begin([]);
+    const maneuvers = question("fighter_bm_level_3_maneuvers", "class", {
+      pickCount: 3,
+    });
+    vi.mocked(apiClient).mockResolvedValueOnce(optionsResponse([maneuvers]));
+
+    useLevelUpStore
+      .getState()
+      .updateDraft({ subclassId: "subclass_fighter_battle_master" });
+    await flush();
+
+    expect(vi.mocked(buildLevelUpOptionsEndpoint)).toHaveBeenLastCalledWith(
+      { campaignId: "campaign-1", characterId: "character-1" },
+      expect.objectContaining({
+        classId: "class_fighter",
+        currentClassLevel: 2,
+        subclassId: "subclass_fighter_battle_master",
+      }),
+    );
+    expect(useLevelUpStore.getState().choiceQuestions).toEqual([maneuvers]);
+  });
+
+  it("refetches with the draft's featId when the feat changes", async () => {
+    await begin([]);
+    vi.mocked(apiClient).mockResolvedValueOnce(optionsResponse([]));
+
+    useLevelUpStore.getState().updateDraft({ featId: "feat_skilled" });
+    await flush();
+
+    expect(vi.mocked(buildLevelUpOptionsEndpoint)).toHaveBeenLastCalledWith(
+      expect.anything(),
+      expect.objectContaining({ featId: "feat_skilled" }),
+    );
+  });
+
+  it("does not refetch for other draft keys, or for an unchanged subclass", async () => {
+    await begin([]);
+    vi.mocked(apiClient).mockResolvedValueOnce(optionsResponse([]));
+    useLevelUpStore
+      .getState()
+      .updateDraft({ subclassId: "subclass_fighter_battle_master" });
+    await flush();
+    const calls = vi.mocked(apiClient).mock.calls.length;
+
+    useLevelUpStore.getState().updateDraft({ hpRoll: 6 });
+    useLevelUpStore
+      .getState()
+      .updateDraft({ subclassId: "subclass_fighter_battle_master" });
+    useLevelUpStore
+      .getState()
+      .updateDraft({ selectedTraits: { some_node: ["opt_a"] } });
+    await flush();
+
+    expect(vi.mocked(apiClient).mock.calls.length).toBe(calls);
+  });
+
+  it("drops answers to questions the refetch no longer asks", async () => {
+    const maneuvers = question("fighter_bm_level_3_maneuvers", "class");
+    const skills = question("fighter_starting_skills", "trait");
+    await begin([maneuvers, skills]);
+    useLevelUpStore.getState().updateDraft({
+      selectedTraits: { fighter_bm_level_3_maneuvers: ["opt_a"] },
+      traitSelections: { fighter_starting_skills: ["opt_b"] },
+    });
+    vi.mocked(apiClient).mockResolvedValueOnce(optionsResponse([skills]));
+
+    useLevelUpStore
+      .getState()
+      .updateDraft({ subclassId: "subclass_fighter_champion" });
+    await flush();
+
+    const draft = useLevelUpStore.getState().draftPayload;
+    expect(draft.selectedTraits).toEqual({});
+    expect(draft.traitSelections).toEqual({ fighter_starting_skills: ["opt_b"] });
+  });
+
+  it("keeps only the latest refetch when an older one resolves after it", async () => {
+    await begin([]);
+    let resolveSlow: (value: unknown) => void = () => undefined;
+    const slow = new Promise((resolve) => {
+      resolveSlow = resolve;
+    });
+    const newest = question("fighter_bm_level_3_maneuvers", "class");
+    vi.mocked(apiClient)
+      .mockReturnValueOnce(slow)
+      .mockResolvedValueOnce(optionsResponse([newest]));
+
+    useLevelUpStore
+      .getState()
+      .updateDraft({ subclassId: "subclass_fighter_champion" });
+    useLevelUpStore
+      .getState()
+      .updateDraft({ subclassId: "subclass_fighter_battle_master" });
+    await flush();
+    resolveSlow(optionsResponse([question("stale_question", "class")]));
+    await flush();
+
+    expect(useLevelUpStore.getState().choiceQuestions).toEqual([newest]);
   });
 });

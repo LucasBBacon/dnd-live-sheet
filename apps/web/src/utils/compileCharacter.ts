@@ -3,6 +3,7 @@ import type {
   CreateCharacterPayload,
   StartingEquipmentGrant,
 } from "@project/shared";
+import { choicesFromAnswers } from "./draftSave";
 import {
   buildStartingEquipmentCategoryKey,
   resolveCategoryGrant,
@@ -77,5 +78,6 @@ export const compileCharacterPayload = (
       })),
       choices: [],
     },
+    choices: choicesFromAnswers(state.choiceAnswers),
   };
 };

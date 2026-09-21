@@ -865,6 +865,12 @@ describe("Character Routes", () => {
       const req = createLevelUpRequest({
         targetClassId: "class_fighter",
         newTotalLevel: 3,
+        // fighter's own level-1 fighting-style node is unlocked purely by
+        // class level in the real pack this harness's snapshot mock loads,
+        // regardless of the resolver's dip simplification above - the
+        // required-answer check (#69) needs an answer for it even though
+        // this dip's resolver context (mocked) never asks for one
+        selectedTraits: { fighter_level_1_fighting_style: ["trait_fs_defense"] },
       });
       const { res, status, json } = createMockResponse();
 

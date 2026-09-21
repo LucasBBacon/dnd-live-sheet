@@ -17,7 +17,7 @@ import {
 } from "@project/shared";
 import { eq } from "drizzle-orm";
 import { v4 as uuidv4 } from "uuid";
-import { CharacterBootstrapper } from "@project/engine";
+import { CharacterBootstrapper, listChoiceQuestions } from "@project/engine";
 import { processStartingEquipment } from "../utils/inventory.js";
 import { applyLevelUp } from "../controllers/characterController.js";
 import { isUserCampaignMember } from "../services/campaignAccess.js";
@@ -182,41 +182,51 @@ router.post("/", async (req, res, next) => {
     }
 
     // the answers are stored keyed by the question they answer, so a wrong
-    // one is refused here rather than silently ignored on every sheet load
+    // one is refused here rather than silently ignored on every sheet load.
+    // Every question level 1 asks must be answered too - collectChoiceIssues
+    // deliberately leaves an unanswered question out (a level-up save is
+    // allowed to have unfinished questions), so that check is added here.
     const choices = payload.choices ?? emptyCharacterChoices();
-    if (payload.choices) {
-      const { snapshot } = await getCachedRuleSnapshot();
-      const issues = CharacterBootstrapper.collectChoiceIssues(
-        toCharacterSave(
-          {
-            raceId: payload.raceId,
-            subraceId: payload.subraceId,
-            backgroundId:
-              payload.background.type === "PRESET"
-                ? payload.background.presetId
-                : null,
-            ...payload.baseAbilityScores,
-            currentHp: null,
-            maxHp: null,
-          },
-          [
-            {
-              classId: payload.classId,
-              classLevel: 1,
-              subclassId: payload.subclassId,
-            },
-          ],
-          choices,
-        ),
-        snapshot,
-      );
+    const { snapshot } = await getCachedRuleSnapshot();
+    const save = toCharacterSave(
+      {
+        raceId: payload.raceId,
+        subraceId: payload.subraceId,
+        backgroundId:
+          payload.background.type === "PRESET"
+            ? payload.background.presetId
+            : null,
+        ...payload.baseAbilityScores,
+        currentHp: null,
+        maxHp: null,
+      },
+      [
+        {
+          classId: payload.classId,
+          classLevel: 1,
+          subclassId: payload.subclassId,
+        },
+      ],
+      choices,
+    );
 
-      if (issues.length > 0) {
-        return res.status(400).json({
-          error: "Invalid character choices.",
-          issues: issues.map((issue) => issue.message),
-        });
-      }
+    const issues = [
+      ...CharacterBootstrapper.collectChoiceIssues(save, snapshot).map(
+        (issue) => issue.message,
+      ),
+      ...listChoiceQuestions(save, snapshot)
+        .filter((question) => question.selected.length === 0)
+        .map(
+          (question) =>
+            `${question.source.name}: nothing selected for ${question.id}`,
+        ),
+    ];
+
+    if (issues.length > 0) {
+      return res.status(400).json({
+        error: "Invalid character choices.",
+        issues,
+      });
     }
 
     // generate the UUID for the new character

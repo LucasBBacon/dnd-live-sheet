@@ -479,5 +479,131 @@ describe("Wizard Store State Management", () => {
       useWizardStore.getState().setStep(99);
       expect(useWizardStore.getState().canProceed()).toBe(false);
     });
+
+    it("should allow step 6 (Choices) unconditionally - the container gates its own Next", () => {
+      useWizardStore.getState().setStep(6);
+      expect(useWizardStore.getState().canProceed()).toBe(true);
+    });
+  });
+
+  describe("choice answers", () => {
+    beforeEach(() => {
+      useWizardStore.setState({ choiceAnswers: {} });
+    });
+
+    it("stores a class-target answer keyed by question id", () => {
+      useWizardStore.getState().setChoiceAnswer(
+        {
+          id: "fighter_level_1_fighting_style",
+          target: "class",
+          classId: "class_fighter",
+          source: { kind: "class", id: "class_fighter", name: "Fighter" },
+          prompt: "Fighter: choose 1",
+          pickCount: 1,
+          options: [],
+          selected: [],
+          held: [],
+        },
+        ["trait_fs_archery"],
+      );
+
+      expect(
+        useWizardStore.getState().choiceAnswers.fighter_level_1_fighting_style,
+      ).toEqual({
+        target: "class",
+        classId: "class_fighter",
+        selected: ["trait_fs_archery"],
+      });
+    });
+
+    it("stores a trait-target answer without a classId", () => {
+      useWizardStore.getState().setChoiceAnswer(
+        {
+          id: "human_language_choice",
+          target: "trait",
+          source: { kind: "race", id: "race_human", name: "Human" },
+          prompt: "Human: choose 1 language",
+          pickCount: 1,
+          options: [],
+          selected: [],
+          held: [],
+        },
+        ["dwarvish"],
+      );
+
+      expect(
+        useWizardStore.getState().choiceAnswers.human_language_choice,
+      ).toEqual({
+        target: "trait",
+        classId: undefined,
+        selected: ["dwarvish"],
+      });
+    });
+
+    it("overwrites a prior answer for the same question id", () => {
+      const question = {
+        id: "human_language_choice",
+        target: "trait" as const,
+        source: { kind: "race" as const, id: "race_human", name: "Human" },
+        prompt: "Human: choose 1 language",
+        pickCount: 1,
+        options: [],
+        selected: [],
+        held: [],
+      };
+
+      useWizardStore.getState().setChoiceAnswer(question, ["dwarvish"]);
+      useWizardStore.getState().setChoiceAnswer(question, ["elvish"]);
+
+      expect(
+        useWizardStore.getState().choiceAnswers.human_language_choice
+          .selected,
+      ).toEqual(["elvish"]);
+    });
+
+    it("prunes answers whose question id is no longer asked", () => {
+      useWizardStore.setState({
+        choiceAnswers: {
+          keep_me: { target: "trait", selected: ["a"] },
+          drop_me: { target: "trait", selected: ["b"] },
+        },
+      });
+
+      useWizardStore.getState().pruneChoiceAnswers([{ id: "keep_me", held: [] }]);
+
+      expect(useWizardStore.getState().choiceAnswers).toEqual({
+        keep_me: { target: "trait", selected: ["a"] },
+      });
+    });
+
+    it("keeps the same object reference when nothing is pruned", () => {
+      useWizardStore.setState({
+        choiceAnswers: { keep_me: { target: "trait", selected: ["a"] } },
+      });
+      const before = useWizardStore.getState().choiceAnswers;
+
+      useWizardStore.getState().pruneChoiceAnswers([{ id: "keep_me", held: [] }]);
+
+      expect(useWizardStore.getState().choiceAnswers).toBe(before);
+    });
+
+    it("drops a picked option that has since become held, leaving the rest", () => {
+      useWizardStore.setState({
+        choiceAnswers: {
+          fighter_starting_skills: {
+            target: "trait",
+            selected: ["insight", "athletics"],
+          },
+        },
+      });
+
+      useWizardStore
+        .getState()
+        .pruneChoiceAnswers([{ id: "fighter_starting_skills", held: ["insight"] }]);
+
+      expect(useWizardStore.getState().choiceAnswers).toEqual({
+        fighter_starting_skills: { target: "trait", selected: ["athletics"] },
+      });
+    });
   });
 });

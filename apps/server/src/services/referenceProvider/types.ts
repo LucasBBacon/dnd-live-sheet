@@ -1,3 +1,4 @@
+import type { ChoiceQuestion } from "@project/engine";
 import type { CoreRulePackSnapshot, RuleSnapshot } from "@project/shared";
 
 export type ScopedContext = {
@@ -26,6 +27,8 @@ export type LevelUpOptionsInput = {
   scope: ScopedContext;
   classId?: string | undefined;
   subclassId?: string | undefined;
+  /** a feat this level-up would take, so its own questions are asked too */
+  featId?: string | undefined;
   currentClassLevel: number;
 };
 
@@ -49,6 +52,12 @@ export type ReferenceProvider = {
     timeline: unknown[];
     nextLevel: unknown | null;
     supportByClass: Record<string, unknown>;
+    /**
+     * The choice questions this level newly asks - the character's
+     * questions after it minus those it already had. Empty without a
+     * character in scope.
+     */
+    choiceQuestions: ChoiceQuestion[];
     selected: {
       classId: string | null;
       subclassId: string | null;

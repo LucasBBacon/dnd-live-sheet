@@ -24,10 +24,13 @@ import { getCachedRuleSnapshot } from "../ruleSnapshotCache.js";
 import { primePackRulebook } from "../packRulebook.js";
 import { classLedgerOrder } from "../classLedger.js";
 import {
+  buildLevelUpSaves,
   finalAbilityScores,
+  questionsNewAtLevel,
   readStoredChoices,
   toCharacterSave,
 } from "../characterSave.js";
+import type { ChoiceQuestion } from "@project/engine";
 import type {
   LevelUpOptionsInput,
   ReferenceProvider,
@@ -210,67 +213,18 @@ const buildNextLevelContext = ({
     ...(requestedSubclassId !== undefined ? { requestedSubclassId } : {}),
   });
 
-const loadCharacterClassLevels = async ({
-  characterId,
-  campaignId,
-}: {
-  characterId: string | undefined;
-  campaignId: string | undefined;
-}): Promise<Record<string, number>> => {
-  if (!characterId) {
-    return {};
-  }
-
-  const characterScopeFilter = campaignId
-    ? and(eq(characters.id, characterId), eq(characters.campaignId, campaignId))
-    : eq(characters.id, characterId);
-
-  const [character] = await db
-    .select({ id: characters.id })
-    .from(characters)
-    .where(characterScopeFilter)
-    .limit(1);
-
-  if (!character) {
-    return {};
-  }
-
-  const classRows = await db
-    .select({
-      classId: characterClasses.classId,
-      classLevel: characterClasses.classLevel,
-    })
-    .from(characterClasses)
-    .where(eq(characterClasses.characterId, characterId))
-    .orderBy(...classLedgerOrder);
-
-  return Object.fromEntries(
-    classRows.map((row) => [row.classId, row.classLevel]),
-  );
-};
-
 /**
- * A character's ability scores as the sheet actually shows them: the stored,
- * pre-racial scores plus every trait modifier, not just the row's raw
- * columns. The dip preview used to assess prerequisites against the stored
- * scores directly, which is what a human (or any race with an ability bonus)
- * stores before racial bonuses are applied - understating exactly the
- * characters a bonus would qualify (#77).
+ * A character as the level-up options read it: the stored row, its class
+ * ledger in the order the classes were taken, and its stored answers. Null
+ * when no character is in scope (or it is not in the scoped campaign).
  */
-const loadCharacterFinalScores = async ({
+const loadCharacterForLevelUp = async ({
   characterId,
   campaignId,
 }: {
   characterId: string | undefined;
   campaignId: string | undefined;
-}): Promise<{
-  str: number;
-  dex: number;
-  con: number;
-  int: number;
-  wis: number;
-  cha: number;
-} | null> => {
+}) => {
   if (!characterId) {
     return null;
   }
@@ -302,7 +256,7 @@ const loadCharacterFinalScores = async ({
     return null;
   }
 
-  const classLedger = await db
+  const ledger = await db
     .select({
       classId: characterClasses.classId,
       classLevel: characterClasses.classLevel,
@@ -312,14 +266,11 @@ const loadCharacterFinalScores = async ({
     .where(eq(characterClasses.characterId, characterId))
     .orderBy(...classLedgerOrder);
 
-  const { snapshot } = await getCachedRuleSnapshot();
-  const save = toCharacterSave(
+  return {
     character,
-    classLedger,
-    readStoredChoices(character.choices, characterId),
-  );
-
-  return finalAbilityScores(save, snapshot);
+    ledger,
+    storedChoices: readStoredChoices(character.choices, characterId),
+  };
 };
 
 export class DatabaseReferenceProvider implements ReferenceProvider {
@@ -375,22 +326,49 @@ export class DatabaseReferenceProvider implements ReferenceProvider {
     timeline: unknown[];
     nextLevel: unknown | null;
     supportByClass: Record<string, unknown>;
+    choiceQuestions: ChoiceQuestion[];
     selected: {
       classId: string | null;
       subclassId: string | null;
     };
   }> {
-    const { scope, classId, subclassId, currentClassLevel } = input;
+    const { scope, classId, subclassId, featId, currentClassLevel } = input;
     const cache = await getEffectiveReferenceSnapshot(scope);
     const feats = await listEffectiveFeats(scope);
-    const classLevelsByClassId = await loadCharacterClassLevels({
+    const loaded = await loadCharacterForLevelUp({
       characterId: scope.characterId,
       campaignId: scope.campaignId,
     });
-    const currentBaseScores = await loadCharacterFinalScores({
-      characterId: scope.characterId,
-      campaignId: scope.campaignId,
-    });
+    const { snapshot } = await getCachedRuleSnapshot();
+
+    const classLevelsByClassId: Record<string, number> = Object.fromEntries(
+      (loaded?.ledger ?? []).map((row) => [row.classId, row.classLevel]),
+    );
+    // final scores, not the stored pre-racial ones: a multiclass
+    // prerequisite is met by the scores the sheet shows (#77)
+    const currentBaseScores = loaded
+      ? finalAbilityScores(
+          toCharacterSave(loaded.character, loaded.ledger, loaded.storedChoices),
+          snapshot,
+        )
+      : null;
+
+    // the character before and after this level, built the same way
+    // applyLevelUp builds them for its required check - the subclass is the
+    // requested one, else the one already stored for the class
+    const levelUpSaves =
+      loaded && classId
+        ? buildLevelUpSaves({
+            ...loaded,
+            targetClassId: classId,
+            subclassId,
+            featId,
+          })
+        : null;
+    const effectiveSubclassId = levelUpSaves?.subclassId ?? subclassId;
+    const choiceQuestions = levelUpSaves
+      ? questionsNewAtLevel(levelUpSaves, snapshot)
+      : [];
 
     const subclasses = classId ? (cache.subclassesByClassId.get(classId) ?? []) : [];
 
@@ -398,7 +376,7 @@ export class DatabaseReferenceProvider implements ReferenceProvider {
       ? buildClassTimeline({
           cache,
           classId,
-          requestedSubclassId: subclassId,
+          requestedSubclassId: effectiveSubclassId ?? undefined,
         })
       : [];
 
@@ -414,7 +392,7 @@ export class DatabaseReferenceProvider implements ReferenceProvider {
       ? buildNextLevelContext({
           classId,
           currentClassLevel: selectedClassCurrentLevel,
-          requestedSubclassId: subclassId,
+          requestedSubclassId: effectiveSubclassId ?? undefined,
           isMulticlassDip: selectedClassIsDip,
         })
       : null;
@@ -458,6 +436,7 @@ export class DatabaseReferenceProvider implements ReferenceProvider {
       timeline,
       nextLevel,
       supportByClass,
+      choiceQuestions,
       selected: {
         classId: classId ?? null,
         subclassId: subclassId ?? null,

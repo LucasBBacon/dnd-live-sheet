@@ -15,6 +15,7 @@ describe("seedSampleCharacters import", () => {
     vi.resetModules();
   });
 
+  // Cold import of seeder and drizzle/postgres deps can exceed 5s default under full-suite load
   it("exposes the roster without a DATABASE_URL", async () => {
     // dotenv never overrides a variable that is already set, so an empty
     // value stands in for a machine with no .env
@@ -24,5 +25,5 @@ describe("seedSampleCharacters import", () => {
     const { ROSTER } = await import("../seedSampleCharacters.js");
 
     expect(ROSTER).toHaveLength(10);
-  });
+  }, 30_000);
 });

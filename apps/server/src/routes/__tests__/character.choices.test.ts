@@ -126,16 +126,59 @@ describe("POST /api/character choices", () => {
     personality: { traits: "", ideals: "", bonds: "", flaws: "" },
   };
 
+  // race_half_elf + background_noble + class_bard ask seven questions at
+  // level 1 (half-elf's own three, noble's own two, plus bard's starting
+  // instruments and skills) - every id below answers one of them, valid picks
+  // that avoid anything the character already holds for free
+  const completeChoicesForLyra = () => ({
+    classSelections: {},
+    traitSelections: {
+      half_elf_asi_choice: ["DEX", "CON"],
+      skill_versatility_choice: ["perception", "insight"],
+      half_elf_language_choice: ["dwarvish"],
+      noble_gaming_set: ["dice_set"],
+      noble_language: ["giant"],
+      bard_starting_instruments: ["lute", "drum", "flute"],
+      bard_starting_skills: ["arcana", "medicine", "survival"],
+    },
+    feats: [],
+  });
+
+  const human = {
+    campaignId: "7a0c5bb8-0dc5-4c39-a58f-8f7baae6f27f",
+    name: "Bran",
+    raceId: "race_human",
+    subraceId: null,
+    classId: "class_fighter",
+    subclassId: null,
+    baseAbilityScores: { str: 16, dex: 12, con: 14, int: 10, wis: 10, cha: 8 },
+    alignment: "Lawful Good",
+    background: {
+      type: "PRESET",
+      presetId: "background_acolyte",
+      customData: null,
+    },
+    personality: { traits: "", ideals: "", bonds: "", flaws: "" },
+  };
+
+  // race_human + background_acolyte + class_fighter ask four questions at
+  // level 1: the human's own bonus language, the acolyte's two languages, and
+  // the fighter's fighting style and starting skills
+  const completeChoicesForHuman = () => ({
+    classSelections: {
+      class_fighter: { fighter_level_1_fighting_style: ["trait_fs_defense"] },
+    },
+    traitSelections: {
+      human_language_choice: ["elvish"],
+      acolyte_languages: ["dwarvish", "giant"],
+      fighter_starting_skills: ["athletics", "perception"],
+    },
+    feats: [],
+  });
+
   it("stores valid choices with the character", async () => {
     const { app, values } = await setupApp();
-    const choices = {
-      classSelections: {},
-      traitSelections: {
-        half_elf_asi_choice: ["DEX", "CON"],
-        skill_versatility_choice: ["perception", "insight"],
-      },
-      feats: [],
-    };
+    const choices = completeChoicesForLyra();
 
     const response = await request(app)
       .post("/api/character")
@@ -145,17 +188,57 @@ describe("POST /api/character choices", () => {
     expect(values).toHaveBeenCalledWith(expect.objectContaining({ choices }));
   });
 
-  it("stores no answers when the payload sends no choices", async () => {
-    const { app, values } = await setupApp();
+  it("rejects creation when no choices are sent, naming every unanswered question", async () => {
+    const { app, transaction } = await setupApp();
 
-    const response = await request(app).post("/api/character").send(lyra);
+    const response = await request(app).post("/api/character").send(human);
+
+    expect(response.status).toBe(400);
+    expect(response.body.error).toBe("Invalid character choices.");
+    expect(response.body.issues).toEqual(
+      expect.arrayContaining([
+        expect.stringContaining("human_language_choice"),
+        expect.stringContaining("fighter_level_1_fighting_style"),
+      ]),
+    );
+    expect(response.body.issues).toHaveLength(4);
+    expect(transaction).not.toHaveBeenCalled();
+  });
+
+  it("creates the character when every question is answered", async () => {
+    const { app, values } = await setupApp();
+    const choices = completeChoicesForHuman();
+
+    const response = await request(app)
+      .post("/api/character")
+      .send({ ...human, choices });
 
     expect(response.status).toBe(201);
-    expect(values).toHaveBeenCalledWith(
-      expect.objectContaining({
-        choices: { classSelections: {}, traitSelections: {}, feats: [] },
-      }),
-    );
+    expect(values).toHaveBeenCalledWith(expect.objectContaining({ choices }));
+  });
+
+  it("rejects creation that leaves exactly one question unanswered, naming only that one", async () => {
+    const { app, transaction } = await setupApp();
+    const full = completeChoicesForHuman();
+    const choices = {
+      classSelections: full.classSelections,
+      traitSelections: {
+        human_language_choice: full.traitSelections.human_language_choice,
+        acolyte_languages: full.traitSelections.acolyte_languages,
+        // fighter_starting_skills left unanswered
+      },
+      feats: [],
+    };
+
+    const response = await request(app)
+      .post("/api/character")
+      .send({ ...human, choices });
+
+    expect(response.status).toBe(400);
+    expect(response.body.issues).toEqual([
+      "Fighter: nothing selected for fighter_starting_skills",
+    ]);
+    expect(transaction).not.toHaveBeenCalled();
   });
 
   it("rejects an option the question does not offer, before writing", async () => {
@@ -199,7 +282,9 @@ describe("POST /api/character choices", () => {
   it("records the creation class as the first class taken (#74)", async () => {
     const { app, values } = await setupApp();
 
-    const response = await request(app).post("/api/character").send(lyra);
+    const response = await request(app)
+      .post("/api/character")
+      .send({ ...lyra, choices: completeChoicesForLyra() });
 
     expect(response.status).toBe(201);
     expect(values).toHaveBeenCalledWith(
@@ -454,11 +539,25 @@ describe("applyLevelUp choices", () => {
   });
 
   it("rejects a trait selection the character is not offered", async () => {
-    const { applyLevelUp } = await setupLevelUp();
+    // fighter_starting_skills is answered on storedFighter already, so an
+    // unrelated character row is used here - otherwise the lock (#69) would
+    // reject this payload for being already answered, not for the option it
+    // offers. The default subclass and its maneuvers answer stay as they
+    // were - dropping the subclass would leave the class foundationless
+    // (missing_subclass), which suppresses trait choice validation entirely
+    // and hides the very issue this test checks for
+    const characterRow = {
+      ...storedFighter,
+      choices: { ...storedFighter.choices, traitSelections: {} },
+    };
+    const { applyLevelUp } = await setupLevelUp({ characterRow });
     const { res, status, json } = response();
 
     await applyLevelUp(
-      levelUp({ traitSelections: { fighter_starting_skills: ["arcana", "history"] } }),
+      levelUp({
+        selectedTraits: { fighter_bm_level_3_maneuvers: maneuvers },
+        traitSelections: { fighter_starting_skills: ["arcana", "history"] },
+      }),
       res,
     );
 
@@ -553,6 +652,11 @@ describe("applyLevelUp choices", () => {
         targetClassId: "class_fighter",
         newTotalLevel: 4,
         subclassId: undefined,
+        // a fighter dip offers Fighting Style just like a level-1 fighter
+        // does (5e-correct) - the resolver now requires it and the
+        // required-answer check (#69) would too, so this dip must answer
+        // it, unrelated as it is to what this test's title checks
+        selectedTraits: { fighter_level_1_fighting_style: ["trait_fs_defense"] },
       }),
       res,
     );
@@ -561,6 +665,55 @@ describe("applyLevelUp choices", () => {
     expect(tx.values).toHaveBeenCalledWith(
       expect.objectContaining({ classId: "class_fighter" }),
     );
+  });
+
+  it("rejects a multiclass dip that leaves the class's own level-1 trait_choice unanswered", async () => {
+    // same dip as above, but without answering fighter_level_1_fighting_style
+    // - a dip now offers the class's own level-1 picks (5e-correct: a
+    // fighter dip gets Fighting Style), so the resolver itself rejects a
+    // dip that leaves it unanswered
+    const humanCleric = {
+      ...storedFighter,
+      raceId: "race_human",
+      str: 12,
+      dex: 9,
+      con: 14,
+      int: 10,
+      wis: 16,
+      cha: 11,
+      choices: {
+        classSelections: {},
+        traitSelections: {},
+        feats: [],
+      },
+    };
+    const { applyLevelUp, tx } = await setupLevelUpWithRealValidation(
+      [
+        {
+          id: "ledger-1",
+          characterId: "char-1",
+          classId: "class_cleric",
+          classLevel: 3,
+          subclassId: null,
+          position: 0,
+        },
+      ],
+      humanCleric,
+    );
+    const { res, status } = response();
+
+    await applyLevelUp(
+      levelUp({
+        targetClassId: "class_fighter",
+        newTotalLevel: 4,
+        subclassId: undefined,
+      }),
+      res,
+    );
+
+    expect(status).toHaveBeenCalledWith(400);
+    expect(tx.set).not.toHaveBeenCalled();
+    expect(tx.values).not.toHaveBeenCalled();
   });
 
   it("dips into the next place after the highest position, not the class count (#74)", async () => {
@@ -660,7 +813,10 @@ describe("applyLevelUp choices", () => {
     });
     const { res, status } = response();
 
-    await applyLevelUp(levelUp({}), res);
+    // no subclass this level-up: the default battle-master subclass would
+    // otherwise unlock fighter_bm_level_3_maneuvers, a newly-required
+    // question unrelated to what this test checks (#69)
+    await applyLevelUp(levelUp({ subclassId: undefined }), res);
 
     expect(status).toHaveBeenCalledWith(200);
     const setCall = tx.set.mock.calls.at(-1)?.[0];
@@ -696,7 +852,8 @@ describe("applyLevelUp choices", () => {
     const { applyLevelUp, orderBy } = await setupLevelUp();
     const { res } = response();
 
-    await applyLevelUp(levelUp({}), res);
+    // no subclass this level-up, same reason as above (#69)
+    await applyLevelUp(levelUp({ subclassId: undefined }), res);
 
     // Imported after setupLevelUp's vi.resetModules() so this is the same
     // module instance applyLevelUp itself resolved classLedgerOrder from -
@@ -710,7 +867,8 @@ describe("applyLevelUp choices", () => {
     const { applyLevelUp, tx } = await setupLevelUp();
     const { res, status } = response();
 
-    await applyLevelUp(levelUp({ featId: "feat_alert" }), res);
+    // no subclass this level-up, same reason as above (#69)
+    await applyLevelUp(levelUp({ subclassId: undefined, featId: "feat_alert" }), res);
 
     expect(status).toHaveBeenCalledWith(200);
     expect(tx.set).toHaveBeenCalledWith(
@@ -765,6 +923,8 @@ describe("applyLevelUp choices", () => {
 
     await applyLevelUp(
       levelUp({
+        // no subclass this level-up, same reason as above (#69)
+        subclassId: undefined,
         featId: "feat_test_choice",
         traitSelections: { trait_test_choice_block_pick: ["STR"] },
       }),
@@ -782,5 +942,141 @@ describe("applyLevelUp choices", () => {
         }),
       }),
     );
+  });
+
+  describe("locked and required answers (#69)", () => {
+    it("rejects a level-up that resends an already-answered class node", async () => {
+      const { applyLevelUp, tx } = await setupLevelUp();
+      const { res, status, json } = response();
+
+      await applyLevelUp(
+        levelUp({
+          subclassId: undefined,
+          selectedTraits: { fighter_level_1_fighting_style: ["trait_fs_dueling"] },
+        }),
+        res,
+      );
+
+      expect(status).toHaveBeenCalledWith(400);
+      expect(json).toHaveBeenCalledWith(
+        expect.objectContaining({
+          success: false,
+          error: "Invalid character choices: fighter_level_1_fighting_style already answered",
+        }),
+      );
+      expect(tx.set).not.toHaveBeenCalled();
+    });
+
+    it("rejects a level-up that resends an already-answered trait choice block", async () => {
+      const { applyLevelUp, tx } = await setupLevelUp();
+      const { res, status, json } = response();
+
+      await applyLevelUp(
+        levelUp({
+          subclassId: undefined,
+          traitSelections: { fighter_starting_skills: ["athletics", "perception"] },
+        }),
+        res,
+      );
+
+      expect(status).toHaveBeenCalledWith(400);
+      expect(json).toHaveBeenCalledWith(
+        expect.objectContaining({
+          success: false,
+          error: "Invalid character choices: fighter_starting_skills already answered",
+        }),
+      );
+      expect(tx.set).not.toHaveBeenCalled();
+    });
+
+    it("rejects a level-up that leaves a newly-unlocked class node unanswered (resolver-covered)", async () => {
+      // the resolver already rejects this - fighter_bm_level_3_maneuvers is a
+      // required trait_selection decision at battle master level 3 - so this
+      // only proves the request is refused and nothing is written; the
+      // required-answer check under test is proven by the feat case below,
+      // which the resolver does not cover
+      const { applyLevelUp, tx } = await setupLevelUpWithRealValidation([
+        {
+          id: "ledger-1",
+          characterId: "char-1",
+          classId: "class_fighter",
+          classLevel: 2,
+          subclassId: null,
+          position: 0,
+        },
+      ]);
+      const { res, status, json } = response();
+
+      await applyLevelUp(levelUp({}), res);
+
+      expect(status).toHaveBeenCalledWith(400);
+      expect(json).toHaveBeenCalledWith(
+        expect.objectContaining({
+          success: false,
+          error: expect.stringMatching(/Battle Master/),
+        }),
+      );
+      expect(tx.set).not.toHaveBeenCalled();
+    });
+
+    it("rejects a level-up that takes a feat without answering its own choice block (not resolver-covered)", async () => {
+      // the resolver has no idea a feat's trait carries a choice block - it
+      // only resolves decisions from class/subclass progression grants - so
+      // only the required-answer check under test catches this
+      const { applyLevelUp, tx } = await setupLevelUp({
+        snapshotOverride: withFeatChoiceBlock(),
+      });
+      const { res, status, json } = response();
+
+      await applyLevelUp(
+        levelUp({ subclassId: undefined, featId: "feat_test_choice" }),
+        res,
+      );
+
+      expect(status).toHaveBeenCalledWith(400);
+      expect(json).toHaveBeenCalledWith(
+        expect.objectContaining({
+          success: false,
+          error:
+            "Invalid character choices: Test Choice Feat: nothing selected for trait_test_choice_block_pick",
+        }),
+      );
+      expect(tx.set).not.toHaveBeenCalled();
+    });
+
+    it("stores an answer to an open question from creation that this level-up does not require", async () => {
+      const { applyLevelUp, tx } = await setupLevelUp();
+      const { res, status } = response();
+
+      await applyLevelUp(
+        levelUp({
+          subclassId: undefined,
+          traitSelections: { human_language_choice: ["elvish"] },
+        }),
+        res,
+      );
+
+      expect(status).toHaveBeenCalledWith(200);
+      expect(tx.set).toHaveBeenCalledWith(
+        expect.objectContaining({
+          choices: expect.objectContaining({
+            traitSelections: expect.objectContaining({
+              human_language_choice: ["elvish"],
+              fighter_starting_skills: ["athletics", "perception"],
+            }),
+          }),
+        }),
+      );
+    });
+
+    it("lets an open question from creation go unanswered when this level-up does not require it", async () => {
+      const { applyLevelUp, tx } = await setupLevelUp();
+      const { res, status } = response();
+
+      await applyLevelUp(levelUp({ subclassId: undefined }), res);
+
+      expect(status).toHaveBeenCalledWith(200);
+      expect(tx.set).toHaveBeenCalled();
+    });
   });
 });

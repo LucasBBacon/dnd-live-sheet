@@ -30,7 +30,7 @@ export const ReviewStepContainer = () => {
     },
   });
 
-  if (currentStep !== 6) return null;
+  if (currentStep !== 7) return null;
 
   const handleFinalize = () => {
     const payload = compileCharacterPayload(state);
@@ -204,7 +204,7 @@ export const ReviewStepContainer = () => {
         }}
       >
         <button
-          onClick={() => setStep(5)}
+          onClick={() => setStep(6)}
           disabled={mutation.isPending}
           style={{
             padding: "0.75rem 1.5rem",
@@ -213,7 +213,7 @@ export const ReviewStepContainer = () => {
             border: "none",
           }}
         >
-          ◄ Amend Background
+          ◄ Amend Choices
         </button>
         <button
           onClick={handleFinalize}

@@ -139,6 +139,24 @@ describe("API Client", () => {
       await expect(apiClient("/error")).rejects.toThrow("Server error");
     });
 
+    it("should name each issue a rejected request lists", async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: false,
+        status: 400,
+        json: async () => ({
+          error: "Invalid character choices.",
+          issues: [
+            "Human: nothing selected for human_language_choice",
+            "Fighter: nothing selected for fighter_starting_skills",
+          ],
+        }),
+      });
+
+      await expect(apiClient("/character")).rejects.toThrow(
+        "Invalid character choices. Human: nothing selected for human_language_choice; Fighter: nothing selected for fighter_starting_skills",
+      );
+    });
+
     it("should use status code fallback if no error message", async () => {
       mockFetch.mockResolvedValueOnce({
         ok: false,
@@ -272,6 +290,17 @@ describe("API Client", () => {
 
       expect(endpoint).toBe(
         "/reference/level-up/options?classId=class_fighter&subclassId=subclass_champion&campaignId=11111111-1111-1111-1111-111111111111&characterId=22222222-2222-2222-2222-222222222222",
+      );
+    });
+
+    it("should pass a featId to the level-up options endpoint", () => {
+      const endpoint = buildLevelUpOptionsEndpoint(
+        { campaignId: "11111111-1111-1111-1111-111111111111" },
+        { classId: "class_fighter", featId: "feat_skilled" },
+      );
+
+      expect(endpoint).toBe(
+        "/reference/level-up/options?classId=class_fighter&featId=feat_skilled&campaignId=11111111-1111-1111-1111-111111111111",
       );
     });
 

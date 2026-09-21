@@ -143,7 +143,7 @@ export const BackgroundStepContainer = () => {
         </button>
         <button
           disabled={!canProceedToReview}
-          onClick={() => setStep(6)} // Step 6: Review & Finalize
+          onClick={() => setStep(6)} // Step 6: Choices
           style={{
             padding: "0.75rem 1.5rem",
             cursor: canProceedToReview ? "pointer" : "not-allowed",
@@ -154,7 +154,7 @@ export const BackgroundStepContainer = () => {
           }}
         >
           {canProceedToReview
-            ? "Review & Finalize Character ►"
+            ? "Continue to Choices ►"
             : "Awaiting Required Fields..."}
         </button>
       </div>

@@ -1,12 +1,8 @@
 import type {
   CharacterSave,
-  FeatureGrant,
-  SpellChoiceNode,
-  TraitChoiceNode,
   TraitChoiceOption,
   TraitDefinition,
 } from "@project/shared";
-import { traitIdOfOption } from "@project/shared";
 import { EffectManager } from "../calculators/effects.js";
 import { ResourceManager } from "../calculators/resources.js";
 import { classLevelsAndSubclassIds } from "../rules/casterLevel.js";
@@ -14,14 +10,22 @@ import { buildLevelContext } from "../utils/resourceRules.js";
 // Classes, races, subclasses and traits all come from the loaded pack, which
 // is the only source of rules content.
 import {
-  resolveBackgroundDefinition,
   resolveClassDefinition,
-  resolveFeatDefinition,
   resolveRaceDefinition,
   resolveSubclassDefinition,
   resolveTraitDefinition,
   type RuleSnapshotLookup,
 } from "../rules/ruleLookup.js";
+import {
+  backgroundTraitIds,
+  classChoiceNodes,
+  classTraitIds,
+  featTraitIds,
+  isSpellChoice,
+  raceTraitIds,
+  unlockedGrants,
+  type ClassState,
+} from "./grantSources.js";
 import { ModifierExtractor } from "./modifierExtractor.js";
 import { ProficiencyExtractor } from "./proficiencyExtractor.js";
 import type {
@@ -34,8 +38,6 @@ import type {
 // Re-exporting it here as well made it ambiguous at the package root.
 
 const MAX_TOTAL_LEVEL = 20;
-
-type ClassState = CharacterSave["classes"][number];
 
 export type SaveValidationCode =
   | "unknown_class"
@@ -129,109 +131,6 @@ const rejectionMessage = (
       return `${where} cannot honour ${selectedId}`;
   }
 };
-
-const isTraitChoice = (grant: FeatureGrant): grant is TraitChoiceNode =>
-  typeof grant !== "string" && grant.type === "trait_choice";
-
-const isSpellChoice = (grant: FeatureGrant): grant is SpellChoiceNode =>
-  typeof grant !== "string" && grant.type === "spell_choice";
-
-/**
- * Every grant a class state has unlocked: the class track plus, once a subclass
- * is chosen, its track too. Levels above the character's are ignored.
- */
-const unlockedGrants = (
-  classState: ClassState,
-  snapshot?: RuleSnapshotLookup,
-): FeatureGrant[] => {
-  const grants: FeatureGrant[] = [];
-
-  const blueprint = resolveClassDefinition(classState.classId, snapshot);
-  if (blueprint) {
-    for (const level of blueprint.progression) {
-      if (level.level <= classState.level) grants.push(...level.grants);
-    }
-  }
-
-  const subclass = classState.subclassId
-    ? resolveSubclassDefinition(classState.subclassId, snapshot)
-    : undefined;
-  if (subclass?.classId === classState.classId) {
-    for (const level of subclass.progression) {
-      if (level.level <= classState.level) grants.push(...level.grants);
-    }
-  }
-
-  return grants;
-};
-
-/**
- * The first class in the array is the one the character started at level 1, so
- * it hands out the full starting proficiency set. Every class after it was
- * multiclassed into and only grants the reduced dip set.
- */
-const classTraitIds = (
-  classState: ClassState,
-  isPrimary: boolean,
-  snapshot?: RuleSnapshotLookup,
-): string[] => {
-  const blueprint = resolveClassDefinition(classState.classId, snapshot);
-  const ids: string[] = blueprint
-    ? [
-        ...(isPrimary
-          ? blueprint.startingProficiencyTraitIds
-          : blueprint.multiclassTraitIds),
-      ]
-    : [];
-
-  for (const grant of unlockedGrants(classState, snapshot)) {
-    if (typeof grant === "string") ids.push(grant);
-    else if (isTraitChoice(grant)) {
-      ids.push(...(classState.selections[grant.nodeId] ?? []));
-    }
-  }
-
-  return ids;
-};
-
-const raceTraitIds = (
-  race: CharacterSave["race"],
-  snapshot?: RuleSnapshotLookup,
-): string[] => {
-  const definition = resolveRaceDefinition(race.baseRaceId, snapshot);
-  if (!definition) return [];
-
-  const ids = [...definition.grantedTraitIds];
-  const subrace = race.subraceId
-    ? definition.subraces[race.subraceId]
-    : undefined;
-  if (subrace) ids.push(...subrace.grantedTraitIds);
-
-  return ids;
-};
-
-/**
- * The traits a preset background grants. An id the pack does not define
- * grants nothing, exactly as an unknown race does - a rulebook gap, not a
- * broken save.
- */
-const backgroundTraitIds = (
-  backgroundId: string | undefined,
-  snapshot?: RuleSnapshotLookup,
-): string[] =>
-  backgroundId === undefined
-    ? []
-    : (resolveBackgroundDefinition(backgroundId, snapshot)?.backgroundTraitIds ??
-      []);
-
-/** The traits of every feat taken. An unknown feat grants nothing (#75). */
-const featTraitIds = (
-  featIds: string[],
-  snapshot?: RuleSnapshotLookup,
-): string[] =>
-  featIds.flatMap(
-    (featId) => resolveFeatDefinition(featId, snapshot)?.grantedTraitIds ?? [],
-  );
 
 const knownSpellIds = (
   classState: ClassState,
@@ -412,6 +311,12 @@ export class CharacterBootstrapper {
 
       // #region choice nodes
       const grants = unlockedGrants(classState, snapshot);
+      const choiceNodesByNodeId = new Map(
+        classChoiceNodes(classState, snapshot).map((node) => [
+          node.nodeId,
+          node,
+        ]),
+      );
       const traitIds = new Set([
         ...raceTraitIds(save.race, snapshot),
         ...classTraitIds(classState, classIndex === 0, snapshot),
@@ -453,10 +358,11 @@ export class CharacterBootstrapper {
 
         // a spell_choice can only be checked for shape: there is no spell list
         // data yet to check membership against
-        if (!isTraitChoice(grant)) continue;
+        const choiceNode = choiceNodesByNodeId.get(grant.nodeId);
+        if (!choiceNode) continue;
 
         const optionsById = new Map(
-          grant.options.map((option) => [traitIdOfOption(option), option]),
+          choiceNode.options.map(({ id, option }) => [id, option]),
         );
 
         for (const choice of selected) {

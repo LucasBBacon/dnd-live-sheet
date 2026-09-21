@@ -1,4 +1,8 @@
-import type { ClassProgression, LevelDecision } from "@project/engine";
+import type {
+  ChoiceQuestion,
+  ClassProgression,
+  LevelDecision,
+} from "@project/engine";
 import type { LevelUpPayload } from "@project/shared";
 import { create } from "zustand";
 import {
@@ -23,7 +27,14 @@ type LevelUpOptionsResponse = {
         | "subclass_progression";
     }>;
     decisionTypes: Array<"subclass" | "asi_or_feat">;
+    // the server's full decision list (Task 3). Kept optional so a stubbed
+    // or stale response falls back to mapServerDecisions below.
+    decisions?: Array<LevelDecision>;
   } | null;
+  // the questions this level newly asks, from the same before/after helper
+  // the server's required check uses. Optional for a stubbed or stale
+  // response, which then asks nothing.
+  choiceQuestions?: ChoiceQuestion[];
 };
 
 export type GrantedTraitDetail = {
@@ -66,12 +77,85 @@ const mapServerDecisions = (
     };
   });
 
+/**
+ * The server's full decision list (Task 3), with a subclass decision that
+ * carries no options filled in from the response's own `subclasses` list -
+ * mirrors what mapServerDecisions already does for the old decisionTypes
+ * shape, so a subclass step always has something to pick from.
+ */
+const resolveDecisions = (
+  decisions: LevelDecision[],
+  subclasses: Array<{ id: string }>,
+): LevelDecision[] =>
+  decisions.map((decision) =>
+    decision.type === "subclass" && !decision.options?.length
+      ? { ...decision, options: subclasses.map((subclass) => subclass.id) }
+      : decision,
+  );
+
+/** What the options request was made with, so it can be made again. */
+type OptionsRequest = {
+  characterId: string;
+  classId: string;
+  currentClassLevel: number;
+  scope: ReferenceScope | undefined;
+};
+
+/**
+ * The draft's answers, less any to a question the level no longer asks (a
+ * subclass swapped for another) and any pick that is now held. Keyed by
+ * question id in the map the question's target routes through.
+ */
+const pruneAnswers = (
+  draft: Partial<LevelUpPayload>,
+  questions: ChoiceQuestion[],
+): Partial<LevelUpPayload> => {
+  const prune = (
+    answers: Record<string, string[]> | undefined,
+    target: ChoiceQuestion["target"],
+  ) => {
+    if (!answers) return answers;
+    const byId = new Map(
+      questions
+        .filter((question) => question.target === target)
+        .map((question) => [question.id, question]),
+    );
+    return Object.fromEntries(
+      Object.entries(answers)
+        .filter(([id]) => byId.has(id))
+        .map(([id, picks]) => [
+          id,
+          picks.filter((pick) => !byId.get(id)!.held.includes(pick)),
+        ]),
+    );
+  };
+
+  const selectedTraits = prune(draft.selectedTraits, "class");
+  const traitSelections = prune(draft.traitSelections, "trait");
+  return {
+    ...draft,
+    ...(selectedTraits ? { selectedTraits } : {}),
+    ...(traitSelections ? { traitSelections } : {}),
+  };
+};
+
+/** a blank select value means "none" */
+const normaliseId = (value: string | undefined | null) => value || undefined;
+
+// every options request gets a number; only the newest one's answer lands
+let latestOptionsRequest = 0;
+
 interface LevelUpState {
   isActive: boolean;
   progressionContext: ClassProgression | null;
   grantedTraitDetails: GrantedTraitDetail[];
   draftPayload: Partial<LevelUpPayload>;
   errorMessage: string | null;
+  /** the questions this level newly asks, as the server sends them */
+  choiceQuestions: ChoiceQuestion[];
+  /** whether choiceQuestions matches the draft's current subclass and feat */
+  questionsStatus: "ready" | "loading" | "error";
+  optionsRequest: OptionsRequest | null;
 
   beginLevelUp: (
     characterId: string,
@@ -82,6 +166,11 @@ interface LevelUpState {
     preResolvedSupport?: PreResolvedNextLevelSupport,
   ) => Promise<void>;
   updateDraft: (updates: Partial<LevelUpPayload>) => void;
+  /**
+   * Asks the server again for this level's questions, with the draft's
+   * current subclassId and featId - both change what a level asks.
+   */
+  refreshChoiceQuestions: () => Promise<void>;
   validateAndSubmit: () => Promise<void>;
   cancelLevelUp: () => void;
 }
@@ -92,6 +181,9 @@ export const useLevelUpStore = create<LevelUpState>((set, get) => ({
   grantedTraitDetails: [],
   draftPayload: {},
   errorMessage: null,
+  choiceQuestions: [],
+  questionsStatus: "ready",
+  optionsRequest: null,
 
   beginLevelUp: async (
     characterId,
@@ -113,6 +205,7 @@ export const useLevelUpStore = create<LevelUpState>((set, get) => ({
       return;
     }
 
+    const requestId = ++latestOptionsRequest;
     try {
       const response = await apiClient(
         buildLevelUpOptionsEndpoint(
@@ -127,7 +220,8 @@ export const useLevelUpStore = create<LevelUpState>((set, get) => ({
         ),
       );
 
-      const { nextLevel, subclasses } = response as LevelUpOptionsResponse;
+      const { nextLevel, subclasses, choiceQuestions } =
+        response as LevelUpOptionsResponse;
 
       if (!nextLevel || !nextLevel.isConfigured) {
         set((state) => ({
@@ -147,7 +241,9 @@ export const useLevelUpStore = create<LevelUpState>((set, get) => ({
           classId,
           level: nextLevel.targetLevel,
           grantedTraits: nextLevel.grantedTraitIds,
-          decisions: mapServerDecisions(nextLevel.decisionTypes, subclasses),
+          decisions: nextLevel.decisions
+            ? resolveDecisions(nextLevel.decisions, subclasses)
+            : mapServerDecisions(nextLevel.decisionTypes, subclasses),
         },
         grantedTraitDetails:
           nextLevel.grantedTraits ??
@@ -162,6 +258,11 @@ export const useLevelUpStore = create<LevelUpState>((set, get) => ({
           newTotalLevel,
         },
         errorMessage: null,
+        choiceQuestions: choiceQuestions ?? [],
+        // a refetch started meanwhile supersedes this answer's questions
+        questionsStatus:
+          requestId === latestOptionsRequest ? "ready" : get().questionsStatus,
+        optionsRequest: { characterId, classId, currentClassLevel, scope },
       });
     } catch (error) {
       const message =
@@ -179,7 +280,66 @@ export const useLevelUpStore = create<LevelUpState>((set, get) => ({
   },
 
   updateDraft: (updates) => {
+    const previous = get().draftPayload;
     set((state) => ({ draftPayload: { ...state.draftPayload, ...updates } }));
+
+    // a subclass or a feat changes what the level asks; nothing else does,
+    // and an unchanged value asks nothing new - so no refetch loop
+    const changes = (key: "subclassId" | "featId") =>
+      key in updates && normaliseId(updates[key]) !== normaliseId(previous[key]);
+    if (changes("subclassId") || changes("featId")) {
+      void get().refreshChoiceQuestions();
+    }
+  },
+
+  refreshChoiceQuestions: async () => {
+    const { optionsRequest } = get();
+    if (!optionsRequest) return;
+
+    const requestId = ++latestOptionsRequest;
+    const { draftPayload } = get();
+    const subclassId = normaliseId(draftPayload.subclassId);
+    const featId = normaliseId(draftPayload.featId);
+    set({ questionsStatus: "loading" });
+
+    try {
+      const response = (await apiClient(
+        buildLevelUpOptionsEndpoint(
+          {
+            campaignId: optionsRequest.scope?.campaignId,
+            characterId: optionsRequest.characterId,
+          },
+          {
+            classId: optionsRequest.classId,
+            currentClassLevel: optionsRequest.currentClassLevel,
+            subclassId,
+            featId,
+          },
+        ),
+      )) as LevelUpOptionsResponse;
+      if (requestId !== latestOptionsRequest) return;
+
+      const choiceQuestions = response.choiceQuestions ?? [];
+      set((state) => ({
+        choiceQuestions,
+        questionsStatus: "ready",
+        draftPayload: pruneAnswers(state.draftPayload, choiceQuestions),
+        // the subclass's own decisions (its spell picks, #79) come with it
+        progressionContext:
+          state.progressionContext && response.nextLevel?.decisions
+            ? {
+                ...state.progressionContext,
+                decisions: resolveDecisions(
+                  response.nextLevel.decisions,
+                  response.subclasses,
+                ),
+              }
+            : state.progressionContext,
+      }));
+    } catch {
+      if (requestId !== latestOptionsRequest) return;
+      set({ questionsStatus: "error" });
+    }
   },
 
   validateAndSubmit: async () => {
@@ -240,6 +400,9 @@ export const useLevelUpStore = create<LevelUpState>((set, get) => ({
       grantedTraitDetails: [],
       draftPayload: {},
       errorMessage: null,
+      choiceQuestions: [],
+      questionsStatus: "ready",
+      optionsRequest: null,
     });
   },
 
@@ -250,6 +413,9 @@ export const useLevelUpStore = create<LevelUpState>((set, get) => ({
       grantedTraitDetails: [],
       draftPayload: {},
       errorMessage: null,
+      choiceQuestions: [],
+      questionsStatus: "ready",
+      optionsRequest: null,
     });
   },
 }));

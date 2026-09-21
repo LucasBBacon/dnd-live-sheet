@@ -4,6 +4,7 @@ import { useSearchParams } from "react-router-dom";
 import { AbilityStepContainer } from "./AbilityStepContainer";
 import { BackgroundStepContainer } from "./BackgroundStepContainer";
 import { BasicsStepContainer } from "./BasicsStepContainer";
+import { ChoicesStepContainer } from "./ChoicesStepContainer";
 import { ClassStepContainer } from "./ClassStepContainer";
 import { RaceStepContainer } from "./RaceStepContainer";
 import { ReviewStepContainer } from "./ReviewStepContainer";
@@ -14,7 +15,8 @@ const WIZARD_STEPS = [
   { id: 3, label: "Class" },
   { id: 4, label: "Attributes" },
   { id: 5, label: "Background" },
-  { id: 6, label: "Finalize" },
+  { id: 6, label: "Choices" },
+  { id: 7, label: "Finalize" },
 ];
 
 export const CharacterCreationWizard = () => {
@@ -162,6 +164,7 @@ export const CharacterCreationWizard = () => {
         <ClassStepContainer />
         <AbilityStepContainer />
         <BackgroundStepContainer />
+        <ChoicesStepContainer />
         <ReviewStepContainer />
       </main>
     </div>
