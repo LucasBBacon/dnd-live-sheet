@@ -146,6 +146,43 @@ describe("validateLevelUpPayloadFromResolver", () => {
     ).toThrow("You must select exactly 2 option(s)");
   });
 
+  it("satisfies a trait-choice-block decision from traitSelections, not selectedTraits", () => {
+    const traitChoiceBlockContext = configuredContext([
+      {
+        id: "rogue_multiclass_skill",
+        type: "trait_selection",
+        description: "Choose proficiencies for Multiclass Skill Proficiency (Rogue).",
+        options: ["acrobatics", "stealth"],
+        isRequired: true,
+        quantity: 1,
+        source: "trait_choice_block",
+      },
+    ]);
+
+    // the same answer filed under selectedTraits (the class-progression map)
+    // does not satisfy a trait-choice-block decision
+    expect(() =>
+      validateLevelUpPayloadFromResolver({
+        payload: {
+          ...basePayload,
+          selectedTraits: { rogue_multiclass_skill: ["stealth"] },
+        },
+        context: traitChoiceBlockContext,
+      }),
+    ).toThrow("You must select exactly 1 option(s)");
+
+    // filed under traitSelections, it satisfies the decision
+    expect(() =>
+      validateLevelUpPayloadFromResolver({
+        payload: {
+          ...basePayload,
+          traitSelections: { rogue_multiclass_skill: ["stealth"] },
+        },
+        context: traitChoiceBlockContext,
+      }),
+    ).not.toThrow();
+  });
+
   it("rejects a trait selection that is not on the decision's option list", () => {
     expect(() =>
       validateLevelUpPayloadFromResolver({
@@ -335,6 +372,24 @@ describe("resolveNextLevelValidationContext", () => {
       expect(decision?.type).toBe("trait_selection");
       expect(decision?.quantity).toBe(1);
       expect(decision?.options).toContain("trait_fs_archery");
+      // a class-progression pick, not a trait's own choice block: answered
+      // through selectedTraits
+      expect(decision?.source).toBeUndefined();
+    });
+
+    it("marks a granted trait's own choice block as trait_choice_block, keyed for traitSelections", () => {
+      const context = resolveNextLevelValidationContext({
+        classId: "class_rogue",
+        currentClassLevel: 0,
+        isMulticlassDip: true,
+      });
+
+      const decision = context.decisions.find(
+        (d) => d.id === "rogue_multiclass_skill",
+      );
+      expect(decision?.type).toBe("trait_selection");
+      expect(decision?.source).toBe("trait_choice_block");
+      expect(decision?.options).toContain("stealth");
     });
 
     it("turns a spell_choice node into a spell_selection decision", () => {

@@ -222,6 +222,54 @@ describe("applyLevelUp choices", () => {
     return { applyLevelUp, tx };
   };
 
+  /**
+   * Same harness, but the real levelUpValidation module runs instead of the
+   * mock: the resolver and CharacterBootstrapper.collectChoiceIssues both see
+   * the real shipped pack, so a trait's own choice-block decision is resolved
+   * (and validated) for real rather than by a canned mock return value.
+   */
+  const setupLevelUpWithRealValidation = async (
+    existingClassRows: unknown[],
+    characterRow: unknown = storedFighter,
+  ) => {
+    vi.resetModules();
+    const selectResults: unknown[][] = [[characterRow], existingClassRows];
+    const tx = {
+      select: vi.fn().mockReturnThis(),
+      from: vi.fn().mockReturnThis(),
+      where: vi.fn().mockImplementation(async () => selectResults.shift() ?? []),
+      update: vi.fn().mockReturnThis(),
+      set: vi.fn().mockReturnThis(),
+      insert: vi.fn().mockReturnThis(),
+      values: vi.fn().mockResolvedValue(undefined),
+    };
+
+    vi.doMock("@project/database", () => ({
+      db: {
+        transaction: vi.fn(
+          async (callback: (trx: unknown) => Promise<unknown>) => callback(tx),
+        ),
+      },
+    }));
+    vi.doMock("../../services/effectiveReferenceResolver.js", () => ({
+      getEffectiveReferenceSnapshot: vi.fn().mockResolvedValue({ classes: [] }),
+    }));
+    mockRuleSnapshot();
+
+    // levelUpValidation.js is NOT mocked here - prime its module-level
+    // rulebook from the same real pack the route's own snapshot mock uses,
+    // exactly as packFixture.usePackRulebook does for its unit tests
+    const { setPackRulebookForTests } = await import(
+      "../../services/packRulebook.js"
+    );
+    setPackRulebookForTests(snapshot);
+
+    const { applyLevelUp } = await import(
+      "../../controllers/characterController.js"
+    );
+    return { applyLevelUp, tx };
+  };
+
   const levelUp = (body: Record<string, unknown>) =>
     ({
       body: {
@@ -302,6 +350,46 @@ describe("applyLevelUp choices", () => {
       expect.objectContaining({
         success: false,
         error: expect.stringMatching(/^Invalid character choices: .*arcana/),
+      }),
+    );
+  });
+
+  it("answers a newly-granted trait's own question through traitSelections (real validation)", async () => {
+    // rogue's multiclass prerequisite is DEX 13+; storedFighter's DEX 12
+    // would fail that check before the fix under test is even reached
+    const dexterousFighter = { ...storedFighter, dex: 14 };
+    const { applyLevelUp, tx } = await setupLevelUpWithRealValidation(
+      [
+        {
+          id: "ledger-1",
+          characterId: "char-1",
+          classId: "class_fighter",
+          classLevel: 2,
+          subclassId: null,
+        },
+      ],
+      dexterousFighter,
+    );
+    const { res, status } = response();
+
+    await applyLevelUp(
+      levelUp({
+        targetClassId: "class_rogue",
+        newTotalLevel: 3,
+        subclassId: undefined,
+        traitSelections: { rogue_multiclass_skill: ["stealth"] },
+      }),
+      res,
+    );
+
+    expect(status).toHaveBeenCalledWith(200);
+    expect(tx.set).toHaveBeenCalledWith(
+      expect.objectContaining({
+        choices: expect.objectContaining({
+          traitSelections: expect.objectContaining({
+            rogue_multiclass_skill: ["stealth"],
+          }),
+        }),
       }),
     );
   });
