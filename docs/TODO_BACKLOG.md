@@ -2190,7 +2190,7 @@ Test totals: shared 227, engine 958, database 198, server 404, web 355 =
 | --- | --- | --- |
 | 75 | ✅ Feat-granted traits never reach either sheet's modifiers | Found while designing `fix/sheet-modifiers`, 2026-09-21; recorded as out of scope rather than fixed. See below. |
 | 76 | The web store's composed `activeStates` still lacks trait and equipment states, so trigger and dice-rule gating still miss them | Found by `fix/sheet-modifiers`'s hand check, 2026-09-21; recorded rather than fixed; `useCheckRoll`'s symptom fixed on `fix/levelup-correctness`. See below. |
-| 77 | ✅ Stored ability scores are pre-racial, and multiclass prerequisites and `useCheckRoll` read them directly | Found by the final review of `fix/sheet-modifiers`, 2026-09-21; closed on `fix/levelup-correctness`. See the Recommended-sequence row 5d. |
+| 77 | ✅ Stored ability scores are pre-racial, and multiclass prerequisites and `useCheckRoll` read them directly | Found by the final review of `fix/sheet-modifiers`, 2026-09-21; closed on `fix/levelup-correctness`. See the Recommended-sequence row 5d. No test exercises `loadCharacterFinalScores` or the dip preview reporting "met"; the hand check covered it manually. |
 | 78 | A level's hit points skip the Constitution modifier on the server | Found by `fix/levelup-correctness`'s hand check, 2026-09-21. See below. |
 | 79 | The level-up wizard has no spell step, so a level with a spell choice cannot be submitted | Found by `fix/levelup-correctness`'s hand check, 2026-09-21. See below. |
 
@@ -2213,6 +2213,18 @@ Test totals: shared 227, engine 958, database 198, server 404, web 355 =
   Hand check: Sister Aveline levelled from cleric 3 to 4 taking Alert, and
   her initiative rose from +0 to +5 on a fresh load. The level-up went
   through the API rather than the wizard because of #79.
+
+  - Old `feat_selection` rows were not migrated into `choices.feats`: a
+    character that took a feat before this branch has none recorded (dev
+    data only; samples re-seeded).
+  - The five feats in `packs/core_2014_pack/feats/unimplemented.json` grant
+    no traits yet and are offered by the wizard; picking one is now accepted
+    and stored, and takes effect once authored (the removed code used to
+    throw "has no mapped trait grants").
+  - Homebrew feats (`listEffectiveFeats` offers them) are not in
+    `featsById`, so level-up now rejects them as unknown.
+  - Migration `0016_choices_default_feats` must be applied to the dev
+    database (`db:migrate`) — needs the owner.
 - **#76 — the web store's composed `activeStates` still lacks trait and
   equipment states.** #73's fix routes the derived-stat hooks through the new
   `getSheetStates()`, but the store's existing `composeActiveStates` still
