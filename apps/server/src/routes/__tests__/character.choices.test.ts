@@ -126,16 +126,59 @@ describe("POST /api/character choices", () => {
     personality: { traits: "", ideals: "", bonds: "", flaws: "" },
   };
 
+  // race_half_elf + background_noble + class_bard ask seven questions at
+  // level 1 (half-elf's own three, noble's own two, plus bard's starting
+  // instruments and skills) - every id below answers one of them, valid picks
+  // that avoid anything the character already holds for free
+  const completeChoicesForLyra = () => ({
+    classSelections: {},
+    traitSelections: {
+      half_elf_asi_choice: ["DEX", "CON"],
+      skill_versatility_choice: ["perception", "insight"],
+      half_elf_language_choice: ["dwarvish"],
+      noble_gaming_set: ["dice_set"],
+      noble_language: ["giant"],
+      bard_starting_instruments: ["lute", "drum", "flute"],
+      bard_starting_skills: ["arcana", "medicine", "survival"],
+    },
+    feats: [],
+  });
+
+  const human = {
+    campaignId: "7a0c5bb8-0dc5-4c39-a58f-8f7baae6f27f",
+    name: "Bran",
+    raceId: "race_human",
+    subraceId: null,
+    classId: "class_fighter",
+    subclassId: null,
+    baseAbilityScores: { str: 16, dex: 12, con: 14, int: 10, wis: 10, cha: 8 },
+    alignment: "Lawful Good",
+    background: {
+      type: "PRESET",
+      presetId: "background_acolyte",
+      customData: null,
+    },
+    personality: { traits: "", ideals: "", bonds: "", flaws: "" },
+  };
+
+  // race_human + background_acolyte + class_fighter ask four questions at
+  // level 1: the human's own bonus language, the acolyte's two languages, and
+  // the fighter's fighting style and starting skills
+  const completeChoicesForHuman = () => ({
+    classSelections: {
+      class_fighter: { fighter_level_1_fighting_style: ["trait_fs_defense"] },
+    },
+    traitSelections: {
+      human_language_choice: ["elvish"],
+      acolyte_languages: ["dwarvish", "giant"],
+      fighter_starting_skills: ["athletics", "perception"],
+    },
+    feats: [],
+  });
+
   it("stores valid choices with the character", async () => {
     const { app, values } = await setupApp();
-    const choices = {
-      classSelections: {},
-      traitSelections: {
-        half_elf_asi_choice: ["DEX", "CON"],
-        skill_versatility_choice: ["perception", "insight"],
-      },
-      feats: [],
-    };
+    const choices = completeChoicesForLyra();
 
     const response = await request(app)
       .post("/api/character")
@@ -145,17 +188,57 @@ describe("POST /api/character choices", () => {
     expect(values).toHaveBeenCalledWith(expect.objectContaining({ choices }));
   });
 
-  it("stores no answers when the payload sends no choices", async () => {
-    const { app, values } = await setupApp();
+  it("rejects creation when no choices are sent, naming every unanswered question", async () => {
+    const { app, transaction } = await setupApp();
 
-    const response = await request(app).post("/api/character").send(lyra);
+    const response = await request(app).post("/api/character").send(human);
+
+    expect(response.status).toBe(400);
+    expect(response.body.error).toBe("Invalid character choices.");
+    expect(response.body.issues).toEqual(
+      expect.arrayContaining([
+        expect.stringContaining("human_language_choice"),
+        expect.stringContaining("fighter_level_1_fighting_style"),
+      ]),
+    );
+    expect(response.body.issues).toHaveLength(4);
+    expect(transaction).not.toHaveBeenCalled();
+  });
+
+  it("creates the character when every question is answered", async () => {
+    const { app, values } = await setupApp();
+    const choices = completeChoicesForHuman();
+
+    const response = await request(app)
+      .post("/api/character")
+      .send({ ...human, choices });
 
     expect(response.status).toBe(201);
-    expect(values).toHaveBeenCalledWith(
-      expect.objectContaining({
-        choices: { classSelections: {}, traitSelections: {}, feats: [] },
-      }),
-    );
+    expect(values).toHaveBeenCalledWith(expect.objectContaining({ choices }));
+  });
+
+  it("rejects creation that leaves exactly one question unanswered, naming only that one", async () => {
+    const { app, transaction } = await setupApp();
+    const full = completeChoicesForHuman();
+    const choices = {
+      classSelections: full.classSelections,
+      traitSelections: {
+        human_language_choice: full.traitSelections.human_language_choice,
+        acolyte_languages: full.traitSelections.acolyte_languages,
+        // fighter_starting_skills left unanswered
+      },
+      feats: [],
+    };
+
+    const response = await request(app)
+      .post("/api/character")
+      .send({ ...human, choices });
+
+    expect(response.status).toBe(400);
+    expect(response.body.issues).toEqual([
+      "Fighter: nothing selected for fighter_starting_skills",
+    ]);
+    expect(transaction).not.toHaveBeenCalled();
   });
 
   it("rejects an option the question does not offer, before writing", async () => {
@@ -199,7 +282,9 @@ describe("POST /api/character choices", () => {
   it("records the creation class as the first class taken (#74)", async () => {
     const { app, values } = await setupApp();
 
-    const response = await request(app).post("/api/character").send(lyra);
+    const response = await request(app)
+      .post("/api/character")
+      .send({ ...lyra, choices: completeChoicesForLyra() });
 
     expect(response.status).toBe(201);
     expect(values).toHaveBeenCalledWith(
