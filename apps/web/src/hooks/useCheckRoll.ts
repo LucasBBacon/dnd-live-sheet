@@ -1,5 +1,6 @@
 import { useCharacterSheetStore } from "../store/characterSheetStore";
 import { useRollStore } from "../store/rollStore";
+import { useAbilities } from "./useCharacterStats";
 import { DiceEngine, type Ability } from "@project/engine";
 
 export interface CheckRollRequest {
@@ -30,9 +31,14 @@ export const useCheckRoll = () => {
     (state) => state.recordRollResult,
   );
   const characterId = useCharacterSheetStore((state) => state.id);
-  const activeStates = useCharacterSheetStore((state) => state.activeStates);
   const getActiveTraits = useCharacterSheetStore((state) => state.getActiveTraits);
-  const baseScores = useCharacterSheetStore((state) => state.baseScores);
+  const { finalAbilities, activeStates } = useAbilities();
+  const abilityScores = Object.fromEntries(
+    Object.entries(finalAbilities).map(([ability, derived]) => [
+      ability,
+      derived.score,
+    ]),
+  ) as Record<Ability, number>;
 
   return async ({ label, modifier, target, ability }: CheckRollRequest) => {
     let rolled: number;
@@ -53,7 +59,7 @@ export const useCheckRoll = () => {
         activeStates,
         sides: 20,
         ...(ability !== undefined && { ability }),
-        abilityScores: baseScores,
+        abilityScores,
       },
     );
 

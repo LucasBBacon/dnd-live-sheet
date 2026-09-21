@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { DiceEngine } from "@project/engine";
 
 const mocks = vi.hoisted(() => ({
   requestRoll: vi.fn(),
@@ -12,7 +13,30 @@ vi.mock("../../store/rollStore", () => ({
 
 vi.mock("../../store/characterSheetStore", () => ({
   useCharacterSheetStore: (selector: (state: unknown) => unknown) =>
-    selector({ recordRollResult: mocks.recordRollResult, id: "char_1" }),
+    selector({
+      recordRollResult: mocks.recordRollResult,
+      id: "char_1",
+      // Pre-racial base scores and the store's raw active states - #77's
+      // point is that the hook must NOT hand these to the dice engine.
+      activeStates: ["store_state_only"],
+      baseScores: { STR: 10, DEX: 10, CON: 10, INT: 10, WIS: 10, CHA: 10 },
+      getActiveTraits: () => [],
+    }),
+}));
+
+vi.mock("../useCharacterStats", () => ({
+  useAbilities: () => ({
+    finalAbilities: {
+      STR: { score: 18, modifier: 4 },
+      DEX: { score: 14, modifier: 2 },
+      CON: { score: 12, modifier: 1 },
+      INT: { score: 10, modifier: 0 },
+      WIS: { score: 10, modifier: 0 },
+      CHA: { score: 10, modifier: 0 },
+    },
+    totalMods: [],
+    activeStates: ["sheet_state_only"],
+  }),
 }));
 
 import { useCheckRoll } from "../useCheckRoll";
@@ -115,5 +139,36 @@ describe("useCheckRoll", () => {
     });
 
     expect(mocks.recordRollResult).not.toHaveBeenCalled();
+  });
+
+  it("hands dice rules the character's final ability scores and the sheet's states, not the store's pre-racial scores and raw states (#77)", async () => {
+    const spy = vi.spyOn(DiceEngine, "applyDiceRulesToRollResult");
+    mocks.requestRoll.mockResolvedValueOnce(11);
+
+    await useCheckRoll()({
+      label: "Strength save",
+      modifier: 4,
+      target: "SAVING_THROW",
+      ability: "STR",
+    });
+
+    expect(spy).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.anything(),
+      "SAVING_THROW",
+      expect.objectContaining({
+        activeStates: ["sheet_state_only"],
+        abilityScores: {
+          STR: 18,
+          DEX: 14,
+          CON: 12,
+          INT: 10,
+          WIS: 10,
+          CHA: 10,
+        },
+      }),
+    );
+
+    spy.mockRestore();
   });
 });
