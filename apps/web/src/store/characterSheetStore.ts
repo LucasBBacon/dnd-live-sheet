@@ -8,6 +8,8 @@ import {
   ResourceManager,
   RestEngine,
   buildLevelContext,
+  gatherBaseStates,
+  gatherSheetModifiers,
   canEquipTo,
   suppressConditions,
   resolveEquipmentDefinition,
@@ -780,6 +782,19 @@ export interface CharacterSheetState {
    */
   getActiveTraits: () => TraitDefinition[];
   /**
+   * Every modifier the sheet applies - traits with their choices, equipment,
+   * live effects - plus the dev TraitWidget's activeModifiers on top. The
+   * same gather the server's buildLiveSheet uses (#73).
+   */
+  getSheetModifiers: () => RuntimeModifier[];
+  /**
+   * The states the sheet's calculators gate on: whatever activeStates the
+   * store has composed (conditions, effects, server replies) plus the states
+   * the character's traits and worn equipment always put on it. activeStates
+   * alone is only composed on events, so worn armour was invisible (#73).
+   */
+  getSheetStates: () => string[];
+  /**
    * Every proficiency the character's traits grant, choice blocks resolved.
    *
    * The same call characterEngine.ts makes. The store used to keep a flat
@@ -1336,6 +1351,41 @@ export const useCharacterSheetStore = create<CharacterSheetState>(
       return CharacterBootstrapper.compileActiveTraits(
         toCharacterSave(state),
         state.ruleSnapshot ?? undefined,
+      );
+    },
+
+    getSheetModifiers: () => {
+      const state = get();
+      const save = toCharacterSave(state);
+      return [
+        ...gatherSheetModifiers({
+          activeTraits: CharacterBootstrapper.compileActiveTraits(
+            save,
+            state.ruleSnapshot ?? undefined,
+          ),
+          selections: CharacterBootstrapper.resolveSelections(save),
+          inventory: state.inventory,
+          effectManager: state.runtimeEffects ?? new EffectManager(),
+          ...(state.ruleSnapshot ? { snapshot: state.ruleSnapshot } : {}),
+        }),
+        ...state.activeModifiers,
+      ];
+    },
+
+    getSheetStates: () => {
+      const state = get();
+      return Array.from(
+        new Set([
+          ...state.activeStates,
+          ...gatherBaseStates({
+            activeTraits: CharacterBootstrapper.compileActiveTraits(
+              toCharacterSave(state),
+              state.ruleSnapshot ?? undefined,
+            ),
+            inventory: state.inventory,
+            ...(state.ruleSnapshot ? { snapshot: state.ruleSnapshot } : {}),
+          }),
+        ]),
       );
     },
 

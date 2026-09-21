@@ -1,12 +1,22 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
+  AbilityEngine,
   CharacterBootstrapper,
+  DerivedStatEngine,
   EffectManager,
   ResourceManager,
 } from "@project/engine";
-import { CombatContextSchema, type ActorInstance } from "@project/shared";
+import {
+  CombatContextSchema,
+  type ActorInstance,
+  type InventoryInstance,
+  type RuntimeModifier,
+} from "@project/shared";
 import { socketService } from "../../services/socketService";
-import { useCharacterSheetStore } from "../characterSheetStore";
+import {
+  useCharacterSheetStore,
+  type CharacterSheetState,
+} from "../characterSheetStore";
 import { packRuleSnapshot } from "./packFixture";
 
 describe("useCharacterSheetStore hp trigger handling", () => {
@@ -1696,5 +1706,162 @@ describe("useCharacterSheetStore proficiency grants", () => {
       .map((grant) => grant.proficiencyId);
 
     expect(skills).toEqual(expect.arrayContaining(["perception", "insight"]));
+  });
+});
+
+describe("getSheetModifiers", () => {
+  const init = (overrides: Partial<CharacterSheetState> = {}) =>
+    useCharacterSheetStore.getState().initialize({
+      id: "char_mods",
+      level: 1,
+      classLevels: { class_bard: 1 },
+      subclassIds: {},
+      raceId: "race_half_elf",
+      subraceId: null,
+      backgroundId: null,
+      choices: {
+        classSelections: {},
+        traitSelections: { half_elf_asi_choice: ["DEX", "CON"] },
+      },
+      inventory: [],
+      resources: [],
+      activeModifiers: [],
+      activeStates: [],
+      ruleSnapshot: packRuleSnapshot(),
+      ...overrides,
+    });
+
+  it("applies a half-elf's fixed and chosen ability bonuses", () => {
+    init();
+    const modifiers = useCharacterSheetStore.getState().getSheetModifiers();
+    const score = (base: number, stat: "STR" | "DEX" | "CON" | "CHA") =>
+      AbilityEngine.calculateScore(base, stat, modifiers, []).score;
+
+    expect(score(16, "CHA")).toBe(18);
+    expect(score(15, "DEX")).toBe(16);
+    expect(score(12, "CON")).toBe(13);
+    expect(score(9, "STR")).toBe(9);
+  });
+
+  it("gives an unarmoured barbarian Unarmored Defense", () => {
+    init({
+      classLevels: { class_barbarian: 1 },
+      raceId: "race_human",
+      choices: { classSelections: {}, traitSelections: {} },
+    });
+    const modifiers = useCharacterSheetStore.getState().getSheetModifiers();
+
+    const armorClass = DerivedStatEngine.calculateAC(
+      { STR: 3, DEX: 2, CON: 3, INT: 0, WIS: 0, CHA: 0 },
+      modifiers,
+      [],
+    );
+
+    expect(armorClass.total).toBe(15); // 10 + DEX 2 + CON 3
+  });
+
+  it("keeps the dev widget's activeModifiers on top", () => {
+    const devModifier: RuntimeModifier = {
+      id: "dev_mod",
+      target: "STR",
+      type: "add",
+      value: 5,
+      scalingFactor: "none",
+      requiredStates: [],
+      forbiddenStates: [],
+      sourceName: "Dev",
+      sourceOrigin: "trait",
+      isActive: true,
+    };
+    init({ activeModifiers: [devModifier] });
+
+    expect(useCharacterSheetStore.getState().getSheetModifiers()).toContainEqual(
+      devModifier,
+    );
+  });
+
+  const plate: InventoryInstance = {
+    id: "inv-plate",
+    itemId: "item_armor_plate",
+    quantity: 1,
+    slot: "body",
+    isAttuned: false,
+  };
+  const noAbilityMods = { STR: 0, DEX: 0, CON: 0, INT: 0, WIS: 0, CHA: 0 };
+
+  it("applies Defense to a fighter wearing armour", () => {
+    init({
+      classLevels: { class_fighter: 1 },
+      raceId: "race_human",
+      choices: {
+        classSelections: {
+          class_fighter: { fighter_level_1_fighting_style: ["trait_fs_defense"] },
+        },
+        traitSelections: {},
+      },
+      inventory: [plate],
+    });
+    const state = useCharacterSheetStore.getState();
+
+    expect(state.getSheetStates()).toContain("status_wearing_armor");
+    expect(
+      DerivedStatEngine.calculateAC(
+        noAbilityMods,
+        state.getSheetModifiers(),
+        state.getSheetStates(),
+      ).total,
+    ).toBe(19); // plate 18 + Defense 1
+  });
+
+  it("does not give a barbarian in armour Unarmored Defense", () => {
+    init({
+      classLevels: { class_barbarian: 1 },
+      raceId: "race_human",
+      choices: { classSelections: {}, traitSelections: {} },
+      inventory: [plate],
+    });
+    const state = useCharacterSheetStore.getState();
+
+    expect(
+      DerivedStatEngine.calculateAC(
+        { ...noAbilityMods, DEX: 2, CON: 3 },
+        state.getSheetModifiers(),
+        state.getSheetStates(),
+      ).total,
+    ).toBe(18); // plate, not 10 + DEX + CON
+  });
+
+  it("does not give a draconic sorcerer in armour Draconic Resilience's AC", () => {
+    init({
+      classLevels: { class_sorcerer: 1 },
+      subclassIds: { class_sorcerer: "subclass_sorcerer_draconic" },
+      raceId: "race_human",
+      choices: {
+        classSelections: {
+          class_sorcerer: {
+            sorcerer_draconic_level_1_ancestor: ["trait_dragon_ancestor_red"],
+          },
+        },
+        traitSelections: {},
+      },
+      inventory: [
+        {
+          id: "inv-leather",
+          itemId: "item_armor_studded_leather",
+          quantity: 1,
+          slot: "body",
+          isAttuned: false,
+        } as InventoryInstance,
+      ],
+    });
+    const state = useCharacterSheetStore.getState();
+
+    expect(
+      DerivedStatEngine.calculateAC(
+        { STR: 0, DEX: 2, CON: 0, INT: 0, WIS: 0, CHA: 0 },
+        state.getSheetModifiers(),
+        state.getSheetStates(),
+      ).total,
+    ).toBe(14); // studded leather 12 + DEX 2, not 13 + DEX 2
   });
 });

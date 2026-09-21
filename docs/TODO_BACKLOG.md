@@ -1,7 +1,7 @@
 # TODO Backlog
 
-**Status as of 2026-09-21**, on `fix/class-order`, after #69 and #54
-closed. The workspace is green — **2120
+**Status as of 2026-09-21**, on `fix/sheet-modifiers`, after #73
+closed. The workspace is green — **2143
 tests**, 0 failures, and typecheck clean per package (6f explains why "per
 package" matters). Nothing below is breaking a build; these are gaps, debt and
 content.
@@ -178,10 +178,13 @@ things the last three branches showed replace it:
 | 2 | ✅ **#63** — a character's pools persist and reach the sheet | small | **Closed 2026-09-21** on `fix/tier1-reach-the-player`. Two causes, both fixed, not the recorded "invisible until Begin turn" symptom, which never reproduced: `ROOM_JOIN` now materialises pools through `getAuthoritativeRuntimeContext` and a spend matching no row is refused as an `action_error` instead of silently broadcast; separately, `GET /api/character/:id` now carries the character's persisted `character_resources` rows, so a reload after a spend shows the spent count instead of a rematerialised full pool. See 9a for the reproduction and the corrected diagnosis. |
 | 3 | ✅ **#68 (fixed half)** — backgrounds reach the live sheet | small–medium | **Closed 2026-09-21** on `fix/tier1-reach-the-player`: `CharacterSaveSchema` gained `backgroundId`, the bootstrapper resolves a background's granted traits, and the server and web store thread it through. A preset background's fixed skill and tool grants (Criminal's Deception, Stealth and thieves' tools, and the like) now reach the live sheet. The choice half is unchanged — see item 5 below and 10d. |
 | 4 | ✅ **#69** — record which node a trait choice answered | medium, needs a decision | **Closed 2026-09-21** on `feat/character-choices`: choices are now stored in `characters.choices`, keyed by the question they answer (`classSelections[classId][nodeId]` for class picks, `traitSelections[blockId]` for trait choice blocks), rather than rebuilt from a flat trait-id set. `CharacterBootstrapper.selectionsFromChosenTraitIds` is deleted. Migration `0014_add_character_choices` exists and has been applied to the dev database. See the "Resolved — #69" section below for the finding that the guessing had been running on nothing. |
-| 4a | **#73** — the web sheet applies no trait modifiers | medium | Found while planning `feat/character-choices`, 2026-09-21. `activeModifiers` is set only by the dev-only `TraitWidget`; `useAbilities` (`apps/web/src/hooks/useCharacterStats.ts`) adds equipment modifiers alone; the creation wizard stores pre-racial scores (`wizardStore.ts`: "3-18 pre racial"). So no racial ability bonus, fixed or chosen, reaches a live sheet, while the server's `buildLiveSheet` applies them — the two disagree. Verified 2026-09-21: Lyra Silverstring (half-elf, stored CHA 18) shows CHA 18 on the sheet. Next branch, ahead of item 5. |
+| 4a | ✅ **#73** — the web sheet applies no trait modifiers | medium | **Closed 2026-09-21** on `fix/sheet-modifiers`: `gatherSheetModifiers` and `gatherBaseStates` (`packages/engine/src/pipeline/sheetModifiers.ts`) are now the one gather for trait, equipment and live-effect modifiers and states, used by both `buildLiveSheet` and the web store's `getSheetModifiers`/`getSheetStates`; the samples now store pre-racial scores, which also stops the server double-counting the racial bonuses it had been applying to their already-final stored scores; and the pack's Draconic Resilience AC gained `forbiddenStates` so it stops beating armour. The hand check's before/after AC table confirms it. See the "11f. #73" section below. |
 | 4b | ✅ **#74** — a multiclass character's first class is whatever order Postgres returns | small–medium | **Closed 2026-09-21** on `fix/class-order`: `character_classes.position` records the order a class was taken, `classLedgerOrder` orders every ledger read, and all writers were updated to keep it. Migration `0015_add_class_position` is applied to the dev database. The hand check reproduced #74's exact failure condition on Lyra Silverstring and the sheet stayed correct. See the "11e. #74" section below. |
 | 5 | **#68 (choice half) — Branch B** — a proficiency-choice wizard step, now that storage exists | medium, UI | Storage landed as `feat/character-choices`'s Branch A: `characters.choices` holds a class's `selections` and a trait's `traitSelections`, keyed by the question, but nothing collects them from a player yet. Widened from 21 proficiency blocks to all 31 choice-block traits in the pack — every class's skill picks, background tools and languages, plus the race picks that predate #68: the half-elf's ability-score choice, Skill Versatility and extra language, the human's and high elf's extra language, and the dwarf's artisan's tools. `ProficiencyExtractor.listPendingChoices` has no caller outside tests. Brainstorm the wizard step first; it is the first new UI surface since the barbarian's table notes. Inherits two findings from the same final review, 2026-09-21: a **custom background's choice blocks cannot be answered at creation** — a custom background's traits live outside `CharacterSave` entirely (the gateway included), so Branch B needs a home for them before a custom-background player can answer anything; and **level-up may re-answer a question already answered at creation or an earlier level** — `applyLevelUp`'s merge (#69, hardened by this review) overwrites a stored pick with whatever the payload sends and validates the new value, but nothing stops a later answer from changing an earlier one, so Branch B needs to decide whether re-answering is allowed. |
 | 5a | **#71** — the sheet ignores a refused resource spend | small–medium | Found by the final review of `fix/tier1-reach-the-player`, 2026-09-21. `RESOURCE_CONSUMED`'s refusal (item 2's fix) is not in `SHEET_ERROR_EVENTS`, so `consumeResource`'s optimistic decrement never rolls back. Same family as item 2: a spend the server refused should not be the spend the player sees. See P11's 11d. |
+| 5b | **#75** — feat-granted traits reach no sheet's modifiers | small–medium | Found while implementing `fix/sheet-modifiers`, 2026-09-21: a feat is stored as a `feat_selection` `character_traits` row, and that row never enters the web store's save or the server's `CharacterBootstrapper.resolveGrantedTraitIds`, which reads a character's race, background and classes only. Same gap #73 closed, one grant source short. See the "11g. #75 and #76" section below. |
+| 5c | **#76** — the web store's composed `activeStates` still lacks trait and equipment states | small–medium | Found by `fix/sheet-modifiers`'s hand check, 2026-09-21: `composeActiveStates` still composes only over `baseStates`, which the store always sets to `[]`; trigger and dice-rule gating in `dispatchAuthoredEvent`, `useCheckRoll`, and the `ArmorClassWidget`, `TableRulesWidget`, `TurnControlsWidget` and `ConditionsWidget` widgets still read it, even though #73 moved the derived-stat hooks to `getSheetStates()`. If the branch's final review fixes this first, it closes #76 rather than leaving it recorded here. See the "11g. #75 and #76" section below. |
+| 5d | **#77** — stored ability scores are pre-racial, and two readers use them directly | small–medium | Found by the final review of `fix/sheet-modifiers`, 2026-09-21: character creation, and now the samples (#73's `fix(database)` commit), store the pre-racial score, but D&D 5e wants the final, post-racial one for both readers below. Multiclass prerequisite validation (`validateMulticlassPrerequisites`, called from `applyLevelUp` in `apps/server/src/controllers/characterController.ts` with `character.str`, `character.dex`, `character.con`, `character.int`, `character.wis`, `character.cha`) reads the stored score directly — it would now refuse e.g. Sister Aveline (stored STR 12, final 13 as a human) a fighter or barbarian dip that `main` allowed. `useCheckRoll` (`apps/web/src/hooks/useCheckRoll.ts`) has the same gap on the client: it passes `baseScores` as `abilityScores` to dice rules such as Indomitable Might's floor, where the server's attack path already uses final scores. |
 
 ### Tier 2 — the burndown, one system per pass
 
@@ -2127,3 +2130,102 @@ fall back to the `class_id` tiebreak, which can be the wrong class. Verified
 characters outside the ten samples, and the three multiclass samples (Lyra,
 Nyx, Kaelen) each have distinct positions after the re-seed — so no stored
 character is affected.
+
+### 11f. #73 — the web sheet applies no trait modifiers
+
+Found while planning `feat/character-choices`, 2026-09-21. `activeModifiers`
+was set only by the dev-only `TraitWidget`; `useAbilities`
+(`apps/web/src/hooks/useCharacterStats.ts`) added equipment modifiers alone;
+the creation wizard stores pre-racial scores (`wizardStore.ts`: "3-18 pre
+racial"). So no racial ability bonus, fixed or chosen, reached a live sheet,
+while the server's `buildLiveSheet` applied them — the two disagreed.
+Verified 2026-09-21: Lyra Silverstring (half-elf, stored CHA 18) showed CHA
+18 on the sheet, which hid the disagreement rather than proving it absent.
+
+**Closed 2026-09-21** on `fix/sheet-modifiers`; see
+[the design](superpowers/specs/2026-09-21-sheet-modifiers-design.md).
+`gatherSheetModifiers` and `gatherBaseStates`
+(`packages/engine/src/pipeline/sheetModifiers.ts`) are now the one gather for
+trait, equipment and live-effect modifiers and states, used by both
+`buildLiveSheet` and the web store, whose `getSheetModifiers` and
+`getSheetStates` getters call them and feed the derived-stat hooks. The ten
+samples in `seedSampleCharacters.ts` now store pre-racial scores instead of
+final scores; this also stops the server double-counting the racial bonuses
+it had been applying on top of their already-final stored scores. Draconic
+Resilience's AC in the pack
+(`packages/database/data/packs/core_2014_pack/traits/ported.json`) gained
+`forbiddenStates: ["status_wearing_armor"]`, matching Unarmored Defense,
+after the first hand check caught it beating armour it should have yielded
+to.
+
+**Hand check** (dev servers + local Postgres, branch at `fe81676`). Every
+sample's six ability scores and max HP matched the spec's baseline in both
+runs — only AC moved:
+
+| Sample | AC on `main` (baseline) | AC, first run (Tasks 1–3) | AC, final run (after 3b, 3c) |
+| --- | --- | --- | --- |
+| Lyra | 16 | 16 | 16 |
+| Sable | 22 | 22 (Defense missing) | 23 |
+| Ko Shen | 15 | 15 | 15 |
+| Grimnar | 12 | 15 | 15 |
+| Nyx | 14 | 15 (Draconic Resilience beat her armour) | 14 |
+| Vaerix | 19 | 19 (Defense missing) | 20 |
+
+The first run's two misses were both traced and fixed before the final run:
+Sable and Vaerix were missing Fighting Style: Defense because the web store's
+`baseStates` was always `[]` and its `activeStates` composed only on events,
+so the worn-equipment state `status_wearing_armor` never reached it — fixed
+by `gatherBaseStates` / `getSheetStates` (Task 3b, `cc42b7a`). Nyx's Draconic
+Resilience was winning over her studded leather because the pack's copy
+carried no `forbiddenStates` — fixed by the Draconic Resilience pack change
+above (Task 3c, `fe81676`). After both fixes, the pack was re-imported and
+the samples re-seeded, and every AC matched the spec's expected values.
+
+Test totals: shared 227, engine 958, database 198, server 404, web 355 =
+**2142**, hygiene passed.
+
+### 11g. #75 and #76 — found while implementing `fix/sheet-modifiers`
+
+| # | Item | Notes |
+| --- | --- | --- |
+| 75 | Feat-granted traits never reach either sheet's modifiers | Found while designing `fix/sheet-modifiers`, 2026-09-21; recorded as out of scope rather than fixed. See below. |
+| 76 | The web store's composed `activeStates` still lacks trait and equipment states, so trigger and dice-rule gating still miss them | Found by `fix/sheet-modifiers`'s hand check, 2026-09-21; recorded rather than fixed. See below. |
+
+- **#75 — feat-granted traits never reach either sheet's modifiers.** A feat
+  is stored as a `feat_selection` `character_traits` row. That row never
+  enters the web store's save, and the server's
+  `CharacterBootstrapper.resolveGrantedTraitIds` reads a character's race,
+  background and classes only — no `feat_selection` source. So a feat's
+  modifiers, an ability-score increase or any other feat effect, reach
+  neither the server's `buildLiveSheet` nor the web store's
+  `getSheetModifiers`, the same shape of gap #73 closed for trait, equipment
+  and live-effect modifiers, one grant source short. `CharacterSave` itself
+  has no feat field, so the fix needs a decision on where a feat pick is
+  stored and read from before either side can pick it up.
+- **#76 — the web store's composed `activeStates` still lacks trait and
+  equipment states.** #73's fix routes the derived-stat hooks through the new
+  `getSheetStates()`, but the store's existing `composeActiveStates` still
+  composes only over `baseStates`, which the store always sets to `[]` — a
+  separate field from the `gatherBaseStates`-backed states `getSheetStates()`
+  now returns. Trigger and dice-rule gating still read the empty
+  `activeStates`: `dispatchAuthoredEvent`, `useCheckRoll`, and the
+  `ArmorClassWidget`, `TableRulesWidget`, `TurnControlsWidget` and
+  `ConditionsWidget` widgets. If `fix/sheet-modifiers`'s final review fixes
+  this before the branch closes, that review closes #76 rather than leaving
+  it recorded here.
+
+  Two concrete symptoms the final review found, 2026-09-21. Totem Spirit
+  (Eagle)'s bonus-action Dash (`action_eagle_dash`) and its
+  opportunity-attack table note are both
+  `forbiddenStates: ["status_wearing_heavy_armor"]`, and the pack's own
+  `trait_totem_spirit_eagle` summary
+  (`packages/database/data/packs/core_2014_pack/traits/ported.json`) claims
+  "the heavy-armour gate holds on the sheet" — it does not: the web store's
+  raw `activeStates` never carries equipment states, so a raging barbarian in
+  heavy armour still sees and can use the Dash action and the table note both
+  claim is blocked. Separately, `useCheckRoll`
+  (`apps/web/src/hooks/useCheckRoll.ts`) is not only a trigger-gating gap —
+  its dice rules (`DiceEngine.applyDiceRulesToRollResult`) are handed the
+  same raw `state.activeStates`, so any dice rule keyed to a trait or
+  equipment state, not only a condition, rolls as though that state is never
+  active.

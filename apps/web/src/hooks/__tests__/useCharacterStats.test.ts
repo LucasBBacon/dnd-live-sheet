@@ -13,6 +13,8 @@ vi.mock("react", async () => {
 let mockStoreState: {
   baseScores: Record<string, number>;
   activeModifiers: unknown[];
+  getSheetModifiers: () => unknown[];
+  getSheetStates: () => string[];
   inventory: Array<{
     id: string;
     itemId: string;
@@ -22,6 +24,15 @@ let mockStoreState: {
   }>;
   activeStates: string[];
   ruleSnapshot: null;
+  raceId: string | null;
+  subraceId: string | null;
+  backgroundId: string | null;
+  subclassIds: Record<string, string | null>;
+  choices: {
+    classSelections: Record<string, Record<string, string[]>>;
+    traitSelections: Record<string, string[]>;
+  };
+  runtimeEffects: null;
   level: number;
   classLevels: Record<string, number>;
   getProficiencyGrants: () => FixedProficiencyGrant[];
@@ -62,9 +73,6 @@ vi.mock("@project/engine", async () => {
           actual.DerivedStatEngine,
         ),
     },
-    InventoryExtractor: {
-      extractModifiers: () => [],
-    },
     SkillEngine: {
       calculateSkill: (
         skillId: string,
@@ -91,9 +99,17 @@ describe("useAbilities", () => {
     mockStoreState = {
       baseScores: { STR: 18, DEX: 10, CON: 10, INT: 10, WIS: 10, CHA: 10 },
       activeModifiers: [],
+      getSheetModifiers: () => mockStoreState.activeModifiers,
+      getSheetStates: () => mockStoreState.activeStates,
       inventory: [],
       activeStates: [],
       ruleSnapshot: null,
+      raceId: null,
+      subraceId: null,
+      backgroundId: null,
+      subclassIds: {},
+      choices: { classSelections: {}, traitSelections: {} },
+      runtimeEffects: null,
       level: 1,
       classLevels: {},
       getProficiencyGrants: () => [],
@@ -124,9 +140,17 @@ describe("useDerivedStats saving throws", () => {
     mockStoreState = {
       baseScores: { STR: 16, DEX: 14, CON: 14, INT: 10, WIS: 10, CHA: 10 },
       activeModifiers: [],
+      getSheetModifiers: () => mockStoreState.activeModifiers,
+      getSheetStates: () => mockStoreState.activeStates,
       inventory: [],
       activeStates: [],
       ruleSnapshot: null,
+      raceId: null,
+      subraceId: null,
+      backgroundId: null,
+      subclassIds: {},
+      choices: { classSelections: {}, traitSelections: {} },
+      runtimeEffects: null,
       level: 2,
       classLevels: { class_barbarian: 2 },
       getProficiencyGrants: () => [],
@@ -322,9 +346,17 @@ describe("useDerivedStats attacks per action", () => {
     mockStoreState = {
       baseScores: { STR: 16, DEX: 14, CON: 14, INT: 10, WIS: 10, CHA: 10 },
       activeModifiers: [],
+      getSheetModifiers: () => mockStoreState.activeModifiers,
+      getSheetStates: () => mockStoreState.activeStates,
       inventory: [],
       activeStates: [],
       ruleSnapshot: null,
+      raceId: null,
+      subraceId: null,
+      backgroundId: null,
+      subclassIds: {},
+      choices: { classSelections: {}, traitSelections: {} },
+      runtimeEffects: null,
       level: 5,
       classLevels: { class_barbarian: 5 },
       getProficiencyGrants: () => [],
