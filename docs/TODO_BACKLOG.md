@@ -1,7 +1,7 @@
 # TODO Backlog
 
 **Status as of 2026-09-21**, on `feat/character-choices`, after #69 and #54
-closed. The workspace is green — **2104
+closed. The workspace is green — **2120
 tests**, 0 failures, and typecheck clean per package (6f explains why "per
 package" matters). Nothing below is breaking a build; these are gaps, debt and
 content.
@@ -179,7 +179,7 @@ things the last three branches showed replace it:
 | 3 | ✅ **#68 (fixed half)** — backgrounds reach the live sheet | small–medium | **Closed 2026-09-21** on `fix/tier1-reach-the-player`: `CharacterSaveSchema` gained `backgroundId`, the bootstrapper resolves a background's granted traits, and the server and web store thread it through. A preset background's fixed skill and tool grants (Criminal's Deception, Stealth and thieves' tools, and the like) now reach the live sheet. The choice half is unchanged — see item 5 below and 10d. |
 | 4 | ✅ **#69** — record which node a trait choice answered | medium, needs a decision | **Closed 2026-09-21** on `feat/character-choices`: choices are now stored in `characters.choices`, keyed by the question they answer (`classSelections[classId][nodeId]` for class picks, `traitSelections[blockId]` for trait choice blocks), rather than rebuilt from a flat trait-id set. `CharacterBootstrapper.selectionsFromChosenTraitIds` is deleted. Migration `0014_add_character_choices` exists and has been applied to the dev database. See the "Resolved — #69" section below for the finding that the guessing had been running on nothing. |
 | 4a | **#73** — the web sheet applies no trait modifiers | medium | Found while planning `feat/character-choices`, 2026-09-21. `activeModifiers` is set only by the dev-only `TraitWidget`; `useAbilities` (`apps/web/src/hooks/useCharacterStats.ts`) adds equipment modifiers alone; the creation wizard stores pre-racial scores (`wizardStore.ts`: "3-18 pre racial"). So no racial ability bonus, fixed or chosen, reaches a live sheet, while the server's `buildLiveSheet` applies them — the two disagree. Verified 2026-09-21: Lyra Silverstring (half-elf, stored CHA 18) shows CHA 18 on the sheet. Next branch, ahead of item 5. |
-| 4b | **#74** — a multiclass character's first class is whatever order Postgres returns | small–medium | Found 2026-09-21 by the final review of `feat/character-choices`. `character_classes` records no class order, and none of its readers orders the query, so an `UPDATE` (a level-up on the primary class) can make a sequential scan return a multiclass character's second class as `classes[0]` — the engine only gives full starting proficiencies to that slot. See the "11e. #74" section below. **Must land before item 5 (Branch B)**, which is about to add a fourth writer to the same ordering gap. |
+| 4b | ✅ **#74** — a multiclass character's first class is whatever order Postgres returns | small–medium | **Closed 2026-09-21** on `fix/class-order`: `character_classes.position` records the order a class was taken, `classLedgerOrder` orders every ledger read, and all writers were updated to keep it. Migration `0015_add_class_position` is applied to the dev database. The hand check reproduced #74's exact failure condition on Lyra Silverstring and the sheet stayed correct. See the "11e. #74" section below. |
 | 5 | **#68 (choice half) — Branch B** — a proficiency-choice wizard step, now that storage exists | medium, UI | Storage landed as `feat/character-choices`'s Branch A: `characters.choices` holds a class's `selections` and a trait's `traitSelections`, keyed by the question, but nothing collects them from a player yet. Widened from 21 proficiency blocks to all 31 choice-block traits in the pack — every class's skill picks, background tools and languages, plus the race picks that predate #68: the half-elf's ability-score choice, Skill Versatility and extra language, the human's and high elf's extra language, and the dwarf's artisan's tools. `ProficiencyExtractor.listPendingChoices` has no caller outside tests. Brainstorm the wizard step first; it is the first new UI surface since the barbarian's table notes. Inherits two findings from the same final review, 2026-09-21: a **custom background's choice blocks cannot be answered at creation** — a custom background's traits live outside `CharacterSave` entirely (the gateway included), so Branch B needs a home for them before a custom-background player can answer anything; and **level-up may re-answer a question already answered at creation or an earlier level** — `applyLevelUp`'s merge (#69, hardened by this review) overwrites a stored pick with whatever the payload sends and validates the new value, but nothing stops a later answer from changing an earlier one, so Branch B needs to decide whether re-answering is allowed. |
 | 5a | **#71** — the sheet ignores a refused resource spend | small–medium | Found by the final review of `fix/tier1-reach-the-player`, 2026-09-21. `RESOURCE_CONSUMED`'s refusal (item 2's fix) is not in `SHEET_ERROR_EVENTS`, so `consumeResource`'s optimistic decrement never rolls back. Same family as item 2: a spend the server refused should not be the spend the player sees. See P11's 11d. |
 
@@ -2066,7 +2066,7 @@ Found 2026-09-21 by the final review of `feat/character-choices`.
 
 | # | Item | Notes |
 | --- | --- | --- |
-| 74 | A multiclass character's "primary" class is inferred from array order, but `character_classes` records no order and nothing reads it in one | Must land before Branch B (item 5). See below. |
+| 74 | ✅ A multiclass character's "primary" class is inferred from array order, but `character_classes` records no order and nothing reads it in one | **Closed 2026-09-21** on `fix/class-order`. See below. |
 
 `CharacterBootstrapper`'s `classTraitIds`
 (`packages/engine/src/pipeline/characterBootstrapper.ts`) grants a class's
@@ -2100,3 +2100,19 @@ explicit primary-class marker, plus `ORDER BY` in all three readers above.
 Small schema change, but every reader has to agree, and Branch B is about to
 add a fourth write path (creation-time choice collection) that would
 otherwise inherit the same bug — hence landing this first.
+
+**Closed 2026-09-21** on `fix/class-order`. `character_classes` gained a
+`position` column recording the order a class was taken, and
+`classLedgerOrder` now orders every ledger read — `getAuthoritativeRuntimeContext`
+(`apps/server/src/gateway/socket.ts`), `fetchCharacterPayload`
+(`apps/server/src/routes/character.ts`) and `applyLevelUp`
+(`apps/server/src/controllers/characterController.ts`) — with the writers
+that populate `character_classes` (creation, level-up and the sample seeder)
+updated to keep it. Migration `0015_add_class_position` is applied to the dev
+database. The hand check reproduced #74's exact failure condition on Lyra
+Silverstring (bard 6 / rogue 1): after an `UPDATE` on her bard row, an
+unordered `select` returned `class_rogue, class_bard` — rogue first, the
+trap this section describes — while the ordered read still returned
+`class_bard, class_rogue`. With the server restarted, Lyra's sheet loaded
+correctly: socket joined and synced with no `action_error`, and her bard
+starting skills (Performance, Acrobatics, Arcana) remained proficient.
