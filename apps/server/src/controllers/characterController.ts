@@ -16,6 +16,34 @@ import {
 } from "../services/levelUpValidation.js";
 import { getCachedRuleSnapshot } from "../services/ruleSnapshotCache.js";
 import { readStoredChoices, toCharacterSave } from "../services/characterSave.js";
+import { z } from "zod";
+
+/** The shape both level-up pick maps share: a key to an array of option ids. */
+const PicksShapeSchema = z.record(z.string(), z.array(z.string()));
+
+/**
+ * Shape-checks a level-up payload's pick map before it ever reaches a merge
+ * or a write. `undefined` (the field was not sent) is left alone; anything
+ * sent that is not string[] keyed by string throws, with a message the route
+ * recognises as a 400 rather than a 500.
+ * @param value The raw payload field, untrusted.
+ * @param fieldName The payload field this value came from, for the error.
+ * @returns The same picks, typed, or undefined if none were sent.
+ */
+const parsePicksShape = (
+  value: unknown,
+  fieldName: "selectedTraits" | "traitSelections",
+): Record<string, string[]> | undefined => {
+  if (value === undefined) return undefined;
+
+  const parsed = PicksShapeSchema.safeParse(value);
+  if (!parsed.success) {
+    throw new Error(
+      `Invalid character choices: ${fieldName} must map each key to an array of strings.`,
+    );
+  }
+  return parsed.data;
+};
 
 /**
  * Applies a level-up to a character.
@@ -27,6 +55,11 @@ export const applyLevelUp = async (req: Request, res: Response) => {
   const { characterId, targetClassId, newTotalLevel } = payload;
 
   try {
+    // shape-checked before anything is read or written, so a malformed pick
+    // map never reaches a merge or the database
+    const selectedTraits = parsePicksShape(payload.selectedTraits, "selectedTraits");
+    const traitSelections = parsePicksShape(payload.traitSelections, "traitSelections");
+
     await db.transaction(async (tx) => {
       // 1 - fetch current character state securely
       const [character] = await tx
@@ -81,21 +114,26 @@ export const applyLevelUp = async (req: Request, res: Response) => {
       // the character's answers after this level: the stored ones plus this
       // payload's, each keyed by the question it answers (#69)
       const storedChoices = readStoredChoices(character.choices, characterId);
+      const existingClassPicks = storedChoices.classSelections[targetClassId];
+      const classSelections = { ...storedChoices.classSelections };
+      // only stake out a classSelections entry for this class when there is
+      // something to put in it - a level-up that answers nothing must not
+      // leave behind an empty {} the class never actually picked anything for
+      if (existingClassPicks || selectedTraits) {
+        classSelections[targetClassId] = {
+          ...(existingClassPicks ?? {}),
+          ...(selectedTraits ?? {}),
+        };
+      }
       const mergedChoices: CharacterChoices = {
-        classSelections: {
-          ...storedChoices.classSelections,
-          [targetClassId]: {
-            ...(storedChoices.classSelections[targetClassId] ?? {}),
-            ...(payload.selectedTraits ?? {}),
-          },
-        },
+        classSelections,
         traitSelections: {
           ...storedChoices.traitSelections,
-          ...(payload.traitSelections ?? {}),
+          ...(traitSelections ?? {}),
         },
       };
 
-      if (payload.selectedTraits || payload.traitSelections) {
+      if (selectedTraits || traitSelections) {
         const ledgerAfterLevel = existingClasses.map((entry) => ({
           classId: entry.classId,
           classLevel:

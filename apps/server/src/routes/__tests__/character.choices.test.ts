@@ -168,10 +168,13 @@ describe("applyLevelUp choices", () => {
     },
   };
 
-  const setupLevelUp = async (ledgerSubclassId: string | null = null) => {
+  const setupLevelUp = async (
+    ledgerSubclassId: string | null = null,
+    characterRow: unknown = storedFighter,
+  ) => {
     vi.resetModules();
     const selectResults: unknown[][] = [
-      [storedFighter],
+      [characterRow],
       [
         {
           id: "ledger-1",
@@ -392,6 +395,76 @@ describe("applyLevelUp choices", () => {
         }),
       }),
     );
+  });
+
+  it("rejects a malformed traitSelections shape before writing", async () => {
+    const { applyLevelUp, tx } = await setupLevelUp();
+    const { res, status, json } = response();
+
+    await applyLevelUp(
+      levelUp({
+        // a real choice block id, but a number instead of an array of
+        // strings - engine validation would only catch a wrong-typed value
+        // at a real block id by way of an uncaught "not iterable" TypeError,
+        // which the route's catch turns into a 400 with the wrong message.
+        // The shape check under test rejects it cleanly before that.
+        traitSelections: { fighter_starting_skills: 42 },
+      }),
+      res,
+    );
+
+    expect(status).toHaveBeenCalledWith(400);
+    expect(json).toHaveBeenCalledWith(
+      expect.objectContaining({
+        success: false,
+        error: expect.stringMatching(/^Invalid character choices: /),
+      }),
+    );
+    expect(tx.set).not.toHaveBeenCalled();
+  });
+
+  it("rejects a malformed selectedTraits shape before writing", async () => {
+    const { applyLevelUp, tx } = await setupLevelUp();
+    const { res, status, json } = response();
+
+    await applyLevelUp(
+      levelUp({
+        // same story: a real progression node id, wrong-typed value
+        selectedTraits: { fighter_level_1_fighting_style: 42 },
+      }),
+      res,
+    );
+
+    expect(status).toHaveBeenCalledWith(400);
+    expect(json).toHaveBeenCalledWith(
+      expect.objectContaining({
+        success: false,
+        error: expect.stringMatching(/^Invalid character choices: /),
+      }),
+    );
+    expect(tx.set).not.toHaveBeenCalled();
+  });
+
+  it("stores no class_fighter entry when this level-up sends no picks and none were stored", async () => {
+    const fighterWithNoClassPicks = {
+      ...storedFighter,
+      choices: {
+        classSelections: {},
+        traitSelections: { fighter_starting_skills: ["athletics", "perception"] },
+      },
+    };
+    const { applyLevelUp, tx } = await setupLevelUp(null, fighterWithNoClassPicks);
+    const { res, status } = response();
+
+    await applyLevelUp(levelUp({}), res);
+
+    expect(status).toHaveBeenCalledWith(200);
+    const setCall = tx.set.mock.calls.at(-1)?.[0];
+    expect(setCall.choices.classSelections.class_fighter).toBeUndefined();
+    expect(setCall.choices).toEqual({
+      classSelections: {},
+      traitSelections: { fighter_starting_skills: ["athletics", "perception"] },
+    });
   });
 
   it("validates against the persisted subclass when the payload's subclassId is blank", async () => {
