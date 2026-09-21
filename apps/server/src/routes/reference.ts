@@ -107,6 +107,10 @@ router.get("/level-up/options", async (req, res, next) => {
       typeof req.query.subclassId === "string"
         ? req.query.subclassId
         : undefined;
+    const featId =
+      typeof req.query.featId === "string" && req.query.featId
+        ? req.query.featId
+        : undefined;
     const currentClassLevelRaw =
       typeof req.query.currentClassLevel === "string"
         ? Number.parseInt(req.query.currentClassLevel, 10)
@@ -126,6 +130,7 @@ router.get("/level-up/options", async (req, res, next) => {
       scope: scoped.scope,
       ...(classId !== undefined ? { classId } : {}),
       ...(subclassId !== undefined ? { subclassId } : {}),
+      ...(featId !== undefined ? { featId } : {}),
       currentClassLevel,
     });
 

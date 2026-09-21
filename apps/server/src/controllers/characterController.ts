@@ -4,10 +4,10 @@ import {
   characters,
   characterTraits,
 } from "@project/database/src/schema/operational.js";
-import type { CharacterChoices, LevelUpPayload } from "@project/shared";
+import type { LevelUpPayload } from "@project/shared";
 import type { Request, Response } from "express";
 import { eq, sql } from "drizzle-orm";
-import { CharacterBootstrapper, listChoiceQuestions } from "@project/engine";
+import { CharacterBootstrapper } from "@project/engine";
 import {
   resolveNextLevelValidationContext,
   validateMulticlassPrerequisites,
@@ -15,9 +15,10 @@ import {
 } from "../services/levelUpValidation.js";
 import { getCachedRuleSnapshot } from "../services/ruleSnapshotCache.js";
 import {
+  buildLevelUpSaves,
   finalAbilityScores,
+  questionsNewAtLevel,
   readStoredChoices,
-  toCharacterSave,
 } from "../services/characterSave.js";
 import { classLedgerOrder } from "../services/classLedger.js";
 import { z } from "zod";
@@ -78,12 +79,6 @@ export const applyLevelUp = async (req: Request, res: Response) => {
         .from(characterClasses)
         .where(eq(characterClasses.characterId, characterId))
         .orderBy(...classLedgerOrder);
-      const targetClassRecord = existingClasses.find(
-        (c) => c.classId === targetClassId,
-      );
-
-      const isMulticlassDip = !targetClassRecord && existingClasses.length > 0;
-      const targetClassLevel = (targetClassRecord?.classLevel || 0) + 1;
 
       // the character's answers before this level, read early: the
       // multiclass prerequisite check below needs them to build the save
@@ -94,6 +89,22 @@ export const applyLevelUp = async (req: Request, res: Response) => {
       // (#69) need it for every level-up, not only ones that send picks
       const { snapshot } = await getCachedRuleSnapshot();
 
+      // the character before and after this level - the same construction
+      // the level-up options use to list the questions the wizard asks, so
+      // what this level requires is exactly what the wizard offered. The
+      // subclass is the payload's, else the one stored for this class (#69)
+      const saves = buildLevelUpSaves({
+        character,
+        ledger: existingClasses,
+        storedChoices,
+        targetClassId,
+        subclassId: payload.subclassId,
+        featId: payload.featId,
+        selectedTraits,
+        traitSelections,
+      });
+      const { isMulticlassDip, targetClassLevel, targetClassRecord } = saves;
+
       // 3 - SERVER VALIDATION
       if (isMulticlassDip) {
         // the character as it is before this level: the stored ledger and
@@ -102,20 +113,19 @@ export const applyLevelUp = async (req: Request, res: Response) => {
         // the row (#77)
         validateMulticlassPrerequisites({
           classId: targetClassId,
-          currentBaseScores: finalAbilityScores(
-            toCharacterSave(character, existingClasses, storedChoices),
-            snapshot,
-          ),
+          currentBaseScores: finalAbilityScores(saves.before, snapshot),
         });
       }
 
       // resolve next level validation context for character's class progression
+      // against the same subclass track the required check below sees: the
+      // payload's subclass, else the one already stored for this class
       const resolverContext = resolveNextLevelValidationContext({
         classId: targetClassId,
         currentClassLevel: targetClassLevel - 1,
         isMulticlassDip,
-        ...(payload.subclassId !== undefined
-          ? { requestedSubclassId: payload.subclassId }
+        ...(saves.subclassId !== null
+          ? { requestedSubclassId: saves.subclassId }
           : {}),
       });
 
@@ -138,80 +148,35 @@ export const applyLevelUp = async (req: Request, res: Response) => {
         }
       }
 
-      // the character's answers after this level: the stored ones (read
-      // above, ahead of the multiclass prerequisite check) plus this
-      // payload's, each keyed by the question it answers (#69)
-      const existingClassPicks = storedChoices.classSelections[targetClassId];
-      const classSelections = { ...storedChoices.classSelections };
-      // only stake out a classSelections entry for this class when there is
-      // something to put in it - a level-up that answers nothing must not
-      // leave behind an empty {} the class never actually picked anything for
-      if (existingClassPicks || selectedTraits) {
-        classSelections[targetClassId] = {
-          ...(existingClassPicks ?? {}),
-          ...(selectedTraits ?? {}),
-        };
-      }
-      let mergedChoices: CharacterChoices = {
-        classSelections,
-        traitSelections: {
-          ...storedChoices.traitSelections,
-          ...(traitSelections ?? {}),
-        },
-        // carried through as-is here; a feat picked this level joins it below
-        feats: storedChoices.feats,
-      };
-
       if (payload.featId) {
         // a feat is a choice like any other: it lives in choices.feats and the
         // bootstrapper grants its traits. It used to become feat_selection
         // rows that no save ever read, so it did nothing (#75)
         //
-        // Validated and appended to mergedChoices BEFORE the choice
-        // validation below: a feat whose traits carry their own choice block
-        // must already be in mergedChoices.feats when that validation runs,
-        // or the same-payload answer to its choice block has no matching
-        // decision yet and is rejected as an orphan_selection (#75 latent)
+        // buildLevelUpSaves above already put it in the after save's feats,
+        // ahead of the choice validation below: a feat whose traits carry
+        // their own choice block must be there when that validation runs, or
+        // the same-payload answer to its choice block has no matching
+        // decision yet and is rejected as an orphan_selection (#75 latent).
+        // Here it is only checked: it has to exist, and a non-repeatable
+        // feat cannot be taken twice
         const feat = snapshot.featsById?.[payload.featId];
         if (!feat) {
           throw new Error(
             `Invalid character choices: unknown feat ${payload.featId}`,
           );
         }
-        if (!feat.repeatable && mergedChoices.feats.includes(payload.featId)) {
+        if (!feat.repeatable && storedChoices.feats.includes(payload.featId)) {
           throw new Error(
             `Invalid character choices: ${payload.featId} already taken`,
           );
         }
-        mergedChoices = {
-          ...mergedChoices,
-          feats: [...mergedChoices.feats, payload.featId],
-        };
       }
 
-      // the class ledger as it will read after this level - built
-      // unconditionally, not only when this payload sends picks, so a
-      // level-up that answers nothing is still checked against whatever it
-      // newly unlocks (#69)
-      const ledgerAfterLevel = existingClasses.map((entry) => ({
-        classId: entry.classId,
-        classLevel:
-          entry.classId === targetClassId ? targetClassLevel : entry.classLevel,
-        subclassId:
-          entry.classId === targetClassId
-            ? payload.subclassId || entry.subclassId
-            : entry.subclassId,
-      }));
-      if (!targetClassRecord) {
-        ledgerAfterLevel.push({
-          classId: targetClassId,
-          classLevel: targetClassLevel,
-          subclassId: payload.subclassId ?? null,
-        });
-      }
+      const mergedChoices = saves.choicesAfterLevel;
 
       const issues = CharacterBootstrapper.collectChoiceIssues(
-        toCharacterSave(character, ledgerAfterLevel, mergedChoices),
+        saves.after,
         snapshot,
       );
 
@@ -219,17 +184,8 @@ export const applyLevelUp = async (req: Request, res: Response) => {
       // question carried over from creation, or an earlier level) is never
       // required here - only one this level newly unlocks and still has no
       // answer for (#69)
-      const before = listChoiceQuestions(
-        toCharacterSave(character, existingClasses, storedChoices),
-        snapshot,
-      );
-      const after = listChoiceQuestions(
-        toCharacterSave(character, ledgerAfterLevel, mergedChoices),
-        snapshot,
-      );
-      const beforeIds = new Set(before.map((question) => question.id));
-      const missing = after.filter(
-        (question) => !beforeIds.has(question.id) && question.selected.length === 0,
+      const missing = questionsNewAtLevel(saves, snapshot).filter(
+        (question) => question.selected.length === 0,
       );
 
       const messages = [
@@ -248,7 +204,7 @@ export const applyLevelUp = async (req: Request, res: Response) => {
           .update(characterClasses)
           .set({
             classLevel: targetClassLevel,
-            subclassId: payload.subclassId || targetClassRecord.subclassId,
+            subclassId: saves.subclassId,
           })
           .where(eq(characterClasses.id, targetClassRecord.id));
       } else {
@@ -256,7 +212,7 @@ export const applyLevelUp = async (req: Request, res: Response) => {
           characterId,
           classId: targetClassId,
           classLevel: targetClassLevel,
-          subclassId: payload.subclassId,
+          subclassId: saves.subclassId,
           // a dip takes the next place after every class already taken (#74)
           position:
             Math.max(-1, ...existingClasses.map((entry) => entry.position)) + 1,
