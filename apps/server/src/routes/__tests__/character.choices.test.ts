@@ -143,6 +143,21 @@ describe("POST /api/character choices", () => {
     expect(response.status).toBe(400);
     expect(transaction).not.toHaveBeenCalled();
   });
+
+  it("records the creation class as the first class taken (#74)", async () => {
+    const { app, values } = await setupApp();
+
+    const response = await request(app).post("/api/character").send(lyra);
+
+    expect(response.status).toBe(201);
+    expect(values).toHaveBeenCalledWith(
+      expect.objectContaining({
+        classId: "class_bard",
+        classLevel: 1,
+        position: 0,
+      }),
+    );
+  });
 });
 
 describe("applyLevelUp choices", () => {
@@ -387,6 +402,7 @@ describe("applyLevelUp choices", () => {
           classId: "class_fighter",
           classLevel: 2,
           subclassId: null,
+          position: 0,
         },
       ],
       dexterousFighter,
@@ -412,6 +428,45 @@ describe("applyLevelUp choices", () => {
           }),
         }),
       }),
+    );
+    expect(tx.values).toHaveBeenCalledWith(
+      expect.objectContaining({ classId: "class_rogue", position: 1 }),
+    );
+  });
+
+  it("dips into the next place after the highest position, not the class count (#74)", async () => {
+    // stored fighter sits at position 2 (a gap below it, e.g. from a removed
+    // class); the dip must land at 3, the next place after the highest
+    // existing position, not at 1 (existingClasses.length)
+    const dexterousFighter = { ...storedFighter, dex: 14 };
+    const { applyLevelUp, tx } = await setupLevelUpWithRealValidation(
+      [
+        {
+          id: "ledger-1",
+          characterId: "char-1",
+          classId: "class_fighter",
+          classLevel: 2,
+          subclassId: null,
+          position: 2,
+        },
+      ],
+      dexterousFighter,
+    );
+    const { res, status } = response();
+
+    await applyLevelUp(
+      levelUp({
+        targetClassId: "class_rogue",
+        newTotalLevel: 3,
+        subclassId: undefined,
+        traitSelections: { rogue_multiclass_skill: ["stealth"] },
+      }),
+      res,
+    );
+
+    expect(status).toHaveBeenCalledWith(200);
+    expect(tx.values).toHaveBeenCalledWith(
+      expect.objectContaining({ classId: "class_rogue", position: 3 }),
     );
   });
 

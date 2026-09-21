@@ -180,6 +180,9 @@ export const applyLevelUp = async (req: Request, res: Response) => {
           classId: targetClassId,
           classLevel: targetClassLevel,
           subclassId: payload.subclassId,
+          // a dip takes the next place after every class already taken (#74)
+          position:
+            Math.max(-1, ...existingClasses.map((entry) => entry.position)) + 1,
         });
       }
 

@@ -271,6 +271,8 @@ router.post("/", async (req, res, next) => {
         classId: payload.classId,
         subclassId: payload.subclassId ?? undefined,
         classLevel: 1,
+        // the class chosen at creation is always the first class taken (#74)
+        position: 0,
       });
 
       // handle custom background traits
