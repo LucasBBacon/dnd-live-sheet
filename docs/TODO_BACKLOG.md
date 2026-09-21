@@ -1,7 +1,7 @@
 # TODO Backlog
 
 **Status as of 2026-09-21**, on `fix/levelup-correctness`, after #75 and #77
-closed. The workspace is green — **2156
+closed. The workspace is green — **2160
 tests**, 0 failures, and typecheck clean per package (6f explains why "per
 package" matters). Nothing below is breaking a build; these are gaps, debt and
 content.
