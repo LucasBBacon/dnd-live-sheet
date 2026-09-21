@@ -598,12 +598,276 @@ Message: `fix(database): sample characters store pre-racial scores (#73)`
 
 ---
 
+### Task 3b: The web sheet gates modifiers on the same base states as the server
+
+Added 2026-09-21 after Task 4's first hand check: with trait modifiers now applied on the web, Sable's and Vaerix's Defense (+1 AC, `requiredStates: ["status_wearing_armor"]`) did not apply, because the web store's `baseStates` is always `[]` and its `activeStates` is only composed on events (actions, HP changes, condition toggles). The server's `buildLiveSheet` builds `baseStates` from trait states (`StateExtractor`), live effect states and equipment states (`InventoryExtractor.extractStates` — `status_wearing_armor`, `status_wearing_<category>_armor`). Without this task an armoured barbarian would wrongly get Unarmored Defense on the sheet (it forbids `status_wearing_armor`).
+
+**Files:**
+- Modify: `packages/engine/src/pipeline/sheetModifiers.ts` (add `gatherBaseStates`)
+- Modify: `packages/engine/src/pipeline/__tests__/sheetModifiers.test.ts`
+- Modify: `packages/engine/src/pipeline/characterEngine.ts` (`buildLiveSheet`'s `baseStates`)
+- Modify: `apps/web/src/store/characterSheetStore.ts` (`getSheetStates` getter)
+- Modify: `apps/web/src/hooks/useCharacterStats.ts` (`useAbilities` returns the sheet states; `useDerivedStats` and `useSpellcasting` use them)
+- Modify: `apps/web/src/hooks/useCombat.ts` (uses them)
+- Test: `apps/web/src/store/__tests__/characterSheetStore.test.ts`
+- Test (mocks only): `apps/web/src/hooks/__tests__/useCharacterStats.test.ts`, and `apps/web/src/hooks/__tests__/useCombat.test.ts` if its mocks need the new return value
+
+**Interfaces:**
+- Produces: `gatherBaseStates(input: SheetStateInput): string[]` with `interface SheetStateInput { activeTraits: TraitDefinition[]; inventory: InventoryInstance[]; effectManager?: EffectManager; snapshot?: RuleSnapshotLookup }` — de-duplicated, in the order trait states, live effect states (only when `effectManager` is given), equipment states — exported from `@project/engine`.
+- Produces: `CharacterSheetState.getSheetStates: () => string[]` — the store's `activeStates` plus `gatherBaseStates` over its compiled traits, `inventory` and `ruleSnapshot`, de-duplicated.
+- Produces: `useAbilities()` returns `{ finalAbilities, totalMods, activeStates }`, where `activeStates` is `getSheetStates()`.
+
+- [ ] **Step 1: Write the failing tests**
+
+(a) Engine, in `sheetModifiers.test.ts` (import `gatherBaseStates` beside `gatherSheetModifiers`; reuse any literal-shape adjustments Task 1 made for `ActiveEffect`/`InventoryInstance`):
+
+```ts
+describe("gatherBaseStates", () => {
+  const plate = {
+    id: "inv-plate",
+    itemId: "item_armor_plate",
+    quantity: 1,
+    slot: "body",
+    isAttuned: false,
+  };
+
+  it("includes the states worn armour puts on the sheet", () => {
+    const states = gatherBaseStates({
+      activeTraits: [],
+      inventory: [plate],
+      snapshot: corePackLookup(),
+    });
+
+    expect(states).toEqual(
+      expect.arrayContaining(["status_wearing_armor", "status_wearing_heavy_armor"]),
+    );
+  });
+
+  it("includes live effect states only when an effect manager is given", () => {
+    const effectManager = new EffectManager();
+    effectManager.addEffect({
+      instanceId: "effect_rage",
+      sourceName: "Rage",
+      durationType: "manual",
+      durationRemaining: undefined,
+      isSelfConcentration: false,
+      modifiers: [],
+      grantedStates: ["status_raging"],
+    });
+
+    expect(
+      gatherBaseStates({ activeTraits: [], inventory: [], effectManager }),
+    ).toContain("status_raging");
+    expect(gatherBaseStates({ activeTraits: [], inventory: [] })).not.toContain(
+      "status_raging",
+    );
+  });
+});
+```
+
+(b) Web store, in `characterSheetStore.test.ts`, inside `describe("getSheetModifiers", ...)` (reuse its `init`):
+
+```ts
+  const plate = {
+    id: "inv-plate",
+    itemId: "item_armor_plate",
+    quantity: 1,
+    slot: "body",
+    isAttuned: false,
+  };
+  const noAbilityMods = { STR: 0, DEX: 0, CON: 0, INT: 0, WIS: 0, CHA: 0 };
+
+  it("applies Defense to a fighter wearing armour", () => {
+    init({
+      classLevels: { class_fighter: 1 },
+      raceId: "race_human",
+      choices: {
+        classSelections: {
+          class_fighter: { fighter_level_1_fighting_style: ["trait_fs_defense"] },
+        },
+        traitSelections: {},
+      },
+      inventory: [plate],
+    });
+    const state = useCharacterSheetStore.getState();
+
+    expect(state.getSheetStates()).toContain("status_wearing_armor");
+    expect(
+      DerivedStatEngine.calculateAC(
+        noAbilityMods,
+        state.getSheetModifiers(),
+        state.getSheetStates(),
+      ).total,
+    ).toBe(19); // plate 18 + Defense 1
+  });
+
+  it("does not give a barbarian in armour Unarmored Defense", () => {
+    init({
+      classLevels: { class_barbarian: 1 },
+      raceId: "race_human",
+      choices: { classSelections: {}, traitSelections: {} },
+      inventory: [plate],
+    });
+    const state = useCharacterSheetStore.getState();
+
+    expect(
+      DerivedStatEngine.calculateAC(
+        { ...noAbilityMods, DEX: 2, CON: 3 },
+        state.getSheetModifiers(),
+        state.getSheetStates(),
+      ).total,
+    ).toBe(18); // plate, not 10 + DEX + CON
+  });
+```
+
+(If the store's `inventory` type needs more fields than these five, add them with neutral values and report it.)
+
+- [ ] **Step 2: Run to verify they fail** — engine: `gatherBaseStates` not exported; web: `getSheetStates is not a function`.
+
+- [ ] **Step 3: Engine** — in `sheetModifiers.ts` add (importing `StateExtractor` from `./stateExtractor.js`):
+
+```ts
+export interface SheetStateInput {
+  activeTraits: TraitDefinition[];
+  inventory: InventoryInstance[];
+  /** Given on the server, where live effects are part of the base states. */
+  effectManager?: EffectManager;
+  snapshot?: RuleSnapshotLookup;
+}
+
+/**
+ * The states a character's sheet gates its modifiers on that hold regardless
+ * of conditions: those its traits grant, those its live effects grant (when an
+ * effect manager is given) and those its worn equipment puts on it, such as
+ * status_wearing_armor. The web store composes effect states separately, so it
+ * omits the manager; the server's buildLiveSheet passes it (#73).
+ */
+export const gatherBaseStates = ({
+  activeTraits,
+  inventory,
+  effectManager,
+  snapshot,
+}: SheetStateInput): string[] =>
+  Array.from(
+    new Set([
+      ...StateExtractor.extractStates(activeTraits),
+      ...(effectManager?.getActiveStates() ?? []),
+      ...InventoryExtractor.extractStates(inventory, snapshot),
+    ]),
+  );
+```
+
+In `buildLiveSheet`, replace the `baseStates` array literal with the following (same sources, same order — the server's behaviour is unchanged; remove `StateExtractor` from characterEngine's imports only if nothing else there uses it):
+
+```ts
+    const baseStates = gatherBaseStates({
+      activeTraits,
+      inventory,
+      effectManager,
+      ...(options.snapshot !== undefined && { snapshot: options.snapshot }),
+    });
+```
+
+- [ ] **Step 4: Web store** — add `gatherBaseStates` to the engine import; add to the state interface beside `getSheetModifiers`:
+
+```ts
+  /**
+   * The states the sheet's calculators gate on: whatever activeStates the
+   * store has composed (conditions, effects, server replies) plus the states
+   * the character's traits and worn equipment always put on it. activeStates
+   * alone is only composed on events, so worn armour was invisible (#73).
+   */
+  getSheetStates: () => string[];
+```
+
+and implement it beside `getSheetModifiers`:
+
+```ts
+    getSheetStates: () => {
+      const state = get();
+      return Array.from(
+        new Set([
+          ...state.activeStates,
+          ...gatherBaseStates({
+            activeTraits: CharacterBootstrapper.compileActiveTraits(
+              toCharacterSave(state),
+              state.ruleSnapshot ?? undefined,
+            ),
+            inventory: state.inventory,
+            ...(state.ruleSnapshot ? { snapshot: state.ruleSnapshot } : {}),
+          }),
+        ]),
+      );
+    },
+```
+
+- [ ] **Step 5: Hooks** — in `useAbilities`, select `getSheetStates` from the store, compute `const activeStates = getSheetStates();` inside the memo (it already subscribes to `activeStates` and every trait/inventory input; add `getSheetStates` to the dependency list), use it for `calculateScore`, and return `{ finalAbilities, totalMods, activeStates }`. In `useDerivedStats`, `useSpellcasting` (in `useCharacterStats.ts`) and `useCombat` (`apps/web/src/hooks/useCombat.ts`), take `activeStates` from `useAbilities()`'s return instead of their own `useCharacterSheetStore((state) => state.activeStates)` subscription, and keep passing it wherever they passed it before. Update the hook test mocks so `getSheetStates` (or `useAbilities`'s mocked return) supplies the states each test previously set through `activeStates`, keeping every assertion.
+
+- [ ] **Step 6: Run everything** — `pnpm test:all` PASS; typecheck `@project/engine` (`tsc --noEmit`) and `@project/web` (`tsc -b`); `pnpm --filter @project/web lint` (report new warnings; do not silence).
+
+- [ ] **Step 7: Commit** — `fix: the web sheet gates modifiers on worn equipment and trait states (#73)`
+
+---
+
+### Task 3c: Draconic Resilience applies only unarmoured
+
+**Files:**
+- Modify: `packages/database/data/packs/core_2014_pack/traits/ported.json` (`trait_draconic_resilience`)
+- Test: `apps/web/src/store/__tests__/characterSheetStore.test.ts`
+
+The pack authors Draconic Resilience's `ARMOR_CLASS` `set_base` 13 with empty `forbiddenStates`, so a draconic sorcerer wearing armour gets 13 + DEX instead of the armour's AC (Nyx: studded leather 12 + DEX 2 = 14, showed 15). The PHB applies it only when not wearing armour — the gate the barbarian's Unarmored Defense already carries.
+
+- [ ] **Step 1: Failing test** — in the `getSheetModifiers` describe block (reuse `init`):
+
+```ts
+  it("does not give a draconic sorcerer in armour Draconic Resilience's AC", () => {
+    init({
+      classLevels: { class_sorcerer: 1 },
+      subclassIds: { class_sorcerer: "subclass_sorcerer_draconic" },
+      raceId: "race_human",
+      choices: {
+        classSelections: {
+          class_sorcerer: {
+            sorcerer_draconic_level_1_ancestor: ["trait_dragon_ancestor_red"],
+          },
+        },
+        traitSelections: {},
+      },
+      inventory: [
+        {
+          id: "inv-leather",
+          itemId: "item_armor_studded_leather",
+          quantity: 1,
+          slot: "body",
+          isAttuned: false,
+        },
+      ],
+    });
+    const state = useCharacterSheetStore.getState();
+
+    expect(
+      DerivedStatEngine.calculateAC(
+        { STR: 0, DEX: 2, CON: 0, INT: 0, WIS: 0, CHA: 0 },
+        state.getSheetModifiers(),
+        state.getSheetStates(),
+      ).total,
+    ).toBe(14); // studded leather 12 + DEX 2, not 13 + DEX 2
+  });
+```
+
+- [ ] **Step 2: Run to verify it fails** (15, not 14).
+- [ ] **Step 3: Fix the pack** — in `ported.json`, on `trait_draconic_resilience`'s `ARMOR_CLASS` modifier only (not its `MAX_HP` one), set `"forbiddenStates": ["status_wearing_armor"]`. Keep the file's 4-space pretty JSON and its working-tree line ending; change nothing else. Run `pnpm --filter @project/database test` — the pack schema, marker and reachability guards must stay green.
+- [ ] **Step 4: Run to verify it passes; `pnpm test:all`.**
+- [ ] **Step 5: Commit** — `fix(pack): Draconic Resilience applies only when not wearing armour`
+
+---
+
 ### Task 4: Hand check, then the backlog
 
 Steps 1–3 need the running app and the owner's database: the controller runs them.
 
 - [ ] **Step 1: Re-seed (owner's permission first)** — `pnpm --filter @project/database db:seed:samples`. No migration in this branch.
-- [ ] **Step 2: Hand check against the spec's baseline table** — restart the `server` preview; for Lyra, Sable, Ko Shen, Grimnar, Nyx and Vaerix record scores, HP and AC. Expected: every score unchanged; Grimnar AC 15, Sable 23, Vaerix 20; Ko Shen 15; Nyx AC 14 (HP may show +3).
+- [ ] **Step 2: Hand check against the spec's baseline table** — restart the `server` preview; for Lyra, Sable, Ko Shen, Grimnar, Nyx and Vaerix record scores, HP and AC. Expected: every score unchanged; Grimnar AC 15, Sable 23, Vaerix 20; Ko Shen 15; Nyx AC 14 (HP may show +3). The first run (before Tasks 3b and 3c) found Sable 22, Vaerix 19 and Nyx 15 - see those tasks.
 - [ ] **Step 3: Record results for the backlog task.**
 - [ ] **Step 4: Update the backlog** — `docs/TODO_BACKLOG.md` (CRLF): mark #73 ✅ closed 2026-09-21 on `fix/sheet-modifiers` in its section and Recommended-sequence row, recording `gatherSheetModifiers`, the hand-check before/after, and that the samples now store pre-racial scores (the server was double-counting them). Add a new numbered item (the next free id) for the feat-trait gap: feat-granted traits are stored as `feat_selection` `character_traits` rows, which never enter the web store's save or the server's (`resolveGrantedTraitIds` reads race, background and classes only), so no feat modifier reaches any sheet. Update the header's test count and branch. Restore CRLF; `pnpm check:hygiene` passes.
 - [ ] **Step 5: Commit** — `docs: close #73, record the feat-trait gap`

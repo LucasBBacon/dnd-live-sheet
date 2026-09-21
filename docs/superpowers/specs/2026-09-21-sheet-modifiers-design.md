@@ -77,6 +77,20 @@ today's stored values; a test holds the final scores computed from the stored
 scores and the gathered trait modifiers equal to them. The samples therefore
 look the same on the sheet, and the server stops double-counting.
 
+### 4. Base states — added after the first hand check
+
+With trait modifiers applied, the first hand check showed Defense (+1 AC, requires
+`status_wearing_armor`) missing for Sable and Vaerix: the web store's `baseStates` is
+always `[]` and its `activeStates` is composed only on events, so the trait and
+worn-equipment states the server puts in `buildLiveSheet`'s `baseStates` never reach
+the web. Left alone, an armoured barbarian would get Unarmored Defense on the sheet.
+So the engine also exports `gatherBaseStates` (trait states, live-effect states when
+given an effect manager, equipment states), used by `buildLiveSheet` and by a web
+store getter `getSheetStates` that the derived-stat hooks gate on. The same check
+showed Nyx at AC 15 in studded leather: the pack authors Draconic Resilience's AC 13
+with no `forbiddenStates`; it gains `["status_wearing_armor"]`, like Unarmored
+Defense.
+
 ## Testing
 
 - Engine: `gatherSheetModifiers` returns a trait's fixed and chosen modifiers,
