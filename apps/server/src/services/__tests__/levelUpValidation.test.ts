@@ -534,6 +534,66 @@ describe("resolveNextLevelValidationContext", () => {
         context.decisions.some((d) => d.type === "spell_selection"),
       ).toBe(false);
     });
+
+    // a subclass chosen at level 1 (a cleric's domain, a sorcerer's origin)
+    // arrives with the dip itself, so its level-1 grants belong to the dip
+    it("includes the subclass's level-1 trait_choice decisions on a dip", () => {
+      const context = resolveNextLevelValidationContext({
+        classId: "class_sorcerer",
+        currentClassLevel: 0,
+        isMulticlassDip: true,
+        requestedSubclassId: "subclass_sorcerer_draconic",
+      });
+
+      const ancestor = context.decisions.find(
+        (d) => d.id === "sorcerer_draconic_level_1_ancestor",
+      );
+      expect(ancestor?.type).toBe("trait_selection");
+      expect(ancestor?.options).toContain("trait_dragon_ancestor_red");
+      expect(context.grantedTraitIds).toContain("trait_draconic_resilience");
+      expect(
+        context.grantedTraits.find((t) => t.id === "trait_draconic_resilience")
+          ?.grantSourceType,
+      ).toBe("subclass_progression");
+      expect(
+        context.decisions.some((d) => d.type === "spell_selection"),
+      ).toBe(false);
+    });
+
+    it("includes the choice blocks of a subclass's level-1 traits on a dip", () => {
+      const context = resolveNextLevelValidationContext({
+        classId: "class_cleric",
+        currentClassLevel: 0,
+        isMulticlassDip: true,
+        requestedSubclassId: "subclass_cleric_knowledge",
+      });
+
+      expect(context.grantedTraitIds).toContain("trait_blessings_of_knowledge");
+      expect(context.decisions.map((d) => d.id)).toEqual(
+        expect.arrayContaining([
+          "knowledge_domain_languages",
+          "knowledge_domain_skills",
+        ]),
+      );
+    });
+
+    // a block with no options list offers its whole category roster; the
+    // decision has to carry that roster or its picker (and its validation)
+    // has nothing to offer
+    it("gives a roster choice block's decision the category roster as options", () => {
+      const context = resolveNextLevelValidationContext({
+        classId: "class_bard",
+        currentClassLevel: 0,
+        isMulticlassDip: true,
+      });
+
+      const skill = context.decisions.find(
+        (d) => d.id === "bard_multiclass_skill",
+      );
+      expect(skill?.options).toEqual(
+        expect.arrayContaining(["athletics", "stealth", "arcana"]),
+      );
+    });
   });
 });
 

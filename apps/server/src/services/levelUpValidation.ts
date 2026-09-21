@@ -6,6 +6,7 @@ import type {
   TraitDefinition,
 } from "@project/shared";
 import { traitIdOfOption } from "@project/shared";
+import { listProficiencyOptions } from "@project/engine";
 import { getPackRulebook } from "./packRulebook.js";
 
 /**
@@ -140,9 +141,16 @@ const traitDrivenDecisions = (traitIds: string[]): ResolverDecision[] => {
         id: choice.id,
         type: "trait_selection",
         description: `Choose proficiencies for ${trait.name}.`,
-        // an absent options list means "any from this category", so leave it
-        // off rather than sending an empty allow-list
-        ...(choice.options ? { options: choice.options } : {}),
+        // an absent (or empty) options list means "any from this category":
+        // the decision carries that roster, so its picker and the option
+        // check below both have the real list to work from. A category with
+        // no roster (weapons, armour) stays unbounded
+        ...(() => {
+          const options = choice.options?.length
+            ? choice.options
+            : listProficiencyOptions(choice.category);
+          return options ? { options } : {};
+        })(),
         isRequired: true,
         quantity: choice.chooseAmount,
         // this is the trait's own choice block, not a progression node - its
@@ -335,37 +343,30 @@ export const resolveNextLevelValidationContext = ({
         grantSourceType: "multiclass_grant",
       });
     }
-    for (const grant of classGrantsAtLevel(blueprint, targetLevel)) {
-      if (typeof grant === "string") {
-        grantedTraits.push({
-          id: grant,
-          name: traitName(grant),
-          grantSourceType: "class_progression",
-        });
-      }
+  }
+  for (const grant of classGrantsAtLevel(blueprint, targetLevel)) {
+    if (typeof grant === "string") {
+      grantedTraits.push({
+        id: grant,
+        name: traitName(grant),
+        grantSourceType: "class_progression",
+      });
     }
-  } else {
-    for (const grant of classGrantsAtLevel(blueprint, targetLevel)) {
-      if (typeof grant === "string") {
-        grantedTraits.push({
-          id: grant,
-          name: traitName(grant),
-          grantSourceType: "class_progression",
-        });
-      }
-    }
-    for (const grant of subclassGrantsAtLevel(
-      classId,
-      requestedSubclassId,
-      targetLevel,
-    )) {
-      if (typeof grant === "string") {
-        grantedTraits.push({
-          id: grant,
-          name: traitName(grant),
-          grantSourceType: "subclass_progression",
-        });
-      }
+  }
+  // the subclass's own features at this level - on a dip too: a subclass
+  // chosen at level 1 (a cleric's domain, a sorcerer's origin) arrives with
+  // the dip itself, and the engine grants its level-1 track just the same
+  for (const grant of subclassGrantsAtLevel(
+    classId,
+    requestedSubclassId,
+    targetLevel,
+  )) {
+    if (typeof grant === "string") {
+      grantedTraits.push({
+        id: grant,
+        name: traitName(grant),
+        grantSourceType: "subclass_progression",
+      });
     }
   }
 
@@ -397,41 +398,41 @@ export const resolveNextLevelValidationContext = ({
     });
   }
 
-  if (!isMulticlassDip || targetLevel !== 1) {
-    decisions.push(
-      ...grantDrivenDecisions(
-        classGrantsAtLevel(blueprint, targetLevel),
-        blueprint.name,
-      ),
-    );
-
-    const subclass = requestedSubclassId
-      ? getPackRulebook().subclassesById[requestedSubclassId]
-      : undefined;
-    if (subclass?.classId === classId) {
-      decisions.push(
-        ...grantDrivenDecisions(
-          subclassGrantsAtLevel(classId, requestedSubclassId, targetLevel),
-          subclass.name,
-        ),
-      );
-    }
-  } else {
-    // a dip offers the class's own level-1 trait_choice picks (Fighting
-    // Style for a fighter dip) - but not spell_choice grants, which stay
-    // skipped until the wizard can answer them (#79)
-    decisions.push(
-      ...grantDrivenDecisions(
-        classGrantsAtLevel(blueprint, targetLevel).filter(
+  // a dip offers the class's (and a level-1 subclass's) own level-1
+  // trait_choice picks - Fighting Style for a fighter dip, a Draconic
+  // sorcerer's ancestor - but not spell_choice grants or a trait's spell
+  // picks, which stay skipped until the wizard can answer them (#79)
+  const isLevelOneDip = isMulticlassDip && targetLevel === 1;
+  const offered = (grants: FeatureGrant[]): FeatureGrant[] =>
+    isLevelOneDip
+      ? grants.filter(
           (grant) => typeof grant !== "string" && grant.type === "trait_choice",
-        ),
-        blueprint.name,
+        )
+      : grants;
+
+  decisions.push(
+    ...grantDrivenDecisions(
+      offered(classGrantsAtLevel(blueprint, targetLevel)),
+      blueprint.name,
+    ),
+  );
+
+  const subclass = requestedSubclassId
+    ? getPackRulebook().subclassesById[requestedSubclassId]
+    : undefined;
+  if (subclass?.classId === classId) {
+    decisions.push(
+      ...grantDrivenDecisions(
+        offered(subclassGrantsAtLevel(classId, requestedSubclassId, targetLevel)),
+        subclass.name,
       ),
     );
   }
 
   decisions.push(
-    ...traitDrivenDecisions(grantedTraits.map((trait) => trait.id)),
+    ...traitDrivenDecisions(grantedTraits.map((trait) => trait.id)).filter(
+      (decision) => !isLevelOneDip || decision.type !== "spell_selection",
+    ),
   );
   // #endregion
 
