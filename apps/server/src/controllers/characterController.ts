@@ -102,7 +102,7 @@ export const applyLevelUp = async (req: Request, res: Response) => {
             entry.classId === targetClassId ? targetClassLevel : entry.classLevel,
           subclassId:
             entry.classId === targetClassId
-              ? (payload.subclassId ?? entry.subclassId)
+              ? payload.subclassId || entry.subclassId
               : entry.subclassId,
         }));
         if (!targetClassRecord) {

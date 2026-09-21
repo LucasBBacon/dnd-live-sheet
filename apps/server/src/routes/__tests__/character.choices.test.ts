@@ -168,7 +168,7 @@ describe("applyLevelUp choices", () => {
     },
   };
 
-  const setupLevelUp = async () => {
+  const setupLevelUp = async (ledgerSubclassId: string | null = null) => {
     vi.resetModules();
     const selectResults: unknown[][] = [
       [storedFighter],
@@ -178,7 +178,7 @@ describe("applyLevelUp choices", () => {
           characterId: "char-1",
           classId: "class_fighter",
           classLevel: 2,
-          subclassId: null,
+          subclassId: ledgerSubclassId,
         },
       ],
     ];
@@ -303,6 +303,24 @@ describe("applyLevelUp choices", () => {
         success: false,
         error: expect.stringMatching(/^Invalid character choices: .*arcana/),
       }),
+    );
+  });
+
+  it("validates against the persisted subclass when the payload's subclassId is blank", async () => {
+    const { applyLevelUp, tx } = await setupLevelUp("subclass_fighter_battle_master");
+    const { res, status } = response();
+
+    await applyLevelUp(
+      levelUp({
+        subclassId: "",
+        selectedTraits: { fighter_bm_level_3_maneuvers: maneuvers },
+      }),
+      res,
+    );
+
+    expect(status).toHaveBeenCalledWith(200);
+    expect(tx.set).toHaveBeenCalledWith(
+      expect.objectContaining({ subclassId: "subclass_fighter_battle_master" }),
     );
   });
 });
