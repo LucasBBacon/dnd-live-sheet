@@ -1,8 +1,9 @@
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { SOCKET_EVENTS } from "@project/shared";
 import {
   campaignMembers,
   characterInventory,
+  characterResources,
   characters,
 } from "@project/database/src/schema/operational.js";
 import {
@@ -135,6 +136,60 @@ describe("socket gateway - ROOM_JOIN", () => {
     expect(harness.ioEmits).toEqual([]);
   });
 
+  /**
+   * The pools a character's traits grant used to exist only in the browser
+   * until a turn or action event, so a spend before then matched no row and
+   * was lost on reload (#63). Joining is the first moment the server knows
+   * which character a socket plays, so that is where they are written.
+   */
+  it("writes the character's missing pools when it joins", async () => {
+    harness = await setupGateway();
+    asMember(harness.db);
+    harness.db.seed(characters, [characterRow()]);
+    harness.db.seed(characterInventory, []);
+    harness.db.seed(characterResources, []);
+
+    await harness.emit(SOCKET_EVENTS.ROOM_JOIN, {
+      campaignId: "camp-1",
+      characterId: "char-1",
+    });
+
+    const [insert] = harness.db.opsFor(characterResources, "insert");
+    expect(insert?.values).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          id: "trait_second_wind",
+          characterId: "char-1",
+        }),
+      ]),
+    );
+    // a turn event arriving alongside the join computes the same pools
+    expect(insert?.onConflict).toBe("nothing");
+  });
+
+  it("writes nothing when the character already holds every pool", async () => {
+    harness = await setupGateway();
+    asMember(harness.db);
+    harness.db.seed(characters, [characterRow()]);
+    harness.db.seed(characterInventory, []);
+    harness.db.seed(characterResources, [
+      {
+        id: "trait_second_wind",
+        name: "Second Wind",
+        current: 1,
+        max: 1,
+        resetCondition: "short_rest",
+      },
+    ]);
+
+    await harness.emit(SOCKET_EVENTS.ROOM_JOIN, {
+      campaignId: "camp-1",
+      characterId: "char-1",
+    });
+
+    expect(harness.db.opsFor(characterResources, "insert")).toEqual([]);
+  });
+
   it("joins the room before resolving the character, not after", async () => {
     harness = await setupGateway();
     asMember(harness.db);
@@ -149,7 +204,8 @@ describe("socket gateway - ROOM_JOIN", () => {
     // ensureCharacterInSocketCampaign reads socket.data.campaignId, so the
     // join and context assignment have to have happened already.
     expect(harness.socket.join).toHaveBeenCalledWith("campaign_camp-1");
-    expect(harness.db.opsFor(characters, "select")).toHaveLength(1);
+    // once for the campaign check, once to materialise the character's pools
+    expect(harness.db.opsFor(characters, "select")).toHaveLength(2);
   });
 
   /**
@@ -238,5 +294,29 @@ describe("socket gateway - ROOM_JOIN", () => {
       userId: "user-1",
     });
     expect(second.data).toEqual({ campaignId: "camp-2", userId: "user-2" });
+  });
+});
+
+/**
+ * Express has always defaulted its CORS origin; the socket server did not, so
+ * a clone without CLIENT_URL served REST and refused every socket (#64).
+ */
+describe("socket gateway - CORS origin", () => {
+  let harness: GatewayHarness | undefined;
+
+  afterEach(() => {
+    harness?.restore();
+    vi.unstubAllEnvs();
+  });
+
+  it("falls back to the same origin Express uses when CLIENT_URL is unset", async () => {
+    vi.stubEnv("CLIENT_URL", "");
+    harness = await setupGateway();
+
+    expect(harness.serverOptions).toEqual(
+      expect.objectContaining({
+        cors: expect.objectContaining({ origin: "http://localhost:5173" }),
+      }),
+    );
   });
 });

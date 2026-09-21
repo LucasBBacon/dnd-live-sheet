@@ -14,6 +14,7 @@ import { buildLevelContext } from "../utils/resourceRules.js";
 // Classes, races, subclasses and traits all come from the loaded pack, which
 // is the only source of rules content.
 import {
+  resolveBackgroundDefinition,
   resolveClassDefinition,
   resolveRaceDefinition,
   resolveSubclassDefinition,
@@ -195,6 +196,20 @@ const raceTraitIds = (
   return ids;
 };
 
+/**
+ * The traits a preset background grants. An id the pack does not define
+ * grants nothing, exactly as an unknown race does - a rulebook gap, not a
+ * broken save.
+ */
+const backgroundTraitIds = (
+  backgroundId: string | undefined,
+  snapshot?: RuleSnapshotLookup,
+): string[] =>
+  backgroundId === undefined
+    ? []
+    : (resolveBackgroundDefinition(backgroundId, snapshot)?.backgroundTraitIds ??
+      []);
+
 const knownSpellIds = (
   classState: ClassState,
   traitIds: Iterable<string>,
@@ -259,6 +274,7 @@ export class CharacterBootstrapper {
   ): string[] {
     const ids = [
       ...raceTraitIds(save.race, snapshot),
+      ...backgroundTraitIds(save.backgroundId, snapshot),
       ...save.classes.flatMap((classState, index) =>
         classTraitIds(classState, index === 0, snapshot),
       ),

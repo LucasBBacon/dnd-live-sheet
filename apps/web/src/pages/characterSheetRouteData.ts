@@ -18,6 +18,8 @@ export type CharacterSheetPayload = {
   }>;
   raceId: string | null;
   subraceId: string | null;
+  // the route spreads the whole characters row, so this already arrives
+  backgroundId?: string | null;
   str: number;
   dex: number;
   con: number;
@@ -82,6 +84,7 @@ export const hydrateCharacterSheet = (
     ),
     raceId: character.raceId ?? null,
     subraceId: character.subraceId ?? null,
+    backgroundId: character.backgroundId ?? null,
     // API payload keeps the flat lowercase column names; the store is keyed by
     // the engine's uppercase Ability type, so translate at this boundary.
     baseScores: {

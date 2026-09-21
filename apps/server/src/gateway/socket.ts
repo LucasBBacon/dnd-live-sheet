@@ -60,6 +60,7 @@ import {
   buildInventoryLedger,
   flushInventoryLedger,
 } from "../services/inventoryLedgerService.js";
+import { clientOrigin } from "../utils/clientOrigin.js";
 
 const EQUIPMENT_SLOT_SET = new Set<string>(EQUIPMENT_SLOTS);
 
@@ -143,10 +144,11 @@ const pruneAuthoritativeRuntime = () => {
   }
 };
 
-const toCharacterSave = (
+export const toCharacterSave = (
   character: {
     raceId: string;
     subraceId: string | null;
+    backgroundId?: string | null;
     str: number;
     dex: number;
     con: number;
@@ -172,6 +174,7 @@ const toCharacterSave = (
     hasSubraces: character.subraceId !== null,
     subraceId: character.subraceId,
   },
+  ...(character.backgroundId ? { backgroundId: character.backgroundId } : {}),
   classes:
     classes.length > 0
       ? classes.map((entry) => ({
@@ -219,6 +222,7 @@ const getAuthoritativeRuntimeContext = async (
     .select({
       raceId: characters.raceId,
       subraceId: characters.subraceId,
+      backgroundId: characters.backgroundId,
       str: characters.str,
       dex: characters.dex,
       con: characters.con,
@@ -302,9 +306,12 @@ const getAuthoritativeRuntimeContext = async (
   );
 
   if (missingPools.length > 0) {
+    // A join and a turn event can materialise the same pools concurrently;
+    // the table's (character_id, id) key makes the second insert a no-op.
     await db
       .insert(characterResources)
-      .values(missingPools.map((pool) => ({ ...pool, characterId })));
+      .values(missingPools.map((pool) => ({ ...pool, characterId })))
+      .onConflictDoNothing();
   }
 
   /**
@@ -491,7 +498,7 @@ const resolveItemAction = async (
 
 export function initializeWebSocketGateway(httpServer: any) {
   const io = new Server(httpServer, {
-    cors: { origin: process.env.CLIENT_URL, methods: ["GET", "POST"] },
+    cors: { origin: clientOrigin(), methods: ["GET", "POST"] },
   });
 
   io.on("connection", (socket: Socket) => {
@@ -578,6 +585,12 @@ export function initializeWebSocketGateway(httpServer: any) {
             console.log(
               `Socket ${socket.id} synced inventory for ${characterId} in campaign_${scopedCampaignId}`,
             );
+
+            // Pools a character's traits grant exist only in the browser until
+            // something writes them, and RESOURCE_CONSUMED can only decrement
+            // a row that exists (#63). Turns and actions already materialise
+            // through this; the join now does too, so they cannot drift.
+            await getAuthoritativeRuntimeContext(characterId);
           } catch (error) {
             console.error("Failed to sync inventory on room join:", error);
             // The room join above stands: membership was verified, and only the
@@ -1433,9 +1446,9 @@ export function initializeWebSocketGateway(httpServer: any) {
             payload.characterId,
           );
 
-          await db.transaction(async (tx) => {
-            // decrement resource automatically, prevent neg values
-            await tx
+          // decrement resource automatically, prevent neg values
+          const consumed = await db.transaction(async (tx) =>
+            tx
               .update(characterResources)
               .set({
                 current: sql`GREATEST(${characterResources.current} - ${payload.amount}, 0)`,
@@ -1445,8 +1458,23 @@ export function initializeWebSocketGateway(httpServer: any) {
                   eq(characterResources.id, payload.resourceId),
                   eq(characterResources.characterId, payload.characterId),
                 ),
-              );
-          });
+              )
+              .returning({ id: characterResources.id }),
+          );
+
+          // An update that matched nothing still succeeds. Broadcasting it
+          // told the table about a spend the database never recorded (#63).
+          if (consumed.length === 0) {
+            console.warn(
+              `RESOURCE_CONSUMED matched no row: ${payload.characterId}/${payload.resourceId}`,
+            );
+            socket.emit("action_error", {
+              event: SOCKET_EVENTS.RESOURCE_CONSUMED,
+              error: "Unknown resource for this character.",
+              payload,
+            });
+            return;
+          }
 
           // broadcast to room
           socket

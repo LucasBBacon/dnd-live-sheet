@@ -1,7 +1,7 @@
 # TODO Backlog
 
-**Status as of 2026-09-21**, at `3315fd9` on `main`, after
-`feat/proficiency-family` merged. The workspace is green — **2052
+**Status as of 2026-09-21**, on `fix/tier1-reach-the-player`, after #64, #63
+and #68's fixed half closed. The workspace is green — **2068
 tests**, 0 failures, and typecheck clean per package (6f explains why "per
 package" matters). Nothing below is breaking a build; these are gaps, debt and
 content.
@@ -174,11 +174,12 @@ things the last three branches showed replace it:
 
 | Order | Item | Scale | Why here |
 | --- | --- | --- | --- |
-| 1 | 🟢 **#64** — give the socket gateway's CORS origin a fallback | minutes | Still open in code. `360c239` documented `CLIENT_URL` in the README but `socket.ts:494` still has no default while `index.ts:20` does. Same one-line fallback, or fail loudly at startup; either way, one test in the existing gateway harness. |
-| 2 | 🟢 **#63** — materialise resource pools on `ROOM_JOIN` | small | Re-verified 2026-09-21: `ROOM_JOIN` (`socket.ts:503`) still never calls `getAuthoritativeRuntimeContext`. Every caster's slots are invisible until they press "Begin turn". The gateway harness and `renderSql` make this a characterisation-test flip. |
-| 3 | **#68 (fixed half)** — backgrounds reach the live sheet | small–medium | Cheaper than recorded: `characters.background_id` already exists and the wizard already selects a background (`wizardStore`, `compileCharacter`). What is missing is only `background` on `CharacterSaveSchema` and one more source in `CharacterBootstrapper.resolveGrantedTraitIds`. No migration. Unlocks the four backgrounds' fixed grants. |
+| 1 | ✅ **#64** — give the socket gateway's CORS origin a fallback | minutes | **Closed 2026-09-21** on `fix/tier1-reach-the-player`: `clientOrigin()` (`apps/server/src/utils/clientOrigin.ts`) is now the one place the default lives; `index.ts` and `socket.ts` both call it. See 9b. |
+| 2 | ✅ **#63** — a character's pools persist and reach the sheet | small | **Closed 2026-09-21** on `fix/tier1-reach-the-player`. Two causes, both fixed, not the recorded "invisible until Begin turn" symptom, which never reproduced: `ROOM_JOIN` now materialises pools through `getAuthoritativeRuntimeContext` and a spend matching no row is refused as an `action_error` instead of silently broadcast; separately, `GET /api/character/:id` now carries the character's persisted `character_resources` rows, so a reload after a spend shows the spent count instead of a rematerialised full pool. See 9a for the reproduction and the corrected diagnosis. |
+| 3 | ✅ **#68 (fixed half)** — backgrounds reach the live sheet | small–medium | **Closed 2026-09-21** on `fix/tier1-reach-the-player`: `CharacterSaveSchema` gained `backgroundId`, the bootstrapper resolves a background's granted traits, and the server and web store thread it through. A preset background's fixed skill and tool grants (Criminal's Deception, Stealth and thieves' tools, and the like) now reach the live sheet. The choice half is unchanged — see item 5 below and 10d. |
 | 4 | **#69** — record which node a trait choice answered | medium, needs a decision | Newly numbered (it sat unnumbered since 2026-09-02). Must land **before the fighter or ranger pass**, and before #68's choice half, because the proficiency-choice step will write more `player_choice` rows through the same lossy path. Recommend the honest fix: persist `node_id` on `character_traits` (one migration). |
 | 5 | **#68 (choice half)** — a proficiency-choice step in character creation | medium, UI | `ProficiencyExtractor.listPendingChoices` has no caller outside tests. 21 authored choice blocks wait on this. Brainstorm the wizard step first; it is the first new UI surface since the barbarian's table notes. |
+| 5a | **#71** — the sheet ignores a refused resource spend | small–medium | Found by the final review of `fix/tier1-reach-the-player`, 2026-09-21. `RESOURCE_CONSUMED`'s refusal (item 2's fix) is not in `SHEET_ERROR_EVENTS`, so `consumeResource`'s optimistic decrement never rolls back. Same family as item 2: a spend the server refused should not be the spend the player sees. See P11's 11d. |
 
 ### Tier 2 — the burndown, one system per pass
 
@@ -186,6 +187,7 @@ things the last three branches showed replace it:
 | --- | --- | --- | --- |
 | 6 | **Rogue pass**, with **#66**'s expertise concept | 26 stubs | Smallest remaining row that needs a new *system* rather than just data: Sneak Attack (#62) and Expertise (#66). Settling expertise here also unblocks the bard's copy of it. Follow the barbarian template (design spec → slices → sheet surface). |
 | 7 | **#31a** — spell *data*: real `level`, `school` and class spell lists | 111 spells | Slots exist since `feat/spellcasting-slots`, but every spell is level 0 evocation, so a wizard has slots and nothing meaningful to cast. The data pass is mechanical (PHB values) and adds spell lists as a pack concept, which also unblocks **#67**. Rules (#31b) stay a later, per-spell job. |
+| 7a | **#70** — author the four missing backgrounds | 4 backgrounds | Same shape as #31a: content authoring, not a new system. Three sample characters (Nyx Vale, Master Ko Shen, Kaelen Duskwarden) already reference `background_charlatan`, `background_folk_hero` and `background_outlander`, which the seeder creates but the pack does not author; `background_sage` is a fourth the seeder creates that no sample character uses. See P11's 11c. |
 | 8 | **Next class passes**, each named by its system | see table below | Monk (ki, #62), sorcerer (sorcery points, #62), cleric/paladin (channel divinity, divine smite, #62), druid (wild shape, #62), fighter (after #69; Battle Master is #69's worst case, so the pass verifies it). Pick by who is playing what. |
 | 9 | **#36** — `SUMMON_ACTOR_DICTIONARY` into the pack | — | The last rules content outside the pack. Unchanged; still two live readers. Best done alongside the wizard or druid pass, whose summons are its only consumers. |
 | — | **#30** — the count itself | **362** | Not an item to "do"; it falls as 6–9 land. Consider #62's option 2 (track blocked-on-a-system stubs separately) the next time it is re-counted. |
@@ -199,6 +201,7 @@ things the last three branches showed replace it:
 | 12 | ✅ **Repo hygiene** — branches and worktrees (P11) | **Done 2026-09-21** — see 11b. |
 | 13 | **#53** — a unit test for the line-ending check | Needs a root vitest project or a move into a package. |
 | 14 | **#52** — 71 LF files against a CRLF tree | One normalising commit, no content change. Do it on a quiet day, not mid-branch. |
+| 14a | **#72** — verify whether any gameplay path needs the authoritative runtime's missing rule snapshot | Pre-existing, found by the final review of `fix/tier1-reach-the-player`, 2026-09-21. `getAuthoritativeRuntimeContext` hydrates with no snapshot in either branch, so trait-granted states and grant-derived resources never reach it. Verify-first: check whether anything reachable depends on those states before scoping a fix. See P11's 11d. |
 
 ### Tier 4 — design passes
 
@@ -1649,6 +1652,39 @@ the branch.
 | --- | --- | --- |
 | 63 | `character_resources` rows are materialised only inside `getAuthoritativeRuntimeContext`, which `ROOM_JOIN` never calls | Verified 2026-09-20 against a real server and database. |
 
+**Re-diagnosed and closed 2026-09-21** on `fix/tier1-reach-the-player`. The
+symptom recorded below — an empty Features widget until the first turn event
+— does not reproduce: `characterSheetStore.initialize` runs
+`materialiseMissingPools` client-side, so a caster's slots appear on first
+load even with no `spell_slots_*` rows in the database. Reproduced instead,
+with the same character (Thistle Quickfoot, wizard 14, `00000000-0000-0000-0000-000000000117`):
+
+| Step | Sheet | `character_resources` |
+| --- | --- | --- |
+| First load | 1st-level slots 4/4 | no `spell_slots_*` rows |
+| "Use" a 1st-level slot | 3/4 | still no rows |
+| Reload | **4/4** | still no rows |
+| Control: "Begin turn", then "Use" | 3/4 | `spell_slots_1 = 3/4` |
+
+The rows were created only inside `getAuthoritativeRuntimeContext`, which
+`ROOM_JOIN` never called; until a turn or action event, a pool existed only in
+the browser, and `RESOURCE_CONSUMED`'s update matched zero rows, succeeded
+silently, and broadcast the spend to the room anyway. Fixed by three changes:
+`ROOM_JOIN` now materialises pools through the same
+`getAuthoritativeRuntimeContext` path a turn or action event uses (commit
+`a9795ed`); a spend matching no row is refused with an `action_error` to the
+sender instead of silently broadcast (commit `0c2fea4`); and the insert
+tolerates a concurrent materialisation with `.onConflictDoNothing()`.
+
+A second, pre-existing cause turned up in the hand check after those three
+landed: with the spend now persisted, a reload still showed the pool back at
+full. `GET /api/character/:id` (`fetchCharacterPayload`) never read
+`character_resources`, so the web store hydrated `resources: []` and
+rematerialised every pool at its maximum regardless of what had been spent.
+Fixed as Task 5b (commit `8d9e642`): the payload now carries the character's
+persisted resource rows (`id`, `name`, `current`), and the store hydrates from
+them before materialising anything the payload lacks.
+
 `collectGrantedResources`'s pools — spell slots, hit dice, Rage, Ki, anything a
 character's traits grant — reach `character_resources` only through
 `getAuthoritativeRuntimeContext` in
@@ -1703,6 +1739,13 @@ immediately.
 The obvious fix for whoever picks this up: give the gateway the same fallback
 `index.ts` already has, or fail loudly at startup when `CLIENT_URL` is unset
 rather than silently refusing every socket connection.
+
+**Closed 2026-09-21** on `fix/tier1-reach-the-player` (commit `c78440e`): a new
+`clientOrigin()` in `apps/server/src/utils/clientOrigin.ts` reads
+`CLIENT_URL` and falls back to `http://localhost:5173`, read at call time
+rather than module load so tests can vary the environment. `index.ts` and
+`socket.ts:501` both call it, so the literal default now exists in one place
+instead of two that could disagree again.
 
 ### 9c. #65 — six small items the branch's own reviews deferred as fix-later
 
@@ -1862,6 +1905,14 @@ character creation) and a schema change (a `background` field on
 was never in its scope. Whoever picks up character-creation UI or the
 background gap should start here rather than rediscovering it.
 
+**Fixed half closed 2026-09-21** on `fix/tier1-reach-the-player`: a
+background's *fixed* grants now reach the live sheet, the way described in
+Tier 1 item 3's design (`CharacterSaveSchema.backgroundId`,
+`RuleSnapshotLookup.resolveBackgroundDefinition`, and the server and web store
+threading the id through). The choice half above — 21 authored choice blocks
+with no wizard step to offer them — is unchanged and stays open as Tier 1 item
+5.
+
 ---
 
 ## P11 — Sequencing pass (opened 2026-09-21)
@@ -1919,3 +1970,62 @@ its fix targets code that no longer exists (the current test is green). It
 survives on `origin/lucasbbacon-split-memory-remediation`. The two local
 branches that backed the worktrees are deleted too; both still exist on
 `origin`.
+
+### 11c. #70 — the sample seeder's background rows are inert, and it authors backgrounds the pack does not
+
+| # | Item | Notes |
+| --- | --- | --- |
+| 70 | The sample seeder writes background `character_traits` rows nothing reads, and creates four `backgrounds` rows the pack does not author | Found in Tier 1's #68 hand check, 2026-09-21, recorded rather than fixed — out of scope for `fix/tier1-reach-the-player`. |
+
+Two separate findings from the same file,
+[seedSampleCharacters.ts](packages/database/src/seedSampleCharacters.ts):
+
+- **The background `character_traits` rows are inert.** Every sample
+  character's seed data includes rows such as `{ traitId:
+  "trait_criminal_prof_skills", source: "background_criminal" }` inserted
+  straight into `character_traits`. Nothing reads them for proficiencies —
+  #68's fixed half derives a character's background grants from
+  `characters.background_id` through `CharacterBootstrapper`, not from stored
+  `character_traits` rows — and character creation never writes them either.
+  Deriving from `background_id` is the one real path; these rows do nothing.
+- **Four backgrounds the pack does not author.** The seeder inserts its own
+  `backgrounds` rows (`SAMPLE_BACKGROUNDS`) for `background_sage`,
+  `background_folk_hero`, `background_outlander` and `background_charlatan`.
+  `core_2014_pack`'s `backgrounds/core.json` authors only acolyte, criminal,
+  noble and soldier. Three sample characters — Nyx Vale (charlatan), Master Ko
+  Shen (folk hero) and Kaelen Duskwarden (outlander) — reference a background
+  the pack has no `backgroundTraitIds` for, so `resolveBackgroundDefinition`
+  finds nothing to grant and they correctly receive nothing from their
+  background, the same as an unknown id. `background_sage` is a fourth row the
+  seeder creates that no sample character uses at all. Four backgrounds to
+  author, for the backlog — tracked as Tier 2 item 7a.
+
+### 11d. #71 and #72 — found by the final review of `fix/tier1-reach-the-player`
+
+| # | Item | Notes |
+| --- | --- | --- |
+| 71 | The sheet ignores a refused resource spend | Found by the final review of `fix/tier1-reach-the-player`, 2026-09-21. See below. |
+| 72 | The server's authoritative runtime is hydrated without the rule snapshot | Pre-existing, noticed by the same review. See below. |
+
+- **#71 — the sheet ignores a refused resource spend.** Since this branch,
+  `RESOURCE_CONSUMED` answers a spend that matched no `character_resources`
+  row with `action_error` ("Unknown resource for this character.") and does
+  not broadcast. But `SHEET_ERROR_EVENTS`
+  (`apps/web/src/components/sheet/sheetErrorEvents.ts`) does not list
+  `RESOURCE_CONSUMED`, so the sheet drops the error, and `consumeResource` in
+  `apps/web/src/store/characterSheetStore.ts` never rolls back its optimistic
+  decrement: the spender sees the spend until reload. Reachable now by a
+  click during page load before the join's insert lands, or by client/server
+  grant drift. Needs a rollback plus a notice; the inventory-scoped banner
+  that `SHEET_ERROR_EVENTS` feeds is the wrong surface (compare S5). The
+  server now logs the refusal (#63's follow-up fix).
+- **#72 — the server's authoritative runtime is hydrated without the rule
+  snapshot.** Pre-existing, noticed by the same review.
+  `getAuthoritativeRuntimeContext` in `apps/server/src/gateway/socket.ts`
+  calls `CharacterBootstrapper.hydrateRuntimeManagers(save, effectManager,
+  resourceManager)` with no snapshot, in both its cached and fresh branches,
+  so `compileActiveTraits` resolves no traits there and the cached runtime
+  gets no trait-granted states or grant-derived resources; only
+  `hydrateFromPersisted` supplies resources. `ROOM_JOIN` now reaches this
+  path too. Needs checking whether any gameplay path depends on those states
+  before deciding the fix.

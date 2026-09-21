@@ -1662,4 +1662,16 @@ describe("useCharacterSheetStore proficiency grants", () => {
       expect.arrayContaining(["STR", "CON"]),
     );
   });
+
+  it("includes the fixed grants of the character's background", () => {
+    useCharacterSheetStore.setState({ backgroundId: "background_criminal" });
+
+    const skills = useCharacterSheetStore
+      .getState()
+      .getProficiencyGrants()
+      .filter((grant) => grant.category === "skills")
+      .map((grant) => grant.proficiencyId);
+
+    expect(skills).toEqual(expect.arrayContaining(["deception", "stealth"]));
+  });
 });

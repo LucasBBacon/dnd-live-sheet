@@ -11,13 +11,14 @@ import { MockAuthProvider } from "./core/auth/MockAuthProvider.js";
 import { globalErrorHandler } from "./middleware/errorHandler.js";
 import { initializeWebSocketGateway } from "./gateway/socket.js";
 import { initialiseReferenceProvider } from "./services/referenceProvider/index.js";
+import { clientOrigin } from "./utils/clientOrigin.js";
 
 const app = express();
 const server = http.createServer(app); // wrap express in standard http server
 
 // security and parsing middleware
 app.use(helmet());
-app.use(cors({ origin: process.env.CLIENT_URL || "http://localhost:5173" }));
+app.use(cors({ origin: clientOrigin() }));
 app.use(express.json());
 
 // mock auth

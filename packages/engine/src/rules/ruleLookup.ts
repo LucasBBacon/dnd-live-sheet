@@ -1,4 +1,5 @@
 import type {
+  BackgroundDefinition,
   ClassDefinition,
   CoreRulePackSnapshot,
   EquipmentDefinition,
@@ -30,6 +31,7 @@ type RuleSnapshotLookup = {
   subclassesById?:
     | Record<string, CoreRulePackSnapshot["subclassesById"][string]>
     | undefined;
+  backgroundsById?: Record<string, BackgroundDefinition> | undefined;
 };
 
 export type { RuleSnapshotLookup };
@@ -107,6 +109,11 @@ export const resolveRaceDefinition = (
   raceId: string,
   snapshot?: RuleSnapshotLookup,
 ): RaceDefinition | undefined => snapshot?.racesById?.[raceId];
+
+export const resolveBackgroundDefinition = (
+  backgroundId: string,
+  snapshot?: RuleSnapshotLookup,
+): BackgroundDefinition | undefined => snapshot?.backgroundsById?.[backgroundId];
 
 /**
  * A class blueprint, from the pack.

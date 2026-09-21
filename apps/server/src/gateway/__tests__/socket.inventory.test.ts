@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { SOCKET_EVENTS } from "@project/shared";
 import {
   characterClasses,
@@ -310,6 +310,7 @@ describe("socket gateway - RESOURCE_CONSUMED", () => {
     harness = await setupGateway();
     await joinCampaign(harness);
     harness.db.seed(characters, [characterRow()]);
+    harness.db.seed(characterResources, [{ id: "res-1" }]);
   };
 
   it("clamps at zero in SQL rather than trusting the client", async () => {
@@ -367,6 +368,34 @@ describe("socket gateway - RESOURCE_CONSUMED", () => {
         },
       },
     ]);
+  });
+
+  /**
+   * Before the join materialised pools, a spend on a pool that existed only
+   * in the browser matched no row, succeeded silently, and was broadcast to
+   * the table as if it had happened (#63). Nothing was written, so the spend
+   * came back on reload.
+   */
+  it("reports an error and does not broadcast when no row matched", async () => {
+    await ready();
+    harness.db.seed(characterResources, []);
+    const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+
+    await harness.emit(SOCKET_EVENTS.RESOURCE_CONSUMED, payload);
+
+    expect(harness.roomEmits).toEqual([]);
+    expect(harness.senderEmits).toEqual([
+      {
+        event: "action_error",
+        payload: {
+          event: SOCKET_EVENTS.RESOURCE_CONSUMED,
+          error: "Unknown resource for this character.",
+          payload,
+        },
+      },
+    ]);
+    expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining("res-1"));
+    warnSpy.mockRestore();
   });
 });
 

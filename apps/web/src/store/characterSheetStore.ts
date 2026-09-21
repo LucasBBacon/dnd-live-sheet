@@ -179,6 +179,7 @@ const toCharacterSave = (state: CharacterSheetState): CharacterSave => ({
     hasSubraces: state.subraceId !== null,
     subraceId: state.subraceId,
   },
+  ...(state.backgroundId ? { backgroundId: state.backgroundId } : {}),
   classes:
     Object.entries(state.classLevels).length > 0
       ? Object.entries(state.classLevels).map(([classId, level]) => ({
@@ -384,7 +385,7 @@ const composeActiveStates = (
   return Array.from(new Set([...gatingStates, ...active]));
 };
 
-const getConditionSuppressions = (state: Pick<CharacterSheetState, "ruleSnapshot" | "classLevels" | "subclassIds" | "baseScores" | "raceId" | "subraceId" | "currentHp" | "baseHpRolled" | "traitGrants" | "activeConditions">): Array<{ condition: string; requiredStates: string[]; forbiddenStates: string[]; source?: string }> => {
+const getConditionSuppressions = (state: Pick<CharacterSheetState, "ruleSnapshot" | "classLevels" | "subclassIds" | "baseScores" | "raceId" | "subraceId" | "backgroundId" | "currentHp" | "baseHpRolled" | "traitGrants" | "activeConditions">): Array<{ condition: string; requiredStates: string[]; forbiddenStates: string[]; source?: string }> => {
   if (!state.ruleSnapshot) return [];
   return CharacterBootstrapper.compileActiveTraits(
     toCharacterSave(state as CharacterSheetState),
@@ -688,6 +689,8 @@ export interface CharacterSheetState {
   subclassIds: Record<string, string | null>;
   raceId: string | null;
   subraceId: string | null;
+  /** The preset background, by id; null for none or a custom background. */
+  backgroundId: string | null;
 
   currentHp: number;
   maxHp: number;
@@ -834,6 +837,7 @@ export const useCharacterSheetStore = create<CharacterSheetState>(
     subclassIds: {},
     raceId: null,
     subraceId: null,
+    backgroundId: null,
     currentHp: 10,
     maxHp: 10,
     baseHpRolled: 1,

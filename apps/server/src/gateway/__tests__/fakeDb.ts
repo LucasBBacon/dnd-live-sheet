@@ -26,8 +26,12 @@ export type DbOperation = {
   set: Row | null;
   /** The values handed to `.values(...)`. */
   values: unknown;
+  /** "nothing" once `.onConflictDoNothing()` was chained, otherwise null. */
+  onConflict: "nothing" | null;
   /** The predicate handed to `.where(...)`, unrendered. Use `renderSql`. */
   where: unknown;
+  /** The arguments handed to `.orderBy(...)`, unrendered. Use `renderSql`. */
+  orderBy: unknown[];
   /** True when the statement was issued against a transaction handle. */
   inTransaction: boolean;
   /** True once the statement has actually been awaited. */
@@ -209,7 +213,9 @@ export class FakeDb {
       joins: [],
       set: null,
       values: undefined,
+      onConflict: null,
       where: undefined,
+      orderBy: [],
       inTransaction,
       executed: false,
     };
@@ -226,10 +232,14 @@ export class FakeDb {
           if (joined !== null) op.joins.push(joined);
         } else if (name === "where") {
           op.where = args[0];
+        } else if (name === "orderBy") {
+          op.orderBy = args;
         } else if (name === "set") {
           op.set = (args[0] ?? null) as Row | null;
         } else if (name === "values") {
           op.values = args[0];
+        } else if (name === "onConflictDoNothing") {
+          op.onConflict = "nothing";
         }
         return builder;
       };
