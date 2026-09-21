@@ -8,13 +8,14 @@ import { ChoicesStepContainer } from "../ChoicesStepContainer";
 
 const mocks = vi.hoisted(() => ({
   queryData: { current: null as { snapshot: unknown } | null },
+  queryError: { current: false },
 }));
 
 vi.mock("@tanstack/react-query", () => ({
   useQuery: () => ({
     data: mocks.queryData.current,
-    isLoading: mocks.queryData.current === null,
-    isError: false,
+    isLoading: mocks.queryData.current === null && !mocks.queryError.current,
+    isError: mocks.queryError.current,
   }),
 }));
 
@@ -33,7 +34,7 @@ vi.mock("@project/engine", async (importOriginal) => {
 
 // packRuleSnapshot() reads the real shipped pack, exactly what the
 // production endpoint this step queries would serve.
-mocks.queryData.current = { snapshot: packRuleSnapshot() };
+const loadedSnapshot = { snapshot: packRuleSnapshot() };
 
 const renderContainer = async () => {
   const container = document.createElement("div");
@@ -88,6 +89,8 @@ describe("ChoicesStepContainer", () => {
   beforeEach(() => {
     setHumanFighterState();
     vi.mocked(listChoiceQuestions).mockClear();
+    mocks.queryData.current = loadedSnapshot;
+    mocks.queryError.current = false;
   });
 
   it("is inert while not the active step", async () => {
@@ -176,5 +179,53 @@ describe("ChoicesStepContainer", () => {
     expect(vi.mocked(listChoiceQuestions).mock.calls.length).toBe(
       callsAfterMount,
     );
+  });
+
+  it("shows a loading state with Next disabled, and prunes nothing, until the snapshot arrives", async () => {
+    mocks.queryData.current = null;
+    useWizardStore.setState({
+      choiceAnswers: {
+        human_language_choice: { target: "trait", selected: ["dwarvish"] },
+      },
+    });
+
+    const container = await renderContainer();
+
+    expect(container.textContent).toContain("Loading");
+    expect(container.textContent).not.toContain("Nothing to choose");
+    expect(findButtonByText(container, "Awaiting Required Answers")?.disabled).toBe(true);
+    expect(useWizardStore.getState().choiceAnswers.human_language_choice).toBeDefined();
+  });
+
+  it("shows an error with Next disabled when the snapshot cannot be fetched", async () => {
+    mocks.queryData.current = null;
+    mocks.queryError.current = true;
+
+    const container = await renderContainer();
+
+    expect(container.textContent).toContain("could not be loaded");
+    expect(container.textContent).not.toContain("Nothing to choose");
+    expect(findButtonByText(container, "Awaiting Required Answers")?.disabled).toBe(true);
+  });
+
+  it("drops a stored pick that the background now grants, so the question reads unanswered", async () => {
+    // Insight answered for the fighter's skills, then the acolyte
+    // background (which grants Insight) chosen after it
+    useWizardStore.setState({
+      backgroundType: "PRESET",
+      backgroundId: "background_acolyte",
+      choiceAnswers: {
+        fighter_starting_skills: {
+          target: "trait",
+          selected: ["insight", "athletics"],
+        },
+      },
+    });
+
+    await renderContainer();
+
+    expect(
+      useWizardStore.getState().choiceAnswers.fighter_starting_skills?.selected,
+    ).toEqual(["athletics"]);
   });
 });

@@ -139,6 +139,24 @@ describe("API Client", () => {
       await expect(apiClient("/error")).rejects.toThrow("Server error");
     });
 
+    it("should name each issue a rejected request lists", async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: false,
+        status: 400,
+        json: async () => ({
+          error: "Invalid character choices.",
+          issues: [
+            "Human: nothing selected for human_language_choice",
+            "Fighter: nothing selected for fighter_starting_skills",
+          ],
+        }),
+      });
+
+      await expect(apiClient("/character")).rejects.toThrow(
+        "Invalid character choices. Human: nothing selected for human_language_choice; Fighter: nothing selected for fighter_starting_skills",
+      );
+    });
+
     it("should use status code fallback if no error message", async () => {
       mockFetch.mockResolvedValueOnce({
         ok: false,

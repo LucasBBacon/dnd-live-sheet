@@ -110,7 +110,20 @@ export const apiClient = async (
 
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({}));
-    throw new Error(errorData.error || `HTTP error! stats ${response.status}`);
+    const message = errorData.error || `HTTP error! stats ${response.status}`;
+    // a 400 that lists what failed (e.g. "Invalid character choices." with
+    // the unanswered questions) names each one, not just the headline
+    const issues: string[] = Array.isArray(errorData.issues)
+      ? errorData.issues.map((issue: unknown) =>
+          typeof issue === "string"
+            ? issue
+            : ((issue as { message?: string } | null)?.message ??
+              JSON.stringify(issue)),
+        )
+      : [];
+    throw new Error(
+      issues.length > 0 ? `${message} ${issues.join("; ")}` : message,
+    );
   }
 
   return response.json();

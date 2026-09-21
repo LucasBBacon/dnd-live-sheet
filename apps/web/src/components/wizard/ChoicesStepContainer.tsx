@@ -40,7 +40,7 @@ export const ChoicesStepContainer = () => {
   );
   const choiceAnswers = draftInputs.choiceAnswers;
 
-  const { data } = useQuery({
+  const { data, isError } = useQuery({
     queryKey: ["reference", "rules-snapshot-full", campaignId],
     queryFn: () => fetchFullRulesSnapshot({ campaignId }),
     staleTime: 1000 * 60 * 30, // reference data changes rarely
@@ -64,12 +64,12 @@ export const ChoicesStepContainer = () => {
   );
 
   useEffect(() => {
-    // do not prune while hidden: `questions` collapses to `[]` above whenever
-    // this step is inactive, and pruning against that would wipe every
-    // stored answer the moment the wizard leaves step 6.
-    if (!isActiveStep) return;
-    pruneChoiceAnswers(questions.map((question) => question.id));
-  }, [isActiveStep, questions, pruneChoiceAnswers]);
+    // do not prune while hidden, or before the snapshot has loaded:
+    // `questions` collapses to `[]` above in both cases, and pruning
+    // against that would wipe every stored answer
+    if (!isActiveStep || !data) return;
+    pruneChoiceAnswers(questions);
+  }, [isActiveStep, data, questions, pruneChoiceAnswers]);
 
   // Hooks above must still run on every render regardless of step (that is
   // what isActiveStep guards inside them are for) - this only skips
@@ -83,9 +83,34 @@ export const ChoicesStepContainer = () => {
     ]),
   );
 
-  const allAnswered = questions.every((question) =>
-    isQuestionAnswered(question, choiceAnswers[question.id]?.selected),
-  );
+  // until the snapshot is in hand there is no question list to judge, so
+  // Next stays disabled rather than reading an empty list as "all answered"
+  const allAnswered =
+    Boolean(data) &&
+    questions.every((question) =>
+      isQuestionAnswered(question, choiceAnswers[question.id]?.selected),
+    );
+
+  const body = () => {
+    if (!data) {
+      return isError ? (
+        <p>This step's choices could not be loaded. Go back and try again.</p>
+      ) : (
+        <p>Loading choices...</p>
+      );
+    }
+    if (questions.length === 0) return <p>Nothing to choose</p>;
+    return (
+      <ChoiceQuestionList
+        questions={questions}
+        answers={answers}
+        onChange={(questionId, selected) => {
+          const question = questions.find((q) => q.id === questionId);
+          if (question) setChoiceAnswer(question, selected);
+        }}
+      />
+    );
+  };
 
   return (
     <div
@@ -99,18 +124,7 @@ export const ChoicesStepContainer = () => {
       <h2>Choices</h2>
 
       <div style={{ flexGrow: 1, overflowY: "auto", paddingBottom: "1rem" }}>
-        {questions.length === 0 ? (
-          <p>Nothing to choose</p>
-        ) : (
-          <ChoiceQuestionList
-            questions={questions}
-            answers={answers}
-            onChange={(questionId, selected) => {
-              const question = questions.find((q) => q.id === questionId);
-              if (question) setChoiceAnswer(question, selected);
-            }}
-          />
-        )}
+        {body()}
       </div>
 
       {/* Navigation Boundaries */}

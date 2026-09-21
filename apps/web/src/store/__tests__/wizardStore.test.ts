@@ -569,7 +569,7 @@ describe("Wizard Store State Management", () => {
         },
       });
 
-      useWizardStore.getState().pruneChoiceAnswers(["keep_me"]);
+      useWizardStore.getState().pruneChoiceAnswers([{ id: "keep_me", held: [] }]);
 
       expect(useWizardStore.getState().choiceAnswers).toEqual({
         keep_me: { target: "trait", selected: ["a"] },
@@ -582,9 +582,28 @@ describe("Wizard Store State Management", () => {
       });
       const before = useWizardStore.getState().choiceAnswers;
 
-      useWizardStore.getState().pruneChoiceAnswers(["keep_me"]);
+      useWizardStore.getState().pruneChoiceAnswers([{ id: "keep_me", held: [] }]);
 
       expect(useWizardStore.getState().choiceAnswers).toBe(before);
+    });
+
+    it("drops a picked option that has since become held, leaving the rest", () => {
+      useWizardStore.setState({
+        choiceAnswers: {
+          fighter_starting_skills: {
+            target: "trait",
+            selected: ["insight", "athletics"],
+          },
+        },
+      });
+
+      useWizardStore
+        .getState()
+        .pruneChoiceAnswers([{ id: "fighter_starting_skills", held: ["insight"] }]);
+
+      expect(useWizardStore.getState().choiceAnswers).toEqual({
+        fighter_starting_skills: { target: "trait", selected: ["athletics"] },
+      });
     });
   });
 });
