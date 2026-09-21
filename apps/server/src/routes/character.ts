@@ -119,7 +119,8 @@ const fetchCharacterPayload = async (userId: string, characterId: string) => {
       current: characterResources.current,
     })
     .from(characterResources)
-    .where(eq(characterResources.characterId, characterId));
+    .where(eq(characterResources.characterId, characterId))
+    .orderBy(characterResources.id);
 
   return {
     ...character,

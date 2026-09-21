@@ -62,4 +62,19 @@ describe("GET /api/character/:characterId", () => {
       '"character_resources"."character_id"',
     );
   });
+
+  it("orders the resources select by id, so an updated row does not jump the list", async () => {
+    const db = seededDb();
+    const app = await setupApp(db);
+
+    await request(app).get("/api/character/char-1");
+
+    const [read] = db.opsFor(characterResources, "select");
+    const orderBy = read?.orderBy ?? [];
+    expect(
+      orderBy.some((clause) =>
+        renderSql(clause).sql.includes('"character_resources"."id"'),
+      ),
+    ).toBe(true);
+  });
 });
