@@ -120,7 +120,17 @@ progression and traits ask for — fighting styles, maneuvers, class, background
 and race skill and tool picks, languages, the half-elf's ASI, subclass bonus
 picks. A test asserts that each sample's save yields **zero**
 `collectSaveIssues`, `missing_selection` included, so the fixture cannot drift
-out of step with the pack.
+out of step with the pack — with one exception: `missing_selection` on a
+`spell_choice` node. Every caster has those (cantrips, spells known, the
+wizard's spellbook), and they list no options because spell lists do not exist
+in the pack yet (#31, #67), so there is nothing valid to seed. The test names
+the exception rather than filtering all `missing_selection`.
+
+Measured 2026-09-21 by building each sample's save against the shipped pack:
+the ten samples have 94 unanswered questions, 49 of them `spell_choice` nodes
+and 45 answerable ones — fighting styles, maneuvers, invocations, a pact boon,
+metamagic, a draconic ancestor, hunter and circle picks, and every class,
+background and race skill, tool, language and ASI block.
 
 ### 6. Testing
 
@@ -131,20 +141,30 @@ out of step with the pack.
   are rejected with 400; omitted choices store `{}`.
 - Level-up: node-keyed picks and trait selections merge into existing choices;
   no `player_choice` row is written; an invalid pick is rejected.
-- Web: a store holding a half-elf's ASI choice reports the +1s, and a class
-  skill choice reports the chosen proficiencies.
+- Engine: a stored half-elf ASI choice produces +1 modifiers on the two
+  chosen abilities (through `ModifierExtractor` with the save's selections).
+- Web: a store holding skill choices reports the chosen proficiencies, and
+  `hydrateCharacterSheet` maps `choices` (and a corrupt value to empty).
 - Seeder: the zero-issues invariant over all ten samples.
 
 ### Hand check
 
 After the migration is applied to the dev database and the samples re-seeded:
-Lyra Silverstring (half-elf, Lore bard / rogue) shows her chosen +1/+1 in two
-abilities and her chosen skills as proficient; Dame Sable Orrin (fighter)
-shows her fighting style's effect on the sheet.
+every sample's `characters.choices` holds its picks, and Lyra Silverstring
+(half-elf, Lore bard / rogue) shows her chosen skills — Skill Versatility,
+bard and Lore bonus picks — as proficient on the sheet.
+
+Her +1/+1 is **not** a hand check for this branch. Found while planning: the
+web sheet applies no trait modifiers at all — `activeModifiers` is set only by
+the dev-only `TraitWidget`, and `useAbilities` adds equipment modifiers alone
+— so no racial ability bonus, fixed or chosen, reaches a live sheet, while the
+server's `buildLiveSheet` does apply them. Recorded as #73, the next branch
+after this one.
 
 ## Out of scope
 
 - Any wizard UI for making choices — Branch B.
+- #73, the web sheet applying trait modifiers (racial ASIs included).
 - #71 (the sheet ignores a refused resource spend).
 - Feat traits written as `feat_selection` rows, a separate path.
 - Removing the seeder's inert `character_traits` rows for class and background
