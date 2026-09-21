@@ -133,7 +133,7 @@
                         "value": 13,
                         "scalingFactor": "none",
                         "requiredStates": [],
-                        "forbiddenStates": []
+                        "forbiddenStates": ["status_wearing_armor"]
                     }
                 ],
                 "choices": []

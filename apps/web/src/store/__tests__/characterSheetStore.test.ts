@@ -1830,4 +1830,38 @@ describe("getSheetModifiers", () => {
       ).total,
     ).toBe(18); // plate, not 10 + DEX + CON
   });
+
+  it("does not give a draconic sorcerer in armour Draconic Resilience's AC", () => {
+    init({
+      classLevels: { class_sorcerer: 1 },
+      subclassIds: { class_sorcerer: "subclass_sorcerer_draconic" },
+      raceId: "race_human",
+      choices: {
+        classSelections: {
+          class_sorcerer: {
+            sorcerer_draconic_level_1_ancestor: ["trait_dragon_ancestor_red"],
+          },
+        },
+        traitSelections: {},
+      },
+      inventory: [
+        {
+          id: "inv-leather",
+          itemId: "item_armor_studded_leather",
+          quantity: 1,
+          slot: "body",
+          isAttuned: false,
+        } as InventoryInstance,
+      ],
+    });
+    const state = useCharacterSheetStore.getState();
+
+    expect(
+      DerivedStatEngine.calculateAC(
+        { STR: 0, DEX: 2, CON: 0, INT: 0, WIS: 0, CHA: 0 },
+        state.getSheetModifiers(),
+        state.getSheetStates(),
+      ).total,
+    ).toBe(14); // studded leather 12 + DEX 2, not 13 + DEX 2
+  });
 });
