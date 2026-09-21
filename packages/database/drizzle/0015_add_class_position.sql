@@ -1,0 +1,1 @@
+ALTER TABLE "character_classes" ADD COLUMN "position" integer DEFAULT 0 NOT NULL;
