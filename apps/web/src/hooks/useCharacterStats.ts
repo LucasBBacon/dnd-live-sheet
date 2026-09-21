@@ -43,6 +43,11 @@ export const useAbilities = () => {
   );
   const runtimeEffects = useCharacterSheetStore((state) => state.runtimeEffects);
   const ruleSnapshot = useCharacterSheetStore((state) => state.ruleSnapshot);
+  // toggleCondition only changes activeConditions/activeStates, and an
+  // effect dispatch mutates runtimeEffects in place while setting a new
+  // activeStates array - neither is otherwise read above, so without this
+  // subscription the memo below never recomputes when either happens (#73)
+  const storeActiveStates = useCharacterSheetStore((state) => state.activeStates);
 
   return useMemo(() => {
     const totalMods = getSheetModifiers();
@@ -67,6 +72,14 @@ export const useAbilities = () => {
     });
 
     return { finalAbilities, totalMods, activeStates };
+    // getSheetModifiers and getSheetStates are stable store-method
+    // references, so react-hooks/exhaustive-deps cannot see what they
+    // actually read - the getters read raceId, subraceId, backgroundId,
+    // classLevels, subclassIds, choices, inventory, activeModifiers,
+    // runtimeEffects, ruleSnapshot and activeStates, which is why those are
+    // listed below instead. Keep this list in sync with what the getters
+    // read.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     baseScores,
     getSheetModifiers,
@@ -81,6 +94,7 @@ export const useAbilities = () => {
     activeModifiers,
     runtimeEffects,
     ruleSnapshot,
+    storeActiveStates,
   ]);
 };
 
