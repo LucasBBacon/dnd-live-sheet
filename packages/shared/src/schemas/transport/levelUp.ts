@@ -14,7 +14,10 @@ export interface LevelUpPayload {
   subclassId?: string; // strict requirement if the class grants it at this level
   asiChoices?: { stat: Ability; value: number }[];
   featId?: string;
-  selectedTraits?: string[];
+  // class progression picks made at this level, keyed by the grant's nodeId
+  selectedTraits?: Record<string, string[]>;
+  // trait choice-block picks that arrive with this level, keyed by block id
+  traitSelections?: Record<string, string[]>;
   addedSpells?: string[];
   replacedSpells?: { oldSpellId: string; newSpellId: string }[];
 }

@@ -131,7 +131,7 @@ describe("validateLevelUpPayloadFromResolver", () => {
           ...basePayload,
           selectedTraits: {
             dec_skills: ["trait_prof_athletics"],
-          } as unknown as string[],
+          },
         },
         context: configuredContext([
           {
@@ -153,7 +153,7 @@ describe("validateLevelUpPayloadFromResolver", () => {
           ...basePayload,
           selectedTraits: {
             fighter_level_1_fighting_style: ["trait_fs_beekeeping"],
-          } as unknown as string[],
+          },
         },
         context: configuredContext([
           {
@@ -198,7 +198,7 @@ describe("validateLevelUpPayloadFromResolver", () => {
           featId: "feat_alert",
           selectedTraits: {
             dec_skills: ["trait_prof_athletics", "trait_perception"],
-          } as unknown as string[],
+          },
           addedSpells: ["spell_magic_missile", "spell_shield"],
         },
         context: configuredContext([
