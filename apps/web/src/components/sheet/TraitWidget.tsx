@@ -219,6 +219,9 @@ export const TraitWidget = () => {
       return;
     }
 
+    // The sheet now applies the fixture character's own traits itself
+    // (getSheetModifiers), so selecting a trait it already has here counts
+    // that trait's modifiers twice. Dev-only debugger, not a sheet bug.
     initializeStore({
       activeModifiers: nextActiveModifiers,
     });
