@@ -9,7 +9,7 @@ import {
 import { useCharacterSheetStore } from "../../../store/characterSheetStore";
 import { useLevelUpStore } from "../../../store/levelUpStore";
 import { fetchFullRulesSnapshot } from "../../../api/client";
-import { ChoicePicker } from "../choices/ChoicePicker";
+import { ChoiceQuestionList } from "../choices/ChoiceQuestionList";
 
 /**
  * Turns a level-up decision into the same `ChoiceQuestion` shape the
@@ -71,7 +71,29 @@ export const ChoicesStep = ({ decisions }: { decisions: LevelDecision[] }) => {
     [decisions, targetClassId, snapshot],
   );
 
-  const handleChange = (decision: LevelDecision, selected: string[]) => {
+  // One merged record, keyed by decision/question id: each decision's stored
+  // picks, read from whichever draft map its own `source` routes through -
+  // `traitSelections` for a trait's own choice block, `selectedTraits` for a
+  // class progression node. `ChoiceQuestionList` groups by `question.source`
+  // for us, which is why every question here carries the same class source
+  // (Task 4) - all these decisions belong to the one class being levelled.
+  const answers = useMemo(
+    () =>
+      Object.fromEntries(
+        decisions.map((decision) => [
+          decision.id,
+          (decision.source === "trait_choice_block"
+            ? draftPayload.traitSelections?.[decision.id]
+            : draftPayload.selectedTraits?.[decision.id]) ?? [],
+        ]),
+      ),
+    [decisions, draftPayload.traitSelections, draftPayload.selectedTraits],
+  );
+
+  const handleChange = (questionId: string, selected: string[]) => {
+    const decision = decisions.find((d) => d.id === questionId);
+    if (!decision) return;
+
     if (decision.source === "trait_choice_block") {
       updateDraft({
         traitSelections: { ...draftPayload.traitSelections, [decision.id]: selected },
@@ -94,22 +116,11 @@ export const ChoicesStep = ({ decisions }: { decisions: LevelDecision[] }) => {
           No trait choices are required at this level.
         </p>
       ) : (
-        questions.map((question, index) => {
-          const decision = decisions[index]!;
-          const stored =
-            decision.source === "trait_choice_block"
-              ? draftPayload.traitSelections?.[decision.id]
-              : draftPayload.selectedTraits?.[decision.id];
-
-          return (
-            <ChoicePicker
-              key={question.id}
-              question={question}
-              selected={stored ?? question.selected}
-              onChange={(selected) => handleChange(decision, selected)}
-            />
-          );
-        })
+        <ChoiceQuestionList
+          questions={questions}
+          answers={answers}
+          onChange={handleChange}
+        />
       )}
     </div>
   );

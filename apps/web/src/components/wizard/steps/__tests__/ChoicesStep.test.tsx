@@ -91,6 +91,18 @@ describe("ChoicesStep", () => {
     expect(container.textContent).toContain("Stealth");
   });
 
+  it("routes questions through ChoiceQuestionList, which groups them under the class's display name", async () => {
+    const container = await renderStep([classNodeDecision, traitBlockDecision]);
+
+    // "class_fighter" resolves to "Fighter" via packRuleSnapshot()'s
+    // classesById, the same pack fixture ChoicesStepContainer's own test
+    // relies on for its "Fighter" heading.
+    const headings = Array.from(container.querySelectorAll("h3")).map(
+      (heading) => heading.textContent,
+    );
+    expect(headings).toContain("Fighter");
+  });
+
   it("writes a class-progression pick to draftPayload.selectedTraits, preserving other draft keys", async () => {
     const container = await renderStep([classNodeDecision, traitBlockDecision]);
 
