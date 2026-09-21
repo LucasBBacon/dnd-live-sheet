@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { createRoot } from "react-dom/client";
-import { act } from "react";
+import { act, useState } from "react";
 import type { ChoiceQuestion } from "@project/engine";
 import { ChoicePicker, isQuestionAnswered } from "../ChoicePicker";
 import { ChoiceQuestionList } from "../ChoiceQuestionList";
@@ -39,6 +39,30 @@ const renderInto = async (element: React.ReactElement) => {
 const checkboxes = (container: HTMLElement) =>
   Array.from(container.querySelectorAll<HTMLInputElement>('input[type="checkbox"]'));
 
+// ChoicePicker is stateless - it hands the parent a new `selected` array and
+// waits to be re-rendered with it. This harness plays that parent role for
+// real, so clicking twice actually accumulates two picks instead of two
+// independent single-pick calls each starting from an empty `selected`.
+const StatefulHarness = ({
+  question,
+  onChangeCalls,
+}: {
+  question: ChoiceQuestion;
+  onChangeCalls: string[][];
+}) => {
+  const [selected, setSelected] = useState<string[]>([]);
+  return (
+    <ChoicePicker
+      question={question}
+      selected={selected}
+      onChange={(next) => {
+        onChangeCalls.push(next);
+        setSelected(next);
+      }}
+    />
+  );
+};
+
 describe("ChoicePicker", () => {
   it("renders one checkbox per option and a 0 / pickCount counter", async () => {
     const question = buildQuestion();
@@ -56,20 +80,23 @@ describe("ChoicePicker", () => {
     const calls: string[][] = [];
 
     const { container } = await renderInto(
-      <ChoicePicker
-        question={question}
-        selected={[]}
-        onChange={(next) => calls.push(next)}
-      />,
+      <StatefulHarness question={question} onChangeCalls={calls} />,
     );
 
-    const boxes = checkboxes(container);
-
     await act(async () => {
-      boxes[2].click(); // perception
+      checkboxes(container)[2].click(); // perception, clicked first
     });
 
-    expect(calls[0]).toEqual(["skill_perception"]);
+    await act(async () => {
+      checkboxes(container)[0].click(); // athletics, clicked second
+    });
+
+    // click order, not option order: perception before athletics even
+    // though athletics is the earlier option in the list.
+    expect(calls[calls.length - 1]).toEqual([
+      "skill_perception",
+      "skill_athletics",
+    ]);
   });
 
   it("re-rendered with two selected disables the unchecked boxes and shows 2 / 2", async () => {
