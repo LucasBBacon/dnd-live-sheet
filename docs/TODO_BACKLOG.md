@@ -1,7 +1,7 @@
 # TODO Backlog
 
-**Status as of 2026-09-21**, on `fix/tier1-reach-the-player`, after #64, #63
-and #68's fixed half closed. The workspace is green — **2068
+**Status as of 2026-09-21**, on `feat/character-choices`, after #69 and #54
+closed. The workspace is green — **2104
 tests**, 0 failures, and typecheck clean per package (6f explains why "per
 package" matters). Nothing below is breaking a build; these are gaps, debt and
 content.
@@ -177,8 +177,10 @@ things the last three branches showed replace it:
 | 1 | ✅ **#64** — give the socket gateway's CORS origin a fallback | minutes | **Closed 2026-09-21** on `fix/tier1-reach-the-player`: `clientOrigin()` (`apps/server/src/utils/clientOrigin.ts`) is now the one place the default lives; `index.ts` and `socket.ts` both call it. See 9b. |
 | 2 | ✅ **#63** — a character's pools persist and reach the sheet | small | **Closed 2026-09-21** on `fix/tier1-reach-the-player`. Two causes, both fixed, not the recorded "invisible until Begin turn" symptom, which never reproduced: `ROOM_JOIN` now materialises pools through `getAuthoritativeRuntimeContext` and a spend matching no row is refused as an `action_error` instead of silently broadcast; separately, `GET /api/character/:id` now carries the character's persisted `character_resources` rows, so a reload after a spend shows the spent count instead of a rematerialised full pool. See 9a for the reproduction and the corrected diagnosis. |
 | 3 | ✅ **#68 (fixed half)** — backgrounds reach the live sheet | small–medium | **Closed 2026-09-21** on `fix/tier1-reach-the-player`: `CharacterSaveSchema` gained `backgroundId`, the bootstrapper resolves a background's granted traits, and the server and web store thread it through. A preset background's fixed skill and tool grants (Criminal's Deception, Stealth and thieves' tools, and the like) now reach the live sheet. The choice half is unchanged — see item 5 below and 10d. |
-| 4 | **#69** — record which node a trait choice answered | medium, needs a decision | Newly numbered (it sat unnumbered since 2026-09-02). Must land **before the fighter or ranger pass**, and before #68's choice half, because the proficiency-choice step will write more `player_choice` rows through the same lossy path. Recommend the honest fix: persist `node_id` on `character_traits` (one migration). |
-| 5 | **#68 (choice half)** — a proficiency-choice step in character creation | medium, UI | `ProficiencyExtractor.listPendingChoices` has no caller outside tests. 21 authored choice blocks wait on this. Brainstorm the wizard step first; it is the first new UI surface since the barbarian's table notes. |
+| 4 | ✅ **#69** — record which node a trait choice answered | medium, needs a decision | **Closed 2026-09-21** on `feat/character-choices`: choices are now stored in `characters.choices`, keyed by the question they answer (`classSelections[classId][nodeId]` for class picks, `traitSelections[blockId]` for trait choice blocks), rather than rebuilt from a flat trait-id set. `CharacterBootstrapper.selectionsFromChosenTraitIds` is deleted. Migration `0014_add_character_choices` exists and has been applied to the dev database. See the "Resolved — #69" section below for the finding that the guessing had been running on nothing. |
+| 4a | **#73** — the web sheet applies no trait modifiers | medium | Found while planning `feat/character-choices`, 2026-09-21. `activeModifiers` is set only by the dev-only `TraitWidget`; `useAbilities` (`apps/web/src/hooks/useCharacterStats.ts`) adds equipment modifiers alone; the creation wizard stores pre-racial scores (`wizardStore.ts`: "3-18 pre racial"). So no racial ability bonus, fixed or chosen, reaches a live sheet, while the server's `buildLiveSheet` applies them — the two disagree. Verified 2026-09-21: Lyra Silverstring (half-elf, stored CHA 18) shows CHA 18 on the sheet. Next branch, ahead of item 5. |
+| 4b | **#74** — a multiclass character's first class is whatever order Postgres returns | small–medium | Found 2026-09-21 by the final review of `feat/character-choices`. `character_classes` records no class order, and none of its readers orders the query, so an `UPDATE` (a level-up on the primary class) can make a sequential scan return a multiclass character's second class as `classes[0]` — the engine only gives full starting proficiencies to that slot. See the "11e. #74" section below. **Must land before item 5 (Branch B)**, which is about to add a fourth writer to the same ordering gap. |
+| 5 | **#68 (choice half) — Branch B** — a proficiency-choice wizard step, now that storage exists | medium, UI | Storage landed as `feat/character-choices`'s Branch A: `characters.choices` holds a class's `selections` and a trait's `traitSelections`, keyed by the question, but nothing collects them from a player yet. Widened from 21 proficiency blocks to all 31 choice-block traits in the pack — every class's skill picks, background tools and languages, plus the race picks that predate #68: the half-elf's ability-score choice, Skill Versatility and extra language, the human's and high elf's extra language, and the dwarf's artisan's tools. `ProficiencyExtractor.listPendingChoices` has no caller outside tests. Brainstorm the wizard step first; it is the first new UI surface since the barbarian's table notes. Inherits two findings from the same final review, 2026-09-21: a **custom background's choice blocks cannot be answered at creation** — a custom background's traits live outside `CharacterSave` entirely (the gateway included), so Branch B needs a home for them before a custom-background player can answer anything; and **level-up may re-answer a question already answered at creation or an earlier level** — `applyLevelUp`'s merge (#69, hardened by this review) overwrites a stored pick with whatever the payload sends and validates the new value, but nothing stops a later answer from changing an earlier one, so Branch B needs to decide whether re-answering is allowed. |
 | 5a | **#71** — the sheet ignores a refused resource spend | small–medium | Found by the final review of `fix/tier1-reach-the-player`, 2026-09-21. `RESOURCE_CONSUMED`'s refusal (item 2's fix) is not in `SHEET_ERROR_EVENTS`, so `consumeResource`'s optimistic decrement never rolls back. Same family as item 2: a spend the server refused should not be the spend the player sees. See P11's 11d. |
 
 ### Tier 2 — the burndown, one system per pass
@@ -197,7 +199,7 @@ things the last three branches showed replace it:
 | Order | Item | Why here |
 | --- | --- | --- |
 | 10 | 🟢 **#65** — six fix-later polish items from the spellcasting review | Each is minutes; (a) is a real lint warning in `RestModal.tsx`. Good warm-up for any session. |
-| 11 | 🟢 **#54** — confirm `0013_add_reset_conditions.sql` has been applied | Owner-only check against the live database. Latent until the pack authors an `initiative_roll` or `start_of_turn` reset. |
+| 11 | ✅ **#54** — confirm `0013_add_reset_conditions.sql` has been applied | **Closed 2026-09-21** — found applied to the dev database while applying `feat/character-choices`'s migration `0014_add_character_choices`; see 6d. |
 | 12 | ✅ **Repo hygiene** — branches and worktrees (P11) | **Done 2026-09-21** — see 11b. |
 | 13 | **#53** — a unit test for the line-ending check | Needs a root vitest project or a move into a package. |
 | 14 | **#52** — 71 LF files against a CRLF tree | One normalising commit, no content change. Do it on a quiet day, not mid-branch. |
@@ -694,10 +696,11 @@ Two smaller findings, recorded but lower value:
 
 ---
 
-## Open — #69: a rebuilt selection is credited to every node that offers the trait
+## Resolved — #69: a rebuilt selection is credited to every node that offers the trait
 
 Numbered #69 on 2026-09-21 (it had no id until then). Found 2026-09-02 by the review of the barbarian pass, in code that pass merged
-rather than wrote.
+rather than wrote. **Closed 2026-09-21** on `feat/character-choices`; see
+[the design](superpowers/specs/2026-09-21-character-choices-design.md).
 
 `CharacterBootstrapper.selectionsFromChosenTraitIds` recovers which
 `trait_choice` node a player answered by intersecting each unlocked node's
@@ -726,6 +729,19 @@ migration, and the honest fix), or scope the intersection to the lowest-level
 node that offers the id (no migration, wrong for a deliberate retake). Worth
 settling before the fighter or the ranger pass, both of which are fighting-style
 classes.
+
+**Fixed the honest way.** `characters.choices` (migration
+`0014_add_character_choices`, applied to the dev database) stores a
+character's choices keyed by the question they answer —
+`classSelections[classId][nodeId]` for class progression picks,
+`traitSelections[blockId]` for trait choice blocks — so a save's
+`selections` are read back rather than rebuilt from a flat trait-id set.
+`selectionsFromChosenTraitIds` is deleted, along with both call sites'
+`player_choice` filtering. Measured against the dev database while closing
+this: it held **no** `player_choice` rows, and no UI ever set
+`selectedTraits`, so the guessing function had been running on nothing — no
+character's class choice reached its sheet before this branch, and there was
+no player data to migrate.
 
 ---
 
@@ -1099,6 +1115,11 @@ and the check is load-bearing enough now to deserve it — `expectedEnding` and
 enum values and nothing else — confirmed by generating it against an otherwise
 in-sync snapshot. It has **not been run**: applying a migration to a live
 database is the owner's call, not a side effect of a backlog pass.
+
+**Closed 2026-09-21.** Found while applying `feat/character-choices`'s
+migration `0014_add_character_choices`: `drizzle.__drizzle_migrations` on the
+dev database already held id 13 — `0013_add_reset_conditions`, created_at
+1787581213539 (2026-08-24) — so this migration has been applied.
 
 ```bash
 pnpm --filter @project/database db:migrate
@@ -1913,6 +1934,15 @@ threading the id through). The choice half above — 21 authored choice blocks
 with no wizard step to offer them — is unchanged and stays open as Tier 1 item
 5.
 
+**Storage for the choice half landed 2026-09-21** on `feat/character-choices`
+("Branch A" of a two-branch split): `characters.choices` now stores a
+character's choices keyed by the question they answer. The count of
+choice-block traits waiting on a wizard step widens from 21 to 31 once the
+race picks that predate #68 are counted too — the half-elf's ability-score
+choice, Skill Versatility and extra language, the human's and high elf's
+extra language, and the dwarf's artisan's tools. The wizard step itself
+("Branch B") is unchanged and stays open as Tier 1 item 5.
+
 ---
 
 ## P11 — Sequencing pass (opened 2026-09-21)
@@ -2029,3 +2059,44 @@ Two separate findings from the same file,
   `hydrateFromPersisted` supplies resources. `ROOM_JOIN` now reaches this
   path too. Needs checking whether any gameplay path depends on those states
   before deciding the fix.
+
+### 11e. #74 — a multiclass character's first class is whatever order Postgres returns
+
+Found 2026-09-21 by the final review of `feat/character-choices`.
+
+| # | Item | Notes |
+| --- | --- | --- |
+| 74 | A multiclass character's "primary" class is inferred from array order, but `character_classes` records no order and nothing reads it in one | Must land before Branch B (item 5). See below. |
+
+`CharacterBootstrapper`'s `classTraitIds`
+(`packages/engine/src/pipeline/characterBootstrapper.ts`) grants a class's
+full `startingProficiencyTraitIds` only to `save.classes[0]`; every class
+after it gets the reduced `multiclassTraitIds` set instead
+(`isPrimary = classState === save.classes[0]`, in effect — the first entry in
+the array). `CharacterSave.classes` is built straight from whatever order a
+`character_classes` query returns, and that table records no class order or
+primary-class marker at all. None of its three readers orders the query:
+`getAuthoritativeRuntimeContext` (`apps/server/src/gateway/socket.ts:195`,
+called `classRows`), `fetchCharacterPayload`
+(`apps/server/src/routes/character.ts:89`, called `classLedger`) and
+`applyLevelUp` (`apps/server/src/controllers/characterController.ts:72`,
+called `existingClasses`) each run a bare
+`.select().from(characterClasses).where(...)`
+with no `.orderBy(...)`. A sequential scan over a small table usually returns
+rows in insertion order, which is why this has not been seen in practice —
+but an `UPDATE` (a level-up on the primary class) writes a new row version,
+and Postgres is free to return that version anywhere in a later scan once the
+old one is vacuumed. So after a primary-class level-up, a multiclass
+character (Lyra, Nyx, Kaelen in the sample data) can have its *second* class
+read back as `classes[0]`: the primary class silently drops to the reduced
+multiclass grant set, its `*_starting_*` choice-block answers (already stored
+under `choices.classSelections`) match nothing offered any more and become
+`orphan_selection`, those answers drop off the sheet, and the next level-up
+that sends any picks at all is refused by `collectChoiceIssues` for choices
+the character can no longer explain.
+
+Fix needs an ordering column (e.g. a `sequence` on `character_classes`) or an
+explicit primary-class marker, plus `ORDER BY` in all three readers above.
+Small schema change, but every reader has to agree, and Branch B is about to
+add a fourth write path (creation-time choice collection) that would
+otherwise inherit the same bug — hence landing this first.

@@ -67,6 +67,19 @@ export interface SaveValidationIssue {
 }
 
 /**
+ * The issues that mean a stored answer is wrong. missing_selection is not
+ * among them: an unanswered question is expected until the UI asks it.
+ */
+const CHOICE_ISSUE_CODES: ReadonlySet<SaveValidationCode> = new Set([
+  "wrong_selection_count",
+  "invalid_option",
+  "duplicate_selection",
+  "unmet_prerequisite",
+  "orphan_selection",
+  "redundant_selection",
+]);
+
+/**
  * How an extractor's refusal reads as a validation issue. `over_limit` maps to
  * nothing because the selection count check already covers it, and reporting
  * both would name the same mistake twice.
@@ -284,47 +297,6 @@ export class CharacterBootstrapper {
   }
 
   /**
-   * Rebuilds a save's trait_choice selections from the traits the character
-   * was recorded as choosing.
-   *
-   * The database keeps a chosen trait as a character_traits row with source
-   * "player_choice" and nothing else - not which node it answered. Neither the
-   * server nor the web store could therefore hand the bootstrapper a save that
-   * knew a Totem Warrior's totem. Walking the unlocked nodes and intersecting
-   * their options with the chosen ids recovers exactly that.
-   */
-  public static selectionsFromChosenTraitIds(
-    classes: Array<{ classId: string; level: number; subclassId?: string }>,
-    chosenTraitIds: string[],
-    snapshot?: RuleSnapshotLookup,
-  ): Record<string, Record<string, string[]>> {
-    const chosen = new Set(chosenTraitIds);
-    const byClass: Record<string, Record<string, string[]>> = {};
-
-    for (const entry of classes) {
-      const selections: Record<string, string[]> = {};
-      const state: ClassState = {
-        classId: entry.classId,
-        level: entry.level,
-        selections: {},
-        ...(entry.subclassId !== undefined && { subclassId: entry.subclassId }),
-      };
-
-      for (const grant of unlockedGrants(state, snapshot)) {
-        if (!isTraitChoice(grant)) continue;
-        const picks = grant.options
-          .map(traitIdOfOption)
-          .filter((id) => chosen.has(id));
-        if (picks.length > 0) selections[grant.nodeId] = picks;
-      }
-
-      byClass[entry.classId] = selections;
-    }
-
-    return byClass;
-  }
-
-  /**
    * Checks a save against the static rulebook without throwing, so callers can
    * surface every problem at once instead of one per round trip.
    */
@@ -531,6 +503,22 @@ export class CharacterBootstrapper {
     }
 
     return issues;
+  }
+
+  /**
+   * The choice problems in a save, for the endpoints that store choices.
+   *
+   * collectSaveIssues judges the whole save; a write only needs to know
+   * whether the answers it is storing are valid, so everything else - and an
+   * unanswered question - is left out.
+   */
+  public static collectChoiceIssues(
+    save: CharacterSave,
+    snapshot?: RuleSnapshotLookup,
+  ): SaveValidationIssue[] {
+    return CharacterBootstrapper.collectSaveIssues(save, snapshot).filter(
+      (issue) => CHOICE_ISSUE_CODES.has(issue.code),
+    );
   }
 
   /**

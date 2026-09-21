@@ -87,6 +87,41 @@ describe("useLevelUpStore", () => {
     expect(nextState.errorMessage).toContain("Level 1 is not configured");
   });
 
+  it("submits a draft's traitSelections alongside selectedTraits", async () => {
+    vi.mocked(apiClient).mockResolvedValueOnce({ ok: true });
+
+    useLevelUpStore.setState({
+      isActive: true,
+      progressionContext: {
+        classId: "class_rogue",
+        level: 1,
+        grantedTraits: [],
+        decisions: [],
+      },
+      grantedTraitDetails: [],
+      draftPayload: {
+        characterId: "character-1",
+        targetClassId: "class_rogue",
+        newTotalLevel: 2,
+        hpRoll: 6,
+        selectedTraits: { some_class_node: ["trait_a"] },
+        traitSelections: { rogue_multiclass_skill: ["stealth"] },
+      },
+      errorMessage: null,
+    });
+
+    await useLevelUpStore.getState().validateAndSubmit();
+
+    const [endpoint, options] = vi.mocked(apiClient).mock.calls[0]!;
+    const submittedBody = JSON.parse(options!.body as string);
+
+    expect(endpoint).toBe("/character/character-1/level-up");
+    expect(submittedBody.traitSelections).toEqual({
+      rogue_multiclass_skill: ["stealth"],
+    });
+    expect(submittedBody.selectedTraits).toEqual({ some_class_node: ["trait_a"] });
+  });
+
   it("clears the wizard state after a successful submission", async () => {
     vi.mocked(apiClient).mockResolvedValueOnce({ ok: true });
 

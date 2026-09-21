@@ -48,6 +48,15 @@ export type ResolverDecision = {
   options?: string[];
   isRequired: boolean;
   quantity?: number;
+  /**
+   * Where this decision's answer travels in the level-up payload. A trait's
+   * own choice block (e.g. the rogue multiclass skill pick, Lore's bonus
+   * skills) is answered through `payload.traitSelections`, keyed by block id
+   * - the same map creation and the sheet already use for trait choice
+   * blocks. Everything else (class progression picks such as a fighting
+   * style) is answered through `payload.selectedTraits`, keyed by nodeId.
+   */
+  source?: "trait_choice_block";
 };
 
 export type GrantSourceType =
@@ -136,6 +145,9 @@ const traitDrivenDecisions = (traitIds: string[]): ResolverDecision[] => {
         ...(choice.options ? { options: choice.options } : {}),
         isRequired: true,
         quantity: choice.chooseAmount,
+        // this is the trait's own choice block, not a progression node - its
+        // answer travels in traitSelections
+        source: "trait_choice_block",
       });
     }
 
@@ -410,14 +422,26 @@ export const resolveNextLevelValidationContext = ({
 
 /**
  * Retrieves the selected traits for a specific decision from the level-up payload, handling different structures of the selectedTraits property (array or object).
+ *
+ * A decision sourced from a trait's own choice block reads its answer from
+ * `payload.traitSelections[decision.id]` instead: that map is keyed by block
+ * id exactly like this decision's id, so no array/record fallback is needed.
  * @param payload The level-up payload containing the selected traits.
- * @param decisionId The ID of the decision for which to retrieve the selected traits.
+ * @param decision The decision for which to retrieve the selected traits.
  * @returns An array of selected trait IDs for the specified decision, or an empty array if no traits are selected.
  */
 const getSelectedTraitsForDecision = (
   payload: LevelUpPayload,
-  decisionId: string,
+  decision: ResolverDecision,
 ): string[] => {
+  if (decision.source === "trait_choice_block") {
+    const exact = payload.traitSelections?.[decision.id];
+    return Array.isArray(exact)
+      ? exact.filter((entry): entry is string => typeof entry === "string")
+      : [];
+  }
+
+  const decisionId = decision.id;
   const selectedTraits = payload.selectedTraits as unknown;
 
   // if no traits are selected, return an empty array
@@ -515,7 +539,7 @@ export const validateLevelUpPayloadFromResolver = ({
 
     // strict validation: trait selection
     if (decision.type === "trait_selection") {
-      const selectedTraits = getSelectedTraitsForDecision(payload, decision.id);
+      const selectedTraits = getSelectedTraitsForDecision(payload, decision);
       const expected = decision.quantity ?? 1;
 
       if (selectedTraits.length !== expected) {

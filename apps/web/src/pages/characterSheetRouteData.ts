@@ -1,5 +1,9 @@
 import type { OperationalResource } from "@project/engine";
-import type { RuleSnapshot } from "@project/shared";
+import {
+  CharacterChoicesSchema,
+  emptyCharacterChoices,
+  type RuleSnapshot,
+} from "@project/shared";
 import { apiClient, fetchRulesSnapshot } from "../api/client";
 import {
   toInventoryInstance,
@@ -20,6 +24,8 @@ export type CharacterSheetPayload = {
   subraceId: string | null;
   // the route spreads the whole characters row, so this already arrives
   backgroundId?: string | null;
+  // characters.choices, straight off the row; parsed at this boundary
+  choices?: unknown;
   str: number;
   dex: number;
   con: number;
@@ -74,6 +80,14 @@ export const hydrateCharacterSheet = (
   initializeStore: CharacterSheetState["initialize"],
   character: CharacterSheetPayload,
 ) => {
+  const storedChoices = CharacterChoicesSchema.safeParse(character.choices ?? {});
+  if (!storedChoices.success) {
+    console.error(
+      `Stored choices for character ${character.id} failed to parse; treating them as empty.`,
+      storedChoices.error.issues,
+    );
+  }
+
   initializeStore({
     id: character.id,
     campaignId: character.campaignId,
@@ -85,6 +99,7 @@ export const hydrateCharacterSheet = (
     raceId: character.raceId ?? null,
     subraceId: character.subraceId ?? null,
     backgroundId: character.backgroundId ?? null,
+    choices: storedChoices.success ? storedChoices.data : emptyCharacterChoices(),
     // API payload keeps the flat lowercase column names; the store is keyed by
     // the engine's uppercase Ability type, so translate at this boundary.
     baseScores: {

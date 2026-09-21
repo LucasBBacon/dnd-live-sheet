@@ -1,8 +1,9 @@
 import { describe, expect, it, vi } from "vitest";
 import type { CharacterSave } from "@project/shared";
 import { CharacterBootstrapper } from "../characterBootstrapper.js";
+import { ModifierExtractor } from "../modifierExtractor.js";
 import { ProficiencyExtractor } from "../proficiencyExtractor.js";
-import { corePackLookup, corePackSnapshot } from "./corePackFixture.js";
+import { corePackSnapshot } from "./corePackFixture.js";
 import { EffectManager } from "../../calculators/effects.js";
 import { ResourceManager } from "../../calculators/resources.js";
 
@@ -754,46 +755,84 @@ describe("CharacterBootstrapper.hydrateRuntimeManagers caster level", () => {
   });
 });
 
-describe("CharacterBootstrapper.selectionsFromChosenTraitIds", () => {
-  const totem = (level: number) => [
-    {
-      classId: "class_barbarian",
-      level,
-      subclassId: "subclass_barbarian_totem_warrior",
-    },
-  ];
-
-  it("assigns a chosen trait to the subclass node that offers it", () => {
-    const selections = CharacterBootstrapper.selectionsFromChosenTraitIds(
-      totem(3),
-      ["trait_totem_spirit_bear", "trait_fs_defense"],
-      corePackLookup(),
+describe("CharacterBootstrapper.collectChoiceIssues", () => {
+  const codes = (save: CharacterSave) =>
+    CharacterBootstrapper.collectChoiceIssues(save, corePackSnapshot()).map(
+      (issue) => issue.code,
     );
 
-    expect(selections).toEqual({
-      class_barbarian: {
-        barbarian_totem_level_3_totem_spirit: ["trait_totem_spirit_bear"],
-      },
+  it("reports nothing for a save whose picks are all valid", () => {
+    expect(codes(fighter())).toEqual([]);
+  });
+
+  // until the wizard asks a question, leaving it unanswered is expected
+  it("does not report a question that has not been answered yet", () => {
+    const save = fighter({ selections: {} });
+
+    expect(
+      CharacterBootstrapper.collectSaveIssues(save, corePackSnapshot()).map(
+        (issue) => issue.code,
+      ),
+    ).toContain("missing_selection");
+    expect(codes(save)).toEqual([]);
+  });
+
+  it("reports an option the question does not offer", () => {
+    const save = fighter({
+      selections: { fighter_level_1_fighting_style: ["trait_fs_not_real"] },
     });
+
+    expect(codes(save)).toContain("invalid_option");
   });
 
-  it("ignores a node the character has not reached", () => {
-    const selections = CharacterBootstrapper.selectionsFromChosenTraitIds(
-      totem(3),
-      ["trait_aspect_of_the_beast_bear"],
-      corePackLookup(),
-    );
+  it("reports a trait choice block given the wrong number of picks", () => {
+    const save = {
+      ...fighter(),
+      traitSelections: {
+        ...fighter().traitSelections,
+        fighter_starting_skills: ["athletics"],
+      },
+    };
 
-    expect(selections).toEqual({ class_barbarian: {} });
+    expect(codes(save)).toContain("wrong_selection_count");
   });
 
-  it("returns an empty map for a class without a subclass", () => {
-    const selections = CharacterBootstrapper.selectionsFromChosenTraitIds(
-      [{ classId: "class_barbarian", level: 3 }],
-      ["trait_totem_spirit_bear"],
-      corePackLookup(),
+  it("leaves issues that are not about choices to collectSaveIssues", () => {
+    const save = {
+      ...fighter(),
+      race: { baseRaceId: "race_not_real", hasSubraces: false, subraceId: null },
+    };
+
+    expect(
+      CharacterBootstrapper.collectSaveIssues(save, corePackSnapshot()).map(
+        (issue) => issue.code,
+      ),
+    ).toContain("unknown_race");
+    expect(codes(save)).not.toContain("unknown_race");
+  });
+});
+
+describe("a stored trait selection reaches the modifiers", () => {
+  it("turns a half-elf's ability score choice into +1 on each chosen ability", () => {
+    const save: CharacterSave = {
+      ...fighter(),
+      race: { baseRaceId: "race_half_elf", hasSubraces: false, subraceId: null },
+      traitSelections: { half_elf_asi_choice: ["DEX", "CON"] },
+    };
+
+    const plusOnes = ModifierExtractor.extractModifiers(
+      CharacterBootstrapper.compileActiveTraits(save, corePackSnapshot()),
+      CharacterBootstrapper.resolveSelections(save),
+    ).filter(
+      (modifier) =>
+        modifier.type === "add" &&
+        modifier.value === 1 &&
+        ["STR", "DEX", "CON", "INT", "WIS"].includes(modifier.target),
     );
 
-    expect(selections).toEqual({ class_barbarian: {} });
+    expect(plusOnes.map((modifier) => modifier.target).sort()).toEqual([
+      "CON",
+      "DEX",
+    ]);
   });
 });

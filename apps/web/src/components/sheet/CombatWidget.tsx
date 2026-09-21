@@ -17,23 +17,21 @@ const ACTIVATION_BADGE: Record<string, { short: string; long: string }> = {
   reaction: { short: "REACTION", long: "Reaction" },
 };
 
-const hasProtectionTrait = (
-  traits: Array<{ id: string }>,
-  traitGrants: Array<{ traitId: string }>,
-) => {
-  return (
-    traits.some((trait) => trait.id === PROTECTION_TRAIT_ID) ||
-    traitGrants.some((grant) => grant.traitId === PROTECTION_TRAIT_ID)
-  );
-};
+const hasProtectionTrait = (activeTraits: Array<{ id: string }>) =>
+  activeTraits.some((trait) => trait.id === PROTECTION_TRAIT_ID);
 
 export const CombatWidget = () => {
   const { attacks } = useCombat();
   const { attacksPerAction } = useDerivedStats();
   const requestRoll = useRollStore((state) => state.requestRoll);
 
-  const traits = useCharacterSheetStore((state) => state.traits);
-  const traitGrants = useCharacterSheetStore((state) => state.traitGrants);
+  const getActiveTraits = useCharacterSheetStore(
+    (state) => state.getActiveTraits,
+  );
+  // getActiveTraits' own reference is stable - it always reads live state
+  // through get() - so a chosen trait (a fighting style such as Protection)
+  // only reaches a re-render because choices is subscribed to here too
+  useCharacterSheetStore((state) => state.choices);
   const inventory = useCharacterSheetStore((state) => state.inventory);
   const ruleSnapshot = useCharacterSheetStore((state) => state.ruleSnapshot);
   const combatContext = useCharacterSheetStore((state) => state.combatContext);
@@ -81,7 +79,7 @@ export const CombatWidget = () => {
     (action) => !costsAttack(action.activation),
   );
   const protectionTrait = ruleSnapshot?.traitsById?.[PROTECTION_TRAIT_ID];
-  const protectionAvailable = hasProtectionTrait(traits, traitGrants);
+  const protectionAvailable = hasProtectionTrait(getActiveTraits());
   const reactionAvailable = combatContext.economy.reactionAvailable;
   const pendingProtectionWindow = combatContext.pendingEvents.find(
     (event) =>

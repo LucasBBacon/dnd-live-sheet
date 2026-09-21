@@ -206,6 +206,7 @@ export const useLevelUpStore = create<LevelUpState>((set, get) => ({
       asiChoices,
       featId,
       selectedTraits,
+      traitSelections,
       addedSpells,
       replacedSpells,
     } = draftPayload;
@@ -223,6 +224,7 @@ export const useLevelUpStore = create<LevelUpState>((set, get) => ({
       asiChoices,
       featId,
       selectedTraits,
+      traitSelections,
       addedSpells,
       replacedSpells,
     };

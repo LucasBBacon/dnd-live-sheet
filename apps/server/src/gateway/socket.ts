@@ -4,7 +4,6 @@ import {
   characterClasses,
   characterInventory,
   characterResources,
-  characterTraits,
   characters,
 } from "@project/database/src/schema/operational.js";
 import { items } from "@project/database/src/schema/reference.js";
@@ -52,6 +51,7 @@ import {
 import { resolvePlayerTurn } from "../services/turnResolution.js";
 import { getCachedRuleSnapshot } from "../services/ruleSnapshotCache.js";
 import { modifyCharacterHp } from "../services/combatService.js";
+import { readStoredChoices, toCharacterSave } from "../services/characterSave.js";
 import {
   getCampaignMembershipRole,
   getUserIdFromSocket,
@@ -144,55 +144,6 @@ const pruneAuthoritativeRuntime = () => {
   }
 };
 
-export const toCharacterSave = (
-  character: {
-    raceId: string;
-    subraceId: string | null;
-    backgroundId?: string | null;
-    str: number;
-    dex: number;
-    con: number;
-    int: number;
-    wis: number;
-    cha: number;
-    currentHp: number | null;
-    maxHp: number | null;
-  },
-  classes: Array<{ classId: string; classLevel: number; subclassId: string | null }>,
-  selectionsByClass: Record<string, Record<string, string[]>> = {},
-): CharacterSave => ({
-  attributes: {
-    str: character.str,
-    dex: character.dex,
-    con: character.con,
-    int: character.int,
-    wis: character.wis,
-    cha: character.cha,
-  },
-  race: {
-    baseRaceId: character.raceId,
-    hasSubraces: character.subraceId !== null,
-    subraceId: character.subraceId,
-  },
-  ...(character.backgroundId ? { backgroundId: character.backgroundId } : {}),
-  classes:
-    classes.length > 0
-      ? classes.map((entry) => ({
-          classId: entry.classId,
-          level: entry.classLevel,
-          ...(entry.subclassId !== null && { subclassId: entry.subclassId }),
-          selections: selectionsByClass[entry.classId] ?? {},
-        }))
-      : [{ classId: "class_fighter", level: 1, selections: {} }],
-  traitSelections: {},
-  hp: {
-    current: character.currentHp ?? character.maxHp ?? 1,
-    temporary: 0,
-    baseRolledHp: character.maxHp ?? 1,
-    hitDiceSpent: {},
-  },
-});
-
 const toRuntimeEffectsPayload = (
   effectManager: EffectManager,
 ): RuntimeEffectSyncPayload[] =>
@@ -223,6 +174,7 @@ const getAuthoritativeRuntimeContext = async (
       raceId: characters.raceId,
       subraceId: characters.subraceId,
       backgroundId: characters.backgroundId,
+      choices: characters.choices,
       str: characters.str,
       dex: characters.dex,
       con: characters.con,
@@ -249,31 +201,13 @@ const getAuthoritativeRuntimeContext = async (
     .from(characterClasses)
     .where(eq(characterClasses.characterId, characterId));
 
-  // the chosen traits are rows with source "player_choice" and no record of
-  // which node they answered; the bootstrapper recovers that from the pack
-  const chosenTraitRows = await db
-    .select({
-      traitId: characterTraits.traitId,
-      source: characterTraits.source,
-    })
-    .from(characterTraits)
-    .where(eq(characterTraits.characterId, characterId));
-
   const { snapshot } = await getCachedRuleSnapshot();
 
-  const selectionsByClass = CharacterBootstrapper.selectionsFromChosenTraitIds(
-    classRows.map((row) => ({
-      classId: row.classId,
-      level: row.classLevel,
-      ...(row.subclassId !== null && { subclassId: row.subclassId }),
-    })),
-    chosenTraitRows
-      .filter((row) => row.source === "player_choice")
-      .map((row) => row.traitId),
-    snapshot,
+  const nextSave = toCharacterSave(
+    character,
+    classRows,
+    readStoredChoices(character.choices, characterId),
   );
-
-  const nextSave = toCharacterSave(character, classRows, selectionsByClass);
 
   const resourceRows = await db
     .select({

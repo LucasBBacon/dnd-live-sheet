@@ -30,6 +30,8 @@ import {
   CombatContextSchema,
   CONDITION_MAP,
   STANDARD_ACTIONS,
+  emptyCharacterChoices,
+  type CharacterChoices,
   type CombatContext,
   type CombatEventInput,
   type CombatRollSnapshotInput,
@@ -189,16 +191,10 @@ const toCharacterSave = (state: CharacterSheetState): CharacterSave => ({
             state.subclassIds[classId] !== undefined && {
               subclassId: state.subclassIds[classId],
             }),
-          selections: CharacterBootstrapper.selectionsFromChosenTraitIds(
-            [{ classId, level, ...(state.subclassIds[classId] !== null && state.subclassIds[classId] !== undefined && { subclassId: state.subclassIds[classId] }) }],
-            state.traitGrants
-              .filter((grant) => grant.source === "player_choice")
-              .map((grant) => grant.traitId),
-            state.ruleSnapshot ?? undefined,
-          )[classId] ?? {},
+          selections: state.choices.classSelections[classId] ?? {},
         }))
       : [{ classId: "class_fighter", level: 1, selections: {} }],
-  traitSelections: {},
+  traitSelections: state.choices.traitSelections,
   hp: {
     current: state.currentHp,
     temporary: 0,
@@ -385,7 +381,7 @@ const composeActiveStates = (
   return Array.from(new Set([...gatingStates, ...active]));
 };
 
-const getConditionSuppressions = (state: Pick<CharacterSheetState, "ruleSnapshot" | "classLevels" | "subclassIds" | "baseScores" | "raceId" | "subraceId" | "backgroundId" | "currentHp" | "baseHpRolled" | "traitGrants" | "activeConditions">): Array<{ condition: string; requiredStates: string[]; forbiddenStates: string[]; source?: string }> => {
+const getConditionSuppressions = (state: Pick<CharacterSheetState, "ruleSnapshot" | "classLevels" | "subclassIds" | "baseScores" | "raceId" | "subraceId" | "backgroundId" | "choices" | "currentHp" | "baseHpRolled" | "traitGrants" | "activeConditions">): Array<{ condition: string; requiredStates: string[]; forbiddenStates: string[]; source?: string }> => {
   if (!state.ruleSnapshot) return [];
   return CharacterBootstrapper.compileActiveTraits(
     toCharacterSave(state as CharacterSheetState),
@@ -691,6 +687,8 @@ export interface CharacterSheetState {
   subraceId: string | null;
   /** The preset background, by id; null for none or a custom background. */
   backgroundId: string | null;
+  /** Every answer the character has given, keyed by the question it answers. */
+  choices: CharacterChoices;
 
   currentHp: number;
   maxHp: number;
@@ -838,6 +836,7 @@ export const useCharacterSheetStore = create<CharacterSheetState>(
     raceId: null,
     subraceId: null,
     backgroundId: null,
+    choices: emptyCharacterChoices(),
     currentHp: 10,
     maxHp: 10,
     baseHpRolled: 1,

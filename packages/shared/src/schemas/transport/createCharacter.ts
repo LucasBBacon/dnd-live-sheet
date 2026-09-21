@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { StartingEquipmentDefinitionSchema } from "../content/items.js";
 import { abilityScoresOf } from "../primitives/ability.js";
+import { CharacterChoicesSchema } from "../runtime/characterSave.js";
 
 // #region Character Creation Payload
 
@@ -45,6 +46,10 @@ export const CreateCharacterPayloadSchema = z.object({
     given: [],
     choices: [],
   }),
+
+  // the answers to the questions level 1 asks - class picks by node, trait
+  // choice-block picks by block id; omitted until the wizard asks them
+  choices: CharacterChoicesSchema.optional(),
 });
 
 // #endregion
