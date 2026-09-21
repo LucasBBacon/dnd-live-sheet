@@ -22,6 +22,7 @@ import {
 } from "../referenceCache.js";
 import { getCachedRuleSnapshot } from "../ruleSnapshotCache.js";
 import { primePackRulebook } from "../packRulebook.js";
+import { classLedgerOrder } from "../classLedger.js";
 import type {
   LevelUpOptionsInput,
   ReferenceProvider,
@@ -235,7 +236,8 @@ const loadCharacterClassLevels = async ({
       classLevel: characterClasses.classLevel,
     })
     .from(characterClasses)
-    .where(eq(characterClasses.characterId, characterId));
+    .where(eq(characterClasses.characterId, characterId))
+    .orderBy(...classLedgerOrder);
 
   return Object.fromEntries(
     classRows.map((row) => [row.classId, row.classLevel]),

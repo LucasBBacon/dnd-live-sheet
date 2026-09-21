@@ -97,9 +97,11 @@ describe("Character Routes", () => {
     const tx = {
       select: vi.fn().mockReturnThis(),
       from: vi.fn().mockReturnThis(),
-      where: vi.fn().mockImplementation(async () => {
-        const nextResult = selectResults.shift();
-        return nextResult ?? [];
+      where: vi.fn().mockImplementation(() => {
+        const rows = selectResults.shift() ?? [];
+        return Object.assign(Promise.resolve(rows), {
+          orderBy: () => Promise.resolve(rows),
+        });
       }),
       update: vi.fn().mockReturnThis(),
       set: vi.fn().mockReturnThis(),

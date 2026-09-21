@@ -185,10 +185,19 @@ describe("applyLevelUp choices", () => {
         },
       ],
     ];
+    const orderBy = vi.fn();
     const tx = {
       select: vi.fn().mockReturnThis(),
       from: vi.fn().mockReturnThis(),
-      where: vi.fn().mockImplementation(async () => selectResults.shift() ?? []),
+      where: vi.fn().mockImplementation(() => {
+        const rows = selectResults.shift() ?? [];
+        return Object.assign(Promise.resolve(rows), {
+          orderBy: (...args: unknown[]) => {
+            orderBy(...args);
+            return Promise.resolve(rows);
+          },
+        });
+      }),
       update: vi.fn().mockReturnThis(),
       set: vi.fn().mockReturnThis(),
       insert: vi.fn().mockReturnThis(),
@@ -222,7 +231,7 @@ describe("applyLevelUp choices", () => {
     const { applyLevelUp } = await import(
       "../../controllers/characterController.js"
     );
-    return { applyLevelUp, tx };
+    return { applyLevelUp, tx, orderBy };
   };
 
   /**
@@ -237,10 +246,19 @@ describe("applyLevelUp choices", () => {
   ) => {
     vi.resetModules();
     const selectResults: unknown[][] = [[characterRow], existingClassRows];
+    const orderBy = vi.fn();
     const tx = {
       select: vi.fn().mockReturnThis(),
       from: vi.fn().mockReturnThis(),
-      where: vi.fn().mockImplementation(async () => selectResults.shift() ?? []),
+      where: vi.fn().mockImplementation(() => {
+        const rows = selectResults.shift() ?? [];
+        return Object.assign(Promise.resolve(rows), {
+          orderBy: (...args: unknown[]) => {
+            orderBy(...args);
+            return Promise.resolve(rows);
+          },
+        });
+      }),
       update: vi.fn().mockReturnThis(),
       set: vi.fn().mockReturnThis(),
       insert: vi.fn().mockReturnThis(),
@@ -270,7 +288,7 @@ describe("applyLevelUp choices", () => {
     const { applyLevelUp } = await import(
       "../../controllers/characterController.js"
     );
-    return { applyLevelUp, tx };
+    return { applyLevelUp, tx, orderBy };
   };
 
   const levelUp = (body: Record<string, unknown>) =>
@@ -483,5 +501,19 @@ describe("applyLevelUp choices", () => {
     expect(tx.set).toHaveBeenCalledWith(
       expect.objectContaining({ subclassId: "subclass_fighter_battle_master" }),
     );
+  });
+
+  it("reads the class ledger in the order the classes were taken (#74)", async () => {
+    const { applyLevelUp, orderBy } = await setupLevelUp();
+    const { res } = response();
+
+    await applyLevelUp(levelUp({}), res);
+
+    // Imported after setupLevelUp's vi.resetModules() so this is the same
+    // module instance applyLevelUp itself resolved classLedgerOrder from -
+    // importing it statically at file scope compares against a stale
+    // pre-reset instance and fails equality despite being value-identical.
+    const { classLedgerOrder } = await import("../../services/classLedger.js");
+    expect(orderBy).toHaveBeenCalledWith(...classLedgerOrder);
   });
 });

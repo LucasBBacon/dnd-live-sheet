@@ -16,6 +16,7 @@ import {
 } from "../services/levelUpValidation.js";
 import { getCachedRuleSnapshot } from "../services/ruleSnapshotCache.js";
 import { readStoredChoices, toCharacterSave } from "../services/characterSave.js";
+import { classLedgerOrder } from "../services/classLedger.js";
 import { z } from "zod";
 
 /** The shape both level-up pick maps share: a key to an array of option ids. */
@@ -72,7 +73,8 @@ export const applyLevelUp = async (req: Request, res: Response) => {
       const existingClasses = await tx
         .select()
         .from(characterClasses)
-        .where(eq(characterClasses.characterId, characterId));
+        .where(eq(characterClasses.characterId, characterId))
+        .orderBy(...classLedgerOrder);
       const targetClassRecord = existingClasses.find(
         (c) => c.classId === targetClassId,
       );

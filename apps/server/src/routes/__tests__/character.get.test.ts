@@ -2,6 +2,7 @@ import express, { type Request } from "express";
 import request from "supertest";
 import { describe, expect, it, vi } from "vitest";
 import {
+  characterClasses,
   characterResources,
   characters,
 } from "@project/database/src/schema/operational.js";
@@ -76,5 +77,18 @@ describe("GET /api/character/:characterId", () => {
         renderSql(clause).sql.includes('"character_resources"."id"'),
       ),
     ).toBe(true);
+  });
+
+  it("returns the class ledger in the order the classes were taken (#74)", async () => {
+    const db = seededDb();
+    const app = await setupApp(db);
+
+    await request(app).get("/api/character/char-1");
+
+    const [ledgerRead] = db.opsFor(characterClasses, "select");
+    expect(ledgerRead?.orderBy.map((part) => renderSql(part).sql)).toEqual([
+      '"character_classes"."position" asc',
+      '"character_classes"."class_id" asc',
+    ]);
   });
 });

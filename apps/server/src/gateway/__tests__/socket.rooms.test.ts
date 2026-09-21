@@ -2,16 +2,23 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { SOCKET_EVENTS } from "@project/shared";
 import {
   campaignMembers,
+  characterClasses,
   characterInventory,
   characterResources,
   characters,
 } from "@project/database/src/schema/operational.js";
+import { renderSql } from "./fakeDb.js";
 import {
   characterRow,
   inventoryRow,
   setupGateway,
   type GatewayHarness,
 } from "./socketHarness.js";
+
+const LEDGER_ORDER_SQL = [
+  '"character_classes"."position" asc',
+  '"character_classes"."class_id" asc',
+];
 
 /**
  * ROOM_JOIN is the only handler that authenticates, so campaignAccess is left
@@ -165,6 +172,24 @@ describe("socket gateway - ROOM_JOIN", () => {
     );
     // a turn event arriving alongside the join computes the same pools
     expect(insert?.onConflict).toBe("nothing");
+  });
+
+  it("reads the class ledger in the order the classes were taken (#74)", async () => {
+    harness = await setupGateway();
+    asMember(harness.db);
+    harness.db.seed(characters, [characterRow()]);
+    harness.db.seed(characterInventory, []);
+    harness.db.seed(characterResources, []);
+
+    await harness.emit(SOCKET_EVENTS.ROOM_JOIN, {
+      campaignId: "camp-1",
+      characterId: "char-1",
+    });
+
+    const [ledgerRead] = harness.db.opsFor(characterClasses, "select");
+    expect(ledgerRead?.orderBy.map((part) => renderSql(part).sql)).toEqual(
+      LEDGER_ORDER_SQL,
+    );
   });
 
   it("writes nothing when the character already holds every pool", async () => {

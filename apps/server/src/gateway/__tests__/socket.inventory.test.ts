@@ -16,6 +16,11 @@ import {
 
 const ROOM = "campaign_camp-1";
 
+const LEDGER_ORDER_SQL = [
+  '"character_classes"."position" asc',
+  '"character_classes"."class_id" asc',
+];
+
 describe("socket gateway - ITEM_EQUIPPED", () => {
   let harness: GatewayHarness;
 
@@ -545,6 +550,20 @@ describe("socket gateway - REST_COMPLETED", () => {
     expect(
       harness.db.opsFor(characterClasses, "select").length,
     ).toBeGreaterThan(0);
+  });
+
+  it("reads the class ledger in the order the classes were taken (#74)", async () => {
+    await ready();
+
+    await harness.emit(SOCKET_EVENTS.REST_COMPLETED, {
+      characterId: "char-1",
+      restType: "long",
+    });
+
+    const [ledgerRead] = harness.db.opsFor(characterClasses, "select");
+    expect(ledgerRead?.orderBy.map((part) => renderSql(part).sql)).toEqual(
+      LEDGER_ORDER_SQL,
+    );
   });
 
   it("reports an error and does not broadcast when the rest transaction fails", async () => {
