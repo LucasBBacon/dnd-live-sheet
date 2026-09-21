@@ -1742,7 +1742,7 @@ rather than silently refusing every socket connection.
 `clientOrigin()` in `apps/server/src/utils/clientOrigin.ts` reads
 `CLIENT_URL` and falls back to `http://localhost:5173`, read at call time
 rather than module load so tests can vary the environment. `index.ts` and
-`socket.ts:494` both call it, so the literal default now exists in one place
+`socket.ts:501` both call it, so the literal default now exists in one place
 instead of two that could disagree again.
 
 ### 9c. #65 — six small items the branch's own reviews deferred as fix-later
