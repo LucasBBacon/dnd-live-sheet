@@ -6,6 +6,7 @@ import {
 } from "@project/engine";
 import type { FixedProficiencyGrant } from "@project/shared";
 import { packRuleSnapshot } from "../../store/__tests__/packFixture";
+import { emptyCharacterChoices, type CharacterChoices } from "@project/shared";
 
 const weaponGrant = (proficiencyId: string): FixedProficiencyGrant => ({
   category: "weapons",
@@ -35,6 +36,7 @@ let mockStoreState: {
   } | null;
   getActiveTraits: () => unknown[];
   subclassIds: Record<string, string | null>;
+  choices: CharacterChoices;
 };
 
 let mockTotalMods: unknown[] = [];
@@ -83,6 +85,7 @@ describe("useCombat", () => {
       ruleSnapshot: packRuleSnapshot(),
       getActiveTraits: () => [],
       subclassIds: {},
+      choices: emptyCharacterChoices(),
     };
     mockTotalMods = [];
   });
@@ -128,13 +131,14 @@ describe("useCombat", () => {
     mockStoreState.getProficiencyGrants = () => [
       weaponGrant("category_weapon_martial"),
     ];
-    mockStoreState.traitGrants = [
-      {
-        id: "grant_savage_attacks",
-        traitId: "savage_attacks",
-        source: "test",
-      },
-    ];
+    // this trait would ordinarily reach getActiveTraits() through the
+    // half-orc race or a stored choice - stubbed directly here since this
+    // suite mocks the store rather than compiling a real save
+    const savageAttacks = packRuleSnapshot().traitsById?.["savage_attacks"];
+    if (!savageAttacks) {
+      throw new Error("savage_attacks missing from the shipped pack");
+    }
+    mockStoreState.getActiveTraits = () => [savageAttacks];
 
     const { attacks } = useCombat();
 

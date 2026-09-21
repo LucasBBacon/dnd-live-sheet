@@ -9,7 +9,7 @@ import {
   resolveWeaponDefinition,
   type Ability,
 } from "@project/engine";
-import type { InventoryInstance, TraitDefinition } from "@project/shared";
+import type { InventoryInstance } from "@project/shared";
 
 type HeldItem = InventoryInstance & { slot: "main_hand" | "off_hand" };
 
@@ -22,13 +22,15 @@ export const useCombat = () => {
   const getProficiencyGrants = useCharacterSheetStore(
     (state) => state.getProficiencyGrants,
   );
-  const traitGrants = useCharacterSheetStore((state) => state.traitGrants);
-  const availableTraits = useCharacterSheetStore((state) => state.traits);
   const activeStates = useCharacterSheetStore((state) => state.activeStates);
   const classLevels = useCharacterSheetStore((state) => state.classLevels);
   const ruleSnapshot = useCharacterSheetStore((state) => state.ruleSnapshot);
   const getActiveTraits = useCharacterSheetStore((state) => state.getActiveTraits);
   const subclassIds = useCharacterSheetStore((state) => state.subclassIds);
+  // getActiveTraits' own reference is stable - it always reads live state
+  // through get() - so a chosen trait (a fighting style, a totem) only
+  // reaches this memo's recompute because choices is read here too
+  const choices = useCharacterSheetStore((state) => state.choices);
 
   // compose the prerequisite math engines
   const { finalAbilities, totalMods } = useAbilities();
@@ -51,23 +53,17 @@ export const useCombat = () => {
 
     const inventoryIds = inventory.map((i) => i.id);
 
-    const activeTraits = Array.from(
-      new Map<string, TraitDefinition>([
-        ...(availableTraits ?? []).map((trait) => [trait.id, trait] as const),
-        ...traitGrants.flatMap((grant) => {
-          const trait = ruleSnapshot?.traitsById?.[grant.traitId];
-          return trait ? [[trait.id, trait] as const] : [];
-        }),
-      ]).values(),
-    );
+    // read through the store's compile - the same traits the server
+    // synthesises its swings from, and the same one that resolves a chosen
+    // trait (a fighting style, a totem) from stored choices rather than just
+    // the traits the character was unconditionally granted - so neither a
+    // subclass feature like Frenzy nor a chosen trait like Savage Attacker is
+    // ever missed here
+    const activeTraits = getActiveTraits();
     const criticalHitModifiers = activeTraits.flatMap(
       (trait) => trait.criticalHitModifiers ?? [],
     );
-
-    // read through the store's compile, the same traits the server
-    // synthesises its swings from, so a subclass feature like Frenzy is
-    // never missed here
-    const dynamicTemplates = getActiveTraits()
+    const dynamicTemplates = activeTraits
       .flatMap((trait) => trait.actions ?? [])
       .filter((action) => action.effect.type === "dynamic_weapon_attack");
 
@@ -193,8 +189,6 @@ export const useCombat = () => {
   }, [
     inventory,
     getProficiencyGrants,
-    traitGrants,
-    availableTraits,
     activeStates,
     classLevels,
     finalAbilities,
@@ -203,5 +197,6 @@ export const useCombat = () => {
     ruleSnapshot,
     getActiveTraits,
     subclassIds,
+    choices,
   ]);
 };

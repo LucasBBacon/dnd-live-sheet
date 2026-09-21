@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { createRoot } from "react-dom/client";
 import { act } from "react";
-import type { ActionGrant, ActorInstance } from "@project/shared";
+import type { ActionGrant, ActorInstance, CharacterChoices } from "@project/shared";
 import { CombatWidget } from "../CombatWidget";
 import { packRuleSnapshot } from "../../../store/__tests__/packFixture";
 
@@ -139,14 +139,22 @@ const storeState = {
   },
   selectedActorInstanceId: actor.instanceId,
   selectActorInstance: mocks.selectActorInstance,
-  traitGrants: [
-    {
-      id: "grant_protection",
-      traitId: "trait_fs_protection",
-      source: "test",
+  // a fighting style is a class progression pick, stored under choices since
+  // this branch - not a character_traits row
+  choices: {
+    classSelections: {
+      class_fighter: { fighter_level_1_fighting_style: ["trait_fs_protection"] },
     },
-  ],
-  traits: [],
+    traitSelections: {},
+  } as CharacterChoices,
+  getActiveTraits: () => {
+    const pickedTraitIds = Object.values(storeState.choices.classSelections)
+      .flatMap((nodeSelections) => Object.values(nodeSelections))
+      .flat();
+    return pickedTraitIds
+      .map((traitId) => storeState.ruleSnapshot?.traitsById?.[traitId])
+      .filter((trait): trait is NonNullable<typeof trait> => Boolean(trait));
+  },
   executeActorAction: mocks.executeActorAction,
   spendReaction: mocks.spendReaction,
   getCharacterActions: () => [
@@ -229,6 +237,25 @@ describe("CombatWidget", () => {
 
     root.unmount();
     container.remove();
+  });
+
+  it("shows no Protection helper when no fighting style has been chosen", async () => {
+    const originalChoices = storeState.choices;
+    storeState.choices = { classSelections: {}, traitSelections: {} };
+
+    const container = document.createElement("div");
+    document.body.appendChild(container);
+    const root = createRoot(container);
+
+    await act(async () => {
+      root.render(<CombatWidget />);
+    });
+
+    expect(container.textContent).not.toContain("Reaction helper");
+
+    root.unmount();
+    container.remove();
+    storeState.choices = originalChoices;
   });
 
   it("opens a hostile attack reaction window through the declare action", async () => {
