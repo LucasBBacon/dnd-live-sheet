@@ -8,8 +8,8 @@
 ## Why these three together
 
 Each is a place where content or state the pack already carries fails to
-reach, or stay on, a player's sheet. None needs new authoring. Each is one
-commit, test-first.
+reach, or stay on, a player's sheet. None needs new authoring. Each lands
+test-first in its own commits: one for #64, two each for #63 and #68.
 
 ## #64 — one client origin for Express and the socket gateway
 
