@@ -144,10 +144,11 @@ const pruneAuthoritativeRuntime = () => {
   }
 };
 
-const toCharacterSave = (
+export const toCharacterSave = (
   character: {
     raceId: string;
     subraceId: string | null;
+    backgroundId?: string | null;
     str: number;
     dex: number;
     con: number;
@@ -173,6 +174,7 @@ const toCharacterSave = (
     hasSubraces: character.subraceId !== null,
     subraceId: character.subraceId,
   },
+  ...(character.backgroundId ? { backgroundId: character.backgroundId } : {}),
   classes:
     classes.length > 0
       ? classes.map((entry) => ({
@@ -220,6 +222,7 @@ const getAuthoritativeRuntimeContext = async (
     .select({
       raceId: characters.raceId,
       subraceId: characters.subraceId,
+      backgroundId: characters.backgroundId,
       str: characters.str,
       dex: characters.dex,
       con: characters.con,
