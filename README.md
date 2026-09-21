@@ -141,10 +141,12 @@ Base URL: `http://localhost:3000/api`
 
 ### Character routes
 
-- `POST /api/character` - create character transactionally
+- `POST /api/character` - create character transactionally; every choice question (class picks, trait choice blocks) must be answered in `choices`
 - `GET /api/character?characterId=<id>` - fetch by query id
 - `GET /api/character/:characterId` - fetch by path id
-- `POST /api/character/:characterId/level-up` - apply one level (hit points, subclass, ability score improvement or feat, class and trait choices, spells), validated before any write
+- `POST /api/character/:characterId/level-up` - apply one level (hit points, subclass, ability score improvement or feat, class and trait choices, spells), validated before any write; questions new at that level must be answered, and a stored answer can never be changed
+
+Both wizards ask every choice question: the creation wizard in a Choices step, the level-up wizard in one Choices step per level (spell picks are not supported by the wizard yet). The engine's `listChoiceQuestions(save, snapshot)` defines what a question is, for the client and the server alike.
 
 A character's choices live in `characters.choices` (JSONB): `classSelections` (class progression picks, keyed by class and node), `traitSelections` (trait choice-block picks, keyed by block) and `feats` (feats taken, in order). The engine's bootstrapper grants traits from race, background, classes and feats, so a feat picked at level-up reaches both the server's sheet and the web sheet. Multiclass prerequisites are checked against final ability scores (stored scores are pre-racial; racial and other trait bonuses are applied on top, magic items are not).
 
