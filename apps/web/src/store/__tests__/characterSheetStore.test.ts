@@ -1,12 +1,21 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
+  AbilityEngine,
   CharacterBootstrapper,
+  DerivedStatEngine,
   EffectManager,
   ResourceManager,
 } from "@project/engine";
-import { CombatContextSchema, type ActorInstance } from "@project/shared";
+import {
+  CombatContextSchema,
+  type ActorInstance,
+  type RuntimeModifier,
+} from "@project/shared";
 import { socketService } from "../../services/socketService";
-import { useCharacterSheetStore } from "../characterSheetStore";
+import {
+  useCharacterSheetStore,
+  type CharacterSheetState,
+} from "../characterSheetStore";
 import { packRuleSnapshot } from "./packFixture";
 
 describe("useCharacterSheetStore hp trigger handling", () => {
@@ -1696,5 +1705,77 @@ describe("useCharacterSheetStore proficiency grants", () => {
       .map((grant) => grant.proficiencyId);
 
     expect(skills).toEqual(expect.arrayContaining(["perception", "insight"]));
+  });
+});
+
+describe("getSheetModifiers", () => {
+  const init = (overrides: Partial<CharacterSheetState> = {}) =>
+    useCharacterSheetStore.getState().initialize({
+      id: "char_mods",
+      level: 1,
+      classLevels: { class_bard: 1 },
+      subclassIds: {},
+      raceId: "race_half_elf",
+      subraceId: null,
+      backgroundId: null,
+      choices: {
+        classSelections: {},
+        traitSelections: { half_elf_asi_choice: ["DEX", "CON"] },
+      },
+      inventory: [],
+      resources: [],
+      activeModifiers: [],
+      activeStates: [],
+      ruleSnapshot: packRuleSnapshot(),
+      ...overrides,
+    });
+
+  it("applies a half-elf's fixed and chosen ability bonuses", () => {
+    init();
+    const modifiers = useCharacterSheetStore.getState().getSheetModifiers();
+    const score = (base: number, stat: "STR" | "DEX" | "CON" | "CHA") =>
+      AbilityEngine.calculateScore(base, stat, modifiers, []).score;
+
+    expect(score(16, "CHA")).toBe(18);
+    expect(score(15, "DEX")).toBe(16);
+    expect(score(12, "CON")).toBe(13);
+    expect(score(9, "STR")).toBe(9);
+  });
+
+  it("gives an unarmoured barbarian Unarmored Defense", () => {
+    init({
+      classLevels: { class_barbarian: 1 },
+      raceId: "race_human",
+      choices: { classSelections: {}, traitSelections: {} },
+    });
+    const modifiers = useCharacterSheetStore.getState().getSheetModifiers();
+
+    const armorClass = DerivedStatEngine.calculateAC(
+      { STR: 3, DEX: 2, CON: 3, INT: 0, WIS: 0, CHA: 0 },
+      modifiers,
+      [],
+    );
+
+    expect(armorClass.total).toBe(15); // 10 + DEX 2 + CON 3
+  });
+
+  it("keeps the dev widget's activeModifiers on top", () => {
+    const devModifier: RuntimeModifier = {
+      id: "dev_mod",
+      target: "STR",
+      type: "add",
+      value: 5,
+      scalingFactor: "none",
+      requiredStates: [],
+      forbiddenStates: [],
+      sourceName: "Dev",
+      sourceOrigin: "trait",
+      isActive: true,
+    };
+    init({ activeModifiers: [devModifier] });
+
+    expect(useCharacterSheetStore.getState().getSheetModifiers()).toContainEqual(
+      devModifier,
+    );
   });
 });

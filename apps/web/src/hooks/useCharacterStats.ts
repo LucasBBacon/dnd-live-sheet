@@ -3,7 +3,6 @@ import { useCharacterSheetStore } from "../store/characterSheetStore";
 import {
   AbilityEngine,
   DerivedStatEngine,
-  InventoryExtractor,
   SaveEngine,
   SkillEngine,
   SpellcastingEngine,
@@ -16,32 +15,40 @@ import { SKILL_MAP } from "@project/shared";
 const ABILITY_KEYS: Ability[] = ["STR", "DEX", "CON", "INT", "WIS", "CHA"];
 
 /**
- * A custom React hook that calculates the character's final ability scores, modifiers, and total active modifiers based on base scores, active modifiers, and equipped inventory items.
+ * A custom React hook that calculates the character's final ability scores
+ * and modifiers from every modifier the sheet applies - traits, equipment
+ * and live effects, via the store's getSheetModifiers (#73).
  * @returns An object containing the final ability scores and modifiers for each ability, as well as an array of all active modifiers affecting the character.
  */
 export const useAbilities = () => {
   const baseScores = useCharacterSheetStore((state) => state.baseScores);
+  const activeStates = useCharacterSheetStore((state) => state.activeStates);
+  const getSheetModifiers = useCharacterSheetStore(
+    (state) => state.getSheetModifiers,
+  );
+  // getSheetModifiers is a stable reference, so subscribe to everything it
+  // reads - otherwise the memo below would never recompute (#73)
+  const raceId = useCharacterSheetStore((state) => state.raceId);
+  const subraceId = useCharacterSheetStore((state) => state.subraceId);
+  const backgroundId = useCharacterSheetStore((state) => state.backgroundId);
+  const classLevels = useCharacterSheetStore((state) => state.classLevels);
+  const subclassIds = useCharacterSheetStore((state) => state.subclassIds);
+  const choices = useCharacterSheetStore((state) => state.choices);
+  const inventory = useCharacterSheetStore((state) => state.inventory);
   const activeModifiers = useCharacterSheetStore(
     (state) => state.activeModifiers,
   );
-  const inventory = useCharacterSheetStore((state) => state.inventory);
-  const activeStates = useCharacterSheetStore((state) => state.activeStates);
+  const runtimeEffects = useCharacterSheetStore((state) => state.runtimeEffects);
   const ruleSnapshot = useCharacterSheetStore((state) => state.ruleSnapshot);
 
   return useMemo(() => {
-    // 1 - compile modifiers from equipped items
-    const equipmentMods = InventoryExtractor.extractModifiers(
-      inventory,
-      ruleSnapshot ?? undefined,
-    );
-    const totalMods = [...activeModifiers, ...equipmentMods];
+    const totalMods = getSheetModifiers();
 
     const finalAbilities = {} as Record<
       Ability,
       { score: number; modifier: number }
     >;
 
-    // 2 - run raw scores through engine
     (Object.keys(baseScores) as Ability[]).forEach((stat) => {
       const derived = AbilityEngine.calculateScore(
         baseScores[stat],
@@ -56,7 +63,21 @@ export const useAbilities = () => {
     });
 
     return { finalAbilities, totalMods };
-  }, [baseScores, activeModifiers, inventory, activeStates, ruleSnapshot]);
+  }, [
+    baseScores,
+    activeStates,
+    getSheetModifiers,
+    raceId,
+    subraceId,
+    backgroundId,
+    classLevels,
+    subclassIds,
+    choices,
+    inventory,
+    activeModifiers,
+    runtimeEffects,
+    ruleSnapshot,
+  ]);
 };
 
 export const useDerivedStats = () => {
