@@ -6,6 +6,7 @@ import {
   characterClasses,
   characterCustomTraits,
   characterInventory,
+  characterResources,
   characterTraits,
   characters,
 } from "@project/database/src/schema/operational.js";
@@ -108,6 +109,18 @@ const fetchCharacterPayload = async (userId: string, characterId: string) => {
     .from(characterInventory)
     .where(eq(characterInventory.characterId, characterId));
 
+  // The sheet hydrates its pools from these. Without them it rebuilt every
+  // pool at full, so a spend RESOURCE_CONSUMED had persisted still came back
+  // on reload (#63).
+  const resources = await db
+    .select({
+      id: characterResources.id,
+      name: characterResources.name,
+      current: characterResources.current,
+    })
+    .from(characterResources)
+    .where(eq(characterResources.characterId, characterId));
+
   return {
     ...character,
     classLevels: Object.fromEntries(
@@ -120,6 +133,7 @@ const fetchCharacterPayload = async (userId: string, characterId: string) => {
     })),
     traitGrants,
     inventory,
+    resources,
   };
 };
 
