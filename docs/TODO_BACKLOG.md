@@ -1,7 +1,7 @@
 # TODO Backlog
 
-**Status as of 2026-09-21**, on `feat/choice-step`, after #68's choice half
-closed (Branch B). The workspace is green — **2266
+**Status as of 2026-09-21**, on `main`, after `feat/choice-step` merged
+(#68's choice half, Branch B, closed). The workspace is green — **2266
 tests**, 0 failures, and typecheck clean per package (6f explains why "per
 package" matters). Nothing below is breaking a build; these are gaps, debt and
 content.
