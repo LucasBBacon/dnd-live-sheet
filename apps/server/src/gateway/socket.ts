@@ -303,9 +303,12 @@ const getAuthoritativeRuntimeContext = async (
   );
 
   if (missingPools.length > 0) {
+    // A join and a turn event can materialise the same pools concurrently;
+    // the table's (character_id, id) key makes the second insert a no-op.
     await db
       .insert(characterResources)
-      .values(missingPools.map((pool) => ({ ...pool, characterId })));
+      .values(missingPools.map((pool) => ({ ...pool, characterId })))
+      .onConflictDoNothing();
   }
 
   /**
@@ -579,6 +582,12 @@ export function initializeWebSocketGateway(httpServer: any) {
             console.log(
               `Socket ${socket.id} synced inventory for ${characterId} in campaign_${scopedCampaignId}`,
             );
+
+            // Pools a character's traits grant exist only in the browser until
+            // something writes them, and RESOURCE_CONSUMED can only decrement
+            // a row that exists (#63). Turns and actions already materialise
+            // through this; the join now does too, so they cannot drift.
+            await getAuthoritativeRuntimeContext(characterId);
           } catch (error) {
             console.error("Failed to sync inventory on room join:", error);
             // The room join above stands: membership was verified, and only the
