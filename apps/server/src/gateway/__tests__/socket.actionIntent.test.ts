@@ -479,16 +479,24 @@ describe("socket gateway - ACTION_INTENT", () => {
   it("resolves a subclass action for a Totem Warrior whose totem was a player choice", async () => {
     harness = await setupGateway();
     await joinCampaign(harness);
-    harness.db.seed(characters, [characterRow()]);
+    harness.db.seed(characters, [
+      characterRow({
+        choices: {
+          classSelections: {
+            class_barbarian: {
+              barbarian_totem_level_3_totem_spirit: ["trait_totem_spirit_eagle"],
+            },
+          },
+          traitSelections: {},
+        },
+      }),
+    ]);
     harness.db.seed(characterClasses, [
       {
         classId: "class_barbarian",
         classLevel: 3,
         subclassId: "subclass_barbarian_totem_warrior",
       },
-    ]);
-    harness.db.seed(characterTraits, [
-      { traitId: "trait_totem_spirit_eagle", source: "player_choice" },
     ]);
     harness.db.seed(characterInventory, []);
     harness.db.seed(characterResources, [
@@ -519,16 +527,24 @@ describe("socket gateway - ACTION_INTENT", () => {
   it("does not allow Eagle Dash while wearing heavy armour", async () => {
     harness = await setupGateway();
     await joinCampaign(harness);
-    harness.db.seed(characters, [characterRow()]);
+    harness.db.seed(characters, [
+      characterRow({
+        choices: {
+          classSelections: {
+            class_barbarian: {
+              barbarian_totem_level_3_totem_spirit: ["trait_totem_spirit_eagle"],
+            },
+          },
+          traitSelections: {},
+        },
+      }),
+    ]);
     harness.db.seed(characterClasses, [
       {
         classId: "class_barbarian",
         classLevel: 3,
         subclassId: "subclass_barbarian_totem_warrior",
       },
-    ]);
-    harness.db.seed(characterTraits, [
-      { traitId: "trait_totem_spirit_eagle", source: "player_choice" },
     ]);
     harness.db.seed(characterInventory, [
       {
