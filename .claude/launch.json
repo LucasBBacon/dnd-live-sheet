@@ -1,0 +1,24 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "server",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["--filter", "@project/server", "dev"],
+      "port": 3000
+    },
+    {
+      "name": "server-no-client-url",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["--filter", "@project/server", "dev"],
+      "env": { "CLIENT_URL": "" },
+      "port": 3000
+    },
+    {
+      "name": "web",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["--filter", "@project/web", "dev"],
+      "port": 5173
+    }
+  ]
+}
