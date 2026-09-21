@@ -1,15 +1,16 @@
 # TODO Backlog
 
-**Status as of 2026-09-02.** The workspace is green — **1779 tests**, 0
-failures, lint clean, `check:hygiene` passing, and **typecheck clean across
-all five packages** (verified per package, not through turbo — 6f explains why
-that distinction matters). Nothing below is breaking a build; these are gaps,
-debt and content.
+**Status as of 2026-09-21**, at `3315fd9` on `main`, after
+`feat/proficiency-family` merged. The workspace is green — **2052
+tests**, 0 failures, and typecheck clean per package (6f explains why "per
+package" matters). Nothing below is breaking a build; these are gaps, debt and
+content.
 
-Read [Recommended sequence](#recommended-sequence) first — it is the ordered
-list, re-measured against the working tree on 2026-09-02. **Tiers 1-3 of the
-previous pass are closed, and so are #32, #33 and #55.** What remains is
-mostly the authoring burndown.
+Read [Recommended sequence](#recommended-sequence) first — it was **re-ordered
+on 2026-09-21** (see P11 for the findings that drove it). The short version:
+the last three branches authored content faster than the product surfaces it,
+so the next sitting is about making authored work reach a player, and the
+burndown after that is sequenced by *system* rather than by trait count.
 
 Item numbers are stable ids. Gaps in the numbering are intentional, closed
 items are struck through rather than deleted, and superseded decisions are kept
@@ -150,6 +151,84 @@ structural.
 ---
 
 ## Recommended sequence
+
+**Re-ordered 2026-09-21**, after `feat/proficiency-family` merged, by
+re-checking every open item against the working tree rather than the page.
+The previous ordering principle was "shrink the problem before working it",
+and it is spent: #57, #58 and #51 are closed and #30 is an honest count. Two
+things the last three branches showed replace it:
+
+1. **Authored content is outrunning what reaches a player.** 28 of the 36
+   proficiency traits just authored reach no live sheet (#68); spell slots
+   exist but do not appear until the first turn event (#63); and a fresh clone
+   cannot open a live session at all without an undocumented env var in the
+   code path (#64). Each new branch that authors content widens this gap, so
+   it goes first.
+2. **A trait is not a unit of work (#62).** The burndown is sequenced by the
+   *system* each class pass needs — a resource pool, a schema concept, a data
+   type — not by which row has the most stubs.
+
+`🟢` marks an easy win: self-contained, with a test harness already in place.
+
+### Tier 1 — make what is already authored reach the player (days)
+
+| Order | Item | Scale | Why here |
+| --- | --- | --- | --- |
+| 1 | 🟢 **#64** — give the socket gateway's CORS origin a fallback | minutes | Still open in code. `360c239` documented `CLIENT_URL` in the README but `socket.ts:494` still has no default while `index.ts:20` does. Same one-line fallback, or fail loudly at startup; either way, one test in the existing gateway harness. |
+| 2 | 🟢 **#63** — materialise resource pools on `ROOM_JOIN` | small | Re-verified 2026-09-21: `ROOM_JOIN` (`socket.ts:503`) still never calls `getAuthoritativeRuntimeContext`. Every caster's slots are invisible until they press "Begin turn". The gateway harness and `renderSql` make this a characterisation-test flip. |
+| 3 | **#68 (fixed half)** — backgrounds reach the live sheet | small–medium | Cheaper than recorded: `characters.background_id` already exists and the wizard already selects a background (`wizardStore`, `compileCharacter`). What is missing is only `background` on `CharacterSaveSchema` and one more source in `CharacterBootstrapper.resolveGrantedTraitIds`. No migration. Unlocks the four backgrounds' fixed grants. |
+| 4 | **#69** — record which node a trait choice answered | medium, needs a decision | Newly numbered (it sat unnumbered since 2026-09-02). Must land **before the fighter or ranger pass**, and before #68's choice half, because the proficiency-choice step will write more `player_choice` rows through the same lossy path. Recommend the honest fix: persist `node_id` on `character_traits` (one migration). |
+| 5 | **#68 (choice half)** — a proficiency-choice step in character creation | medium, UI | `ProficiencyExtractor.listPendingChoices` has no caller outside tests. 21 authored choice blocks wait on this. Brainstorm the wizard step first; it is the first new UI surface since the barbarian's table notes. |
+
+### Tier 2 — the burndown, one system per pass
+
+| Order | Item | Scale | Why here |
+| --- | --- | --- | --- |
+| 6 | **Rogue pass**, with **#66**'s expertise concept | 26 stubs | Smallest remaining row that needs a new *system* rather than just data: Sneak Attack (#62) and Expertise (#66). Settling expertise here also unblocks the bard's copy of it. Follow the barbarian template (design spec → slices → sheet surface). |
+| 7 | **#31a** — spell *data*: real `level`, `school` and class spell lists | 111 spells | Slots exist since `feat/spellcasting-slots`, but every spell is level 0 evocation, so a wizard has slots and nothing meaningful to cast. The data pass is mechanical (PHB values) and adds spell lists as a pack concept, which also unblocks **#67**. Rules (#31b) stay a later, per-spell job. |
+| 8 | **Next class passes**, each named by its system | see table below | Monk (ki, #62), sorcerer (sorcery points, #62), cleric/paladin (channel divinity, divine smite, #62), druid (wild shape, #62), fighter (after #69; Battle Master is #69's worst case, so the pass verifies it). Pick by who is playing what. |
+| 9 | **#36** — `SUMMON_ACTOR_DICTIONARY` into the pack | — | The last rules content outside the pack. Unchanged; still two live readers. Best done alongside the wizard or druid pass, whose summons are its only consumers. |
+| — | **#30** — the count itself | **362** | Not an item to "do"; it falls as 6–9 land. Consider #62's option 2 (track blocked-on-a-system stubs separately) the next time it is re-counted. |
+
+### Tier 3 — small loose ends (interleave between passes)
+
+| Order | Item | Why here |
+| --- | --- | --- |
+| 10 | 🟢 **#65** — six fix-later polish items from the spellcasting review | Each is minutes; (a) is a real lint warning in `RestModal.tsx`. Good warm-up for any session. |
+| 11 | 🟢 **#54** — confirm `0013_add_reset_conditions.sql` has been applied | Owner-only check against the live database. Latent until the pack authors an `initiative_roll` or `start_of_turn` reset. |
+| 12 | ✅ **Repo hygiene** — branches and worktrees (P11) | **Done 2026-09-21** — see 11b. |
+| 13 | **#53** — a unit test for the line-ending check | Needs a root vitest project or a move into a package. |
+| 14 | **#52** — 71 LF files against a CRLF tree | One normalising commit, no content change. Do it on a quiet day, not mid-branch. |
+
+### Tier 4 — design passes
+
+| Order | Item | Why here |
+| --- | --- | --- |
+| 15 | **#23 + #24 + A1 + A5 + E2 together** | One root: the event vocabulary only models your own turn. #24 (Dueling) joins it because the missing `status_wielding_one_handed_only` emitter is the same "what am I holding" model E2 needs. |
+| 16 | **A2b**, **S5** | Both small judgement calls about UI, not defects. |
+
+### Tier 5 — blocked or conditional; do not start
+
+Unchanged from the previous pass: **#41, #42** (need a second pack), **#43**
+(needs a browse endpoint over resources), **#38** (`db:push` TTY; `db:migrate`
+is the path in use), **#37 remainder** (deliberate), coverage thresholds.
+
+**Suggested first sitting:** Tier 1 items 1–3. Two are one-test fixes in a
+harness that already exists, and the third is a schema field plus one
+bootstrapper line — together they make every existing caster and every
+background visible on the sheet the first time it opens. Then settle #69's
+decision before anything writes more trait choices.
+
+The per-class stub table Tier 2 relies on ("Where the remaining stubs sit",
+re-counted 2026-09-21) is still current and stays in place below, inside the
+superseded sequence's Tier 2 — only the ordering around it is retired.
+
+### Superseded — the 2026-09-02 → 2026-09-21 sequence
+
+Kept so the change of direction is visible. Tiers 1 and 3 of it are closed
+(#57, #58, #51, #56); its Tier 2 is carried into the new Tier 2 above,
+re-ordered by system; its Tiers 4 and 5 are carried unchanged, with #24 folded
+into the design pass.
 
 Re-measured **2026-09-20**, after `feat/item-proficiency` merged. #30 is
 **408**, all twelve class rows were re-counted, #52 is **71**, E2 now covers 38
@@ -612,9 +691,9 @@ Two smaller findings, recorded but lower value:
 
 ---
 
-## Open — a rebuilt selection is credited to every node that offers the trait
+## Open — #69: a rebuilt selection is credited to every node that offers the trait
 
-Found 2026-09-02 by the review of the barbarian pass, in code that pass merged
+Numbered #69 on 2026-09-21 (it had no id until then). Found 2026-09-02 by the review of the barbarian pass, in code that pass merged
 rather than wrote.
 
 `CharacterBootstrapper.selectionsFromChosenTraitIds` recovers which
@@ -862,7 +941,7 @@ Found while executing `docs/superpowers/plans/2026-08-22-schema-layering.md`.
 
 | # | Item | Notes |
 | --- | --- | --- |
-| 45 | Three independent implementations of "read the manifest, strip assembly-only keys, merge the sections, parse through `CoreRulePackSchema`" | **Proven to drift, three times in one branch.** See below. |
+| ~~45~~ | ~~Three independent implementations of "read the manifest, strip assembly-only keys, merge the sections, parse through `CoreRulePackSchema`"~~ | **Closed — see 6e.** Both hand copies now import `assembleCoreRulePackSync` from `@project/database/pack`; re-confirmed 2026-09-21. This row was never struck when 6e recorded the fix. |
 
 The three copies:
 
@@ -1782,3 +1861,61 @@ character creation) and a schema change (a `background` field on
 `CharacterSaveSchema`) that this branch did not build, because building them
 was never in its scope. Whoever picks up character-creation UI or the
 background gap should start here rather than rediscovering it.
+
+---
+
+## P11 — Sequencing pass (opened 2026-09-21)
+
+Every open item was re-checked against the working tree at `3315fd9` before
+the Recommended sequence was re-ordered. Recorded so the new order's reasons
+are checkable.
+
+### 11a. What the re-check found
+
+- **#64 is still open in code.** `360c239` ("mark CLIENT_URL as required")
+  changed only `README.md`. `socket.ts:494` still reads
+  `process.env.CLIENT_URL` with no default, and there is still no server-side
+  `.env.example`. The README note helps a reader; it does not help a fresh
+  clone that runs `pnpm dev` without reading it.
+- **#63 is unchanged.** `ROOM_JOIN` still never calls
+  `getAuthoritativeRuntimeContext`; its callers are still the action and turn
+  handlers only.
+- **#68's fixed half is smaller than recorded.** 10d frames it as "a schema
+  change (a `background` field on `CharacterSaveSchema`)", which is true, but
+  the storage and the selection already exist: `characters.background_id`
+  (`operational.ts:87`) is a real column with a foreign key, and the wizard
+  already picks a background (`wizardStore.ts`, `compileCharacter.ts`,
+  `ReviewStepContainer.tsx`). Only the save shape and the bootstrapper need to
+  learn about it. No migration.
+- **#45 was closed but still listed open** in 5a's table; struck there now.
+  6e had recorded the fix.
+- **#37's resource half is closed.** `ruleSnapshotCache` now reads resources
+  off the shared `toRuleSnapshot` projection ("the server no longer keeps its
+  own copy"), and the engine's `packToRuleLookup` builds on the same function.
+  What remains is the deliberate equipment remainder already in Tier 5.
+- **The selection-credit defect had no number**, which is why it could sit in
+  the middle of the page for three weeks while three branches merged past it.
+  It is **#69** now, and ordered ahead of any work that writes more trait
+  choices.
+
+### 11b. Repo hygiene — branches and worktrees
+
+Three local branches are fully merged into `main` (0 commits ahead) and can be
+deleted: `chore/pin-engine-typescript`, `feat/lossless-rule-snapshot`,
+`feat/weapon-damage-expressions`.
+
+Two Copilot worktrees under `../copilot-worktrees/dnd-live-sheet/` are from
+early July. `lucasbbacon-super-parakeet` is 0 ahead and can go.
+`lucasbbacon-split-memory-remediation` (worktree `lucasbbacon-cautious-winner`)
+is 2 ahead, 329 behind: a merge commit and `31ada62`, a 15-line stabilisation
+of `requireCampaignRole.test.ts`. Worth one look to see whether `main` already
+has an equivalent fix before discarding it; both also exist on `origin`.
+
+**Done 2026-09-21, on the owner's instruction.** The three merged branches
+are deleted and both worktrees removed. `31ada62` was **not** merged: it
+conflicts, because `main` has since rewritten `requireCampaignRole.test.ts` to
+mock `campaignAccess` instead of the `db` query chain the commit hoisted, so
+its fix targets code that no longer exists (the current test is green). It
+survives on `origin/lucasbbacon-split-memory-remediation`. The two local
+branches that backed the worktrees are deleted too; both still exist on
+`origin`.
