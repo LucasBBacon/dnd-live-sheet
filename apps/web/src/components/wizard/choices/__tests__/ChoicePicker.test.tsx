@@ -39,6 +39,53 @@ const renderInto = async (element: React.ReactElement) => {
 const checkboxes = (container: HTMLElement) =>
   Array.from(container.querySelectorAll<HTMLInputElement>('input[type="checkbox"]'));
 
+// React tracks a controlled input's value itself, so a test sets it through
+// the native setter and fires "input" for onChange to see the change
+const typeInto = async (input: HTMLInputElement, text: string) => {
+  const setValue = Object.getOwnPropertyDescriptor(
+    HTMLInputElement.prototype,
+    "value",
+  )!.set!;
+  await act(async () => {
+    setValue.call(input, text);
+    input.dispatchEvent(new Event("input", { bubbles: true }));
+  });
+};
+
+const optionLabels = (container: HTMLElement) =>
+  Array.from(container.querySelectorAll("label")).map(
+    (label) => label.textContent,
+  );
+
+const filterBox = (container: HTMLElement) =>
+  container.querySelector<HTMLInputElement>('input[type="search"]');
+
+/** thirteen options - one past the filter threshold */
+const spellQuestion = buildQuestion({
+  id: "cleric_level_1_cantrips",
+  target: "class",
+  prompt: "Cleric: choose 3 cantrip(s)",
+  pickCount: 3,
+  options: [
+    "Bless",
+    "Burning Hands",
+    "Fireball",
+    "Fire Shield",
+    "Guidance",
+    "Light",
+    "Mending",
+    "Resistance",
+    "Sacred Flame",
+    "Spare the Dying",
+    "Thaumaturgy",
+    "Toll the Dead",
+    "Word of Radiance",
+  ].map((label) => ({
+    id: `spell_${label.toLowerCase().replace(/ /g, "_")}`,
+    label,
+  })),
+});
+
 // ChoicePicker is stateless - it hands the parent a new `selected` array and
 // waits to be re-rendered with it. This harness plays that parent role for
 // real, so clicking twice actually accumulates two picks instead of two
@@ -168,6 +215,41 @@ describe("ChoicePicker", () => {
     const boxes = checkboxes(container);
     expect(boxes[0].disabled).toBe(true);
     expect(container.textContent).toContain("already known");
+  });
+});
+
+describe("ChoicePicker's name filter", () => {
+  it("is not shown for a question with 12 or fewer options", async () => {
+    const { container } = await renderInto(
+      <ChoicePicker question={buildQuestion()} selected={[]} onChange={() => {}} />,
+    );
+
+    expect(filterBox(container)).toBeNull();
+  });
+
+  it("narrows a long question's options by name, ignoring case", async () => {
+    const { container } = await renderInto(
+      <ChoicePicker question={spellQuestion} selected={[]} onChange={() => {}} />,
+    );
+
+    await typeInto(filterBox(container)!, "FIRE");
+
+    expect(optionLabels(container)).toEqual(["Fireball", "Fire Shield"]);
+  });
+
+  it("keeps a selected option shown and checked when the filter excludes it", async () => {
+    const { container } = await renderInto(
+      <ChoicePicker
+        question={spellQuestion}
+        selected={["spell_bless"]}
+        onChange={() => {}}
+      />,
+    );
+
+    await typeInto(filterBox(container)!, "fire");
+
+    expect(optionLabels(container)).toEqual(["Bless", "Fireball", "Fire Shield"]);
+    expect(checkboxes(container)[0].checked).toBe(true);
   });
 });
 
