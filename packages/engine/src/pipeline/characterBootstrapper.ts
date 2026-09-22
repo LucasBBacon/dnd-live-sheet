@@ -25,6 +25,7 @@ import {
   spellChoiceEntries,
   spellOptions,
   spellsKnownElsewhere,
+  traitSpellPicks,
   type SpellChoiceEntry,
 } from "./spellChoices.js";
 import {
@@ -324,9 +325,7 @@ export class CharacterBootstrapper {
     // (a Fiend warlock's Agonizing Blast checking for Eldritch Blast) - not
     // only a race trait's or this class's own traits, but a background's,
     // feat's or another class's trait too (#79)
-    const traitSpellPicks = spellEntries
-      .filter((entry) => entry.target === "trait")
-      .flatMap((entry) => entry.selected);
+    const traitSpellPickIds = traitSpellPicks(spellEntries);
 
     let totalLevel = 0;
     const seenClassIds = new Set<string>();
@@ -396,7 +395,7 @@ export class CharacterBootstrapper {
       const prerequisites = prerequisiteContext(
         save,
         classIndex,
-        traitSpellPicks,
+        traitSpellPickIds,
         snapshot,
       );
       const knownNodeIds = new Set<string>();

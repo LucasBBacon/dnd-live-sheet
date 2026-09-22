@@ -35,6 +35,7 @@ import {
   spellChoiceEntries,
   spellOptions,
   spellsKnownElsewhere,
+  traitSpellPicks,
   type SpellChoiceEntry,
 } from "./spellChoices.js";
 import {
@@ -269,9 +270,7 @@ const classQuestions = (
 ): { question: ChoiceQuestion; rank: number }[] => {
   // every trait spell block's picks count as known for a prerequisite
   // (Agonizing Blast's Eldritch Blast), exactly as save validation counts them
-  const traitSpellPicks = spells.entries
-    .filter((entry) => entry.target === "trait")
-    .flatMap((entry) => entry.selected);
+  const traitSpellPickIds = traitSpellPicks(spells.entries);
 
   return save.classes.flatMap((classState, classIndex) => {
     const blueprint = resolveClassDefinition(classState.classId, snapshot);
@@ -287,7 +286,7 @@ const classQuestions = (
     const prerequisites = prerequisiteContext(
       save,
       classIndex,
-      traitSpellPicks,
+      traitSpellPickIds,
       snapshot,
     );
 
