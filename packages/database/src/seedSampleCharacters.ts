@@ -496,6 +496,11 @@ interface SampleCharacter {
   int: number;
   wis: number;
   cha: number;
+  /**
+   * Base rolled hit points: the hit dice this character has taken, and
+   * nothing else. Constitution and any MAX_HP trait are added by the engine
+   * when a sheet or a clamp asks for the maximum (#78).
+   */
   maxHp: number;
   currentHp: number;
   /** One line on what this character is here to exercise. */
@@ -547,7 +552,7 @@ const ROSTER: SampleCharacter[] = [
     int: 12,
     wis: 10,
     cha: 12,
-    maxHp: 10,
+    maxHp: 8,
     currentHp: 10,
     testFocus:
       "Floor case: level 1, no subclass yet, untouched hit points, sparse slots.",
@@ -627,7 +632,7 @@ const ROSTER: SampleCharacter[] = [
     int: 10,
     wis: 16,
     cha: 11,
-    maxHp: 24,
+    maxHp: 18,
     currentHp: 17,
     testFocus:
       "Subrace-less race, a fully spent short-rest resource, sword-and-board slots.",
@@ -712,7 +717,7 @@ const ROSTER: SampleCharacter[] = [
     int: 8,
     wis: 12,
     cha: 10,
-    maxHp: 55,
+    maxHp: 40,
     currentHp: 22,
     testFocus:
       "Bloodied below half, attuned gloves, renamed weapon, body slot left empty for unarmoured defence.",
@@ -832,7 +837,7 @@ const ROSTER: SampleCharacter[] = [
     int: 12,
     wis: 10,
     cha: 16,
-    maxHp: 45,
+    maxHp: 38,
     currentHp: 45,
     testFocus:
       "Multiclass ledger, attuned cloak, partially spent short-rest pool, renamed instrument.",
@@ -933,7 +938,7 @@ const ROSTER: SampleCharacter[] = [
     int: 10,
     wis: 12,
     cha: 15,
-    maxHp: 85,
+    maxHp: 58,
     currentHp: 61,
     testFocus:
       "Two magic items across two slots, one very large partial pool, three resources at once.",
@@ -1067,7 +1072,7 @@ const ROSTER: SampleCharacter[] = [
     int: 12,
     wis: 10,
     cha: 17,
-    maxHp: 77,
+    maxHp: 55,
     currentHp: 1,
     testFocus:
       "One hit point from death, two fully drained pools, and a container holding other stacks.",
@@ -1180,7 +1185,7 @@ const ROSTER: SampleCharacter[] = [
     int: 9,
     wis: 17,
     cha: 7,
-    maxHp: 99,
+    maxHp: 63,
     currentHp: 99,
     testFocus:
       "No armour at all, a large half-spent pool, attuned boots, and one unattuned magic item waiting.",
@@ -1286,7 +1291,7 @@ const ROSTER: SampleCharacter[] = [
     int: 18,
     wis: 13,
     cha: 10,
-    maxHp: 86,
+    maxHp: 58,
     currentHp: 52,
     testFocus:
       "Custom background instead of a preset, ad-hoc granted traits, a dawn-recharging item pool.",
@@ -1410,7 +1415,7 @@ const ROSTER: SampleCharacter[] = [
     int: 10,
     wis: 17,
     cha: 8,
-    maxHp: 152,
+    maxHp: 101,
     currentHp: 0,
     testFocus:
       "Downed at zero hit points, high-level multiclass, big ammunition stack, drained wild shape.",
@@ -1548,7 +1553,7 @@ const ROSTER: SampleCharacter[] = [
     int: 10,
     wis: 12,
     cha: 14,
-    maxHp: 224,
+    maxHp: 124,
     currentHp: 224,
     testFocus:
       "Ceiling case: level 20, every slot filled, attunement at the cap of three, four resources.",
