@@ -1,4 +1,9 @@
-import type { CharacterSave } from "@project/shared";
+import type {
+  CharacterSave,
+  SpellChoiceNode,
+  SpellDefinition,
+  TraitDefinition,
+} from "@project/shared";
 import {
   LANGUAGE_DICTIONARY,
   listProficiencyOptions,
@@ -9,6 +14,7 @@ import {
   resolveClassDefinition,
   resolveFeatDefinition,
   resolveRaceDefinition,
+  resolveSpellDefinition,
   resolveTraitDefinition,
   type RuleSnapshotLookup,
 } from "../rules/ruleLookup.js";
@@ -19,10 +25,18 @@ import {
   classChoiceNodes,
   classTraitIds,
   featTraitIds,
+  isSpellChoice,
   subraceTraitIds,
+  unlockedGrants,
 } from "./grantSources.js";
 import { ModifierExtractor } from "./modifierExtractor.js";
 import { ProficiencyExtractor } from "./proficiencyExtractor.js";
+import {
+  spellChoiceEntries,
+  spellOptions,
+  spellsKnownElsewhere,
+  type SpellChoiceEntry,
+} from "./spellChoices.js";
 
 export interface ChoiceOption {
   id: string;
@@ -70,15 +84,16 @@ const humanise = (id: string): string => {
 };
 
 /**
- * What a picker shows for an option id: a trait's own name, a language or
- * tool's dictionary name, an ability's full name, or a humanised fallback for
- * anything else (a skill id, or an id nothing recognises).
+ * What a picker shows for an option id: a trait's own name, a spell's name, a
+ * language or tool's dictionary name, an ability's full name, or a humanised
+ * fallback for anything else (a skill id, or an id nothing recognises).
  */
 export const choiceOptionLabel = (
   optionId: string,
   snapshot?: RuleSnapshotLookup,
 ): string =>
   resolveTraitDefinition(optionId, snapshot)?.name ??
+  resolveSpellDefinition(optionId, snapshot)?.name ??
   LANGUAGE_DICTIONARY[optionId]?.name ??
   TOOL_DICTIONARY[optionId]?.name ??
   ABILITY_NAMES[optionId] ??
@@ -88,6 +103,32 @@ const optionsOf = (
   ids: string[],
   snapshot?: RuleSnapshotLookup,
 ): ChoiceOption[] => ids.map((id) => ({ id, label: choiceOptionLabel(id, snapshot) }));
+
+/** The character's spell choices, and the active traits they were built from. */
+interface SpellContext {
+  activeTraits: TraitDefinition[];
+  entries: SpellChoiceEntry[];
+}
+
+/** A spell question's options: each spell, labelled by its name. */
+const spellChoiceOptions = (spells: SpellDefinition[]): ChoiceOption[] =>
+  spells.map((spell) => ({ id: spell.id, label: spell.name }));
+
+/** What a spell question asks for, after the name of what grants it. */
+const spellPrompt = (node: SpellChoiceNode): string =>
+  node.maxSpellLevel === 0
+    ? `choose ${node.pickCount} cantrip(s)`
+    : `choose ${node.pickCount} spell(s) of level ${node.maxSpellLevel === 1 ? "1" : `1 to ${node.maxSpellLevel}`}`;
+
+/** The options of a spell question the character already knows from elsewhere. */
+const heldSpells = (
+  options: SpellDefinition[],
+  spells: SpellContext,
+  nodeId: string,
+): string[] => {
+  const known = spellsKnownElsewhere(spells.entries, spells.activeTraits, nodeId);
+  return options.filter((spell) => known.has(spell.id)).map((spell) => spell.id);
+};
 
 /**
  * Which of the character's five kinds of source first granted each trait id
@@ -170,15 +211,16 @@ const buildSourceIndex = (
 };
 
 /**
- * Every class progression trait_choice node the character has unlocked, one
- * question per class in ledger order. spell_choice nodes are never asked
- * here - they are not trait choices, and have no vocabulary of trait options
- * this function could label.
+ * Every class progression choice the character has unlocked - trait_choice
+ * and spell_choice nodes alike - one class at a time in ledger order, each
+ * class's in the order its tracks author them. A spell node with nothing to
+ * offer (no pack spell in its level range yet, #31a) is not asked.
  */
 const classQuestions = (
   save: CharacterSave,
   snapshot: RuleSnapshotLookup | undefined,
   rankOf: Map<string, number>,
+  spells: SpellContext,
 ): { question: ChoiceQuestion; rank: number }[] =>
   save.classes.flatMap((classState) => {
     const blueprint = resolveClassDefinition(classState.classId, snapshot);
@@ -188,24 +230,56 @@ const classQuestions = (
       name: blueprint?.name ?? classState.classId,
     };
     const rank = rankOf.get(`class:${classState.classId}`) ?? Number.MAX_SAFE_INTEGER;
+    const traitNodes = new Map(
+      classChoiceNodes(classState, snapshot).map((node) => [node.nodeId, node]),
+    );
 
-    return classChoiceNodes(classState, snapshot).map((node) => ({
-      rank,
-      question: {
-        id: node.nodeId,
-        target: "class" as const,
-        classId: classState.classId,
-        source,
-        prompt: `${source.name}: choose ${node.pickCount} (${humanise(node.nodeId)})`,
-        pickCount: node.pickCount,
-        options: optionsOf(
-          node.options.map((option) => option.id),
-          snapshot,
-        ),
-        selected: classState.selections[node.nodeId] ?? [],
-        held: [],
-      },
-    }));
+    return unlockedGrants(classState, snapshot).flatMap((grant) => {
+      if (typeof grant === "string") return [];
+
+      if (isSpellChoice(grant)) {
+        const options = spellOptions(grant, snapshot);
+        if (options.length === 0) return [];
+        return [
+          {
+            rank,
+            question: {
+              id: grant.nodeId,
+              target: "class" as const,
+              classId: classState.classId,
+              source,
+              prompt: `${source.name}: ${spellPrompt(grant)}`,
+              pickCount: grant.pickCount,
+              options: spellChoiceOptions(options),
+              selected: classState.selections[grant.nodeId] ?? [],
+              held: heldSpells(options, spells, grant.nodeId),
+            },
+          },
+        ];
+      }
+
+      const node = traitNodes.get(grant.nodeId);
+      if (!node) return [];
+      return [
+        {
+          rank,
+          question: {
+            id: node.nodeId,
+            target: "class" as const,
+            classId: classState.classId,
+            source,
+            prompt: `${source.name}: choose ${node.pickCount} (${humanise(node.nodeId)})`,
+            pickCount: node.pickCount,
+            options: optionsOf(
+              node.options.map((option) => option.id),
+              snapshot,
+            ),
+            selected: classState.selections[node.nodeId] ?? [],
+            held: [],
+          },
+        },
+      ];
+    });
   });
 
 /**
@@ -218,10 +292,10 @@ const classQuestions = (
 const traitQuestions = (
   save: CharacterSave,
   snapshot: RuleSnapshotLookup | undefined,
+  traits: TraitDefinition[],
   traitSource: Map<string, ChoiceSource>,
   rankOf: Map<string, number>,
 ): { question: ChoiceQuestion; rank: number }[] => {
-  const traits = CharacterBootstrapper.compileActiveTraits(save, snapshot);
   const selections = CharacterBootstrapper.resolveSelections(save);
 
   const rankFor = (source: ChoiceSource): number =>
@@ -299,9 +373,44 @@ const traitQuestions = (
 };
 
 /**
+ * The spell choices that live on traits rather than on a class track - a
+ * High Elf's cantrip. Ranked with the source that granted the trait; one with
+ * nothing to offer is not asked, exactly as for a class spell node.
+ */
+const traitSpellQuestions = (
+  snapshot: RuleSnapshotLookup | undefined,
+  traitSource: Map<string, ChoiceSource>,
+  rankOf: Map<string, number>,
+  spells: SpellContext,
+): { question: ChoiceQuestion; rank: number }[] =>
+  spells.entries.flatMap((entry) => {
+    if (entry.target !== "trait") return [];
+    const source = traitSource.get(entry.trait.id);
+    const options = spellOptions(entry.node, snapshot);
+    if (!source || options.length === 0) return [];
+
+    return [
+      {
+        rank: rankOf.get(`${source.kind}:${source.id}`) ?? Number.MAX_SAFE_INTEGER,
+        question: {
+          id: entry.node.nodeId,
+          target: "trait" as const,
+          source,
+          prompt: `${entry.trait.name}: ${spellPrompt(entry.node)}`,
+          pickCount: entry.node.pickCount,
+          options: spellChoiceOptions(options),
+          selected: entry.selected,
+          held: heldSpells(options, spells, entry.node.nodeId),
+        },
+      },
+    ];
+  });
+
+/**
  * Every question a character must answer to finish assembling their sheet:
- * every unfinished class progression trait_choice node, and every unfinished
- * trait choice block, race through feat.
+ * every class progression trait_choice and spell_choice node, every trait
+ * choice block and every trait spell choice, race through feat. A spell
+ * choice with nothing to offer is left out (spellOptions).
  *
  * Answered and unanswered questions both come back - a builder that only
  * wants what is left can filter on `selected.length < pickCount` itself; this
@@ -312,10 +421,16 @@ export const listChoiceQuestions = (
   snapshot?: RuleSnapshotLookup,
 ): ChoiceQuestion[] => {
   const { traitSource, rankOf } = buildSourceIndex(save, snapshot);
+  const activeTraits = CharacterBootstrapper.compileActiveTraits(save, snapshot);
+  const spells: SpellContext = {
+    activeTraits,
+    entries: spellChoiceEntries(save, activeTraits, snapshot),
+  };
 
   const entries = [
-    ...classQuestions(save, snapshot, rankOf),
-    ...traitQuestions(save, snapshot, traitSource, rankOf),
+    ...classQuestions(save, snapshot, rankOf, spells),
+    ...traitQuestions(save, snapshot, activeTraits, traitSource, rankOf),
+    ...traitSpellQuestions(snapshot, traitSource, rankOf, spells),
   ];
 
   return entries

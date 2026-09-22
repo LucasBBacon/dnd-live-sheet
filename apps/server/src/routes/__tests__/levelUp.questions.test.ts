@@ -322,7 +322,13 @@ describe("level-up questions: offered by the options endpoint, required by apply
       subclassId: "subclass_cleric_knowledge",
     });
     expect(ids(choiceQuestions)).toEqual(
-      expect.arrayContaining(["knowledge_domain_languages", "knowledge_domain_skills"]),
+      expect.arrayContaining([
+        "knowledge_domain_languages",
+        "knowledge_domain_skills",
+        // a dip into a caster asks its level-1 cantrips like any other
+        // level-1 question (#79)
+        "cleric_level_1_cantrips",
+      ]),
     );
 
     const result = await levelUp({
