@@ -116,6 +116,15 @@ const cleric = (classLevel: number): LedgerRow => ({
   position: 0,
 });
 
+const druid = (classLevel: number, subclassId: string | null = null): LedgerRow => ({
+  id: "ledger-1",
+  characterId: "char-1",
+  classId: "class_druid",
+  classLevel,
+  subclassId,
+  position: 0,
+});
+
 /**
  * A stand-in for drizzle that answers every select by the table it reads:
  * the character row for `characters`, the ledger for `character_classes`.
@@ -434,6 +443,35 @@ describe("level-up questions: offered by the options endpoint, required by apply
     expect(result.body.error).toBe(
       "Invalid character choices: cleric_level_1_cantrips already answered",
     );
+  });
+
+  // a stored pick a later grant makes redundant must not block every future
+  // level-up: level-up only checks answers it is sent and questions new at
+  // this level, not the whole save (#84)
+  it("lets a Land druid level up past a stored cantrip a new circle trait makes redundant", async () => {
+    const landDruid2 = character({
+      choices: {
+        classSelections: {
+          class_druid: { druid_level_1_cantrips: ["spell_barkskin", "spell_dancing_lights"] },
+        },
+        traitSelections: {
+          human_language_choice: ["elvish"],
+          druid_starting_skills: ["arcana", "insight"],
+        },
+        feats: [],
+      },
+    });
+    const { levelUp } = await setup(landDruid2, [druid(2, "subclass_druid_land")]);
+
+    const result = await levelUp({
+      targetClassId: "class_druid",
+      newTotalLevel: 3,
+      selectedTraits: {
+        druid_land_level_3_circle_land: ["trait_land_circle_spells_forest"],
+      },
+    });
+
+    expect(result.status).toBe(200);
   });
 
   it("gives a bard dip's roster skill pick its whole roster, held skills marked", async () => {
