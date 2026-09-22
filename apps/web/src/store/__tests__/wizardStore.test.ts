@@ -569,7 +569,9 @@ describe("Wizard Store State Management", () => {
         },
       });
 
-      useWizardStore.getState().pruneChoiceAnswers([{ id: "keep_me", held: [] }]);
+      useWizardStore
+        .getState()
+        .pruneChoiceAnswers([{ id: "keep_me", held: [], options: [] }]);
 
       expect(useWizardStore.getState().choiceAnswers).toEqual({
         keep_me: { target: "trait", selected: ["a"] },
@@ -582,7 +584,9 @@ describe("Wizard Store State Management", () => {
       });
       const before = useWizardStore.getState().choiceAnswers;
 
-      useWizardStore.getState().pruneChoiceAnswers([{ id: "keep_me", held: [] }]);
+      useWizardStore
+        .getState()
+        .pruneChoiceAnswers([{ id: "keep_me", held: [], options: [] }]);
 
       expect(useWizardStore.getState().choiceAnswers).toBe(before);
     });
@@ -597,12 +601,50 @@ describe("Wizard Store State Management", () => {
         },
       });
 
-      useWizardStore
-        .getState()
-        .pruneChoiceAnswers([{ id: "fighter_starting_skills", held: ["insight"] }]);
+      useWizardStore.getState().pruneChoiceAnswers([
+        { id: "fighter_starting_skills", held: ["insight"], options: [] },
+      ]);
 
       expect(useWizardStore.getState().choiceAnswers).toEqual({
         fighter_starting_skills: { target: "trait", selected: ["athletics"] },
+      });
+    });
+
+    it("drops a picked option whose prerequisites are unmet, leaving the rest", () => {
+      useWizardStore.setState({
+        choiceAnswers: {
+          warlock_level_2_invocations: {
+            target: "class",
+            classId: "class_warlock",
+            selected: [
+              "trait_invocation_agonizing_blast",
+              "trait_invocation_armor_of_shadows",
+            ],
+          },
+        },
+      });
+
+      useWizardStore.getState().pruneChoiceAnswers([
+        {
+          id: "warlock_level_2_invocations",
+          held: [],
+          options: [
+            {
+              id: "trait_invocation_agonizing_blast",
+              label: "Agonizing Blast",
+              unmet: ["needs Eldritch Blast"],
+            },
+            { id: "trait_invocation_armor_of_shadows", label: "Armor of Shadows" },
+          ],
+        },
+      ]);
+
+      expect(useWizardStore.getState().choiceAnswers).toEqual({
+        warlock_level_2_invocations: {
+          target: "class",
+          classId: "class_warlock",
+          selected: ["trait_invocation_armor_of_shadows"],
+        },
       });
     });
   });

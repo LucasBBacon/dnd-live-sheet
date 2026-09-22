@@ -253,6 +253,56 @@ describe("ChoicePicker's name filter", () => {
   });
 });
 
+describe("ChoicePicker - unmet prerequisites", () => {
+  const invocations = buildQuestion({
+    id: "warlock_level_2_invocations",
+    target: "class",
+    prompt: "Warlock: choose 2",
+    pickCount: 2,
+    options: [
+      {
+        id: "trait_invocation_agonizing_blast",
+        label: "Agonizing Blast",
+        unmet: ["needs Eldritch Blast"],
+      },
+      { id: "trait_invocation_armor_of_shadows", label: "Armor of Shadows" },
+      {
+        id: "trait_invocation_thirsting_blade",
+        label: "Thirsting Blade",
+        unmet: ["needs Warlock level 5", "needs Pact of the Blade"],
+      },
+    ],
+  });
+
+  it("disables an option with unmet prerequisites and says why", async () => {
+    const { container } = await renderInto(
+      <ChoicePicker question={invocations} selected={[]} onChange={() => {}} />,
+    );
+
+    const boxes = checkboxes(container);
+    expect(boxes[0].disabled).toBe(true);
+    expect(boxes[1].disabled).toBe(false);
+    expect(boxes[2].disabled).toBe(true);
+    expect(container.textContent).toContain("Agonizing Blast (needs Eldritch Blast)");
+    expect(container.textContent).toContain(
+      "Thirsting Blade (needs Warlock level 5, needs Pact of the Blade)",
+    );
+  });
+
+  it("keeps a selected unmet option enabled so it can be unpicked", async () => {
+    const { container } = await renderInto(
+      <ChoicePicker
+        question={invocations}
+        selected={["trait_invocation_agonizing_blast"]}
+        onChange={() => {}}
+      />,
+    );
+
+    expect(checkboxes(container)[0].checked).toBe(true);
+    expect(checkboxes(container)[0].disabled).toBe(false);
+  });
+});
+
 describe("ChoiceQuestionList", () => {
   it("groups questions under their source.name headings in the given order", async () => {
     const questions: ChoiceQuestion[] = [

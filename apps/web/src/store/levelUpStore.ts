@@ -1,7 +1,8 @@
-import type {
-  ChoiceQuestion,
-  ClassProgression,
-  LevelDecision,
+import {
+  blockedOptionIds,
+  type ChoiceQuestion,
+  type ClassProgression,
+  type LevelDecision,
 } from "@project/engine";
 import type { LevelUpPayload } from "@project/shared";
 import { create } from "zustand";
@@ -103,8 +104,9 @@ type OptionsRequest = {
 
 /**
  * The draft's answers, less any to a question the level no longer asks (a
- * subclass swapped for another) and any pick that is now held. Keyed by
- * question id in the map the question's target routes through.
+ * subclass swapped for another) and any pick the question now blocks (held,
+ * or with unmet prerequisites). Keyed by question id in the map the
+ * question's target routes through.
  */
 const pruneAnswers = (
   draft: Partial<LevelUpPayload>,
@@ -125,7 +127,7 @@ const pruneAnswers = (
         .filter(([id]) => byId.has(id))
         .map(([id, picks]) => [
           id,
-          picks.filter((pick) => !byId.get(id)!.held.includes(pick)),
+          picks.filter((pick) => !blockedOptionIds(byId.get(id)!).includes(pick)),
         ]),
     );
   };

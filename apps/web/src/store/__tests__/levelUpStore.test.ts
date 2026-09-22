@@ -407,6 +407,30 @@ describe("useLevelUpStore choice questions", () => {
     expect(draft.traitSelections).toEqual({ fighter_starting_skills: ["opt_b"] });
   });
 
+  it("drops a pick the refetched question marks unmet", async () => {
+    await begin([question("warlock_level_2_invocations", "class")]);
+    useLevelUpStore.getState().updateDraft({
+      selectedTraits: { warlock_level_2_invocations: ["opt_a"] },
+    });
+    vi.mocked(apiClient).mockResolvedValueOnce(
+      optionsResponse([
+        question("warlock_level_2_invocations", "class", {
+          options: [
+            { id: "opt_a", label: "A", unmet: ["needs Eldritch Blast"] },
+            { id: "opt_b", label: "B" },
+          ],
+        }),
+      ]),
+    );
+
+    useLevelUpStore.getState().updateDraft({ featId: "feat_alert" });
+    await flush();
+
+    expect(useLevelUpStore.getState().draftPayload.selectedTraits).toEqual({
+      warlock_level_2_invocations: [],
+    });
+  });
+
   it("keeps only the latest refetch when an older one resolves after it", async () => {
     await begin([]);
     let resolveSlow: (value: unknown) => void = () => undefined;

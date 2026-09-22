@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import type { Ability, ChoiceQuestion } from "@project/engine";
+import { blockedOptionIds, type Ability, type ChoiceQuestion } from "@project/engine";
 import type {
   StartingEquipmentDefinition,
   StartingEquipmentGrant,
@@ -113,11 +113,12 @@ export interface WizardState {
   setChoiceAnswer: (question: ChoiceQuestion, selected: string[]) => void;
   /**
    * Keeps only answers to the questions still asked, and drops any picked
-   * option a question now lists as held (e.g. a skill the newly chosen
-   * background grants), so that question reads unanswered again.
+   * option a question now blocks - held (a skill the newly chosen
+   * background grants) or with unmet prerequisites - so that question reads
+   * unanswered again.
    */
   pruneChoiceAnswers: (
-    questions: Array<Pick<ChoiceQuestion, "id" | "held">>,
+    questions: Array<Pick<ChoiceQuestion, "id" | "held" | "options">>,
   ) => void;
 
   // validation gatekeeper
@@ -318,13 +319,13 @@ export const useWizardStore = create<WizardState>((set, get) => ({
 
   pruneChoiceAnswers: (questions) =>
     set((state) => {
-      const heldById = new Map(
-        questions.map((question) => [question.id, question.held]),
+      const blockedById = new Map(
+        questions.map((question) => [question.id, blockedOptionIds(question)]),
       );
       const entries = Object.entries(state.choiceAnswers);
       const isStale = ([id, answer]: (typeof entries)[number]) =>
-        !heldById.has(id) ||
-        answer.selected.some((pick) => heldById.get(id)!.includes(pick));
+        !blockedById.has(id) ||
+        answer.selected.some((pick) => blockedById.get(id)!.includes(pick));
 
       // nothing to remove: return the same reference so callers driving this
       // from a useEffect do not trigger another render every time
@@ -333,13 +334,13 @@ export const useWizardStore = create<WizardState>((set, get) => ({
       return {
         choiceAnswers: Object.fromEntries(
           entries
-            .filter(([id]) => heldById.has(id))
+            .filter(([id]) => blockedById.has(id))
             .map(([id, answer]) => [
               id,
               {
                 ...answer,
                 selected: answer.selected.filter(
-                  (pick) => !heldById.get(id)!.includes(pick),
+                  (pick) => !blockedById.get(id)!.includes(pick),
                 ),
               },
             ]),
