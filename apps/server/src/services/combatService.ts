@@ -28,8 +28,10 @@ export const modifyCharacterHp = async (
 
     const currentHp = character.currentHp ?? 0;
     // the row's max_hp is base rolled hit points; the clamp needs the
-    // derived maximum (#78)
-    const maxHp = await deriveMaxHp(characterId);
+    // derived maximum (#78). Pass tx: deriveMaxHp must query through this
+    // transaction's connection, not the module db, or a full pool of
+    // concurrent heals can hang (#78 final review, F1)
+    const maxHp = await deriveMaxHp(characterId, tx);
     // 5E 2014 hp mechanics
     const nextCurrentHp =
       amount < 0

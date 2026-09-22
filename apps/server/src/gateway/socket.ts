@@ -1505,9 +1505,12 @@ export function initializeWebSocketGateway(httpServer: any) {
             }
 
             // 4 - long rest hp reset: back to the derived maximum, which the
-            // stored base rolled hit points alone cannot give (#78)
+            // stored base rolled hit points alone cannot give (#78). Pass
+            // tx: deriveMaxHp must query through this transaction's
+            // connection, not the module db, or a full pool of concurrent
+            // long rests can hang (#78 final review, F1)
             if (payload.restType === "long") {
-              const restoredHp = await deriveMaxHp(payload.characterId);
+              const restoredHp = await deriveMaxHp(payload.characterId, tx);
               await tx
                 .update(characters)
                 .set({ currentHp: restoredHp })
