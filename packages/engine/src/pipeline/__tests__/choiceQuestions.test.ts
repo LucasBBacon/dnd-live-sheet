@@ -466,4 +466,23 @@ describe("blockedOptionIds", () => {
 
     expect([...blockedOptionIds(question)].sort()).toEqual(["b", "c", "d"]);
   });
+
+  it("does not block an option whose unmet array is empty", () => {
+    const question: ChoiceQuestion = {
+      id: "warlock_level_2_invocations",
+      target: "class",
+      classId: "class_warlock",
+      source: { kind: "class", id: "class_warlock", name: "Warlock" },
+      prompt: "Warlock: choose 2",
+      pickCount: 2,
+      options: [
+        { id: "a", label: "A" },
+        { id: "b", label: "B", unmet: [] },
+      ],
+      selected: [],
+      held: [],
+    };
+
+    expect(blockedOptionIds(question)).toEqual([]);
+  });
 });

@@ -143,7 +143,7 @@ export const blockedOptionIds = (
   ...new Set([
     ...question.held,
     ...question.options
-      .filter((option) => option.unmet !== undefined)
+      .filter((option) => (option.unmet?.length ?? 0) > 0)
       .map((option) => option.id),
   ]),
 ];
