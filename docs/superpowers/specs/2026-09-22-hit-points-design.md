@@ -39,7 +39,7 @@ reset, and the gateway's authoritative runtime context.
 2. The ten sample characters keep the hit points they show today: each stored
    value becomes `documented final - final CON x total level`. The derived
    maximum then equals today's number for every sample except Nyx Vale, who
-   gains the 3 hit points her Draconic Resilience was always owed.
+   gains the 1 hit point her Draconic Resilience was always owed.
 
 ## Design
 
@@ -106,8 +106,19 @@ hit-dice sums, which is the check that the old hand-computed finals were
 `base + CON x level`: Sister Aveline 24 - 6 = 18 = 8 + 5 + 5 (cleric d8
 averages); Grimnar 55 - 15 = 40 = 12 + 7 x 4 (barbarian d12 averages). Derived
 finals then equal today's numbers for every sample but Nyx Vale, who is a
-Draconic Bloodline sorcerer 3 and gains +3 (77 -> 80). No sample carries
-Dwarven Toughness (Grimnar is a mountain dwarf) or Tough (no sample has feats).
+Draconic Bloodline sorcerer 3 and gains +1 (77 -> 78). No sample carries
+Dwarven Toughness (Grimnar is a mountain dwarf) or Tough (no sample has
+feats).
+
+Nyx gains 1 rather than 3 because the pack authors Draconic Resilience's
+`MAX_HP` modifier with `scalingFactor: "class_level"` and no
+`scalingClassId`, and `DerivedStatEngine.resolveScaledValue` then falls
+through to the flat value. That is a pack gap, not this branch's to fix; it
+is recorded below, together with the engine's silent fallback that hides it.
+
+The bases this rule produces, computed with the engine against the shipped
+pack: Pip 8, Sister Aveline 18, Grimnar 40, Lyra 38, Vaerix 58, Nyx 55,
+Master Ko Shen 63, Thistle 58, Kaelen 101, Dame Sable 124.
 
 ## Testing
 
@@ -125,7 +136,7 @@ Test-first.
   CON and trait modifiers; damage and heal clamp to it; a long rest restores to
   it.
 - **Database:** every sample's derived maximum equals its documented final
-  (Nyx Vale's is 80, the rest unchanged).
+  (Nyx Vale's is 78, the rest unchanged).
 - Full suite, per-package typecheck and `pnpm check:hygiene`.
 
 ### Hand check
@@ -133,17 +144,19 @@ Test-first.
 Dev servers, local Postgres, samples re-seeded. Sister Aveline levels cleric
 4 -> 5 and her maximum rises by the roll plus her Constitution modifier, the
 number the wizard promised. A character created through the creation wizard
-opens its sheet with real hit points rather than blank. Nyx Vale's sheet shows
-80.
+opens its sheet with real hit points rather than blank. Nyx Vale's sheet
+shows 78.
 
 ## Docs
 
 `docs/TODO_BACKLOG.md`: close #78, recording that `max_hp` now means base
 rolled hit points and that a character stored before this branch reads high by
 roughly CON x level until re-seeded (dev data only). Record two new items: the
-negative-Constitution floor approximation in `calculateMaxHp`, and the note
-that an item granting CON or `MAX_HP` would need the inventory passed into
-`finalMaxHp`.
+negative-Constitution floor approximation in `calculateMaxHp`; the note that
+an item granting CON or `MAX_HP` would need the inventory passed into
+`finalMaxHp`; and Draconic Resilience's unscaled `MAX_HP` modifier, with the
+engine fallback that turns a `class_level` modifier carrying no
+`scalingClassId` into a flat value with no warning.
 
 ## Out of scope
 
