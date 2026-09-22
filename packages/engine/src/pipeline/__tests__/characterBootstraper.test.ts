@@ -333,7 +333,7 @@ describe("CharacterBootstrapper.collectSaveIssues", () => {
                 {
                   type: "spell_choice",
                   nodeId: "test_feat_cantrip",
-                  listSource: "wizard",
+                  listSource: "warlock",
                   maxSpellLevel: 0,
                   pickCount: 1,
                 },
