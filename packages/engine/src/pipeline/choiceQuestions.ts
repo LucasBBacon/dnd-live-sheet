@@ -35,12 +35,25 @@ import {
   spellChoiceEntries,
   spellOptions,
   spellsKnownElsewhere,
+  traitSpellPicks,
   type SpellChoiceEntry,
 } from "./spellChoices.js";
+import {
+  prerequisiteContext,
+  unmetPrerequisites,
+  type UnmetPrerequisite,
+} from "./optionPrerequisites.js";
 
 export interface ChoiceOption {
   id: string;
   label: string;
+  /**
+   * Why the character cannot take this option yet - "needs Eldritch Blast",
+   * "needs Warlock level 5" - from the same check save validation runs.
+   * Absent when the option is available; only a class trait-choice option
+   * ever carries it.
+   */
+  unmet?: string[];
 }
 
 export type ChoiceSourceKind =
@@ -103,6 +116,37 @@ const optionsOf = (
   ids: string[],
   snapshot?: RuleSnapshotLookup,
 ): ChoiceOption[] => ids.map((id) => ({ id, label: choiceOptionLabel(id, snapshot) }));
+
+/** How an unmet prerequisite reads in a picker: by name, not id. */
+const unmetLabel = (
+  unmet: UnmetPrerequisite,
+  snapshot?: RuleSnapshotLookup,
+): string => {
+  switch (unmet.kind) {
+    case "level":
+      return `needs ${resolveClassDefinition(unmet.classId, snapshot)?.name ?? unmet.classId} level ${unmet.level}`;
+    case "trait":
+      return `needs ${choiceOptionLabel(unmet.traitId, snapshot)}`;
+    case "spell":
+      return `needs ${choiceOptionLabel(unmet.spellId, snapshot)}`;
+  }
+};
+
+/**
+ * The options of a question a player cannot pick: those already held, and
+ * those whose prerequisites are unmet. What a picker disables, and what a
+ * wizard drops from an answer it is keeping.
+ */
+export const blockedOptionIds = (
+  question: Pick<ChoiceQuestion, "held" | "options">,
+): string[] => [
+  ...new Set([
+    ...question.held,
+    ...question.options
+      .filter((option) => (option.unmet?.length ?? 0) > 0)
+      .map((option) => option.id),
+  ]),
+];
 
 /** The character's spell choices, and the active traits they were built from. */
 interface SpellContext {
@@ -214,15 +258,21 @@ const buildSourceIndex = (
  * Every class progression choice the character has unlocked - trait_choice
  * and spell_choice nodes alike - one class at a time in ledger order, each
  * class's in the order its tracks author them. A spell node with nothing to
- * offer (no pack spell in its level range yet, #31a) is not asked.
+ * offer (no pack spell in its level range yet, #31a) is not asked. An option
+ * whose prerequisites the character does not meet carries the reasons in
+ * `unmet` (optionPrerequisites.ts).
  */
 const classQuestions = (
   save: CharacterSave,
   snapshot: RuleSnapshotLookup | undefined,
   rankOf: Map<string, number>,
   spells: SpellContext,
-): { question: ChoiceQuestion; rank: number }[] =>
-  save.classes.flatMap((classState) => {
+): { question: ChoiceQuestion; rank: number }[] => {
+  // every trait spell block's picks count as known for a prerequisite
+  // (Agonizing Blast's Eldritch Blast), exactly as save validation counts them
+  const traitSpellPickIds = traitSpellPicks(spells.entries);
+
+  return save.classes.flatMap((classState, classIndex) => {
     const blueprint = resolveClassDefinition(classState.classId, snapshot);
     const source: ChoiceSource = {
       kind: "class",
@@ -232,6 +282,12 @@ const classQuestions = (
     const rank = rankOf.get(`class:${classState.classId}`) ?? Number.MAX_SAFE_INTEGER;
     const traitNodes = new Map(
       classChoiceNodes(classState, snapshot).map((node) => [node.nodeId, node]),
+    );
+    const prerequisites = prerequisiteContext(
+      save,
+      classIndex,
+      traitSpellPickIds,
+      snapshot,
     );
 
     return unlockedGrants(classState, snapshot).flatMap((grant) => {
@@ -270,10 +326,16 @@ const classQuestions = (
             source,
             prompt: `${source.name}: choose ${node.pickCount} (${humanise(node.nodeId)})`,
             pickCount: node.pickCount,
-            options: optionsOf(
-              node.options.map((option) => option.id),
-              snapshot,
-            ),
+            options: node.options.map(({ id, option }) => {
+              const unmet = unmetPrerequisites(option, prerequisites);
+              return {
+                id,
+                label: choiceOptionLabel(id, snapshot),
+                ...(unmet.length > 0
+                  ? { unmet: unmet.map((entry) => unmetLabel(entry, snapshot)) }
+                  : {}),
+              };
+            }),
             selected: classState.selections[node.nodeId] ?? [],
             held: [],
           },
@@ -281,6 +343,7 @@ const classQuestions = (
       ];
     });
   });
+};
 
 /**
  * The choice blocks that live on traits rather than on a class progression

@@ -2,6 +2,7 @@ export * from "./actionResolver.js";
 export * from "./characterBootstrapper.js";
 export * from "./choiceQuestions.js";
 export * from "./spellChoices.js";
+export * from "./optionPrerequisites.js";
 export * from "./characterEngine.js";
 export * from "./dynamicWeaponAttacks.js";
 export * from "./inventoryExtractor.js";

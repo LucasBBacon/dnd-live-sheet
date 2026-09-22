@@ -366,6 +366,13 @@ export class DatabaseReferenceProvider implements ReferenceProvider {
           })
         : null;
     const effectiveSubclassId = levelUpSaves?.subclassId ?? subclassId;
+    // questionsNewAtLevel judges each option's `unmet` against
+    // levelUpSaves.after, which is the character after the level but without
+    // this level-up's own answers - so an option gated on a pick made at this
+    // same level (a trait or spell first obtainable at this class level)
+    // would show permanently disabled with no way to satisfy it. No pack
+    // option does this today; #85 records the pack-validation rule that
+    // would enforce it.
     const choiceQuestions = levelUpSaves
       ? questionsNewAtLevel(levelUpSaves, snapshot)
       : [];

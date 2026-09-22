@@ -1,5 +1,5 @@
 import { useState } from "react";
-import type { ChoiceQuestion } from "@project/engine";
+import { blockedOptionIds, type ChoiceQuestion } from "@project/engine";
 
 // This predicate belongs beside the picker it describes, not split into a
 // file of its own for one function; react-refresh only cares in dev builds.
@@ -37,6 +37,10 @@ export const ChoicePicker = ({
             option.label.toLowerCase().includes(needle),
         );
 
+  // held options and options with unmet prerequisites cannot be picked; one
+  // that is already selected stays enabled so it can be unpicked
+  const blocked = new Set(blockedOptionIds(question));
+
   const toggle = (optionId: string, checked: boolean) => {
     if (checked) {
       onChange([...selected, optionId]);
@@ -67,7 +71,7 @@ export const ChoicePicker = ({
           const isHeld = question.held.includes(option.id);
           const disabled =
             !isSelected &&
-            (selected.length >= question.pickCount || isHeld);
+            (selected.length >= question.pickCount || blocked.has(option.id));
 
           return (
             <label
@@ -81,7 +85,11 @@ export const ChoicePicker = ({
                 onChange={(event) => toggle(option.id, event.target.checked)}
               />
               {option.label}
-              {isHeld ? " (already known)" : ""}
+              {isHeld
+                ? " (already known)"
+                : option.unmet
+                  ? ` (${option.unmet.join(", ")})`
+                  : ""}
             </label>
           );
         })}

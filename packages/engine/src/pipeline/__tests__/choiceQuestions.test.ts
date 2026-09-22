@@ -1,8 +1,9 @@
 import { describe, expect, it } from "vitest";
 import type { CharacterSave } from "@project/shared";
-import { choiceOptionLabel, listChoiceQuestions } from "../choiceQuestions.js";
+import { blockedOptionIds, choiceOptionLabel, listChoiceQuestions, type ChoiceQuestion } from "../choiceQuestions.js";
+import { CharacterBootstrapper } from "../characterBootstrapper.js";
 import type { RuleSnapshotLookup } from "../../rules/ruleLookup.js";
-import { corePack, corePackLookup } from "./corePackFixture.js";
+import { corePack, corePackLookup, corePackSnapshot } from "./corePackFixture.js";
 
 const attributes = { str: 10, dex: 10, con: 10, int: 10, wis: 10, cha: 10 };
 const hp = { current: 1, temporary: 0, baseRolledHp: 1, hitDiceSpent: {} };
@@ -343,5 +344,180 @@ describe("choiceOptionLabel", () => {
 
   it("labels a spell id by its spell name", () => {
     expect(choiceOptionLabel("spell_thaumaturgy", snapshot)).toBe("Thaumaturgy");
+  });
+});
+
+describe("listChoiceQuestions - option prerequisites", () => {
+  /** a human Fiend warlock at the given level with these level-1 cantrips */
+  const warlockSave = (
+    level: number,
+    cantrips: string[],
+    picks: Record<string, string[]> = {},
+  ) =>
+    save({
+      classes: [
+        {
+          classId: "class_warlock",
+          level,
+          subclassId: "subclass_warlock_fiend",
+          selections: { warlock_level_1_cantrips: cantrips, ...picks },
+        },
+      ],
+    });
+
+  const optionOf = (
+    questions: ChoiceQuestion[],
+    questionId: string,
+    optionId: string,
+  ) =>
+    questions
+      .find((q) => q.id === questionId)!
+      .options.find((o) => o.id === optionId)!;
+
+  it("marks Agonizing Blast for a warlock who does not know Eldritch Blast", () => {
+    const questions = listChoiceQuestions(
+      warlockSave(2, ["spell_minor_illusion", "spell_dancing_lights"]),
+      snapshot,
+    );
+
+    expect(
+      optionOf(questions, "warlock_level_2_invocations", "trait_invocation_agonizing_blast")
+        .unmet,
+    ).toEqual(["needs Eldritch Blast"]);
+  });
+
+  it("leaves Agonizing Blast available once Eldritch Blast is known", () => {
+    const questions = listChoiceQuestions(
+      warlockSave(2, ["spell_eldritch_blast", "spell_minor_illusion"]),
+      snapshot,
+    );
+
+    expect(
+      optionOf(questions, "warlock_level_2_invocations", "trait_invocation_agonizing_blast"),
+    ).not.toHaveProperty("unmet");
+  });
+
+  it("gives Thirsting Blade at warlock 2 both its reasons, level first", () => {
+    const questions = listChoiceQuestions(
+      warlockSave(2, ["spell_eldritch_blast", "spell_minor_illusion"]),
+      snapshot,
+    );
+
+    expect(
+      optionOf(questions, "warlock_level_2_invocations", "trait_invocation_thirsting_blade")
+        .unmet,
+    ).toEqual(["needs Warlock level 5", "needs Pact of the Blade"]);
+  });
+
+  it("marks a Four Elements monk's higher-level disciplines at monk 3", () => {
+    const questions = listChoiceQuestions(
+      save({
+        classes: [
+          {
+            classId: "class_monk",
+            level: 3,
+            subclassId: "subclass_monk_four_elements",
+            selections: {},
+          },
+        ],
+      }),
+      snapshot,
+    );
+
+    expect(
+      optionOf(questions, "monk_elements_level_3_discipline", "trait_discipline_clench_of_the_north_wind")
+        .unmet,
+    ).toEqual(["needs Monk level 6"]);
+    expect(
+      optionOf(questions, "monk_elements_level_3_discipline", "trait_discipline_fangs_of_the_fire_snake"),
+    ).not.toHaveProperty("unmet");
+  });
+
+  it("puts no unmet key on a trait choice block's options", () => {
+    const questions = listChoiceQuestions(
+      save({ backgroundId: "background_acolyte" }),
+      snapshot,
+    );
+
+    for (const question of questions.filter((q) => q.target === "trait")) {
+      for (const option of question.options) {
+        expect(option).not.toHaveProperty("unmet");
+      }
+    }
+  });
+
+  // the picker and the validator share one prerequisite check
+  // (optionPrerequisites.ts), and this pins that they agree not just by
+  // construction but by test: every option the picker blocks is one
+  // collectSaveIssues would also reject if picked, and nothing else is
+  it("blocks exactly the invocation options collectSaveIssues also rejects when picked", () => {
+    const cantrips = ["spell_eldritch_blast", "spell_minor_illusion"];
+    const withPick = (optionId: string) =>
+      warlockSave(3, cantrips, { warlock_level_2_invocations: [optionId] });
+
+    const invocationsQuestion = listChoiceQuestions(
+      warlockSave(3, cantrips),
+      snapshot,
+    ).find((q) => q.id === "warlock_level_2_invocations")!;
+
+    const pickerBlocked = new Set(blockedOptionIds(invocationsQuestion));
+
+    const validatorBlocked = new Set(
+      invocationsQuestion.options
+        .filter((option) =>
+          CharacterBootstrapper.collectSaveIssues(
+            withPick(option.id),
+            corePackSnapshot(),
+          ).some(
+            (issue) =>
+              issue.code === "unmet_prerequisite" &&
+              issue.nodeId === "warlock_level_2_invocations",
+          ),
+        )
+        .map((option) => option.id),
+    );
+
+    expect(pickerBlocked).toEqual(validatorBlocked);
+  });
+});
+
+describe("blockedOptionIds", () => {
+  it("returns held options and options with unmet prerequisites, once each", () => {
+    const question: ChoiceQuestion = {
+      id: "warlock_level_2_invocations",
+      target: "class",
+      classId: "class_warlock",
+      source: { kind: "class", id: "class_warlock", name: "Warlock" },
+      prompt: "Warlock: choose 2",
+      pickCount: 2,
+      options: [
+        { id: "a", label: "A" },
+        { id: "b", label: "B", unmet: ["needs Eldritch Blast"] },
+        { id: "c", label: "C", unmet: ["needs Warlock level 5"] },
+      ],
+      selected: [],
+      held: ["c", "d"],
+    };
+
+    expect([...blockedOptionIds(question)].sort()).toEqual(["b", "c", "d"]);
+  });
+
+  it("does not block an option whose unmet array is empty", () => {
+    const question: ChoiceQuestion = {
+      id: "warlock_level_2_invocations",
+      target: "class",
+      classId: "class_warlock",
+      source: { kind: "class", id: "class_warlock", name: "Warlock" },
+      prompt: "Warlock: choose 2",
+      pickCount: 2,
+      options: [
+        { id: "a", label: "A" },
+        { id: "b", label: "B", unmet: [] },
+      ],
+      selected: [],
+      held: [],
+    };
+
+    expect(blockedOptionIds(question)).toEqual([]);
   });
 });

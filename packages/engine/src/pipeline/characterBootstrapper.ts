@@ -1,8 +1,4 @@
-import type {
-  CharacterSave,
-  TraitChoiceOption,
-  TraitDefinition,
-} from "@project/shared";
+import type { CharacterSave, TraitDefinition } from "@project/shared";
 import { EffectManager } from "../calculators/effects.js";
 import { ResourceManager } from "../calculators/resources.js";
 import { classLevelsAndSubclassIds } from "../rules/casterLevel.js";
@@ -24,14 +20,19 @@ import {
   isSpellChoice,
   raceTraitIds,
   unlockedGrants,
-  type ClassState,
 } from "./grantSources.js";
 import {
   spellChoiceEntries,
   spellOptions,
   spellsKnownElsewhere,
+  traitSpellPicks,
   type SpellChoiceEntry,
 } from "./spellChoices.js";
+import {
+  prerequisiteContext,
+  unmetPrerequisites,
+  type UnmetPrerequisite,
+} from "./optionPrerequisites.js";
 import { ModifierExtractor } from "./modifierExtractor.js";
 import { ProficiencyExtractor } from "./proficiencyExtractor.js";
 import type {
@@ -230,54 +231,20 @@ const traitSpellIssues = (
   return issues;
 };
 
-const knownSpellIds = (
-  classState: ClassState,
-  traitIds: Iterable<string>,
-  snapshot?: RuleSnapshotLookup,
-): Set<string> => {
-  const ids = new Set<string>();
-
-  for (const traitId of traitIds) {
-    const spells = resolveTraitDefinition(traitId, snapshot)?.spells;
-    for (const spell of spells?.fixed ?? []) ids.add(spell.spellId);
-  }
-  for (const grant of unlockedGrants(classState, snapshot)) {
-    if (!isSpellChoice(grant)) continue;
-    for (const id of classState.selections[grant.nodeId] ?? []) ids.add(id);
-  }
-
-  return ids;
-};
-
 /**
- * Prerequisites are checked against the character as they stand now, not
- * against the level the node first appeared at. That matches how the rules
- * work in practice - a warlock who swaps an invocation on level up is judged
- * on their current pact and level, not on what they had at level 2.
+ * How an unmet prerequisite reads in a save validation message: by id,
+ * because the message is for the API and logs. A picker labels the same
+ * result by name (choiceQuestions.ts).
  */
-const unmetPrerequisites = (
-  option: TraitChoiceOption,
-  classState: ClassState,
-  traitIds: Set<string>,
-  spellIds: Set<string>,
-): string[] => {
-  if (typeof option === "string") return [];
-
-  const reasons: string[] = [];
-  const { minimumLevel, requiredTraitIds, requiredSpellIds } =
-    option.prerequisites;
-
-  if (minimumLevel !== undefined && classState.level < minimumLevel) {
-    reasons.push(`needs ${classState.classId} level ${minimumLevel}`);
+const describeUnmet = (unmet: UnmetPrerequisite): string => {
+  switch (unmet.kind) {
+    case "level":
+      return `needs ${unmet.classId} level ${unmet.level}`;
+    case "trait":
+      return `needs ${unmet.traitId}`;
+    case "spell":
+      return `needs ${unmet.spellId}`;
   }
-  for (const required of requiredTraitIds ?? []) {
-    if (!traitIds.has(required)) reasons.push(`needs ${required}`);
-  }
-  for (const required of requiredSpellIds ?? []) {
-    if (!spellIds.has(required)) reasons.push(`needs ${required}`);
-  }
-
-  return reasons;
 };
 
 export class CharacterBootstrapper {
@@ -358,9 +325,7 @@ export class CharacterBootstrapper {
     // (a Fiend warlock's Agonizing Blast checking for Eldritch Blast) - not
     // only a race trait's or this class's own traits, but a background's,
     // feat's or another class's trait too (#79)
-    const traitSpellPicks = spellEntries
-      .filter((entry) => entry.target === "trait")
-      .flatMap((entry) => entry.selected);
+    const traitSpellPickIds = traitSpellPicks(spellEntries);
 
     let totalLevel = 0;
     const seenClassIds = new Set<string>();
@@ -427,14 +392,12 @@ export class CharacterBootstrapper {
           node,
         ]),
       );
-      const traitIds = new Set([
-        ...raceTraitIds(save.race, snapshot),
-        ...classTraitIds(classState, classIndex === 0, snapshot),
-      ]);
-      const spellIds = new Set([
-        ...knownSpellIds(classState, traitIds, snapshot),
-        ...traitSpellPicks,
-      ]);
+      const prerequisites = prerequisiteContext(
+        save,
+        classIndex,
+        traitSpellPickIds,
+        snapshot,
+      );
       const knownNodeIds = new Set<string>();
 
       for (const grant of grants) {
@@ -507,17 +470,12 @@ export class CharacterBootstrapper {
             continue;
           }
 
-          const unmet = unmetPrerequisites(
-            option,
-            classState,
-            traitIds,
-            spellIds,
-          );
+          const unmet = unmetPrerequisites(option, prerequisites);
           if (unmet.length > 0) {
             add({
               ...where,
               code: "unmet_prerequisite",
-              message: `${blueprint.name}: ${choice} ${unmet.join(", ")}`,
+              message: `${blueprint.name}: ${choice} ${unmet.map(describeUnmet).join(", ")}`,
             });
           }
         }

@@ -89,6 +89,19 @@ export const spellChoiceEntries = (
 ];
 
 /**
+ * Every trait spell block's picks - a High Elf's cantrip, a feat's - which
+ * count as known wherever they came from (an invocation prerequisite's
+ * Eldritch Blast). The one derivation save validation and
+ * listChoiceQuestions share.
+ * @param entries spellChoiceEntries for the character
+ * @returns The picked spell ids of every target "trait" entry
+ */
+export const traitSpellPicks = (entries: SpellChoiceEntry[]): string[] =>
+  entries
+    .filter((entry) => entry.target === "trait")
+    .flatMap((entry) => entry.selected);
+
+/**
  * The spells a character already knows from anywhere but one spell choice:
  * every active trait's fixed spells, and every other spell choice's picks.
  * What a picker marks held, and what a pick on that choice buys nothing from.
