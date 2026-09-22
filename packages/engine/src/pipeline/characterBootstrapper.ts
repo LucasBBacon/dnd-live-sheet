@@ -26,6 +26,12 @@ import {
   unlockedGrants,
   type ClassState,
 } from "./grantSources.js";
+import {
+  spellChoiceEntries,
+  spellOptions,
+  spellsKnownElsewhere,
+  type SpellChoiceEntry,
+} from "./spellChoices.js";
 import { ModifierExtractor } from "./modifierExtractor.js";
 import { ProficiencyExtractor } from "./proficiencyExtractor.js";
 import type {
@@ -132,17 +138,84 @@ const rejectionMessage = (
   }
 };
 
+/**
+ * The problems with one trait's spell choice - the checks a class spell node
+ * gets in collectSaveIssues, keyed by the trait instead of a class. No
+ * extractor reads these blocks, so nothing else would check them.
+ */
+const traitSpellIssues = (
+  entry: Extract<SpellChoiceEntry, { target: "trait" }>,
+  entries: SpellChoiceEntry[],
+  activeTraits: TraitDefinition[],
+  snapshot?: RuleSnapshotLookup,
+): SaveValidationIssue[] => {
+  const { node, trait, selected } = entry;
+  const where = { nodeId: node.nodeId, traitId: trait.id };
+  const roster = new Set(spellOptions(node, snapshot).map((spell) => spell.id));
+
+  if (selected.length === 0) {
+    // nothing to offer: not asked (listChoiceQuestions), so not unanswered
+    return roster.size === 0
+      ? []
+      : [
+          {
+            ...where,
+            code: "missing_selection",
+            message: `${trait.name}: nothing selected for ${node.nodeId}`,
+          },
+        ];
+  }
+
+  const issues: SaveValidationIssue[] = [];
+  if (selected.length !== node.pickCount) {
+    issues.push({
+      ...where,
+      code: "wrong_selection_count",
+      message: `${trait.name}: ${node.nodeId} takes ${node.pickCount} selection(s), got ${selected.length}`,
+    });
+  }
+  if (new Set(selected).size !== selected.length) {
+    issues.push({
+      ...where,
+      code: "duplicate_selection",
+      message: `${trait.name}: ${node.nodeId} has the same spell selected twice`,
+    });
+  }
+
+  const known = spellsKnownElsewhere(entries, activeTraits, node.nodeId);
+  for (const spellId of selected) {
+    if (!roster.has(spellId)) {
+      issues.push({
+        ...where,
+        code: "invalid_option",
+        message: `${trait.name}: ${node.nodeId} does not offer ${spellId}`,
+      });
+    } else if (known.has(spellId)) {
+      issues.push({
+        ...where,
+        code: "redundant_selection",
+        message: `${trait.name}: ${node.nodeId} picked ${spellId}, which this character already knows - the pick buys nothing`,
+      });
+    }
+  }
+
+  return issues;
+};
+
 const knownSpellIds = (
   classState: ClassState,
   traitIds: Iterable<string>,
+  traitSelections: Record<string, string[]>,
   snapshot?: RuleSnapshotLookup,
 ): Set<string> => {
   const ids = new Set<string>();
 
   for (const traitId of traitIds) {
-    for (const spell of resolveTraitDefinition(traitId, snapshot)?.spells
-      ?.fixed ?? []) {
-      ids.add(spell.spellId);
+    const spells = resolveTraitDefinition(traitId, snapshot)?.spells;
+    for (const spell of spells?.fixed ?? []) ids.add(spell.spellId);
+    // a trait's own spell pick (a High Elf's cantrip) is known too
+    for (const choice of spells?.choices ?? []) {
+      for (const id of traitSelections[choice.nodeId] ?? []) ids.add(id);
     }
   }
   for (const grant of unlockedGrants(classState, snapshot)) {
@@ -252,6 +325,12 @@ export class CharacterBootstrapper {
     }
     // #endregion
 
+    // every spell choice the character has, for each one's held check: a
+    // spell picked twice across choices, or already granted by a trait, buys
+    // nothing
+    const activeTraits = CharacterBootstrapper.compileActiveTraits(save, snapshot);
+    const spellEntries = spellChoiceEntries(save, activeTraits, snapshot);
+
     let totalLevel = 0;
     const seenClassIds = new Set<string>();
 
@@ -321,7 +400,7 @@ export class CharacterBootstrapper {
         ...raceTraitIds(save.race, snapshot),
         ...classTraitIds(classState, classIndex === 0, snapshot),
       ]);
-      const spellIds = knownSpellIds(classState, traitIds, snapshot);
+      const spellIds = knownSpellIds(classState, traitIds, save.traitSelections, snapshot);
       const knownNodeIds = new Set<string>();
 
       for (const grant of grants) {
@@ -330,8 +409,15 @@ export class CharacterBootstrapper {
 
         const selected = classState.selections[grant.nodeId];
         const where = { classId: classState.classId, nodeId: grant.nodeId };
+        // a spell node offers the pack's spells for its level range
+        const spellRoster = isSpellChoice(grant)
+          ? new Set(spellOptions(grant, snapshot).map((spell) => spell.id))
+          : undefined;
 
         if (!selected || selected.length === 0) {
+          // a spell node with nothing to offer cannot be answered, so it is
+          // neither asked (listChoiceQuestions) nor reported unanswered
+          if (spellRoster?.size === 0) continue;
           add({
             ...where,
             code: "missing_selection",
@@ -356,8 +442,26 @@ export class CharacterBootstrapper {
           });
         }
 
-        // a spell_choice can only be checked for shape: there is no spell list
-        // data yet to check membership against
+        if (spellRoster) {
+          const known = spellsKnownElsewhere(spellEntries, activeTraits, grant.nodeId);
+          for (const choice of selected) {
+            if (!spellRoster.has(choice)) {
+              add({
+                ...where,
+                code: "invalid_option",
+                message: `${blueprint.name}: ${choice} is not an option for ${grant.nodeId}`,
+              });
+            } else if (known.has(choice)) {
+              add({
+                ...where,
+                code: "redundant_selection",
+                message: `${blueprint.name}: ${grant.nodeId} picked ${choice}, which this character already knows - the pick buys nothing`,
+              });
+            }
+          }
+          continue;
+        }
+
         const choiceNode = choiceNodesByNodeId.get(grant.nodeId);
         if (!choiceNode) continue;
 
@@ -499,7 +603,20 @@ export class CharacterBootstrapper {
       }
     }
 
-    const knownChoiceIds = new Set(resolutions.map((r) => r.choiceId));
+    // a trait's own spell choice (a High Elf's cantrip): no extractor reads
+    // these, so they are checked here - and are known blocks, not orphans
+    const spellEntries = spellChoiceEntries(save, activeTraits, snapshot);
+    const spellBlockIds: string[] = [];
+    for (const entry of spellEntries) {
+      if (entry.target !== "trait") continue;
+      spellBlockIds.push(entry.node.nodeId);
+      issues.push(...traitSpellIssues(entry, spellEntries, activeTraits, snapshot));
+    }
+
+    const knownChoiceIds = new Set([
+      ...resolutions.map((r) => r.choiceId),
+      ...spellBlockIds,
+    ]);
     for (const choiceId of Object.keys(save.traitSelections)) {
       if (knownChoiceIds.has(choiceId)) continue;
       issues.push({

@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import type { CharacterSave } from "@project/shared";
+import type { CharacterSave, CoreRulePackSnapshot } from "@project/shared";
 import { CharacterBootstrapper } from "../characterBootstrapper.js";
 import { ModifierExtractor } from "../modifierExtractor.js";
 import { ProficiencyExtractor } from "../proficiencyExtractor.js";
@@ -79,13 +79,12 @@ const warlock = (
   hp: baseHp,
 });
 
+// cantrips from the pack's roster; the spells-known nodes are left unanswered
+// - they offer nothing until #31a gives the pack's spells real levels
 const warlock3 = (invocations: string[], boon = "trait_pact_of_the_blade") =>
   warlock(3, {
-    warlock_level_1_cantrips: ["spell_eldritch_blast", "spell_prestidigitation"],
-    warlock_level_1_spells_known: ["spell_hex", "spell_armor_of_agathys"],
+    warlock_level_1_cantrips: ["spell_eldritch_blast", "spell_minor_illusion"],
     warlock_level_2_invocations: invocations,
-    warlock_level_2_spells_known: ["spell_hellish_rebuke"],
-    warlock_level_3_spells_known: ["spell_misty_step"],
     warlock_level_3_pact_boon: [boon],
   });
 
@@ -292,8 +291,8 @@ describe("CharacterBootstrapper.collectSaveIssues", () => {
         "trait_invocation_devils_sight",
       ]);
       save.classes[0]!.selections.warlock_level_1_cantrips = [
-        "spell_chill_touch",
-        "spell_prestidigitation",
+        "spell_dancing_lights",
+        "spell_minor_illusion",
       ];
       const issue = CharacterBootstrapper.collectSaveIssues(save, corePackSnapshot())[0]!;
       expect(issue.code).toBe("unmet_prerequisite");
@@ -440,6 +439,146 @@ describe("CharacterBootstrapper.collectSaveIssues - trait choice blocks", () => 
         (g) => g.category === "languages",
       ),
     ).toHaveLength(2); // common + elvish, both from the fixed grant
+  });
+});
+
+describe("CharacterBootstrapper.collectSaveIssues - spell choices", () => {
+  const issuesAt = (
+    save: CharacterSave,
+    nodeId: string,
+    snapshot: CoreRulePackSnapshot = corePackSnapshot(),
+  ) =>
+    CharacterBootstrapper.collectSaveIssues(save, snapshot)
+      .filter((issue) => issue.nodeId === nodeId)
+      .map((issue) => issue.code);
+
+  /**
+   * The pack with only its level-0 spells - today the whole pack (#31a), built
+   * explicitly so "no spell of level 1 or above" keeps meaning that.
+   */
+  const cantripsOnly = (): CoreRulePackSnapshot => {
+    const snapshot = corePackSnapshot();
+    return {
+      ...snapshot,
+      spellsById: Object.fromEntries(
+        Object.entries(snapshot.spellsById).filter(
+          ([, spell]) => spell.level === 0,
+        ),
+      ),
+    };
+  };
+
+  const human = { baseRaceId: "race_human", hasSubraces: false, subraceId: null };
+  const tiefling = { baseRaceId: "race_tiefling", hasSubraces: false, subraceId: null };
+  const highElf = { baseRaceId: "race_elf", hasSubraces: true, subraceId: "subrace_elf_high" };
+  const cantrips = ["spell_dancing_lights", "spell_minor_illusion", "spell_eldritch_blast"];
+
+  /** a level-1 wizard of the given race, with the given picks */
+  const wizard = (
+    race: CharacterSave["race"],
+    selections: Record<string, string[]>,
+    traitSelections: Record<string, string[]> = {},
+  ): CharacterSave => ({
+    attributes: baseAttributes,
+    race,
+    classes: [{ classId: "class_wizard", level: 1, selections }],
+    traitSelections,
+    feats: [],
+    hp: baseHp,
+  });
+
+  it("accepts cantrips picked from the node's roster", () => {
+    const save = wizard(human, { wizard_level_1_cantrips: cantrips });
+    expect(issuesAt(save, "wizard_level_1_cantrips")).toEqual([]);
+  });
+
+  it("rejects a spell the node does not offer", () => {
+    const save = wizard(human, {
+      wizard_level_1_cantrips: ["spell_dancing_lights", "spell_minor_illusion", "spell_not_real"],
+    });
+    expect(issuesAt(save, "wizard_level_1_cantrips")).toEqual(["invalid_option"]);
+  });
+
+  it("rejects a pick the character already knows from a trait", () => {
+    // Thaumaturgy comes with the tiefling's Infernal Legacy
+    const save = wizard(tiefling, {
+      wizard_level_1_cantrips: ["spell_thaumaturgy", "spell_minor_illusion", "spell_dancing_lights"],
+    });
+    expect(issuesAt(save, "wizard_level_1_cantrips")).toEqual(["redundant_selection"]);
+  });
+
+  it("reports an unanswered spell node, but not one with nothing to offer", () => {
+    const save = wizard(human, {});
+    expect(issuesAt(save, "wizard_level_1_cantrips", cantripsOnly())).toEqual(["missing_selection"]);
+    expect(issuesAt(save, "wizard_level_1_spellbook", cantripsOnly())).toEqual([]);
+  });
+
+  it("rejects every pick on a spell node with nothing to offer", () => {
+    const save = wizard(human, {
+      wizard_level_1_cantrips: cantrips,
+      wizard_level_1_spellbook: [
+        "spell_bless",
+        "spell_command",
+        "spell_identify",
+        "spell_augury",
+        "spell_suggestion",
+        "spell_nondetection",
+      ],
+    });
+    expect(issuesAt(save, "wizard_level_1_spellbook", cantripsOnly())).toEqual(
+      Array(6).fill("invalid_option"),
+    );
+  });
+
+  it("accepts a High Elf's cantrip, which is not an orphan", () => {
+    const save = wizard(highElf, { wizard_level_1_cantrips: cantrips }, {
+      high_elf_cantrip: ["spell_thaumaturgy"],
+    });
+    expect(issuesAt(save, "high_elf_cantrip")).toEqual([]);
+  });
+
+  it("reports a High Elf's cantrip left unanswered", () => {
+    const save = wizard(highElf, { wizard_level_1_cantrips: cantrips });
+    expect(issuesAt(save, "high_elf_cantrip")).toEqual(["missing_selection"]);
+  });
+
+  it("rejects a High Elf's cantrip the block does not offer, or one too many", () => {
+    const notOffered = wizard(highElf, { wizard_level_1_cantrips: cantrips }, {
+      high_elf_cantrip: ["spell_not_real"],
+    });
+    const tooMany = wizard(highElf, { wizard_level_1_cantrips: cantrips }, {
+      high_elf_cantrip: ["spell_thaumaturgy", "spell_command"],
+    });
+
+    expect(issuesAt(notOffered, "high_elf_cantrip")).toEqual(["invalid_option"]);
+    expect(issuesAt(tooMany, "high_elf_cantrip")).toEqual(["wrong_selection_count"]);
+  });
+
+  it("rejects a High Elf's cantrip the wizard already picked", () => {
+    const save = wizard(highElf, { wizard_level_1_cantrips: cantrips }, {
+      high_elf_cantrip: ["spell_dancing_lights"],
+    });
+    expect(issuesAt(save, "high_elf_cantrip")).toEqual(["redundant_selection"]);
+  });
+
+  it("meets an invocation's spell prerequisite with a trait's spell pick", () => {
+    const save: CharacterSave = {
+      ...warlock3([
+        "trait_invocation_agonizing_blast",
+        "trait_invocation_devils_sight",
+      ]),
+      race: highElf,
+      traitSelections: {
+        high_elf_cantrip: ["spell_eldritch_blast"],
+        warlock_starting_skills: ["arcana", "history"],
+      },
+    };
+    save.classes[0]!.selections.warlock_level_1_cantrips = [
+      "spell_minor_illusion",
+      "spell_dancing_lights",
+    ];
+
+    expect(issuesAt(save, "warlock_level_2_invocations")).toEqual([]);
   });
 });
 
