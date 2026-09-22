@@ -233,7 +233,6 @@ const traitSpellIssues = (
 const knownSpellIds = (
   classState: ClassState,
   traitIds: Iterable<string>,
-  traitSelections: Record<string, string[]>,
   snapshot?: RuleSnapshotLookup,
 ): Set<string> => {
   const ids = new Set<string>();
@@ -241,10 +240,6 @@ const knownSpellIds = (
   for (const traitId of traitIds) {
     const spells = resolveTraitDefinition(traitId, snapshot)?.spells;
     for (const spell of spells?.fixed ?? []) ids.add(spell.spellId);
-    // a trait's own spell pick (a High Elf's cantrip) is known too
-    for (const choice of spells?.choices ?? []) {
-      for (const id of traitSelections[choice.nodeId] ?? []) ids.add(id);
-    }
   }
   for (const grant of unlockedGrants(classState, snapshot)) {
     if (!isSpellChoice(grant)) continue;
@@ -359,6 +354,14 @@ export class CharacterBootstrapper {
     const activeTraits = CharacterBootstrapper.compileActiveTraits(save, snapshot);
     const spellEntries = spellChoiceEntries(save, activeTraits, snapshot);
 
+    // every active trait's own spell pick counts as known for prerequisites
+    // (a Fiend warlock's Agonizing Blast checking for Eldritch Blast) - not
+    // only a race trait's or this class's own traits, but a background's,
+    // feat's or another class's trait too (#83)
+    const traitSpellPicks = spellEntries
+      .filter((entry) => entry.target === "trait")
+      .flatMap((entry) => entry.selected);
+
     let totalLevel = 0;
     const seenClassIds = new Set<string>();
 
@@ -428,7 +431,10 @@ export class CharacterBootstrapper {
         ...raceTraitIds(save.race, snapshot),
         ...classTraitIds(classState, classIndex === 0, snapshot),
       ]);
-      const spellIds = knownSpellIds(classState, traitIds, save.traitSelections, snapshot);
+      const spellIds = new Set([
+        ...knownSpellIds(classState, traitIds, snapshot),
+        ...traitSpellPicks,
+      ]);
       const knownNodeIds = new Set<string>();
 
       for (const grant of grants) {

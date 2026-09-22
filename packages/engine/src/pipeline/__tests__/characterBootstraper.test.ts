@@ -298,6 +298,71 @@ describe("CharacterBootstrapper.collectSaveIssues", () => {
       expect(issue.code).toBe("unmet_prerequisite");
       expect(issue.message).toContain("spell_eldritch_blast");
     });
+
+    // an invocation's requiredSpellIds must see every active trait's spell
+    // pick, not only a race trait's or this class's own traits - a feat's
+    // trait counts too (#83)
+    it("counts a feat's trait spell pick toward an invocation's spell prerequisite", () => {
+      const snapshot: CoreRulePackSnapshot = {
+        ...corePackSnapshot(),
+        featsById: {
+          ...corePackSnapshot().featsById,
+          feat_test_cantrip: {
+            id: "feat_test_cantrip",
+            name: "Test Cantrip Feat",
+            category: "general",
+            repeatable: false,
+            lore: {
+              shortDescription: "A test-only feat whose trait carries a spell pick.",
+            },
+            grantedTraitIds: ["trait_test_feat_cantrip"],
+            tags: [],
+          },
+        },
+        traitsById: {
+          ...corePackSnapshot().traitsById,
+          trait_test_feat_cantrip: {
+            id: "trait_test_feat_cantrip",
+            name: "Test Feat Cantrip",
+            lore: { shortDescription: "Grants a test-only cantrip pick." },
+            isStartingProficiency: false,
+            modifiers: { fixed: [], choices: [] },
+            spells: {
+              fixed: [],
+              choices: [
+                {
+                  type: "spell_choice",
+                  nodeId: "test_feat_cantrip",
+                  listSource: "wizard",
+                  maxSpellLevel: 0,
+                  pickCount: 1,
+                },
+              ],
+            },
+            resources: [],
+            triggers: [],
+            diceRules: [],
+            criticalHitModifiers: [],
+            actions: [],
+          },
+        },
+      };
+
+      const save = warlock3([
+        "trait_invocation_agonizing_blast",
+        "trait_invocation_devils_sight",
+      ]);
+      // Eldritch Blast is known only through the feat's trait pick here, not
+      // a warlock cantrip
+      save.classes[0]!.selections.warlock_level_1_cantrips = [
+        "spell_minor_illusion",
+        "spell_dancing_lights",
+      ];
+      save.feats = ["feat_test_cantrip"];
+      save.traitSelections.test_feat_cantrip = ["spell_eldritch_blast"];
+
+      expect(CharacterBootstrapper.collectSaveIssues(save, snapshot)).toEqual([]);
+    });
   });
 });
 
