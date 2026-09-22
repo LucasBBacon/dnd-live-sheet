@@ -139,6 +139,42 @@ const rejectionMessage = (
 };
 
 /**
+ * The pick-by-pick check every spell node gets, a class track's spell_choice
+ * or a trait's own spells block alike: invalid_option for a pick outside the
+ * roster, redundant_selection for a pick the character already knows from
+ * elsewhere. The two callers' message wording differs, so each builds its own
+ * via the callbacks rather than this helper guessing at a shared phrasing.
+ */
+const spellPickIssues = (
+  where: { classId?: string; nodeId: string; traitId?: string },
+  picks: string[],
+  roster: Set<string>,
+  known: Set<string>,
+  messages: {
+    invalidOption: (spellId: string) => string;
+    redundant: (spellId: string) => string;
+  },
+): SaveValidationIssue[] => {
+  const issues: SaveValidationIssue[] = [];
+  for (const spellId of picks) {
+    if (!roster.has(spellId)) {
+      issues.push({
+        ...where,
+        code: "invalid_option",
+        message: messages.invalidOption(spellId),
+      });
+    } else if (known.has(spellId)) {
+      issues.push({
+        ...where,
+        code: "redundant_selection",
+        message: messages.redundant(spellId),
+      });
+    }
+  }
+  return issues;
+};
+
+/**
  * The problems with one trait's spell choice - the checks a class spell node
  * gets in collectSaveIssues, keyed by the trait instead of a class. No
  * extractor reads these blocks, so nothing else would check them.
@@ -183,21 +219,13 @@ const traitSpellIssues = (
   }
 
   const known = spellsKnownElsewhere(entries, activeTraits, node.nodeId);
-  for (const spellId of selected) {
-    if (!roster.has(spellId)) {
-      issues.push({
-        ...where,
-        code: "invalid_option",
-        message: `${trait.name}: ${node.nodeId} does not offer ${spellId}`,
-      });
-    } else if (known.has(spellId)) {
-      issues.push({
-        ...where,
-        code: "redundant_selection",
-        message: `${trait.name}: ${node.nodeId} picked ${spellId}, which this character already knows - the pick buys nothing`,
-      });
-    }
-  }
+  issues.push(
+    ...spellPickIssues(where, selected, roster, known, {
+      invalidOption: (spellId) => `${trait.name}: ${node.nodeId} does not offer ${spellId}`,
+      redundant: (spellId) =>
+        `${trait.name}: ${node.nodeId} picked ${spellId}, which this character already knows - the pick buys nothing`,
+    }),
+  );
 
   return issues;
 };
@@ -444,20 +472,13 @@ export class CharacterBootstrapper {
 
         if (spellRoster) {
           const known = spellsKnownElsewhere(spellEntries, activeTraits, grant.nodeId);
-          for (const choice of selected) {
-            if (!spellRoster.has(choice)) {
-              add({
-                ...where,
-                code: "invalid_option",
-                message: `${blueprint.name}: ${choice} is not an option for ${grant.nodeId}`,
-              });
-            } else if (known.has(choice)) {
-              add({
-                ...where,
-                code: "redundant_selection",
-                message: `${blueprint.name}: ${grant.nodeId} picked ${choice}, which this character already knows - the pick buys nothing`,
-              });
-            }
+          for (const issue of spellPickIssues(where, selected, spellRoster, known, {
+            invalidOption: (choice) =>
+              `${blueprint.name}: ${choice} is not an option for ${grant.nodeId}`,
+            redundant: (choice) =>
+              `${blueprint.name}: ${grant.nodeId} picked ${choice}, which this character already knows - the pick buys nothing`,
+          })) {
+            add(issue);
           }
           continue;
         }
