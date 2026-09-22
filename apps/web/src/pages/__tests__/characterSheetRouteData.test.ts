@@ -42,6 +42,9 @@ describe("hydrateCharacterSheet", () => {
     expect(initialize).toHaveBeenCalledWith(
       expect.objectContaining({ choices: { ...choices, feats: [] } }),
     );
+    expect(initialize).toHaveBeenCalledWith(
+      expect.objectContaining({ baseHpRolled: 8 }),
+    );
   });
 
   it("hands the store no answers when the stored value is corrupt", () => {

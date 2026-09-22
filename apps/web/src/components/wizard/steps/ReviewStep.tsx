@@ -9,7 +9,7 @@ export const ReviewStep = () => {
   const { draftPayload, progressionContext, grantedTraitDetails } =
     useLevelUpStore();
   const currentTotalLevel = useCharacterSheetStore((state) => state.level);
-  const currentMaxHp = useCharacterSheetStore((state) => state.maxHp);
+  const currentMaxHp = useCharacterSheetStore((state) => state.getMaxHp());
   const classLevels = useCharacterSheetStore((state) => state.classLevels);
   const ruleSnapshot = useCharacterSheetStore((state) => state.ruleSnapshot);
   const traitsById = ruleSnapshot?.traitsById;

@@ -22,7 +22,7 @@ export const RestModal = ({ onClose }: RestModalProps) => {
   const classLevels = useCharacterSheetStore((state) => state.classLevels);
   const subclassIds = useCharacterSheetStore((state) => state.subclassIds);
   const currentHp = useCharacterSheetStore((state) => state.currentHp);
-  const maxHp = useCharacterSheetStore((state) => state.maxHp);
+  const maxHp = useCharacterSheetStore((state) => state.getMaxHp());
   const triggerRest = useCharacterSheetStore((state) => state.triggerRest);
   const ruleSnapshot = useCharacterSheetStore((state) => state.ruleSnapshot);
 

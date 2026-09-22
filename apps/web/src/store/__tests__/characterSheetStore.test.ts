@@ -34,8 +34,7 @@ describe("useCharacterSheetStore hp trigger handling", () => {
       raceId: "race_half_orc",
       subraceId: null,
       currentHp: 5,
-      maxHp: 10,
-      baseHpRolled: 1,
+      baseHpRolled: 9,
       baseScores: { STR: 10, DEX: 10, CON: 10, INT: 10, WIS: 10, CHA: 10 },
       traits: [],
       traitGrants: [],
@@ -54,6 +53,12 @@ describe("useCharacterSheetStore hp trigger handling", () => {
 
     vi.spyOn(socketService, "emitHpModification").mockImplementation(() => {});
     vi.spyOn(socketService, "emitActionIntent").mockImplementation(() => {});
+  });
+
+  it("derives the maximum from the base, Constitution and trait modifiers (#78)", () => {
+    // base 9, CON 10 + 1 (half-orc) = 11 (+0), so one level grants the
+    // 1-per-level floor: 10
+    expect(useCharacterSheetStore.getState().getMaxHp()).toBe(10);
   });
 
   it("drops a half-orc to one hp and records the trigger state when hp hits zero", () => {
@@ -733,8 +738,7 @@ describe("useCharacterSheetStore remote action state composition", () => {
       raceId: "race_human",
       subraceId: null,
       currentHp: 10,
-      maxHp: 10,
-      baseHpRolled: 1,
+      baseHpRolled: 9,
       baseScores: { STR: 10, DEX: 10, CON: 10, INT: 10, WIS: 10, CHA: 10 },
       traits: [],
       traitGrants: [],
@@ -925,8 +929,7 @@ describe("useCharacterSheetStore conditions", () => {
       raceId: "race_human",
       subraceId: null,
       currentHp: 20,
-      maxHp: 20,
-      baseHpRolled: 1,
+      baseHpRolled: 16,
       baseScores: { STR: 16, DEX: 14, CON: 14, INT: 10, WIS: 10, CHA: 10 },
       traits: [],
       traitGrants: [],
@@ -1031,8 +1034,7 @@ describe("useCharacterSheetStore server-owned turns", () => {
       raceId: "race_human",
       subraceId: null,
       currentHp: 20,
-      maxHp: 20,
-      baseHpRolled: 1,
+      baseHpRolled: 10,
       baseScores: { STR: 16, DEX: 14, CON: 14, INT: 10, WIS: 10, CHA: 10 },
       traits: [],
       traitGrants: [],
@@ -1548,7 +1550,7 @@ describe("the store's resource counts survive runtime hydration", () => {
       raceId: "race_human",
       subraceId: null,
       currentHp: 30,
-      maxHp: 100,
+      baseHpRolled: 100,
       resources: [
         { id: RAGE, current: 1 },
         { id: RELENTLESS, current: 1 },
@@ -1643,7 +1645,6 @@ describe("useCharacterSheetStore proficiency grants", () => {
       raceId: "race_human",
       subraceId: null,
       currentHp: 12,
-      maxHp: 12,
       baseHpRolled: 12,
       baseScores: { STR: 16, DEX: 12, CON: 14, INT: 10, WIS: 10, CHA: 10 },
       traits: [],

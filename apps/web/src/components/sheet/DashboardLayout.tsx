@@ -169,7 +169,7 @@ export const DashboardLayout = () => {
           <div className="bg-red-50 border border-red-200 p-3 mb-4 rounded text-center">
             <div className="text-gray-500 text-xs uppercase">Hit Points</div>
             <div className="text-3xl font-bold text-red-700 my-2">
-              {character.currentHp}/{character.maxHp}
+              {character.currentHp}/{character.getMaxHp()}
             </div>
 
             <div className="flex gap-2 justify-center mt-2">

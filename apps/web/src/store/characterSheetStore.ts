@@ -1,9 +1,11 @@
 import {
+  AbilityEngine,
   ActionResolver,
   ATTUNEMENT_LIMIT,
   CARRIED_SLOT,
   CharacterBootstrapper,
   CombatContextManager,
+  DerivedStatEngine,
   EffectManager,
   ResourceManager,
   RestEngine,
@@ -694,7 +696,6 @@ export interface CharacterSheetState {
   choices: CharacterChoices;
 
   currentHp: number;
-  maxHp: number;
   baseHpRolled: number;
 
   // base attributes (no items or buffs)
@@ -796,6 +797,12 @@ export interface CharacterSheetState {
    */
   getSheetStates: () => string[];
   /**
+   * The character's maximum hit points: the stored base rolled hit points
+   * plus Constitution for every level and every MAX_HP modifier (#78). The
+   * same derivation useDerivedStats runs, for the store's own clamps.
+   */
+  getMaxHp: () => number;
+  /**
    * Every proficiency the character's traits grant, choice blocks resolved.
    *
    * The same call characterEngine.ts makes. The store used to keep a flat
@@ -854,8 +861,7 @@ export const useCharacterSheetStore = create<CharacterSheetState>(
     backgroundId: null,
     choices: emptyCharacterChoices(),
     currentHp: 10,
-    maxHp: 10,
-    baseHpRolled: 1,
+    baseHpRolled: 10,
 
     baseScores: { STR: 10, DEX: 10, CON: 10, INT: 10, WIS: 10, CHA: 10 },
     traits: [],
@@ -929,7 +935,7 @@ export const useCharacterSheetStore = create<CharacterSheetState>(
     applyHealthDelta: (delta, source) => {
       const state = get();
       const previousHp = state.currentHp;
-      const nextHp = clampHealth(previousHp, delta, state.maxHp);
+      const nextHp = clampHealth(previousHp, delta, state.getMaxHp());
 
       const {
         appliedHp,
@@ -972,7 +978,7 @@ export const useCharacterSheetStore = create<CharacterSheetState>(
 
       const { delta } = payload;
       const previousHp = state.currentHp;
-      const nextHp = clampHealth(previousHp, delta, state.maxHp);
+      const nextHp = clampHealth(previousHp, delta, state.getMaxHp());
 
       const {
         appliedHp,
@@ -1310,7 +1316,7 @@ export const useCharacterSheetStore = create<CharacterSheetState>(
         ),
         state.ruleSnapshot ?? undefined,
       );
-      const updatedHp = restType === "long" ? state.maxHp : state.currentHp;
+      const updatedHp = restType === "long" ? state.getMaxHp() : state.currentHp;
 
       set({
         resources: updatedResources,
@@ -1388,6 +1394,26 @@ export const useCharacterSheetStore = create<CharacterSheetState>(
           }),
         ]),
       );
+    },
+
+    getMaxHp: () => {
+      const state = get();
+      const modifiers = state.getSheetModifiers();
+      const activeStates = state.getSheetStates();
+      const con = AbilityEngine.calculateScore(
+        state.baseScores.CON,
+        "CON",
+        modifiers,
+        activeStates,
+      );
+
+      return DerivedStatEngine.calculateMaxHp(
+        state.baseHpRolled,
+        con.modifier,
+        { total: state.level, classes: state.classLevels },
+        modifiers,
+        activeStates,
+      ).total;
     },
 
     getProficiencyGrants: () => {

@@ -79,7 +79,7 @@ interface MockStoreState {
   level: number;
   classLevels: Record<string, number>;
   currentHp: number;
-  maxHp: number;
+  getMaxHp: () => number;
   inventory: InventoryInstance[];
   ruleSnapshot: MockRuleSnapshot | null;
   itemActions: ItemActionGrant[];
@@ -98,7 +98,7 @@ const baseStoreState: MockStoreState = {
   level: 1,
   classLevels: { class_fighter: 1 },
   currentHp: 10,
-  maxHp: 10,
+  getMaxHp: () => 10,
   inventory: [],
   ruleSnapshot: null,
   itemActions: [],

@@ -87,7 +87,6 @@ export const TraitWidget = () => {
   const raceId = useCharacterSheetStore((state) => state.raceId);
   const subraceId = useCharacterSheetStore((state) => state.subraceId);
   const currentHp = useCharacterSheetStore((state) => state.currentHp);
-  const storedMaxHp = useCharacterSheetStore((state) => state.maxHp);
   const inventory = useCharacterSheetStore((state) => state.inventory);
   const getProficiencyGrants = useCharacterSheetStore(
     (state) => state.getProficiencyGrants,
@@ -359,7 +358,7 @@ export const TraitWidget = () => {
               <div>Resources: {resources.length}</div>
               <div>Trait Grants: {traitGrants.length}</div>
               <div>
-                HP: {currentHp} / {storedMaxHp} (engine max: {maxHp.total})
+                HP: {currentHp} / {maxHp.total}
               </div>
             </div>
 

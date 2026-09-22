@@ -113,7 +113,8 @@ export const hydrateCharacterSheet = (
     // normalize slots at the boundary, translating any legacy names
     inventory: character.inventory.map(toInventoryInstance),
     currentHp: character.currentHp,
-    maxHp: character.maxHp,
+    // the column holds base rolled hit points; the maximum is derived (#78)
+    baseHpRolled: character.maxHp,
     resources: character.resources || [],
     traitGrants: character.traitGrants || [],
     ruleSnapshot: null,
