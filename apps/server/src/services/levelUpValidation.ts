@@ -25,14 +25,15 @@ const listSubclassesForClass = (classId: string) =>
 // #region Type Definitions
 
 /**
- * Defines the types of decisions that can be made during the level-up process:
- * subclass selection, ability score improvement or feat selection, trait selection, and spell selection.
+ * The decisions a level-up can raise: subclass selection, ability score
+ * improvement or feat selection, and trait selection. Spell picks are not
+ * among them - they are choice questions (listChoiceQuestions), required and
+ * stored like any other answer (#79).
  */
 export type ResolverDecisionType =
   | "subclass"
   | "asi_or_feat"
-  | "trait_selection"
-  | "spell_selection";
+  | "trait_selection";
 
 /**
  * Represents a decision that needs to be made during the level-up process, including its type, description, and any associated options or requirements.
@@ -125,9 +126,10 @@ const subclassGrantsAtLevel = (
 };
 
 /**
- * Decisions carried by the traits granted at this level. These are the choices
- * that live inside a trait rather than on the level track: a proficiency choice
- * such as the rogue's Expertise, or a spell choice such as the High Elf cantrip.
+ * Decisions carried by the traits granted at this level: the proficiency
+ * choices that live inside a trait rather than on the level track, such as
+ * the rogue's Expertise. A trait's spell choice is a choice question instead
+ * (listChoiceQuestions, #79).
  */
 const traitDrivenDecisions = (traitIds: string[]): ResolverDecision[] => {
   const decisions: ResolverDecision[] = [];
@@ -158,16 +160,6 @@ const traitDrivenDecisions = (traitIds: string[]): ResolverDecision[] => {
         source: "trait_choice_block",
       });
     }
-
-    for (const choice of trait.spells?.choices ?? []) {
-      decisions.push({
-        id: choice.nodeId,
-        type: "spell_selection",
-        description: `Choose spells granted by ${trait.name}.`,
-        isRequired: true,
-        quantity: choice.pickCount,
-      });
-    }
   }
 
   return decisions;
@@ -181,25 +173,15 @@ const grantDrivenDecisions = (
   const decisions: ResolverDecision[] = [];
 
   for (const grant of grants) {
-    if (typeof grant === "string") continue;
+    // a spell_choice node is a choice question (listChoiceQuestions),
+    // answered through selectedTraits like any class node - not a decision
+    if (typeof grant === "string" || grant.type !== "trait_choice") continue;
 
-    if (grant.type === "trait_choice") {
-      decisions.push({
-        id: grant.nodeId,
-        type: "trait_selection",
-        description: `Choose ${grant.pickCount} option(s) for ${sourceName}.`,
-        options: grant.options.map(traitIdOfOption),
-        isRequired: true,
-        quantity: grant.pickCount,
-      });
-      continue;
-    }
-
-    // no options: there is no spell list data to enumerate from yet
     decisions.push({
       id: grant.nodeId,
-      type: "spell_selection",
-      description: `Choose ${grant.pickCount} spell(s) for ${sourceName}.`,
+      type: "trait_selection",
+      description: `Choose ${grant.pickCount} option(s) for ${sourceName}.`,
+      options: grant.options.map(traitIdOfOption),
       isRequired: true,
       quantity: grant.pickCount,
     });
@@ -329,12 +311,9 @@ export const resolveNextLevelValidationContext = ({
 
   // a dip grants the reduced multiclass proficiency set, plus the level's
   // own string feature grants - a fighter dip still gets Fighting Style,
-  // which is 5e-correct. Its trait_choice picks become a decision below
-  // (the "#region decisions" branch for a dip); its spell_choice grants, if
-  // the class has any at level 1, are left out of both the granted-trait
-  // list and the decisions - the wizard cannot answer a spell pick yet
-  // (#79), and a dip into a caster must keep working rather than 400 on a
-  // decision nothing can satisfy.
+  // which is 5e-correct. Its trait_choice picks become a decision below;
+  // its spell picks are choice questions like any other level-1 question
+  // (#79).
   if (isMulticlassDip && targetLevel === 1) {
     for (const traitId of blueprint.multiclassTraitIds) {
       grantedTraits.push({
@@ -400,19 +379,10 @@ export const resolveNextLevelValidationContext = ({
 
   // a dip offers the class's (and a level-1 subclass's) own level-1
   // trait_choice picks - Fighting Style for a fighter dip, a Draconic
-  // sorcerer's ancestor - but not spell_choice grants or a trait's spell
-  // picks, which stay skipped until the wizard can answer them (#79)
-  const isLevelOneDip = isMulticlassDip && targetLevel === 1;
-  const offered = (grants: FeatureGrant[]): FeatureGrant[] =>
-    isLevelOneDip
-      ? grants.filter(
-          (grant) => typeof grant !== "string" && grant.type === "trait_choice",
-        )
-      : grants;
-
+  // sorcerer's ancestor - exactly as a level-1 character gets them
   decisions.push(
     ...grantDrivenDecisions(
-      offered(classGrantsAtLevel(blueprint, targetLevel)),
+      classGrantsAtLevel(blueprint, targetLevel),
       blueprint.name,
     ),
   );
@@ -423,16 +393,14 @@ export const resolveNextLevelValidationContext = ({
   if (subclass?.classId === classId) {
     decisions.push(
       ...grantDrivenDecisions(
-        offered(subclassGrantsAtLevel(classId, requestedSubclassId, targetLevel)),
+        subclassGrantsAtLevel(classId, requestedSubclassId, targetLevel),
         subclass.name,
       ),
     );
   }
 
   decisions.push(
-    ...traitDrivenDecisions(grantedTraits.map((trait) => trait.id)).filter(
-      (decision) => !isLevelOneDip || decision.type !== "spell_selection",
-    ),
+    ...traitDrivenDecisions(grantedTraits.map((trait) => trait.id)),
   );
   // #endregion
 
@@ -604,18 +572,6 @@ export const validateLevelUpPayloadFromResolver = ({
             `${invalid.join(", ")} is not a valid option for ${decision.description}.`,
           );
         }
-      }
-    }
-
-    // strict validation: spell selection
-    if (decision.type === "spell_selection") {
-      const selectedSpells = payload.addedSpells ?? [];
-      const expected = decision.quantity ?? 1;
-
-      if (selectedSpells.length < expected) {
-        throw new Error(
-          `You must select exactly ${expected} spell option(s) for ${decision.description}.`,
-        );
       }
     }
   }

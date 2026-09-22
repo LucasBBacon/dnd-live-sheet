@@ -93,6 +93,29 @@ const fighter = (classLevel: number, subclassId: string | null = null): LedgerRo
   position: 0,
 });
 
+/** a human Life cleric with the level-1 questions other than cantrips answered */
+const humanCleric = (clericPicks: Record<string, string[]> = {}): CharacterRow =>
+  character({
+    wis: 16,
+    choices: {
+      classSelections: { class_cleric: clericPicks },
+      traitSelections: {
+        human_language_choice: ["elvish"],
+        cleric_starting_skills: ["history", "medicine"],
+      },
+      feats: [],
+    },
+  });
+
+const cleric = (classLevel: number): LedgerRow => ({
+  id: "ledger-1",
+  characterId: "char-1",
+  classId: "class_cleric",
+  classLevel,
+  subclassId: "subclass_cleric_life",
+  position: 0,
+});
+
 /**
  * A stand-in for drizzle that answers every select by the table it reads:
  * the character row for `characters`, the ledger for `character_classes`.
@@ -338,6 +361,79 @@ describe("level-up questions: offered by the options endpoint, required by apply
       ...answerAll(choiceQuestions),
     });
     expect(result.status).toBe(200);
+  });
+
+  it("asks a cleric 3 -> 4 for its level-4 cantrip, requires it, and stores the answer (#79)", async () => {
+    const { options, levelUp, sets } = await setup(humanCleric(), [cleric(3)]);
+
+    const { choiceQuestions, nextLevel } = await options({ classId: "class_cleric" });
+    expect(ids(choiceQuestions)).toEqual(["cleric_level_4_cantrips"]);
+    expect(choiceQuestions[0]!.options).toContainEqual({
+      id: "spell_thaumaturgy",
+      label: "Thaumaturgy",
+    });
+    // no spell decision left to give the wizard a step that blocks it
+    expect(nextLevel.decisions.map((decision) => decision.type)).not.toContain(
+      "spell_selection",
+    );
+
+    const unanswered = await levelUp({
+      targetClassId: "class_cleric",
+      newTotalLevel: 4,
+      featId: "feat_alert",
+    });
+    expect(unanswered.status).toBe(400);
+    expect(unanswered.body.error).toBe(
+      "Invalid character choices: Cleric: nothing selected for cleric_level_4_cantrips",
+    );
+
+    const answered = await levelUp({
+      targetClassId: "class_cleric",
+      newTotalLevel: 4,
+      featId: "feat_alert",
+      selectedTraits: { cleric_level_4_cantrips: ["spell_thaumaturgy"] },
+    });
+    expect(answered.status).toBe(200);
+    expect(sets).toContainEqual(
+      expect.objectContaining({
+        choices: expect.objectContaining({
+          classSelections: {
+            class_cleric: { cleric_level_4_cantrips: ["spell_thaumaturgy"] },
+          },
+        }),
+      }),
+    );
+  });
+
+  // the lock is generic; this pins that a stored spell answer is covered too
+  it("refuses to re-answer a cantrip the character already stored", async () => {
+    const { levelUp } = await setup(
+      humanCleric({
+        cleric_level_1_cantrips: [
+          "spell_thaumaturgy",
+          "spell_minor_illusion",
+          "spell_dancing_lights",
+        ],
+      }),
+      [cleric(1)],
+    );
+
+    const result = await levelUp({
+      targetClassId: "class_cleric",
+      newTotalLevel: 2,
+      selectedTraits: {
+        cleric_level_1_cantrips: [
+          "spell_faerie_fire",
+          "spell_minor_illusion",
+          "spell_dancing_lights",
+        ],
+      },
+    });
+
+    expect(result.status).toBe(400);
+    expect(result.body.error).toBe(
+      "Invalid character choices: cleric_level_1_cantrips already answered",
+    );
   });
 
   it("gives a bard dip's roster skill pick its whole roster, held skills marked", async () => {
