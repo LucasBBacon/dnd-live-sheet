@@ -4,6 +4,7 @@ import type {
   CoreRulePackSnapshot,
   EquipmentDefinition,
   Resource,
+  SpellDefinition,
   TraitDefinition,
 } from "@project/shared";
 import { toWeaponDefinition, type WeaponView } from "./equipmentProjection.js";
@@ -33,6 +34,7 @@ type RuleSnapshotLookup = {
     | undefined;
   backgroundsById?: Record<string, BackgroundDefinition> | undefined;
   featsById?: Record<string, FeatDefinition> | undefined;
+  spellsById?: Record<string, SpellDefinition> | undefined;
 };
 
 /** A feat, keyed the way the pack authors it. */
@@ -155,3 +157,14 @@ export const resolveSubclassDefinition = (
   snapshot?: RuleSnapshotLookup,
 ): CoreRulePackSnapshot["subclassesById"][string] | undefined =>
   snapshot?.subclassesById?.[subclassId];
+
+/**
+ * A spell, from the pack.
+ * @param spellId The authored spell id
+ * @param snapshot Pack content, when the caller has any loaded
+ * @returns The spell definition, or undefined
+ */
+export const resolveSpellDefinition = (
+  spellId: string,
+  snapshot?: RuleSnapshotLookup,
+): SpellDefinition | undefined => snapshot?.spellsById?.[spellId];

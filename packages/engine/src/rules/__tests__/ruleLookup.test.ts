@@ -7,7 +7,9 @@ import {
   resolveRaceDefinition,
   resolveTraitDefinition,
   resolveClassDefinition,
+  resolveSpellDefinition,
 } from "../ruleLookup.js";
+import type { SpellDefinition } from "@project/shared";
 
 const acBonusModifier = {
   target: "ARMOR_CLASS" as const,
@@ -134,6 +136,29 @@ describe("ruleLookup", () => {
     });
 
     expect(rules.trait_custom_rule?.name).toBe("Custom Rule");
+  });
+
+  it("resolves a spell from spellsById, and nothing without a snapshot", () => {
+    const thaumaturgy = {
+      id: "spell_thaumaturgy",
+      name: "Thaumaturgy",
+      level: 0,
+      school: "transmutation",
+      isRitual: false,
+      action: {
+        id: "action_spell_thaumaturgy",
+        name: "Thaumaturgy",
+        activation: "action",
+        effect: { type: "no_effect" },
+      },
+    } as unknown as SpellDefinition;
+
+    expect(
+      resolveSpellDefinition("spell_thaumaturgy", {
+        spellsById: { spell_thaumaturgy: thaumaturgy },
+      })?.name,
+    ).toBe("Thaumaturgy");
+    expect(resolveSpellDefinition("spell_thaumaturgy")).toBeUndefined();
   });
 });
 

@@ -24,6 +24,7 @@ const EMPTY: CoreRulePackSnapshot = {
   subclassesById: {},
   backgroundsById: {},
   featsById: {},
+  spellsById: {},
   resourcesById: {},
 };
 
