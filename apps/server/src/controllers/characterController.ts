@@ -135,6 +135,21 @@ export const applyLevelUp = async (req: Request, res: Response) => {
         context: resolverContext,
       });
 
+      // a stored subclass is a locked answer too: once the target class's
+      // ledger row already has one, this level-up may resend that same id
+      // (a no-op) but not name a different one. A blank subclassId means
+      // "none", matching buildLevelUpSaves' `||` (#84)
+      const storedSubclassId = targetClassRecord?.subclassId ?? null;
+      if (
+        storedSubclassId &&
+        payload.subclassId &&
+        payload.subclassId !== storedSubclassId
+      ) {
+        throw new Error(
+          `Invalid character choices: ${targetClassId} already has subclass ${storedSubclassId}`,
+        );
+      }
+
       // an answer already on the character's row is locked: this level-up
       // cannot resend it, whether or not the new value would differ (#69)
       for (const nodeId of Object.keys(selectedTraits ?? {})) {

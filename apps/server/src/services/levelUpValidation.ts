@@ -484,25 +484,30 @@ export const validateLevelUpPayloadFromResolver = ({
     }
   }
 
+  // strict validation: any subclass this payload names must exist and
+  // belong to this class. Checked unconditionally, not only when this
+  // level's decisions include a subclass pick: buildLevelUpSaves takes
+  // payload.subclassId at any level, so a wrong-class or unknown subclass
+  // sent at a level with no subclass decision must still be rejected here,
+  // not silently written to the ledger (G1)
+  if (payload.subclassId) {
+    const subclass = getPackRulebook().subclassesById[payload.subclassId];
+    if (!subclass || subclass.classId !== payload.targetClassId) {
+      throw new Error(
+        `${payload.subclassId} is not a subclass of ${payload.targetClassId}`,
+      );
+    }
+  }
+
   for (const decision of context.decisions) {
     // skip validation for non-required decisions
     if (!decision.isRequired) {
       continue;
     }
 
-    // strict validation: subclass selection
+    // strict validation: subclass selection required at unlock level
     if (decision.type === "subclass" && !payload.subclassId) {
       throw new Error("A subclass selection is required at this level");
-    }
-
-    // strict validation: the selected subclass has to belong to this class
-    if (decision.type === "subclass" && payload.subclassId) {
-      const subclass = getPackRulebook().subclassesById[payload.subclassId];
-      if (!subclass || subclass.classId !== payload.targetClassId) {
-        throw new Error(
-          `${payload.subclassId} is not a subclass of ${payload.targetClassId}`,
-        );
-      }
     }
 
     // strict validation: ability score improvement or feat selection

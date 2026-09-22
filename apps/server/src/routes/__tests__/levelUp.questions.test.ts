@@ -474,6 +474,42 @@ describe("level-up questions: offered by the options endpoint, required by apply
     expect(result.status).toBe(200);
   });
 
+  // a stored subclass is a locked answer: F1's scoping (#84) must not let a
+  // level-up swap it out from under the character (G1)
+  it("refuses to swap a stored subclass for a different one", async () => {
+    const landDruid3 = character({
+      choices: {
+        classSelections: {
+          class_druid: {
+            druid_level_1_cantrips: ["spell_barkskin", "spell_dancing_lights"],
+            druid_land_level_3_circle_land: ["trait_land_circle_spells_forest"],
+          },
+        },
+        traitSelections: {
+          human_language_choice: ["elvish"],
+          druid_starting_skills: ["arcana", "insight"],
+        },
+        feats: [],
+      },
+    });
+    const { levelUp } = await setup(landDruid3, [druid(3, "subclass_druid_land")]);
+
+    const result = await levelUp({
+      targetClassId: "class_druid",
+      newTotalLevel: 4,
+      subclassId: "subclass_druid_moon",
+      featId: "feat_alert",
+      selectedTraits: {
+        druid_level_4_cantrips: ["spell_thaumaturgy"],
+      },
+    });
+
+    expect(result.status).toBe(400);
+    expect(result.body.error).toBe(
+      "Invalid character choices: class_druid already has subclass subclass_druid_land",
+    );
+  });
+
   it("gives a bard dip's roster skill pick its whole roster, held skills marked", async () => {
     const { options, levelUp } = await setup(character(), [fighter(3, "subclass_fighter_champion")]);
 

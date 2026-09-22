@@ -94,6 +94,18 @@ describe("validateLevelUpPayloadFromResolver", () => {
     ).toThrow("is not a subclass of class_fighter");
   });
 
+  // buildLevelUpSaves takes payload.subclassId at any level, so a
+  // wrong-class subclass sent at a level whose decisions do not include a
+  // subclass pick must still be rejected here, not written unchecked (#79)
+  it("rejects a subclass that belongs to another class even with no subclass decision this level", () => {
+    expect(() =>
+      validateLevelUpPayloadFromResolver({
+        payload: { ...basePayload, subclassId: "subclass_rogue_thief" },
+        context: configuredContext([]),
+      }),
+    ).toThrow("is not a subclass of class_fighter");
+  });
+
   it("requires exactly one path for asi_or_feat", () => {
     const asiContext = configuredContext([
       {
