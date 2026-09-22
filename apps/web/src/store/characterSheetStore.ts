@@ -1406,11 +1406,19 @@ export const useCharacterSheetStore = create<CharacterSheetState>(
         modifiers,
         activeStates,
       );
+      // the ledger's sum, not state.level: applyLevelUp writes
+      // characters.level straight from the request without checking it
+      // against the ledger, so the two can drift. finalMaxHp (server) already
+      // derives its total the same way (#78 final review, F2)
+      const totalLevel = Object.values(state.classLevels).reduce(
+        (sum, level) => sum + level,
+        0,
+      );
 
       return DerivedStatEngine.calculateMaxHp(
         state.baseHpRolled,
         con.modifier,
-        { total: state.level, classes: state.classLevels },
+        { total: totalLevel, classes: state.classLevels },
         modifiers,
         activeStates,
       ).total;

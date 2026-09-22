@@ -30,7 +30,11 @@ describe("useCharacterSheetStore hp trigger handling", () => {
       id: "char_1",
       campaignId: null,
       level: 1,
-      classLevels: {},
+      // a real level 1 character always has a ledger entry; F2 (#78 final
+      // review) makes getMaxHp sum classLevels instead of reading level, so
+      // an empty ledger here would silently zero the Constitution
+      // contribution this block's fixtures rely on
+      classLevels: { class_fighter: 1 },
       raceId: "race_half_orc",
       subraceId: null,
       currentHp: 5,
@@ -1018,6 +1022,17 @@ describe("useCharacterSheetStore conditions", () => {
     const states = useCharacterSheetStore.getState().activeStates;
     expect(states).toContain("prone");
     expect(states).toContain("status_raging");
+  });
+
+  it("computes maximum hit points from the class ledger, not the level column (#78 F2)", () => {
+    // applyLevelUp writes characters.level straight from the request without
+    // checking it against the ledger, so the two can drift. classLevels stays
+    // { class_barbarian: 2 } from the fixture above; level disagrees with it.
+    useCharacterSheetStore.setState({ level: 9 });
+
+    // base 16, CON 14 (+2): base + max(1, 2) x the ledger's total of 2, not
+    // the column's 9
+    expect(useCharacterSheetStore.getState().getMaxHp()).toBe(20);
   });
 });
 

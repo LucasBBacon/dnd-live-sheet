@@ -115,12 +115,21 @@ export const useDerivedStats = () => {
       (grant) => grant.category === "skills",
     );
 
+    // the ledger's sum, not level: applyLevelUp writes characters.level
+    // straight from the request without checking it against the ledger, so
+    // the two can drift. finalMaxHp (server) already derives its total the
+    // same way (#78 final review, F2)
+    const totalLevel = Object.values(classLevels).reduce(
+      (sum, classLevel) => sum + classLevel,
+      0,
+    );
+
     // hp calc
     const maxHp = DerivedStatEngine.calculateMaxHp(
       baseHpRolled,
       finalAbilities.CON.modifier,
       {
-        total: level,
+        total: totalLevel,
         classes: classLevels,
       },
       totalMods,
