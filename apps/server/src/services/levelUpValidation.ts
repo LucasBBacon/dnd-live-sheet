@@ -416,11 +416,17 @@ export const resolveNextLevelValidationContext = ({
 };
 
 /**
- * Retrieves the selected traits for a specific decision from the level-up payload, handling different structures of the selectedTraits property (array or object).
+ * Retrieves the selected traits for a specific decision from the level-up
+ * payload.
  *
  * A decision sourced from a trait's own choice block reads its answer from
  * `payload.traitSelections[decision.id]` instead: that map is keyed by block
- * id exactly like this decision's id, so no array/record fallback is needed.
+ * id exactly like this decision's id. Every other decision reads its answer
+ * from `payload.selectedTraits[decision.id]` and only that key - spell picks
+ * now share `selectedTraits` with class-progression picks (#79), and a
+ * payload's `selectedTraits` can only ever be a string-keyed record
+ * (`applyLevelUp`'s shape check rejects anything else), so there is no array
+ * form or other key to fall back to.
  * @param payload The level-up payload containing the selected traits.
  * @param decision The decision for which to retrieve the selected traits.
  * @returns An array of selected trait IDs for the specified decision, or an empty array if no traits are selected.
@@ -429,45 +435,14 @@ const getSelectedTraitsForDecision = (
   payload: LevelUpPayload,
   decision: ResolverDecision,
 ): string[] => {
-  if (decision.source === "trait_choice_block") {
-    const exact = payload.traitSelections?.[decision.id];
-    return Array.isArray(exact)
-      ? exact.filter((entry): entry is string => typeof entry === "string")
-      : [];
-  }
+  const source =
+    decision.source === "trait_choice_block"
+      ? payload.traitSelections?.[decision.id]
+      : payload.selectedTraits?.[decision.id];
 
-  const decisionId = decision.id;
-  const selectedTraits = payload.selectedTraits as unknown;
-
-  // if no traits are selected, return an empty array
-  if (!selectedTraits) {
-    return [];
-  }
-
-  // handle case where selectedTraits is an array of strings
-  if (Array.isArray(selectedTraits)) {
-    return selectedTraits.filter(
-      (entry): entry is string => typeof entry === "string",
-    );
-  }
-
-  // handle case where selectedTraits is an object mapping decision IDs to arrays of strings
-  if (typeof selectedTraits === "object") {
-    const selectedByDecision = selectedTraits as Record<string, unknown>;
-    const exact = selectedByDecision[decisionId];
-
-    if (Array.isArray(exact)) {
-      return exact.filter(
-        (entry): entry is string => typeof entry === "string",
-      );
-    }
-
-    return Object.values(selectedByDecision)
-      .flatMap((entry) => (Array.isArray(entry) ? entry : []))
-      .filter((entry): entry is string => typeof entry === "string");
-  }
-
-  return [];
+  return Array.isArray(source)
+    ? source.filter((entry): entry is string => typeof entry === "string")
+    : [];
 };
 
 /**

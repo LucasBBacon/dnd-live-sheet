@@ -180,6 +180,30 @@ describe("validateLevelUpPayloadFromResolver", () => {
     ).toThrow("You must select exactly 2 option(s)");
   });
 
+  // selectedTraits is read only at the decision's own key (#82): a missing
+  // key must not fall back to sweeping every other key's picks
+  it("does not satisfy a decision from another key's picks in selectedTraits", () => {
+    expect(() =>
+      validateLevelUpPayloadFromResolver({
+        payload: {
+          ...basePayload,
+          selectedTraits: {
+            some_other_node: ["trait_prof_athletics", "trait_perception"],
+          },
+        },
+        context: configuredContext([
+          {
+            id: "dec_skills",
+            type: "trait_selection",
+            description: "Choose two skills",
+            isRequired: true,
+            quantity: 2,
+          },
+        ]),
+      }),
+    ).toThrow("You must select exactly 2 option(s)");
+  });
+
   it("satisfies a trait-choice-block decision from traitSelections, not selectedTraits", () => {
     const traitChoiceBlockContext = configuredContext([
       {
