@@ -418,7 +418,7 @@ describe("socket gateway - REST_COMPLETED", () => {
     harness.db.seed(characterResources, resources);
   };
 
-  it("resets hp to the character's own max column on a long rest", async () => {
+  it("resets hp to the derived maximum on a long rest", async () => {
     await ready();
 
     await harness.emit(SOCKET_EVENTS.REST_COMPLETED, {
@@ -428,10 +428,13 @@ describe("socket gateway - REST_COMPLETED", () => {
 
     const updates = harness.db.opsFor(characters, "update");
     expect(updates).toHaveLength(1);
-    // Column-to-column, so the server never has to know the computed max.
-    expect(renderSql(updates[0]?.set?.["currentHp"]).sql).toBe(
-      '"characters"."max_hp"',
-    );
+    // characterRow()'s stored maxHp (24) is base rolled hit points, not the
+    // maximum (#78): race_dwarf grants CON +2 regardless of subrace (14 ->
+    // 16, +3), and this suite's `ready()` seeds no character_classes row, so
+    // the ledger falls back to a level-1 class_fighter. The fixture's own
+    // subraceId ("sub_hill_dwarf") resolves to no real pack subrace, so
+    // Dwarven Toughness never applies. 24 + 3 x 1 = 27.
+    expect(updates[0]?.set?.["currentHp"]).toBe(27);
   });
 
   it("leaves hp alone on a short rest", async () => {

@@ -51,6 +51,7 @@ import {
 import { resolvePlayerTurn } from "../services/turnResolution.js";
 import { getCachedRuleSnapshot } from "../services/ruleSnapshotCache.js";
 import { modifyCharacterHp } from "../services/combatService.js";
+import { deriveMaxHp } from "../services/hitPoints.js";
 import { readStoredChoices, toCharacterSave } from "../services/characterSave.js";
 import { classLedgerOrder } from "../services/classLedger.js";
 import {
@@ -1503,13 +1504,13 @@ export function initializeWebSocketGateway(httpServer: any) {
               }
             }
 
-            // 4 - long rest hp reset
+            // 4 - long rest hp reset: back to the derived maximum, which the
+            // stored base rolled hit points alone cannot give (#78)
             if (payload.restType === "long") {
-              // in drizzle, doing an update with self-referencing column requires sql''
-              // or simply relying on the UI's maxHp calculation if stored directly
+              const restoredHp = await deriveMaxHp(payload.characterId);
               await tx
                 .update(characters)
-                .set({ currentHp: characters.maxHp })
+                .set({ currentHp: restoredHp })
                 .where(eq(characters.id, payload.characterId));
             }
           });

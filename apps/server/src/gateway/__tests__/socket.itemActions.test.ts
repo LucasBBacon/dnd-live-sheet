@@ -211,6 +211,14 @@ describe("socket gateway - ACTION_INTENT (item source)", () => {
 
   it("applies a positive HP delta and broadcasts it when the item action heals", async () => {
     await ready();
+    // re-seed the character close to the derived cap so every possible roll
+    // clamps to the same deterministic number (#78): the clamp is the
+    // derived maximum, not the stored maxHp column, so it no longer sits at
+    // characterRow()'s low 24. ready() seeds class_fighter level 3, and
+    // race_dwarf grants CON +2 regardless of subrace (14 -> 16, +3;
+    // characterRow()'s subraceId does not match a real pack subrace, so
+    // Dwarven Toughness never applies): 24 + 3 x 3 = 33.
+    harness.db.seed(characters, [characterRow({ currentHp: 31 })]);
     harness.db.seed(characterInventory, [
       inventoryRow({
         id: "inv-potion",
@@ -229,13 +237,12 @@ describe("socket gateway - ACTION_INTENT (item source)", () => {
     // labeled, so the sheet stops rendering healing under the damage heading
     expect(resolved.rollResults[0]?.label).toBe("Healing");
 
-    // characterRow() seeds currentHp 20 / maxHp 24. 2d4+2 spans 4..10, and
-    // even the minimum roll already reaches the cap, so the clamped result on
-    // both the write and the broadcast is deterministic regardless of the
-    // roll.
+    // currentHp 31, derived max 33. 2d4+2 spans 4..10, and even the minimum
+    // roll already reaches the cap, so the clamped result on both the write
+    // and the broadcast is deterministic regardless of the roll.
     const hpUpdates = harness.db.opsFor(characters, "update");
     expect(hpUpdates).toHaveLength(1);
-    expect(hpUpdates[0]?.set?.["currentHp"]).toBe(24);
+    expect(hpUpdates[0]?.set?.["currentHp"]).toBe(33);
 
     const hpEmit = harness.ioEmits.find(
       (emit) => emit.event === SOCKET_EVENTS.HP_MODIFIED,

@@ -1,6 +1,7 @@
 import { db } from "@project/database";
 import { characters } from "@project/database/src/schema/operational.js";
 import { eq } from "drizzle-orm";
+import { deriveMaxHp } from "./hitPoints.js";
 
 /**
  * Modifies the current HP of a character by a specified amount, ensuring that the resulting HP does not exceed the character's maximum HP or drop below zero.
@@ -26,7 +27,9 @@ export const modifyCharacterHp = async (
     }
 
     const currentHp = character.currentHp ?? 0;
-    const maxHp = character.maxHp ?? currentHp;
+    // the row's max_hp is base rolled hit points; the clamp needs the
+    // derived maximum (#78)
+    const maxHp = await deriveMaxHp(characterId);
     // 5E 2014 hp mechanics
     const nextCurrentHp =
       amount < 0

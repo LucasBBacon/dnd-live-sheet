@@ -7,6 +7,10 @@ vi.mock("@project/database", () => ({
   },
 }));
 
+vi.mock("../hitPoints.js", () => ({
+  deriveMaxHp: vi.fn().mockResolvedValue(100),
+}));
+
 import { db } from "@project/database";
 
 const createMockCharacter = (currentHp = 50, maxHp = 100) => ({
@@ -82,5 +86,15 @@ describe("modifyCharacterHp", () => {
     await expect(modifyCharacterHp("missing", -5)).rejects.toThrow(
       "Character missing not found",
     );
+  });
+
+  it("clamps a heal to the derived maximum, not the stored base", async () => {
+    const txMock = createMockTransaction(createMockCharacter(90, 40));
+    (db.transaction as any).mockImplementation((fn: any) => fn(txMock));
+
+    const hp = await modifyCharacterHp("char123", 25);
+
+    // the row's stored 40 is base rolled hit points; deriveMaxHp says 100
+    expect(hp).toEqual({ current: 100, temporary: 0, max: 100 });
   });
 });
