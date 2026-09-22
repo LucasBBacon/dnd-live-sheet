@@ -161,4 +161,28 @@ describe("toRuleSnapshot", () => {
       "feat_alert",
     ]);
   });
+
+  it("keys spells by their id", () => {
+    const snapshot = toRuleSnapshot(
+      pack({
+        spells: [
+          {
+            id: "spell_thaumaturgy",
+            name: "Thaumaturgy",
+            level: 0,
+            school: "transmutation",
+            isRitual: false,
+            action: {
+              id: "action_spell_thaumaturgy",
+              name: "Thaumaturgy",
+              activation: "action",
+              effect: { type: "no_effect" },
+            },
+          },
+        ],
+      } as never),
+    );
+
+    expect(snapshot.spellsById["spell_thaumaturgy"]?.name).toBe("Thaumaturgy");
+  });
 });

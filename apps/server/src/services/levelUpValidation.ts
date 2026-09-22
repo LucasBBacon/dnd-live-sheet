@@ -25,14 +25,15 @@ const listSubclassesForClass = (classId: string) =>
 // #region Type Definitions
 
 /**
- * Defines the types of decisions that can be made during the level-up process:
- * subclass selection, ability score improvement or feat selection, trait selection, and spell selection.
+ * The decisions a level-up can raise: subclass selection, ability score
+ * improvement or feat selection, and trait selection. Spell picks are not
+ * among them - they are choice questions (listChoiceQuestions), required and
+ * stored like any other answer (#79).
  */
 export type ResolverDecisionType =
   | "subclass"
   | "asi_or_feat"
-  | "trait_selection"
-  | "spell_selection";
+  | "trait_selection";
 
 /**
  * Represents a decision that needs to be made during the level-up process, including its type, description, and any associated options or requirements.
@@ -125,9 +126,10 @@ const subclassGrantsAtLevel = (
 };
 
 /**
- * Decisions carried by the traits granted at this level. These are the choices
- * that live inside a trait rather than on the level track: a proficiency choice
- * such as the rogue's Expertise, or a spell choice such as the High Elf cantrip.
+ * Decisions carried by the traits granted at this level: the proficiency
+ * choices that live inside a trait rather than on the level track, such as
+ * the rogue's Expertise. A trait's spell choice is a choice question instead
+ * (listChoiceQuestions, #79).
  */
 const traitDrivenDecisions = (traitIds: string[]): ResolverDecision[] => {
   const decisions: ResolverDecision[] = [];
@@ -158,16 +160,6 @@ const traitDrivenDecisions = (traitIds: string[]): ResolverDecision[] => {
         source: "trait_choice_block",
       });
     }
-
-    for (const choice of trait.spells?.choices ?? []) {
-      decisions.push({
-        id: choice.nodeId,
-        type: "spell_selection",
-        description: `Choose spells granted by ${trait.name}.`,
-        isRequired: true,
-        quantity: choice.pickCount,
-      });
-    }
   }
 
   return decisions;
@@ -181,25 +173,15 @@ const grantDrivenDecisions = (
   const decisions: ResolverDecision[] = [];
 
   for (const grant of grants) {
-    if (typeof grant === "string") continue;
+    // a spell_choice node is a choice question (listChoiceQuestions),
+    // answered through selectedTraits like any class node - not a decision
+    if (typeof grant === "string" || grant.type !== "trait_choice") continue;
 
-    if (grant.type === "trait_choice") {
-      decisions.push({
-        id: grant.nodeId,
-        type: "trait_selection",
-        description: `Choose ${grant.pickCount} option(s) for ${sourceName}.`,
-        options: grant.options.map(traitIdOfOption),
-        isRequired: true,
-        quantity: grant.pickCount,
-      });
-      continue;
-    }
-
-    // no options: there is no spell list data to enumerate from yet
     decisions.push({
       id: grant.nodeId,
-      type: "spell_selection",
-      description: `Choose ${grant.pickCount} spell(s) for ${sourceName}.`,
+      type: "trait_selection",
+      description: `Choose ${grant.pickCount} option(s) for ${sourceName}.`,
+      options: grant.options.map(traitIdOfOption),
       isRequired: true,
       quantity: grant.pickCount,
     });
@@ -329,12 +311,9 @@ export const resolveNextLevelValidationContext = ({
 
   // a dip grants the reduced multiclass proficiency set, plus the level's
   // own string feature grants - a fighter dip still gets Fighting Style,
-  // which is 5e-correct. Its trait_choice picks become a decision below
-  // (the "#region decisions" branch for a dip); its spell_choice grants, if
-  // the class has any at level 1, are left out of both the granted-trait
-  // list and the decisions - the wizard cannot answer a spell pick yet
-  // (#79), and a dip into a caster must keep working rather than 400 on a
-  // decision nothing can satisfy.
+  // which is 5e-correct. Its trait_choice picks become a decision below;
+  // its spell picks are choice questions like any other level-1 question
+  // (#79).
   if (isMulticlassDip && targetLevel === 1) {
     for (const traitId of blueprint.multiclassTraitIds) {
       grantedTraits.push({
@@ -400,19 +379,10 @@ export const resolveNextLevelValidationContext = ({
 
   // a dip offers the class's (and a level-1 subclass's) own level-1
   // trait_choice picks - Fighting Style for a fighter dip, a Draconic
-  // sorcerer's ancestor - but not spell_choice grants or a trait's spell
-  // picks, which stay skipped until the wizard can answer them (#79)
-  const isLevelOneDip = isMulticlassDip && targetLevel === 1;
-  const offered = (grants: FeatureGrant[]): FeatureGrant[] =>
-    isLevelOneDip
-      ? grants.filter(
-          (grant) => typeof grant !== "string" && grant.type === "trait_choice",
-        )
-      : grants;
-
+  // sorcerer's ancestor - exactly as a level-1 character gets them
   decisions.push(
     ...grantDrivenDecisions(
-      offered(classGrantsAtLevel(blueprint, targetLevel)),
+      classGrantsAtLevel(blueprint, targetLevel),
       blueprint.name,
     ),
   );
@@ -423,16 +393,14 @@ export const resolveNextLevelValidationContext = ({
   if (subclass?.classId === classId) {
     decisions.push(
       ...grantDrivenDecisions(
-        offered(subclassGrantsAtLevel(classId, requestedSubclassId, targetLevel)),
+        subclassGrantsAtLevel(classId, requestedSubclassId, targetLevel),
         subclass.name,
       ),
     );
   }
 
   decisions.push(
-    ...traitDrivenDecisions(grantedTraits.map((trait) => trait.id)).filter(
-      (decision) => !isLevelOneDip || decision.type !== "spell_selection",
-    ),
+    ...traitDrivenDecisions(grantedTraits.map((trait) => trait.id)),
   );
   // #endregion
 
@@ -448,11 +416,17 @@ export const resolveNextLevelValidationContext = ({
 };
 
 /**
- * Retrieves the selected traits for a specific decision from the level-up payload, handling different structures of the selectedTraits property (array or object).
+ * Retrieves the selected traits for a specific decision from the level-up
+ * payload.
  *
  * A decision sourced from a trait's own choice block reads its answer from
  * `payload.traitSelections[decision.id]` instead: that map is keyed by block
- * id exactly like this decision's id, so no array/record fallback is needed.
+ * id exactly like this decision's id. Every other decision reads its answer
+ * from `payload.selectedTraits[decision.id]` and only that key - spell picks
+ * now share `selectedTraits` with class-progression picks (#79), and a
+ * payload's `selectedTraits` can only ever be a string-keyed record
+ * (`applyLevelUp`'s shape check rejects anything else), so there is no array
+ * form or other key to fall back to.
  * @param payload The level-up payload containing the selected traits.
  * @param decision The decision for which to retrieve the selected traits.
  * @returns An array of selected trait IDs for the specified decision, or an empty array if no traits are selected.
@@ -461,45 +435,14 @@ const getSelectedTraitsForDecision = (
   payload: LevelUpPayload,
   decision: ResolverDecision,
 ): string[] => {
-  if (decision.source === "trait_choice_block") {
-    const exact = payload.traitSelections?.[decision.id];
-    return Array.isArray(exact)
-      ? exact.filter((entry): entry is string => typeof entry === "string")
-      : [];
-  }
+  const source =
+    decision.source === "trait_choice_block"
+      ? payload.traitSelections?.[decision.id]
+      : payload.selectedTraits?.[decision.id];
 
-  const decisionId = decision.id;
-  const selectedTraits = payload.selectedTraits as unknown;
-
-  // if no traits are selected, return an empty array
-  if (!selectedTraits) {
-    return [];
-  }
-
-  // handle case where selectedTraits is an array of strings
-  if (Array.isArray(selectedTraits)) {
-    return selectedTraits.filter(
-      (entry): entry is string => typeof entry === "string",
-    );
-  }
-
-  // handle case where selectedTraits is an object mapping decision IDs to arrays of strings
-  if (typeof selectedTraits === "object") {
-    const selectedByDecision = selectedTraits as Record<string, unknown>;
-    const exact = selectedByDecision[decisionId];
-
-    if (Array.isArray(exact)) {
-      return exact.filter(
-        (entry): entry is string => typeof entry === "string",
-      );
-    }
-
-    return Object.values(selectedByDecision)
-      .flatMap((entry) => (Array.isArray(entry) ? entry : []))
-      .filter((entry): entry is string => typeof entry === "string");
-  }
-
-  return [];
+  return Array.isArray(source)
+    ? source.filter((entry): entry is string => typeof entry === "string")
+    : [];
 };
 
 /**
@@ -541,25 +484,30 @@ export const validateLevelUpPayloadFromResolver = ({
     }
   }
 
+  // strict validation: any subclass this payload names must exist and
+  // belong to this class. Checked unconditionally, not only when this
+  // level's decisions include a subclass pick: buildLevelUpSaves takes
+  // payload.subclassId at any level, so a wrong-class or unknown subclass
+  // sent at a level with no subclass decision must still be rejected here,
+  // not silently written to the ledger (G1)
+  if (payload.subclassId) {
+    const subclass = getPackRulebook().subclassesById[payload.subclassId];
+    if (!subclass || subclass.classId !== payload.targetClassId) {
+      throw new Error(
+        `${payload.subclassId} is not a subclass of ${payload.targetClassId}`,
+      );
+    }
+  }
+
   for (const decision of context.decisions) {
     // skip validation for non-required decisions
     if (!decision.isRequired) {
       continue;
     }
 
-    // strict validation: subclass selection
+    // strict validation: subclass selection required at unlock level
     if (decision.type === "subclass" && !payload.subclassId) {
       throw new Error("A subclass selection is required at this level");
-    }
-
-    // strict validation: the selected subclass has to belong to this class
-    if (decision.type === "subclass" && payload.subclassId) {
-      const subclass = getPackRulebook().subclassesById[payload.subclassId];
-      if (!subclass || subclass.classId !== payload.targetClassId) {
-        throw new Error(
-          `${payload.subclassId} is not a subclass of ${payload.targetClassId}`,
-        );
-      }
     }
 
     // strict validation: ability score improvement or feat selection
@@ -604,18 +552,6 @@ export const validateLevelUpPayloadFromResolver = ({
             `${invalid.join(", ")} is not a valid option for ${decision.description}.`,
           );
         }
-      }
-    }
-
-    // strict validation: spell selection
-    if (decision.type === "spell_selection") {
-      const selectedSpells = payload.addedSpells ?? [];
-      const expected = decision.quantity ?? 1;
-
-      if (selectedSpells.length < expected) {
-        throw new Error(
-          `You must select exactly ${expected} spell option(s) for ${decision.description}.`,
-        );
       }
     }
   }

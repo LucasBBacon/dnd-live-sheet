@@ -1,3 +1,4 @@
+import { useState } from "react";
 import type { ChoiceQuestion } from "@project/engine";
 
 // This predicate belongs beside the picker it describes, not split into a
@@ -8,6 +9,12 @@ export const isQuestionAnswered = (
   selected: string[] | undefined,
 ): boolean => (selected ?? []).length === question.pickCount;
 
+/**
+ * Past this many options a question gets a name filter - a cantrip question
+ * lists every cantrip the pack has.
+ */
+const FILTER_THRESHOLD = 12;
+
 export const ChoicePicker = ({
   question,
   selected,
@@ -17,6 +24,19 @@ export const ChoicePicker = ({
   selected: string[];
   onChange: (selected: string[]) => void;
 }) => {
+  const [filter, setFilter] = useState("");
+  const needle = filter.trim().toLowerCase();
+  // the filter narrows what is shown, never what is picked: a selected
+  // option stays shown whatever the filter says
+  const shown =
+    needle === ""
+      ? question.options
+      : question.options.filter(
+          (option) =>
+            selected.includes(option.id) ||
+            option.label.toLowerCase().includes(needle),
+        );
+
   const toggle = (optionId: string, checked: boolean) => {
     if (checked) {
       onChange([...selected, optionId]);
@@ -31,8 +51,18 @@ export const ChoicePicker = ({
       <p className="text-xs text-gray-500 mb-2">
         {selected.length} / {question.pickCount}
       </p>
+      {question.options.length > FILTER_THRESHOLD && (
+        <input
+          type="search"
+          value={filter}
+          onChange={(event) => setFilter(event.target.value)}
+          placeholder="Filter by name"
+          aria-label={`Filter: ${question.prompt}`}
+          className="w-full border border-gray-300 rounded px-2 py-1 text-sm mb-2"
+        />
+      )}
       <div className="flex flex-col gap-1">
-        {question.options.map((option) => {
+        {shown.map((option) => {
           const isSelected = selected.includes(option.id);
           const isHeld = question.held.includes(option.id);
           const disabled =

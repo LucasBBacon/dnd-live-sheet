@@ -1,11 +1,13 @@
 /**
- * Represents the different types of decisions a player can make when leveling up their character in a role-playing game. These decisions include choosing a subclass, subrace, ability score improvement (ASI), feat, spell selection, or trait selection. Each decision type corresponds to a specific aspect of character progression and customization.
+ * The decisions a player can make when leveling up: a subclass, a subrace,
+ * an ability score improvement (ASI) or feat, or a trait selection. Spell
+ * picks are not level decisions - they are choice questions
+ * (listChoiceQuestions), answered like any class or trait pick (#79).
  */
 export type DecisionType =
   | "subclass"
   | "subrace"
   | "asi_or_feat"
-  | "spell_selection"
   | "trait_selection";
 
 /**

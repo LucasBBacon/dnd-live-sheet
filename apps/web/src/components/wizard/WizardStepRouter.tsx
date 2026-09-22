@@ -5,7 +5,6 @@ import { ReviewStep } from "./steps/ReviewStep";
 import { OverviewStep } from "./steps/OverviewStep";
 import { SubclassStep } from "./steps/SubclassStep";
 import { ChoicesStep } from "./steps/ChoicesStep";
-import { SpellChoiceUnsupportedStep } from "./steps/SpellChoiceUnsupportedStep";
 
 interface RouterProps {
   stepType: string;
@@ -32,8 +31,6 @@ export const WizardStepRouter = ({ stepType, decisions }: RouterProps) => {
       return <AsiFeatStep context={getDecisionContext("asi_or_feat")!} />;
     case "choices":
       return <ChoicesStep />;
-    case "spell_selection":
-      return <SpellChoiceUnsupportedStep />;
     case "review":
       return <ReviewStep />;
     default:

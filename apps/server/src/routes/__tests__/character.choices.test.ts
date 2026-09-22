@@ -126,12 +126,17 @@ describe("POST /api/character choices", () => {
     personality: { traits: "", ideals: "", bonds: "", flaws: "" },
   };
 
-  // race_half_elf + background_noble + class_bard ask seven questions at
-  // level 1 (half-elf's own three, noble's own two, plus bard's starting
-  // instruments and skills) - every id below answers one of them, valid picks
-  // that avoid anything the character already holds for free
+  // race_half_elf + background_noble + class_bard ask eight questions at
+  // level 1 (half-elf's own three, noble's own two, bard's starting
+  // instruments and skills, and bard's two cantrips) - every id below answers
+  // one of them, valid picks that avoid anything the character already holds
+  // for free
   const completeChoicesForLyra = () => ({
-    classSelections: {},
+    classSelections: {
+      class_bard: {
+        bard_level_1_cantrips: ["spell_dancing_lights", "spell_minor_illusion"],
+      },
+    },
     traitSelections: {
       half_elf_asi_choice: ["DEX", "CON"],
       skill_versatility_choice: ["perception", "insight"],
@@ -176,6 +181,35 @@ describe("POST /api/character choices", () => {
     feats: [],
   });
 
+  const cleric = {
+    ...human,
+    name: "Aveline",
+    classId: "class_cleric",
+    subclassId: "subclass_cleric_life",
+    baseAbilityScores: { str: 12, dex: 9, con: 14, int: 10, wis: 16, cha: 11 },
+  };
+
+  // race_human + background_acolyte + class_cleric (Life) ask four questions
+  // at level 1: the human's language, the acolyte's two languages, the
+  // cleric's starting skills, and the cleric's three cantrips (#79)
+  const completeChoicesForCleric = () => ({
+    classSelections: {
+      class_cleric: {
+        cleric_level_1_cantrips: [
+          "spell_thaumaturgy",
+          "spell_minor_illusion",
+          "spell_dancing_lights",
+        ],
+      },
+    },
+    traitSelections: {
+      human_language_choice: ["elvish"],
+      acolyte_languages: ["dwarvish", "giant"],
+      cleric_starting_skills: ["history", "medicine"],
+    },
+    feats: [],
+  });
+
   it("stores valid choices with the character", async () => {
     const { app, values } = await setupApp();
     const choices = completeChoicesForLyra();
@@ -212,6 +246,33 @@ describe("POST /api/character choices", () => {
     const response = await request(app)
       .post("/api/character")
       .send({ ...human, choices });
+
+    expect(response.status).toBe(201);
+    expect(values).toHaveBeenCalledWith(expect.objectContaining({ choices }));
+  });
+
+  it("rejects a cleric created without cantrips, naming only that question (#79)", async () => {
+    const { app, transaction } = await setupApp();
+    const { traitSelections } = completeChoicesForCleric();
+
+    const response = await request(app)
+      .post("/api/character")
+      .send({ ...cleric, choices: { classSelections: {}, traitSelections, feats: [] } });
+
+    expect(response.status).toBe(400);
+    expect(response.body.issues).toEqual([
+      "Cleric: nothing selected for cleric_level_1_cantrips",
+    ]);
+    expect(transaction).not.toHaveBeenCalled();
+  });
+
+  it("creates a cleric with three cantrips, stored under the class (#79)", async () => {
+    const { app, values } = await setupApp();
+    const choices = completeChoicesForCleric();
+
+    const response = await request(app)
+      .post("/api/character")
+      .send({ ...cleric, choices });
 
     expect(response.status).toBe(201);
     expect(values).toHaveBeenCalledWith(expect.objectContaining({ choices }));

@@ -191,7 +191,7 @@ things the last three branches showed replace it:
 | Order | Item | Scale | Why here |
 | --- | --- | --- | --- |
 | 6 | **Rogue pass**, with **#66**'s expertise concept | 26 stubs | Smallest remaining row that needs a new *system* rather than just data: Sneak Attack (#62) and Expertise (#66). Settling expertise here also unblocks the bard's copy of it. Follow the barbarian template (design spec → slices → sheet surface). |
-| 7 | **#31a** — spell *data*: real `level`, `school` and class spell lists | 111 spells | Slots exist since `feat/spellcasting-slots`, but every spell is level 0 evocation, so a wizard has slots and nothing meaningful to cast. The data pass is mechanical (PHB values) and adds spell lists as a pack concept, which also unblocks **#67**. Rules (#31b) stay a later, per-spell job. |
+| 7 | **#31a** — spell *data*: real `level`, `school` and class spell lists | 111 spells | Slots exist since `feat/spellcasting-slots`, but every spell is level 0 evocation, so a wizard has slots and nothing meaningful to cast. The data pass is mechanical (PHB values) and adds spell lists as a pack concept, which also unblocks **#67**. Rules (#31b) stay a later, per-spell job. Since `feat/spell-choices` (#79), `spellOptions` (`packages/engine/src/pipeline/spellChoices.ts`) is the one place list membership goes, and once spells have real levels the spellbook and spells-known questions are asked with no code change — but #31a must also (a) decide whether to clear or migrate the placeholder picks already stored (Bless as a cantrip becomes off-roster; level-up ignores it since #84's fix, but nothing repairs it), planned together with an answer-later path; (b) note that the level-up Choices step takes `held` from the server as-is, so two new spell questions at one level with overlapping rosters (a Lore bard 6's Additional Magical Secrets beside its spells known; a warlock 11/13/15/17's Mystic Arcanum beside its spells known) can take the same spell until submit fails; (c) Mystic Arcanum needs exactly its level, not `spellOptions`' 1..max. |
 | 7a | **#70** — author the four missing backgrounds | 4 backgrounds | Same shape as #31a: content authoring, not a new system. Three sample characters (Nyx Vale, Master Ko Shen, Kaelen Duskwarden) already reference `background_charlatan`, `background_folk_hero` and `background_outlander`, which the seeder creates but the pack does not author; `background_sage` is a fourth the seeder creates that no sample character uses. See P11's 11c. |
 | 8 | **Next class passes**, each named by its system | see table below | Monk (ki, #62), sorcerer (sorcery points, #62), cleric/paladin (channel divinity, divine smite, #62), druid (wild shape, #62), fighter (after #69; Battle Master is #69's worst case, so the pass verifies it). Pick by who is playing what. |
 | 9 | **#36** — `SUMMON_ACTOR_DICTIONARY` into the pack | — | The last rules content outside the pack. Unchanged; still two live readers. Best done alongside the wizard or druid pass, whose summons are its only consumers. |
@@ -1896,6 +1896,12 @@ unimplemented sub-part. It was also invisible to #30: the trait carries no
 nothing counted this. Fixed 2026-09-21 by trimming the lore back to the rules
 text the pack actually delivers; this item is where the gap lives now instead.
 
+Since `feat/spell-choices` (#79) a trait's `spells.choices` block is asked and
+stored like any choice question (the High Elf cantrip is one), so the druid
+cantrip can be authored as a `spell_choice` block on the trait
+(`listSource: "druid"`, `maxSpellLevel: 0`, `pickCount: 1`) once #31a gives
+the pack spell lists; authored before that, it would offer every pack spell.
+
 ### 10d. #68 — authored proficiency data has no consumer outside tests, and backgrounds reach no live sheet at all
 
 | # | Item | Notes |
@@ -2192,7 +2198,7 @@ Test totals: shared 227, engine 958, database 198, server 404, web 355 =
 | 76 | The web store's composed `activeStates` still lacks trait and equipment states, so trigger and dice-rule gating still miss them | Found by `fix/sheet-modifiers`'s hand check, 2026-09-21; recorded rather than fixed; `useCheckRoll`'s symptom fixed on `fix/levelup-correctness`. See below. |
 | 77 | ✅ Stored ability scores are pre-racial, and multiclass prerequisites and `useCheckRoll` read them directly | Found by the final review of `fix/sheet-modifiers`, 2026-09-21; closed on `fix/levelup-correctness`. See the Recommended-sequence row 5d. No test exercises `loadCharacterFinalScores` or the dip preview reporting "met"; the hand check covered it manually. |
 | 78 | A level's hit points skip the Constitution modifier on the server | Found by `fix/levelup-correctness`'s hand check, 2026-09-21. See below. |
-| 79 | The level-up wizard has no spell step, so a level with a spell choice cannot be submitted | Found by `fix/levelup-correctness`'s hand check, 2026-09-21. Since `feat/choice-step` the wizard shows a step naming #79 and blocks submit instead of "Unhandled Step Type". See below. |
+| 79 | ✅ The level-up wizard has no spell step, so a level with a spell choice cannot be submitted | Found by `fix/levelup-correctness`'s hand check, 2026-09-21; closed 2026-09-22 on `feat/spell-choices`: spell picks are choice questions. See below. |
 | 80 | A custom background's choice blocks cannot be answered | Inherited by `feat/choice-step` from the final review of `fix/sheet-modifiers`, 2026-09-21. See below. |
 | 81 | A choice question offers options whose prerequisites the character does not meet | Found by the final review of `feat/choice-step`, 2026-09-22. See below. |
 
@@ -2272,6 +2278,36 @@ Test totals: shared 227, engine 958, database 198, server 404, web 355 =
   (`apps/web/src/components/wizard/steps/`) has no step that fills
   `addedSpells`. Cleric 3 → 4 ("Choose 1 spell(s) for Cleric") fails with a
   400 at the review step. Sits beside Branch B's choice-step UI.
+
+  **Closed 2026-09-22** on `feat/spell-choices`. Spell picks are choice
+  questions: `listChoiceQuestions` asks one per unlocked class
+  `spell_choice` node (stored in `choices.classSelections[classId][nodeId]`,
+  sent as `selectedTraits`) and one per trait `spells.choices` block (the
+  High Elf cantrip, stored in `traitSelections`), with options from
+  `spellOptions` (`packages/engine/src/pipeline/spellChoices.ts`) and spells
+  known elsewhere marked held. Both wizards' Choices steps ask them; the
+  server's required-answer and lock checks cover them; save validation
+  checks each pick's option, held status and count. The resolver's
+  `spell_selection` decisions, `SpellChoiceUnsupportedStep` and
+  `LevelUpPayload.addedSpells`/`replacedSpells` are gone. Until #31a gives
+  spells real levels, a cantrip question lists every pack spell and a
+  spellbook or spells-known node has no options and is not asked.
+  Hand check (samples re-seeded before and after): Sister Aveline levelled
+  cleric 3 → 4 through the wizard taking Alert, in five steps with no spell
+  step; the Choices step asked "Cleric: choose 1 cantrip(s)" with her ten
+  Life domain spells marked already known, the filter box narrowed the 111
+  options to Thaumaturgy, and the commit stored
+  `class_cleric: { cleric_level_4_cantrips: ["spell_thaumaturgy"] }` (her
+  maximum hit points came out 29, not the promised 31 — #78). A High Elf
+  Life cleric made through the creation wizard was asked the High Elf's
+  cantrip and the cleric's three; taking Minor Illusion for the High Elf
+  marked it already known on the cleric question, and the row stored
+  `cleric_level_1_cantrips` (Thaumaturgy, Dancing Lights, Eldritch Blast)
+  and `traitSelections.high_elf_cantrip` (Minor Illusion). A human Fiend
+  warlock created with Eldritch Blast (through `POST /api/character`, the
+  wizard's own endpoint) levelled 1 → 2 through the wizard taking Agonizing
+  Blast and Devil's Sight, and the server accepted it. Level-up checks only
+  the answers it is sent and the questions new at that level (#84).
 - **#80 — a custom background's choice blocks cannot be answered.** A
   custom background keeps its traits as `character_custom_traits` rows
   rather than a pack `backgroundId`, so they sit outside `CharacterSave`
@@ -2288,3 +2324,49 @@ Test totals: shared 227, engine 958, database 198, server 404, web 355 =
   needs spell_eldritch_blast` at submit. Older than `feat/choice-step` (the
   resolver never filtered either). Fix: mark such options unavailable in
   `listChoiceQuestions` (reuse `unmetPrerequisites`) the way `held` is.
+  Since `feat/spell-choices` (#79) the warlock's cantrips are asked at
+  creation, so the example only fails when Eldritch Blast was not picked.
+
+### 11h. #82, #83 and #84 — found while implementing `feat/spell-choices`
+
+| # | Item | Notes |
+| --- | --- | --- |
+| 82 | Level-up cannot swap a known spell | Recorded 2026-09-22 when `feat/spell-choices` removed `LevelUpPayload.replacedSpells`, which nothing read. See below. |
+| 83 | The sheet does not list a character's picked spells | Recorded 2026-09-22 on `feat/spell-choices`. See below. |
+| 84 | A stored pick can go stale | Recorded 2026-09-22 on the branch's final review. See below. |
+
+- **#82 — level-up cannot swap a known spell.** A bard, ranger, sorcerer
+  or warlock (and an Eldritch Knight or Arcane Trickster) may replace one
+  known spell on gaining a level. `replacedSpells` was declared on
+  `LevelUpPayload` but never read or stored, so `feat/spell-choices`
+  removed it rather than keep a dead field. A swap needs a way to say
+  which stored pick is replaced, against the lock that refuses to
+  re-answer a stored question (`Invalid character choices: <id> already
+  answered`). Waits on #31a: until spells have real levels no
+  spells-known node is asked at all.
+- **#83 — the sheet does not list picked spells.** Since
+  `feat/spell-choices` spell picks are stored in `choices`, and
+  `knownSpellIds` reads them for invocation prerequisites, but
+  `SpellcastingWidget` shows slots only and no code builds a
+  `RuntimeSpellSource` from a save, so `SpellbookEngine` has no caller.
+  Best done with or after #31a, when spells have real levels (and #31b,
+  real actions).
+- **#84 — a stored pick can go stale.** A later grant can make a stored
+  pick redundant: a Land druid who stored Barkskin as a level-1 cantrip
+  finds Circle of the Land (Forest) grants Barkskin fixed at level 3, and
+  #31a will make stored placeholder picks off-roster the same way.
+  Answers are locked, so nothing can re-answer a stale pick. Since
+  `feat/spell-choices` level-up checks only the answers it is sent and
+  the questions new at that level, so a stale stored pick no longer
+  blocks levelling (it used to, with no remedy). Nothing surfaces or
+  repairs a stale pick yet; that belongs with an answer-later path. A
+  stored subclass is a locked answer too: a level-up that names a
+  subclass other than the one already stored for that class is refused
+  (fixed in the scoped re-review; it used to rewrite the ledger). A
+  further consequence of scoping level-up to this level's answers: a
+  pick this level makes that duplicates a stored proficiency is
+  reported against whichever choice block the proficiency extractor
+  resolves first, so once the stored block resolves later the level-up
+  now passes and the stored pick buys nothing - a Bard 2 / Rogue 1 with
+  a stored rogue Stealth pick, taking Stealth again with Lore's bonus
+  skills at bard 3, no longer catches the duplicate.

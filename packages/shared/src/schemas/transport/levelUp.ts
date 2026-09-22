@@ -2,7 +2,11 @@ type Ability = "STR" | "DEX" | "CON" | "INT" | "WIS" | "CHA";
 
 /**
  * Represents the payload for a level-up event in a character's progression.
- * This payload contains all necessary information to process a level-up, including the character's ID, the target class for leveling up, the new total level, and any choices made during the level-up process (e.g., hit point roll, subclass selection, ability score improvements, feats, traits, and spell changes).
+ * It carries the character's ID, the target class, the new total level, and
+ * the choices made at this level: the hit point roll, a subclass, ability
+ * score improvements or a feat, and picks. A spell pick is a class or trait
+ * pick like any other, keyed by its node, so it travels in selectedTraits or
+ * traitSelections (#79).
  */
 export interface LevelUpPayload {
   characterId: string;
@@ -18,6 +22,4 @@ export interface LevelUpPayload {
   selectedTraits?: Record<string, string[]>;
   // trait choice-block picks that arrive with this level, keyed by block id
   traitSelections?: Record<string, string[]>;
-  addedSpells?: string[];
-  replacedSpells?: { oldSpellId: string; newSpellId: string }[];
 }

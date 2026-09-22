@@ -31,10 +31,10 @@ export type RulesSnapshotResponse = {
  * What `/reference/rules/snapshot` actually serves: the same equipment and
  * resource maps as `RulesSnapshotResponse`, plus every other rulebook map a
  * loaded pack contributes (races, classes, subclasses, backgrounds, feats,
- * traits) - each one optional, since a database with no imported pack serves
- * none of them. Shaped to be handed straight to `listChoiceQuestions`, whose
- * `RuleSnapshotLookup` parameter wants exactly this: equipment/resources
- * required, everything else optional.
+ * traits, spells) - each one optional, since a database with no imported
+ * pack serves none of them. Shaped to be handed straight to
+ * `listChoiceQuestions`, whose `RuleSnapshotLookup` parameter wants exactly
+ * this: equipment/resources required, everything else optional.
  */
 export type FullRulesSnapshotResponse = {
   version: number;

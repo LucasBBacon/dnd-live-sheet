@@ -18,7 +18,7 @@ export const levelUpSteps = (decisions: LevelDecision[]): string[] => {
       continue;
     }
     seenTypes.add(decision.type);
-    steps.push(decision.type); // 'subclass', 'asi_or_feat', 'spell_selection'
+    steps.push(decision.type); // 'subclass', 'asi_or_feat'
   }
   steps.push("choices", "review");
   return steps;
@@ -76,11 +76,6 @@ export const isStepComplete = (
           isQuestionAnswered(question, draftPicksFor(payload, question)),
         )
       );
-
-    case "spell_selection":
-      // the wizard cannot answer a spell choice yet (#79) - this step always
-      // blocks progress, even when there is nothing left to pick
-      return false;
 
     default:
       return false;

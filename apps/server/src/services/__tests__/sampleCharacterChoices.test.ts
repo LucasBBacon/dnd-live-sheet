@@ -17,9 +17,10 @@ const PACK_DIR = path.join(
 );
 
 /**
- * The spell_choice nodes a save's classes and subclasses carry. They list no
- * options until spell lists exist in the pack (#31, #67), so there is nothing
- * valid to seed for them.
+ * The spell_choice nodes a save's classes and subclasses carry. The samples
+ * leave them unanswered: every pack spell is a level-0 placeholder until
+ * #31a, so the picks a sample could record (Bless as a cantrip) are ones
+ * #31a would have to unpick.
  */
 const spellChoiceNodeIds = (
   snapshot: CoreRulePackSnapshot,

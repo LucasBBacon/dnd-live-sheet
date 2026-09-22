@@ -93,6 +93,38 @@ const fighter = (classLevel: number, subclassId: string | null = null): LedgerRo
   position: 0,
 });
 
+/** a human Life cleric with the level-1 questions other than cantrips answered */
+const humanCleric = (clericPicks: Record<string, string[]> = {}): CharacterRow =>
+  character({
+    wis: 16,
+    choices: {
+      classSelections: { class_cleric: clericPicks },
+      traitSelections: {
+        human_language_choice: ["elvish"],
+        cleric_starting_skills: ["history", "medicine"],
+      },
+      feats: [],
+    },
+  });
+
+const cleric = (classLevel: number): LedgerRow => ({
+  id: "ledger-1",
+  characterId: "char-1",
+  classId: "class_cleric",
+  classLevel,
+  subclassId: "subclass_cleric_life",
+  position: 0,
+});
+
+const druid = (classLevel: number, subclassId: string | null = null): LedgerRow => ({
+  id: "ledger-1",
+  characterId: "char-1",
+  classId: "class_druid",
+  classLevel,
+  subclassId,
+  position: 0,
+});
+
 /**
  * A stand-in for drizzle that answers every select by the table it reads:
  * the character row for `characters`, the ledger for `character_classes`.
@@ -322,7 +354,13 @@ describe("level-up questions: offered by the options endpoint, required by apply
       subclassId: "subclass_cleric_knowledge",
     });
     expect(ids(choiceQuestions)).toEqual(
-      expect.arrayContaining(["knowledge_domain_languages", "knowledge_domain_skills"]),
+      expect.arrayContaining([
+        "knowledge_domain_languages",
+        "knowledge_domain_skills",
+        // a dip into a caster asks its level-1 cantrips like any other
+        // level-1 question (#79)
+        "cleric_level_1_cantrips",
+      ]),
     );
 
     const result = await levelUp({
@@ -332,6 +370,144 @@ describe("level-up questions: offered by the options endpoint, required by apply
       ...answerAll(choiceQuestions),
     });
     expect(result.status).toBe(200);
+  });
+
+  it("asks a cleric 3 -> 4 for its level-4 cantrip, requires it, and stores the answer (#79)", async () => {
+    const { options, levelUp, sets } = await setup(humanCleric(), [cleric(3)]);
+
+    const { choiceQuestions, nextLevel } = await options({ classId: "class_cleric" });
+    expect(ids(choiceQuestions)).toEqual(["cleric_level_4_cantrips"]);
+    expect(choiceQuestions[0]!.options).toContainEqual({
+      id: "spell_thaumaturgy",
+      label: "Thaumaturgy",
+    });
+    // no spell decision left to give the wizard a step that blocks it
+    expect(nextLevel.decisions.map((decision) => decision.type)).not.toContain(
+      "spell_selection",
+    );
+
+    const unanswered = await levelUp({
+      targetClassId: "class_cleric",
+      newTotalLevel: 4,
+      featId: "feat_alert",
+    });
+    expect(unanswered.status).toBe(400);
+    expect(unanswered.body.error).toBe(
+      "Invalid character choices: Cleric: nothing selected for cleric_level_4_cantrips",
+    );
+
+    const answered = await levelUp({
+      targetClassId: "class_cleric",
+      newTotalLevel: 4,
+      featId: "feat_alert",
+      selectedTraits: { cleric_level_4_cantrips: ["spell_thaumaturgy"] },
+    });
+    expect(answered.status).toBe(200);
+    expect(sets).toContainEqual(
+      expect.objectContaining({
+        choices: expect.objectContaining({
+          classSelections: {
+            class_cleric: { cleric_level_4_cantrips: ["spell_thaumaturgy"] },
+          },
+        }),
+      }),
+    );
+  });
+
+  // the lock is generic; this pins that a stored spell answer is covered too
+  it("refuses to re-answer a cantrip the character already stored", async () => {
+    const { levelUp } = await setup(
+      humanCleric({
+        cleric_level_1_cantrips: [
+          "spell_thaumaturgy",
+          "spell_minor_illusion",
+          "spell_dancing_lights",
+        ],
+      }),
+      [cleric(1)],
+    );
+
+    const result = await levelUp({
+      targetClassId: "class_cleric",
+      newTotalLevel: 2,
+      selectedTraits: {
+        cleric_level_1_cantrips: [
+          "spell_faerie_fire",
+          "spell_minor_illusion",
+          "spell_dancing_lights",
+        ],
+      },
+    });
+
+    expect(result.status).toBe(400);
+    expect(result.body.error).toBe(
+      "Invalid character choices: cleric_level_1_cantrips already answered",
+    );
+  });
+
+  // a stored pick a later grant makes redundant must not block every future
+  // level-up: level-up only checks answers it is sent and questions new at
+  // this level, not the whole save (#84)
+  it("lets a Land druid level up past a stored cantrip a new circle trait makes redundant", async () => {
+    const landDruid2 = character({
+      choices: {
+        classSelections: {
+          class_druid: { druid_level_1_cantrips: ["spell_barkskin", "spell_dancing_lights"] },
+        },
+        traitSelections: {
+          human_language_choice: ["elvish"],
+          druid_starting_skills: ["arcana", "insight"],
+        },
+        feats: [],
+      },
+    });
+    const { levelUp } = await setup(landDruid2, [druid(2, "subclass_druid_land")]);
+
+    const result = await levelUp({
+      targetClassId: "class_druid",
+      newTotalLevel: 3,
+      selectedTraits: {
+        druid_land_level_3_circle_land: ["trait_land_circle_spells_forest"],
+      },
+    });
+
+    expect(result.status).toBe(200);
+  });
+
+  // a stored subclass is a locked answer: F1's scoping (#84) must not let a
+  // level-up swap it out from under the character (G1)
+  it("refuses to swap a stored subclass for a different one", async () => {
+    const landDruid3 = character({
+      choices: {
+        classSelections: {
+          class_druid: {
+            druid_level_1_cantrips: ["spell_barkskin", "spell_dancing_lights"],
+            druid_land_level_3_circle_land: ["trait_land_circle_spells_forest"],
+          },
+        },
+        traitSelections: {
+          human_language_choice: ["elvish"],
+          druid_starting_skills: ["arcana", "insight"],
+        },
+        feats: [],
+      },
+    });
+    const { levelUp } = await setup(landDruid3, [druid(3, "subclass_druid_land")]);
+
+    const result = await levelUp({
+      targetClassId: "class_druid",
+      newTotalLevel: 4,
+      subclassId: "subclass_druid_moon",
+      featId: "feat_alert",
+      selectedTraits: {
+        druid_level_4_cantrips: ["spell_thaumaturgy"],
+      },
+    });
+
+    expect(result.status).toBe(400);
+    expect(result.body.error).toBe(
+      "Invalid character choices: class_druid already has subclass subclass_druid_land",
+    );
   });
 
   it("gives a bard dip's roster skill pick its whole roster, held skills marked", async () => {

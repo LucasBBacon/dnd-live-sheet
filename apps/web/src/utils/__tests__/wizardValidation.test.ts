@@ -88,46 +88,14 @@ describe("levelUpSteps", () => {
     expect(levelUpSteps([])).toEqual(["overview", "hp_increase", "choices", "review"]);
   });
 
-  it("keeps subclass, ASI/feat and spell steps, but no step for trait_selection decisions", () => {
+  it("keeps subclass and ASI/feat steps, but no step for trait_selection decisions", () => {
     expect(
       levelUpSteps([
         decision("subclass"),
         decision("trait_selection", "a"),
         decision("trait_selection", "b"),
         decision("asi_or_feat"),
-        decision("spell_selection"),
       ]),
-    ).toEqual([
-      "overview",
-      "hp_increase",
-      "subclass",
-      "asi_or_feat",
-      "spell_selection",
-      "choices",
-      "review",
-    ]);
-  });
-});
-
-describe("isStepComplete: spell_selection", () => {
-  it("is always false - the wizard cannot complete a spell-choice step yet (#79)", () => {
-    const decisions: LevelDecision[] = [
-      {
-        id: "node_spell_pick",
-        type: "spell_selection",
-        description: "Choose a spell.",
-        isRequired: true,
-        quantity: 2,
-      },
-    ];
-
-    expect(isStepComplete("spell_selection", {}, decisions)).toBe(false);
-    expect(
-      isStepComplete(
-        "spell_selection",
-        { addedSpells: ["spell_fire_bolt", "spell_ray_of_frost"] },
-        decisions,
-      ),
-    ).toBe(false);
+    ).toEqual(["overview", "hp_increase", "subclass", "asi_or_feat", "choices", "review"]);
   });
 });

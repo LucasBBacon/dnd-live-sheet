@@ -1,7 +1,8 @@
 import { describe, expect, it } from "vitest";
 import type { CharacterSave } from "@project/shared";
 import { choiceOptionLabel, listChoiceQuestions } from "../choiceQuestions.js";
-import { corePackLookup } from "./corePackFixture.js";
+import type { RuleSnapshotLookup } from "../../rules/ruleLookup.js";
+import { corePack, corePackLookup } from "./corePackFixture.js";
 
 const attributes = { str: 10, dex: 10, con: 10, int: 10, wis: 10, cha: 10 };
 const hp = { current: 1, temporary: 0, baseRolledHp: 1, hitDiceSpent: {} };
@@ -17,6 +18,20 @@ const save = (overrides: Partial<CharacterSave> = {}): CharacterSave => ({
 });
 
 const snapshot = corePackLookup();
+
+/**
+ * The pack with only its level-0 spells. Every pack spell is a placeholder
+ * level 0 until #31a, so today this is the whole pack; built explicitly so
+ * the tests that need "no spell of level 1 or above" keep meaning that.
+ */
+const cantripsOnly: RuleSnapshotLookup = {
+  ...snapshot,
+  spellsById: Object.fromEntries(
+    Object.entries(snapshot.spellsById ?? {}).filter(
+      ([, spell]) => spell.level === 0,
+    ),
+  ),
+};
 
 describe("listChoiceQuestions", () => {
   it("orders questions race, background, class for a human fighter with the acolyte background", () => {
@@ -155,20 +170,129 @@ describe("listChoiceQuestions", () => {
     expect(skillQuestion.selected).toEqual(["athletics"]);
   });
 
-  it("never returns a question for a spell_choice class node", () => {
+  it("asks a cleric's level-1 cantrips as a class question listing every level-0 spell", () => {
+    const characterSave = save({
+      classes: [{ classId: "class_cleric", level: 1, selections: {} }],
+    });
+
+    const cantrips = listChoiceQuestions(characterSave, snapshot).find(
+      (q) => q.id === "cleric_level_1_cantrips",
+    )!;
+
+    expect(cantrips.target).toBe("class");
+    expect(cantrips.classId).toBe("class_cleric");
+    expect(cantrips.source).toEqual({
+      kind: "class",
+      id: "class_cleric",
+      name: "Cleric",
+    });
+    expect(cantrips.prompt).toBe("Cleric: choose 3 cantrip(s)");
+    expect(cantrips.pickCount).toBe(3);
+    expect(cantrips.options).toHaveLength(
+      corePack().spells.filter((spell) => spell.level === 0).length,
+    );
+    expect(cantrips.options).toContainEqual({
+      id: "spell_thaumaturgy",
+      label: "Thaumaturgy",
+    });
+    expect(cantrips.selected).toEqual([]);
+  });
+
+  it("does not ask a spell node with nothing to offer", () => {
     const characterSave = save({
       classes: [{ classId: "class_wizard", level: 1, selections: {} }],
     });
 
+    const ids = listChoiceQuestions(characterSave, cantripsOnly).map((q) => q.id);
+
+    expect(ids).toContain("wizard_level_1_cantrips");
+    expect(ids).not.toContain("wizard_level_1_spellbook");
+  });
+
+  it("keeps a class's trait and spell questions in the order its track authors them", () => {
+    const characterSave = save({
+      classes: [{ classId: "class_warlock", level: 3, selections: {} }],
+    });
+
+    const classIds = listChoiceQuestions(characterSave, cantripsOnly)
+      .filter((q) => q.target === "class")
+      .map((q) => q.id);
+
+    expect(classIds).toEqual([
+      "warlock_level_1_cantrips",
+      "warlock_level_2_invocations",
+      "warlock_level_3_pact_boon",
+    ]);
+  });
+
+  it("asks a High Elf's cantrip as a trait question sourced from the subrace", () => {
+    const characterSave = save({
+      race: {
+        baseRaceId: "race_elf",
+        hasSubraces: true,
+        subraceId: "subrace_elf_high",
+      },
+    });
+
+    const cantrip = listChoiceQuestions(characterSave, snapshot).find(
+      (q) => q.id === "high_elf_cantrip",
+    )!;
+
+    expect(cantrip.target).toBe("trait");
+    expect(cantrip.classId).toBeUndefined();
+    expect(cantrip.source.kind).toBe("subrace");
+    expect(cantrip.source.id).toBe("subrace_elf_high");
+    expect(cantrip.prompt).toBe("(High Elf) Cantrip: choose 1 cantrip(s)");
+    expect(cantrip.pickCount).toBe(1);
+  });
+
+  it("marks a spell a trait already grants as held, but not the question's own picks", () => {
+    const characterSave = save({
+      race: { baseRaceId: "race_tiefling", hasSubraces: false, subraceId: null },
+      classes: [
+        {
+          classId: "class_cleric",
+          level: 1,
+          selections: { cleric_level_1_cantrips: ["spell_minor_illusion"] },
+        },
+      ],
+    });
+
+    const cantrips = listChoiceQuestions(characterSave, snapshot).find(
+      (q) => q.id === "cleric_level_1_cantrips",
+    )!;
+
+    // Thaumaturgy comes with the tiefling's Infernal Legacy
+    expect(cantrips.held).toContain("spell_thaumaturgy");
+    expect(cantrips.held).not.toContain("spell_minor_illusion");
+    expect(cantrips.selected).toEqual(["spell_minor_illusion"]);
+  });
+
+  it("marks another spell question's pick as held", () => {
+    const characterSave = save({
+      race: {
+        baseRaceId: "race_elf",
+        hasSubraces: true,
+        subraceId: "subrace_elf_high",
+      },
+      classes: [
+        {
+          classId: "class_wizard",
+          level: 1,
+          selections: { wizard_level_1_cantrips: ["spell_dancing_lights"] },
+        },
+      ],
+      traitSelections: { high_elf_cantrip: ["spell_minor_illusion"] },
+    });
+
     const questions = listChoiceQuestions(characterSave, snapshot);
 
+    expect(questions.find((q) => q.id === "high_elf_cantrip")!.held).toContain(
+      "spell_dancing_lights",
+    );
     expect(
-      questions.some(
-        (q) =>
-          q.id === "wizard_level_1_cantrips" ||
-          q.id === "wizard_level_1_spellbook",
-      ),
-    ).toBe(false);
+      questions.find((q) => q.id === "wizard_level_1_cantrips")!.held,
+    ).toContain("spell_minor_illusion");
   });
 
   it("gives every returned question a source", () => {
@@ -215,5 +339,9 @@ describe("choiceOptionLabel", () => {
     expect(choiceOptionLabel("trait_totally_made_up", snapshot)).toBe(
       "Totally made up",
     );
+  });
+
+  it("labels a spell id by its spell name", () => {
+    expect(choiceOptionLabel("spell_thaumaturgy", snapshot)).toBe("Thaumaturgy");
   });
 });

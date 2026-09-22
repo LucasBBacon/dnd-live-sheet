@@ -135,6 +135,21 @@ export const applyLevelUp = async (req: Request, res: Response) => {
         context: resolverContext,
       });
 
+      // a stored subclass is a locked answer too: once the target class's
+      // ledger row already has one, this level-up may resend that same id
+      // (a no-op) but not name a different one. A blank subclassId means
+      // "none", matching buildLevelUpSaves' `||` (#84)
+      const storedSubclassId = targetClassRecord?.subclassId ?? null;
+      if (
+        storedSubclassId &&
+        payload.subclassId &&
+        payload.subclassId !== storedSubclassId
+      ) {
+        throw new Error(
+          `Invalid character choices: ${targetClassId} already has subclass ${storedSubclassId}`,
+        );
+      }
+
       // an answer already on the character's row is locked: this level-up
       // cannot resend it, whether or not the new value would differ (#69)
       for (const nodeId of Object.keys(selectedTraits ?? {})) {
@@ -175,18 +190,30 @@ export const applyLevelUp = async (req: Request, res: Response) => {
 
       const mergedChoices = saves.choicesAfterLevel;
 
-      const issues = CharacterBootstrapper.collectChoiceIssues(
-        saves.after,
-        snapshot,
-      );
-
       // a question that exists both before and after this level (an open
       // question carried over from creation, or an earlier level) is never
       // required here - only one this level newly unlocks and still has no
       // answer for (#69)
-      const missing = questionsNewAtLevel(saves, snapshot).filter(
+      const newQuestions = questionsNewAtLevel(saves, snapshot);
+      const missing = newQuestions.filter(
         (question) => question.selected.length === 0,
       );
+
+      // stored answers are locked - no endpoint can re-answer them - so a
+      // stored pick that a later grant (or #31a's real spell levels) makes
+      // invalid must not block every future level-up with no remedy.
+      // Level-up rejects a choice issue only when it is on a node this
+      // payload answers or this level newly asks; a stale stored pick stays
+      // recorded as it is (#84). Creation still validates the whole save.
+      const nodesInScope = new Set<string>([
+        ...Object.keys(selectedTraits ?? {}),
+        ...Object.keys(traitSelections ?? {}),
+        ...newQuestions.map((question) => question.id),
+      ]);
+      const issues = CharacterBootstrapper.collectChoiceIssues(
+        saves.after,
+        snapshot,
+      ).filter((issue) => issue.nodeId === undefined || nodesInScope.has(issue.nodeId));
 
       const messages = [
         ...issues.map((issue) => issue.message),

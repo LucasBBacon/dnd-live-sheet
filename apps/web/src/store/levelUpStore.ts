@@ -324,7 +324,8 @@ export const useLevelUpStore = create<LevelUpState>((set, get) => ({
         choiceQuestions,
         questionsStatus: "ready",
         draftPayload: pruneAnswers(state.draftPayload, choiceQuestions),
-        // the subclass's own decisions (its spell picks, #79) come with it
+        // the subclass's own decisions come with it; its picks, spells
+        // included, arrive as choiceQuestions (#79)
         progressionContext:
           state.progressionContext && response.nextLevel?.decisions
             ? {
@@ -367,8 +368,6 @@ export const useLevelUpStore = create<LevelUpState>((set, get) => ({
       featId,
       selectedTraits,
       traitSelections,
-      addedSpells,
-      replacedSpells,
     } = draftPayload;
 
     if (!characterId || !targetClassId || !newTotalLevel || !hpRoll) {
@@ -385,8 +384,6 @@ export const useLevelUpStore = create<LevelUpState>((set, get) => ({
       featId,
       selectedTraits,
       traitSelections,
-      addedSpells,
-      replacedSpells,
     };
 
     await apiClient(`/character/${characterId}/level-up`, {

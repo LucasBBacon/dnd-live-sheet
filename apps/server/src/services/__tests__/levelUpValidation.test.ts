@@ -94,6 +94,18 @@ describe("validateLevelUpPayloadFromResolver", () => {
     ).toThrow("is not a subclass of class_fighter");
   });
 
+  // buildLevelUpSaves takes payload.subclassId at any level, so a
+  // wrong-class subclass sent at a level whose decisions do not include a
+  // subclass pick must still be rejected here, not written unchecked (#79)
+  it("rejects a subclass that belongs to another class even with no subclass decision this level", () => {
+    expect(() =>
+      validateLevelUpPayloadFromResolver({
+        payload: { ...basePayload, subclassId: "subclass_rogue_thief" },
+        context: configuredContext([]),
+      }),
+    ).toThrow("is not a subclass of class_fighter");
+  });
+
   it("requires exactly one path for asi_or_feat", () => {
     const asiContext = configuredContext([
       {
@@ -180,6 +192,30 @@ describe("validateLevelUpPayloadFromResolver", () => {
     ).toThrow("You must select exactly 2 option(s)");
   });
 
+  // selectedTraits is read only at the decision's own key (#79): a missing
+  // key must not fall back to sweeping every other key's picks
+  it("does not satisfy a decision from another key's picks in selectedTraits", () => {
+    expect(() =>
+      validateLevelUpPayloadFromResolver({
+        payload: {
+          ...basePayload,
+          selectedTraits: {
+            some_other_node: ["trait_prof_athletics", "trait_perception"],
+          },
+        },
+        context: configuredContext([
+          {
+            id: "dec_skills",
+            type: "trait_selection",
+            description: "Choose two skills",
+            isRequired: true,
+            quantity: 2,
+          },
+        ]),
+      }),
+    ).toThrow("You must select exactly 2 option(s)");
+  });
+
   it("satisfies a trait-choice-block decision from traitSelections, not selectedTraits", () => {
     const traitChoiceBlockContext = configuredContext([
       {
@@ -240,26 +276,6 @@ describe("validateLevelUpPayloadFromResolver", () => {
     ).toThrow("trait_fs_beekeeping is not a valid option");
   });
 
-  it("validates spell_selection quantity", () => {
-    expect(() =>
-      validateLevelUpPayloadFromResolver({
-        payload: {
-          ...basePayload,
-          addedSpells: ["spell_magic_missile"],
-        },
-        context: configuredContext([
-          {
-            id: "dec_spells",
-            type: "spell_selection",
-            description: "Choose two spells",
-            isRequired: true,
-            quantity: 2,
-          },
-        ]),
-      }),
-    ).toThrow("You must select exactly 2 spell option(s)");
-  });
-
   it("accepts valid payload for combined decision set", () => {
     expect(() =>
       validateLevelUpPayloadFromResolver({
@@ -270,7 +286,6 @@ describe("validateLevelUpPayloadFromResolver", () => {
           selectedTraits: {
             dec_skills: ["trait_prof_athletics", "trait_perception"],
           },
-          addedSpells: ["spell_magic_missile", "spell_shield"],
         },
         context: configuredContext([
           {
@@ -291,13 +306,6 @@ describe("validateLevelUpPayloadFromResolver", () => {
             id: "dec_skills",
             type: "trait_selection",
             description: "Choose two skills",
-            isRequired: true,
-            quantity: 2,
-          },
-          {
-            id: "dec_spells",
-            type: "spell_selection",
-            description: "Choose two spells",
             isRequired: true,
             quantity: 2,
           },
@@ -432,22 +440,17 @@ describe("resolveNextLevelValidationContext", () => {
       expect(decision?.options).toContain("stealth");
     });
 
-    it("turns a spell_choice node into a spell_selection decision", () => {
+    // spell picks are choice questions (listChoiceQuestions, #79), required
+    // and stored like any class node's answer - not resolver decisions
+    it("raises no decision for a spell_choice node", () => {
       const context = resolveNextLevelValidationContext({
         classId: "class_wizard",
         currentClassLevel: 0,
       });
 
-      const cantrips = context.decisions.find(
-        (d) => d.id === "wizard_level_1_cantrips",
-      );
-      expect(cantrips?.type).toBe("spell_selection");
-      expect(cantrips?.quantity).toBe(3);
-
-      const spellbook = context.decisions.find(
-        (d) => d.id === "wizard_level_1_spellbook",
-      );
-      expect(spellbook?.quantity).toBe(6);
+      const ids = context.decisions.map((d) => d.id);
+      expect(ids).not.toContain("wizard_level_1_cantrips");
+      expect(ids).not.toContain("wizard_level_1_spellbook");
     });
 
     it("includes subclass decisions once a subclass is supplied", () => {
@@ -520,19 +523,16 @@ describe("resolveNextLevelValidationContext", () => {
       ).toBe("class_progression");
     });
 
-    // spell picks on a dip stay skipped until the wizard can answer them
-    // (#79) - a dip into a caster (wizard's level 1 is spell_choice only)
-    // must not 400 on a decision nothing can satisfy
-    it("excludes spell_choice decisions from a level-1 dip", () => {
+    it("raises no spell decision on a level-1 dip either", () => {
       const context = resolveNextLevelValidationContext({
         classId: "class_wizard",
         currentClassLevel: 0,
         isMulticlassDip: true,
       });
 
-      expect(
-        context.decisions.some((d) => d.type === "spell_selection"),
-      ).toBe(false);
+      expect(context.decisions.map((d) => d.id)).not.toContain(
+        "wizard_level_1_cantrips",
+      );
     });
 
     // a subclass chosen at level 1 (a cleric's domain, a sorcerer's origin)
@@ -555,9 +555,9 @@ describe("resolveNextLevelValidationContext", () => {
         context.grantedTraits.find((t) => t.id === "trait_draconic_resilience")
           ?.grantSourceType,
       ).toBe("subclass_progression");
-      expect(
-        context.decisions.some((d) => d.type === "spell_selection"),
-      ).toBe(false);
+      expect(context.decisions.map((d) => d.id)).not.toContain(
+        "sorcerer_level_1_cantrips",
+      );
     });
 
     it("includes the choice blocks of a subclass's level-1 traits on a dip", () => {
