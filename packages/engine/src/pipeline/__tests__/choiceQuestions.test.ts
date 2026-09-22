@@ -1,8 +1,9 @@
 import { describe, expect, it } from "vitest";
 import type { CharacterSave } from "@project/shared";
 import { blockedOptionIds, choiceOptionLabel, listChoiceQuestions, type ChoiceQuestion } from "../choiceQuestions.js";
+import { CharacterBootstrapper } from "../characterBootstrapper.js";
 import type { RuleSnapshotLookup } from "../../rules/ruleLookup.js";
-import { corePack, corePackLookup } from "./corePackFixture.js";
+import { corePack, corePackLookup, corePackSnapshot } from "./corePackFixture.js";
 
 const attributes = { str: 10, dex: 10, con: 10, int: 10, wis: 10, cha: 10 };
 const hp = { current: 1, temporary: 0, baseRolledHp: 1, hitDiceSpent: {} };
@@ -443,6 +444,40 @@ describe("listChoiceQuestions - option prerequisites", () => {
         expect(option).not.toHaveProperty("unmet");
       }
     }
+  });
+
+  // the picker and the validator share one prerequisite check
+  // (optionPrerequisites.ts), and this pins that they agree not just by
+  // construction but by test: every option the picker blocks is one
+  // collectSaveIssues would also reject if picked, and nothing else is
+  it("blocks exactly the invocation options collectSaveIssues also rejects when picked", () => {
+    const cantrips = ["spell_eldritch_blast", "spell_minor_illusion"];
+    const withPick = (optionId: string) =>
+      warlockSave(3, cantrips, { warlock_level_2_invocations: [optionId] });
+
+    const invocationsQuestion = listChoiceQuestions(
+      warlockSave(3, cantrips),
+      snapshot,
+    ).find((q) => q.id === "warlock_level_2_invocations")!;
+
+    const pickerBlocked = new Set(blockedOptionIds(invocationsQuestion));
+
+    const validatorBlocked = new Set(
+      invocationsQuestion.options
+        .filter((option) =>
+          CharacterBootstrapper.collectSaveIssues(
+            withPick(option.id),
+            corePackSnapshot(),
+          ).some(
+            (issue) =>
+              issue.code === "unmet_prerequisite" &&
+              issue.nodeId === "warlock_level_2_invocations",
+          ),
+        )
+        .map((option) => option.id),
+    );
+
+    expect(pickerBlocked).toEqual(validatorBlocked);
   });
 });
 

@@ -267,6 +267,18 @@ describe("CharacterBootstrapper.collectSaveIssues", () => {
       ).toContain("level 5");
     });
 
+    // pins the server's message in full, not just a substring - the API and
+    // logs promise this exact text
+    it("reports the Thirsting Blade case with the server's exact message", () => {
+      const save = warlock3([
+        "trait_invocation_thirsting_blade",
+        "trait_invocation_devils_sight",
+      ]);
+      expect(
+        CharacterBootstrapper.collectSaveIssues(save, corePackSnapshot())[0]!.message,
+      ).toBe("Warlock: trait_invocation_thirsting_blade needs class_warlock level 5");
+    });
+
     it("rejects an invocation whose pact boon was not taken", () => {
       const save = warlock3(
         ["trait_invocation_book_of_ancient_secrets", "trait_invocation_devils_sight"],
