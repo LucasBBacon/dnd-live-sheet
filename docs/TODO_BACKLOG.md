@@ -1,9 +1,10 @@
 # TODO Backlog
 
-**Status as of 2026-09-22**, on `main`, after `fix/choice-prerequisites`
-merged (#81 closed: pickers mark options a character cannot take yet; #85
-recorded). The workspace is green — **2321 tests**, 0 failures, and typecheck clean per package (6f explains why "per
-package" matters). Nothing below is breaking a build; these are gaps, debt and
+**Status as of 2026-09-23**, on `main`, after `fix/hit-points` merged (#78
+closed: `max_hp` stores base rolled hit points and every displayed or
+clamping maximum is derived; #86 to #91 recorded). The workspace is green —
+**2344 tests**, 0 failures, and typecheck clean per package (6f explains why
+"per package" matters). Nothing below is breaking a build; these are gaps, debt and
 content.
 
 Read [Recommended sequence](#recommended-sequence) first — it was **re-ordered
