@@ -185,6 +185,7 @@ things the last three branches showed replace it:
 | 5b | ✅ **#75** — feat-granted traits reach no sheet's modifiers | small–medium | **Closed 2026-09-21** on `fix/levelup-correctness`: a feat pick now lives in `characters.choices.feats` (and `CharacterSave.feats`); `CharacterBootstrapper.resolveGrantedTraitIds` grants each feat's `grantedTraitIds` from the snapshot's new `featsById`, so both sheets pick feats up. `applyLevelUp` rejects an unknown feat or a repeat of a non-repeatable one before any write, appends the pick to `choices.feats`, and no longer writes `feat_selection` rows. Hand check: Sister Aveline, cleric 3 → 4 taking Alert, initiative +0 → +5, `choices.feats` `["feat_alert"]`, no `feat_selection` rows. See the "11g" section below. |
 | 5c | **#76** — the web store's composed `activeStates` still lacks trait and equipment states | small–medium | Found by `fix/sheet-modifiers`'s hand check, 2026-09-21: `composeActiveStates` still composes only over `baseStates`, which the store always sets to `[]`; trigger and dice-rule gating in `dispatchAuthoredEvent`, `useCheckRoll`, and the `ArmorClassWidget`, `TableRulesWidget`, `TurnControlsWidget` and `ConditionsWidget` widgets still read it, even though #73 moved the derived-stat hooks to `getSheetStates()`. If the branch's final review fixes this first, it closes #76 rather than leaving it recorded here. See the "11g. #75 and #76" section below. **`useCheckRoll`'s symptom fixed 2026-09-21** on `fix/levelup-correctness` (it now reads `useAbilities().activeStates`); the rest stays open. |
 | 5d | ✅ **#77** — stored ability scores are pre-racial, and two readers use them directly | small–medium | **Closed 2026-09-21** on `fix/levelup-correctness`: `finalAbilityScores(save, snapshot)` (`apps/server/src/services/characterSave.ts`) runs the stored scores through `AbilityEngine.calculateScore` with the gathered trait modifiers (magic items deliberately excluded). `applyLevelUp`'s multiclass check and `databaseReferenceProvider`'s dip preview both use it; `useCheckRoll` hands dice rules the sheet's final scores and states. Hand check: the wizard offers Sister Aveline (human, stored STR 12, final 13) a fighter dip. See the "11g" section below. |
+| 5e | **#78** — hit points: creation writes none, level-up skips CON, the engine's derived maximum is never shown | small or medium, needs a decision | Every character made through the wizard has no hit points at all, and every level-up loses the Constitution modifier the wizard previewed — the sheet's most visible number. Decide what `max_hp` means first (the final number, or the base rolled HP with every maximum derived); see the #78 bullet in 11g. |
 
 ### Tier 2 — the burndown, one system per pass
 
@@ -2197,10 +2198,10 @@ Test totals: shared 227, engine 958, database 198, server 404, web 355 =
 | 75 | ✅ Feat-granted traits never reach either sheet's modifiers | Found while designing `fix/sheet-modifiers`, 2026-09-21; recorded as out of scope rather than fixed. See below. |
 | 76 | The web store's composed `activeStates` still lacks trait and equipment states, so trigger and dice-rule gating still miss them | Found by `fix/sheet-modifiers`'s hand check, 2026-09-21; recorded rather than fixed; `useCheckRoll`'s symptom fixed on `fix/levelup-correctness`. See below. |
 | 77 | ✅ Stored ability scores are pre-racial, and multiclass prerequisites and `useCheckRoll` read them directly | Found by the final review of `fix/sheet-modifiers`, 2026-09-21; closed on `fix/levelup-correctness`. See the Recommended-sequence row 5d. No test exercises `loadCharacterFinalScores` or the dip preview reporting "met"; the hand check covered it manually. |
-| 78 | A level's hit points skip the Constitution modifier on the server | Found by `fix/levelup-correctness`'s hand check, 2026-09-21. See below. |
+| 78 | Hit points: creation writes none, level-up skips the Constitution modifier, and the engine's derived maximum is never shown | Found by `fix/levelup-correctness`'s hand check, 2026-09-21; widened 2026-09-22 while scoping `fix/choice-prerequisites`. Needs a decision first. See below. |
 | 79 | ✅ The level-up wizard has no spell step, so a level with a spell choice cannot be submitted | Found by `fix/levelup-correctness`'s hand check, 2026-09-21; closed 2026-09-22 on `feat/spell-choices`: spell picks are choice questions. See below. |
 | 80 | A custom background's choice blocks cannot be answered | Inherited by `feat/choice-step` from the final review of `fix/sheet-modifiers`, 2026-09-21. See below. |
-| 81 | A choice question offers options whose prerequisites the character does not meet | Found by the final review of `feat/choice-step`, 2026-09-22. See below. |
+| 81 | ✅ A choice question offers options whose prerequisites the character does not meet | Found by the final review of `feat/choice-step`, 2026-09-22; closed 2026-09-22 on `fix/choice-prerequisites`. See below. |
 
 - **#75 — feat-granted traits never reach either sheet's modifiers.** A feat
   is stored as a `feat_selection` `character_traits` row. That row never
@@ -2265,13 +2266,34 @@ Test totals: shared 227, engine 958, database 198, server 404, web 355 =
   its dice rules now receive `useAbilities().activeStates` (the sheet's
   states) and the final ability scores. The Eagle Dash gate and the other
   readers above are still open.
-- **#78 — a level's hit points skip the Constitution modifier on the
-  server.** The wizard's hit-point step previews the roll plus the CON
-  modifier ("Total +CON: 7"), and the review step shows the maximum rising
-  by that total, but `applyLevelUp` adds `payload.hpRoll` alone to `maxHp`
-  and `currentHp`. Sister Aveline (CON +2) went from 24 to 29 maximum hit
-  points where the wizard promised 31. Older than `fix/levelup-correctness`;
-  recorded, not fixed.
+- **#78 — hit points are stored three inconsistent ways.** Found by
+  `fix/levelup-correctness`'s hand check (Sister Aveline, CON +2, went from
+  24 to 29 maximum hit points where the wizard promised 31, and again on
+  `feat/spell-choices`), and widened on 2026-09-22 while scoping
+  `fix/choice-prerequisites`, which left it for its own branch:
+  1. **Creation writes no hit points.** `POST /api/character` leaves
+     `maxHp` and `currentHp` null, and level-up's `maxHp + payload.hpRoll`
+     stays null, so a character made through the wizard never has hit
+     points at all.
+  2. **Level-up adds the raw roll only.** `applyLevelUp` adds
+     `payload.hpRoll` to `maxHp` and `currentHp`, while the stored column is
+     read everywhere as the final maximum (the sheet header, the server's
+     heal clamp and long rest, the samples' hand-computed values), so the
+     Constitution modifier the wizard previews is lost.
+  3. **The engine's derived maximum is never what the sheet shows.**
+     `DerivedStatEngine.calculateMaxHp` computes base rolled HP +
+     CON × level + `MAX_HP` modifiers - Dwarven Toughness, Tough and
+     Draconic Resilience, and a Constitution increase applied
+     retroactively - but the server feeds it the stored final maximum as
+     its base (`toCharacterSave`'s `baseRolledHp`), counting CON twice, and
+     the web store never loads a base at all (`baseHpRolled` stays 1), so
+     those three traits reach no displayed number.
+  The fix needs a decision first: either `max_hp` stays the final number
+  (creation writes hit die + CON, level-up adds roll + CON; small, and the
+  three traits and retroactive CON stay unapplied), or `max_hp` becomes the
+  base rolled HP and every displayed and clamping maximum comes from
+  `calculateMaxHp` (rules-correct; touches the sheet, the server's heal and
+  long rest, creation, level-up and the samples; medium).
 - **#79 — the level-up wizard has no spell step.** `validateLevelUpPayload`
   rejects a level whose progression carries a `spell_selection` decision
   unless `addedSpells` holds enough spells, but the wizard
@@ -2326,6 +2348,29 @@ Test totals: shared 227, engine 958, database 198, server 404, web 355 =
   `listChoiceQuestions` (reuse `unmetPrerequisites`) the way `held` is.
   Since `feat/spell-choices` (#79) the warlock's cantrips are asked at
   creation, so the example only fails when Eldritch Blast was not picked.
+
+  **Closed 2026-09-22** on `fix/choice-prerequisites`. The prerequisite
+  check save validation runs now lives in one engine module
+  (`packages/engine/src/pipeline/optionPrerequisites.ts`, returning
+  structured `UnmetPrerequisite`s the bootstrapper formats exactly as
+  before), and `listChoiceQuestions` puts its reasons on each class
+  trait-choice option (`ChoiceOption.unmet`, labelled by name: "needs
+  Eldritch Blast", "needs Warlock level 5", "needs Pact of the Blade").
+  Both wizards' pickers show such an option disabled with its reasons, and
+  both prune a pick whose prerequisite has gone (`blockedOptionIds`: held
+  or unmet). Server messages are unchanged. The 183 options that carry
+  prerequisites are the warlock's invocation nodes and the Four Elements
+  monk's discipline nodes.
+
+  Hand check (samples re-seeded afterwards): a human Fiend warlock created
+  with Minor Illusion and Dancing Lights levelled 1 → 2, and its
+  invocations question showed "Agonizing Blast (needs Eldritch Blast)",
+  "Book of Ancient Secrets (needs Pact of the Tome)", "Chains of Carceri
+  (needs Warlock level 15, needs Pact of the Chain)" and the rest disabled,
+  with Armor of Shadows and Devil's Sight pickable; the commit stored both.
+  A second warlock created with Eldritch Blast got Agonizing Blast with no
+  reasons, while Thirsting Blade kept "needs Warlock level 5, needs Pact of
+  the Blade".
 
 ### 11h. #82, #83 and #84 — found while implementing `feat/spell-choices`
 
