@@ -95,7 +95,8 @@ For both:
   Simplification accepted: 5e lets two classes know the same spell with
   different casting stats; here that counts as held.
 - Prompt: `"<source>: choose <n> cantrip(s)"` for a cantrip node,
-  `"<source>: choose <n> spell(s) of level 1–<max>"` otherwise.
+  `"<source>: choose <n> spell(s) of level 1 to <max>"` otherwise (`"of level 1"`
+  when the cap is 1).
 
 **Labels.** `choiceOptionLabel` resolves a spell id to the spell's name,
 ahead of the humanised fallback.
