@@ -22,7 +22,7 @@ import { processStartingEquipment } from "../utils/inventory.js";
 import { applyLevelUp } from "../controllers/characterController.js";
 import { isUserCampaignMember } from "../services/campaignAccess.js";
 import { getCachedRuleSnapshot } from "../services/ruleSnapshotCache.js";
-import { toCharacterSave } from "../services/characterSave.js";
+import { finalMaxHp, toCharacterSave } from "../services/characterSave.js";
 import { classLedgerOrder } from "../services/classLedger.js";
 
 const router: ExpressRouter = Router();
@@ -188,6 +188,16 @@ router.post("/", async (req, res, next) => {
     // allowed to have unfinished questions), so that check is added here.
     const choices = payload.choices ?? emptyCharacterChoices();
     const { snapshot } = await getCachedRuleSnapshot();
+
+    // 5e: a character starts with the full hit die of their class, and that
+    // is all the column stores - the maximum is derived from it (#78)
+    const hitDie = snapshot.classesById?.[payload.classId]?.hitDie;
+    if (!hitDie) {
+      return res
+        .status(400)
+        .json({ error: `Unknown class: ${payload.classId}` });
+    }
+
     const save = toCharacterSave(
       {
         raceId: payload.raceId,
@@ -198,7 +208,7 @@ router.post("/", async (req, res, next) => {
             : null,
         ...payload.baseAbilityScores,
         currentHp: null,
-        maxHp: null,
+        maxHp: hitDie,
       },
       [
         {
@@ -228,6 +238,8 @@ router.post("/", async (req, res, next) => {
         issues,
       });
     }
+
+    const startingHp = finalMaxHp(save, snapshot);
 
     // generate the UUID for the new character
     const newCharacterId = uuidv4();
@@ -268,6 +280,8 @@ router.post("/", async (req, res, next) => {
             ? (payload.background.customData ?? undefined)
             : undefined,
         choices,
+        maxHp: hitDie,
+        currentHp: startingHp,
 
         personalityTraits: payload.personality.traits,
         ideals: payload.personality.ideals,

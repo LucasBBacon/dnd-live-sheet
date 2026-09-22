@@ -278,6 +278,21 @@ describe("POST /api/character choices", () => {
     expect(values).toHaveBeenCalledWith(expect.objectContaining({ choices }));
   });
 
+  it("stores the class's hit die as the base and full derived hit points (#78)", async () => {
+    const { app, values } = await setupApp();
+
+    const response = await request(app)
+      .post("/api/character")
+      .send({ ...cleric, choices: completeChoicesForCleric() });
+
+    expect(response.status).toBe(201);
+    // a cleric's d8 is the base; WIS 16/CON 14 human -> CON 15 (+2), so the
+    // derived maximum at level 1 is 8 + 2
+    expect(values).toHaveBeenCalledWith(
+      expect.objectContaining({ maxHp: 8, currentHp: 10 }),
+    );
+  });
+
   it("rejects creation that leaves exactly one question unanswered, naming only that one", async () => {
     const { app, transaction } = await setupApp();
     const full = completeChoicesForHuman();

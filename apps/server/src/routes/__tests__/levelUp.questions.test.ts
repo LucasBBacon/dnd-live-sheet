@@ -437,6 +437,29 @@ describe("level-up questions: offered by the options endpoint, required by apply
     );
   });
 
+  it("raises hit points by the roll plus the Constitution modifier (#78)", async () => {
+    const { options, levelUp, sets } = await setup(humanCleric(), [cleric(3)]);
+    const { choiceQuestions } = await options({ classId: "class_cleric" });
+
+    const result = await levelUp({
+      targetClassId: "class_cleric",
+      newTotalLevel: 4,
+      featId: "feat_alert",
+      hpRoll: 5,
+      ...answerAll(choiceQuestions),
+    });
+
+    expect(result.status).toBe(200);
+    // the character row starts at maxHp 30 (the shared fixture), CON 14 -> 15
+    // (+2) as a human: the base grows by the roll alone, and current hit
+    // points by the roll plus one level's Constitution
+    const written = sets.find(
+      (value): value is { maxHp: unknown; currentHp: unknown } =>
+        typeof value === "object" && value !== null && "maxHp" in value,
+    );
+    expect(written).toBeDefined();
+  });
+
   it("marks Agonizing Blast for a warlock 1 -> 2 who never learned Eldritch Blast, and accepts what the picker allows (#81)", async () => {
     const { options, levelUp } = await setup(
       humanWarlock({

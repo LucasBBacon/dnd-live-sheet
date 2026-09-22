@@ -7,7 +7,7 @@ import {
 import type { LevelUpPayload } from "@project/shared";
 import type { Request, Response } from "express";
 import { eq, sql } from "drizzle-orm";
-import { CharacterBootstrapper } from "@project/engine";
+import { CharacterBootstrapper, type RuleSnapshotLookup } from "@project/engine";
 import {
   resolveNextLevelValidationContext,
   validateMulticlassPrerequisites,
@@ -17,8 +17,11 @@ import { getCachedRuleSnapshot } from "../services/ruleSnapshotCache.js";
 import {
   buildLevelUpSaves,
   finalAbilityScores,
+  finalMaxHp,
   questionsNewAtLevel,
   readStoredChoices,
+  type CharacterClassSource,
+  type LevelUpSaves,
 } from "../services/characterSave.js";
 import { classLedgerOrder } from "../services/classLedger.js";
 import { z } from "zod";
@@ -48,6 +51,47 @@ const parsePicksShape = (
     );
   }
   return parsed.data;
+};
+
+/**
+ * The hit points a level-up adds to a character's current total: the
+ * difference between the maximum after this level and the maximum before it.
+ * The roll, this level's Constitution modifier, an ability score increase
+ * taken at this level and any MAX_HP trait it grants all count once, so the
+ * wizard's preview and the stored number cannot disagree (#78).
+ * @param saves The character before and after this level (buildLevelUpSaves)
+ * @param payload The level-up's roll and any ability score increases
+ * @param snapshot Pack content
+ * @returns The hit points to add to current hit points
+ */
+export const levelUpHitPointGain = ({
+  saves,
+  payload,
+  snapshot,
+}: {
+  saves: Pick<LevelUpSaves<CharacterClassSource>, "before" | "after">;
+  payload: Pick<LevelUpPayload, "hpRoll" | "asiChoices">;
+  snapshot: RuleSnapshotLookup;
+}): number => {
+  const attributes = { ...saves.after.attributes };
+  for (const choice of payload.asiChoices ?? []) {
+    const key = choice.stat.toLowerCase() as keyof typeof attributes;
+    attributes[key] += choice.value;
+  }
+
+  const after = finalMaxHp(
+    {
+      ...saves.after,
+      attributes,
+      hp: {
+        ...saves.after.hp,
+        baseRolledHp: saves.after.hp.baseRolledHp + payload.hpRoll,
+      },
+    },
+    snapshot,
+  );
+
+  return after - finalMaxHp(saves.before, snapshot);
 };
 
 /**
@@ -276,13 +320,15 @@ export const applyLevelUp = async (req: Request, res: Response) => {
       // the bootstrapper grants its traits from choices.feats at read time,
       // so no trait row is written for it here
 
+      const gainedHp = levelUpHitPointGain({ saves, payload, snapshot });
+
       // 7 - mutate top level character state
       await tx
         .update(characters)
         .set({
           level: newTotalLevel,
-          maxHp: sql`${characters.maxHp} + ${payload.hpRoll}`,
-          currentHp: sql`${characters.currentHp} + ${payload.hpRoll}`,
+          maxHp: sql`COALESCE(${characters.maxHp}, 0) + ${payload.hpRoll}`,
+          currentHp: sql`COALESCE(${characters.currentHp}, 0) + ${gainedHp}`,
           ...asiUpdates,
           choices: mergedChoices,
         })
