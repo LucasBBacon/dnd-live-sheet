@@ -301,7 +301,7 @@ describe("CharacterBootstrapper.collectSaveIssues", () => {
 
     // an invocation's requiredSpellIds must see every active trait's spell
     // pick, not only a race trait's or this class's own traits - a feat's
-    // trait counts too (#83)
+    // trait counts too (#79)
     it("counts a feat's trait spell pick toward an invocation's spell prerequisite", () => {
       const snapshot: CoreRulePackSnapshot = {
         ...corePackSnapshot(),

@@ -192,7 +192,7 @@ describe("validateLevelUpPayloadFromResolver", () => {
     ).toThrow("You must select exactly 2 option(s)");
   });
 
-  // selectedTraits is read only at the decision's own key (#82): a missing
+  // selectedTraits is read only at the decision's own key (#79): a missing
   // key must not fall back to sweeping every other key's picks
   it("does not satisfy a decision from another key's picks in selectedTraits", () => {
     expect(() =>

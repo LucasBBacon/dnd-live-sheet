@@ -357,7 +357,7 @@ export class CharacterBootstrapper {
     // every active trait's own spell pick counts as known for prerequisites
     // (a Fiend warlock's Agonizing Blast checking for Eldritch Blast) - not
     // only a race trait's or this class's own traits, but a background's,
-    // feat's or another class's trait too (#83)
+    // feat's or another class's trait too (#79)
     const traitSpellPicks = spellEntries
       .filter((entry) => entry.target === "trait")
       .flatMap((entry) => entry.selected);
