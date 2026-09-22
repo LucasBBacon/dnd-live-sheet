@@ -2405,7 +2405,7 @@ Test totals: shared 227, engine 958, database 198, server 404, web 355 =
   reasons, while Thirsting Blade kept "needs Warlock level 5, needs Pact of
   the Blade".
 
-### 11h. #82 to #90 — found while implementing `feat/spell-choices`, `fix/choice-prerequisites` and `fix/hit-points`
+### 11h. #82 to #91 — found while implementing `feat/spell-choices`, `fix/choice-prerequisites` and `fix/hit-points`
 
 | # | Item | Notes |
 | --- | --- | --- |
@@ -2418,6 +2418,7 @@ Test totals: shared 227, engine 958, database 198, server 404, web 355 =
 | 85 | Nothing stops a pack gating a choice option on a pick made at the same level | Recorded 2026-09-22 by the final review of `fix/choice-prerequisites`. See below. |
 | 89 | The sheet's own damage and heal writes are never clamped | Found by the final review of `fix/hit-points`. See below. |
 | 90 | `newTotalLevel` is written from the request without checking the ledger | Found by the final review of `fix/hit-points`. See below. |
+| 91 | The fake database cannot tell the pool from a transaction, so nothing pins which one a service queries | Recorded 2026-09-23 by the re-review of `fix/hit-points`. See below. |
 
 - **#82 — level-up cannot swap a known spell.** A bard, ranger, sorcerer
   or warlock (and an Eldritch Knight or Arcane Trickster) may replace one
@@ -2526,3 +2527,19 @@ Test totals: shared 227, engine 958, database 198, server 404, web 355 =
   derive the new total from the ledger, or reject a payload whose
   `newTotalLevel` does not match it. Found by the final review of
   `fix/hit-points`.
+- **#91 — the fake database cannot tell the pool from a transaction, so
+  nothing pins which one a service queries.** `deriveMaxHp` takes an
+  executor precisely so a caller inside `db.transaction` can pass its `tx`
+  rather than reaching for a second connection from a ten-connection pool
+  it is already holding one of - a deadlock under load. Nothing in the
+  suite pins that: `combatService.test.ts` mocks `deriveMaxHp` whole and
+  never inspects its arguments, and `FakeDb`
+  (`apps/server/src/gateway/__tests__/fakeDb.ts`) answers a module-level
+  `select` and a transaction handle's `select` from the same standing and
+  queued results, both flagged `inTransaction: true`. Drop the `tx`
+  argument at either call site (`combatService.ts`, the gateway's long
+  rest) and every test still passes. Fix: have `FakeDb` record which
+  executor issued each call - the pool or a particular transaction handle -
+  rather than a boolean, then assert it where a service must stay on its
+  caller's transaction. Recorded by the re-review of `fix/hit-points`;
+  a coverage gap, not a defect - both call sites are correct today.
