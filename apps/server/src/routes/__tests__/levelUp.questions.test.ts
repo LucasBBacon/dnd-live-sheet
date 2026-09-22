@@ -5,7 +5,7 @@ import { getTableName, type Table } from "drizzle-orm";
 import { beforeAll, describe, expect, it, vi } from "vitest";
 import { assembleCoreRulePack } from "@project/database/pack";
 import { toRuleSnapshot, type CoreRulePackSnapshot } from "@project/shared";
-import type { ChoiceQuestion } from "@project/engine";
+import { blockedOptionIds, type ChoiceQuestion } from "@project/engine";
 import { globalErrorHandler } from "../../middleware/errorHandler.js";
 
 /**
@@ -125,6 +125,29 @@ const druid = (classLevel: number, subclassId: string | null = null): LedgerRow 
   position: 0,
 });
 
+/** a human Fiend warlock with the level-1 questions other than cantrips answered */
+const humanWarlock = (warlockPicks: Record<string, string[]>): CharacterRow =>
+  character({
+    cha: 16,
+    choices: {
+      classSelections: { class_warlock: warlockPicks },
+      traitSelections: {
+        human_language_choice: ["elvish"],
+        warlock_starting_skills: ["arcana", "deception"],
+      },
+      feats: [],
+    },
+  });
+
+const warlock = (classLevel: number): LedgerRow => ({
+  id: "ledger-1",
+  characterId: "char-1",
+  classId: "class_warlock",
+  classLevel,
+  subclassId: "subclass_warlock_fiend",
+  position: 0,
+});
+
 /**
  * A stand-in for drizzle that answers every select by the table it reads:
  * the character row for `characters`, the ledger for `character_classes`.
@@ -239,9 +262,9 @@ const setup = async (characterRow: CharacterRow, ledger: LedgerRow[]) => {
 };
 
 /**
- * Answers every question the way the wizard's picker would let a player:
- * the first options that are not already held and not already chosen for
- * another question.
+ * Answers every question the way the wizard's picker would let a player: the
+ * first options that are not blocked (held, or with unmet prerequisites) and
+ * not already chosen for another question.
  */
 const answerAll = (questions: ChoiceQuestion[], taken: string[] = []) => {
   const selectedTraits: Record<string, string[]> = {};
@@ -251,7 +274,7 @@ const answerAll = (questions: ChoiceQuestion[], taken: string[] = []) => {
   for (const question of questions) {
     const picks = question.options
       .map((option) => option.id)
-      .filter((id) => !question.held.includes(id) && !used.has(id))
+      .filter((id) => !blockedOptionIds(question).includes(id) && !used.has(id))
       .slice(0, question.pickCount);
     picks.forEach((id) => used.add(id));
     if (question.target === "class") selectedTraits[question.id] = picks;
@@ -412,6 +435,32 @@ describe("level-up questions: offered by the options endpoint, required by apply
         }),
       }),
     );
+  });
+
+  it("marks Agonizing Blast for a warlock 1 -> 2 who never learned Eldritch Blast, and accepts what the picker allows (#81)", async () => {
+    const { options, levelUp } = await setup(
+      humanWarlock({
+        warlock_level_1_cantrips: ["spell_minor_illusion", "spell_dancing_lights"],
+      }),
+      [warlock(1)],
+    );
+
+    const { choiceQuestions } = await options({ classId: "class_warlock" });
+    const invocations = choiceQuestions.find(
+      (question) => question.id === "warlock_level_2_invocations",
+    );
+    expect(
+      invocations?.options.find(
+        (option) => option.id === "trait_invocation_agonizing_blast",
+      )?.unmet,
+    ).toEqual(["needs Eldritch Blast"]);
+
+    const result = await levelUp({
+      targetClassId: "class_warlock",
+      newTotalLevel: 2,
+      ...answerAll(choiceQuestions),
+    });
+    expect(result.status).toBe(200);
   });
 
   // the lock is generic; this pins that a stored spell answer is covered too
