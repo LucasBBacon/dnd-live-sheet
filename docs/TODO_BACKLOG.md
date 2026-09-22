@@ -1,8 +1,8 @@
 # TODO Backlog
 
-**Status as of 2026-09-22**, on `main`, after `feat/spell-choices` merged
-(#79 closed: spell picks are choice questions; #84 fixed). The workspace is
-green — **2300 tests**, 0 failures, and typecheck clean per package (6f explains why "per
+**Status as of 2026-09-22**, on `main`, after `fix/choice-prerequisites`
+merged (#81 closed: pickers mark options a character cannot take yet; #85
+recorded). The workspace is green — **2321 tests**, 0 failures, and typecheck clean per package (6f explains why "per
 package" matters). Nothing below is breaking a build; these are gaps, debt and
 content.
 
