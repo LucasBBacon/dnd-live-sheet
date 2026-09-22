@@ -66,8 +66,8 @@ count and becomes correct.
 
 Out of scope, recorded instead: `calculateMaxHp` floors the Constitution
 contribution at 1 per level, where 5e floors each level's whole gain at 1. The
-two differ only for a negative Constitution modifier, and getting it exact
-needs per-level rolls the save does not store.
+two differ for a Constitution modifier of zero or below, not just a negative
+one, and getting it exact needs per-level rolls the save does not store.
 
 ### Writers
 

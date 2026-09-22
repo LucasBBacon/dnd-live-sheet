@@ -2405,7 +2405,7 @@ Test totals: shared 227, engine 958, database 198, server 404, web 355 =
   reasons, while Thirsting Blade kept "needs Warlock level 5, needs Pact of
   the Blade".
 
-### 11h. #82 to #88 — found while implementing `feat/spell-choices`, `fix/choice-prerequisites` and `fix/hit-points`
+### 11h. #82 to #90 — found while implementing `feat/spell-choices`, `fix/choice-prerequisites` and `fix/hit-points`
 
 | # | Item | Notes |
 | --- | --- | --- |
@@ -2416,6 +2416,8 @@ Test totals: shared 227, engine 958, database 198, server 404, web 355 =
 | 87 | Draconic Resilience's `MAX_HP` modifier does not scale, and the engine says nothing | Recorded 2026-09-22 while closing #78. See below. |
 | 88 | The level-up review step understates the hit points an ability score increase adds | Recorded 2026-09-22 while closing #78. See below. |
 | 85 | Nothing stops a pack gating a choice option on a pick made at the same level | Recorded 2026-09-22 by the final review of `fix/choice-prerequisites`. See below. |
+| 89 | The sheet's own damage and heal writes are never clamped | Found by the final review of `fix/hit-points`. See below. |
+| 90 | `newTotalLevel` is written from the request without checking the ledger | Found by the final review of `fix/hit-points`. See below. |
 
 - **#82 — level-up cannot swap a known spell.** A bard, ranger, sorcerer
   or warlock (and an Eldritch Knight or Arcane Trickster) may replace one
@@ -2472,9 +2474,18 @@ Test totals: shared 227, engine 958, database 198, server 404, web 355 =
   the roll and the modifier together; `DerivedStatEngine.calculateMaxHp`
   floors the Constitution contribution alone
   (`Math.max(1, conModifier) * levels.total`), so a character with a
-  negative Constitution modifier gets more hit points than the rules give.
-  Getting it exact needs the per-level rolls, which the save does not
-  store - it keeps their sum. Recorded while closing #78.
+  Constitution modifier of zero or below gets more hit points than the
+  rules give - the common case, not just a negative modifier: a CON 10
+  fighter 5 shows 5 hit points more than the rules give, and a newly
+  created CON 10 cleric opens at 9/9 rather than 8/8. Two tests currently
+  pin the inflated number:
+  `apps/server/src/services/__tests__/characterSave.test.ts`'s "gives at
+  least one hit point per level when Constitution is not a bonus"
+  (expecting 14), and `apps/web/src/store/__tests__/characterSheetStore.test.ts`'s
+  derived-maximum case. A zero-or-positive modifier should contribute
+  `conModifier x level`; only a negative one needs the floor - the
+  genuinely unsolvable part is that per-level rolls are not stored, only
+  their sum. Recorded while closing #78.
 - **#87 — Draconic Resilience's `MAX_HP` modifier does not scale, and the
   engine says nothing.** The pack authors it
   `scalingFactor: "class_level"` with no `scalingClassId`
@@ -2493,3 +2504,25 @@ Test totals: shared 227, engine 958, database 198, server 404, web 355 =
   increase gains 11, where the preview says 8). Fix: preview the same
   difference the server computes, rather than re-deriving it in the UI.
   Recorded while closing #78.
+- **#89 — the sheet's own damage and heal writes are never clamped.**
+  `HP_MODIFIED`'s handler in `apps/server/src/gateway/socket.ts` persists
+  `currentHp + delta` directly, bypassing `modifyCharacterHp` and
+  therefore every derivation #78 added: a client at 25/31 healing 10
+  stores 35. The web clamps locally before emitting, so the stored value
+  only diverges when a client sends a raw delta, but this is the most
+  travelled write path in the app and the server is meant to be
+  authoritative. Fix: route that handler through `modifyCharacterHp`,
+  which clamps to the derived maximum. Pre-existing, found by the final
+  review of `fix/hit-points`.
+- **#90 — `newTotalLevel` is written from the request without checking
+  the ledger.** `applyLevelUp`
+  (`apps/server/src/controllers/characterController.ts`) sets
+  `characters.level` to the payload's `newTotalLevel` with no comparison
+  against the class ledger it just updated, so a crafted request can
+  leave the column disagreeing with the sum of class levels. Since #78
+  the sheet's maximum hit points and both health clamps derive from a
+  level, which makes the drift visible rather than cosmetic (the client
+  reads the ledger after F2; the server sums the ledger already). Fix:
+  derive the new total from the ledger, or reject a payload whose
+  `newTotalLevel` does not match it. Found by the final review of
+  `fix/hit-points`.
