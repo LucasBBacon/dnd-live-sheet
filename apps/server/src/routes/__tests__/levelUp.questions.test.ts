@@ -7,6 +7,7 @@ import { assembleCoreRulePack } from "@project/database/pack";
 import { toRuleSnapshot, type CoreRulePackSnapshot } from "@project/shared";
 import { blockedOptionIds, type ChoiceQuestion } from "@project/engine";
 import { globalErrorHandler } from "../../middleware/errorHandler.js";
+import { renderSql } from "../../gateway/__tests__/fakeDb.js";
 
 /**
  * The level-up questions the wizard is sent (GET /reference/level-up/options)
@@ -458,6 +459,11 @@ describe("level-up questions: offered by the options endpoint, required by apply
         typeof value === "object" && value !== null && "maxHp" in value,
     );
     expect(written).toBeDefined();
+    // maxHp: COALESCE(max_hp, 0) + the roll alone
+    expect(renderSql(written!.maxHp).params).toEqual([5]);
+    // currentHp: COALESCE(current_hp, 0) + the roll (5) plus one level's
+    // Constitution (max(1, 2) x 1 = 2) = 7
+    expect(renderSql(written!.currentHp).params).toEqual([7]);
   });
 
   it("marks Agonizing Blast for a warlock 1 -> 2 who never learned Eldritch Blast, and accepts what the picker allows (#81)", async () => {
