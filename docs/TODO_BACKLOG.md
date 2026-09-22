@@ -185,7 +185,6 @@ things the last three branches showed replace it:
 | 5b | ✅ **#75** — feat-granted traits reach no sheet's modifiers | small–medium | **Closed 2026-09-21** on `fix/levelup-correctness`: a feat pick now lives in `characters.choices.feats` (and `CharacterSave.feats`); `CharacterBootstrapper.resolveGrantedTraitIds` grants each feat's `grantedTraitIds` from the snapshot's new `featsById`, so both sheets pick feats up. `applyLevelUp` rejects an unknown feat or a repeat of a non-repeatable one before any write, appends the pick to `choices.feats`, and no longer writes `feat_selection` rows. Hand check: Sister Aveline, cleric 3 → 4 taking Alert, initiative +0 → +5, `choices.feats` `["feat_alert"]`, no `feat_selection` rows. See the "11g" section below. |
 | 5c | **#76** — the web store's composed `activeStates` still lacks trait and equipment states | small–medium | Found by `fix/sheet-modifiers`'s hand check, 2026-09-21: `composeActiveStates` still composes only over `baseStates`, which the store always sets to `[]`; trigger and dice-rule gating in `dispatchAuthoredEvent`, `useCheckRoll`, and the `ArmorClassWidget`, `TableRulesWidget`, `TurnControlsWidget` and `ConditionsWidget` widgets still read it, even though #73 moved the derived-stat hooks to `getSheetStates()`. If the branch's final review fixes this first, it closes #76 rather than leaving it recorded here. See the "11g. #75 and #76" section below. **`useCheckRoll`'s symptom fixed 2026-09-21** on `fix/levelup-correctness` (it now reads `useAbilities().activeStates`); the rest stays open. |
 | 5d | ✅ **#77** — stored ability scores are pre-racial, and two readers use them directly | small–medium | **Closed 2026-09-21** on `fix/levelup-correctness`: `finalAbilityScores(save, snapshot)` (`apps/server/src/services/characterSave.ts`) runs the stored scores through `AbilityEngine.calculateScore` with the gathered trait modifiers (magic items deliberately excluded). `applyLevelUp`'s multiclass check and `databaseReferenceProvider`'s dip preview both use it; `useCheckRoll` hands dice rules the sheet's final scores and states. Hand check: the wizard offers Sister Aveline (human, stored STR 12, final 13) a fighter dip. See the "11g" section below. |
-| 5e | **#78** — hit points: creation writes none, level-up skips CON, the engine's derived maximum is never shown | small or medium, needs a decision | Every character made through the wizard has no hit points at all, and every level-up loses the Constitution modifier the wizard previewed — the sheet's most visible number. Decide what `max_hp` means first (the final number, or the base rolled HP with every maximum derived); see the #78 bullet in 11g. |
 
 ### Tier 2 — the burndown, one system per pass
 
@@ -2198,7 +2197,7 @@ Test totals: shared 227, engine 958, database 198, server 404, web 355 =
 | 75 | ✅ Feat-granted traits never reach either sheet's modifiers | Found while designing `fix/sheet-modifiers`, 2026-09-21; recorded as out of scope rather than fixed. See below. |
 | 76 | The web store's composed `activeStates` still lacks trait and equipment states, so trigger and dice-rule gating still miss them | Found by `fix/sheet-modifiers`'s hand check, 2026-09-21; recorded rather than fixed; `useCheckRoll`'s symptom fixed on `fix/levelup-correctness`. See below. |
 | 77 | ✅ Stored ability scores are pre-racial, and multiclass prerequisites and `useCheckRoll` read them directly | Found by the final review of `fix/sheet-modifiers`, 2026-09-21; closed on `fix/levelup-correctness`. See the Recommended-sequence row 5d. No test exercises `loadCharacterFinalScores` or the dip preview reporting "met"; the hand check covered it manually. |
-| 78 | Hit points: creation writes none, level-up skips the Constitution modifier, and the engine's derived maximum is never shown | Found by `fix/levelup-correctness`'s hand check, 2026-09-21; widened 2026-09-22 while scoping `fix/choice-prerequisites`. Needs a decision first. See below. |
+| 78 | ✅ Hit points: creation writes none, level-up skips the Constitution modifier, and the engine's derived maximum is never shown | Found by `fix/levelup-correctness`'s hand check, 2026-09-21; widened 2026-09-22 while scoping `fix/choice-prerequisites`; closed 2026-09-22 on `fix/hit-points`. See below. |
 | 79 | ✅ The level-up wizard has no spell step, so a level with a spell choice cannot be submitted | Found by `fix/levelup-correctness`'s hand check, 2026-09-21; closed 2026-09-22 on `feat/spell-choices`: spell picks are choice questions. See below. |
 | 80 | A custom background's choice blocks cannot be answered | Inherited by `feat/choice-step` from the final review of `fix/sheet-modifiers`, 2026-09-21. See below. |
 | 81 | ✅ A choice question offers options whose prerequisites the character does not meet | Found by the final review of `feat/choice-step`, 2026-09-22; closed 2026-09-22 on `fix/choice-prerequisites`. See below. |
@@ -2294,6 +2293,40 @@ Test totals: shared 227, engine 958, database 198, server 404, web 355 =
   base rolled HP and every displayed and clamping maximum comes from
   `calculateMaxHp` (rules-correct; touches the sheet, the server's heal and
   long rest, creation, level-up and the samples; medium).
+
+  **Closed 2026-09-22** on `fix/hit-points`, taking the second option:
+  `characters.max_hp` stores base rolled hit points alone - the hit dice
+  taken, nothing else. `finalMaxHp(save, snapshot)`
+  (`apps/server/src/services/characterSave.ts`) is the one derivation, and
+  `deriveMaxHp(characterId)` (`apps/server/src/services/hitPoints.ts`) is
+  where the server loads a character to run it; the heal clamp
+  (`combatService`) and the long-rest reset (the gateway) both use it.
+  Creation writes the class's hit die as the base and a derived full
+  `currentHp`; a level-up grows the base by the raw roll and moves
+  `currentHp` by `levelUpHitPointGain` - the difference between the
+  maximum after the level and before it, so the roll, the Constitution
+  modifier, an ability score increase taken at that level and any `MAX_HP`
+  trait all count once. `COALESCE` repairs a row whose columns are still
+  null. On the web, hydration finally fills `baseHpRolled` from the
+  payload and one store getter, `getMaxHp()`, replaced the stored field in
+  the sheet header, both health clamps, the long rest, the rest modal, the
+  trait widget and the level-up review step. The ten samples store base
+  rolled hit points, pinned by `sampleCharacterHitPoints.test.ts`: every
+  sample keeps the maximum it showed, except Nyx Vale, who gains the 1 hit
+  point her Draconic Resilience was owed (77 -> 78, and see #87).
+  A character stored before this branch reads high by roughly CON x level
+  until re-seeded - dev data only.
+
+  Hand check (samples re-seeded before and after): Nyx Vale's sheet showed
+  1/78 and Sister Aveline's 17/24 from stored bases of 55 and 18. Aveline
+  levelled cleric 3 -> 4 taking Alert with the average roll: the review
+  step promised 24 -> 31 (+7) and the row stored base 23 with current 24,
+  deriving 31 - the number the wizard had promised and the branch's
+  original symptom (it used to store 29). One point of damage then a long
+  rest returned her to 31/31, written as a number rather than a copy of
+  the base column. A cleric created through `POST /api/character` opened
+  its sheet at 10/10 from a stored base of 8, where creation used to write
+  no hit points at all.
 - **#79 — the level-up wizard has no spell step.** `validateLevelUpPayload`
   rejects a level whose progression carries a `spell_selection` decision
   unless `addedSpells` holds enough spells, but the wizard
@@ -2372,13 +2405,16 @@ Test totals: shared 227, engine 958, database 198, server 404, web 355 =
   reasons, while Thirsting Blade kept "needs Warlock level 5, needs Pact of
   the Blade".
 
-### 11h. #82, #83, #84 and #85 — found while implementing `feat/spell-choices`
+### 11h. #82 to #88 — found while implementing `feat/spell-choices`, `fix/choice-prerequisites` and `fix/hit-points`
 
 | # | Item | Notes |
 | --- | --- | --- |
 | 82 | Level-up cannot swap a known spell | Recorded 2026-09-22 when `feat/spell-choices` removed `LevelUpPayload.replacedSpells`, which nothing read. See below. |
 | 83 | The sheet does not list a character's picked spells | Recorded 2026-09-22 on `feat/spell-choices`. See below. |
 | 84 | A stored pick can go stale | Recorded 2026-09-22 on the branch's final review. See below. |
+| 86 | `calculateMaxHp` floors Constitution at 1 per level, not the level's whole gain | Recorded 2026-09-22 while closing #78. See below. |
+| 87 | Draconic Resilience's `MAX_HP` modifier does not scale, and the engine says nothing | Recorded 2026-09-22 while closing #78. See below. |
+| 88 | The level-up review step understates the hit points an ability score increase adds | Recorded 2026-09-22 while closing #78. See below. |
 | 85 | Nothing stops a pack gating a choice option on a pick made at the same level | Recorded 2026-09-22 by the final review of `fix/choice-prerequisites`. See below. |
 
 - **#82 — level-up cannot swap a known spell.** A bard, ranger, sorcerer
@@ -2431,3 +2467,29 @@ Test totals: shared 227, engine 958, database 198, server 404, web 355 =
   obtainable at the node's own class level. Alternatively, recompute a
   level-up question's `unmet` as the player answers, which is a larger
   change to how the wizard fetches questions.
+- **#86 — `calculateMaxHp` floors Constitution at 1 per level, not the
+  level's whole gain.** 5e grants at least 1 hit point per level counting
+  the roll and the modifier together; `DerivedStatEngine.calculateMaxHp`
+  floors the Constitution contribution alone
+  (`Math.max(1, conModifier) * levels.total`), so a character with a
+  negative Constitution modifier gets more hit points than the rules give.
+  Getting it exact needs the per-level rolls, which the save does not
+  store - it keeps their sum. Recorded while closing #78.
+- **#87 — Draconic Resilience's `MAX_HP` modifier does not scale, and the
+  engine says nothing.** The pack authors it
+  `scalingFactor: "class_level"` with no `scalingClassId`
+  (`traits/ported.json`), and `DerivedStatEngine.resolveScaledValue` falls
+  through to the flat value, so a Draconic Bloodline sorcerer gains 1 hit
+  point instead of 1 per sorcerer level - Nyx Vale derives 78 where the
+  rules give 80. Two halves: author the `scalingClassId`, and make a
+  `class_level` modifier that carries none loud rather than silent (a pack
+  validation rule, or a warning). Recorded while closing #78.
+- **#88 — the level-up review step understates the hit points an ability
+  score increase adds.** `ReviewStep.tsx` previews the gain as
+  `hpRoll + projectedConMod`, which is right for an ordinary level but not
+  for one whose ability score increase raises Constitution: that raises
+  every earlier level's hit points too, which is what `levelUpHitPointGain`
+  now stores (Sister Aveline at cleric 3 -> 4 with a +2 Constitution
+  increase gains 11, where the preview says 8). Fix: preview the same
+  difference the server computes, rather than re-deriving it in the UI.
+  Recorded while closing #78.
