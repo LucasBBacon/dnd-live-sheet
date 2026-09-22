@@ -4,6 +4,7 @@ import { assembleCoreRulePack } from "@project/database/pack";
 import { toRuleSnapshot, type CoreRulePackSnapshot } from "@project/shared";
 import {
   finalAbilityScores,
+  finalMaxHp,
   readStoredChoices,
   toCharacterSave,
 } from "../characterSave.js";
@@ -150,5 +151,54 @@ describe("finalAbilityScores", () => {
       wis: 17,
       cha: 12,
     });
+  });
+});
+
+describe("finalMaxHp", () => {
+  let snapshot: CoreRulePackSnapshot;
+
+  beforeAll(async () => {
+    snapshot = toRuleSnapshot(await assembleCoreRulePack(PACK_DIR));
+  });
+
+  it("adds the Constitution modifier for every level, and a trait's own MAX_HP", () => {
+    // a hill dwarf fighter 1: CON 14 + 2 = 16 (+3), base 24, and Dwarven
+    // Toughness adds 1 per level
+    const save = toCharacterSave(row(), fighterLedger);
+
+    expect(finalMaxHp(save, snapshot)).toBe(28);
+  });
+
+  it("counts the Constitution modifier for every level of a multi-level class", () => {
+    const save = toCharacterSave(
+      row({
+        raceId: "race_human",
+        subraceId: null,
+        con: 14,
+        currentHp: 18,
+        maxHp: 18,
+      }),
+      [{ classId: "class_cleric", classLevel: 3, subclassId: "subclass_cleric_life" }],
+    );
+
+    expect(finalMaxHp(save, snapshot)).toBe(24);
+  });
+
+  it("gives at least one hit point per level when Constitution is not a bonus", () => {
+    // a human Draconic Bloodline sorcerer 3: CON 10 + 1 = 11 (+0), base 10,
+    // so three levels grant the 1-per-level floor, and Draconic Resilience
+    // adds its own
+    const save = toCharacterSave(
+      row({
+        raceId: "race_human",
+        subraceId: null,
+        con: 10,
+        currentHp: 10,
+        maxHp: 10,
+      }),
+      [{ classId: "class_sorcerer", classLevel: 3, subclassId: "subclass_sorcerer_draconic" }],
+    );
+
+    expect(finalMaxHp(save, snapshot)).toBe(14);
   });
 });

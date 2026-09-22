@@ -344,6 +344,26 @@ describe("DerivedStatEngine.calculateMaxHp", () => {
         { name: "Barbarian Bonus", value: "+4" },
       ]);
     });
+
+    it("adds a MAX_HP modifier to the total, scaled by total level", () => {
+      const result = DerivedStatEngine.calculateMaxHp(
+        20,
+        2,
+        { total: 3, classes: { class_barbarian: 3 } },
+        [
+          makeMod({
+            value: 1,
+            scalingFactor: "total_level",
+            sourceName: "Dwarven Toughness",
+          }),
+        ],
+      );
+
+      expect(result.total).toBe(29);
+      expect(result.breakdown).toContainEqual(
+        expect.objectContaining({ name: "Dwarven Toughness" }),
+      );
+    });
   });
 });
 

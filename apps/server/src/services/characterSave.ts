@@ -7,6 +7,7 @@ import {
 import {
   AbilityEngine,
   CharacterBootstrapper,
+  DerivedStatEngine,
   EffectManager,
   gatherSheetModifiers,
   listChoiceQuestions,
@@ -111,6 +112,51 @@ export const finalAbilityScores = (
     wis: score(save.attributes.wis, "WIS"),
     cha: score(save.attributes.cha, "CHA"),
   };
+};
+
+/**
+ * A character's maximum hit points: the stored base rolled hit points, plus
+ * the Constitution modifier for every level, plus every MAX_HP modifier a
+ * trait grants (Dwarven Toughness, Tough, Draconic Resilience).
+ *
+ * The one derivation every clamp and every display reads, so the stored
+ * column can mean one thing - the hit dice taken, and nothing else (#78).
+ * Magic items are left out exactly as finalAbilityScores leaves them out: no
+ * pack item modifies CON or MAX_HP, and an item that did would have to reach
+ * this function as inventory.
+ * @param save The character
+ * @param snapshot Pack content
+ * @returns The maximum hit points to show and to clamp against
+ */
+export const finalMaxHp = (
+  save: CharacterSave,
+  snapshot: RuleSnapshotLookup,
+): number => {
+  const modifiers = gatherSheetModifiers({
+    activeTraits: CharacterBootstrapper.compileActiveTraits(save, snapshot),
+    selections: CharacterBootstrapper.resolveSelections(save),
+    inventory: [],
+    effectManager: new EffectManager(),
+    snapshot,
+  });
+  const conModifier = AbilityEngine.calculateScore(
+    save.attributes.con,
+    "CON",
+    modifiers,
+    [],
+  ).modifier;
+
+  return DerivedStatEngine.calculateMaxHp(
+    save.hp.baseRolledHp,
+    conModifier,
+    {
+      total: save.classes.reduce((sum, entry) => sum + entry.level, 0),
+      classes: Object.fromEntries(
+        save.classes.map((entry) => [entry.classId, entry.level]),
+      ),
+    },
+    modifiers,
+  ).total;
 };
 
 /** What one level-up changes, as buildLevelUpSaves reads it. */
