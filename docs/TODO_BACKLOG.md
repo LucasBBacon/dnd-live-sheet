@@ -2372,13 +2372,14 @@ Test totals: shared 227, engine 958, database 198, server 404, web 355 =
   reasons, while Thirsting Blade kept "needs Warlock level 5, needs Pact of
   the Blade".
 
-### 11h. #82, #83 and #84 — found while implementing `feat/spell-choices`
+### 11h. #82, #83, #84 and #85 — found while implementing `feat/spell-choices`
 
 | # | Item | Notes |
 | --- | --- | --- |
 | 82 | Level-up cannot swap a known spell | Recorded 2026-09-22 when `feat/spell-choices` removed `LevelUpPayload.replacedSpells`, which nothing read. See below. |
 | 83 | The sheet does not list a character's picked spells | Recorded 2026-09-22 on `feat/spell-choices`. See below. |
 | 84 | A stored pick can go stale | Recorded 2026-09-22 on the branch's final review. See below. |
+| 85 | Nothing stops a pack gating a choice option on a pick made at the same level | Recorded 2026-09-22 by the final review of `fix/choice-prerequisites`. See below. |
 
 - **#82 — level-up cannot swap a known spell.** A bard, ranger, sorcerer
   or warlock (and an Eldritch Knight or Arcane Trickster) may replace one
@@ -2415,3 +2416,18 @@ Test totals: shared 227, engine 958, database 198, server 404, web 355 =
   now passes and the stored pick buys nothing - a Bard 2 / Rogue 1 with
   a stored rogue Stealth pick, taking Stealth again with Lore's bonus
   skills at bard 3, no longer catches the duplicate.
+- **#85 — a same-level prerequisite would be unanswerable.** A level-up
+  question's `unmet` is judged against the character after the level but
+  without this level-up's own answers (`databaseReferenceProvider.ts`), so
+  an option gated on a trait or spell first obtainable at that same class
+  level would be shown disabled with no way to satisfy it, and the level
+  could not be finished. The core pack has no such option - the warlock's
+  invocation nodes are at levels 2, 5, 7, 9, 12, 15 and 18 while its
+  cantrip nodes are at 1, 4 and 10 and its pact boon at 3; the Four
+  Elements monk's disciplines are gated by level only - and
+  `fix/choice-prerequisites` relied on that. A homebrew pack reaches the
+  same path. Fix: a `validatePack` rule rejecting a `trait_choice` option
+  whose `requiredTraitIds` or `requiredSpellIds` name something first
+  obtainable at the node's own class level. Alternatively, recompute a
+  level-up question's `unmet` as the player answers, which is a larger
+  change to how the wizard fetches questions.
