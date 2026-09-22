@@ -189,13 +189,6 @@ describe("useLevelUpStore", () => {
             quantity: 1,
           },
           {
-            id: "node_spell_pick",
-            type: "spell_selection",
-            description: "Choose a spell.",
-            isRequired: true,
-            quantity: 2,
-          },
-          {
             id: "dec_asi",
             type: "asi_or_feat",
             description: "Increase an ability score or choose a feat.",
@@ -222,7 +215,7 @@ describe("useLevelUpStore", () => {
     const decisions =
       useLevelUpStore.getState().progressionContext?.decisions ?? [];
 
-    expect(decisions).toHaveLength(5);
+    expect(decisions).toHaveLength(4);
 
     expect(decisions.find((d) => d.id === "rogue_multiclass_skill")).toEqual({
       id: "rogue_multiclass_skill",
@@ -243,14 +236,6 @@ describe("useLevelUpStore", () => {
       options: ["trait_fs_archery", "trait_fs_defense"],
       isRequired: true,
       quantity: 1,
-    });
-
-    expect(decisions.find((d) => d.id === "node_spell_pick")).toEqual({
-      id: "node_spell_pick",
-      type: "spell_selection",
-      description: "Choose a spell.",
-      isRequired: true,
-      quantity: 2,
     });
 
     expect(decisions.find((d) => d.id === "dec_asi")).toEqual({
