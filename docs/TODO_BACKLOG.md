@@ -2359,4 +2359,14 @@ Test totals: shared 227, engine 958, database 198, server 404, web 355 =
   `feat/spell-choices` level-up checks only the answers it is sent and
   the questions new at that level, so a stale stored pick no longer
   blocks levelling (it used to, with no remedy). Nothing surfaces or
-  repairs a stale pick yet; that belongs with an answer-later path.
+  repairs a stale pick yet; that belongs with an answer-later path. A
+  stored subclass is a locked answer too: a level-up that names a
+  subclass other than the one already stored for that class is refused
+  (fixed in the scoped re-review; it used to rewrite the ledger). A
+  further consequence of scoping level-up to this level's answers: a
+  pick this level makes that duplicates a stored proficiency is
+  reported against whichever choice block the proficiency extractor
+  resolves first, so once the stored block resolves later the level-up
+  now passes and the stored pick buys nothing - a Bard 2 / Rogue 1 with
+  a stored rogue Stealth pick, taking Stealth again with Lore's bonus
+  skills at bard 3, no longer catches the duplicate.
