@@ -115,7 +115,8 @@ Test-first.
     `unmet: ["needs Eldritch Blast"]`; with Eldritch Blast among the cantrips
     it has no `unmet` key.
   - Thirsting Blade at warlock 2 has
-    `unmet: ["needs Pact of the Blade", "needs Warlock level 5"]`.
+    `unmet: ["needs Warlock level 5", "needs Pact of the Blade"]` (level
+    first: the order save validation already reports them in).
   - A Four Elements monk 3's `monk_elements_level_3_discipline`: Clench of the
     North Wind has `unmet: ["needs Monk level 6"]`; Fangs of the Fire Snake
     has no `unmet` key.
