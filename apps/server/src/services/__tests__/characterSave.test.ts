@@ -187,7 +187,8 @@ describe("finalMaxHp", () => {
   it("adds nothing for a Constitution modifier of zero", () => {
     // a human Draconic Bloodline sorcerer 3: CON 10 + 1 = 11 (+0), base 10.
     // A zero modifier adds nothing - the engine used to credit it with the
-    // 1-per-level floor (#86) - and Draconic Resilience adds its own
+    // 1-per-level floor (#86) - and Draconic Resilience adds 1 per sorcerer
+    // level (#87): 10 + 3
     const save = toCharacterSave(
       row({
         raceId: "race_human",
@@ -199,6 +200,6 @@ describe("finalMaxHp", () => {
       [{ classId: "class_sorcerer", classLevel: 3, subclassId: "subclass_sorcerer_draconic" }],
     );
 
-    expect(finalMaxHp(save, snapshot)).toBe(11);
+    expect(finalMaxHp(save, snapshot)).toBe(13);
   });
 });

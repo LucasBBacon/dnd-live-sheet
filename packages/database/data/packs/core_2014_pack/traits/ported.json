@@ -124,6 +124,7 @@
                         "type": "add",
                         "value": 1,
                         "scalingFactor": "class_level",
+                        "scalingClassId": "class_sorcerer",
                         "requiredStates": [],
                         "forbiddenStates": []
                     },
@@ -133,7 +134,9 @@
                         "value": 13,
                         "scalingFactor": "none",
                         "requiredStates": [],
-                        "forbiddenStates": ["status_wearing_armor"]
+                        "forbiddenStates": [
+                            "status_wearing_armor"
+                        ]
                     }
                 ],
                 "choices": []

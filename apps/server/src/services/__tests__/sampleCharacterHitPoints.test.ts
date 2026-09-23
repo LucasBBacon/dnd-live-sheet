@@ -14,8 +14,8 @@ const PACK_DIR = path.join(
  * What each sample's sheet shows. Their stored maxHp is base rolled hit
  * points now (#78), so these are what the engine must derive from it: the
  * numbers they showed before the change, except Nyx Vale, whose Draconic
- * Resilience never reached a sheet, and Seraphine Dusk, whose negative
- * Constitution modifier counts since #86.
+ * Resilience never reached a sheet and scales per sorcerer level since #87,
+ * and Seraphine Dusk, whose negative Constitution modifier counts since #86.
  */
 const EXPECTED_MAX_HP: Record<string, number> = {
   "Pip Underbough": 10,
@@ -23,7 +23,7 @@ const EXPECTED_MAX_HP: Record<string, number> = {
   "Grimnar Stonefist": 55,
   "Lyra Silverstring": 45,
   "Vaerix the Ashen": 85,
-  "Nyx Vale": 78,
+  "Nyx Vale": 80,
   "Master Ko Shen": 99,
   "Thistle Quickfoot": 86,
   "Kaelen Duskwarden": 152,

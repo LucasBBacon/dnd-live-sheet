@@ -17,6 +17,7 @@ export type CoreRulePackIssueCode =
   | "incompatible_ammunition_reference"
   | "invalid_choice_count"
   | "invalid_progression_order"
+  | "missing_scaling_class"
   | "missing_subrace"
   | "unexpected_subrace";
 
@@ -191,6 +192,61 @@ const validateStartingEquipment = (
       );
     });
   });
+};
+
+const CLASS_SCALED = new Set(["class_level", "class_level_thresholds"]);
+
+/**
+ * An entry scaled by one class's level must say which class.
+ *
+ * Without `scalingClassId`, `DerivedStatEngine.resolveScaledValue` falls
+ * through to the flat value, so a feature meant to grow with its class stops
+ * at level one and nothing says so - Draconic Resilience added 1 hit point
+ * instead of 1 per sorcerer level (#87). The whole pack is walked rather than
+ * a list of known sites: scaling is authored as `scalingFactor` on modifiers
+ * and critical-hit dice and as `scalingMode` on damage segments, and a site
+ * added later is covered without anyone remembering to add it here. The
+ * message names the nearest enclosing entity with an id.
+ */
+const validateClassScaling = (
+  pack: CoreRulePack,
+  issues: CoreRulePackValidationIssue[],
+) => {
+  const visit = (
+    value: unknown,
+    path: Array<string | number>,
+    ownerId: string | undefined,
+  ): void => {
+    if (Array.isArray(value)) {
+      value.forEach((entry, index) => visit(entry, [...path, index], ownerId));
+      return;
+    }
+    if (value === null || typeof value !== "object") return;
+
+    const record = value as Record<string, unknown>;
+    const owner = typeof record.id === "string" ? record.id : ownerId;
+    const scaling = record.scalingFactor ?? record.scalingMode;
+
+    if (
+      typeof scaling === "string" &&
+      CLASS_SCALED.has(scaling) &&
+      !record.scalingClassId
+    ) {
+      const target =
+        typeof record.target === "string" ? ` ${record.target}` : "";
+      issues.push({
+        code: "missing_scaling_class",
+        path,
+        message: `${owner ? `'${owner}'` : "An entry"} scales${target} by ${scaling} but names no scalingClassId.`,
+      });
+    }
+
+    for (const [key, child] of Object.entries(record)) {
+      visit(child, [...path, key], owner);
+    }
+  };
+
+  visit(pack, [], undefined);
 };
 
 export const validateCoreRulePack = (
@@ -404,6 +460,8 @@ export const validateCoreRulePack = (
       }
     });
   });
+
+  validateClassScaling(pack, issues);
 
   return { ok: issues.length === 0, issues };
 };
