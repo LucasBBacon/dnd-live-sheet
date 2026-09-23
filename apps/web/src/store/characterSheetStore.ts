@@ -367,10 +367,15 @@ type ConditionSuppression = {
  * active traits: the states that gate, and the suppressions that can silence
  * a condition.
  *
- * Compiling once is the point. The pair of helpers this replaced called
- * compileActiveTraits twice for the same state, and one of them composed over
- * a stored `baseStates` field the store set to [] and never wrote again - so
- * no equipment or trait state ever reached a gate (#76).
+ * The pair of helpers this replaced called compileActiveTraits twice for a
+ * single composition - one of them composed over a stored `baseStates` field
+ * the store set to [] and never wrote again, so no equipment or trait state
+ * ever reached a gate (#76). That is fixed here: this compiles once for the
+ * pair of results it returns. It does not help a caller that already holds
+ * its own compiled trait list for something else - dispatchAuthoredEvent
+ * (actionLookup, triggerGrants, diceRules) and initialize (missingPools)
+ * both still pay for a second compile when they call this, same as before
+ * this task.
  * @param state The sheet, for the save the engine compiles from
  * @param effectManager The runtime effects whose states also gate
  * @returns The gating states and the condition suppressions
