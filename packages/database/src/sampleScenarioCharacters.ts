@@ -138,7 +138,7 @@ const SCENARIO_ROSTER: SampleCharacter[] = [
     maxHp: 13,
     currentHp: 17,
     testFocus:
-      "Staging: level to 3 for Arcane Trickster (#65b, #31a); Expertise and Sneak Attack absent (#66); Folk Hero grants nothing (#70).",
+      "Staging: level to 3 for Arcane Trickster (#65b, #31a); Expertise (#66) and Sneak Attack (#62) absent; Folk Hero grants nothing (#70).",
     personalityTraits:
       "I narrate my own heists under my breath, with footnotes.",
     ideals: "Curiosity. A lock is a question somebody forgot to answer.",
@@ -321,7 +321,7 @@ const SCENARIO_ROSTER: SampleCharacter[] = [
     maxHp: 23,
     currentHp: 20,
     testFocus:
-      "Staging: level to 5 for invocation prerequisites against Pact of the Chain (#81); Alert reaches initiative; no familiar actor (#36).",
+      "Staging: level to 5 for invocation prerequisites against Pact of the Chain (#81); a wizard dip that only final INT allows (#77); Alert reaches initiative; no familiar actor (#36).",
     personalityTraits: "I thank the air before I speak to it, and it answers.",
     ideals: "Freedom. A bargain is only as good as the way out of it.",
     bonds: "The Summer Court holds a promise I made at nine years old.",
@@ -415,7 +415,7 @@ const SCENARIO_ROSTER: SampleCharacter[] = [
     maxHp: 34,
     currentHp: 6,
     testFocus:
-      "Two tabs: low hit points with Relentless Endurance unspent (#92, #93); Tough per level; the dip menu refuses wizard on INT (#77).",
+      "Two tabs: low hit points with Relentless Endurance unspent (#92, #93); Tough per level.",
     personalityTraits: "I apologise to people after I have hit them, sincerely.",
     ideals: "Retribution. The ledger balances, one way or the other.",
     bonds: "The gang that raised me is the first name on my oath's list.",
@@ -1183,7 +1183,7 @@ const SCENARIO_ROSTER: SampleCharacter[] = [
     maxHp: 82,
     currentHp: 134,
     testFocus:
-      "Unknown content: a race, subclass, background and two items the pack does not author, and race traits that resolve to nothing.",
+      "Unknown content: a race, subclass, background and two items the pack does not author, and race traits that resolve to nothing; a slotless attuned belt (#102).",
     personalityTraits: "I keep a tally of every favour, mine and everyone's.",
     ideals: "Fairness. Everyone climbs the same mountain.",
     bonds: "The runes on my sword were carved by a giant who called me small.",

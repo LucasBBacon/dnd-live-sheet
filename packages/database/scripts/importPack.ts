@@ -54,7 +54,7 @@ if (doomed.length > 0) {
     console.warn(`  ${table.padEnd(24)} ${count}`);
   }
   console.warn(
-    "\ndb:seed:samples restores the ten fixture characters. Anything",
+    "\ndb:seed:samples restores the twenty fixture characters. Anything",
   );
   console.warn("hand-made is not recoverable.");
 }

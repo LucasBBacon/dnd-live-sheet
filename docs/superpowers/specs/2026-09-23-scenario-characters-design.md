@@ -383,6 +383,12 @@ disagree.
 8. **The doc's "Serve them with the database provider" section is stale too**
    (`REFERENCE_SOURCE=static` no longer exists), and goes with "Known gaps".
 
+9. **Two live checks were corrected by the final review.** Ursk's #77 dip
+   check could not fail — none of his thresholds moves between stored and
+   final scores — so it moved to Isolde, whose Intelligence is 12 stored and 13
+   final. And his #92 script had the tester hit tab B again, which would erase
+   the divergence: B already shows 1 once the server's 0 arrives.
+
 Every number in the plan — final scores, derived maxima, zero save issues, and
 Orrik's two expected issues — was measured by running the scenario module
 through the calls the invariant tests make.

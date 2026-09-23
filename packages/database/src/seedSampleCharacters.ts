@@ -1860,7 +1860,7 @@ const seedCampaign = async () => {
  *
  * Child rows are cleared first so a second run cannot double up inventory or
  * trait grants. Every delete is keyed on this character's id alone, which is
- * one of the ten this file declares.
+ * one of the twenty in ROSTER.
  */
 const seedCharacter = async (character: SampleCharacter) => {
   // the ledger decides, except where a character exists to disagree with it
@@ -2006,7 +2006,8 @@ const run = async () => {
       Build: character.classes
         .map((entry) => `${entry.classId.replace("class_", "")} ${entry.classLevel}`)
         .join(" / "),
-      HP: `${character.currentHp}/${character.maxHp}`,
+      // maxHp is base rolled hit points since #78, not the maximum a sheet shows
+      "HP (cur/rolled)": `${character.currentHp}/${character.maxHp}`,
       Items: character.inventory.length,
       Res: character.resources.length,
     })),

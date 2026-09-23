@@ -62,14 +62,14 @@ Each is reachable at `http://localhost:5173/character/<id>`.
 | --- | --- | --- | --- | --- | --- |
 | [Quill Ashgrove](http://localhost:5173/character/00000000-0000-0000-0000-000000000120) | 2 | Rogue 2 | 17/17 | Level-up staging | #65b, #31a, #66, #70 |
 | [Brannoc Hale](http://localhost:5173/character/00000000-0000-0000-0000-000000000121) | 3 | Fighter 3 (Champion) | 31/31 | Level-up staging | #88, #94, #24 |
-| [Isolde Varn](http://localhost:5173/character/00000000-0000-0000-0000-000000000122) | 4 | Warlock 4 (Archfey) | 20/31 | Level-up staging | #81, #36 |
-| [Ursk Gravemaw](http://localhost:5173/character/00000000-0000-0000-0000-000000000123) | 5 | Paladin 5 (Vengeance) | 6/54 | Two tabs, dip staging | #92, #93, #77 |
+| [Isolde Varn](http://localhost:5173/character/00000000-0000-0000-0000-000000000122) | 4 | Warlock 4 (Archfey) | 20/31 | Level-up and dip staging | #81, #77, #36 |
+| [Ursk Gravemaw](http://localhost:5173/character/00000000-0000-0000-0000-000000000123) | 5 | Paladin 5 (Vengeance) | 6/54 | Two tabs | #92, #93 |
 | [Tamsin Burrowdeep](http://localhost:5173/character/00000000-0000-0000-0000-000000000124) | 6 | Barbarian 6 (Totem Warrior) | 30/65 | Two tabs, socket | #76, #97, #99, #101 |
 | [Hesk Mossgather](http://localhost:5173/character/00000000-0000-0000-0000-000000000125) | 8 | Druid 8 (Moon) | 41/59 | Wild-shape preview | #62, #83, #80 |
 | [Seraphine Dusk](http://localhost:5173/character/00000000-0000-0000-0000-000000000126) | 9 | Wizard 9 (Divination) | 33/47 | Wizard preview | #86, #31a, #83 |
 | [Kestrel Vey](http://localhost:5173/character/00000000-0000-0000-0000-000000000127) | 7 | Sorcerer 7 (Wild Magic) | 44/44 | Sorcery-points preview | #62 |
 | [Brother Mote](http://localhost:5173/character/00000000-0000-0000-0000-000000000128) | 11 (column: 12) | Cleric 11 (Tempest) | 95/80 | Broken on purpose | #95, #98 |
-| [Orrik Stonehide](http://localhost:5173/character/00000000-0000-0000-0000-000000000129) | 13 | Fighter 13 (Rune Knight) | 134/134 | Broken on purpose | — |
+| [Orrik Stonehide](http://localhost:5173/character/00000000-0000-0000-0000-000000000129) | 13 | Fighter 13 (Rune Knight) | 134/134 | Broken on purpose | #102 |
 
 Ids run `…000000000110` through `…000000000129`; the last two digits are the
 row. HP is current over the derived maximum, as the sheet shows it.
@@ -174,6 +174,11 @@ re-running the seed. Stored values can be read with
 3. **After submitting.** The pact slot level rises to 3rd.
 4. **Familiar.** Pact of the Chain summons nothing: the engine knows no
    familiar actor (#36).
+5. **Dip menu (#77, a regression check).** Level Up, choose a new class:
+   wizard is offered. Her stored Intelligence is 12 and the high elf's +1
+   makes 13, the wizard's requirement, so the check passes only when it reads
+   final scores; before #77's fix it read the stored 12 and refused. (Charisma
+   15 meets the warlock's own requirement.) Cancel without submitting.
 
 ### Ursk Gravemaw — `…0123`
 
@@ -181,31 +186,35 @@ re-running the seed. Stored values can be read with
 2. **Two tabs (#92).** Open the sheet in tabs A and B; both show 6/54 and
    Relentless Endurance 1 of 1.
    - In A, take 20 damage: Relentless Endurance fires, and A shows 1 hit point
-     with the charge spent.
+     with the charge spent. B follows the broadcast to 1; its own charge is
+     untouched.
    - In A, take 20 damage again: the charge is spent, so A sends the full
      lethal delta and the server stores 0.
-   - Look at B. If it still shows more than 0 hit points, take 20 damage
-     there: it fires its own, never-synced Relentless Endurance and lands on 1
-     while the database and A show 0.
+   - Look at B, and do nothing in it. When the server's 0 arrived, B ran its
+     own, never-synced Relentless Endurance and shows 1, while A and
+     `GET /api/character/…0123` show 0. Taking damage in B now would drop it to
+     0 as well and erase the divergence.
 
    **Today:** the tabs disagree. *After #92:* trigger resolution is
    server-side, and every tab shows the server's answer.
 3. **A heal from the stale tab (#93, a regression check).** Heal from B in the
    Combat widget, or drink one of his two Potions of Healing: the heal reaches
    the server raw, and any notice reports what actually applied.
-4. **Dip menu (#77, a regression check).** Level Up, choose a new class:
-   sorcerer, warlock and bard are allowed (CHA 14; paladin's own STR 13 and
-   CHA 13 are met), wizard is refused on Intelligence 8 — judged on final
-   scores. Cancel without submitting.
+4. **Dip menu.** Level Up, choose a new class: sorcerer, warlock and bard are
+   allowed (CHA 14; paladin's own STR 13 and CHA 13 are met), and wizard is
+   refused on Intelligence 8. None of his thresholds moves between stored and
+   final scores, so this is an observation, not the #77 check — that is
+   Isolde's step 5. Cancel without submitting.
 
 ### Tamsin Burrowdeep — `…0124`
 
 1. **Eagle Dash (#76).** Rage. Eagle Dash is offered. Equip the plate from the
    backpack into the body slot: Eagle Dash disappears, because
    `status_wearing_heavy_armor` now reaches the sheet's states.
-2. **A second tab (#101, a regression check).** With tab B open, equip the
-   plate from B: tab A's actions update without a reload. Attune the Cloak of
-   Protection from B: A's armour class rises by 1.
+2. **A second tab (#101, a regression check).** Stow the plate again (or
+   re-seed) so it starts in the backpack. With tab B open, equip the plate from
+   B: tab A's actions update without a reload. Attune the Cloak of Protection
+   from B: A's armour class rises by 1.
 3. **A crafted intent (#97).** With the plate worn, emit `ACTION_INTENT` for
    `action_eagle_dash` by hand (the payload shape is in
    `apps/server/src/gateway/__tests__/socket.actionIntent.test.ts`, "does not
@@ -262,7 +271,9 @@ re-running the seed. Stored values can be read with
    the row's level.
 2. **An over-maximum pool (#98).** 1st-level slots show 4 of 4, though 6 are
    stored. Spend one: still 4. Spend another: still 4 — two spends the player
-   cannot see. *After #98:* a stored total cannot exceed its maximum.
+   cannot see. *After #98:* a stored total cannot exceed its maximum. A long
+   rest resets the pool to 4 of 4 and quietly repairs the setup; re-seed to
+   restore it.
 3. **Over-maximum hit points.** 95 of 80. The next damage or heal is clamped
    against the maximum (#89).
 4. **Four attunements.** Cloak, ring, headband and boots are all attuned
@@ -271,15 +282,18 @@ re-running the seed. Stored values can be read with
 
 ### Orrik Stonehide — `…0129`
 
-Nothing here has a known answer; whatever happens is the finding. Record it as
-a backlog item rather than fixing it.
+These checks had no known answer when he was written; whatever happens is the
+finding. Record it as a backlog item rather than fixing it. The first load, on
+2026-09-23, answered two of them.
 
-1. Does the sheet load, and does the room join report an error?
+1. Does the sheet load, and does the room join report an error? **It loads,
+   joins the live session, and logs no console errors.**
 2. What do the race (Goliath, speed 30) and subclass (Rune Knight) show, given
    the snapshot knows neither? None of his race or subclass traits resolve,
    and the Giant's Might pool he stores has no rule.
 3. The Belt of Hill Giant Strength is attuned with no slot to wear it in: does
-   Strength read 21?
+   Strength read 21? **No — it reads 20, and the Items widget lists the belt
+   without its "Attuned" marker (#102).**
 4. Level Up: what do the level-up wizard and its dip menu do with a subclass
    the snapshot does not have?
 
