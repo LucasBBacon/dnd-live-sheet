@@ -1517,6 +1517,80 @@ describe("getCharacterActions and dynamic templates", () => {
   });
 });
 
+describe("getCharacterActions honours an action's states (#76)", () => {
+  const eagleBarbarian = (inventory: unknown[]) => ({
+    id: "char_1",
+    level: 3,
+    classLevels: { class_barbarian: 3 },
+    subclassIds: { class_barbarian: "subclass_barbarian_totem_warrior" },
+    choices: {
+      classSelections: {
+        class_barbarian: {
+          barbarian_totem_level_3_totem_spirit: ["trait_totem_spirit_eagle"],
+        },
+      },
+      traitSelections: {},
+      feats: [],
+    },
+    raceId: "race_human",
+    subraceId: null,
+    inventory,
+    ruleSnapshot: packRuleSnapshot(),
+  });
+
+  const plate = {
+    id: "inv-plate",
+    itemId: "item_armor_plate",
+    quantity: 1,
+    slot: "body",
+    isAttuned: false,
+  };
+
+  const actionIds = () =>
+    useCharacterSheetStore
+      .getState()
+      .getCharacterActions()
+      .map((action) => action.id);
+
+  it("does not offer the Eagle Dash while the barbarian is not raging", () => {
+    useCharacterSheetStore.getState().initialize(eagleBarbarian([]) as never);
+
+    // action_eagle_dash requires status_raging
+    expect(actionIds()).not.toContain("action_eagle_dash");
+  });
+
+  it("offers the Eagle Dash to a raging barbarian out of heavy armour", () => {
+    useCharacterSheetStore.getState().initialize(eagleBarbarian([]) as never);
+    useCharacterSheetStore.setState({
+      activeStates: [
+        ...useCharacterSheetStore.getState().activeStates,
+        "status_raging",
+      ],
+    });
+
+    expect(actionIds()).toContain("action_eagle_dash");
+  });
+
+  it("withholds the Eagle Dash from a raging barbarian in plate", () => {
+    useCharacterSheetStore
+      .getState()
+      .initialize(eagleBarbarian([plate]) as never);
+    useCharacterSheetStore.setState({
+      activeStates: [
+        ...useCharacterSheetStore.getState().activeStates,
+        "status_raging",
+      ],
+    });
+
+    // the pack forbids it on status_wearing_heavy_armor, and the trait's own
+    // summary claims this gate holds on the sheet - until now it did not
+    expect(useCharacterSheetStore.getState().activeStates).toContain(
+      "status_wearing_heavy_armor",
+    );
+    expect(actionIds()).not.toContain("action_eagle_dash");
+  });
+});
+
 describe("getSuspendedConditions", () => {
   const raging = () => {
     const effects = new EffectManager();

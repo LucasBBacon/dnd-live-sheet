@@ -164,7 +164,17 @@ const hasStatePredicate = (effect: ActionGrant["effect"]): boolean => {
   return requiredStates.length > 0 || forbiddenStates.length > 0;
 };
 
-const matchesStatePredicate = (
+/**
+ * Whether an action may be used in these states.
+ *
+ * Exported because the sheet gates on the same rule: the web app decides
+ * whether to offer an action, the resolver decides whether to apply it, and
+ * both must agree about what an effect's states mean (#76).
+ * @param effect The action's effect, whose predicate may be top level or in a predicates group
+ * @param activeStates The states that currently hold
+ * @returns True when every required state holds and no forbidden one does
+ */
+export const matchesStatePredicate = (
   effect: ActionGrant["effect"],
   activeStates: string[],
 ): boolean => {

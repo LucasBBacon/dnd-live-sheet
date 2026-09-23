@@ -18,6 +18,7 @@ import {
   collectGrantedResources,
   getResourceMaxUses,
   materialiseMissingPools,
+  matchesStatePredicate,
   ProficiencyExtractor,
   RELENTLESS_RAGE_ACTION_ID,
   resolveResourceRule,
@@ -1579,7 +1580,11 @@ export const useCharacterSheetStore = create<CharacterSheetState>(
         // self-save would otherwise be reachable from nowhere.
         (action) =>
           action.effect.type !== "dynamic_weapon_attack" &&
-          action.id !== RELENTLESS_RAGE_ACTION_ID,
+          action.id !== RELENTLESS_RAGE_ACTION_ID &&
+          // An action the character's states forbid was offered as an enabled
+          // button that silently did nothing when pressed: the resolver
+          // returns executed with no effect applied (#76).
+          matchesStatePredicate(action.effect, state.activeStates),
       );
     },
 
