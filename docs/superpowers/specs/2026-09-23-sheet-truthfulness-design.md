@@ -163,13 +163,15 @@ amount for a rules reason and this asymmetry would have to go.
   `InventoryExtractor.extractStates` - a body-slot row whose definition is
   armour of category `heavy`. This test needs both halves of the change and is
   what makes #76 real rather than a refactor.
-- **A dice rule keyed to an equipment state** now reaches the dice engine,
-  covering the other half of #76 that `useCheckRoll` exposed. No pack dice rule
-  is gated on a non-condition state for `ABILITY_CHECK` or `SAVING_THROW` - the
-  one state-gated rule in the pack, `trait_fs_great_weapon_fighting`, targets
-  `DAMAGE_ROLL`, which `useCheckRoll` never passes. The test therefore hands
-  `DiceEngine` a rule authored in the test itself, following that rule's
-  `requiredStates` shape.
+- **The dice-rule half of #76, as two links rather than one test.**
+  `useCheckRoll` hands `DiceEngine.applyDiceRulesToRollResult` the states from
+  `useAbilities()`, and `useCheckRoll.test.ts` already pins that it passes the
+  sheet's states rather than the store's raw ones. What was missing is the
+  other link: that those states carry equipment at all. A store-level assertion
+  that `getSheetStates()` returns the worn-armour state closes it, and the two
+  together cover the chain. A third test handing `DiceEngine` a rule authored
+  in the test would exercise the engine, which `diceParser.test.ts` already
+  covers, rather than this fix.
 - **A refused spend** restores the charge and raises a notice; an echo for a
   different character is ignored.
 - **A heal past the maximum** emits the raw delta, and damage still emits the
