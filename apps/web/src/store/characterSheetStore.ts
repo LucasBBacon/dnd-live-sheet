@@ -1424,10 +1424,13 @@ export const useCharacterSheetStore = create<CharacterSheetState>(
         modifiers,
         activeStates,
       );
-      // the ledger's sum, not state.level: applyLevelUp writes
-      // characters.level straight from the request without checking it
-      // against the ledger, so the two can drift. finalMaxHp (server) already
-      // derives its total the same way (#78 final review, F2)
+      // the ledger's sum, not state.level: the class ledger is the source
+      // both sides derive their total from. The server's finalMaxHp sums the
+      // same character_classes rows rather than reading characters.level,
+      // and since #90 applyLevelUp itself derives the column it writes from
+      // that ledger and rejects a request that disagrees with it - so this
+      // sum and state.level should always agree, but the ledger is still the
+      // authority to read (#78 final review, F2; #90 closed)
       const totalLevel = Object.values(state.classLevels).reduce(
         (sum, level) => sum + level,
         0,
