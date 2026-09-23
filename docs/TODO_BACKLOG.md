@@ -294,6 +294,7 @@ Every id this file has ever issued, in one table. Gaps in the numbering are inte
 | 98 | A resource total has no ceiling, so a rollback can over-restore it | Open | Open items |
 | 99 | An action's ender can be hidden by the gate that hides the action | Open | Open items |
 | 100 | `resolveActionError`'s async-failure branch is untested, and the reachable case is the untested one | Open | Open items |
+| 101 | One inventory writer does not recompose the sheet's states, unlike the six beside it | Open | Open items |
 | A1 | Ready's trigger is not modelled | Open | Open items |
 | A2 | No roll-initiating UI for skills | ✅ Closed | Closed items |
 | A2b | actions do not prompt their own check | Open | Open items |
@@ -1135,6 +1136,31 @@ Also recorded from the same review, left alone rather than added as items:
 client's own payload, so this is defence-in-depth only, not a real hole),
 and `triggerRest`'s long rest healing to the client's own `getMaxHp()` (the
 same stale-maximum family as #93, but outside its scope).
+
+### #101 — one inventory writer does not recompose the sheet's states, unlike the six beside it
+
+| # | Item | Notes |
+| --- | --- | --- |
+| 101 | One inventory writer does not recompose the sheet's states, unlike the six beside it | Found by the re-review of `fix/sheet-truthfulness`, 2026-09-23. See below. |
+
+`activeStates` is a stored composition and `getSheetStates()` reads it
+rather than recomputing, so every writer that changes the inputs has to
+recompose. The fix wave that closed #76's regression gave
+`recomposeStates` to seven call sites - `equipItem`, both of
+`toggleAttunement`'s paths, `syncInventorySnapshot`, `syncRemoteEquipment`,
+`consumeItem` and `syncRemoteConsumption` - but not to
+`syncRemoteAttunement` (`apps/web/src/store/characterSheetStore.ts`), the
+remote counterpart of the one attunement path that does.
+
+Inert today: `InventoryExtractor.extractStates`
+(`packages/engine/src/pipeline/inventoryExtractor.ts`) keys only on a body
+slot holding armour and never reads `isAttuned`, and no modifier target
+grants a state, so attunement cannot change `activeStates` at all. It is
+recorded because it is the same shape as the defect that made this
+necessary - a writer that changes the inputs and leaves the composition
+behind - and the next authored rule that ties a state to attunement would
+make it live and silent. Fix: one call, or a comment on
+`syncRemoteAttunement` saying why it does not need one.
 
 ### Coverage thresholds
 
