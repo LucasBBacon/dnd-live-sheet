@@ -5,6 +5,7 @@ import {
   ROSTER,
   SAMPLE_BACKGROUNDS,
   SAMPLE_ITEMS,
+  SAMPLE_RACES,
   SAMPLE_SUBCLASSES,
 } from "../seedSampleCharacters.js";
 
@@ -36,9 +37,9 @@ const SHIPPED_PACK = path.join(process.cwd(), "data/packs/core_2014_pack");
  * writes onto the character itself.
  *
  * The roster may name ids the core pack lacks, but only the ones the seed
- * supplies itself as reference stubs - the sample subclasses, backgrounds and
- * items. It supplies no trait stubs, so a `customTraitIds` entry has nowhere
- * to come from but the pack.
+ * supplies itself as reference stubs - the sample races, subclasses,
+ * backgrounds and items. It supplies no trait stubs, so a `customTraitIds`
+ * entry has nowhere to come from but the pack.
  */
 const pack = assembleCoreRulePackSync(SHIPPED_PACK);
 
@@ -46,7 +47,7 @@ const idsOf = (rows: ReadonlyArray<{ id: string }>) =>
   new Set(rows.map((row) => row.id));
 
 const traitIds = idsOf(pack.traits);
-const raceIds = idsOf(pack.races);
+const raceIds = new Set([...idsOf(pack.races), ...idsOf(SAMPLE_RACES)]);
 const classIds = idsOf(pack.classes);
 const subraceIds = new Set(
   pack.races.flatMap((race) => Object.keys(race.subraces ?? {})),
@@ -81,6 +82,14 @@ const dangling = (
   );
 
 describe("the sample roster names ids the pack defines", () => {
+  it("gives every character its own id", () => {
+    // the roster is assembled from two modules, and a repeated id would have
+    // the second character silently overwrite the first on every seed
+    const ids = ROSTER.map((character) => character.id);
+
+    expect(ids.filter((id, index) => ids.indexOf(id) !== index)).toEqual([]);
+  });
+
   it("names only real traits where the foreign key demands one", () => {
     expect(
       dangling(
