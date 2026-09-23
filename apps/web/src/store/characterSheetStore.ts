@@ -376,14 +376,15 @@ type ResolvedConditionSuppression = {
  * a condition.
  *
  * The pair of helpers this replaced called compileActiveTraits twice for a
- * single composition - one of them composed over a stored `baseStates` field
- * the store set to [] and never wrote again, so no equipment or trait state
- * ever reached a gate (#76). That is fixed here: this compiles once for the
- * pair of results it returns. It does not help a caller that already holds
- * its own compiled trait list for something else - dispatchAuthoredEvent
- * (actionLookup, triggerGrants, diceRules) and initialize (missingPools)
- * both still pay for a second compile when they call this, same as before
- * this task.
+ * single composition - one of them composed over a stored field, then called
+ * `baseStates`, that the store set to [] and never wrote again, so no
+ * equipment or trait state ever reached a gate (#76). That field is gone;
+ * what this function returns instead is the states composed fresh from
+ * traits, equipment and effects, in one compile. It does not help a caller
+ * that already holds its own compiled trait list for something else -
+ * dispatchAuthoredEvent (actionLookup, triggerGrants, diceRules) and
+ * initialize (missingPools) both still pay for a second compile when they
+ * call this, same as before this task.
  * @param state The sheet, for the save the engine compiles from
  * @param effectManager The runtime effects whose states also gate
  * @returns The gating states and the condition suppressions
@@ -1906,8 +1907,9 @@ export const useCharacterSheetStore = create<CharacterSheetState>(
       );
 
       set((previous) => ({
-        // conditions and base states are the player's, not the server's, so
-        // they are composed back in rather than taken from the payload
+        // conditions and the states composed from traits, equipment and
+        // effects are the player's, not the server's, so they are composed
+        // back in rather than taken from the payload
         activeStates: (() => {
           const { gatingStates, suppressions } = sheetGating(
             previous,
