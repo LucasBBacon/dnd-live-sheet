@@ -37,10 +37,8 @@ export const DashboardLayout = () => {
   const triggerItemAction = useCharacterSheetStore(
     (state) => state.useItemAction,
   );
-  const inventoryError = useCharacterSheetStore((state) => state.inventoryError);
-  const setInventoryError = useCharacterSheetStore(
-    (state) => state.setInventoryError,
-  );
+  const notice = useCharacterSheetStore((state) => state.notice);
+  const dismissNotice = useCharacterSheetStore((state) => state.dismissNotice);
   const beginLevelUp = useLevelUpStore((state) => state.beginLevelUp);
 
   const { initiative } = useDerivedStats();
@@ -157,6 +155,31 @@ export const DashboardLayout = () => {
         </div>
       </header>
 
+      {notice && (
+        <section
+          data-testid="sheet-notice"
+          className={`mb-4 border rounded p-2 flex items-center justify-between gap-3 ${
+            notice.tone === "warning"
+              ? "bg-amber-50 border-amber-200"
+              : "bg-red-50 border-red-200"
+          }`}
+        >
+          <span
+            className={`text-xs ${
+              notice.tone === "warning" ? "text-amber-800" : "text-red-700"
+            }`}
+          >
+            {notice.text}
+          </span>
+          <button
+            onClick={dismissNotice}
+            className="text-xs px-2 py-1 rounded border bg-white hover:bg-gray-100"
+          >
+            Dismiss
+          </button>
+        </section>
+      )}
+
       {/* MAIN GRID */}
       <div className="flex-grow grid grid-cols-12 gap-4 overflow-hidden">
         {/* HUD */}
@@ -260,18 +283,6 @@ export const DashboardLayout = () => {
         <h2 className="font-bold border-b-2 border-gray-800 pb-1 mb-4 uppercase">
           Inventory Manager (DEV MODE)
         </h2>
-
-        {inventoryError && (
-          <div className="mb-3 bg-red-50 border border-red-200 rounded p-2 flex items-center justify-between gap-3">
-            <span className="text-xs text-red-700">{inventoryError}</span>
-            <button
-              onClick={() => setInventoryError(null)}
-              className="text-xs px-2 py-1 rounded border bg-white hover:bg-gray-100"
-            >
-              Dismiss
-            </button>
-          </div>
-        )}
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           <div>

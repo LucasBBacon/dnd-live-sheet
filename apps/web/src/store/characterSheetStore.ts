@@ -682,6 +682,11 @@ const placeItem = (
   return consolidateCarried(next);
 };
 
+export type SheetNotice = {
+  text: string;
+  tone: "error" | "warning";
+};
+
 export interface CharacterSheetState {
   id: string;
   campaignId: string | null;
@@ -710,7 +715,13 @@ export interface CharacterSheetState {
 
   // operational inventory
   inventory: InventoryInstance[];
-  inventoryError: string | null;
+  /**
+   * The sheet's one way of saying that something did not take: a spend the
+   * server refused, an attunement the rules forbid, a character that could not
+   * be bound to its campaign. It is deliberately not scoped to the inventory -
+   * that scoping is what made a refused resource spend invisible (#71, S5).
+   */
+  notice: SheetNotice | null;
   /**
    * Actions granted by carried items, recomputed alongside `inventory` and
    * `ruleSnapshot` - see computeItemActions. Read from the inventory row so a
@@ -765,7 +776,8 @@ export interface CharacterSheetState {
   syncRemoteEquipment: (inventoryId: string, targetSlot: string) => void;
   consumeItem: (inventoryId: string, amount: number) => void;
   syncRemoteConsumption: (inventoryId: string, amount: number) => void;
-  setInventoryError: (message: string | null) => void;
+  setNotice: (text: string, tone?: "error" | "warning") => void;
+  dismissNotice: () => void;
   useItemAction: (instanceId: string, actionId: string) => void;
 
   consumeResource: (resourceId: string, amount?: number) => void;
@@ -867,7 +879,7 @@ export const useCharacterSheetStore = create<CharacterSheetState>(
     traits: [],
     traitGrants: [],
     inventory: [],
-    inventoryError: null,
+    notice: null,
     itemActions: [],
     activeModifiers: [],
     resources: [],
@@ -1040,7 +1052,7 @@ export const useCharacterSheetStore = create<CharacterSheetState>(
       }
 
       // update local state instantly 0-latency
-      set({ inventory: updatedInventory, inventoryError: null });
+      set({ inventory: updatedInventory, notice: null });
 
       // dispatch to backend for persistence and broadcasting
       const movedItem = state.inventory.find((row) => row.id === inventoryId);
@@ -1090,7 +1102,7 @@ export const useCharacterSheetStore = create<CharacterSheetState>(
               row.id === inventoryId ? { ...row, isAttuned: false } : row,
             ),
           ),
-          inventoryError: null,
+          notice: null,
         });
 
         socketService.emitAttunementUpdate({
@@ -1106,7 +1118,10 @@ export const useCharacterSheetStore = create<CharacterSheetState>(
       // cannot begin it
       if (item.slot === CARRIED_SLOT) {
         set({
-          inventoryError: `${definition.name} must be equipped before you can attune to it.`,
+          notice: {
+            text: `${definition.name} must be equipped before you can attune to it.`,
+            tone: "error",
+          },
         });
         return;
       }
@@ -1117,7 +1132,10 @@ export const useCharacterSheetStore = create<CharacterSheetState>(
 
       if (attunedCount >= ATTUNEMENT_LIMIT) {
         set({
-          inventoryError: `Already attuned to ${ATTUNEMENT_LIMIT} items. Break an attunement first.`,
+          notice: {
+            text: `Already attuned to ${ATTUNEMENT_LIMIT} items. Break an attunement first.`,
+            tone: "error",
+          },
         });
         return;
       }
@@ -1126,7 +1144,7 @@ export const useCharacterSheetStore = create<CharacterSheetState>(
         inventory: state.inventory.map((row) =>
           row.id === inventoryId ? { ...row, isAttuned: true } : row,
         ),
-        inventoryError: null,
+        notice: null,
       });
 
       socketService.emitAttunementUpdate({
@@ -1207,7 +1225,7 @@ export const useCharacterSheetStore = create<CharacterSheetState>(
       set({
         inventory: updatedInventory,
         itemActions: computeItemActions(updatedInventory, state.ruleSnapshot),
-        inventoryError: null,
+        notice: null,
       });
 
       socketService.emitInventoryConsumed({
@@ -1234,8 +1252,12 @@ export const useCharacterSheetStore = create<CharacterSheetState>(
       });
     },
 
-    setInventoryError: (message) => {
-      set({ inventoryError: message });
+    setNotice: (text, tone = "error") => {
+      set({ notice: { text, tone } });
+    },
+
+    dismissNotice: () => {
+      set({ notice: null });
     },
 
     consumeResource: (resourceId, amount = 1) => {

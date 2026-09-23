@@ -30,9 +30,7 @@ export const LiveSheetProvider = ({
   const syncRemoteAttunement = useCharacterSheetStore(
     (state) => state.syncRemoteAttunement,
   );
-  const setInventoryError = useCharacterSheetStore(
-    (state) => state.setInventoryError,
-  );
+  const setNotice = useCharacterSheetStore((state) => state.setNotice);
   const recordRollResult = useCharacterSheetStore(
     (state) => state.recordRollResult,
   );
@@ -91,7 +89,7 @@ export const LiveSheetProvider = ({
       // `event` is optional on the wire, and an error that names no event
       // cannot be matched against the list at all.
       if (payload.event && SHEET_ERROR_EVENTS.includes(payload.event)) {
-        setInventoryError(payload.error);
+        setNotice(payload.error);
       }
     });
 
@@ -108,7 +106,7 @@ export const LiveSheetProvider = ({
     syncInventorySnapshot,
     syncRemoteConsumption,
     syncRemoteAttunement,
-    setInventoryError,
+    setNotice,
     recordRollResult,
     syncRemoteActionExecution,
     syncRemoteTurnResolution,

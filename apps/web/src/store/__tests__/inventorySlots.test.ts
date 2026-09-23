@@ -292,10 +292,10 @@ describe("stack splitting and merging", () => {
 describe("toggleAttunement", () => {
   beforeEach(() => {
     seed([]);
-    useCharacterSheetStore.setState({ inventoryError: null });
+    useCharacterSheetStore.setState({ notice: null });
   });
 
-  const errorText = () => useCharacterSheetStore.getState().inventoryError;
+  const errorText = () => useCharacterSheetStore.getState().notice?.text ?? null;
   const attunedOf = (id: string) =>
     useCharacterSheetStore.getState().inventory.find((i) => i.id === id)
       ?.isAttuned;
@@ -358,7 +358,7 @@ describe("toggleAttunement", () => {
 describe("attunement wiring", () => {
   beforeEach(() => {
     seed([]);
-    useCharacterSheetStore.setState({ id: "char_1", inventoryError: null });
+    useCharacterSheetStore.setState({ id: "char_1", notice: null });
     emitAttunement.mockClear();
   });
 

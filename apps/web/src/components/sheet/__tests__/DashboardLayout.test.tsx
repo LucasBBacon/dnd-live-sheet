@@ -30,7 +30,7 @@ const mocks = vi.hoisted(() => ({
   equipItem: vi.fn(),
   toggleAttunement: vi.fn(),
   consumeItem: vi.fn(),
-  setInventoryError: vi.fn(),
+  dismissNotice: vi.fn(),
   useItemAction: vi.fn(),
   beginLevelUp: vi.fn(),
 }));
@@ -83,12 +83,12 @@ interface MockStoreState {
   inventory: InventoryInstance[];
   ruleSnapshot: MockRuleSnapshot | null;
   itemActions: ItemActionGrant[];
-  inventoryError: string | null;
+  notice: { text: string; tone: "error" | "warning" } | null;
   applyHealthDelta: typeof mocks.applyHealthDelta;
   equipItem: typeof mocks.equipItem;
   toggleAttunement: typeof mocks.toggleAttunement;
   consumeItem: typeof mocks.consumeItem;
-  setInventoryError: typeof mocks.setInventoryError;
+  dismissNotice: typeof mocks.dismissNotice;
   useItemAction: typeof mocks.useItemAction;
 }
 
@@ -102,12 +102,12 @@ const baseStoreState: MockStoreState = {
   inventory: [],
   ruleSnapshot: null,
   itemActions: [],
-  inventoryError: null,
+  notice: null,
   applyHealthDelta: mocks.applyHealthDelta,
   equipItem: mocks.equipItem,
   toggleAttunement: mocks.toggleAttunement,
   consumeItem: mocks.consumeItem,
-  setInventoryError: mocks.setInventoryError,
+  dismissNotice: mocks.dismissNotice,
   useItemAction: mocks.useItemAction,
 };
 
@@ -172,6 +172,7 @@ describe("DashboardLayout widgets", () => {
 describe("DashboardLayout inventory actions", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    storeState = baseStoreState;
   });
 
   it("sends an item action intent instead of a bare consume", async () => {
@@ -241,6 +242,30 @@ describe("DashboardLayout inventory actions", () => {
 
     expect(mocks.consumeItem).toHaveBeenCalledWith("inv-ration", 1);
     expect(mocks.useItemAction).not.toHaveBeenCalled();
+
+    root.unmount();
+    container.remove();
+  });
+
+  it("shows a sheet notice above the grid rather than inside the inventory panel", async () => {
+    storeState = {
+      ...baseStoreState,
+      notice: { text: "Unknown resource for this character.", tone: "error" },
+    };
+
+    const { container, root } = await renderDashboard();
+
+    const notice = container.querySelector('[data-testid="sheet-notice"]');
+    expect(notice).not.toBeNull();
+    expect(notice?.textContent).toContain(
+      "Unknown resource for this character.",
+    );
+
+    // the inventory panel is a sibling of the notice, not its parent: a
+    // failure that is not about inventory must not read as one (#71, S5)
+    expect(notice?.closest("section")?.textContent).not.toContain(
+      "Inventory Manager",
+    );
 
     root.unmount();
     container.remove();

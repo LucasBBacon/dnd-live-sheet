@@ -44,7 +44,7 @@ describe("useCharacterSheetStore hp trigger handling", () => {
       traits: [],
       traitGrants: [],
       inventory: [],
-      inventoryError: null,
+      notice: null,
       activeModifiers: [],
       resources: [],
       ruleSnapshot: packRuleSnapshot(),
