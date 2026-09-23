@@ -349,3 +349,40 @@ skip Orrik with a comment naming that item. Do not fix it on this branch.
    upserts the twenty ids and inserts stubs), start the server, and open each
    of the ten new sheets in the browser pane. Record what fails to load, most
    likely Orrik; do not fix it here.
+
+## Corrections found while planning (2026-09-23)
+
+Reading the code for the implementation plan changed several details above.
+The plan (`docs/superpowers/plans/2026-09-23-scenario-characters.md`) and
+`docs/development/sample-characters.md` follow this section where the two
+disagree.
+
+1. **A stored pool with no rule behind it is hidden, not stale.** `useFeatures`
+   (`apps/web/src/hooks/useFeatures.ts`) drops any `character_resources` row
+   the rule snapshot cannot resolve. Hesk's Wild Shape, Kestrel's Sorcery
+   Points and Tides of Chaos, and Seraphine's Portent and Arcane Recovery are
+   stored but not shown; their live checks say "not shown", not "not
+   refilled".
+2. **Brother Mote's #98 case is a spell slot pool.** Channel Divinity has no
+   rule, so a stored 5 of 2 would be hidden rather than frozen. His
+   `spell_slots_1` is stored at 6 against a derived maximum of 4 instead.
+3. **Mote attunes the Headband of Intellect, not the Amulet of Health.** The
+   amulet's CON 19 would lift his maximum above the hit points stored to
+   exceed it.
+4. **Quill's level-up asks for cantrips.** At rogue 3 with Arcane Trickster the
+   Choices step asks for three cantrips and offers all 111 placeholder spells;
+   only the spells-known question is missing (#31a).
+5. **Isolde's level-5 invocation is a single pick**, and Agonizing Blast also
+   shows unmet ("needs Eldritch Blast"), because spell picks are not stored
+   until #31a.
+6. **Tamsin wears an unattuned Cloak of Protection**, so the two-tab
+   attunement check (#101) has something to attune.
+7. **Orrik's unresolved race traits** are Stone's Endurance, Natural Athlete
+   and Mountain Born. Powerful Build was dropped from the list: the pack
+   defines `trait_powerful_build`, so it would resolve.
+8. **The doc's "Serve them with the database provider" section is stale too**
+   (`REFERENCE_SOURCE=static` no longer exists), and goes with "Known gaps".
+
+Every number in the plan — final scores, derived maxima, zero save issues, and
+Orrik's two expected issues — was measured by running the scenario module
+through the calls the invariant tests make.
