@@ -102,12 +102,7 @@ without changing a line, because `activeStates` is finally what its name says.
 found while planning rather than while writing the entry. Nothing gates an
 *action* on its `forbiddenStates`. `getCharacterActions()` filters out only
 `dynamic_weapon_attack` and Relentless Rage, and `CombatWidget` renders every
-entry it returns as an always-enabled button. The server does check, in
-`ActionResolver.execute` (`packages/engine/src/pipeline/actionResolver.ts`) -
-but the gateway hands it `runtime.effectManager.getActiveStates()`, effect
-states alone, and `status_wearing_heavy_armor` comes from the inventory, so it
-is never in that list. A forbidden action there does not fail either: it
-returns `executed: true` and applies nothing.
+entry it returns as an always-enabled button.
 
 So a raging barbarian in heavy armour is offered a Dash button that quietly
 does nothing, and `trait_totem_spirit_eagle`'s own summary in the pack claims
@@ -119,9 +114,20 @@ or any of whose `forbiddenStates` are. This is the first state gate on an
 action in the web app - there is no existing selector to copy - and it is only
 correct once `activeStates` is, which is why the two belong in one change.
 
-The server half is **recorded, not fixed**: the gateway composing action states
-from the effect manager alone is the same family as #92, and closing it means
-deciding what the server may know about a character's rules.
+*Correction, from the branch's final review (2026-09-23): the paragraph
+originally here claimed the server-side gate does not see equipment states -
+that `ActionResolver.execute` checks `forbiddenStates` honestly but the
+gateway hands it `runtime.effectManager.getActiveStates()`, effect states
+alone. That is wrong. `apps/server/src/gateway/socket.ts`'s `ACTION_INTENT`
+handler merges `resolved.liveSheet.baseStates` - `gatherBaseStates` over the
+character's stored inventory, via `CharacterEngine.buildLiveSheet` - into the
+states it hands `ActionResolver.execute`, for both the `character` and `item`
+source branches. `status_wearing_heavy_armor` does reach the gate:
+`socket.actionIntent.test.ts`'s "does not allow Eagle Dash while wearing
+heavy armour" already covers exactly this, server-side, and passes. The real
+defect is that a blocked `ActionResolver.execute` returns the shared `ok`
+result (`{ executed: true }`) rather than a refusal, so `ACTION_RESOLVED`
+tells the client a blocked action worked. See #97, corrected the same way.*
 
 **`getSheetStates()` stays**, now returning `activeStates` directly. This is not
 leftover: `useCharacterStats` subscribes to the *method* because
@@ -194,20 +200,26 @@ The file contradicts itself in three places, all from recent closures:
 
 ## Recorded, not fixed
 
-One new item: **the gateway gates an action on the effect manager's states
-alone.** `ActionResolver.execute` checks `requiredStates` and `forbiddenStates`
-honestly, but the gateway hands it `runtime.effectManager.getActiveStates()`,
-so no state that comes from a trait or from worn equipment can ever block an
-action server-side - and a blocked action returns `executed: true` having
-applied nothing, so a client that asks anyway is told it worked. The sheet's
-new gate stops the button being offered; it does not stop a crafted or stale
-client asking. Closing it means deciding what the server may know about a
-character's rules, which is the same question as #92.
+One new item, corrected by the branch's final review (2026-09-23): **a
+blocked action reports success, having applied nothing.** This was first
+recorded as the gateway gating an action on the effect manager's states
+alone - that no state from a trait or worn equipment could ever reach
+`ActionResolver.execute` server-side. That framing is wrong: the gateway
+already merges the character's `gatherBaseStates` output, inventory
+included, into the states it hands the resolver for a character or item
+action, and `status_wearing_heavy_armor` does block Eagle Dash there today.
+The real defect is one line further on - `ActionResolver.execute` returns
+the shared `ok` result (`{ executed: true }`) when a state predicate fails,
+rather than a refusal, so `ACTION_RESOLVED` tells the client a blocked
+action worked, with no roll results and no note. The sheet's new gate stops
+the button being offered; it does not stop a crafted or stale client asking,
+and the reply that client gets back is wrong. See #97.
 
 ## Out of scope
 
 - #92's server-side trigger arbitration, and #94, #95 and #96.
-- The server-side action gate above, which is recorded rather than fixed.
+- The server-side blocked-action reporting defect above, which is recorded
+  rather than fixed.
 - Any change to what the server stores or to the socket contract.
 - A page-level treatment for a refused room join (see the S5 note).
 - #44's recorded contradiction, which needs a working-tree check rather than a

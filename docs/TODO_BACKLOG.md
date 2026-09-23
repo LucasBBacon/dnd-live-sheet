@@ -290,8 +290,10 @@ Every id this file has ever issued, in one table. Gaps in the numbering are inte
 | 94 | Two concurrent level-ups both pass the ledger check and both add hit points | Open | Open items (11h) |
 | 95 | A row whose level already disagrees with its ledger can no longer level up | Open | Open items (11h) |
 | 96 | A socket payload is trusted to be the shape its type claims | Open | Open items (11h) |
-| 97 | The gateway gates an action on the effect manager's states alone | Open | Open items |
+| 97 | A blocked action reports `executed: true`, having applied nothing | Open | Open items |
 | 98 | A resource total has no ceiling, so a rollback can over-restore it | Open | Open items |
+| 99 | An action's ender can be hidden by the gate that hides the action | Open | Open items |
+| 100 | `resolveActionError`'s async-failure branch is untested, and the reachable case is the untested one | Open | Open items |
 | A1 | Ready's trigger is not modelled | Open | Open items |
 | A2 | No roll-initiating UI for skills | ✅ Closed | Closed items |
 | A2b | actions do not prompt their own check | Open | Open items |
@@ -1038,32 +1040,47 @@ blast radius but did not close that. Fix: parse inbound payloads with the zod
 schemas the shared package already hosts, and decide whether ownership
 should gate the write. Found by the final review of `fix/hp-authority`.
 
-### #97 — the gateway gates an action on the effect manager's states alone
+### #97 — a blocked action reports success, having applied nothing
 
 | # | Item | Notes |
 | --- | --- | --- |
-| 97 | The gateway gates an action on the effect manager's states alone | Found while planning `fix/sheet-truthfulness`, 2026-09-23. See below. |
+| 97 | A blocked action returns `executed: true` having applied nothing | Found while planning `fix/sheet-truthfulness`, 2026-09-23; corrected by that branch's final review, 2026-09-23. See below. |
 
-`ActionResolver.execute` checks an effect's `requiredStates` and
-`forbiddenStates` honestly, but `apps/server/src/gateway/socket.ts` hands it
-`runtime.effectManager.getActiveStates()`, so no state that comes from a
-trait or from worn equipment can block an action server-side —
-`status_wearing_heavy_armor` comes from the inventory and is never in that
-list. A blocked action is not refused either: it returns `executed: true`
-having applied nothing, so a client that asks anyway is told it worked. #76
-stopped the sheet offering a forbidden action; it did not stop a crafted or
-stale client asking. The whole pack carries exactly three actions with a
-state predicate on their own effect — `action_relentless_rage`,
-`action_frenzied_strike` and `action_eagle_dash` — and the web's
-`getCharacterActions` already drops the first two before either gate runs:
-`action_relentless_rage` by id (the Rules panel offers it directly, not as a
-pressable button) and `action_frenzied_strike` because its effect is a
-`dynamic_weapon_attack`, filtered out as a template rather than a concrete
-action. `action_eagle_dash` is currently the only action that exercises
-either gate. Fix: compose the action states the gateway passes from the
-character's full state rather than the effect manager alone, which is the
-same question as #92 — what the server may know about a character's rules.
-Found while planning `fix/sheet-truthfulness`.
+**Originally recorded as** the gateway gating an action on the effect
+manager's states alone, so no state from a trait or from worn equipment
+could ever block an action server-side. **That claim is false**, caught by
+the branch's final review. `apps/server/src/gateway/socket.ts`'s
+`ACTION_INTENT` handler does start `actionStates` from
+`runtime.effectManager.getActiveStates()`, but for both the `character` and
+`item` source branches it then merges in `resolved.liveSheet.baseStates` -
+built by `CharacterEngine.buildLiveSheet` from `gatherBaseStates({
+activeTraits, inventory, effectManager, snapshot })` over the character's
+stored inventory - before calling `ActionResolver.execute`, which gates on
+the states it is given honestly. `status_wearing_heavy_armor` does reach the
+gate: `socket.actionIntent.test.ts`'s "does not allow Eagle Dash while
+wearing heavy armour" already exercises exactly this and passes. The server
+already knows what the sheet knows; #92's "what the server may know about a
+character's rules" framing does not apply here.
+
+**The real defect is one line further on.** When `matchesStatePredicate`
+fails, `ActionResolver.execute` returns the shared `ok` constant -
+`{ executed: true }` - rather than a refusal, so `ACTION_RESOLVED` tells the
+client a blocked action worked: no roll results, no note, and no signal that
+anything was refused. #76 stopped the sheet offering a forbidden action as a
+pressable button; it does not stop a crafted or stale client asking anyway,
+and the reply that client gets back claims success. The whole pack carries
+exactly three actions with a state predicate on their own effect -
+`action_relentless_rage`, `action_frenzied_strike` and `action_eagle_dash` -
+and the web's `getCharacterActions` already drops the first two before
+either gate runs: `action_relentless_rage` by id (the Rules panel offers it
+directly, not as a pressable button) and `action_frenzied_strike` because
+its effect is a `dynamic_weapon_attack`, filtered out as a template rather
+than a concrete action. `action_eagle_dash` is currently the only action
+that exercises either gate. Fix: give a blocked `ActionResolver.execute` its
+own result distinct from `ok`, so `ACTION_RESOLVED` - and the sheet reading
+it - can tell "blocked, nothing applied" apart from "executed, nothing to
+do". Found while planning `fix/sheet-truthfulness`; corrected by that
+branch's final review, 2026-09-23.
 
 ### #98 — a resource total has no ceiling, so a rollback can over-restore it
 
@@ -1082,6 +1099,42 @@ produce two refusals, which is not a path the socket currently takes, so
 this is latent. Fix: give the store the rules-derived ceiling, probably by
 extracting the `maxUses` derivation so both the hook and the store use one
 calculation. Found by the review of `fix/sheet-truthfulness`.
+
+### #99 — an action's ender can be hidden by the gate that hides the action
+
+| # | Item | Notes |
+| --- | --- | --- |
+| 99 | An action's ender can be hidden by the gate that hides the action | Found by the final review of `fix/sheet-truthfulness`, 2026-09-23. See below. |
+
+`ActiveEffectsWidget` finds the `remove_effect` action that dismisses an
+active effect through `getCharacterActions()`, which is now state-gated
+(#76). No authored ender carries a predicate today, so nothing breaks; if
+one ever does, the effect becomes undismissable from the sheet. Separately,
+`TurnControlsWidget` looks an action up by id in the same gated list to name
+it in the turn log, so an action that was used and then gated out (for
+example, armour removed between the swing and the log rendering) prints its
+id instead of its name. Found by the final review of `fix/sheet-truthfulness`.
+
+### #100 — `resolveActionError`'s async-failure branch is untested, and the reachable case is the untested one
+
+| # | Item | Notes |
+| --- | --- | --- |
+| 100 | `resolveActionError`'s async-failure branch is untested, and the reachable case is the untested one | Found by the final review of `fix/sheet-truthfulness`, 2026-09-23. See below. |
+
+The test for "no usable payload" sends `{ characterId }` alone, which the
+server never actually emits - both `action_error` branches echo the full
+payload back - so the tested branch is unreachable in practice, while the
+reachable async-failure path, which does roll back, has no test of its own.
+Separately, that branch's `try` spans both the commit and the broadcast, so
+a throw after the commit lands but before the broadcast would roll back on
+the client a spend that had actually persisted server-side. Found by the
+final review of `fix/sheet-truthfulness`.
+
+Also recorded from the same review, left alone rather than added as items:
+`isRefusedSpend` accepting any `number` for `amount` (the echo is the
+client's own payload, so this is defence-in-depth only, not a real hole),
+and `triggerRest`'s long rest healing to the client's own `getMaxHp()` (the
+same stale-maximum family as #93, but outside its scope).
 
 ### Coverage thresholds
 
