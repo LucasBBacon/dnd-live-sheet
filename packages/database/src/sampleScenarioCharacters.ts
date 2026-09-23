@@ -749,9 +749,9 @@ const SCENARIO_ROSTER: SampleCharacter[] = [
     wis: 12,
     cha: 10,
     maxHp: 38,
-    currentHp: 33,
+    currentHp: 21,
     testFocus:
-      "Wizard preview: CON 8 overstates the maximum (#86); a spellbook that lists nothing (#31a, #83); Drow Magic at dawn.",
+      "Wizard preview: CON 8, a negative modifier the maximum counts (#86); a spellbook that lists nothing (#31a, #83); Drow Magic at dawn.",
     personalityTraits:
       "I annotate other people's sentences while they are still saying them.",
     ideals: "Knowledge. The future is only a text nobody has read carefully.",

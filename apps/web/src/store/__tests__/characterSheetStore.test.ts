@@ -39,7 +39,7 @@ describe("useCharacterSheetStore hp trigger handling", () => {
       raceId: "race_half_orc",
       subraceId: null,
       currentHp: 5,
-      baseHpRolled: 9,
+      baseHpRolled: 10,
       baseScores: { STR: 10, DEX: 10, CON: 10, INT: 10, WIS: 10, CHA: 10 },
       traits: [],
       traitGrants: [],
@@ -61,8 +61,9 @@ describe("useCharacterSheetStore hp trigger handling", () => {
   });
 
   it("derives the maximum from the base, Constitution and trait modifiers (#78)", () => {
-    // base 9, CON 10 + 1 (half-orc) = 11 (+0), so one level grants the
-    // 1-per-level floor: 10
+    // base 10, CON 10 + 1 (half-orc) = 11 (+0): a zero modifier adds
+    // nothing (#86), so the maximum is the base. Every case in this block
+    // is built on a maximum of 10
     expect(useCharacterSheetStore.getState().getMaxHp()).toBe(10);
   });
 
