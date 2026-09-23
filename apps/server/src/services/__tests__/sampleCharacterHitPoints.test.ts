@@ -31,6 +31,9 @@ const EXPECTED_MAX_HP: Record<string, number> = {
   // Dwarven Toughness: +1 per level
   "Brannoc Hale": 31,
   "Isolde Varn": 31,
+  // Tough: +2 per level
+  "Ursk Gravemaw": 54,
+  "Tamsin Burrowdeep": 65,
 };
 
 describe("sample character hit points", () => {

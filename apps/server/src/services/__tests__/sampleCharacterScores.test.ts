@@ -42,6 +42,8 @@ const INTENDED_FINAL: Record<string, number[]> = {
   "Quill Ashgrove": [8, 16, 14, 15, 12, 10],
   "Brannoc Hale": [16, 12, 15, 10, 13, 8],
   "Isolde Varn": [8, 16, 14, 13, 10, 15],
+  "Ursk Gravemaw": [17, 10, 14, 8, 10, 14],
+  "Tamsin Burrowdeep": [16, 16, 16, 8, 12, 8],
 };
 
 describe("sample character scores", () => {

@@ -313,6 +313,234 @@ const SCENARIO_ROSTER: SampleCharacter[] = [
       },
     ],
   },
+  {
+    id: "00000000-0000-0000-0000-000000000123",
+    name: "Ursk Gravemaw",
+    raceId: "race_half_orc",
+    classes: [
+      {
+        classId: "class_paladin",
+        classLevel: 5,
+        subclassId: "subclass_paladin_vengeance",
+      },
+    ],
+    backgroundId: "background_criminal",
+    choices: {
+      // the level-4 increase, taken as a feat
+      feats: ["feat_tough"],
+      classSelections: {
+        class_paladin: {
+          paladin_level_2_fighting_style: ["trait_fs_great_weapon_fighting"],
+        },
+      },
+      traitSelections: {
+        criminal_gaming_set: ["three_dragon_ante_set"],
+        paladin_starting_skills: ["athletics", "insight"],
+      },
+    },
+    alignment: "Lawful Neutral",
+    str: 15,
+    dex: 10,
+    con: 13,
+    int: 8,
+    wis: 10,
+    cha: 14,
+    maxHp: 34,
+    currentHp: 6,
+    testFocus:
+      "Two tabs: low hit points with Relentless Endurance unspent (#92, #93); Tough per level; the dip menu refuses wizard on INT (#77).",
+    personalityTraits: "I apologise to people after I have hit them, sincerely.",
+    ideals: "Retribution. The ledger balances, one way or the other.",
+    bonds: "The gang that raised me is the first name on my oath's list.",
+    flaws: "I remember every slight, and I keep the list in order.",
+    traits: [
+      {
+        traitId: "trait_paladin_prof_saving_throw",
+        source: "class_paladin_level_1",
+      },
+      { traitId: "trait_paladin_prof_armor", source: "class_paladin_level_1" },
+      {
+        traitId: "trait_paladin_prof_weapons",
+        source: "class_paladin_level_1",
+      },
+      { traitId: "trait_paladin_prof_skills", source: "class_paladin_level_1" },
+      { traitId: "trait_divine_sense", source: "class_paladin_level_1" },
+      { traitId: "trait_lay_on_hands", source: "class_paladin_level_1" },
+      { traitId: "trait_divine_smite", source: "class_paladin_level_2" },
+      { traitId: "trait_spellcasting_paladin", source: "class_paladin_level_2" },
+      { traitId: "trait_divine_health", source: "class_paladin_level_3" },
+      { traitId: "trait_sacred_oath", source: "class_paladin_level_3" },
+      { traitId: "trait_extra_attack", source: "class_paladin_level_5" },
+      {
+        traitId: "trait_vengeance_oath_spells",
+        source: "subclass_paladin_vengeance_level_3",
+      },
+      {
+        traitId: "trait_cd_abjure_enemy",
+        source: "subclass_paladin_vengeance_level_3",
+      },
+      {
+        traitId: "trait_cd_vow_of_enmity",
+        source: "subclass_paladin_vengeance_level_3",
+      },
+      { traitId: "race_half_orc_asi", source: "race_half_orc" },
+      { traitId: "race_half_orc_darkvision", source: "race_half_orc" },
+      { traitId: "menacing", source: "race_half_orc" },
+      { traitId: "relentless_endurance", source: "race_half_orc" },
+      { traitId: "savage_attacks", source: "race_half_orc" },
+      { traitId: "race_half_orc_languages", source: "race_half_orc" },
+    ],
+    inventory: [
+      { itemId: "item_armor_chain_mail", slot: "body" },
+      { itemId: "item_weapon_greatsword", slot: "main_hand" },
+      { itemId: "item_weapon_javelin", quantity: 5 },
+      { itemId: "item_focus_emblem" },
+      { itemId: "item_pack_explorers" },
+      // the pack's potion, which carries a drink action that heals
+      { itemId: "item_potion_of_healing", quantity: 2 },
+    ],
+    resources: [
+      {
+        // unspent on purpose: #92 needs the charge to fire once in each tab
+        id: "resource_relentless_endurance",
+        name: "Relentless Endurance Use",
+        current: 1,
+        max: 1,
+        resetCondition: "long_rest",
+      },
+      {
+        id: "spell_slots_1",
+        name: "1st-Level Spell Slots",
+        current: 2,
+        max: 4,
+        resetCondition: "long_rest",
+      },
+      {
+        id: "spell_slots_2",
+        name: "2nd-Level Spell Slots",
+        current: 2,
+        max: 2,
+        resetCondition: "long_rest",
+      },
+      {
+        id: "resource_hit_dice_d10",
+        name: "Hit Dice (d10)",
+        current: 3,
+        max: 5,
+        resetCondition: "long_rest_half",
+      },
+    ],
+  },
+  {
+    id: "00000000-0000-0000-0000-000000000124",
+    name: "Tamsin Burrowdeep",
+    raceId: "race_halfling",
+    subraceId: "subrace_halfling_stout",
+    classes: [
+      {
+        classId: "class_barbarian",
+        classLevel: 6,
+        subclassId: "subclass_barbarian_totem_warrior",
+      },
+    ],
+    backgroundId: "background_outlander",
+    choices: {
+      feats: [],
+      classSelections: {
+        class_barbarian: {
+          barbarian_totem_level_3_totem_spirit: ["trait_totem_spirit_eagle"],
+          barbarian_totem_level_6_aspect: ["trait_aspect_of_the_beast_eagle"],
+        },
+      },
+      traitSelections: {
+        barbarian_starting_skills: ["athletics", "perception"],
+      },
+    },
+    alignment: "Chaotic Good",
+    str: 16,
+    dex: 14,
+    con: 15,
+    int: 8,
+    wis: 12,
+    cha: 8,
+    maxHp: 47,
+    currentHp: 30,
+    testFocus:
+      "Plate carried, not worn: Eagle Dash gated by heavy armour (#76, #97, #99); a second tab's equip and attune recompose the first (#101).",
+    personalityTraits: "I climb whatever is tallest, then report back.",
+    ideals: "Freedom. The sky does not ask anyone's leave.",
+    bonds: "An eagle took my brother's lamb once. I have been chasing it since.",
+    flaws: "I treat every closed door as a personal challenge.",
+    traits: [
+      {
+        traitId: "trait_barbarian_prof_armor",
+        source: "class_barbarian_level_1",
+      },
+      {
+        traitId: "trait_barbarian_prof_weapons",
+        source: "class_barbarian_level_1",
+      },
+      {
+        traitId: "trait_barbarian_prof_saving_throw",
+        source: "class_barbarian_level_1",
+      },
+      {
+        traitId: "trait_barbarian_prof_skills",
+        source: "class_barbarian_level_1",
+      },
+      { traitId: "trait_rage", source: "class_barbarian_level_1" },
+      {
+        traitId: "trait_unarmored_defense_barbarian",
+        source: "class_barbarian_level_1",
+      },
+      { traitId: "trait_reckless_attack", source: "class_barbarian_level_2" },
+      { traitId: "trait_danger_sense", source: "class_barbarian_level_2" },
+      { traitId: "trait_extra_attack", source: "class_barbarian_level_5" },
+      { traitId: "trait_fast_movement", source: "class_barbarian_level_5" },
+      {
+        traitId: "trait_spirit_seeker",
+        source: "subclass_barbarian_totem_warrior_level_3",
+      },
+      { traitId: "race_halfling_asi", source: "race_halfling" },
+      { traitId: "lucky", source: "race_halfling" },
+      { traitId: "brave", source: "race_halfling" },
+      { traitId: "halfling_nimbleness", source: "race_halfling" },
+      { traitId: "race_halfling_languages", source: "race_halfling" },
+      {
+        traitId: "subrace_halfling_stout_asi",
+        source: "subrace_halfling_stout",
+      },
+      { traitId: "stout_resilience", source: "subrace_halfling_stout" },
+    ],
+    inventory: [
+      // body slot empty: Unarmoured Defence, and Eagle Dash while raging
+      // a heavy weapon on a Small creature, which nothing models
+      { itemId: "item_weapon_maul", slot: "main_hand" },
+      // carried, not worn: equipping it is the live check
+      { itemId: "item_armor_plate" },
+      // worn but not attuned: attuning it from a second tab is the #101 check
+      { itemId: "item_wondrous_cloak_of_protection", slot: "cloak" },
+      { itemId: "item_weapon_javelin", quantity: 4 },
+      { itemId: "item_pack_explorers" },
+      { itemId: "item_potion_healing" },
+    ],
+    resources: [
+      {
+        id: "resource_barbarian_rage",
+        name: "Rage",
+        current: 2,
+        max: 4,
+        resetCondition: "long_rest",
+      },
+      {
+        id: "resource_hit_dice_d12",
+        name: "Hit Dice (d12)",
+        current: 4,
+        max: 6,
+        resetCondition: "long_rest_half",
+      },
+    ],
+  },
 ];
 
 // #endregion
