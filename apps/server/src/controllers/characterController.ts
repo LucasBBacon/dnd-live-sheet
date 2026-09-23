@@ -94,6 +94,71 @@ export const levelUpHitPointGain = ({
   return after - finalMaxHp(saves.before, snapshot);
 };
 
+/** Whatever can `.select()`: the module `db`, or a caller's transaction. */
+type LevelUpExecutor = Pick<typeof db, "select">;
+
+/** The draft fields a level-up's saves depend on (#88). */
+interface LevelUpDraft {
+  targetClassId: string;
+  subclassId?: string | undefined;
+  featId?: string | undefined;
+  selectedTraits?: Record<string, string[]> | undefined;
+  traitSelections?: Record<string, string[]> | undefined;
+}
+
+/**
+ * Reads the character a level-up acts on and builds it before and after.
+ *
+ * applyLevelUp and previewLevelUp both call this, so the preview measures
+ * exactly the saves the write stores (#88). applyLevelUp passes its
+ * transaction with `lock: true`: the character row is read FOR UPDATE, so a
+ * second concurrent level-up waits for the first to commit, then reads the
+ * ledger the first wrote and fails the ledger check rather than adding a
+ * second level's hit points (#94). The preview reads from the pool, unlocked.
+ * @param executor The database, or the transaction a level-up runs in
+ * @param characterId The character to read
+ * @param draft The level-up's class, subclass, feat and picks
+ * @param options `lock` takes the row lock; only a write should
+ * @returns The class ledger, the stored choices, and the saves
+ * @throws Error("Character not found.") when no such row exists
+ */
+const loadLevelUpSaves = async (
+  executor: LevelUpExecutor,
+  characterId: string,
+  draft: LevelUpDraft,
+  { lock }: { lock: boolean },
+) => {
+  const characterRead = executor
+    .select()
+    .from(characters)
+    .where(eq(characters.id, characterId));
+  const [character] = lock
+    ? await characterRead.for("update")
+    : await characterRead;
+  if (!character) throw new Error("Character not found.");
+
+  const existingClasses = await executor
+    .select()
+    .from(characterClasses)
+    .where(eq(characterClasses.characterId, characterId))
+    .orderBy(...classLedgerOrder);
+
+  const storedChoices = readStoredChoices(character.choices, characterId);
+
+  const saves = buildLevelUpSaves({
+    character,
+    ledger: existingClasses,
+    storedChoices,
+    targetClassId: draft.targetClassId,
+    subclassId: draft.subclassId,
+    featId: draft.featId,
+    selectedTraits: draft.selectedTraits,
+    traitSelections: draft.traitSelections,
+  });
+
+  return { existingClasses, storedChoices, saves };
+};
+
 /**
  * Applies a level-up to a character.
  * @param req The incoming request object containing the level-up payload.
@@ -109,20 +174,31 @@ export const applyLevelUp = async (req: Request, res: Response) => {
     const selectedTraits = parsePicksShape(payload.selectedTraits, "selectedTraits");
     const traitSelections = parsePicksShape(payload.traitSelections, "traitSelections");
 
-    await db.transaction(async (tx) => {
-      // 1 - fetch current character state securely
-      const [character] = await tx
-        .select()
-        .from(characters)
-        .where(eq(characters.id, characterId));
-      if (!character) throw new Error("Character not found.");
+    // resolved before the transaction opens: on a cache miss it queries the
+    // module db, which from inside the transaction would take a second
+    // connection from the pool (#89 final review, F2). The lock and
+    // required-answer checks below (#69) need it for every level-up
+    const { snapshot } = await getCachedRuleSnapshot();
 
-      // 2 - fetch existing class ledger to determine if this is a dip or a main progression
-      const existingClasses = await tx
-        .select()
-        .from(characterClasses)
-        .where(eq(characterClasses.characterId, characterId))
-        .orderBy(...classLedgerOrder);
+    await db.transaction(async (tx) => {
+      // 1-2 - the character (locked, #94), its class ledger and stored
+      // answers, and the character before and after this level - the same
+      // construction the level-up options use to list the questions the
+      // wizard asks, so what this level requires is exactly what the wizard
+      // offered. The subclass is the payload's, else the one stored for this
+      // class (#69)
+      const { existingClasses, storedChoices, saves } = await loadLevelUpSaves(
+        tx,
+        characterId,
+        {
+          targetClassId,
+          subclassId: payload.subclassId,
+          featId: payload.featId,
+          selectedTraits,
+          traitSelections,
+        },
+        { lock: true },
+      );
 
       // the new total level comes from the ledger this transaction is about
       // to extend, never from the request. A level-up adds exactly one class
@@ -137,29 +213,6 @@ export const applyLevelUp = async (req: Request, res: Response) => {
         );
       }
 
-      // the character's answers before this level, read early: the
-      // multiclass prerequisite check below needs them to build the save
-      // finalAbilityScores reads from (#77)
-      const storedChoices = readStoredChoices(character.choices, characterId);
-
-      // loaded unconditionally: the lock and required-answer checks below
-      // (#69) need it for every level-up, not only ones that send picks
-      const { snapshot } = await getCachedRuleSnapshot();
-
-      // the character before and after this level - the same construction
-      // the level-up options use to list the questions the wizard asks, so
-      // what this level requires is exactly what the wizard offered. The
-      // subclass is the payload's, else the one stored for this class (#69)
-      const saves = buildLevelUpSaves({
-        character,
-        ledger: existingClasses,
-        storedChoices,
-        targetClassId,
-        subclassId: payload.subclassId,
-        featId: payload.featId,
-        selectedTraits,
-        traitSelections,
-      });
       const { isMulticlassDip, targetClassLevel, targetClassRecord } = saves;
 
       // 3 - SERVER VALIDATION

@@ -165,6 +165,8 @@ const fakeDatabase = (characterRow: CharacterRow, ledger: LedgerRow[]) => {
     Object.assign(Promise.resolve(result), {
       limit: () => Promise.resolve(result),
       orderBy: () => Promise.resolve(result),
+      // applyLevelUp reads the character FOR UPDATE (#94)
+      for: () => Promise.resolve(result),
     });
   const sets: unknown[] = [];
   const inserted: unknown[] = [];

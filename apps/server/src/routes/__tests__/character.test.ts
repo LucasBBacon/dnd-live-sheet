@@ -117,6 +117,9 @@ describe("Character Routes", () => {
       existingClasses,
     ];
 
+    // records the strength of every row lock a read asks for (#94)
+    const lockMock = vi.fn();
+
     const tx = {
       select: vi.fn().mockReturnThis(),
       from: vi.fn().mockReturnThis(),
@@ -124,6 +127,10 @@ describe("Character Routes", () => {
         const rows = selectResults.shift() ?? [];
         return Object.assign(Promise.resolve(rows), {
           orderBy: () => Promise.resolve(rows),
+          for: (strength: string) => {
+            lockMock(strength);
+            return Promise.resolve(rows);
+          },
         });
       }),
       update: vi.fn().mockReturnThis(),
@@ -197,6 +204,7 @@ describe("Character Routes", () => {
     return {
       applyLevelUp,
       tx,
+      lockMock,
       effectiveReferenceMock,
       resolveContextMock,
       validateMulticlassPrerequisitesMock,
@@ -904,6 +912,18 @@ describe("Character Routes", () => {
         success: true,
         message: "Level up applied successfully.",
       });
+    });
+
+    it("reads the character FOR UPDATE, so a concurrent level-up waits for this one (#94)", async () => {
+      const { applyLevelUp, lockMock } = await setupLevelUpHarness({});
+      const { res } = createMockResponse();
+
+      await applyLevelUp(createLevelUpRequest(), res);
+
+      // exactly one read takes a lock, and it takes the strength that makes a
+      // second level-up wait for this transaction to commit
+      expect(lockMock).toHaveBeenCalledTimes(1);
+      expect(lockMock).toHaveBeenCalledWith("update");
     });
   });
 });
