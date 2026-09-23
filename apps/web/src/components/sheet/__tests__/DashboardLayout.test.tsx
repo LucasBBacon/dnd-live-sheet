@@ -263,9 +263,11 @@ describe("DashboardLayout inventory actions", () => {
 
     // the inventory panel is a sibling of the notice, not its parent: a
     // failure that is not about inventory must not read as one (#71, S5)
-    expect(notice?.closest("section")?.textContent).not.toContain(
-      "Inventory Manager",
-    );
+    const inventoryPanel = Array.from(
+      container.querySelectorAll("section"),
+    ).find((section) => section.textContent?.includes("Inventory Manager"));
+    expect(inventoryPanel).not.toBeUndefined();
+    expect(inventoryPanel?.contains(notice)).toBe(false);
 
     root.unmount();
     container.remove();
