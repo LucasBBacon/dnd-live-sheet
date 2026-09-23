@@ -8,6 +8,11 @@ import { StatePredicateSchema } from "../primitives/statePredicate.js";
 
 // #region Modifier Schemas
 
+/**
+ * No target here can alter healing received - that is what makes
+ * `applyHealthDelta`'s raw, unclamped emit of an incoming heal safe (#93);
+ * authoring one means revisiting that emit too.
+ */
 export const ModifierTargetSchema = z.enum([
   "MAX_HP",
   "ARMOR_CLASS",
