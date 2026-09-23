@@ -1,10 +1,10 @@
 # TODO Backlog
 
-**Status as of 2026-09-23**, on `main`, after `fix/hit-points` merged (#78
-closed: `max_hp` stores base rolled hit points and every displayed or
-clamping maximum is derived; #86 to #91 recorded). The workspace is green —
-**2344 tests**, 0 failures, and typecheck clean per package (6f explains why
-"per package" matters). Nothing below is breaking a build; these are gaps, debt and
+**Status as of 2026-09-23**, on `main`, after `fix/hp-authority` merged (#89
+and #90 closed: every hit point write is clamped to the derived maximum and
+its total asserted, and `characters.level` comes from the class ledger; #92
+to #96 recorded). The workspace is green — **2353 tests**, 0 failures, and
+typecheck clean per package (6f explains why "per package" matters). Nothing below is breaking a build; these are gaps, debt and
 content.
 
 ---
