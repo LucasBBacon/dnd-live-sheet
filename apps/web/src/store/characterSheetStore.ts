@@ -1113,9 +1113,12 @@ export const useCharacterSheetStore = create<CharacterSheetState>(
       }
 
       // update local state instantly 0-latency
+      // notice is not cleared here: nothing raises an inventory notice on
+      // success, so there is nothing for a successful equip to clear, and a
+      // sheet-wide notice - a refused spend, a failed room join - must
+      // survive it (#71)
       set({
         inventory: updatedInventory,
-        notice: null,
         activeStates: recomposeStates(
           { ...state, inventory: updatedInventory },
           state.runtimeEffects ?? new EffectManager(),
@@ -1169,9 +1172,9 @@ export const useCharacterSheetStore = create<CharacterSheetState>(
             row.id === inventoryId ? { ...row, isAttuned: false } : row,
           ),
         );
+        // notice is not cleared here - see the matching comment below (#71)
         set({
           inventory: updatedInventory,
-          notice: null,
           activeStates: recomposeStates(
             { ...state, inventory: updatedInventory },
             state.runtimeEffects ?? new EffectManager(),
@@ -1216,9 +1219,11 @@ export const useCharacterSheetStore = create<CharacterSheetState>(
       const updatedInventory = state.inventory.map((row) =>
         row.id === inventoryId ? { ...row, isAttuned: true } : row,
       );
+      // nothing raises an inventory notice on a successful attunement, so
+      // there is nothing here for a success to clear - a sheet-wide notice
+      // must survive it (#71)
       set({
         inventory: updatedInventory,
-        notice: null,
         activeStates: recomposeStates(
           { ...state, inventory: updatedInventory },
           state.runtimeEffects ?? new EffectManager(),
@@ -1310,10 +1315,12 @@ export const useCharacterSheetStore = create<CharacterSheetState>(
         })
         .filter((item) => item.quantity > 0); // strip it out if it hits 0
 
+      // notice is not cleared here: nothing raises an inventory notice on
+      // success, so there is nothing for eating a ration to clear, and a
+      // sheet-wide notice must survive it (#71)
       set({
         inventory: updatedInventory,
         itemActions: computeItemActions(updatedInventory, state.ruleSnapshot),
-        notice: null,
         activeStates: recomposeStates(
           { ...state, inventory: updatedInventory },
           state.runtimeEffects ?? new EffectManager(),

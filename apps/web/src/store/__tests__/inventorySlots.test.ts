@@ -457,6 +457,49 @@ describe("attunement wiring", () => {
   });
 });
 
+describe("a successful inventory write leaves an existing notice alone (final review, #71)", () => {
+  const raisedNotice = {
+    text: "Character is not available in this campaign.",
+    tone: "error" as const,
+  };
+
+  beforeEach(() => {
+    seed([]);
+  });
+
+  // notice used to be inventoryError, scoped to the inventory, so clearing it
+  // on every successful inventory write was right. It is sheet-wide now (#71,
+  // S5), and nothing raises an inventory notice on success - so equipping an
+  // item or eating a ration was silently wiping a real notice, such as a
+  // refused resource spend or a failed room join, out from under the player.
+  it("does not clear an existing notice on a successful equipItem", () => {
+    seed([item("inv_plate", "item_armor_plate")]);
+    useCharacterSheetStore.setState({ notice: raisedNotice });
+
+    useCharacterSheetStore.getState().equipItem("inv_plate", "body");
+
+    expect(useCharacterSheetStore.getState().notice).toEqual(raisedNotice);
+  });
+
+  it("does not clear an existing notice on a successful toggleAttunement", () => {
+    seed([item("inv_ring", "item_ring_of_protection", "ring_1")]);
+    useCharacterSheetStore.setState({ notice: raisedNotice });
+
+    useCharacterSheetStore.getState().toggleAttunement("inv_ring");
+
+    expect(useCharacterSheetStore.getState().notice).toEqual(raisedNotice);
+  });
+
+  it("does not clear an existing notice on a successful consumeItem", () => {
+    seed([item("inv_rations", "item_rations")]);
+    useCharacterSheetStore.setState({ notice: raisedNotice });
+
+    useCharacterSheetStore.getState().consumeItem("inv_rations", 1);
+
+    expect(useCharacterSheetStore.getState().notice).toEqual(raisedNotice);
+  });
+});
+
 describe("toInventoryInstance", () => {
   /**
    * Migration 0008 rewrote every stored "armor" and "ring" row, so these names
