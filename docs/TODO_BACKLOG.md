@@ -1,10 +1,12 @@
 # TODO Backlog
 
-**Status as of 2026-09-23**, on `main`, after `fix/hp-authority` merged (#89
-and #90 closed: every hit point write is clamped to the derived maximum and
-its total asserted, and `characters.level` comes from the class ledger; #92
-to #96 recorded). The workspace is green — **2353 tests**, 0 failures, and
-typecheck clean per package (6f explains why "per package" matters). Nothing below is breaking a build; these are gaps, debt and
+**Status as of 2026-09-23**, on `main`, after `fix/sheet-truthfulness`
+merged (#71, #76, #93 and S5 closed: a refused resource spend is put back
+and reported through one sheet-level notice, `activeStates` carries trait
+and equipment states so authored gates hold, the sheet stops offering an
+action its states forbid, and a heal reaches the server raw; #97 corrected,
+#98 to #101 recorded). The workspace is green — **2371 tests**, 0 failures,
+and typecheck clean per package (6f explains why "per package" matters). Nothing below is breaking a build; these are gaps, debt and
 content.
 
 ---
