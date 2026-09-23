@@ -1456,6 +1456,14 @@ export function initializeWebSocketGateway(httpServer: any) {
             payload.characterId,
           );
 
+          // resolved before the transaction opens: a cache miss here queries
+          // the module db, and doing that from inside the transaction below
+          // - which a long rest also uses for deriveMaxHp - would ask the
+          // pool for a second connection while holding one (#89 final
+          // review, F2). Also used at step 3 below, so a long rest only
+          // ever resolves this once.
+          const { snapshot } = await getCachedRuleSnapshot();
+
           await db.transaction(async (tx) => {
             // 1 - fetch current resources
             const currentResources = await tx
@@ -1484,8 +1492,8 @@ export function initializeWebSocketGateway(httpServer: any) {
             // 3 - calculate the swept state
             // the snapshot carries pack.resources; without it every resource
             // resolves to no rule and applyRest returns it untouched, so a
-            // rest would silently restore nothing
-            const { snapshot } = await getCachedRuleSnapshot();
+            // rest would silently restore nothing. Resolved above, before
+            // the transaction opened (#89 final review, F2)
             const levels = buildLevelContext(
               classLevels,
               Object.fromEntries(
@@ -1521,9 +1529,16 @@ export function initializeWebSocketGateway(httpServer: any) {
             // stored base rolled hit points alone cannot give (#78). Pass
             // tx: deriveMaxHp must query through this transaction's
             // connection, not the module db, or a full pool of concurrent
-            // long rests can hang (#78 final review, F1)
+            // long rests can hang (#78 final review, F1). Pass snapshot too,
+            // resolved above before the transaction opened, or deriveMaxHp's
+            // own cache-miss path reaches for the module db from in here
+            // (#89 final review, F2)
             if (payload.restType === "long") {
-              const restoredHp = await deriveMaxHp(payload.characterId, tx);
+              const restoredHp = await deriveMaxHp(
+                payload.characterId,
+                tx,
+                snapshot,
+              );
               await tx
                 .update(characters)
                 .set({ currentHp: restoredHp })

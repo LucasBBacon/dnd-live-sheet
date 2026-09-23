@@ -51,9 +51,16 @@ const chainableSelect = (onSelect: () => void) => () => {
   };
 };
 
+const getCachedRuleSnapshotMock = vi.fn(async () => ({
+  cacheVersion: 1,
+  loadedAt: 0,
+  snapshot,
+}));
+
 const loadModule = async () => {
   vi.resetModules();
   moduleDbSelectCalls = 0;
+  getCachedRuleSnapshotMock.mockClear();
   vi.doMock("@project/database", () => ({
     db: {
       select: chainableSelect(() => {
@@ -62,7 +69,7 @@ const loadModule = async () => {
     },
   }));
   vi.doMock("../ruleSnapshotCache.js", () => ({
-    getCachedRuleSnapshot: async () => ({ cacheVersion: 1, loadedAt: 0, snapshot }),
+    getCachedRuleSnapshot: getCachedRuleSnapshotMock,
   }));
   return import("../hitPoints.js");
 };
@@ -95,5 +102,29 @@ describe("deriveMaxHp", () => {
     // module db - proving a caller's transaction executor is actually used
     expect(stubSelectCalls).toBe(2);
     expect(moduleDbSelectCalls).toBe(0);
+  });
+
+  it("uses a supplied snapshot instead of consulting the cache (#89 final review, F2)", async () => {
+    const { deriveMaxHp } = await loadModule();
+
+    // same fixture as the first test - the derived number must not change
+    // just because the snapshot arrived as a parameter instead of a cache
+    // hit. Cast like stubExecutor above: CoreRulePackSnapshot has no
+    // equipmentById, which RulesSnapshotPayload requires, but this fixture
+    // never reaches equipment - the same gap the mocked getCachedRuleSnapshot
+    // above already carries at runtime, just now type-checked at the call site
+    await expect(
+      deriveMaxHp(
+        "char-1",
+        undefined,
+        snapshot as unknown as Parameters<typeof deriveMaxHp>[2],
+      ),
+    ).resolves.toBe(28);
+
+    // a caller that already resolved the snapshot (to hoist it out of a
+    // transaction, #89 final review F2) must not have deriveMaxHp fetch it
+    // again - that fetch is exactly the cache-miss-inside-a-transaction path
+    // this fix removes
+    expect(getCachedRuleSnapshotMock).not.toHaveBeenCalled();
   });
 });

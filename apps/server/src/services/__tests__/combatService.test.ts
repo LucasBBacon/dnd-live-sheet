@@ -11,6 +11,19 @@ vi.mock("../hitPoints.js", () => ({
   deriveMaxHp: vi.fn().mockResolvedValue(100),
 }));
 
+// modifyCharacterHp now resolves the snapshot before opening its transaction
+// (#89 final review, F2), so a cache miss cannot ask the pool for a second
+// connection while holding one. Without this mock that resolve reaches the
+// real buildRuleSnapshot, which calls db.select - a method this file's db
+// mock above never defines.
+vi.mock("../ruleSnapshotCache.js", () => ({
+  getCachedRuleSnapshot: vi.fn().mockResolvedValue({
+    cacheVersion: 1,
+    loadedAt: 0,
+    snapshot: {},
+  }),
+}));
+
 import { db } from "@project/database";
 
 const createMockCharacter = (currentHp = 50, maxHp = 100) => ({

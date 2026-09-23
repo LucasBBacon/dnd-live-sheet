@@ -11,6 +11,7 @@ import {
   toCharacterSave,
 } from "./characterSave.js";
 import { getCachedRuleSnapshot } from "./ruleSnapshotCache.js";
+import type { RulesSnapshotPayload } from "./referenceProvider/types.js";
 
 /**
  * The minimal database surface deriveMaxHp needs: whatever can `.select()`
@@ -33,14 +34,23 @@ type DatabaseExecutor = Pick<typeof db, "select">;
  * transaction can leave every concurrent caller waiting on a connection the
  * pool cannot supply, and reads an unlocked, separate snapshot that a
  * concurrent write can race.
+ *
+ * That same caller must also resolve the rule snapshot *before* opening its
+ * transaction and pass it as `snapshot`: `getCachedRuleSnapshot()` queries
+ * the module `db` on a cache miss, and calling it from in here while already
+ * inside a transaction is the same second-connection problem as `executor`
+ * above, on the pool's most contended path (#89 final review, F2).
  * @param characterId The character to measure
  * @param executor The database or transaction to query through; defaults to
  * the module `db`
+ * @param snapshot The rule snapshot to derive against; when omitted this
+ * calls `getCachedRuleSnapshot()` itself, exactly as before
  * @returns The maximum hit points, or 0 for a character that does not exist
  */
 export const deriveMaxHp = async (
   characterId: string,
   executor: DatabaseExecutor = db,
+  snapshot?: RulesSnapshotPayload,
 ): Promise<number> => {
   const [character] = await executor
     .select()
@@ -59,7 +69,8 @@ export const deriveMaxHp = async (
     .where(eq(characterClasses.characterId, characterId))
     .orderBy(...classLedgerOrder);
 
-  const { snapshot } = await getCachedRuleSnapshot();
+  const resolvedSnapshot =
+    snapshot ?? (await getCachedRuleSnapshot()).snapshot;
 
   return finalMaxHp(
     toCharacterSave(
@@ -67,6 +78,6 @@ export const deriveMaxHp = async (
       ledger,
       readStoredChoices(character.choices, characterId),
     ),
-    snapshot,
+    resolvedSnapshot,
   );
 };
