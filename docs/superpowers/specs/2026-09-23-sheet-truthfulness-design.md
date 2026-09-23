@@ -93,10 +93,35 @@ once is not only tidier: `getConditionSuppressions` already calls
 `compileActiveTraits`, and `gatherBaseStates` needs the same result, so today
 that work would happen twice per health transition.
 
-Every existing reader - `dispatchAuthoredEvent`, `useCheckRoll` and the
-`ArmorClassWidget`, `TableRulesWidget`, `TurnControlsWidget` and
-`ConditionsWidget` widgets - starts gating correctly without changing a line,
-because `activeStates` is finally what its name says.
+Every existing reader of `activeStates` - `dispatchAuthoredEvent`,
+`useCheckRoll` and the `ArmorClassWidget`, `TableRulesWidget`,
+`TurnControlsWidget` and `ConditionsWidget` widgets - starts gating correctly
+without changing a line, because `activeStates` is finally what its name says.
+
+**But that is not enough for the symptom #76 was recorded for**, and this was
+found while planning rather than while writing the entry. Nothing gates an
+*action* on its `forbiddenStates`. `getCharacterActions()` filters out only
+`dynamic_weapon_attack` and Relentless Rage, and `CombatWidget` renders every
+entry it returns as an always-enabled button. The server does check, in
+`ActionResolver.execute` (`packages/engine/src/pipeline/actionResolver.ts`) -
+but the gateway hands it `runtime.effectManager.getActiveStates()`, effect
+states alone, and `status_wearing_heavy_armor` comes from the inventory, so it
+is never in that list. A forbidden action there does not fail either: it
+returns `executed: true` and applies nothing.
+
+So a raging barbarian in heavy armour is offered a Dash button that quietly
+does nothing, and `trait_totem_spirit_eagle`'s own summary in the pack claims
+the gate holds.
+
+**The sheet gains that gate**, as part of this work: `getCharacterActions()`
+drops any action whose `requiredStates` are not all present in `activeStates`,
+or any of whose `forbiddenStates` are. This is the first state gate on an
+action in the web app - there is no existing selector to copy - and it is only
+correct once `activeStates` is, which is why the two belong in one change.
+
+The server half is **recorded, not fixed**: the gateway composing action states
+from the effect manager alone is the same family as #92, and closing it means
+deciding what the server may know about a character's rules.
 
 **`getSheetStates()` stays**, now returning `activeStates` directly. This is not
 leftover: `useCharacterStats` subscribes to the *method* because
@@ -131,14 +156,20 @@ amount for a rules reason and this asymmetry would have to go.
 
 ## Testing
 
-- **The Eagle Totem gate, as a regression test.** A raging barbarian in heavy
-  armour cannot use `action_eagle_dash`. Its `forbiddenStates` are
-  `["status_wearing_heavy_armor"]`, and `trait_totem_spirit_eagle`'s own summary
-  in the pack claims the gate holds on the sheet. It does not. This is the test
-  that makes #76 real rather than a refactor.
-- **A dice rule keyed to an equipment state** now applies, covering the other
-  half of #76 that `useCheckRoll` exposed: `DiceEngine.applyDiceRulesToRollResult`
-  is handed the same list.
+- **The Eagle Totem gate, as a regression test.** A barbarian with Totem Spirit
+  (Eagle) wearing plate is not offered `action_eagle_dash`, and the same
+  character without the armour is. Its `forbiddenStates` are
+  `["status_wearing_heavy_armor"]`, which reaches `activeStates` only through
+  `InventoryExtractor.extractStates` - a body-slot row whose definition is
+  armour of category `heavy`. This test needs both halves of the change and is
+  what makes #76 real rather than a refactor.
+- **A dice rule keyed to an equipment state** now reaches the dice engine,
+  covering the other half of #76 that `useCheckRoll` exposed. No pack dice rule
+  is gated on a non-condition state for `ABILITY_CHECK` or `SAVING_THROW` - the
+  one state-gated rule in the pack, `trait_fs_great_weapon_fighting`, targets
+  `DAMAGE_ROLL`, which `useCheckRoll` never passes. The test therefore hands
+  `DiceEngine` a rule authored in the test itself, following that rule's
+  `requiredStates` shape.
 - **A refused spend** restores the charge and raises a notice; an echo for a
   different character is ignored.
 - **A heal past the maximum** emits the raw delta, and damage still emits the
@@ -159,9 +190,22 @@ The file contradicts itself in three places, all from recent closures:
 - The "Suggested first sitting" paragraph recommends four items that are all
   now closed.
 
+## Recorded, not fixed
+
+One new item: **the gateway gates an action on the effect manager's states
+alone.** `ActionResolver.execute` checks `requiredStates` and `forbiddenStates`
+honestly, but the gateway hands it `runtime.effectManager.getActiveStates()`,
+so no state that comes from a trait or from worn equipment can ever block an
+action server-side - and a blocked action returns `executed: true` having
+applied nothing, so a client that asks anyway is told it worked. The sheet's
+new gate stops the button being offered; it does not stop a crafted or stale
+client asking. Closing it means deciding what the server may know about a
+character's rules, which is the same question as #92.
+
 ## Out of scope
 
 - #92's server-side trigger arbitration, and #94, #95 and #96.
+- The server-side action gate above, which is recorded rather than fixed.
 - Any change to what the server stores or to the socket contract.
 - A page-level treatment for a refused room join (see the S5 note).
 - #44's recorded contradiction, which needs a working-tree check rather than a
