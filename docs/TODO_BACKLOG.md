@@ -297,6 +297,7 @@ Every id this file has ever issued, in one table. Gaps in the numbering are inte
 | 99 | An action's ender can be hidden by the gate that hides the action | Open | Open items |
 | 100 | `resolveActionError`'s async-failure branch is untested, and the reachable case is the untested one | Open | Open items |
 | 101 | ✅ One inventory writer does not recompose the sheet's states, unlike the six beside it | ✅ Closed | Closed items |
+| 102 | An attuned item with no equip slot applies nothing, and no slot holds a belt | Open | Open items |
 | A1 | Ready's trigger is not modelled | Open | Open items |
 | A2 | No roll-initiating UI for skills | ✅ Closed | Closed items |
 | A2b | actions do not prompt their own check | Open | Open items |
@@ -1141,6 +1142,28 @@ Also recorded from the same review, left alone rather than added as items:
 client's own payload, so this is defence-in-depth only, not a real hole),
 and `triggerRest`'s long rest healing to the client's own `getMaxHp()` (the
 same stale-maximum family as #93, but outside its scope).
+
+### #102 — an attuned item with no equip slot applies nothing, and no slot holds a belt
+
+| # | Item | Notes |
+| --- | --- | --- |
+| 102 | An attuned item with no equip slot applies nothing, and no slot holds a belt | Found by the scenario characters' first load, 2026-09-23. See below. |
+
+Orrik Stonehide (sample `…0129`, broken on purpose) carries a Belt of Hill
+Giant Strength seeded as attuned in the backpack: a `wondrous` item whose only
+modifier sets `STR` to 21, with no `equipSlot`, because `CharacterSlotSchema`
+(`packages/shared/src/schemas/runtime/inventory.ts`) has nowhere to wear a
+belt — its eleven slots are the backpack, head, amulet, cloak, body, both
+hands, gloves, two rings and boots. On the sheet his Strength stays 20, and the
+Items widget lists the belt in the backpack without the "Attuned" marker its
+stored row carries.
+
+The UI cannot create that row, but the pack can author a belt, bracers or an
+ioun stone and meet the same wall: a worn wondrous item outside the eleven
+slots can never apply. Two questions for whoever picks it up: whether the slot
+vocabulary gains a waist slot (or a general "worn" slot for items that occupy
+no body location), and whether an attuned row that is not equipped should
+show its attunement rather than hide it.
 
 ### Coverage thresholds
 
