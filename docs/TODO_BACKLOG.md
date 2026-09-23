@@ -288,9 +288,10 @@ Every id this file has ever issued, in one table. Gaps in the numbering are inte
 | 86 | `calculateMaxHp` floors Constitution at 1 per level, not the level's whole gain | Open | Open items (11h) |
 | 87 | Draconic Resilience's `MAX_HP` modifier does not scale, and the engine says nothing | Open | Open items (11h) |
 | 88 | The level-up review step understates the hit points an ability score increase adds | Open | Open items (11h) |
-| 89 | The sheet's own damage and heal writes are never clamped | Open | Open items (11h) |
-| 90 | `newTotalLevel` is written from the request without checking the ledger | Open | Open items (11h) |
+| 89 | The sheet's own damage and heal writes are never clamped | ✅ Closed | Closed items (11h) |
+| 90 | `newTotalLevel` is written from the request without checking the ledger | ✅ Closed | Closed items (11h) |
 | 91 | The fake database cannot tell the pool from a transaction, so nothing pins which one a service queries | Open | Open items (11h) |
+| 92 | the server clamps hit points without knowing the rules that govern them | Open | Open items (11h) |
 | A1 | Ready's trigger is not modelled | Open | Open items |
 | A2 | No roll-initiating UI for skills | ✅ Closed | Closed items |
 | A2b | actions do not prompt their own check | Open | Open items |
@@ -1046,13 +1047,13 @@ with a +2 Constitution increase gains 11, where the preview says 8). Fix:
 preview the same difference the server computes, rather than re-deriving it
 in the UI.
 
-### #89 — the sheet's own damage and heal writes are never clamped
+### #89 — the sheet's own damage and heal writes are never clamped ✅
 
 *Recorded as 11h.*
 
 | # | Item | Notes |
 | --- | --- | --- |
-| 89 | The sheet's own damage and heal writes are never clamped | Found by the final review of `fix/hit-points`. See below. |
+| 89 | ✅ The sheet's own damage and heal writes are never clamped | Found by the final review of `fix/hit-points`; closed 2026-09-23 on `fix/hp-authority`. See below. |
 
 `HP_MODIFIED`'s handler in `apps/server/src/gateway/socket.ts` persists
 `currentHp + delta` directly, bypassing `modifyCharacterHp` and therefore
@@ -1063,13 +1064,29 @@ app and the server is meant to be authoritative. Fix: route that handler
 through `modifyCharacterHp`, which clamps to the derived maximum.
 Pre-existing.
 
-### #90 — `newTotalLevel` is written from the request without checking the ledger
+**Closed 2026-09-23** on `fix/hp-authority`. `HP_MODIFIED` now persists
+through `modifyCharacterHp`, which locks the row and clamps to `[0, derived
+max]`. Both of the gateway's HP emitters — the relay handler and the
+item-action heal path — now broadcast an `HpModifiedBroadcast` carrying
+`currentHp` and `maxHp`, to the whole campaign room including the sender, so
+a client whose derived maximum is stale corrects itself. On the web,
+`applyHealthDelta` emits the delta that actually applied (`appliedHp -
+previousHp`) rather than the raw one, and `syncRemoteHealthDelta` follows
+the asserted total instead of re-deriving one, returning early when that
+total is the one it already shows.
+
+Correct the record: the original entry above said the database only
+diverged when a client sent a raw delta, but the web sent the raw delta on
+every heal and every hit, so an ordinary overheal diverged — a character at
+25/31 healing 10 stored 35, and one at 3 hit points taking 20 stored -17.
+
+### #90 — `newTotalLevel` is written from the request without checking the ledger ✅
 
 *Recorded as 11h.*
 
 | # | Item | Notes |
 | --- | --- | --- |
-| 90 | `newTotalLevel` is written from the request without checking the ledger | Found by the final review of `fix/hit-points`. See below. |
+| 90 | ✅ `newTotalLevel` is written from the request without checking the ledger | Found by the final review of `fix/hit-points`; closed 2026-09-23 on `fix/hp-authority`. See below. |
 
 `applyLevelUp` (`apps/server/src/controllers/characterController.ts`) sets
 `characters.level` to the payload's `newTotalLevel` with no comparison
@@ -1079,6 +1096,13 @@ maximum hit points and both health clamps derive from a level, which makes
 the drift visible rather than cosmetic (the client reads the ledger after
 F2; the server sums the ledger already). Fix: derive the new total from the
 ledger, or reject a payload whose `newTotalLevel` does not match it.
+
+**Closed 2026-09-23** on `fix/hp-authority`. `applyLevelUp` now derives the
+new total by summing the class ledger it already read and adding one —
+correct for a multiclass dip as well as ordinary progression, since a
+level-up always advances exactly one class by exactly one level — writes
+that derived number, and rejects a payload whose `newTotalLevel` disagrees
+with a 400 naming both numbers.
 
 ### #91 — the fake database cannot tell the pool from a transaction, so nothing pins which one a service queries
 
@@ -1101,6 +1125,35 @@ test still passes. Fix: have `FakeDb` record which executor issued each call
 - the pool or a particular transaction handle - rather than a boolean, then
 assert it where a service must stay on its caller's transaction. A coverage
 gap, not a defect - both call sites are correct today.
+
+### #92 — the server clamps hit points without knowing the rules that govern them
+
+*Recorded as 11h.*
+
+| # | Item | Notes |
+| --- | --- | --- |
+| 92 | the server clamps hit points without knowing the rules that govern them | Recorded 2026-09-23 while closing #89. See below. |
+
+`ON_HP_REDUCED_TO_ZERO`, its resource spending and `dispatchAuthoredEvent`
+live only in the web store (`apps/web/src/store/characterSheetStore.ts`), so
+the server can bound a hit point total but never arbitrate one. The
+divergence is not hypothetical, and is reachable through the general
+`HP_MODIFIED` handler: when the acting client's Relentless Endurance charge
+is already spent, it sends the full lethal delta, the server stores 0, and
+the broadcast asserts 0 - but any second live client for the same character
+(a second tab, or another viewer with that character loaded) that still
+shows more than zero hit points will dispatch `ON_HP_REDUCED_TO_ZERO`
+against its own local resource state, which is never synced or persisted,
+and can independently decide the trigger executes and land on 1 while the
+database and every other viewer show 0. It is not reachable through the
+item-action heal emitter, whose delta is always positive. That is why #89
+has the client report the delta that applied rather than the one it
+attempted: if the server recomputed the total itself it would compute 0 for
+a half-orc whose Relentless Endurance had just left them at 1, and the
+client would obey - charge spent, character at 0, and the trigger's own
+`previousHp > 0` guard means it cannot fire again. Fix: move trigger
+resolution server-side so the server can compute the true result.
+Pre-existing; not introduced by this branch.
 
 ### Coverage thresholds
 
