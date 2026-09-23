@@ -979,6 +979,13 @@ export const useCharacterSheetStore = create<CharacterSheetState>(
       // reload would reveal the divergence from the database.
       if (payload.characterId !== state.id) return;
 
+      // the total is what this action now follows, so a broadcast without one
+      // is not actionable: an old server, or a future emitter that forgets the
+      // field - `satisfies` only binds the two emitters that use it. Ignoring
+      // it leaves the sheet on the number it already shows, which is right
+      // (#89 final review)
+      if (typeof payload.currentHp !== "number") return;
+
       // the server asserts the total it stored, and this client may be the
       // one that sent the change. Re-running the transition on a total we
       // already show would recompose state and clear the roll display a

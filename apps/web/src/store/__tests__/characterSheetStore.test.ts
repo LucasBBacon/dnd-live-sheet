@@ -13,6 +13,7 @@ import {
   type RuntimeModifier,
 } from "@project/shared";
 import { socketService } from "../../services/socketService";
+import type { HpModifiedBroadcast } from "@project/shared";
 import {
   useCharacterSheetStore,
   type CharacterSheetState,
@@ -170,6 +171,24 @@ describe("useCharacterSheetStore hp trigger handling", () => {
     });
 
     expect(useCharacterSheetStore.getState()).toBe(afterTrigger);
+  });
+
+  it("does nothing when a broadcast arrives with no asserted total, as an old server would send", () => {
+    const before = useCharacterSheetStore.getState();
+
+    // models an old server (or a rollback, or the web deployed ahead of the
+    // server) that still emits the pre-#89 payload shape with no currentHp.
+    // The character-id guard passes and payload.currentHp !== state.currentHp
+    // is also true (undefined !== 5), so without a type guard the store would
+    // set currentHp to undefined and blank the sheet (#89 final review, F1)
+    useCharacterSheetStore.getState().syncRemoteHealthDelta({
+      characterId: "char_1",
+      delta: -5,
+      source: "test",
+      timestamp: Date.now(),
+    } as unknown as HpModifiedBroadcast);
+
+    expect(useCharacterSheetStore.getState()).toBe(before);
   });
 
   it("emits the delta that actually applied, not the one that was asked for", () => {
