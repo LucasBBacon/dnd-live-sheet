@@ -84,7 +84,7 @@ things the last three branches showed replace it:
 | --- | --- | --- | --- |
 | 6 | **Rogue pass**, with **#66**'s expertise concept | 26 stubs | Smallest remaining row that needs a new *system* rather than just data: Sneak Attack (#62) and Expertise (#66). Settling expertise here also unblocks the bard's copy of it. Follow the barbarian template (design spec → slices → sheet surface). |
 | 7 | **#31a** — spell *data*: real `level`, `school` and class spell lists | 111 spells | Content authoring, not a new system, and the data pass also unblocks **#67**. See #31a. |
-| 7a | **#70** — author the four missing backgrounds | 4 backgrounds | Same shape as #31a: content authoring, not a new system. Three sample characters (Nyx Vale, Master Ko Shen, Kaelen Duskwarden) already reference `background_charlatan`, `background_folk_hero` and `background_outlander`, which the seeder creates but the pack does not author; `background_sage` is a fourth the seeder creates that no sample character uses. See P11's 11c. |
+| 7a | **#70** — author the four missing backgrounds | 4 backgrounds | Same shape as #31a: content authoring, not a new system. Seven sample characters reference a background the seeder creates but the pack does not author: `background_charlatan` (Nyx Vale, Kestrel Vey), `background_folk_hero` (Master Ko Shen, Quill Ashgrove), `background_outlander` (Kaelen Duskwarden, Tamsin Burrowdeep) and `background_sage` (Seraphine Dusk). A fifth stub, `background_hermit`, belongs to Orrik Stonehide, who is broken on purpose and not a candidate for authoring. See P11's 11c. |
 | 8 | **Next class passes**, each named by its system | see table below | Monk (ki, #62), sorcerer (sorcery points, #62), cleric/paladin (channel divinity, divine smite, #62), druid (wild shape, #62), fighter (after #69; Battle Master is #69's worst case, so the pass verifies it). Pick by who is playing what. |
 | 9 | **#36** — `SUMMON_ACTOR_DICTIONARY` into the pack | — | The last rules content outside the pack. Unchanged; still two live readers. Best done alongside the wizard or druid pass, whose summons are its only consumers. |
 | — | **#30** — the count itself | **362** | Not an item to "do"; it falls as 6–9 land. Consider #62's option 2 (track blocked-on-a-system stubs separately) the next time it is re-counted. |
@@ -297,6 +297,7 @@ Every id this file has ever issued, in one table. Gaps in the numbering are inte
 | 99 | An action's ender can be hidden by the gate that hides the action | Open | Open items |
 | 100 | `resolveActionError`'s async-failure branch is untested, and the reachable case is the untested one | Open | Open items |
 | 101 | ✅ One inventory writer does not recompose the sheet's states, unlike the six beside it | ✅ Closed | Closed items |
+| 102 | An attuned item with no equip slot applies nothing, and no slot holds a belt | Open | Open items |
 | A1 | Ready's trigger is not modelled | Open | Open items |
 | A2 | No roll-initiating UI for skills | ✅ Closed | Closed items |
 | A2b | actions do not prompt their own check | Open | Open items |
@@ -756,13 +757,16 @@ Two separate findings from the same file,
   `backgrounds` rows (`SAMPLE_BACKGROUNDS`) for `background_sage`,
   `background_folk_hero`, `background_outlander` and `background_charlatan`.
   `core_2014_pack`'s `backgrounds/core.json` authors only acolyte, criminal,
-  noble and soldier. Three sample characters — Nyx Vale (charlatan), Master Ko
-  Shen (folk hero) and Kaelen Duskwarden (outlander) — reference a background
-  the pack has no `backgroundTraitIds` for, so `resolveBackgroundDefinition`
-  finds nothing to grant and they correctly receive nothing from their
-  background, the same as an unknown id. `background_sage` is a fourth row the
-  seeder creates that no sample character uses at all. Four backgrounds to
-  author, for the backlog — tracked as Tier 2 item 7a.
+  noble and soldier. Seven sample characters reference a background the pack
+  has no `backgroundTraitIds` for — Nyx Vale and Kestrel Vey (charlatan),
+  Master Ko Shen and Quill Ashgrove (folk hero), Kaelen Duskwarden and Tamsin
+  Burrowdeep (outlander), and Seraphine Dusk (sage) — so
+  `resolveBackgroundDefinition` finds nothing to grant and they correctly
+  receive nothing from their background, the same as an unknown id. Since
+  `feat/scenario-characters` every one of the four has a user; the seeder's
+  fifth stub, `background_hermit`, belongs to Orrik Stonehide, who is broken
+  on purpose. Four backgrounds to author, for the backlog — tracked as Tier 2
+  item 7a.
 
 ### #72 — the server's authoritative runtime is hydrated without the rule snapshot
 
@@ -1138,6 +1142,28 @@ Also recorded from the same review, left alone rather than added as items:
 client's own payload, so this is defence-in-depth only, not a real hole),
 and `triggerRest`'s long rest healing to the client's own `getMaxHp()` (the
 same stale-maximum family as #93, but outside its scope).
+
+### #102 — an attuned item with no equip slot applies nothing, and no slot holds a belt
+
+| # | Item | Notes |
+| --- | --- | --- |
+| 102 | An attuned item with no equip slot applies nothing, and no slot holds a belt | Found by the scenario characters' first load, 2026-09-23. See below. |
+
+Orrik Stonehide (sample `…0129`, broken on purpose) carries a Belt of Hill
+Giant Strength seeded as attuned in the backpack: a `wondrous` item whose only
+modifier sets `STR` to 21, with no `equipSlot`, because `CharacterSlotSchema`
+(`packages/shared/src/schemas/runtime/inventory.ts`) has nowhere to wear a
+belt — its eleven slots are the backpack, head, amulet, cloak, body, both
+hands, gloves, two rings and boots. On the sheet his Strength stays 20, and the
+Items widget lists the belt in the backpack without the "Attuned" marker its
+stored row carries.
+
+The UI cannot create that row, but the pack can author a belt, bracers or an
+ioun stone and meet the same wall: a worn wondrous item outside the eleven
+slots can never apply. Two questions for whoever picks it up: whether the slot
+vocabulary gains a waist slot (or a general "worn" slot for items that occupy
+no body location), and whether an attuned row that is not equipped should
+show its attunement rather than hide it.
 
 ### Coverage thresholds
 

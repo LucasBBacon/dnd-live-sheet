@@ -38,6 +38,18 @@ const INTENDED_FINAL: Record<string, number[]> = {
   "Thistle Quickfoot": [8, 14, 14, 20, 13, 10],
   "Kaelen Duskwarden": [14, 18, 16, 10, 18, 8],
   "Dame Sable Orrin": [20, 14, 20, 10, 12, 14],
+  // the scenario set was authored pre-racial from the start
+  "Quill Ashgrove": [8, 16, 14, 15, 12, 10],
+  "Brannoc Hale": [16, 12, 15, 10, 13, 8],
+  "Isolde Varn": [8, 16, 14, 13, 10, 15],
+  "Ursk Gravemaw": [17, 10, 14, 8, 10, 14],
+  "Tamsin Burrowdeep": [16, 16, 16, 8, 12, 8],
+  "Hesk Mossgather": [11, 13, 15, 11, 18, 9],
+  "Seraphine Dusk": [8, 16, 8, 18, 12, 11],
+  "Kestrel Vey": [10, 14, 14, 10, 12, 18],
+  "Brother Mote": [14, 10, 14, 10, 20, 13],
+  // the pack knows no Goliath, so nothing is added to the stored scores
+  "Orrik Stonehide": [20, 12, 18, 8, 12, 10],
 };
 
 describe("sample character scores", () => {

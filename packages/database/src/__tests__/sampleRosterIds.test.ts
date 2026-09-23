@@ -5,6 +5,7 @@ import {
   ROSTER,
   SAMPLE_BACKGROUNDS,
   SAMPLE_ITEMS,
+  SAMPLE_RACES,
   SAMPLE_SUBCLASSES,
 } from "../seedSampleCharacters.js";
 
@@ -26,8 +27,9 @@ const SHIPPED_PACK = path.join(process.cwd(), "data/packs/core_2014_pack");
  * deliberately a mix of ids the compendium defines and ids named by convention
  * that it does not yet, which the seed's own header states in as many words:
  * `character_traits` carries no foreign key, and "an unresolved grant is
- * exactly what the sheet has to survive while the pack is incomplete". Fifty
- * three of them currently resolve to nothing, on purpose. Asserting on them
+ * exactly what the sheet has to survive while the pack is incomplete". More
+ * than fifty of them resolve to nothing, on purpose - every Goliath and Rune
+ * Knight trait Orrik Stonehide carries among them. Asserting on them
  * would break that fixture's whole reason for existing.
  *
  * Everything below is a field where an unresolved id is a defect rather than a
@@ -36,9 +38,9 @@ const SHIPPED_PACK = path.join(process.cwd(), "data/packs/core_2014_pack");
  * writes onto the character itself.
  *
  * The roster may name ids the core pack lacks, but only the ones the seed
- * supplies itself as reference stubs - the sample subclasses, backgrounds and
- * items. It supplies no trait stubs, so a `customTraitIds` entry has nowhere
- * to come from but the pack.
+ * supplies itself as reference stubs - the sample races, subclasses,
+ * backgrounds and items. It supplies no trait stubs, so a `customTraitIds`
+ * entry has nowhere to come from but the pack.
  */
 const pack = assembleCoreRulePackSync(SHIPPED_PACK);
 
@@ -46,7 +48,7 @@ const idsOf = (rows: ReadonlyArray<{ id: string }>) =>
   new Set(rows.map((row) => row.id));
 
 const traitIds = idsOf(pack.traits);
-const raceIds = idsOf(pack.races);
+const raceIds = new Set([...idsOf(pack.races), ...idsOf(SAMPLE_RACES)]);
 const classIds = idsOf(pack.classes);
 const subraceIds = new Set(
   pack.races.flatMap((race) => Object.keys(race.subraces ?? {})),
@@ -81,6 +83,14 @@ const dangling = (
   );
 
 describe("the sample roster names ids the pack defines", () => {
+  it("gives every character its own id", () => {
+    // the roster is assembled from two modules, and a repeated id would have
+    // the second character silently overwrite the first on every seed
+    const ids = ROSTER.map((character) => character.id);
+
+    expect(ids.filter((id, index) => ids.indexOf(id) !== index)).toEqual([]);
+  });
+
   it("names only real traits where the foreign key demands one", () => {
     expect(
       dangling(

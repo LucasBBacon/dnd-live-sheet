@@ -1,5 +1,7 @@
 /**
- * Development fixture: ten varied sample characters on stable URLs.
+ * Development fixture: twenty sample characters on stable URLs - the ten
+ * coverage characters below, and the ten scenario characters in
+ * sampleScenarioCharacters.ts, each staged for one hand check.
  *
  * Purpose is live UI and socket testing, not content authoring. Every row it
  * writes is either operational (characters and their ledgers) or a clearly
@@ -11,9 +13,9 @@
  * 1. Reference stubs are inserted with onConflictDoNothing. If an id already
  *    exists - because the real pack now defines it, or because a previous run
  *    created it - the authored row wins and this script leaves it alone.
- * 2. Operational writes touch only the ten fixed ids in ROSTER. Child rows for
- *    those ids are cleared and rewritten so re-running is idempotent; no other
- *    character is read or modified.
+ * 2. Operational writes touch only the twenty fixed ids in ROSTER. Child rows
+ *    for those ids are cleared and rewritten so re-running is idempotent; no
+ *    other character is read or modified.
  *
  * Trait ids on character_traits are deliberately a mix of ids the compendium
  * already defines and ids named by convention that it does not yet. That column
@@ -34,7 +36,7 @@ import {
   type StartingEquipmentDefinition,
   type WeaponCapability,
 } from "@project/shared";
-import { backgrounds, items, subclasses } from "./schema/reference.js";
+import { backgrounds, items, races, subclasses } from "./schema/reference.js";
 import {
   campaignMembers,
   campaigns,
@@ -45,6 +47,13 @@ import {
   characterTraits,
   characters,
 } from "./schema/operational.js";
+import {
+  SCENARIO_BACKGROUNDS,
+  SCENARIO_ITEMS,
+  SCENARIO_RACES,
+  SCENARIO_ROSTER,
+  SCENARIO_SUBCLASSES,
+} from "./sampleScenarioCharacters.js";
 
 // Opened by connect(), only when this file runs as a script. Importing the
 // module for its ROSTER - which invariant tests do, in CI, with no
@@ -88,11 +97,18 @@ const EMPTY_STARTING_EQUIPMENT: StartingEquipmentDefinition = {
 
 // #region Reference Stubs - Subclasses
 
+interface SampleSubclass {
+  id: string;
+  parentClassId: string;
+  name: string;
+  shortDescription: string;
+}
+
 /**
  * Subclasses the roster needs that the pack has not reached yet. Ids follow the
  * `subclass_<class>_<archetype>` convention the imported rows already use.
  */
-const SAMPLE_SUBCLASSES = [
+const BASE_SUBCLASSES: SampleSubclass[] = [
   {
     id: "subclass_paladin_devotion",
     parentClassId: "class_paladin",
@@ -137,18 +153,32 @@ const SAMPLE_SUBCLASSES = [
     name: "Draconic Bloodline",
     shortDescription: "Innate magic inherited from a draconic ancestor.",
   },
-] as const;
+];
+
+/** Every subclass stub the seed writes: the ones above, then the scenario set's. */
+const SAMPLE_SUBCLASSES: SampleSubclass[] = [
+  ...BASE_SUBCLASSES,
+  ...SCENARIO_SUBCLASSES,
+];
 
 // #endregion
 
 // #region Reference Stubs - Backgrounds
+
+interface SampleBackground {
+  id: string;
+  name: string;
+  featureName: string;
+  featureDescription: string;
+  shortDescription: string;
+}
 
 /**
  * Backgrounds beyond the four the pack currently carries. Only the columns the
  * sheet reads carry anything meaningful; the inspiration tables are left empty
  * rather than half-authored, because the wizard is not what this fixture tests.
  */
-const SAMPLE_BACKGROUNDS = [
+const BASE_BACKGROUNDS: SampleBackground[] = [
   {
     id: "background_sage",
     name: "Sage",
@@ -185,7 +215,31 @@ const SAMPLE_BACKGROUNDS = [
     shortDescription:
       "You have always had a way with people, and a way of getting their money.",
   },
-] as const;
+];
+
+/** Every background stub the seed writes: the ones above, then the scenario set's. */
+const SAMPLE_BACKGROUNDS: SampleBackground[] = [
+  ...BASE_BACKGROUNDS,
+  ...SCENARIO_BACKGROUNDS,
+];
+
+// #endregion
+
+// #region Reference Stubs - Races
+
+interface SampleRace {
+  id: string;
+  name: string;
+  speed: number;
+  shortDescription: string;
+}
+
+/**
+ * Races the pack does not author. The coverage ten need none; the scenario
+ * set's Orrik Stonehide is a Goliath on purpose, so the sheet meets a race the
+ * rule snapshot cannot resolve.
+ */
+const SAMPLE_RACES: SampleRace[] = [...SCENARIO_RACES];
 
 // #endregion
 
@@ -233,7 +287,7 @@ interface SampleItem {
  * Unlike the compendium's current rows these declare `equipSlot`, so the client
  * can tell a ring from a cloak.
  */
-const SAMPLE_ITEMS: SampleItem[] = [
+const BASE_ITEMS: SampleItem[] = [
   {
     id: "item_potion_healing",
     name: "Potion of Healing",
@@ -443,6 +497,9 @@ const SAMPLE_ITEMS: SampleItem[] = [
   },
 ];
 
+/** Every item stub the seed writes: the ones above, then the scenario set's. */
+const SAMPLE_ITEMS: SampleItem[] = [...BASE_ITEMS, ...SCENARIO_ITEMS];
+
 // #endregion
 
 // #region Roster
@@ -489,6 +546,18 @@ interface SampleCharacter {
    * validation issues.
    */
   choices?: CharacterChoices;
+  /**
+   * Written to characters.level in place of the ledger sum. Only Brother Mote
+   * sets it: a row whose level disagrees with its ledger is what #95 cannot
+   * repair, and the UI cannot create one.
+   */
+  levelColumn?: number;
+  /**
+   * The save-issue codes this character is built to raise. Only Orrik
+   * Stonehide declares any; sampleCharacterChoices.test.ts holds every
+   * character to exactly these.
+   */
+  expectedIssues?: string[];
   alignment: string;
   str: number;
   dex: number;
@@ -524,7 +593,7 @@ interface SampleCharacter {
  * Ability scores are stored pre-racial, like character creation stores them, with
  * racial bonuses applied by the sheet (#73).
  */
-const ROSTER: SampleCharacter[] = [
+const BASE_ROSTER: SampleCharacter[] = [
   {
     id: "00000000-0000-0000-0000-000000000110",
     name: "Pip Underbough",
@@ -1657,6 +1726,9 @@ const ROSTER: SampleCharacter[] = [
   },
 ];
 
+/** Every character the seed writes: the coverage ten, then the scenario ten. */
+const ROSTER: SampleCharacter[] = [...BASE_ROSTER, ...SCENARIO_ROSTER];
+
 // #endregion
 
 // #region Seeding
@@ -1699,6 +1771,23 @@ const toItemRule = (
  * for that entity rather than a regression.
  */
 const seedReferenceStubs = async () => {
+  // drizzle refuses an empty values list, and the coverage ten need no race
+  if (SAMPLE_RACES.length > 0) {
+    await db
+      .insert(races)
+      .values(
+        SAMPLE_RACES.map((race) => ({
+          id: race.id,
+          name: race.name,
+          speed: race.speed,
+          requiresSubrace: false,
+          lore: { shortDescription: race.shortDescription },
+          ...packStamp,
+        })),
+      )
+      .onConflictDoNothing({ target: races.id });
+  }
+
   await db
     .insert(subclasses)
     .values(
@@ -1771,10 +1860,11 @@ const seedCampaign = async () => {
  *
  * Child rows are cleared first so a second run cannot double up inventory or
  * trait grants. Every delete is keyed on this character's id alone, which is
- * one of the ten this file declares.
+ * one of the twenty in ROSTER.
  */
 const seedCharacter = async (character: SampleCharacter) => {
-  const level = totalLevelOf(character);
+  // the ledger decides, except where a character exists to disagree with it
+  const level = character.levelColumn ?? totalLevelOf(character);
 
   const columns = {
     campaignId: CAMPAIGN_ID,
@@ -1916,7 +2006,8 @@ const run = async () => {
       Build: character.classes
         .map((entry) => `${entry.classId.replace("class_", "")} ${entry.classLevel}`)
         .join(" / "),
-      HP: `${character.currentHp}/${character.maxHp}`,
+      // maxHp is base rolled hit points since #78, not the maximum a sheet shows
+      "HP (cur/rolled)": `${character.currentHp}/${character.maxHp}`,
       Items: character.inventory.length,
       Res: character.resources.length,
     })),
@@ -1929,7 +2020,7 @@ const run = async () => {
     );
   }
   console.log(
-    `\nAll ten sit in campaign ${CAMPAIGN_ID}, owned by '${OWNER_USER_ID}' - the id the web client sends as x-tester-id.`,
+    `\nAll ${ROSTER.length} sit in campaign ${CAMPAIGN_ID}, owned by '${OWNER_USER_ID}' - the id the web client sends as x-tester-id.`,
   );
 };
 
@@ -1964,6 +2055,15 @@ export {
   SAMPLE_BACKGROUNDS,
   SAMPLE_ITEMS,
   SAMPLE_PACK_ID,
+  SAMPLE_RACES,
   SAMPLE_SUBCLASSES,
   SHEET_URL_BASE,
+};
+
+export type {
+  SampleBackground,
+  SampleCharacter,
+  SampleItem,
+  SampleRace,
+  SampleSubclass,
 };

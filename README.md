@@ -88,7 +88,7 @@ An existing database created before a schema change needs its migrations applied
 pnpm --filter @project/database db:migrate
 ```
 
-4. Optionally seed the ten sample characters (fixed UUIDs, campaign `00000000-0000-0000-0000-000000000001`; re-running resets them):
+4. Optionally seed the twenty sample characters (fixed UUIDs, campaign `00000000-0000-0000-0000-000000000001`; re-running resets them):
 
 ```bash
 pnpm --filter @project/database db:seed:samples

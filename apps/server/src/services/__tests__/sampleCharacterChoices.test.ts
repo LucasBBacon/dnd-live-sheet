@@ -53,7 +53,7 @@ describe("sample character choices", () => {
   });
 
   it.each(ROSTER.map((character) => [character.name, character] as const))(
-    "%s answers every question the pack offers options for",
+    "%s answers every question the pack offers options for, and raises only the issues it declares",
     (_name, character) => {
       const save = toCharacterSave(
         {
@@ -82,7 +82,16 @@ describe("sample character choices", () => {
           ),
       );
 
-      expect(issues).toEqual([]);
+      // a character built to be broken declares what it raises; any other
+      // issue is a mistake, and so is a declared one that went missing
+      const expected = character.expectedIssues ?? [];
+
+      expect(
+        issues.filter((issue) => !expected.includes(issue.code)),
+      ).toEqual([]);
+      expect(issues.map((issue) => issue.code).sort()).toEqual(
+        [...expected].sort(),
+      );
     },
   );
 });
