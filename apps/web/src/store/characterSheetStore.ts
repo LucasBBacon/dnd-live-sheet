@@ -435,6 +435,21 @@ const composeActiveStates = (
   return Array.from(new Set([...gatingStates, ...active]));
 };
 
+/**
+ * The composed state list for a character whose gating inputs just changed.
+ * Inventory writes have to call this: `activeStates` is a stored composition,
+ * and `getSheetStates()` reads it rather than recomputing, so a worn-armour
+ * state that is not recomposed here is one the whole sheet will keep gating
+ * on after the armour comes off (#76).
+ */
+const recomposeStates = (
+  state: CharacterSheetState,
+  effectManager: EffectManager,
+): string[] => {
+  const { gatingStates, suppressions } = sheetGating(state, effectManager);
+  return composeActiveStates(gatingStates, state.activeConditions, suppressions);
+};
+
 const dispatchAuthoredEvent = (
   state: CharacterSheetState,
   eventName: EngineEvent,
@@ -1098,7 +1113,14 @@ export const useCharacterSheetStore = create<CharacterSheetState>(
       }
 
       // update local state instantly 0-latency
-      set({ inventory: updatedInventory, notice: null });
+      set({
+        inventory: updatedInventory,
+        notice: null,
+        activeStates: recomposeStates(
+          { ...state, inventory: updatedInventory },
+          state.runtimeEffects ?? new EffectManager(),
+        ),
+      });
 
       // dispatch to backend for persistence and broadcasting
       const movedItem = state.inventory.find((row) => row.id === inventoryId);
@@ -1142,13 +1164,18 @@ export const useCharacterSheetStore = create<CharacterSheetState>(
 
       if (item.isAttuned) {
         // breaking attunement can free the row to rejoin a carried pile
-        set({
-          inventory: consolidateCarried(
-            state.inventory.map((row) =>
-              row.id === inventoryId ? { ...row, isAttuned: false } : row,
-            ),
+        const updatedInventory = consolidateCarried(
+          state.inventory.map((row) =>
+            row.id === inventoryId ? { ...row, isAttuned: false } : row,
           ),
+        );
+        set({
+          inventory: updatedInventory,
           notice: null,
+          activeStates: recomposeStates(
+            { ...state, inventory: updatedInventory },
+            state.runtimeEffects ?? new EffectManager(),
+          ),
         });
 
         socketService.emitAttunementUpdate({
@@ -1186,11 +1213,16 @@ export const useCharacterSheetStore = create<CharacterSheetState>(
         return;
       }
 
+      const updatedInventory = state.inventory.map((row) =>
+        row.id === inventoryId ? { ...row, isAttuned: true } : row,
+      );
       set({
-        inventory: state.inventory.map((row) =>
-          row.id === inventoryId ? { ...row, isAttuned: true } : row,
-        ),
+        inventory: updatedInventory,
         notice: null,
+        activeStates: recomposeStates(
+          { ...state, inventory: updatedInventory },
+          state.runtimeEffects ?? new EffectManager(),
+        ),
       });
 
       socketService.emitAttunementUpdate({
@@ -1229,6 +1261,10 @@ export const useCharacterSheetStore = create<CharacterSheetState>(
       set((state) => ({
         inventory: nextInventory,
         itemActions: computeItemActions(nextInventory, state.ruleSnapshot),
+        activeStates: recomposeStates(
+          { ...state, inventory: nextInventory },
+          state.runtimeEffects ?? new EffectManager(),
+        ),
       }));
     },
 
@@ -1248,7 +1284,13 @@ export const useCharacterSheetStore = create<CharacterSheetState>(
         return;
       }
 
-      set({ inventory: updatedInventory });
+      set({
+        inventory: updatedInventory,
+        activeStates: recomposeStates(
+          { ...state, inventory: updatedInventory },
+          state.runtimeEffects ?? new EffectManager(),
+        ),
+      });
     },
 
     consumeItem: (inventoryId, amount = 1) => {
@@ -1272,6 +1314,10 @@ export const useCharacterSheetStore = create<CharacterSheetState>(
         inventory: updatedInventory,
         itemActions: computeItemActions(updatedInventory, state.ruleSnapshot),
         notice: null,
+        activeStates: recomposeStates(
+          { ...state, inventory: updatedInventory },
+          state.runtimeEffects ?? new EffectManager(),
+        ),
       });
 
       socketService.emitInventoryConsumed({
@@ -1295,6 +1341,10 @@ export const useCharacterSheetStore = create<CharacterSheetState>(
       set({
         inventory: updatedInventory,
         itemActions: computeItemActions(updatedInventory, state.ruleSnapshot),
+        activeStates: recomposeStates(
+          { ...state, inventory: updatedInventory },
+          state.runtimeEffects ?? new EffectManager(),
+        ),
       });
     },
 

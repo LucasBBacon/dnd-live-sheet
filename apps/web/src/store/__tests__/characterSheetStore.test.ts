@@ -2181,3 +2181,59 @@ describe("activeStates carries what the character is wearing (#76)", () => {
     );
   });
 });
+
+describe("activeStates recomposes on every inventory write (final review, #76)", () => {
+  it("drops a worn-armour state on unequip and regains it on re-equip", () => {
+    useCharacterSheetStore.getState().initialize({
+      id: "char_1",
+      level: 3,
+      classLevels: { class_barbarian: 3 },
+      subclassIds: { class_barbarian: "subclass_barbarian_totem_warrior" },
+      choices: {
+        classSelections: {
+          class_barbarian: {
+            barbarian_totem_level_3_totem_spirit: ["trait_totem_spirit_eagle"],
+          },
+        },
+        traitSelections: {},
+        feats: [],
+      },
+      raceId: "race_human",
+      subraceId: null,
+      inventory: [
+        {
+          id: "inv-plate",
+          itemId: "item_armor_plate",
+          quantity: 1,
+          slot: "body",
+          isAttuned: false,
+        },
+      ],
+      ruleSnapshot: packRuleSnapshot(),
+    } as never);
+
+    expect(useCharacterSheetStore.getState().getSheetStates()).toContain(
+      "status_wearing_heavy_armor",
+    );
+
+    useCharacterSheetStore.getState().equipItem("inv-plate", "backpack");
+
+    // getSheetStates() reads the stored `activeStates` composition rather
+    // than recomputing it, so equipItem has to recompose on every write - a
+    // state the character no longer has must not keep gating the sheet
+    // after the armour comes off. This is the regression the final review
+    // found: on this branch before the fix, activeStates is composed only
+    // by initialize, health transitions, dispatchAuthoredEvent,
+    // toggleCondition and the two remote-sync handlers, and equipItem is
+    // none of those.
+    expect(useCharacterSheetStore.getState().getSheetStates()).not.toContain(
+      "status_wearing_heavy_armor",
+    );
+
+    useCharacterSheetStore.getState().equipItem("inv-plate", "body");
+
+    expect(useCharacterSheetStore.getState().getSheetStates()).toContain(
+      "status_wearing_heavy_armor",
+    );
+  });
+});
