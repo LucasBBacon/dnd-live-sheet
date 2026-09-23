@@ -44,6 +44,11 @@ export interface HpModifiedPayload {
  * What the server asserts after a hit point change, as distinct from what a
  * client proposes. A client may only send a delta; only the server, which
  * clamps to the engine's derived maximum, knows the total that resulted (#89).
+ *
+ * `maxHp` is informational and currently unread by the web: the receiver
+ * follows `currentHp` alone. The one thing it enables is a client noticing
+ * its own rules view has gone stale - `payload.maxHp !== getMaxHp()` - which
+ * is recorded as a backlog item (#93) rather than implemented here.
  */
 export interface HpModifiedBroadcast extends HpModifiedPayload {
   currentHp: number;
