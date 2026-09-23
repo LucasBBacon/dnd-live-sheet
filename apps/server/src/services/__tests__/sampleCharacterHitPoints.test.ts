@@ -27,6 +27,10 @@ const EXPECTED_MAX_HP: Record<string, number> = {
   "Thistle Quickfoot": 86,
   "Kaelen Duskwarden": 152,
   "Dame Sable Orrin": 224,
+  "Quill Ashgrove": 17,
+  // Dwarven Toughness: +1 per level
+  "Brannoc Hale": 31,
+  "Isolde Varn": 31,
 };
 
 describe("sample character hit points", () => {

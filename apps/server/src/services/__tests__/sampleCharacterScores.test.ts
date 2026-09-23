@@ -38,6 +38,10 @@ const INTENDED_FINAL: Record<string, number[]> = {
   "Thistle Quickfoot": [8, 14, 14, 20, 13, 10],
   "Kaelen Duskwarden": [14, 18, 16, 10, 18, 8],
   "Dame Sable Orrin": [20, 14, 20, 10, 12, 14],
+  // the scenario set was authored pre-racial from the start
+  "Quill Ashgrove": [8, 16, 14, 15, 12, 10],
+  "Brannoc Hale": [16, 12, 15, 10, 13, 8],
+  "Isolde Varn": [8, 16, 14, 13, 10, 15],
 };
 
 describe("sample character scores", () => {
