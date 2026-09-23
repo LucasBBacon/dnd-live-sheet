@@ -71,9 +71,9 @@ things the last three branches showed replace it:
 | 4a | ✅ **#73** — the web sheet applies no trait modifiers | medium | **Closed 2026-09-21** on `fix/sheet-modifiers` — one gather now feeds trait, equipment and live-effect modifiers to both sheets. See #73 (11f). |
 | 4b | ✅ **#74** — a multiclass character's first class is whatever order Postgres returns | small–medium | **Closed 2026-09-21** on `fix/class-order` — `character_classes.position` records the order a class was taken and `classLedgerOrder` orders every ledger read. See #74 (11e). |
 | 5 | ✅ **#68 (choice half) — Branch B** — a choice step in both wizards | medium, UI | **Closed 2026-09-21** on `feat/choice-step`. `listChoiceQuestions(save, snapshot)` (`packages/engine/src/pipeline/choiceQuestions.ts`) defines every question a character must answer — class progression trait-choice nodes and trait proficiency/modifier choice blocks — with labelled options and the options already held. The creation wizard gained a **Choices** step (step 6; Finalize is 7) that asks every question for the draft character and blocks Next until all are answered; the level-up wizard asks, in one Choices step through the same shared `ChoiceQuestionList`, exactly the questions the server sends in `GET /reference/level-up/options`'s `choiceQuestions` — the character's questions after the level minus those before it, for the chosen (or stored) subclass and feat, refetched when either changes. The server builds that list with the same before/after helper (`buildLevelUpSaves` + `questionsNewAtLevel`) its required-answer check uses, so there is one definition of a question for both wizards and the server; a later subclass level (Champion 10, Battle Master 7), a subclass picked at its unlock level, and a level-1 subclass on a dip (Draconic ancestor, Knowledge blessings) are all asked. Rosters and held options come with the questions (a bard dip's skill pick lists every skill). The server requires answers: creation rejects any unanswered question, level-up rejects a question new at that level left unanswered, and **answers are locked** — re-answering a stored pick is refused (`Invalid character choices: <id> already answered`), which settles the inherited re-answering finding. A multiclass dip now offers the new class's (and a level-1 subclass's) level-1 trait-choice picks (a fighter dip's Fighting Style, a Draconic sorcerer's ancestor) and shows its level-1 features; spell picks on a dip stay skipped until #79. Hand check: a half-elf fighter (acolyte) created through the wizard answering six questions (held skills disabled as "already known"); all six stored in `choices`, the sheet shows the picks (STR 16/CON 14/CHA 10, Athletics +5, Stealth +4). Sister Aveline's fighter dip asked for and stored a Fighting Style (AC 15 → 16). Still open from the inherited findings: **#80**, a custom background's choice blocks. |
-| 5a | **#71** — the sheet ignores a refused resource spend | small–medium | Found by the final review of `fix/tier1-reach-the-player`, 2026-09-21. `RESOURCE_CONSUMED`'s refusal (item 2's fix) is not in `SHEET_ERROR_EVENTS`, so `consumeResource`'s optimistic decrement never rolls back. Same family as item 2: a spend the server refused should not be the spend the player sees. See P11's 11d. |
+| 5a | ✅ **#71** — the sheet ignores a refused resource spend | small–medium | **Closed 2026-09-23** on `fix/sheet-truthfulness`. `RESOURCE_CONSUMED` joined `SHEET_ERROR_EVENTS` and `rollbackResourceSpend` puts the charge back (uncapped — see #98) before the notice is raised. See #71. |
 | 5b | ✅ **#75** — feat-granted traits reach no sheet's modifiers | small–medium | **Closed 2026-09-21** on `fix/levelup-correctness` — a feat pick is stored where both sheets read it. See #75 (11g). |
-| 5c | **#76** — the web store's composed `activeStates` still lacks trait and equipment states | small–medium | Found by `fix/sheet-modifiers`'s hand check, 2026-09-21: `composeActiveStates` still composes only over `baseStates`, which the store always sets to `[]`; trigger and dice-rule gating in `dispatchAuthoredEvent`, `useCheckRoll`, and the `ArmorClassWidget`, `TableRulesWidget`, `TurnControlsWidget` and `ConditionsWidget` widgets still read it, even though #73 moved the derived-stat hooks to `getSheetStates()`. If the branch's final review fixes this first, it closes #76 rather than leaving it recorded here. See the "11g. #75 and #76" section below. **`useCheckRoll`'s symptom fixed 2026-09-21** on `fix/levelup-correctness` (it now reads `useAbilities().activeStates`); the rest stays open. |
+| 5c | ✅ **#76** — the web store's composed `activeStates` still lacks trait and equipment states | small–medium | **Closed 2026-09-23** on `fix/sheet-truthfulness`. The `baseStates` field is gone; `activeStates` finally carries trait and equipment states, and `getCharacterActions` gates on the engine's `matchesStatePredicate`. See #76. |
 | 5d | ✅ **#77** — stored ability scores are pre-racial, and two readers use them directly | small–medium | **Closed 2026-09-21** on `fix/levelup-correctness` — the readers that took stored scores at face value now take the final ones. See #77 (11g). |
 
 ### Tier 2 — the burndown, one system per pass
@@ -103,19 +103,13 @@ things the last three branches showed replace it:
 | Order | Item | Why here |
 | --- | --- | --- |
 | 15 | **#23 + #24 + A1 + A5 + E2 together** | One root: the event vocabulary only models your own turn. #24 (Dueling) joins it because the missing `status_wielding_one_handed_only` emitter is the same "what am I holding" model E2 needs. |
-| 16 | **A2b**, **S5** | Both small judgement calls about UI, not defects. |
+| 16 | **A2b** | A small judgement call about UI, not a defect. ✅ **S5 closed 2026-09-23** on `fix/sheet-truthfulness` — see S5. |
 
 ### Tier 5 — blocked or conditional; do not start
 
 Unchanged from the previous pass: **#41, #42** (need a second pack), **#43**
 (needs a browse endpoint over resources), **#38** (`db:push` TTY; `db:migrate`
 is the path in use), **#37 remainder** (deliberate), coverage thresholds.
-
-**Suggested first sitting:** Tier 1 items 1–3. Two are one-test fixes in a
-harness that already exists, and the third is a schema field plus one
-bootstrapper line — together they make every existing caster and every
-background visible on the sheet the first time it opens. Then settle #69's
-decision before anything writes more trait choices.
 
 The per-class stub table Tier 2 relies on ("Where the remaining stubs sit",
 re-counted 2026-09-21) is still current and stays in place below, as the last
@@ -267,15 +261,15 @@ Every id this file has ever issued, in one table. Gaps in the numbering are inte
 | 65 | six small items the branch's own reviews deferred as fix-later | Open | Open items (9c) |
 | 66 | Three schema concepts are missing, and they block four traits, not three | Open | Open items (10b) |
 | 67 | Nature Domain's Acolyte of Nature grants a druid cantrip of the player's choice; the pack has no spell lists to draw it from | Open | Open items (10c) |
-| 68 | 28 of the 36 traits `feat/proficiency-family` authored are data with no UI or save-shape to reach a player | Half-closed | Open items (10d) |
+| 68 | 28 of the 36 traits `feat/proficiency-family` authored are data with no UI or save-shape to reach a player | ✅ Closed | Closed items (10d) |
 | 69 | a rebuilt selection is credited to every node that offers the trait | ✅ Closed | Closed items (Resolved — #69) |
 | 70 | The sample seeder writes background `character_traits` rows nothing reads, and creates four `backgrounds` rows the pack does not author | Open | Open items (11c) |
-| 71 | The sheet ignores a refused resource spend | Open | Open items (11d) |
+| 71 | The sheet ignores a refused resource spend | ✅ Closed | Closed items (11d) |
 | 72 | The server's authoritative runtime is hydrated without the rule snapshot | Open | Open items (11d) |
 | 73 | the web sheet applies no trait modifiers | ✅ Closed | Closed items (11f) |
 | 74 | A multiclass character's "primary" class is inferred from array order, but `character_classes` records no order and nothing reads it in one | ✅ Closed | Closed items (11e) |
 | 75 | Feat-granted traits never reach either sheet's modifiers | ✅ Closed | Closed items (11g) |
-| 76 | The web store's composed `activeStates` still lacks trait and equipment states, so trigger and dice-rule gating still miss them | Open | Open items (11g) |
+| 76 | The web store's composed `activeStates` still lacks trait and equipment states, so trigger and dice-rule gating still miss them | ✅ Closed | Closed items (11g) |
 | 77 | Stored ability scores are pre-racial, and multiclass prerequisites and `useCheckRoll` read them directly | ✅ Closed | Closed items (11g) |
 | 78 | Hit points: creation writes none, level-up skips the Constitution modifier, and the engine's derived maximum is never shown | ✅ Closed | Closed items (11g) |
 | 79 | The level-up wizard has no spell step, so a level with a spell choice cannot be submitted | ✅ Closed | Closed items (11g) |
@@ -292,10 +286,12 @@ Every id this file has ever issued, in one table. Gaps in the numbering are inte
 | 90 | `newTotalLevel` is written from the request without checking the ledger | ✅ Closed | Closed items (11h) |
 | 91 | The fake database cannot tell the pool from a transaction, so nothing pins which one a service queries | Open | Open items (11h) |
 | 92 | the server clamps hit points without knowing the rules that govern them | Open | Open items (11h) |
-| 93 | A stale client silently truncates its own healing, and nothing reports it | Open | Open items (11h) |
+| 93 | A stale client silently truncates its own healing, and nothing reports it | ✅ Closed | Closed items (11h) |
 | 94 | Two concurrent level-ups both pass the ledger check and both add hit points | Open | Open items (11h) |
 | 95 | A row whose level already disagrees with its ledger can no longer level up | Open | Open items (11h) |
 | 96 | A socket payload is trusted to be the shape its type claims | Open | Open items (11h) |
+| 97 | The gateway gates an action on the effect manager's states alone | Open | Open items |
+| 98 | A resource total has no ceiling, so a rollback can over-restore it | Open | Open items |
 | A1 | Ready's trigger is not modelled | Open | Open items |
 | A2 | No roll-initiating UI for skills | ✅ Closed | Closed items |
 | A2b | actions do not prompt their own check | Open | Open items |
@@ -311,7 +307,7 @@ Every id this file has ever issued, in one table. Gaps in the numbering are inte
 | S2 | Replayed actions arrive in a different shape | ✅ Closed | Closed items |
 | S3 | ROOM_JOIN has no error path | ✅ Closed | Closed items |
 | S4 | gap in the numbering (intentional) | — | — |
-| S5 | a failed room join reports itself on the inventory banner | Open | Open items |
+| S5 | a failed room join reports itself on the inventory banner | ✅ Closed | Closed items |
 | S6 | `ITEM_ATTUNED` is emitted by the client and bound by nobody | ✅ Closed | Closed items |
 | — | Coverage thresholds | Open | Open items — no id, listed by title after #91 |
 | — | `add_specific_die` replaces the damage dice instead of adding to them | ✅ Closed | Closed items — no id, listed by title after the lettered groups |
@@ -732,66 +728,6 @@ cantrip can be authored as a `spell_choice` block on the trait
 (`listSource: "druid"`, `maxSpellLevel: 0`, `pickCount: 1`) once #31a gives
 the pack spell lists; authored before that, it would offer every pack spell.
 
-### #68 — authored proficiency data has no consumer outside tests, and backgrounds reach no live sheet at all
-
-*Recorded as 10d.*
-
-| # | Item | Notes |
-| --- | --- | --- |
-| 68 | 28 of the 36 traits `feat/proficiency-family` authored are data with no UI or save-shape to reach a player | Opened 2026-09-21, on closing `feat/proficiency-family`. |
-
-The design doc claimed "skills, languages and tools all already have
-consumers; this branch gives them data" (corrected in place, see its Engine
-changes section). Verified against the working tree at close:
-
-- **Choice blocks have no consumer.** 21 of the 36 traits this branch
-  authored are choice blocks. `ProficiencyExtractor.listPendingChoices` and
-  `PendingProficiencyChoice` are referenced only by this branch's own tests
-  (`authoredProficiencies.test.ts`, `characterEngine.test.ts`) and by
-  `proficiencyExtractor.ts` itself — nothing in `apps/web/src` or the server
-  calls or references either. The character-creation wizard has no
-  proficiency step to offer a rogue's four-from-eleven or an acolyte's two
-  languages.
-- **Backgrounds reach no live sheet at all, fixed or chosen.**
-  `CharacterSaveSchema` (`packages/shared/src/schemas/runtime/characterSave.ts`)
-  has no `background` field, so `CharacterBootstrapper.resolveGrantedTraitIds`
-  builds its granted-trait id list from `race` and `classes` only. A
-  background's proficiencies — fixed or choice, all four backgrounds this
-  branch authored — never enter `compileActiveTraits`.
-
-Net effect: of the 36 traits authored, roughly 8 reach a live sheet today —
-the fixed tool/armour/weapon grants hanging off classes and subclasses. The
-other ~28 are correct pack data waiting on a UI (a proficiency-choice step in
-character creation) and a schema change (a `background` field on
-`CharacterSaveSchema`) that this branch did not build, because building them
-was never in its scope. Whoever picks up character-creation UI or the
-background gap should start here rather than rediscovering it.
-
-**Fixed half closed 2026-09-21** on `fix/tier1-reach-the-player`: a
-background's *fixed* grants now reach the live sheet, the way described in
-Tier 1 item 3's design (`CharacterSaveSchema.backgroundId`,
-`RuleSnapshotLookup.resolveBackgroundDefinition`, and the server and web store
-threading the id through). The choice half above — 21 authored choice blocks
-with no wizard step to offer them — is unchanged and stays open as Tier 1 item
-5.
-
-**Storage for the choice half landed 2026-09-21** on `feat/character-choices`
-("Branch A" of a two-branch split): `characters.choices` now stores a
-character's choices keyed by the question they answer. The count of
-choice-block traits waiting on a wizard step widens from 21 to 31 once the
-race picks that predate #68 are counted too — the half-elf's ability-score
-choice, Skill Versatility and extra language, the human's and high elf's
-extra language, and the dwarf's artisan's tools. The wizard step itself
-("Branch B") is unchanged and stays open as Tier 1 item 5.
-
-**#68's fixed half is smaller than recorded.** 10d frames it as "a schema
-change (a `background` field on `CharacterSaveSchema`)", which is true, but
-the storage and the selection already exist: `characters.background_id`
-(`operational.ts:87`) is a real column with a foreign key, and the wizard
-already picks a background (`wizardStore.ts`, `compileCharacter.ts`,
-`ReviewStepContainer.tsx`). Only the save shape and the bootstrapper need to
-learn about it. No migration.
-
 ### #70 — the sample seeder's background rows are inert, and it authors backgrounds the pack does not
 
 *Recorded as 11c.*
@@ -823,26 +759,6 @@ Two separate findings from the same file,
   seeder creates that no sample character uses at all. Four backgrounds to
   author, for the backlog — tracked as Tier 2 item 7a.
 
-### #71 — the sheet ignores a refused resource spend
-
-*Recorded as 11d.*
-
-| # | Item | Notes |
-| --- | --- | --- |
-| 71 | The sheet ignores a refused resource spend | Found by the final review of `fix/tier1-reach-the-player`, 2026-09-21. See below. |
-
-Since this branch, `RESOURCE_CONSUMED` answers a spend that matched no
-`character_resources` row with `action_error` ("Unknown resource for this
-character.") and does not broadcast. But `SHEET_ERROR_EVENTS`
-(`apps/web/src/components/sheet/sheetErrorEvents.ts`) does not list
-`RESOURCE_CONSUMED`, so the sheet drops the error, and `consumeResource` in
-`apps/web/src/store/characterSheetStore.ts` never rolls back its optimistic
-decrement: the spender sees the spend until reload. Reachable now by a click
-during page load before the join's insert lands, or by client/server grant
-drift. Needs a rollback plus a notice; the inventory-scoped banner that
-`SHEET_ERROR_EVENTS` feeds is the wrong surface (compare S5). The server now
-logs the refusal (#63's follow-up fix).
-
 ### #72 — the server's authoritative runtime is hydrated without the rule snapshot
 
 *Recorded as 11d.*
@@ -860,43 +776,6 @@ gets no trait-granted states or grant-derived resources; only
 `hydrateFromPersisted` supplies resources. `ROOM_JOIN` now reaches this path
 too. Needs checking whether any gameplay path depends on those states before
 deciding the fix.
-
-### #76 — the web store's composed `activeStates` still lacks trait and equipment states
-
-*Recorded as 11g.*
-
-| # | Item | Notes |
-| --- | --- | --- |
-| 76 | The web store's composed `activeStates` still lacks trait and equipment states, so trigger and dice-rule gating still miss them | Found by `fix/sheet-modifiers`'s hand check, 2026-09-21; recorded rather than fixed; `useCheckRoll`'s symptom fixed on `fix/levelup-correctness`. See below. |
-
-#73's fix routes the derived-stat hooks through the new `getSheetStates()`,
-but the store's existing `composeActiveStates` still composes only over
-`baseStates`, which the store always sets to `[]` — a separate field from
-the `gatherBaseStates`-backed states `getSheetStates()` now returns. Trigger
-and dice-rule gating still read the empty `activeStates`:
-`dispatchAuthoredEvent`, `useCheckRoll`, and the `ArmorClassWidget`,
-`TableRulesWidget`, `TurnControlsWidget` and `ConditionsWidget` widgets. If
-`fix/sheet-modifiers`'s final review fixes this before the branch closes,
-that review closes #76 rather than leaving it recorded here.
-
-Two concrete symptoms the final review found, 2026-09-21. Totem Spirit
-(Eagle)'s bonus-action Dash (`action_eagle_dash`) and its opportunity-attack
-table note are both `forbiddenStates: ["status_wearing_heavy_armor"]`, and
-the pack's own `trait_totem_spirit_eagle` summary
-(`packages/database/data/packs/core_2014_pack/traits/ported.json`) claims
-"the heavy-armour gate holds on the sheet" — it does not: the web store's
-raw `activeStates` never carries equipment states, so a raging barbarian in
-heavy armour still sees and can use the Dash action and the table note both
-claim is blocked. Separately, `useCheckRoll`
-(`apps/web/src/hooks/useCheckRoll.ts`) is not only a trigger-gating gap —
-its dice rules (`DiceEngine.applyDiceRulesToRollResult`) are handed the same
-raw `state.activeStates`, so any dice rule keyed to a trait or equipment
-state, not only a condition, rolls as though that state is never active.
-
-**`useCheckRoll`'s symptom fixed 2026-09-21** on `fix/levelup-correctness`:
-its dice rules now receive `useAbilities().activeStates` (the sheet's
-states) and the final ability scores. The Eagle Dash gate and the other
-readers above are still open.
 
 ### #80 — a custom background's choice blocks cannot be answered
 
@@ -1051,63 +930,6 @@ with a +2 Constitution increase gains 11, where the preview says 8). Fix:
 preview the same difference the server computes, rather than re-deriving it
 in the UI.
 
-### #89 — the sheet's own damage and heal writes are never clamped ✅
-
-*Recorded as 11h.*
-
-| # | Item | Notes |
-| --- | --- | --- |
-| 89 | ✅ The sheet's own damage and heal writes are never clamped | Found by the final review of `fix/hit-points`; closed 2026-09-23 on `fix/hp-authority`. See below. |
-
-`HP_MODIFIED`'s handler in `apps/server/src/gateway/socket.ts` persists
-`currentHp + delta` directly, bypassing `modifyCharacterHp` and therefore
-every derivation #78 added: a client at 25/31 healing 10 stores 35. The web
-clamps locally before emitting, so the stored value only diverges when a
-client sends a raw delta, but this is the most travelled write path in the
-app and the server is meant to be authoritative. Fix: route that handler
-through `modifyCharacterHp`, which clamps to the derived maximum.
-Pre-existing.
-
-**Closed 2026-09-23** on `fix/hp-authority`. `HP_MODIFIED` now persists
-through `modifyCharacterHp`, which locks the row and clamps to `[0, derived
-max]`. Both of the gateway's HP emitters — the relay handler and the
-item-action heal path — now broadcast an `HpModifiedBroadcast` carrying
-`currentHp` and `maxHp`, to the whole campaign room including the sender, so
-a client whose derived maximum is stale corrects itself. On the web,
-`applyHealthDelta` emits the delta that actually applied (`appliedHp -
-previousHp`) rather than the raw one, and `syncRemoteHealthDelta` follows
-the asserted total instead of re-deriving one, returning early when that
-total is the one it already shows.
-
-Correct the record: the original entry above said the database only
-diverged when a client sent a raw delta, but the web sent the raw delta on
-every heal and every hit, so an ordinary overheal diverged — a character at
-25/31 healing 10 stored 35, and one at 3 hit points taking 20 stored -17.
-
-### #90 — `newTotalLevel` is written from the request without checking the ledger ✅
-
-*Recorded as 11h.*
-
-| # | Item | Notes |
-| --- | --- | --- |
-| 90 | ✅ `newTotalLevel` is written from the request without checking the ledger | Found by the final review of `fix/hit-points`; closed 2026-09-23 on `fix/hp-authority`. See below. |
-
-`applyLevelUp` (`apps/server/src/controllers/characterController.ts`) sets
-`characters.level` to the payload's `newTotalLevel` with no comparison
-against the class ledger it just updated, so a crafted request can leave the
-column disagreeing with the sum of class levels. Since #78 the sheet's
-maximum hit points and both health clamps derive from a level, which makes
-the drift visible rather than cosmetic (the client reads the ledger after
-F2; the server sums the ledger already). Fix: derive the new total from the
-ledger, or reject a payload whose `newTotalLevel` does not match it.
-
-**Closed 2026-09-23** on `fix/hp-authority`. `applyLevelUp` now derives the
-new total by summing the class ledger it already read and adding one —
-correct for a multiclass dip as well as ordinary progression, since a
-level-up always advances exactly one class by exactly one level — writes
-that derived number, and rejects a payload whose `newTotalLevel` disagrees
-with a 400 naming both numbers.
-
 ### #91 — the fake database cannot tell the pool from a transaction, so nothing pins which one a service queries
 
 *Recorded as 11h.*
@@ -1158,24 +980,6 @@ client would obey - charge spent, character at 0, and the trigger's own
 `previousHp > 0` guard means it cannot fire again. Fix: move trigger
 resolution server-side so the server can compute the true result.
 Pre-existing; not introduced by this branch.
-
-### #93 — A stale client silently truncates its own healing, and nothing reports it
-
-*Recorded as 11h.*
-
-| # | Item | Notes |
-| --- | --- | --- |
-| 93 | A stale client silently truncates its own healing, and nothing reports it | Found by the final review of `fix/hp-authority`. See below. |
-
-The web clamps with `state.getMaxHp()` before emitting and sends the
-post-clamp delta, so when the client's derived maximum is *lower* than the
-server's - stale `classLevels`, ability scores or trait view after levelling
-on another device, or a `MAX_HP` item equipped elsewhere - the heal is cut
-before it leaves the browser. The server can only clamp further, never
-restore, so the points are lost with no error anywhere. #89's design says a
-client whose maximum is stale "corrects itself"; that holds only when the
-client's maximum is too high. The broadcast already carries `maxHp`, so the
-client has what it needs to detect the disagreement and refetch.
 
 ### #94 — Two concurrent level-ups both pass the ledger check and both add hit points
 
@@ -1233,6 +1037,51 @@ emit hit point changes for any character in the campaign; #89 bounded the
 blast radius but did not close that. Fix: parse inbound payloads with the zod
 schemas the shared package already hosts, and decide whether ownership
 should gate the write. Found by the final review of `fix/hp-authority`.
+
+### #97 — the gateway gates an action on the effect manager's states alone
+
+| # | Item | Notes |
+| --- | --- | --- |
+| 97 | The gateway gates an action on the effect manager's states alone | Found while planning `fix/sheet-truthfulness`, 2026-09-23. See below. |
+
+`ActionResolver.execute` checks an effect's `requiredStates` and
+`forbiddenStates` honestly, but `apps/server/src/gateway/socket.ts` hands it
+`runtime.effectManager.getActiveStates()`, so no state that comes from a
+trait or from worn equipment can block an action server-side —
+`status_wearing_heavy_armor` comes from the inventory and is never in that
+list. A blocked action is not refused either: it returns `executed: true`
+having applied nothing, so a client that asks anyway is told it worked. #76
+stopped the sheet offering a forbidden action; it did not stop a crafted or
+stale client asking. The whole pack carries exactly three actions with a
+state predicate on their own effect — `action_relentless_rage`,
+`action_frenzied_strike` and `action_eagle_dash` — and the web's
+`getCharacterActions` already drops the first two before either gate runs:
+`action_relentless_rage` by id (the Rules panel offers it directly, not as a
+pressable button) and `action_frenzied_strike` because its effect is a
+`dynamic_weapon_attack`, filtered out as a template rather than a concrete
+action. `action_eagle_dash` is currently the only action that exercises
+either gate. Fix: compose the action states the gateway passes from the
+character's full state rather than the effect manager alone, which is the
+same question as #92 — what the server may know about a character's rules.
+Found while planning `fix/sheet-truthfulness`.
+
+### #98 — a resource total has no ceiling, so a rollback can over-restore it
+
+| # | Item | Notes |
+| --- | --- | --- |
+| 98 | A resource total has no ceiling, so a rollback can over-restore it | Found by the review of `fix/sheet-truthfulness`, 2026-09-23, while closing #71. See below. |
+
+`OperationalResource` (`packages/engine/src/types/resources.ts`) is `{ id,
+current }` with no maximum, so `rollbackResourceSpend` (closed as part of
+#71) restores `current + amount` uncapped. The ceiling exists only at
+display time: `useFeatures.ts` derives `maxUses` from the rule snapshot and
+renders `Math.min(current, maxUses)`. So a stored total that climbs above
+the real maximum does not show as too high — it freezes the counter, and the
+next genuine spends move nothing the player can see. It needs one spend to
+produce two refusals, which is not a path the socket currently takes, so
+this is latent. Fix: give the store the rules-derived ceiling, probably by
+extracting the `maxUses` derivation so both the hook and the store use one
+calculation. Found by the review of `fix/sheet-truthfulness`.
 
 ### Coverage thresholds
 
@@ -1299,19 +1148,6 @@ had an off-hand weapon. Before the pre-fix gateway is missed, note that it
 accepted them without checking `light`, so it would have persisted a
 dual-wielded maul. Worth a design pass alongside the Tier 6 reaction work,
 since two-weapon fighting needs a bonus-action attack to be worth anything.
-
-### S5 — a failed room join reports itself on the inventory banner
-
-Found 2026-08-21 while closing S3. `ROOM_JOIN`'s `action_error` now reaches the
-sheet, but it arrives through `setInventoryError`, which renders an
-inventory-scoped banner. The actual condition is broader: the character could
-not be bound to the campaign at all, so the whole sheet is unbacked, not just
-the inventory list.
-
-Strictly better than the silence it replaces, and deliberately minimal. The
-right treatment is probably page-level — the route knows it asked for a
-character in a campaign and got refused — but that is a UI design decision
-rather than a defect, so it is recorded rather than guessed at.
 
 ---
 
@@ -2052,6 +1888,76 @@ rather than module load so tests can vary the environment. `index.ts` and
 `socket.ts:501` both call it, so the literal default now exists in one place
 instead of two that could disagree again.
 
+### #68 — authored proficiency data has no consumer outside tests, and backgrounds reach no live sheet at all ✅
+
+*Recorded as 10d.*
+
+| # | Item | Notes |
+| --- | --- | --- |
+| 68 | ✅ 28 of the 36 traits `feat/proficiency-family` authored are data with no UI or save-shape to reach a player | Opened 2026-09-21, on closing `feat/proficiency-family`; both halves closed 2026-09-21. Status reconciled in this file 2026-09-23. |
+
+The design doc claimed "skills, languages and tools all already have
+consumers; this branch gives them data" (corrected in place, see its Engine
+changes section). Verified against the working tree at close:
+
+- **Choice blocks have no consumer.** 21 of the 36 traits this branch
+  authored are choice blocks. `ProficiencyExtractor.listPendingChoices` and
+  `PendingProficiencyChoice` are referenced only by this branch's own tests
+  (`authoredProficiencies.test.ts`, `characterEngine.test.ts`) and by
+  `proficiencyExtractor.ts` itself — nothing in `apps/web/src` or the server
+  calls or references either. The character-creation wizard has no
+  proficiency step to offer a rogue's four-from-eleven or an acolyte's two
+  languages.
+- **Backgrounds reach no live sheet at all, fixed or chosen.**
+  `CharacterSaveSchema` (`packages/shared/src/schemas/runtime/characterSave.ts`)
+  has no `background` field, so `CharacterBootstrapper.resolveGrantedTraitIds`
+  builds its granted-trait id list from `race` and `classes` only. A
+  background's proficiencies — fixed or choice, all four backgrounds this
+  branch authored — never enter `compileActiveTraits`.
+
+Net effect: of the 36 traits authored, roughly 8 reach a live sheet today —
+the fixed tool/armour/weapon grants hanging off classes and subclasses. The
+other ~28 are correct pack data waiting on a UI (a proficiency-choice step in
+character creation) and a schema change (a `background` field on
+`CharacterSaveSchema`) that this branch did not build, because building them
+was never in its scope. Whoever picks up character-creation UI or the
+background gap should start here rather than rediscovering it.
+
+**Fixed half closed 2026-09-21** on `fix/tier1-reach-the-player`: a
+background's *fixed* grants now reach the live sheet, the way described in
+Tier 1 item 3's design (`CharacterSaveSchema.backgroundId`,
+`RuleSnapshotLookup.resolveBackgroundDefinition`, and the server and web store
+threading the id through). The choice half above — 21 authored choice blocks
+with no wizard step to offer them — is unchanged and stays open as Tier 1 item
+5.
+
+**Storage for the choice half landed 2026-09-21** on `feat/character-choices`
+("Branch A" of a two-branch split): `characters.choices` now stores a
+character's choices keyed by the question they answer. The count of
+choice-block traits waiting on a wizard step widens from 21 to 31 once the
+race picks that predate #68 are counted too — the half-elf's ability-score
+choice, Skill Versatility and extra language, the human's and high elf's
+extra language, and the dwarf's artisan's tools. The wizard step itself
+("Branch B") is unchanged and stays open as Tier 1 item 5.
+
+**#68's fixed half is smaller than recorded.** 10d frames it as "a schema
+change (a `background` field on `CharacterSaveSchema`)", which is true, but
+the storage and the selection already exist: `characters.background_id`
+(`operational.ts:87`) is a real column with a foreign key, and the wizard
+already picks a background (`wizardStore.ts`, `compileCharacter.ts`,
+`ReviewStepContainer.tsx`). Only the save shape and the bootstrapper need to
+learn about it. No migration.
+
+**Choice half closed 2026-09-21** on `feat/choice-step` (Tier 1 item 5,
+"Branch B"): `listChoiceQuestions` asks every proficiency choice block this
+item found, alongside the trait-choice nodes #69 and the spell step #79
+needed, through the creation wizard's Choices step and the level-up wizard's
+shared question list. Both halves were closed the same day; the Recommended
+sequence's Tier 1 table already shows both rows ✅ — this entry and the Item
+Index had simply not been updated to match. **Reconciled 2026-09-23** on
+`fix/sheet-truthfulness`, with no further code change: closed status here now
+matches what Tier 1 items 3 and 5 already recorded.
+
 ### #69 — a rebuilt selection is credited to every node that offers the trait ✅
 
 *Recorded as "Resolved — #69".*
@@ -2100,6 +2006,46 @@ this: it held **no** `player_choice` rows, and no UI ever set
 `selectedTraits`, so the guessing function had been running on nothing — no
 character's class choice reached its sheet before this branch, and there was
 no player data to migrate.
+
+### #71 — the sheet ignores a refused resource spend ✅
+
+*Recorded as 11d.*
+
+| # | Item | Notes |
+| --- | --- | --- |
+| 71 | ✅ The sheet ignores a refused resource spend | Found by the final review of `fix/tier1-reach-the-player`, 2026-09-21; closed 2026-09-23 on `fix/sheet-truthfulness`. See below. |
+
+Since this branch, `RESOURCE_CONSUMED` answers a spend that matched no
+`character_resources` row with `action_error` ("Unknown resource for this
+character.") and does not broadcast. But `SHEET_ERROR_EVENTS`
+(`apps/web/src/components/sheet/sheetErrorEvents.ts`) does not list
+`RESOURCE_CONSUMED`, so the sheet drops the error, and `consumeResource` in
+`apps/web/src/store/characterSheetStore.ts` never rolls back its optimistic
+decrement: the spender sees the spend until reload. Reachable now by a click
+during page load before the join's insert lands, or by client/server grant
+drift. Needs a rollback plus a notice; the inventory-scoped banner that
+`SHEET_ERROR_EVENTS` feeds is the wrong surface (compare S5). The server now
+logs the refusal (#63's follow-up fix).
+
+**Closed 2026-09-23** on `fix/sheet-truthfulness`. `RESOURCE_CONSUMED` joined
+`SHEET_ERROR_EVENTS`; a pure `resolveActionError`
+(`apps/web/src/components/sheet/sheetErrorEvents.ts`) now decides what an
+`action_error` means, so the routing is unit-testable without mocking the
+socket singleton (`LiveSheetProvider` imports it directly and nothing in the
+repo mocks it), and `rollbackResourceSpend` restores the charge before the
+notice is raised, ignoring an echo that names another character. The notice
+that reports it replaced the inventory-scoped banner (see S5): one `notice: {
+text, tone }` renders above the dashboard grid.
+
+Correct the record: the plan's own closing text for this item said the
+restore is "clamped to the pool's maximum". It is not. `OperationalResource`
+(`packages/engine/src/types/resources.ts`) carries no maximum for the store
+to clamp against — `rollbackResourceSpend`'s own docstring and its test say
+so directly ("adds the full refused amount back, since the store holds no
+maximum to clamp against"). A refusal delivered twice, or one landing on a
+pool already at its rules-derived ceiling, over-restores it silently; that
+gap is real but is not this item's shape, so it is recorded separately as
+#98 rather than folded in here.
 
 ### #73 — the web sheet applies no trait modifiers ✅
 
@@ -2274,6 +2220,61 @@ rows.
 - Migration `0016_choices_default_feats` was applied to the dev
   database (`db:migrate`) on 2026-09-21, after the merge.
 
+### #76 — the web store's composed `activeStates` still lacks trait and equipment states ✅
+
+*Recorded as 11g.*
+
+| # | Item | Notes |
+| --- | --- | --- |
+| 76 | ✅ The web store's composed `activeStates` still lacks trait and equipment states, so trigger and dice-rule gating still miss them | Found by `fix/sheet-modifiers`'s hand check, 2026-09-21; `useCheckRoll`'s symptom fixed on `fix/levelup-correctness`; closed 2026-09-23 on `fix/sheet-truthfulness`. See below. |
+
+#73's fix routes the derived-stat hooks through the new `getSheetStates()`,
+but the store's existing `composeActiveStates` still composes only over
+`baseStates`, which the store always sets to `[]` — a separate field from
+the `gatherBaseStates`-backed states `getSheetStates()` now returns. Trigger
+and dice-rule gating still read the empty `activeStates`:
+`dispatchAuthoredEvent`, `useCheckRoll`, and the `ArmorClassWidget`,
+`TableRulesWidget`, `TurnControlsWidget` and `ConditionsWidget` widgets. If
+`fix/sheet-modifiers`'s final review fixes this before the branch closes,
+that review closes #76 rather than leaving it recorded here.
+
+Two concrete symptoms the final review found, 2026-09-21. Totem Spirit
+(Eagle)'s bonus-action Dash (`action_eagle_dash`) and its opportunity-attack
+table note are both `forbiddenStates: ["status_wearing_heavy_armor"]`, and
+the pack's own `trait_totem_spirit_eagle` summary
+(`packages/database/data/packs/core_2014_pack/traits/ported.json`) claims
+"the heavy-armour gate holds on the sheet" — it does not: the web store's
+raw `activeStates` never carries equipment states, so a raging barbarian in
+heavy armour still sees and can use the Dash action and the table note both
+claim is blocked. Separately, `useCheckRoll`
+(`apps/web/src/hooks/useCheckRoll.ts`) is not only a trigger-gating gap —
+its dice rules (`DiceEngine.applyDiceRulesToRollResult`) are handed the same
+raw `state.activeStates`, so any dice rule keyed to a trait or equipment
+state, not only a condition, rolls as though that state is never active.
+
+**`useCheckRoll`'s symptom fixed 2026-09-21** on `fix/levelup-correctness`:
+its dice rules now receive `useAbilities().activeStates` (the sheet's
+states) and the final ability scores. The Eagle Dash gate and the other
+readers above stayed open until this branch.
+
+**Closed 2026-09-23** on `fix/sheet-truthfulness`. The `baseStates` field is
+gone; one `sheetGating` helper compiles the character's active traits once
+and returns both the gating states (through `gatherBaseStates`) and the
+condition suppressions, so `activeStates` finally carries trait and
+equipment states. `initialize` now composes `activeStates` too, which it
+never did before — without that the sheet would have shown no equipment
+states until the player's first action.
+
+Record what planning found and the entry had wrong: fixing the list was
+**not sufficient** for the Eagle Totem symptom, because nothing gated an
+*action* on its states at all — the web never read `forbiddenStates` and the
+server is handed the effect manager's states alone. `getCharacterActions`
+now calls the engine's newly exported `matchesStatePredicate`, so a raging
+barbarian in plate is no longer offered the Eagle Dash, and an action is no
+longer offered before its `requiredStates` hold. The server-side half of
+this same gap — the gateway still hands `ActionResolver.execute` the effect
+manager's states alone — is not closed by this; it is recorded as #97.
+
 ### #77 — Stored ability scores are pre-racial, and multiclass prerequisites and `useCheckRoll` read them directly ✅
 
 *Recorded as 11g.*
@@ -2447,6 +2448,92 @@ A second warlock created with Eldritch Blast got Agonizing Blast with no
 reasons, while Thirsting Blade kept "needs Warlock level 5, needs Pact of
 the Blade".
 
+### #89 — the sheet's own damage and heal writes are never clamped ✅
+
+*Recorded as 11h.*
+
+| # | Item | Notes |
+| --- | --- | --- |
+| 89 | ✅ The sheet's own damage and heal writes are never clamped | Found by the final review of `fix/hit-points`; closed 2026-09-23 on `fix/hp-authority`. See below. |
+
+`HP_MODIFIED`'s handler in `apps/server/src/gateway/socket.ts` persists
+`currentHp + delta` directly, bypassing `modifyCharacterHp` and therefore
+every derivation #78 added: a client at 25/31 healing 10 stores 35. The web
+clamps locally before emitting, so the stored value only diverges when a
+client sends a raw delta, but this is the most travelled write path in the
+app and the server is meant to be authoritative. Fix: route that handler
+through `modifyCharacterHp`, which clamps to the derived maximum.
+Pre-existing.
+
+**Closed 2026-09-23** on `fix/hp-authority`. `HP_MODIFIED` now persists
+through `modifyCharacterHp`, which locks the row and clamps to `[0, derived
+max]`. Both of the gateway's HP emitters — the relay handler and the
+item-action heal path — now broadcast an `HpModifiedBroadcast` carrying
+`currentHp` and `maxHp`, to the whole campaign room including the sender, so
+a client whose derived maximum is stale corrects itself. On the web,
+`applyHealthDelta` emits the delta that actually applied (`appliedHp -
+previousHp`) rather than the raw one, and `syncRemoteHealthDelta` follows
+the asserted total instead of re-deriving one, returning early when that
+total is the one it already shows.
+
+Correct the record: the original entry above said the database only
+diverged when a client sent a raw delta, but the web sent the raw delta on
+every heal and every hit, so an ordinary overheal diverged — a character at
+25/31 healing 10 stored 35, and one at 3 hit points taking 20 stored -17.
+
+### #90 — `newTotalLevel` is written from the request without checking the ledger ✅
+
+*Recorded as 11h.*
+
+| # | Item | Notes |
+| --- | --- | --- |
+| 90 | ✅ `newTotalLevel` is written from the request without checking the ledger | Found by the final review of `fix/hit-points`; closed 2026-09-23 on `fix/hp-authority`. See below. |
+
+`applyLevelUp` (`apps/server/src/controllers/characterController.ts`) sets
+`characters.level` to the payload's `newTotalLevel` with no comparison
+against the class ledger it just updated, so a crafted request can leave the
+column disagreeing with the sum of class levels. Since #78 the sheet's
+maximum hit points and both health clamps derive from a level, which makes
+the drift visible rather than cosmetic (the client reads the ledger after
+F2; the server sums the ledger already). Fix: derive the new total from the
+ledger, or reject a payload whose `newTotalLevel` does not match it.
+
+**Closed 2026-09-23** on `fix/hp-authority`. `applyLevelUp` now derives the
+new total by summing the class ledger it already read and adding one —
+correct for a multiclass dip as well as ordinary progression, since a
+level-up always advances exactly one class by exactly one level — writes
+that derived number, and rejects a payload whose `newTotalLevel` disagrees
+with a 400 naming both numbers.
+
+### #93 — A stale client silently truncates its own healing, and nothing reports it ✅
+
+*Recorded as 11h.*
+
+| # | Item | Notes |
+| --- | --- | --- |
+| 93 | ✅ A stale client silently truncates its own healing, and nothing reports it | Found by the final review of `fix/hp-authority`; closed 2026-09-23 on `fix/sheet-truthfulness`. See below. |
+
+The web clamps with `state.getMaxHp()` before emitting and sends the
+post-clamp delta, so when the client's derived maximum is *lower* than the
+server's - stale `classLevels`, ability scores or trait view after levelling
+on another device, or a `MAX_HP` item equipped elsewhere - the heal is cut
+before it leaves the browser. The server can only clamp further, never
+restore, so the points are lost with no error anywhere. #89's design says a
+client whose maximum is stale "corrects itself"; that holds only when the
+client's maximum is too high. The broadcast already carries `maxHp`, so the
+client has what it needs to detect the disagreement and refetch.
+
+**Closed 2026-09-23** on `fix/sheet-truthfulness`. A heal is now emitted raw
+and the server clamps it; only damage reports what applied back to the
+client, because only damage can carry a trigger. The invariant this rests on
+— nothing modifies incoming healing — was checked against
+`ModifierTargetSchema`, the affinity schemas, and the pack itself, not
+assumed. Name the tripwire: `trait_blessed_healer` and
+`trait_supreme_healing` exist in the pack as `unimplemented` placeholders
+(`packages/database/data/packs/core_2014_pack/traits/unimplemented.json`),
+so implementing either is the moment this asymmetry — damage reports what
+applied, healing does not — has to be revisited.
+
 ### A2 — No roll-initiating UI for skills ✅
 
 **Closed 2026-08-19.** `useCheckRoll` asks for a d20 through the existing roll interceptor and files the result; `SkillsWidget` (extracted from `DashboardLayout`) and `SavingThrowsWidget` both use it. Hide and Search still do not *prompt* their own check — see A2b.
@@ -2612,6 +2699,32 @@ Location: [socket.ts](apps/server/src/gateway/socket.ts)
 Location: [socket.ts](apps/server/src/gateway/socket.ts), [sheetErrorEvents.ts](apps/web/src/components/sheet/sheetErrorEvents.ts)
 
 **Fixed 2026-08-21.** The handler now emits `action_error` like every other one. Three things the original note missed: (1) **the unguarded window was wider than the `characterId` branch** — `getCampaignMembershipRole` and the inventory `select` were also awaited outside any try/catch, so a DB fault there was equally silent; both are now covered, and a test drives the inventory read to fail on its own. (2) **State was already partially applied at the throw** — the socket had joined the room and set its context before the character was looked at. Membership was legitimately verified, so the fix reports the character failure and *keeps* the join; tearing it down would drop a player out of a campaign they belong to. A test pins that. (3) **The client filtered `action_error` by event** and listed only three inventory events, so a server-only fix would have stopped the error being silent on the wire while leaving it invisible to the player. The list is now `SHEET_ERROR_EVENTS` in its own module, includes `ROOM_JOIN`, and is named through `SOCKET_EVENTS` instead of loose strings (its own module because `react-refresh/only-export-components` rightly refuses a non-component export from a component file). One message covers "another campaign" and "no such character" — which of the two it was is not the client's business.
+
+### S5 — a failed room join reports itself on the inventory banner ✅
+
+Found 2026-08-21 while closing S3. `ROOM_JOIN`'s `action_error` now reaches the
+sheet, but it arrives through `setInventoryError`, which renders an
+inventory-scoped banner. The actual condition is broader: the character could
+not be bound to the campaign at all, so the whole sheet is unbacked, not just
+the inventory list.
+
+Strictly better than the silence it replaces, and deliberately minimal. The
+right treatment is probably page-level — the route knows it asked for a
+character in a campaign and got refused — but that is a UI design decision
+rather than a defect, so it is recorded rather than guessed at.
+
+**Closed 2026-09-23** on `fix/sheet-truthfulness`, because the banner it
+complained about no longer exists. `setInventoryError` and the
+inventory-scoped banner are gone; `inventoryError` is gone too, and the two
+attunement messages the store used to raise directly moved onto the same
+surface. The sheet now has one `notice: { text, tone }`, rendered above the
+dashboard grid rather than scoped to any one widget, and `ROOM_JOIN`'s
+`action_error` reaches it like any other. Say plainly: this is **not** the
+page-level treatment speculated about above — the route still does not know
+it asked for a character in a campaign and got refused; the fix is
+sheet-level, one level up from inventory-scoped rather than all the way to
+the route. If a page-level treatment is still wanted, that is a new item
+about routing, not about this banner.
 
 ### S6 — `ITEM_ATTUNED` is emitted by the client and bound by nobody ✅
 
