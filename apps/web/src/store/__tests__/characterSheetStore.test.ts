@@ -838,11 +838,18 @@ describe("useCharacterSheetStore remote action state composition", () => {
       baseScores: { STR: 10, DEX: 10, CON: 10, INT: 10, WIS: 10, CHA: 10 },
       traits: [],
       traitGrants: [],
-      inventory: [],
+      inventory: [
+        {
+          id: "inv-plate",
+          itemId: "item_armor_plate",
+          quantity: 1,
+          slot: "body",
+          isAttuned: false,
+        },
+      ],
       activeModifiers: [],
       resources: [],
       ruleSnapshot: packRuleSnapshot(),
-      baseStates: ["status_wearing_armor"],
       activeStates: ["status_wearing_armor"],
       latestRollResults: [],
       latestNotes: [],
@@ -1033,7 +1040,6 @@ describe("useCharacterSheetStore conditions", () => {
       activeModifiers: [],
       resources: [],
       ruleSnapshot: packRuleSnapshot(),
-      baseStates: [],
       activeConditions: [],
       activeStates: [],
       runtimeEffects: null,
@@ -1149,7 +1155,6 @@ describe("useCharacterSheetStore server-owned turns", () => {
       activeModifiers: [],
       resources: [],
       ruleSnapshot: packRuleSnapshot(),
-      baseStates: [],
       activeConditions: [],
       activeStates: [],
       runtimeEffects: null,
@@ -1287,7 +1292,6 @@ describe("useCharacterSheetStore standard actions", () => {
       inventory: [],
       activeModifiers: [],
       resources: [],
-      baseStates: [],
       activeConditions: [],
       activeStates: [],
       runtimeEffects: null,
@@ -1329,7 +1333,6 @@ describe("useCharacterSheetStore surprise", () => {
     useCharacterSheetStore.setState({
       ...useCharacterSheetStore.getState(),
       id: "char_surprise",
-      baseStates: [],
       activeConditions: [],
       combatContext: CombatContextSchema.parse({}),
       runtimeCombat: null,
@@ -1539,7 +1542,6 @@ describe("getSuspendedConditions", () => {
       subraceId: null,
       ruleSnapshot: packRuleSnapshot(),
       activeConditions: ["frightened"],
-      baseStates: [],
       runtimeEffects,
     });
 
@@ -1646,7 +1648,6 @@ describe("the store's resource counts survive runtime hydration", () => {
       runtimeEffects: null,
       runtimeResources: null,
       activeConditions: [],
-      baseStates: [],
     });
     useCharacterSheetStore.getState().initialize({
       id: "char_1",
@@ -2035,5 +2036,71 @@ describe("getSheetModifiers", () => {
         state.getSheetStates(),
       ).total,
     ).toBe(14); // studded leather 12 + DEX 2, not 13 + DEX 2
+  });
+});
+
+describe("activeStates carries what the character is wearing (#76)", () => {
+  it("composes equipment states into activeStates, not only conditions and effects", () => {
+    useCharacterSheetStore.getState().initialize({
+      id: "char_1",
+      level: 3,
+      classLevels: { class_barbarian: 3 },
+      subclassIds: { class_barbarian: "subclass_barbarian_totem_warrior" },
+      choices: {
+        classSelections: {
+          class_barbarian: {
+            barbarian_totem_level_3_totem_spirit: ["trait_totem_spirit_eagle"],
+          },
+        },
+        traitSelections: {},
+        feats: [],
+      },
+      raceId: "race_human",
+      subraceId: null,
+      inventory: [
+        {
+          id: "inv-plate",
+          itemId: "item_armor_plate",
+          quantity: 1,
+          slot: "body",
+          isAttuned: false,
+        },
+      ],
+      ruleSnapshot: packRuleSnapshot(),
+    } as never);
+
+    // plate is armour of category heavy worn in the body slot, which is what
+    // InventoryExtractor.extractStates keys on
+    expect(useCharacterSheetStore.getState().activeStates).toContain(
+      "status_wearing_heavy_armor",
+    );
+  });
+
+  it("hands the same states to the accessor the derived-stat hooks read", () => {
+    useCharacterSheetStore.getState().initialize({
+      id: "char_1",
+      level: 1,
+      classLevels: { class_fighter: 1 },
+      raceId: "race_human",
+      subraceId: null,
+      inventory: [
+        {
+          id: "inv-plate",
+          itemId: "item_armor_plate",
+          quantity: 1,
+          slot: "body",
+          isAttuned: false,
+        },
+      ],
+      ruleSnapshot: packRuleSnapshot(),
+    } as never);
+
+    // useCheckRoll hands these to DiceEngine through useAbilities, so a dice
+    // rule keyed to worn equipment could never fire while this was empty.
+    // useCheckRoll.test.ts pins the other link - that the hook passes the
+    // sheet's states rather than the store's raw ones (#76)
+    expect(useCharacterSheetStore.getState().getSheetStates()).toContain(
+      "status_wearing_heavy_armor",
+    );
   });
 });

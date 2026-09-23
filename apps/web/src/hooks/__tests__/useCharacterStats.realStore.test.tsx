@@ -69,7 +69,6 @@ describe("useAbilities recomputes when a condition changes (#73 regression)", ()
       inventory: [],
       activeModifiers: [],
       activeConditions: [],
-      baseStates: [],
       activeStates: [],
       runtimeEffects: null,
       ruleSnapshot: packRuleSnapshot(),

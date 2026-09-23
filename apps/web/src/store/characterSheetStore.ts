@@ -355,28 +355,71 @@ const withRuntimeCounts = (
   ];
 };
 
+type ConditionSuppression = {
+  condition: string;
+  requiredStates: string[];
+  forbiddenStates: string[];
+  source?: string;
+};
+
 /**
- * The character's full state list, rebuilt from its three sources.
+ * The two things every gate needs, from one compilation of the character's
+ * active traits: the states that gate, and the suppressions that can silence
+ * a condition.
  *
+ * Compiling once is the point. The pair of helpers this replaced called
+ * compileActiveTraits twice for the same state, and one of them composed over
+ * a stored `baseStates` field the store set to [] and never wrote again - so
+ * no equipment or trait state ever reached a gate (#76).
+ * @param state The sheet, for the save the engine compiles from
+ * @param effectManager The runtime effects whose states also gate
+ * @returns The gating states and the condition suppressions
+ */
+const sheetGating = (
+  state: CharacterSheetState,
+  effectManager: EffectManager,
+): { gatingStates: string[]; suppressions: ConditionSuppression[] } => {
+  if (!state.ruleSnapshot) {
+    return { gatingStates: effectManager.getActiveStates(), suppressions: [] };
+  }
+
+  const activeTraits = CharacterBootstrapper.compileActiveTraits(
+    toCharacterSave(state),
+    state.ruleSnapshot,
+  );
+
+  return {
+    gatingStates: gatherBaseStates({
+      activeTraits,
+      inventory: state.inventory,
+      effectManager,
+      snapshot: state.ruleSnapshot,
+    }),
+    suppressions: activeTraits.flatMap((trait) =>
+      (trait.conditionSuppressions ?? []).map((suppression) => ({
+        ...suppression,
+        requiredStates: suppression.requiredStates ?? [],
+        forbiddenStates: suppression.forbiddenStates ?? [],
+        source: trait.name,
+      })),
+    ),
+  };
+};
+
+/**
  * Rebuilt rather than accumulated on purpose. Folding the effect manager's
  * states into the previous activeStates makes the list monotonic - it can only
  * ever grow - so an effect that expires stays visible forever and a one-turn
  * rule like Reckless Attack never switches off.
  *
- * The three sources are distinct in lifetime, which is why they stay separate:
- * baseStates is what holds regardless of anything temporary (worn armour,
- * encumbrance), conditions last until the player clears them, and effects
- * expire on their own timers. Composing here means every calculator gates on
- * conditions without any of them knowing conditions exist.
+ * Composing here means every calculator gates on conditions without any of
+ * them knowing conditions exist.
  */
 const composeActiveStates = (
-  baseStates: string[] | undefined,
+  gatingStates: string[],
   activeConditions: string[] | undefined,
-  effectManager: EffectManager,
-  suppressions: Array<{ condition: string; requiredStates: string[]; forbiddenStates: string[]; source?: string }> = [],
+  suppressions: ConditionSuppression[],
 ): string[] => {
-  const effectStates = effectManager.getActiveStates();
-  const gatingStates = [...(baseStates ?? []), ...effectStates];
   const active = suppressConditions(
     activeConditions ?? [],
     suppressions,
@@ -384,21 +427,6 @@ const composeActiveStates = (
   ).active;
 
   return Array.from(new Set([...gatingStates, ...active]));
-};
-
-const getConditionSuppressions = (state: Pick<CharacterSheetState, "ruleSnapshot" | "classLevels" | "subclassIds" | "baseScores" | "raceId" | "subraceId" | "backgroundId" | "choices" | "currentHp" | "baseHpRolled" | "traitGrants" | "activeConditions">): Array<{ condition: string; requiredStates: string[]; forbiddenStates: string[]; source?: string }> => {
-  if (!state.ruleSnapshot) return [];
-  return CharacterBootstrapper.compileActiveTraits(
-    toCharacterSave(state as CharacterSheetState),
-    state.ruleSnapshot,
-  ).flatMap((trait) =>
-    (trait.conditionSuppressions ?? []).map((suppression) => ({
-      ...suppression,
-      requiredStates: suppression.requiredStates ?? [],
-      forbiddenStates: suppression.forbiddenStates ?? [],
-      source: trait.name,
-    })),
-  );
 };
 
 const dispatchAuthoredEvent = (
@@ -476,14 +504,15 @@ const dispatchAuthoredEvent = (
     }
   }
 
+  const { gatingStates, suppressions } = sheetGating(state, runtimeEffects);
+
   return {
     results,
     rollResults: results.flatMap((result) => result.rollResults ?? []),
     activeStates: composeActiveStates(
-      state.baseStates,
+      gatingStates,
       state.activeConditions,
-      runtimeEffects,
-      getConditionSuppressions(state),
+      suppressions,
     ),
     resources: withRuntimeCounts(state.resources, runtimeResources),
     runtimeEffects,
@@ -525,11 +554,11 @@ const resolveHealthTransition = (
 
   let appliedHp = targetHp;
   let rollResults: ActionRollResult[] = [];
+  const { gatingStates, suppressions } = sheetGating(state, runtimeEffects);
   let activeStates = composeActiveStates(
-    state.baseStates,
+    gatingStates,
     state.activeConditions,
-    runtimeEffects,
-    getConditionSuppressions(state),
+    suppressions,
   );
   let resources = withRuntimeCounts(state.resources, runtimeResources);
 
@@ -734,12 +763,6 @@ export interface CharacterSheetState {
 
   resources: OperationalResource[];
   /**
-   * What is true of the character regardless of any active effect: worn armour,
-   * encumbrance, and anything the sheet was hydrated with. Kept apart from
-   * activeStates so effect expiry can be seen - see composeActiveStates.
-   */
-  baseStates: string[];
-  /**
    * Conditions the player has declared on themselves. Ids from CONDITION_MAP;
    * each one becomes a state that authored rules gate on.
    */
@@ -803,10 +826,9 @@ export interface CharacterSheetState {
    */
   getSheetModifiers: () => RuntimeModifier[];
   /**
-   * The states the sheet's calculators gate on: whatever activeStates the
-   * store has composed (conditions, effects, server replies) plus the states
-   * the character's traits and worn equipment always put on it. activeStates
-   * alone is only composed on events, so worn armour was invisible (#73).
+   * The states the sheet's calculators gate on: activeStates, which now
+   * already carries whatever the character's traits and worn equipment put
+   * on it - see composeActiveStates and gatherBaseStates (#76).
    */
   getSheetStates: () => string[];
   /**
@@ -884,7 +906,6 @@ export const useCharacterSheetStore = create<CharacterSheetState>(
     itemActions: [],
     activeModifiers: [],
     resources: [],
-    baseStates: [],
     activeConditions: [],
     activeStates: [],
     selectedActorInstanceId: null,
@@ -924,11 +945,26 @@ export const useCharacterSheetStore = create<CharacterSheetState>(
           levels,
         );
 
+        // Hydration is the one path that never runs through applyHealthDelta,
+        // toggleCondition or a socket reply, so without composing here a
+        // freshly loaded sheet's activeStates would stay [] until one of
+        // those fires - the same gate-never-held bug this task fixes, just
+        // on the very first render (#76).
+        const { gatingStates, suppressions } = sheetGating(
+          next,
+          next.runtimeEffects ?? new EffectManager(),
+        );
+        const activeStates = composeActiveStates(
+          gatingStates,
+          next.activeConditions,
+          suppressions,
+        );
+
         // Hand back the same array when nothing was added. useFeatures and
         // RestModal select `resources` under zustand's default Object.is, and
         // TraitWidget calls initialize from an effect on every modifier
         // change, so a fresh array here re-renders them both for nothing.
-        if (missingPools.length === 0) return { ...next, itemActions };
+        if (missingPools.length === 0) return { ...next, itemActions, activeStates };
 
         return {
           ...next,
@@ -942,6 +978,7 @@ export const useCharacterSheetStore = create<CharacterSheetState>(
             })),
           ],
           itemActions,
+          activeStates,
         };
       }),
 
@@ -1443,22 +1480,14 @@ export const useCharacterSheetStore = create<CharacterSheetState>(
       ];
     },
 
-    getSheetStates: () => {
-      const state = get();
-      return Array.from(
-        new Set([
-          ...state.activeStates,
-          ...gatherBaseStates({
-            activeTraits: CharacterBootstrapper.compileActiveTraits(
-              toCharacterSave(state),
-              state.ruleSnapshot ?? undefined,
-            ),
-            inventory: state.inventory,
-            ...(state.ruleSnapshot ? { snapshot: state.ruleSnapshot } : {}),
-          }),
-        ]),
-      );
-    },
+    /**
+     * The sheet's states. Kept as a method rather than letting callers read
+     * `activeStates` directly: useCharacterStats subscribes to this reference
+     * because composeActiveStates returns a fresh array on every composition,
+     * so subscribing to the array itself re-renders the derived-stat hooks
+     * each time. It is a thin read on purpose (#76).
+     */
+    getSheetStates: () => get().activeStates,
 
     getMaxHp: () => {
       const state = get();
@@ -1506,15 +1535,13 @@ export const useCharacterSheetStore = create<CharacterSheetState>(
 
     getSuspendedConditions: () => {
       const state = get();
-      // the gates composeActiveStates uses: base states and effect states,
-      // never the conditions themselves
-      const gatingStates = [
-        ...state.baseStates,
-        ...(state.runtimeEffects?.getActiveStates() ?? []),
-      ];
+      const { gatingStates, suppressions } = sheetGating(
+        state,
+        state.runtimeEffects ?? new EffectManager(),
+      );
       return suppressConditions(
         state.activeConditions,
-        getConditionSuppressions(state),
+        suppressions,
         gatingStates,
       ).suspended;
     },
@@ -1640,12 +1667,17 @@ export const useCharacterSheetStore = create<CharacterSheetState>(
       set((previous) => ({
         // the payload carries the server's effect states only, so the states
         // that do not come from effects have to be folded back in here
-        activeStates: composeActiveStates(
-          previous.baseStates,
-          previous.activeConditions,
-          runtimeEffects,
-          getConditionSuppressions(previous),
-        ),
+        activeStates: (() => {
+          const { gatingStates, suppressions } = sheetGating(
+            previous,
+            runtimeEffects,
+          );
+          return composeActiveStates(
+            gatingStates,
+            previous.activeConditions,
+            suppressions,
+          );
+        })(),
         resources: payload.resources,
         // one ACTION_RESOLVED reply is one action, so latestRollResults
         // and latestNotes are always decided together from this payload -
@@ -1800,12 +1832,17 @@ export const useCharacterSheetStore = create<CharacterSheetState>(
       set((previous) => ({
         // conditions and base states are the player's, not the server's, so
         // they are composed back in rather than taken from the payload
-        activeStates: composeActiveStates(
-          previous.baseStates,
-          previous.activeConditions,
-          runtimeEffects,
-          getConditionSuppressions(previous),
-        ),
+        activeStates: (() => {
+          const { gatingStates, suppressions } = sheetGating(
+            previous,
+            runtimeEffects,
+          );
+          return composeActiveStates(
+            gatingStates,
+            previous.activeConditions,
+            suppressions,
+          );
+        })(),
         resources: payload.resources,
         latestRollResults:
           payload.rollResults.length > 0
@@ -1838,12 +1875,18 @@ export const useCharacterSheetStore = create<CharacterSheetState>(
 
         return {
           activeConditions,
-          activeStates: composeActiveStates(
-            state.baseStates,
-            activeConditions,
-            state.runtimeEffects ?? new EffectManager(),
-            getConditionSuppressions({ ...state, activeConditions }),
-          ),
+          activeStates: (() => {
+            const effectManager = state.runtimeEffects ?? new EffectManager();
+            const { gatingStates, suppressions } = sheetGating(
+              { ...state, activeConditions },
+              effectManager,
+            );
+            return composeActiveStates(
+              gatingStates,
+              activeConditions,
+              suppressions,
+            );
+          })(),
         };
       });
     },
