@@ -29,13 +29,80 @@ import type {
 
 // #region Reference Stubs
 
-const SCENARIO_RACES: SampleRace[] = [];
+/** A race the pack does not author, so the sheet meets one it cannot resolve. */
+const SCENARIO_RACES: SampleRace[] = [
+  {
+    id: "race_goliath",
+    name: "Goliath",
+    speed: 30,
+    shortDescription:
+      "Mountain-born wanderers who keep score of everything, themselves included.",
+  },
+];
 
-const SCENARIO_SUBCLASSES: SampleSubclass[] = [];
+const SCENARIO_SUBCLASSES: SampleSubclass[] = [
+  {
+    id: "subclass_fighter_rune_knight",
+    parentClassId: "class_fighter",
+    name: "Rune Knight",
+    shortDescription:
+      "A fighter who carves giants' runes into their gear and grows to match them.",
+  },
+];
 
-const SCENARIO_BACKGROUNDS: SampleBackground[] = [];
+const SCENARIO_BACKGROUNDS: SampleBackground[] = [
+  {
+    id: "background_hermit",
+    name: "Hermit",
+    featureName: "Discovery",
+    featureDescription:
+      "The quiet of your seclusion gave you access to a unique and powerful discovery.",
+    shortDescription: "You lived in seclusion for a formative part of your life.",
+  },
+];
 
-const SCENARIO_ITEMS: SampleItem[] = [];
+/**
+ * Two magic items the item schema cannot fully express: the greatsword's
+ * cold rider is description only, and the belt has no slot to go in, so it
+ * sits attuned in the backpack.
+ */
+const SCENARIO_ITEMS: SampleItem[] = [
+  {
+    id: "item_weapon_frost_brand_greatsword",
+    name: "Frost Brand Greatsword",
+    pounds: 6,
+    description:
+      "A hit deals an extra 1d6 cold damage, and you have resistance to fire damage while you hold it.",
+    itemRule: {
+      type: "weapon",
+      equipSlot: "main_hand",
+      requiresAttunement: true,
+      categoryTags: ["category_weapon_martial", "category_weapon_martial_melee"],
+    },
+    weaponRule: {
+      category: "martial_melee",
+      damageDice: "2d6",
+      damageType: "slashing",
+      properties: ["heavy", "two_handed"],
+      range: 5,
+    },
+  },
+  {
+    id: "item_wondrous_belt_of_hill_giant_strength",
+    name: "Belt of Hill Giant Strength",
+    pounds: 1,
+    description:
+      "Your Strength score is 21 while you wear this belt, unless it is already higher.",
+    itemRule: {
+      type: "wondrous",
+      requiresAttunement: true,
+      categoryTags: [],
+      modifiers: [
+        { target: "STR", type: "set_base", value: 21, scalingFactor: "none" },
+      ],
+    },
+  },
+];
 
 // #endregion
 
@@ -945,6 +1012,259 @@ const SCENARIO_ROSTER: SampleCharacter[] = [
         name: "4th-Level Spell Slots",
         current: 1,
         max: 1,
+        resetCondition: "long_rest",
+      },
+    ],
+  },
+  {
+    id: "00000000-0000-0000-0000-000000000128",
+    name: "Brother Mote",
+    raceId: "race_half_elf",
+    classes: [
+      {
+        classId: "class_cleric",
+        classLevel: 11,
+        subclassId: "subclass_cleric_tempest_subclass",
+      },
+    ],
+    // the ledger sums to 11: every level-up is refused (#95)
+    levelColumn: 12,
+    backgroundId: "background_acolyte",
+    choices: {
+      feats: [],
+      classSelections: {},
+      traitSelections: {
+        half_elf_asi_choice: ["WIS", "CON"],
+        skill_versatility_choice: ["medicine", "perception"],
+        half_elf_language_choice: ["dwarvish"],
+        acolyte_languages: ["celestial", "infernal"],
+        cleric_starting_skills: ["history", "persuasion"],
+      },
+    },
+    alignment: "Lawful Good",
+    str: 14,
+    dex: 10,
+    con: 13,
+    int: 10,
+    wis: 19,
+    cha: 11,
+    maxHp: 58,
+    // above the derived maximum of 80: the next hit point write clamps it
+    currentHp: 95,
+    testFocus:
+      "Broken on purpose: level column 12 against an 11 ledger (#95), a slot pool above its maximum (#98), hit points above theirs, four attuned items.",
+    personalityTraits: "I bless the sick, the storm, and the cook, in that order.",
+    ideals: "Faith. The thunder answers; I only have to ask properly.",
+    bonds: "The lighthouse temple at Saltmarch keeps my vows in its bell.",
+    flaws: "I cannot admit the ledger might be wrong, even when it is.",
+    traits: [
+      {
+        traitId: "trait_cleric_prof_saving_throw",
+        source: "class_cleric_level_1",
+      },
+      { traitId: "trait_cleric_prof_armor", source: "class_cleric_level_1" },
+      { traitId: "trait_cleric_prof_weapons", source: "class_cleric_level_1" },
+      { traitId: "trait_cleric_prof_skills", source: "class_cleric_level_1" },
+      { traitId: "trait_spellcasting_cleric", source: "class_cleric_level_1" },
+      { traitId: "trait_divine_domain", source: "class_cleric_level_1" },
+      { traitId: "trait_channel_divinity", source: "class_cleric_level_2" },
+      {
+        traitId: "trait_divine_domain_feature",
+        source: "class_cleric_level_2",
+      },
+      { traitId: "trait_destroy_undead", source: "class_cleric_level_5" },
+      { traitId: "trait_divine_intervention", source: "class_cleric_level_10" },
+      {
+        traitId: "trait_tempest_domain_spells",
+        source: "subclass_cleric_tempest_subclass_level_1",
+      },
+      {
+        traitId: "trait_cleric_tempest_prof_bonus",
+        source: "subclass_cleric_tempest_subclass_level_1",
+      },
+      {
+        traitId: "trait_wrath_of_the_storm",
+        source: "subclass_cleric_tempest_subclass_level_1",
+      },
+      {
+        traitId: "trait_cd_destructive_wrath",
+        source: "subclass_cleric_tempest_subclass_level_2",
+      },
+      {
+        traitId: "trait_thunderous_strike",
+        source: "subclass_cleric_tempest_subclass_level_6",
+      },
+      {
+        traitId: "trait_divine_strike",
+        source: "subclass_cleric_tempest_subclass_level_8",
+      },
+      { traitId: "race_half_elf_asi", source: "race_half_elf" },
+      { traitId: "race_half_elf_darkvision", source: "race_half_elf" },
+      { traitId: "fey_ancestry", source: "race_half_elf" },
+      { traitId: "skill_versatility", source: "race_half_elf" },
+      { traitId: "race_half_elf_languages", source: "race_half_elf" },
+    ],
+    inventory: [
+      { itemId: "item_armor_plate", slot: "body" },
+      { itemId: "item_weapon_warhammer", slot: "main_hand" },
+      { itemId: "item_armor_shield", slot: "off_hand" },
+      // four attuned against a cap of three: the UI cannot make this
+      {
+        itemId: "item_wondrous_cloak_of_protection",
+        slot: "cloak",
+        isAttuned: true,
+      },
+      { itemId: "item_ring_protection", slot: "ring_1", isAttuned: true },
+      {
+        itemId: "item_wondrous_headband_of_intellect",
+        slot: "head",
+        isAttuned: true,
+      },
+      {
+        itemId: "item_wondrous_boots_of_elvenkind",
+        slot: "boots",
+        isAttuned: true,
+      },
+      { itemId: "item_focus_emblem" },
+      { itemId: "item_pack_priests" },
+      { itemId: "item_potion_healing", quantity: 2 },
+    ],
+    resources: [
+      {
+        // 6 of 4: the sheet clamps the display to 4, so the next two genuine
+        // spends move nothing the player can see (#98)
+        id: "spell_slots_1",
+        name: "1st-Level Spell Slots",
+        current: 6,
+        max: 4,
+        resetCondition: "long_rest",
+      },
+      {
+        id: "resource_hit_dice_d8",
+        name: "Hit Dice (d8)",
+        current: 11,
+        max: 11,
+        resetCondition: "long_rest_half",
+      },
+    ],
+  },
+  {
+    id: "00000000-0000-0000-0000-000000000129",
+    name: "Orrik Stonehide",
+    // neither the race nor the subclass is authored by the pack
+    raceId: "race_goliath",
+    classes: [
+      {
+        classId: "class_fighter",
+        classLevel: 13,
+        subclassId: "subclass_fighter_rune_knight",
+      },
+    ],
+    backgroundId: "background_hermit",
+    choices: {
+      feats: [],
+      classSelections: {
+        class_fighter: {
+          fighter_level_1_fighting_style: ["trait_fs_great_weapon_fighting"],
+        },
+      },
+      traitSelections: {
+        fighter_starting_skills: ["athletics", "survival"],
+      },
+    },
+    expectedIssues: ["unknown_race", "unknown_subclass"],
+    alignment: "Lawful Neutral",
+    str: 20,
+    dex: 12,
+    con: 18,
+    int: 8,
+    wis: 12,
+    cha: 10,
+    maxHp: 82,
+    currentHp: 134,
+    testFocus:
+      "Unknown content: a race, subclass, background and two items the pack does not author, and race traits that resolve to nothing.",
+    personalityTraits: "I keep a tally of every favour, mine and everyone's.",
+    ideals: "Fairness. Everyone climbs the same mountain.",
+    bonds: "The runes on my sword were carved by a giant who called me small.",
+    flaws: "I will turn any task into a contest, and I will win it.",
+    traits: [
+      {
+        traitId: "trait_fighter_prof_saving_throw",
+        source: "class_fighter_level_1",
+      },
+      { traitId: "trait_fighter_prof_armor", source: "class_fighter_level_1" },
+      {
+        traitId: "trait_fighter_prof_weapons",
+        source: "class_fighter_level_1",
+      },
+      { traitId: "trait_fighter_prof_skills", source: "class_fighter_level_1" },
+      { traitId: "trait_second_wind", source: "class_fighter_level_1" },
+      { traitId: "trait_action_surge", source: "class_fighter_level_2" },
+      { traitId: "trait_martial_archetype", source: "class_fighter_level_3" },
+      { traitId: "trait_extra_attack", source: "class_fighter_level_5" },
+      {
+        traitId: "trait_martial_archetype_feature",
+        source: "class_fighter_level_7",
+      },
+      { traitId: "trait_indomitable", source: "class_fighter_level_9" },
+      // none of these resolve: the pack has no Rune Knight and no Goliath
+      {
+        traitId: "trait_rune_carver",
+        source: "subclass_fighter_rune_knight_level_3",
+      },
+      {
+        traitId: "trait_giants_might",
+        source: "subclass_fighter_rune_knight_level_3",
+      },
+      {
+        traitId: "trait_runic_shield",
+        source: "subclass_fighter_rune_knight_level_7",
+      },
+      {
+        traitId: "trait_great_stature",
+        source: "subclass_fighter_rune_knight_level_10",
+      },
+      { traitId: "trait_stones_endurance", source: "race_goliath" },
+      { traitId: "trait_natural_athlete", source: "race_goliath" },
+      { traitId: "trait_mountain_born", source: "race_goliath" },
+    ],
+    inventory: [
+      { itemId: "item_armor_splint", slot: "body" },
+      {
+        itemId: "item_weapon_frost_brand_greatsword",
+        slot: "main_hand",
+        isAttuned: true,
+      },
+      // attuned, with no slot to wear it in
+      {
+        itemId: "item_wondrous_belt_of_hill_giant_strength",
+        isAttuned: true,
+      },
+      { itemId: "item_weapon_javelin", quantity: 4 },
+      { itemId: "item_pack_explorers" },
+    ],
+    resources: [
+      {
+        id: "trait_second_wind",
+        name: "Second Wind",
+        current: 0,
+        max: 1,
+        resetCondition: "short_rest",
+      },
+      {
+        id: "trait_action_surge",
+        name: "Action Surge",
+        current: 1,
+        max: 1,
+        resetCondition: "short_rest",
+      },
+      {
+        // a pool whose trait the pack does not author
+        id: "trait_giants_might",
+        name: "Giant's Might",
+        current: 2,
+        max: 2,
         resetCondition: "long_rest",
       },
     ],

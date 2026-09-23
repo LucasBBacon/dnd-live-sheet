@@ -47,6 +47,9 @@ const INTENDED_FINAL: Record<string, number[]> = {
   "Hesk Mossgather": [11, 13, 15, 11, 18, 9],
   "Seraphine Dusk": [8, 16, 8, 18, 12, 11],
   "Kestrel Vey": [10, 14, 14, 10, 12, 18],
+  "Brother Mote": [14, 10, 14, 10, 20, 13],
+  // the pack knows no Goliath, so nothing is added to the stored scores
+  "Orrik Stonehide": [20, 12, 18, 8, 12, 10],
 };
 
 describe("sample character scores", () => {

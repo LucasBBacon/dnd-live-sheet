@@ -40,6 +40,9 @@ const EXPECTED_MAX_HP: Record<string, number> = {
   // this red on purpose; update it to 29 then.
   "Seraphine Dusk": 47,
   "Kestrel Vey": 44,
+  // his current hit points (95) are stored above this on purpose
+  "Brother Mote": 80,
+  "Orrik Stonehide": 134,
 };
 
 describe("sample character hit points", () => {

@@ -27,8 +27,9 @@ const SHIPPED_PACK = path.join(process.cwd(), "data/packs/core_2014_pack");
  * deliberately a mix of ids the compendium defines and ids named by convention
  * that it does not yet, which the seed's own header states in as many words:
  * `character_traits` carries no foreign key, and "an unresolved grant is
- * exactly what the sheet has to survive while the pack is incomplete". Fifty
- * three of them currently resolve to nothing, on purpose. Asserting on them
+ * exactly what the sheet has to survive while the pack is incomplete". More
+ * than fifty of them resolve to nothing, on purpose - every Goliath and Rune
+ * Knight trait Orrik Stonehide carries among them. Asserting on them
  * would break that fixture's whole reason for existing.
  *
  * Everything below is a field where an unresolved id is a defect rather than a
