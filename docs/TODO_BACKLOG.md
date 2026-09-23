@@ -292,6 +292,10 @@ Every id this file has ever issued, in one table. Gaps in the numbering are inte
 | 90 | `newTotalLevel` is written from the request without checking the ledger | ✅ Closed | Closed items (11h) |
 | 91 | The fake database cannot tell the pool from a transaction, so nothing pins which one a service queries | Open | Open items (11h) |
 | 92 | the server clamps hit points without knowing the rules that govern them | Open | Open items (11h) |
+| 93 | A stale client silently truncates its own healing, and nothing reports it | Open | Open items (11h) |
+| 94 | Two concurrent level-ups both pass the ledger check and both add hit points | Open | Open items (11h) |
+| 95 | A row whose level already disagrees with its ledger can no longer level up | Open | Open items (11h) |
+| 96 | A socket payload is trusted to be the shape its type claims | Open | Open items (11h) |
 | A1 | Ready's trigger is not modelled | Open | Open items |
 | A2 | No roll-initiating UI for skills | ✅ Closed | Closed items |
 | A2b | actions do not prompt their own check | Open | Open items |
@@ -1154,6 +1158,81 @@ client would obey - charge spent, character at 0, and the trigger's own
 `previousHp > 0` guard means it cannot fire again. Fix: move trigger
 resolution server-side so the server can compute the true result.
 Pre-existing; not introduced by this branch.
+
+### #93 — A stale client silently truncates its own healing, and nothing reports it
+
+*Recorded as 11h.*
+
+| # | Item | Notes |
+| --- | --- | --- |
+| 93 | A stale client silently truncates its own healing, and nothing reports it | Found by the final review of `fix/hp-authority`. See below. |
+
+The web clamps with `state.getMaxHp()` before emitting and sends the
+post-clamp delta, so when the client's derived maximum is *lower* than the
+server's - stale `classLevels`, ability scores or trait view after levelling
+on another device, or a `MAX_HP` item equipped elsewhere - the heal is cut
+before it leaves the browser. The server can only clamp further, never
+restore, so the points are lost with no error anywhere. #89's design says a
+client whose maximum is stale "corrects itself"; that holds only when the
+client's maximum is too high. The broadcast already carries `maxHp`, so the
+client has what it needs to detect the disagreement and refetch.
+
+### #94 — Two concurrent level-ups both pass the ledger check and both add hit points
+
+*Recorded as 11h.*
+
+| # | Item | Notes |
+| --- | --- | --- |
+| 94 | Two concurrent level-ups both pass the ledger check and both add hit points | Found by the final review of `fix/hp-authority`. See below. |
+
+`applyLevelUp` (`apps/server/src/controllers/characterController.ts`) selects
+the character without `.for("update")` and takes no lock on the ledger read.
+Two simultaneous requests - a double-click or a retry - both read a ledger
+summing 3, both derive 4, both pass #90's new check, and both apply `maxHp +
+hpRoll` and `currentHp + gainedHp`. The class row write is idempotent, so the
+character ends at level 4 carrying two levels of hit points: the column now
+disagrees with the hit points instead of with the ledger. Fix: `.for("update")`
+on the character select in step 1. Pre-existing; found by the final review of
+`fix/hp-authority`.
+
+### #95 — A row whose level already disagrees with its ledger can no longer level up
+
+*Recorded as 11h.*
+
+| # | Item | Notes |
+| --- | --- | --- |
+| 95 | A row whose level already disagrees with its ledger can no longer level up | Found by the final review of `fix/hp-authority`. See below. |
+
+Since #90, `applyLevelUp` rejects a `newTotalLevel` that disagrees with the
+ledger, and both callers source that number from the suspect column itself
+(`DashboardLayout.tsx` sends `character.level + 1`; the wizard's
+`OverviewStep.tsx` sends the store's `totalLevel + 1`). Any row that had
+already drifted therefore gets a permanent 400 on every level-up with no way
+to repair it from the UI. Loud rejection is the right behaviour, but it wants
+a one-off reconciliation: a query comparing `characters.level` against the
+sum of each character's `character_classes.class_level`, and a decision
+about rows that disagree. Found by the final review of `fix/hp-authority`.
+
+### #96 — A socket payload is trusted to be the shape its type claims
+
+*Recorded as 11h.*
+
+| # | Item | Notes |
+| --- | --- | --- |
+| 96 | A socket payload is trusted to be the shape its type claims | Found by the final review of `fix/hp-authority`. See below. |
+
+`HP_MODIFIED` and its neighbours in `apps/server/src/gateway/socket.ts`
+annotate the inbound payload with a TypeScript type and parse nothing at
+runtime, so a crafted `NaN` or fractional delta reaches Postgres. Today that
+fails closed - Postgres rejects it and the handler emits `error:rollback` -
+but #89's premise is that a crafted client cannot store nonsense, and for
+non-integer values that currently rests on Postgres' integer parser rather
+than on our own code. Relatedly, `ensureCharacterInSocketCampaign` authorises
+on campaign membership, not character ownership, so any joined player may
+emit hit point changes for any character in the campaign; #89 bounded the
+blast radius but did not close that. Fix: parse inbound payloads with the zod
+schemas the shared package already hosts, and decide whether ownership
+should gate the write. Found by the final review of `fix/hp-authority`.
 
 ### Coverage thresholds
 

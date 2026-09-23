@@ -58,7 +58,10 @@ So the client reports what happened and the server bounds it:
 - the **server** owns the bounds, clamping to `[0, derived max]` so a crafted or
   buggy client cannot store nonsense, and asserts the resulting total;
 - the **broadcast** carries that total, so a client whose maximum is stale
-  corrects itself.
+  corrects itself - but only when its maximum is too *high*. A client whose
+  maximum is too *low* has already clamped its own heal before emitting, so
+  the broadcast can shrink what it sent but cannot restore what never left
+  the browser. See "Recorded, not fixed".
 
 The deeper problem - that the server can bound a hit point total but never
 arbitrate one - is recorded, not fixed. See "Recorded, not fixed".
@@ -195,6 +198,16 @@ hit point total but never arbitrate one - which is why this design has the
 client report what happened rather than what it attempted. Moving trigger
 resolution server-side is its own branch, and would let the server compute the
 true result itself.
+
+A second gap sits next to it, recorded as **#93**: because the client clamps
+to `state.getMaxHp()` before it ever emits, a client whose derived maximum is
+*below* the server's truncates its own healing, irrecoverably. The broadcast's
+asserted total can shrink an overheal the client sent, but it cannot restore
+points a stale clamp cut before the delta left the browser - so "a client
+whose maximum is stale corrects itself" (see "The decision behind the
+design") holds only in that one direction, too-high, and not in the other.
+The broadcast already carries `maxHp`, which is what a fix would compare
+against the client's own derived maximum to detect the disagreement.
 
 ## Out of scope
 
