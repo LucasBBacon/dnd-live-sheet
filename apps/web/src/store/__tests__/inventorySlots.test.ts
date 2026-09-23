@@ -547,3 +547,25 @@ describe("toInventoryInstance", () => {
     ).toBe("off_hand");
   });
 });
+
+describe("syncRemoteAttunement keeps the composed states fresh (#101)", () => {
+  it("recomposes activeStates rather than leaving whatever was there", () => {
+    // plate in the body slot is what puts the armour states in the
+    // composition; the amulet is only there to have something attunable
+    seed([
+      item("inv_plate", "item_armor_plate", "body"),
+      item("inv_amulet", "item_amulet_of_health"),
+    ]);
+
+    // a composition from before the inventory settled. Every other inventory
+    // writer refreshes this; the point of the test is that this one does too,
+    // whether or not attunement itself can change the list today
+    useCharacterSheetStore.setState({ activeStates: ["status_stale"] });
+
+    useCharacterSheetStore.getState().syncRemoteAttunement("inv_amulet", true);
+
+    const states = useCharacterSheetStore.getState().activeStates;
+    expect(states).not.toContain("status_stale");
+    expect(states).toContain("status_wearing_heavy_armor");
+  });
+});

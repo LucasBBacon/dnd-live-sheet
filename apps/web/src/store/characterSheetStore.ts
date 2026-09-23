@@ -1266,7 +1266,21 @@ export const useCharacterSheetStore = create<CharacterSheetState>(
       );
 
       // breaking attunement can free the row to rejoin a carried pile
-      set({ inventory: isAttuned ? updated : consolidateCarried(updated) });
+      const nextInventory = isAttuned ? updated : consolidateCarried(updated);
+
+      set({
+        inventory: nextInventory,
+        // activeStates is a stored composition and getSheetStates reads it
+        // rather than recomputing, so every writer that changes the inputs
+        // refreshes it. Attunement cannot change the list today - no trait is
+        // granted by an item, and InventoryExtractor keys only on a body slot
+        // holding armour - but a writer that changes the inventory and leaves
+        // the composition behind is exactly how #76 happened (#101)
+        activeStates: recomposeStates(
+          { ...state, inventory: nextInventory },
+          state.runtimeEffects ?? new EffectManager(),
+        ),
+      });
     },
 
     syncInventorySnapshot: (inventory) => {
