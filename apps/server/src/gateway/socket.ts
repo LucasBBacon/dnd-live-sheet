@@ -18,6 +18,7 @@ import {
   SOCKET_EVENTS,
   type CharacterSave,
   type HpModifiedPayload,
+  type HpModifiedBroadcast,
   type ItemConsumedPayload,
   type ItemAttunedPayload,
   type ItemEquippedPayload,
@@ -557,18 +558,25 @@ export function initializeWebSocketGateway(httpServer: any) {
           payload.characterId,
         );
 
-        // 1 - persist the delta immediately using an atomic SQL update
-        // this prevents race conditions if 2 sources damage the character at the exact same millisecond
-        await db
-          .update(characters)
-          .set({ currentHp: sql`${characters.currentHp} + ${payload.delta}` })
-          .where(eq(characters.id, payload.characterId));
+        // 1 - the client owns the rules and sends the delta that actually
+        // applied; the server owns the bounds. modifyCharacterHp locks the
+        // row and clamps to [0, derived max], so a stale or crafted client
+        // cannot store 35 against a maximum of 31, or a negative total (#89)
+        const { current, max } = await modifyCharacterHp(
+          payload.characterId,
+          payload.delta,
+        );
 
-        // 2 - broadcast to everyone in the room EXCEPT sender
-        // sender already updated UI optimistically
-        socket.to(`campaign_${campaignId}`).emit(SOCKET_EVENTS.HP_MODIFIED, {
+        // 2 - broadcast the total the server settled on, to the whole room
+        // including the sender: a client whose derived maximum is stale
+        // corrects itself, and every other sheet follows the same number
+        io.to(`campaign_${campaignId}`).emit(SOCKET_EVENTS.HP_MODIFIED, {
           actorId: socket.id,
-          data: payload,
+          data: {
+            ...payload,
+            currentHp: current,
+            maxHp: max,
+          } satisfies HpModifiedBroadcast,
         });
       } catch (error) {
         console.error("Failed to process HP modification:", error);
@@ -917,7 +925,10 @@ export function initializeWebSocketGateway(httpServer: any) {
                   // modifyCharacterHp already clamps to max HP - see
                   // combatService.ts - so healing past full is handled there,
                   // not here.
-                  await modifyCharacterHp(payload.characterId, healRoll.total);
+                  const { current, max } = await modifyCharacterHp(
+                    payload.characterId,
+                    healRoll.total,
+                  );
 
                   io.to(`campaign_${campaignId}`).emit(
                     SOCKET_EVENTS.HP_MODIFIED,
@@ -928,7 +939,9 @@ export function initializeWebSocketGateway(httpServer: any) {
                         delta: healRoll.total,
                         source: action.name,
                         timestamp: Date.now(),
-                      } satisfies HpModifiedPayload,
+                        currentHp: current,
+                        maxHp: max,
+                      } satisfies HpModifiedBroadcast,
                     },
                   );
                 }

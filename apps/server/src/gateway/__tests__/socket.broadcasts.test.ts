@@ -1,7 +1,9 @@
 import { afterEach, describe, expect, it } from "vitest";
 import { SOCKET_EVENTS } from "@project/shared";
-import { characters } from "@project/database/src/schema/operational.js";
-import { renderSql } from "./fakeDb.js";
+import {
+  characterClasses,
+  characters,
+} from "@project/database/src/schema/operational.js";
 import {
   characterRow,
   joinCampaign,
@@ -10,9 +12,10 @@ import {
 } from "./socketHarness.js";
 
 /**
- * The two relay handlers. Both persist-or-relay and then broadcast to the
- * room *excluding* the sender, on the assumption the sender already applied
- * the change optimistically.
+ * The two relay handlers. HP_MODIFIED persists through modifyCharacterHp, so
+ * the stored value is clamped to the derived maximum, and then broadcasts the
+ * total it settled on to the whole room *including* the sender - whose own
+ * maximum may be stale (#89).
  */
 describe("socket gateway - HP_MODIFIED", () => {
   let harness: GatewayHarness;
@@ -29,47 +32,63 @@ describe("socket gateway - HP_MODIFIED", () => {
     ...overrides,
   });
 
-  it("persists the delta as one atomic expression, not a read-modify-write", async () => {
+  it("clamps a heal to the derived maximum instead of storing what the client asked for", async () => {
     harness = await setupGateway();
     await joinCampaign(harness);
-    harness.db.seed(characters, [characterRow()]);
+    harness.db.seed(characters, [characterRow({ currentHp: 31 })]);
+    harness.db.seed(characterClasses, [
+      { classId: "class_fighter", classLevel: 3 },
+    ]);
 
-    await harness.emit(SOCKET_EVENTS.HP_MODIFIED, hpPayload());
+    await harness.emit(SOCKET_EVENTS.HP_MODIFIED, hpPayload({ delta: 10 }));
+
+    // max_hp holds base rolled hit points (24); the derived maximum for this
+    // fixture is 33, so 31 + 10 stores 33 rather than 41 (#89)
+    const updates = harness.db.opsFor(characters, "update");
+    expect(updates).toHaveLength(1);
+    expect(updates[0]?.set?.["currentHp"]).toBe(33);
+  });
+
+  it("clamps damage at zero instead of storing a negative total", async () => {
+    harness = await setupGateway();
+    await joinCampaign(harness);
+    harness.db.seed(characters, [characterRow({ currentHp: 5 })]);
+    harness.db.seed(characterClasses, [
+      { classId: "class_fighter", classLevel: 3 },
+    ]);
+
+    await harness.emit(SOCKET_EVENTS.HP_MODIFIED, hpPayload({ delta: -30 }));
 
     const updates = harness.db.opsFor(characters, "update");
     expect(updates).toHaveLength(1);
-
-    // The comment in socket.ts claims this prevents a lost update when two
-    // sources damage the same character in the same millisecond. That is only
-    // true if the new value is computed in SQL rather than in JS.
-    expect(renderSql(updates[0]?.set?.["currentHp"])).toEqual({
-      sql: '"characters"."current_hp" + $1',
-      params: [-5],
-    });
-
-    // No SELECT of the current hp - that would reintroduce the race.
-    expect(harness.db.opsFor(characters, "select")).toHaveLength(1);
+    expect(updates[0]?.set?.["currentHp"]).toBe(0);
   });
 
-  it("broadcasts to the campaign room excluding the sender", async () => {
+  it("broadcasts the settled total to the whole room, including the sender", async () => {
     harness = await setupGateway();
     await joinCampaign(harness);
     harness.db.seed(characters, [characterRow()]);
+    harness.db.seed(characterClasses, [
+      { classId: "class_fighter", classLevel: 3 },
+    ]);
     const payload = hpPayload();
 
     await harness.emit(SOCKET_EVENTS.HP_MODIFIED, payload);
 
-    expect(harness.socket.to).toHaveBeenCalledWith("campaign_camp-1");
-    expect(harness.roomEmits).toEqual([
+    // 20 - 5 = 15, against a derived maximum of 33
+    expect(harness.ioEmits).toEqual([
       {
         room: "campaign_camp-1",
         event: SOCKET_EVENTS.HP_MODIFIED,
-        payload: { actorId: harness.socket.id, data: payload },
+        payload: {
+          actorId: harness.socket.id,
+          data: { ...payload, currentHp: 15, maxHp: 33 },
+        },
       },
     ]);
-
-    // io.to would echo back to the sender, who already applied it optimistically.
-    expect(harness.ioEmits).toEqual([]);
+    // the sender is included now: it may have clamped against a stale
+    // maximum, and the asserted total is what corrects it (#89)
+    expect(harness.roomEmits).toEqual([]);
     expect(harness.senderEmits).toEqual([]);
   });
 
@@ -141,8 +160,10 @@ describe("socket gateway - HP_MODIFIED", () => {
       hpPayload({ delta: 8, source: "Potion of Healing" }),
     );
 
+    // currentHp 20 + 8 = 28, clamped to the derived maximum with no ledger
+    // row seeded (27)
     const [update] = harness.db.opsFor(characters, "update");
-    expect(renderSql(update?.set?.["currentHp"]).params).toEqual([8]);
+    expect(update?.set?.["currentHp"]).toBe(27);
   });
 });
 

@@ -255,6 +255,8 @@ describe("socket gateway - ACTION_INTENT (item source)", () => {
         data: {
           characterId: "char-1",
           source: "Drink Potion of Healing",
+          currentHp: 33,
+          maxHp: 33,
         },
       },
     });

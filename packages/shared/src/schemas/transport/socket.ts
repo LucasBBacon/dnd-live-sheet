@@ -40,6 +40,16 @@ export interface HpModifiedPayload {
   timestamp: number;
 }
 
+/**
+ * What the server asserts after a hit point change, as distinct from what a
+ * client proposes. A client may only send a delta; only the server, which
+ * clamps to the engine's derived maximum, knows the total that resulted (#89).
+ */
+export interface HpModifiedBroadcast extends HpModifiedPayload {
+  currentHp: number;
+  maxHp: number;
+}
+
 export interface InventorySyncItem {
   id: string;
   itemId: string;
