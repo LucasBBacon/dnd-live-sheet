@@ -633,6 +633,43 @@ describe("level-up questions: offered by the options endpoint, required by apply
     expect(result.status).toBe(200);
   });
 
+  it("rejects a level total that disagrees with the class ledger (#90)", async () => {
+    const { options, levelUp } = await setup(humanCleric(), [cleric(3)]);
+    const { choiceQuestions } = await options({ classId: "class_cleric" });
+
+    const result = await levelUp({
+      targetClassId: "class_cleric",
+      newTotalLevel: 7,
+      featId: "feat_alert",
+      ...answerAll(choiceQuestions),
+    });
+
+    expect(result.status).toBe(400);
+    expect(result.body.error).toBe(
+      "Invalid character choices: newTotalLevel 7 does not match the class ledger (4)",
+    );
+  });
+
+  it("writes the level derived from the ledger, not the one the request sent (#90)", async () => {
+    const { options, levelUp, sets } = await setup(humanCleric(), [cleric(3)]);
+    const { choiceQuestions } = await options({ classId: "class_cleric" });
+
+    const result = await levelUp({
+      targetClassId: "class_cleric",
+      newTotalLevel: 4,
+      featId: "feat_alert",
+      ...answerAll(choiceQuestions),
+    });
+
+    expect(result.status).toBe(200);
+    const written = sets.find(
+      (value): value is { level: unknown } =>
+        typeof value === "object" && value !== null && "level" in value,
+    );
+    expect(written).toBeDefined();
+    expect(written!.level).toBe(4);
+  });
+
   it("returns no questions without a character in scope", async () => {
     const { app } = await setup(character(), [fighter(2)]);
 

@@ -124,6 +124,19 @@ export const applyLevelUp = async (req: Request, res: Response) => {
         .where(eq(characterClasses.characterId, characterId))
         .orderBy(...classLedgerOrder);
 
+      // the new total level comes from the ledger this transaction is about
+      // to extend, never from the request. A level-up adds exactly one class
+      // level, and since #78 the sheet's maximum hit points and both health
+      // clamps derive from a level - so a column that disagrees with these
+      // rows is visible, not cosmetic (#90)
+      const derivedTotalLevel =
+        existingClasses.reduce((total, row) => total + row.classLevel, 0) + 1;
+      if (newTotalLevel !== derivedTotalLevel) {
+        throw new Error(
+          `Invalid character choices: newTotalLevel ${newTotalLevel} does not match the class ledger (${derivedTotalLevel})`,
+        );
+      }
+
       // the character's answers before this level, read early: the
       // multiclass prerequisite check below needs them to build the save
       // finalAbilityScores reads from (#77)
@@ -326,7 +339,7 @@ export const applyLevelUp = async (req: Request, res: Response) => {
       await tx
         .update(characters)
         .set({
-          level: newTotalLevel,
+          level: derivedTotalLevel,
           maxHp: sql`COALESCE(${characters.maxHp}, 0) + ${payload.hpRoll}`,
           currentHp: sql`COALESCE(${characters.currentHp}, 0) + ${gainedHp}`,
           ...asiUpdates,
