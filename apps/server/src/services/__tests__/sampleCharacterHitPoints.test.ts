@@ -34,6 +34,12 @@ const EXPECTED_MAX_HP: Record<string, number> = {
   // Tough: +2 per level
   "Ursk Gravemaw": 54,
   "Tamsin Burrowdeep": 65,
+  "Hesk Mossgather": 59,
+  // #86: the rules give 29. CON 8 is -1 per level, and calculateMaxHp floors
+  // the modifier at +1, so nine levels come out 18 too high. Fixing #86 turns
+  // this red on purpose; update it to 29 then.
+  "Seraphine Dusk": 47,
+  "Kestrel Vey": 44,
 };
 
 describe("sample character hit points", () => {
