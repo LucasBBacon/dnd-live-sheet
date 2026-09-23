@@ -191,16 +191,19 @@ describe("useCharacterSheetStore hp trigger handling", () => {
     expect(useCharacterSheetStore.getState()).toBe(before);
   });
 
-  it("emits the delta that actually applied, not the one that was asked for", () => {
+  it("sends a heal raw and lets the server clamp it", () => {
     const store = useCharacterSheetStore.getState();
 
-    // the fixture derives a maximum of 10 and starts at 5, so a heal of 10
-    // applies only 5 - and 5 is what the server must store (#89)
+    // the fixture derives a maximum of 10 and starts at 5. The sheet still
+    // shows 10, but the server is sent the whole 10: only damage can carry a
+    // trigger, so a heal's applied amount differs from the raw one by the
+    // client's own clamp alone - and the client's maximum may be the stale
+    // one (#93)
     store.applyHealthDelta(10, "test");
 
     expect(useCharacterSheetStore.getState().currentHp).toBe(10);
     expect(socketService.emitHpModification).toHaveBeenCalledWith(
-      expect.objectContaining({ characterId: "char_1", delta: 5 }),
+      expect.objectContaining({ characterId: "char_1", delta: 10 }),
     );
   });
 

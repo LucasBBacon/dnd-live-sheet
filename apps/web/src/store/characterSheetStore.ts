@@ -1015,13 +1015,15 @@ export const useCharacterSheetStore = create<CharacterSheetState>(
         runtimeResources,
       });
 
-      // fire and forget network req. What goes over the wire is the delta
-      // that actually applied - after this clamp, and after any trigger that
-      // turned a lethal hit into one hit point. The raw delta would make the
-      // server store a number no sheet is showing (#89)
+      // fire and forget network req. Damage reports what actually applied,
+      // because a trigger may have turned a lethal hit into one hit point.
+      // A heal is sent raw: no trigger fires on a positive delta, so the only
+      // thing the client's clamp adds is its own maximum - which may be stale
+      // and lower than the server's, silently losing hit points (#93). The
+      // server clamps and asserts the total back, which the sheet follows.
       socketService.emitHpModification({
         characterId: state.id,
-        delta: appliedHp - previousHp,
+        delta: delta > 0 ? delta : appliedHp - previousHp,
         source,
         timestamp: Date.now(),
       });
