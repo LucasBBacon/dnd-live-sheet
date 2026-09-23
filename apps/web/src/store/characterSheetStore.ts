@@ -356,7 +356,14 @@ const withRuntimeCounts = (
   ];
 };
 
-type ConditionSuppression = {
+/**
+ * Named distinctly from the shared package's `ConditionSuppression`
+ * (`packages/shared/src/schemas/content/traits.ts`) on purpose: this is a
+ * narrower, resolved shape - `requiredStates`/`forbiddenStates` defaulted to
+ * `[]` and `source` stamped from the trait - not the authored one, and the
+ * two sharing a name is what invites them to drift.
+ */
+type ResolvedConditionSuppression = {
   condition: string;
   requiredStates: string[];
   forbiddenStates: string[];
@@ -384,7 +391,7 @@ type ConditionSuppression = {
 const sheetGating = (
   state: CharacterSheetState,
   effectManager: EffectManager,
-): { gatingStates: string[]; suppressions: ConditionSuppression[] } => {
+): { gatingStates: string[]; suppressions: ResolvedConditionSuppression[] } => {
   if (!state.ruleSnapshot) {
     return { gatingStates: effectManager.getActiveStates(), suppressions: [] };
   }
@@ -424,7 +431,7 @@ const sheetGating = (
 const composeActiveStates = (
   gatingStates: string[],
   activeConditions: string[] | undefined,
-  suppressions: ConditionSuppression[],
+  suppressions: ResolvedConditionSuppression[],
 ): string[] => {
   const active = suppressConditions(
     activeConditions ?? [],
