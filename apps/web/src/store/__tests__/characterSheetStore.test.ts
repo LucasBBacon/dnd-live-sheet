@@ -126,6 +126,33 @@ describe("useCharacterSheetStore hp trigger handling", () => {
     expect(useCharacterSheetStore.getState().currentHp).toBe(8);
   });
 
+  it("emits the delta that actually applied, not the one that was asked for", () => {
+    const store = useCharacterSheetStore.getState();
+
+    // the fixture derives a maximum of 10 and starts at 5, so a heal of 10
+    // applies only 5 - and 5 is what the server must store (#89)
+    store.applyHealthDelta(10, "test");
+
+    expect(useCharacterSheetStore.getState().currentHp).toBe(10);
+    expect(socketService.emitHpModification).toHaveBeenCalledWith(
+      expect.objectContaining({ characterId: "char_1", delta: 5 }),
+    );
+  });
+
+  it("emits the post-trigger delta when Relentless Endurance saves the character", () => {
+    const store = useCharacterSheetStore.getState();
+
+    // 5 hit points taking 5 damage would be zero, but the half-orc trigger
+    // leaves them at 1 - so what applied was -4, and a raw -5 would store a
+    // number this sheet is not showing (#89)
+    store.applyHealthDelta(-5, "test");
+
+    expect(useCharacterSheetStore.getState().currentHp).toBe(1);
+    expect(socketService.emitHpModification).toHaveBeenCalledWith(
+      expect.objectContaining({ delta: -4 }),
+    );
+  });
+
   it("dispatches rest triggers through the authored runtime path", () => {
     const store = useCharacterSheetStore.getState();
 

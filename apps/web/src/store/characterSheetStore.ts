@@ -959,10 +959,13 @@ export const useCharacterSheetStore = create<CharacterSheetState>(
         runtimeResources,
       });
 
-      // fire and forget network req
+      // fire and forget network req. What goes over the wire is the delta
+      // that actually applied - after this clamp, and after any trigger that
+      // turned a lethal hit into one hit point. The raw delta would make the
+      // server store a number no sheet is showing (#89)
       socketService.emitHpModification({
         characterId: state.id,
-        delta,
+        delta: appliedHp - previousHp,
         source,
         timestamp: Date.now(),
       });
