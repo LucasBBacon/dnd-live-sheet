@@ -50,7 +50,7 @@ import {
   type DamageType,
   type EngineEvent,
   type FixedProficiencyGrant,
-  type HpModifiedPayload,
+  type HpModifiedBroadcast,
   type InventoryInstance,
   type RollResultsBroadcastPayload,
   type RuleSnapshot,
@@ -753,7 +753,7 @@ export interface CharacterSheetState {
   initialize: (payload: Partial<CharacterSheetState>) => void;
 
   applyHealthDelta: (delta: number, source: string) => void;
-  syncRemoteHealthDelta: (payload: HpModifiedPayload) => void;
+  syncRemoteHealthDelta: (payload: HpModifiedBroadcast) => void;
 
   equipItem: (inventoryId: string, targetSlot: string) => void;
   toggleAttunement: (inventoryId: string) => void;
@@ -979,9 +979,17 @@ export const useCharacterSheetStore = create<CharacterSheetState>(
       // reload would reveal the divergence from the database.
       if (payload.characterId !== state.id) return;
 
+      // the server asserts the total it stored, and this client may be the
+      // one that sent the change. Re-running the transition on a total we
+      // already show would recompose state and clear the roll display a
+      // trigger just produced, so an echo in agreement is left alone (#89)
+      if (payload.currentHp === state.currentHp) return;
+
       const { delta } = payload;
       const previousHp = state.currentHp;
-      const nextHp = clampHealth(previousHp, delta, state.getMaxHp());
+      // the asserted total, not a second opinion: this client's derived
+      // maximum may be stale, and the server wrote the row (#89)
+      const nextHp = payload.currentHp;
 
       const {
         appliedHp,

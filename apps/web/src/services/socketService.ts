@@ -6,6 +6,7 @@ import {
   type RoomJoinPayload,
   SOCKET_EVENTS,
   type HpModifiedPayload,
+  type HpModifiedBroadcast,
   type ItemAttunedPayload,
   type ItemConsumedPayload,
   type ItemEquippedPayload,
@@ -48,10 +49,10 @@ class SocketManager {
     this.socket?.emit(SOCKET_EVENTS.HP_MODIFIED, payload);
   }
 
-  public subscribeToHpUpdates(callback: (payload: HpModifiedPayload) => void) {
+  public subscribeToHpUpdates(callback: (payload: HpModifiedBroadcast) => void) {
     this.socket?.on(
       SOCKET_EVENTS.HP_MODIFIED,
-      (payload: MaybeServerBroadcastPayload<HpModifiedPayload>) => {
+      (payload: MaybeServerBroadcastPayload<HpModifiedBroadcast>) => {
         callback(unwrapServerBroadcastPayload(payload));
       },
     );

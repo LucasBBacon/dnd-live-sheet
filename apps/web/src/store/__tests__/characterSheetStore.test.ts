@@ -92,6 +92,8 @@ describe("useCharacterSheetStore hp trigger handling", () => {
       delta: -5,
       source: "test",
       timestamp: Date.now(),
+      currentHp: 0,
+      maxHp: 10,
     });
 
     expect(useCharacterSheetStore.getState().currentHp).toBe(1);
@@ -108,6 +110,8 @@ describe("useCharacterSheetStore hp trigger handling", () => {
       delta: 100,
       source: "test",
       timestamp: Date.now(),
+      currentHp: 100,
+      maxHp: 100,
     });
 
     expect(useCharacterSheetStore.getState().currentHp).toBe(5);
@@ -121,9 +125,51 @@ describe("useCharacterSheetStore hp trigger handling", () => {
       delta: 3,
       source: "test",
       timestamp: Date.now(),
+      currentHp: 8,
+      maxHp: 10,
     });
 
     expect(useCharacterSheetStore.getState().currentHp).toBe(8);
+  });
+
+  it("follows the total the server asserted, not the arithmetic of the delta", () => {
+    const store = useCharacterSheetStore.getState();
+
+    // 5 + 3 would be 8. The server says 7, and the server is the one that
+    // wrote the row - a client whose derived maximum is stale follows it (#89)
+    store.syncRemoteHealthDelta({
+      characterId: "char_1",
+      delta: 3,
+      source: "test",
+      timestamp: Date.now(),
+      currentHp: 7,
+      maxHp: 10,
+    });
+
+    expect(useCharacterSheetStore.getState().currentHp).toBe(7);
+  });
+
+  it("does nothing when the asserted total is the one already shown", () => {
+    const store = useCharacterSheetStore.getState();
+
+    // the acting client fires the trigger locally and lands on 1
+    store.applyHealthDelta(-5, "test");
+    const afterTrigger = useCharacterSheetStore.getState();
+    expect(afterTrigger.currentHp).toBe(1);
+
+    // its own echo comes back asserting that same total. Re-running the
+    // transition would recompose state and clear the roll display the
+    // trigger just produced, so the store must not touch anything (#89)
+    store.syncRemoteHealthDelta({
+      characterId: "char_1",
+      delta: -4,
+      source: "test",
+      timestamp: Date.now(),
+      currentHp: 1,
+      maxHp: 10,
+    });
+
+    expect(useCharacterSheetStore.getState()).toBe(afterTrigger);
   });
 
   it("emits the delta that actually applied, not the one that was asked for", () => {
