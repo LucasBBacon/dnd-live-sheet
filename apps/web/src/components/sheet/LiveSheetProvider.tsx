@@ -2,7 +2,7 @@ import type React from "react";
 import { useCharacterSheetStore } from "../../store/characterSheetStore";
 import { useEffect } from "react";
 import { socketService } from "../../services/socketService";
-import { SHEET_ERROR_EVENTS } from "./sheetErrorEvents";
+import { resolveActionError } from "./sheetErrorEvents";
 
 export const LiveSheetProvider = ({
   campaignId,
@@ -31,6 +31,9 @@ export const LiveSheetProvider = ({
     (state) => state.syncRemoteAttunement,
   );
   const setNotice = useCharacterSheetStore((state) => state.setNotice);
+  const rollbackResourceSpend = useCharacterSheetStore(
+    (state) => state.rollbackResourceSpend,
+  );
   const recordRollResult = useCharacterSheetStore(
     (state) => state.recordRollResult,
   );
@@ -86,11 +89,18 @@ export const LiveSheetProvider = ({
     });
 
     socketService.subscribeToActionErrors((payload) => {
-      // `event` is optional on the wire, and an error that names no event
-      // cannot be matched against the list at all.
-      if (payload.event && SHEET_ERROR_EVENTS.includes(payload.event)) {
-        setNotice(payload.error);
+      const outcome = resolveActionError(payload);
+      if (outcome.kind === "ignore") return;
+
+      // an echo for another character is not this sheet's to act on
+      if (
+        outcome.kind === "rollback-resource" &&
+        outcome.characterId === characterId
+      ) {
+        rollbackResourceSpend(outcome.resourceId, outcome.amount);
       }
+
+      setNotice(outcome.text);
     });
 
     // cleanup on dismount
@@ -107,6 +117,7 @@ export const LiveSheetProvider = ({
     syncRemoteConsumption,
     syncRemoteAttunement,
     setNotice,
+    rollbackResourceSpend,
     recordRollResult,
     syncRemoteActionExecution,
     syncRemoteTurnResolution,

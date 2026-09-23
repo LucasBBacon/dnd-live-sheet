@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { SOCKET_EVENTS } from "@project/shared";
-import { SHEET_ERROR_EVENTS } from "../sheetErrorEvents";
+import { resolveActionError, SHEET_ERROR_EVENTS } from "../sheetErrorEvents";
 
 /**
  * The gateway emits `action_error` for every handler, but the sheet only
@@ -29,5 +29,68 @@ describe("SHEET_ERROR_EVENTS", () => {
     for (const event of SHEET_ERROR_EVENTS) {
       expect(known, `${event} is not a declared socket event`).toContain(event);
     }
+  });
+});
+
+describe("resolveActionError", () => {
+  const spend = {
+    characterId: "char_1",
+    resourceId: "res_ki",
+    amount: 2,
+    timestamp: 1_700_000_000_000,
+  };
+
+  it("ignores an error that names no event", () => {
+    expect(resolveActionError({ error: "boom" })).toEqual({ kind: "ignore" });
+  });
+
+  it("ignores an event the sheet does not act on", () => {
+    expect(
+      resolveActionError({
+        event: SOCKET_EVENTS.ROLL_RESULTS,
+        error: "boom",
+      }),
+    ).toEqual({ kind: "ignore" });
+  });
+
+  it("asks for a rollback when a resource spend was refused", () => {
+    expect(
+      resolveActionError({
+        event: SOCKET_EVENTS.RESOURCE_CONSUMED,
+        error: "Unknown resource for this character.",
+        payload: spend,
+      }),
+    ).toEqual({
+      kind: "rollback-resource",
+      text: "Unknown resource for this character.",
+      characterId: "char_1",
+      resourceId: "res_ki",
+      amount: 2,
+    });
+  });
+
+  it("falls back to a plain notice when the refusal echoes no usable payload", () => {
+    expect(
+      resolveActionError({
+        event: SOCKET_EVENTS.RESOURCE_CONSUMED,
+        error: "Resource async failure. Rolling back state.",
+        payload: { characterId: "char_1" },
+      }),
+    ).toEqual({
+      kind: "notice",
+      text: "Resource async failure. Rolling back state.",
+    });
+  });
+
+  it("shows a notice for the events it already showed", () => {
+    expect(
+      resolveActionError({
+        event: SOCKET_EVENTS.ROOM_JOIN,
+        error: "Character is not available in this campaign.",
+      }),
+    ).toEqual({
+      kind: "notice",
+      text: "Character is not available in this campaign.",
+    });
   });
 });

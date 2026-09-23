@@ -781,6 +781,7 @@ export interface CharacterSheetState {
   useItemAction: (instanceId: string, actionId: string) => void;
 
   consumeResource: (resourceId: string, amount?: number) => void;
+  rollbackResourceSpend: (resourceId: string, amount: number) => void;
   syncRemoteResource: (resourceId: string, amount: number) => void;
 
   beginCombat: () => void;
@@ -1282,6 +1283,29 @@ export const useCharacterSheetStore = create<CharacterSheetState>(
         resourceId,
         amount,
         timestamp: Date.now(),
+      });
+    },
+
+    /**
+     * Put back a spend the server refused. consumeResource decrements
+     * optimistically and the refusal arrives afterwards, so without this the
+     * charge stays spent on screen until a reload (#71).
+     *
+     * OperationalResource (packages/engine/src/types/resources.ts) is only
+     * `{ id, current }` - the store holds no maximum for a resource; the
+     * ceiling lives solely in the runtime ResourceManager, which pools built
+     * from grants and the rule snapshot feed (see adoptStoredResources /
+     * withRuntimeCounts above). This direct mutation does not consult it, the
+     * same as consumeResource and syncRemoteResource beside it, so there is
+     * nothing to clamp against: a refusal that arrives twice adds the amount
+     * back twice.
+     */
+    rollbackResourceSpend: (resourceId, amount) => {
+      const state = get();
+      set({
+        resources: state.resources.map((res) =>
+          res.id === resourceId ? { ...res, current: res.current + amount } : res,
+        ),
       });
     },
 

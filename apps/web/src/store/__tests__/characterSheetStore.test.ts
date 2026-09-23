@@ -1738,6 +1738,49 @@ describe("the store's resource counts survive runtime hydration", () => {
   });
 });
 
+// OperationalResource (packages/engine/src/types/resources.ts) is only
+// `{ id, current }` - unlike the brief's guess, there is no `name`,
+// `currentCharges` or `max` field on the type, and consumeResource/
+// syncRemoteResource beside rollbackResourceSpend confirm the store never
+// clamps a direct mutation against a ceiling. So the second case below
+// documents the actual, uncapped behaviour instead of a maximum clamp.
+describe("rollbackResourceSpend", () => {
+  beforeEach(() => {
+    useCharacterSheetStore.setState({
+      ...useCharacterSheetStore.getState(),
+      id: "char_1",
+      resources: [{ id: "res_ki", current: 1 }],
+      notice: null,
+    } as never);
+  });
+
+  it("restores a charge the server refused", () => {
+    useCharacterSheetStore.getState().rollbackResourceSpend("res_ki", 2);
+
+    expect(
+      useCharacterSheetStore.getState().resources.find((r) => r.id === "res_ki")
+        ?.current,
+    ).toBe(3);
+  });
+
+  it("adds the full refused amount back, since the store holds no maximum to clamp against", () => {
+    useCharacterSheetStore.getState().rollbackResourceSpend("res_ki", 99);
+
+    expect(
+      useCharacterSheetStore.getState().resources.find((r) => r.id === "res_ki")
+        ?.current,
+    ).toBe(100);
+  });
+
+  it("leaves an unknown resource alone", () => {
+    useCharacterSheetStore.getState().rollbackResourceSpend("res_absent", 1);
+
+    expect(useCharacterSheetStore.getState().resources).toEqual([
+      { id: "res_ki", current: 1 },
+    ]);
+  });
+});
+
 describe("useCharacterSheetStore proficiency grants", () => {
   beforeEach(() => {
     const baseState = useCharacterSheetStore.getState();
