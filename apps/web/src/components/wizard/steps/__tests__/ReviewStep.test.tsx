@@ -73,3 +73,73 @@ describe("ReviewStep level (#95)", () => {
     container.remove();
   });
 });
+
+describe("ReviewStep hit point preview (#88)", () => {
+  beforeEach(() => {
+    vi.mocked(apiClient).mockReset();
+    useCharacterSheetStore.setState({ classLevels: { class_fighter: 3 }, level: 3 });
+    useLevelUpStore.setState({
+      isActive: true,
+      draftPayload: {
+        characterId: "char_1",
+        targetClassId: "class_fighter",
+        newTotalLevel: 4,
+        hpRoll: 6,
+        asiChoices: [
+          { stat: "CON", value: 1 },
+          { stat: "STR", value: 1 },
+        ],
+      },
+      progressionContext: null,
+      grantedTraitDetails: [],
+      hitPointPreview: { status: "idle" },
+    });
+  });
+
+  it("shows the server's maximum before, after and the gain", async () => {
+    vi.mocked(apiClient).mockResolvedValueOnce({
+      maxHpBefore: 31,
+      maxHpAfter: 44,
+      hitPointGain: 13,
+    });
+
+    const { container, root } = await render();
+    await act(async () => {});
+
+    const cells = rowCells(container, "Maximum Hit Points");
+    expect(cells?.[1]).toBe("31");
+    expect(cells?.[3]).toBe("44+13");
+    expect(vi.mocked(apiClient)).toHaveBeenCalledWith(
+      "/character/char_1/level-up/preview",
+      expect.objectContaining({ method: "POST" }),
+    );
+
+    root.unmount();
+    container.remove();
+  });
+
+  it("says it is calculating while the preview is pending", async () => {
+    vi.mocked(apiClient).mockReturnValueOnce(new Promise(() => {}));
+
+    const { container, root } = await render();
+
+    expect(rowCells(container, "Maximum Hit Points")?.[3]).toBe("Calculating…");
+
+    root.unmount();
+    container.remove();
+  });
+
+  it("says the preview is unavailable when the server cannot answer", async () => {
+    vi.mocked(apiClient).mockRejectedValueOnce(new Error("offline"));
+
+    const { container, root } = await render();
+    await act(async () => {});
+
+    expect(rowCells(container, "Maximum Hit Points")?.[3]).toBe(
+      "Hit point preview unavailable",
+    );
+
+    root.unmount();
+    container.remove();
+  });
+});

@@ -147,6 +147,23 @@ const normaliseId = (value: string | undefined | null) => value || undefined;
 // every options request gets a number; only the newest one's answer lands
 let latestOptionsRequest = 0;
 
+/** What the server says a level-up draft would do to hit points (#88). */
+type HitPointPreview =
+  | { status: "idle" }
+  | { status: "loading" }
+  | {
+      status: "ready";
+      maxHpBefore: number;
+      maxHpAfter: number;
+      hitPointGain: number;
+    }
+  | { status: "error" };
+
+const IDLE_PREVIEW: HitPointPreview = { status: "idle" };
+
+// every preview request gets a number too; only the newest one's answer lands
+let latestHitPointPreview = 0;
+
 interface LevelUpState {
   isActive: boolean;
   progressionContext: ClassProgression | null;
@@ -173,6 +190,10 @@ interface LevelUpState {
    * current subclassId and featId - both change what a level asks.
    */
   refreshChoiceQuestions: () => Promise<void>;
+  /** the server's hit point preview for the current draft (#88) */
+  hitPointPreview: HitPointPreview;
+  /** asks the server what the current draft would do to hit points (#88) */
+  requestHitPointPreview: () => Promise<void>;
   validateAndSubmit: () => Promise<void>;
   cancelLevelUp: () => void;
 }
@@ -186,6 +207,7 @@ export const useLevelUpStore = create<LevelUpState>((set, get) => ({
   choiceQuestions: [],
   questionsStatus: "ready",
   optionsRequest: null,
+  hitPointPreview: IDLE_PREVIEW,
 
   beginLevelUp: async (
     characterId,
@@ -265,6 +287,7 @@ export const useLevelUpStore = create<LevelUpState>((set, get) => ({
         questionsStatus:
           requestId === latestOptionsRequest ? "ready" : get().questionsStatus,
         optionsRequest: { characterId, classId, currentClassLevel, scope },
+        hitPointPreview: IDLE_PREVIEW,
       });
     } catch (error) {
       const message =
@@ -345,6 +368,59 @@ export const useLevelUpStore = create<LevelUpState>((set, get) => ({
     }
   },
 
+  requestHitPointPreview: async () => {
+    const {
+      characterId,
+      targetClassId,
+      hpRoll,
+      asiChoices,
+      featId,
+      subclassId,
+      selectedTraits,
+      traitSelections,
+    } = get().draftPayload;
+
+    if (!characterId || !targetClassId || !hpRoll) {
+      set({ hitPointPreview: IDLE_PREVIEW });
+      return;
+    }
+
+    const requestId = ++latestHitPointPreview;
+    set({ hitPointPreview: { status: "loading" } });
+
+    try {
+      const preview = (await apiClient(
+        `/character/${characterId}/level-up/preview`,
+        {
+          method: "POST",
+          body: JSON.stringify({
+            targetClassId,
+            hpRoll,
+            asiChoices,
+            featId,
+            subclassId,
+            selectedTraits,
+            traitSelections,
+          }),
+        },
+      )) as { maxHpBefore: number; maxHpAfter: number; hitPointGain: number };
+
+      // a newer draft asked again, or the wizard closed: this answer is stale
+      if (requestId !== latestHitPointPreview || !get().isActive) return;
+      set({
+        hitPointPreview: {
+          status: "ready",
+          maxHpBefore: preview.maxHpBefore,
+          maxHpAfter: preview.maxHpAfter,
+          hitPointGain: preview.hitPointGain,
+        },
+      });
+    } catch {
+      if (requestId !== latestHitPointPreview || !get().isActive) return;
+      set({ hitPointPreview: { status: "error" } });
+    }
+  },
+
   validateAndSubmit: async () => {
     const { draftPayload, progressionContext, errorMessage } = get();
 
@@ -402,6 +478,7 @@ export const useLevelUpStore = create<LevelUpState>((set, get) => ({
       choiceQuestions: [],
       questionsStatus: "ready",
       optionsRequest: null,
+      hitPointPreview: IDLE_PREVIEW,
     });
   },
 
@@ -415,6 +492,7 @@ export const useLevelUpStore = create<LevelUpState>((set, get) => ({
       choiceQuestions: [],
       questionsStatus: "ready",
       optionsRequest: null,
+      hitPointPreview: IDLE_PREVIEW,
     });
   },
 }));

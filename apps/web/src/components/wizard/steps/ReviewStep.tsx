@@ -1,14 +1,18 @@
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import { useAbilities } from "../../../hooks/useCharacterStats";
 import { useCharacterSheetStore } from "../../../store/characterSheetStore";
 import { type Ability } from "@project/engine";
 import { useLevelUpStore } from "../../../store/levelUpStore";
 import { ledgerTotalLevel } from "../../../utils/ledgerLevel";
-import { getProjectedConModifier } from "../../../utils/levelUpReview";
 
 export const ReviewStep = () => {
-  const { draftPayload, progressionContext, grantedTraitDetails } =
-    useLevelUpStore();
+  const {
+    draftPayload,
+    progressionContext,
+    grantedTraitDetails,
+    hitPointPreview,
+    requestHitPointPreview,
+  } = useLevelUpStore();
   // the ledger's total, as the level-up itself counts it (#95)
   const currentTotalLevel = useCharacterSheetStore((state) =>
     ledgerTotalLevel(state.classLevels),
@@ -19,6 +23,19 @@ export const ReviewStep = () => {
   const traitsById = ruleSnapshot?.traitsById;
 
   const { finalAbilities } = useAbilities();
+
+  // the server's answer, not an estimate: an ability score increase that
+  // raises Constitution also raises every earlier level, which only the
+  // saves the level-up itself builds can see (#88)
+  useEffect(() => {
+    void requestHitPointPreview();
+  }, [
+    requestHitPointPreview,
+    draftPayload.hpRoll,
+    draftPayload.asiChoices,
+    draftPayload.featId,
+    draftPayload.subclassId,
+  ]);
 
   // 1 - calculate the projected state
   const diffs = useMemo(() => {
@@ -44,22 +61,28 @@ export const ReviewStep = () => {
       delta: "+1",
     });
 
-    // HIT POINTS
-    // note if CON mod increased this lvl the exact projected HP requires full engine exec
-    // for clarity, approximate delta visually based on the raw roll + current CON
+    // HIT POINTS - the server's preview, never an estimate (#88)
     if (draftPayload.hpRoll) {
-      const projectedConMod = getProjectedConModifier(
-        finalAbilities,
-        draftPayload.asiChoices,
+      changes.push(
+        hitPointPreview.status === "ready"
+          ? {
+              category: "Vitals",
+              label: "Maximum Hit Points",
+              current: hitPointPreview.maxHpBefore,
+              next: hitPointPreview.maxHpAfter,
+              delta: `+${hitPointPreview.hitPointGain}`,
+            }
+          : {
+              category: "Vitals",
+              label: "Maximum Hit Points",
+              current: currentMaxHp,
+              next:
+                hitPointPreview.status === "error"
+                  ? "Hit point preview unavailable"
+                  : "Calculating…",
+              delta: "",
+            },
       );
-      const totalHpGain = draftPayload.hpRoll + projectedConMod;
-      changes.push({
-        category: "Vitals",
-        label: "Maximum Hit Points",
-        current: currentMaxHp,
-        next: currentMaxHp + totalHpGain,
-        delta: `+${totalHpGain}`,
-      });
     }
 
     // ABILITY SCORES
@@ -80,6 +103,7 @@ export const ReviewStep = () => {
     return changes;
   }, [
     draftPayload,
+    hitPointPreview,
     currentTotalLevel,
     currentMaxHp,
     finalAbilities,
@@ -175,9 +199,11 @@ export const ReviewStep = () => {
                   <td className="p-3 text-center text-gray-400">→</td>
                   <td className="p-3 text-center text-green-700 flex items-center justify-center gap-2">
                     {diff.next}
-                    <span className="text-xs font-black bg-green-100 text-green-800 px-1.5 py-0.5 rounded">
-                      {diff.delta}
-                    </span>
+                    {diff.delta ? (
+                      <span className="text-xs font-black bg-green-100 text-green-800 px-1.5 py-0.5 rounded">
+                        {diff.delta}
+                      </span>
+                    ) : null}
                   </td>
                 </tr>
               ))}

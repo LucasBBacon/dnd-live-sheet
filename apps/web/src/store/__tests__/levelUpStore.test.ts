@@ -455,3 +455,94 @@ describe("useLevelUpStore choice questions", () => {
     expect(useLevelUpStore.getState().choiceQuestions).toEqual([newest]);
   });
 });
+
+describe("useLevelUpStore hit point preview (#88)", () => {
+  const draft = {
+    characterId: "char_1",
+    targetClassId: "class_fighter",
+    newTotalLevel: 4,
+    hpRoll: 6,
+    asiChoices: [{ stat: "CON" as const, value: 1 }],
+  };
+
+  beforeEach(() => {
+    vi.mocked(apiClient).mockReset();
+    useLevelUpStore.setState({
+      isActive: true,
+      draftPayload: draft,
+      hitPointPreview: { status: "idle" },
+    });
+  });
+
+  it("posts the draft to the preview endpoint and keeps the server's numbers", async () => {
+    vi.mocked(apiClient).mockResolvedValueOnce({
+      maxHpBefore: 31,
+      maxHpAfter: 42,
+      hitPointGain: 11,
+    });
+
+    await useLevelUpStore.getState().requestHitPointPreview();
+
+    const [endpoint, options] = vi.mocked(apiClient).mock.calls[0]!;
+    expect(endpoint).toBe("/character/char_1/level-up/preview");
+    expect(options?.method).toBe("POST");
+    expect(JSON.parse(options!.body as string)).toEqual({
+      targetClassId: "class_fighter",
+      hpRoll: 6,
+      asiChoices: [{ stat: "CON", value: 1 }],
+    });
+    expect(useLevelUpStore.getState().hitPointPreview).toEqual({
+      status: "ready",
+      maxHpBefore: 31,
+      maxHpAfter: 42,
+      hitPointGain: 11,
+    });
+  });
+
+  it("records a failed preview as an error, never a guess", async () => {
+    vi.mocked(apiClient).mockRejectedValueOnce(new Error("offline"));
+
+    await useLevelUpStore.getState().requestHitPointPreview();
+
+    expect(useLevelUpStore.getState().hitPointPreview).toEqual({
+      status: "error",
+    });
+  });
+
+  it("asks nothing until the draft has a class and a roll", async () => {
+    useLevelUpStore.setState({
+      draftPayload: { characterId: "char_1", targetClassId: "class_fighter" },
+    });
+
+    await useLevelUpStore.getState().requestHitPointPreview();
+
+    expect(apiClient).not.toHaveBeenCalled();
+    expect(useLevelUpStore.getState().hitPointPreview).toEqual({
+      status: "idle",
+    });
+  });
+
+  it("keeps only the newest answer when two previews overlap", async () => {
+    let answerFirst!: (value: unknown) => void;
+    vi.mocked(apiClient)
+      .mockImplementationOnce(
+        () =>
+          new Promise((resolve) => {
+            answerFirst = resolve;
+          }),
+      )
+      .mockResolvedValueOnce({ maxHpBefore: 31, maxHpAfter: 44, hitPointGain: 13 });
+
+    const first = useLevelUpStore.getState().requestHitPointPreview();
+    await useLevelUpStore.getState().requestHitPointPreview();
+    answerFirst({ maxHpBefore: 31, maxHpAfter: 40, hitPointGain: 9 });
+    await first;
+
+    expect(useLevelUpStore.getState().hitPointPreview).toEqual({
+      status: "ready",
+      maxHpBefore: 31,
+      maxHpAfter: 44,
+      hitPointGain: 13,
+    });
+  });
+});
