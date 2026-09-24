@@ -16,7 +16,7 @@ export const HpRollStep = () => {
   const campaignId = useCharacterSheetStore((state) => state.campaignId);
   const characterId = useCharacterSheetStore((state) => state.id);
 
-  const { data: classesData } = useQuery<{ classes: ReferenceClass[] }>({
+  const { data: classesData, isError } = useQuery<{ classes: ReferenceClass[] }>({
     queryKey: ["reference", "level-up", "classes", campaignId, characterId],
     queryFn: () =>
       apiClient(
@@ -33,11 +33,27 @@ export const HpRollStep = () => {
   const { finalAbilities } = useAbilities();
   const conMod = finalAbilities.CON.modifier;
 
-  // determine die size based on the class being leveled up
+  // the class being levelled up. No default die: a guessed d8 offered while
+  // the class list loads could be taken, and stored for a class that rolls
+  // something else (#105)
   const selectedClass = classesData?.classes.find(
     (cls) => cls.id === draftPayload.targetClassId,
   );
-  const hitDieSize = selectedClass?.hitDie ?? 8;
+
+  if (!selectedClass) {
+    return (
+      <div className="flex flex-col h-full">
+        <h3 className="text-lg font-bold border-b-2 border-gray-800 pb-2 mb-4 uppercase">
+          Hit Points Increase
+        </h3>
+        <p className="text-sm text-gray-600">
+          {classesData || isError ? "Hit die unavailable" : "Loading hit die…"}
+        </p>
+      </div>
+    );
+  }
+
+  const hitDieSize = selectedClass.hitDie;
 
   // 5e rule: average = half die size + 1
   const averageRoll = hitDieSize / 2 + 1;

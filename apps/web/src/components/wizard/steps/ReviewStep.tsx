@@ -5,6 +5,15 @@ import { type Ability } from "@project/engine";
 import { useLevelUpStore } from "../../../store/levelUpStore";
 import { ledgerTotalLevel } from "../../../utils/ledgerLevel";
 
+/**
+ * A change with its sign - "+13", "+0", "−1" - so a gain below zero reads as
+ * one, not as "+-1" (#107).
+ * @param value The change
+ * @returns The change, signed
+ */
+const signedDelta = (value: number): string =>
+  value < 0 ? `−${Math.abs(value)}` : `+${value}`;
+
 export const ReviewStep = () => {
   const {
     draftPayload,
@@ -70,7 +79,7 @@ export const ReviewStep = () => {
               label: "Maximum Hit Points",
               current: hitPointPreview.maxHpBefore,
               next: hitPointPreview.maxHpAfter,
-              delta: `+${hitPointPreview.hitPointGain}`,
+              delta: signedDelta(hitPointPreview.hitPointGain),
             }
           : {
               category: "Vitals",
