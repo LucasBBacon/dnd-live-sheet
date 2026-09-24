@@ -385,14 +385,23 @@ export const applyLevelUp = async (req: Request, res: Response) => {
       }
 
       // 6 - apply ASI or Feats
+      // totalled per column first: two choices naming the same stat (a
+      // crafted payload; the wizard cannot produce one) would otherwise
+      // overwrite rather than add, so the write would carry only the last
+      // choice while levelUpHitPointGain - which sums every choice into
+      // attributes - counted them all (#103's guarantee)
+      const columnTotals: Partial<Record<AbilityKey, number>> = {};
+      for (const choice of payload.asiChoices ?? []) {
+        const column = abilityColumn(choice.stat);
+        columnTotals[column] = (columnTotals[column] ?? 0) + choice.value;
+      }
       // keyed by column, so a key the table does not have is a type error
       // rather than an update Drizzle silently drops (#103)
       const asiUpdates: Partial<Record<AbilityKey, SQL>> = {};
-      if (payload.asiChoices) {
-        for (const choice of payload.asiChoices) {
-          const column = abilityColumn(choice.stat);
-          asiUpdates[column] = sql`${characters[column]} + ${choice.value}`;
-        }
+      for (const [column, total] of Object.entries(columnTotals) as Array<
+        [AbilityKey, number]
+      >) {
+        asiUpdates[column] = sql`${characters[column]} + ${total}`;
       }
       // a picked feat already joined mergedChoices above, ahead of any write;
       // the bootstrapper grants its traits from choices.feats at read time,
