@@ -4,9 +4,9 @@ import {
   characters,
   characterTraits,
 } from "@project/database/src/schema/operational.js";
-import type { LevelUpPayload } from "@project/shared";
+import type { Ability, AbilityKey, LevelUpPayload } from "@project/shared";
 import type { Request, Response } from "express";
-import { eq, sql } from "drizzle-orm";
+import { eq, sql, type SQL } from "drizzle-orm";
 import { CharacterBootstrapper, type RuleSnapshotLookup } from "@project/engine";
 import {
   resolveNextLevelValidationContext,
@@ -54,6 +54,18 @@ const parsePicksShape = (
 };
 
 /**
+ * The characters column an ability score increase writes. The payload spells
+ * a stat as AbilitySchema does ("CON"); the column is lowercase (`con`).
+ * levelUpHitPointGain and applyLevelUp's write both go through here, so the
+ * hit points a level-up grants and the score it stores cannot name different
+ * stats (#103).
+ * @param stat The payload's stat
+ * @returns Its column, which is also its key in a save's attributes
+ */
+const abilityColumn = (stat: Ability): AbilityKey =>
+  stat.toLowerCase() as AbilityKey;
+
+/**
  * The hit points a level-up adds to a character's current total: the
  * difference between the maximum after this level and the maximum before it.
  * The roll, this level's Constitution modifier, an ability score increase
@@ -75,8 +87,7 @@ export const levelUpHitPointGain = ({
 }): number => {
   const attributes = { ...saves.after.attributes };
   for (const choice of payload.asiChoices ?? []) {
-    const key = choice.stat.toLowerCase() as keyof typeof attributes;
-    attributes[key] += choice.value;
+    attributes[abilityColumn(choice.stat)] += choice.value;
   }
 
   const after = finalMaxHp(
@@ -374,12 +385,13 @@ export const applyLevelUp = async (req: Request, res: Response) => {
       }
 
       // 6 - apply ASI or Feats
-      const asiUpdates: Record<string, unknown> = {};
+      // keyed by column, so a key the table does not have is a type error
+      // rather than an update Drizzle silently drops (#103)
+      const asiUpdates: Partial<Record<AbilityKey, SQL>> = {};
       if (payload.asiChoices) {
         for (const choice of payload.asiChoices) {
-          // dynamically build SQL update for specific stat col
-          asiUpdates[choice.stat] =
-            sql`${characters[choice.stat as keyof typeof characters]} + ${choice.value}`;
+          const column = abilityColumn(choice.stat);
+          asiUpdates[column] = sql`${characters[column]} + ${choice.value}`;
         }
       }
       // a picked feat already joined mergedChoices above, ahead of any write;

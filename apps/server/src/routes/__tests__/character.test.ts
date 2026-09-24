@@ -9,6 +9,7 @@ import {
   type CoreRulePackSnapshot,
 } from "@project/shared";
 import type { Request, Response } from "express";
+import type { SQL } from "drizzle-orm";
 import { globalErrorHandler } from "../../middleware/errorHandler.js";
 
 const PACK_DIR = path.join(
@@ -924,6 +925,39 @@ describe("Character Routes", () => {
       // second level-up wait for this transaction to commit
       expect(lockMock).toHaveBeenCalledTimes(1);
       expect(lockMock).toHaveBeenCalledWith("update");
+    });
+
+    it("writes an ability score increase to the column it names (#103)", async () => {
+      const { applyLevelUp, tx } = await setupLevelUpHarness({});
+      const { res, status } = createMockResponse();
+
+      await applyLevelUp(
+        createLevelUpRequest({
+          asiChoices: [
+            { stat: "CON", value: 1 },
+            { stat: "STR", value: 1 },
+          ],
+        }),
+        res,
+      );
+
+      // imported after the harness's resetModules, so this is the same table
+      // object the controller built its update from
+      const { characters } = await import(
+        "@project/database/src/schema/operational.js"
+      );
+      // the character write is the one .set() that carries choices
+      const characterWrite = tx.set.mock.calls
+        .map(([values]) => values as Record<string, unknown>)
+        .find((values) => "choices" in values);
+
+      expect(status).toHaveBeenCalledWith(200);
+      // the payload spells the stat "CON" and the column is `con`: keyed by
+      // the payload's spelling, Drizzle dropped the increase without a word
+      expect(characterWrite).not.toHaveProperty("CON");
+      expect(characterWrite).not.toHaveProperty("STR");
+      expect((characterWrite?.con as SQL).queryChunks).toContain(characters.con);
+      expect((characterWrite?.str as SQL).queryChunks).toContain(characters.str);
     });
   });
 });
