@@ -273,3 +273,38 @@ describe("DashboardLayout inventory actions", () => {
     container.remove();
   });
 });
+
+describe("DashboardLayout level up", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    storeState = baseStoreState;
+  });
+
+  it("asks for the level after the class ledger's total, not the level column (#95)", async () => {
+    // a row whose level column drifted to 5 while its ledger says fighter 3
+    storeState = {
+      ...baseStoreState,
+      level: 5,
+      classLevels: { class_fighter: 3 },
+    };
+
+    const { container, root } = await renderDashboard();
+    const levelUp = findButton(container, "Level Up");
+    expect(levelUp).toBeDefined();
+
+    await act(async () => {
+      levelUp!.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    });
+
+    expect(mocks.beginLevelUp).toHaveBeenCalledWith(
+      "char_1",
+      "class_fighter",
+      3,
+      4,
+      { campaignId: "campaign_1" },
+    );
+
+    root.unmount();
+    container.remove();
+  });
+});

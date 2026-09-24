@@ -8,6 +8,7 @@ import type { CharacterSlot } from "@project/shared";
 import { useAbilities, useDerivedStats } from "../../hooks/useCharacterStats";
 import { useCharacterSheetStore } from "../../store/characterSheetStore";
 import { useLevelUpStore } from "../../store/levelUpStore";
+import { ledgerTotalLevel } from "../../utils/ledgerLevel";
 import { CombatWidget } from "./CombatWidget";
 import { RestModal } from "./modals/RestModal";
 import { LevelUpWizard } from "../wizard/LevelUpWizard";
@@ -135,7 +136,9 @@ export const DashboardLayout = () => {
                 character.id,
                 activeClassId,
                 currentLevelInActiveClass,
-                character.level + 1,
+                // the ledger's total, which the server checks this against -
+                // a drifted level column would be refused on every try (#95)
+                ledgerTotalLevel(character.classLevels) + 1,
                 { campaignId: character.campaignId },
               );
             }}

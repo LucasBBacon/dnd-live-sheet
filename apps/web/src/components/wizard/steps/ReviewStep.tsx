@@ -3,12 +3,16 @@ import { useAbilities } from "../../../hooks/useCharacterStats";
 import { useCharacterSheetStore } from "../../../store/characterSheetStore";
 import { type Ability } from "@project/engine";
 import { useLevelUpStore } from "../../../store/levelUpStore";
+import { ledgerTotalLevel } from "../../../utils/ledgerLevel";
 import { getProjectedConModifier } from "../../../utils/levelUpReview";
 
 export const ReviewStep = () => {
   const { draftPayload, progressionContext, grantedTraitDetails } =
     useLevelUpStore();
-  const currentTotalLevel = useCharacterSheetStore((state) => state.level);
+  // the ledger's total, as the level-up itself counts it (#95)
+  const currentTotalLevel = useCharacterSheetStore((state) =>
+    ledgerTotalLevel(state.classLevels),
+  );
   const currentMaxHp = useCharacterSheetStore((state) => state.getMaxHp());
   const classLevels = useCharacterSheetStore((state) => state.classLevels);
   const ruleSnapshot = useCharacterSheetStore((state) => state.ruleSnapshot);

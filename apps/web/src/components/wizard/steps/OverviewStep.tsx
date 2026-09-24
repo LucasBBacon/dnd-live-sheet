@@ -1,6 +1,7 @@
 import React, { useMemo } from "react";
 import { useCharacterSheetStore } from "../../../store/characterSheetStore";
 import { useLevelUpStore } from "../../../store/levelUpStore";
+import { ledgerTotalLevel } from "../../../utils/ledgerLevel";
 import { useQuery } from "@tanstack/react-query";
 import {
   apiClient,
@@ -41,7 +42,11 @@ export const OverviewStep = () => {
   } = useLevelUpStore();
   const characterId = useCharacterSheetStore((state) => state.id);
   const campaignId = useCharacterSheetStore((state) => state.campaignId);
-  const totalLevel = useCharacterSheetStore((state) => state.level);
+  // the ledger's total, not the level column: the server checks a
+  // level-up against the ledger, and a drifted column would be refused (#95)
+  const totalLevel = useCharacterSheetStore((state) =>
+    ledgerTotalLevel(state.classLevels),
+  );
   const classLevels = useCharacterSheetStore((state) => state.classLevels);
 
   const {
