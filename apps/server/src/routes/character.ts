@@ -1,4 +1,9 @@
-import { Router, type Router as ExpressRouter } from "express";
+import {
+  Router,
+  type Request,
+  type Response,
+  type Router as ExpressRouter,
+} from "express";
 import { db } from "@project/database";
 import {
   campaignMembers,
@@ -19,7 +24,7 @@ import { eq } from "drizzle-orm";
 import { v4 as uuidv4 } from "uuid";
 import { CharacterBootstrapper, listChoiceQuestions } from "@project/engine";
 import { processStartingEquipment } from "../utils/inventory.js";
-import { applyLevelUp } from "../controllers/characterController.js";
+import { applyLevelUp, previewLevelUp } from "../controllers/characterController.js";
 import { isUserCampaignMember } from "../services/campaignAccess.js";
 import { getCachedRuleSnapshot } from "../services/ruleSnapshotCache.js";
 import { finalMaxHp, toCharacterSave } from "../services/characterSave.js";
@@ -411,45 +416,82 @@ router.get("/:characterId", async (req, res, next) => {
 // #region POST /api/character/:characterId/level-up
 
 /**
+ * The gate both level-up routes share: an authenticated user, a character
+ * that exists, a campaign that user belongs to, and a body that - if it names
+ * a character at all - names this one. Sends the refusal itself and returns
+ * false when the request may not go on; otherwise stamps the path's id onto
+ * the body, where the controllers read it.
+ * @param req The request, with the character id in its path
+ * @param res The response the refusal is sent on
+ * @returns Whether the request may go on to its controller
+ */
+const admitLevelUpRequest = async (
+  req: Request<{ characterId: string }>,
+  res: Response,
+): Promise<boolean> => {
+  const userId = req.user?.id;
+  if (!userId) {
+    res.status(401).json({ error: "Unauthorized request" });
+    return false;
+  }
+
+  const characterId = req.params.characterId;
+  const [character] = await db
+    .select({ id: characters.id, campaignId: characters.campaignId })
+    .from(characters)
+    .where(eq(characters.id, characterId))
+    .limit(1);
+
+  if (!character) {
+    res.status(404).json({ error: "Character not found." });
+    return false;
+  }
+
+  const canAccess = await isUserCampaignMember(userId, character.campaignId);
+  if (!canAccess) {
+    res.status(403).json({ error: "Forbidden campaign access." });
+    return false;
+  }
+
+  if (req.body?.characterId && req.body.characterId !== characterId) {
+    res.status(400).json({ error: "Character id mismatch in payload." });
+    return false;
+  }
+
+  req.body = {
+    ...req.body,
+    characterId,
+  };
+  return true;
+};
+
+/**
  * POST /api/character/:characterId/level-up
  * Applies a validated level-up payload for the requested character.
  * @param characterId - The ID of the character to level up.
  */
 router.post("/:characterId/level-up", async (req, res, next) => {
   try {
-    const userId = req.user?.id;
-    if (!userId) {
-      return res.status(401).json({ error: "Unauthorized request" });
-    }
-
-    const characterId = req.params.characterId;
-    const [character] = await db
-      .select({ id: characters.id, campaignId: characters.campaignId })
-      .from(characters)
-      .where(eq(characters.id, characterId))
-      .limit(1);
-
-    if (!character) {
-      return res.status(404).json({ error: "Character not found." });
-    }
-
-    const canAccess = await isUserCampaignMember(userId, character.campaignId);
-    if (!canAccess) {
-      return res.status(403).json({ error: "Forbidden campaign access." });
-    }
-
-    if (req.body?.characterId && req.body.characterId !== characterId) {
-      return res
-        .status(400)
-        .json({ error: "Character id mismatch in payload." });
-    }
-
-    req.body = {
-      ...req.body,
-      characterId,
-    };
-
+    if (!(await admitLevelUpRequest(req, res))) return;
     return applyLevelUp(req, res);
+  } catch (error) {
+    next(error);
+  }
+});
+
+// #endregion
+
+// #region POST /api/character/:characterId/level-up/preview
+
+/**
+ * POST /api/character/:characterId/level-up/preview
+ * What a level-up draft would do to hit points, without applying it (#88).
+ * @param characterId - The ID of the character the draft levels up.
+ */
+router.post("/:characterId/level-up/preview", async (req, res, next) => {
+  try {
+    if (!(await admitLevelUpRequest(req, res))) return;
+    return previewLevelUp(req, res);
   } catch (error) {
     next(error);
   }

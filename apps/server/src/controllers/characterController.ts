@@ -409,3 +409,70 @@ export const applyLevelUp = async (req: Request, res: Response) => {
     res.status(400).json({ success: false, error: error.message });
   }
 };
+
+/**
+ * What a level-up draft would do to hit points, without applying it.
+ *
+ * Builds the character before and after through the same loadLevelUpSaves
+ * applyLevelUp uses, then measures both with finalMaxHp and
+ * levelUpHitPointGain - so the level-up wizard previews exactly the number
+ * the write will store, including an ability score increase that raises
+ * every earlier level's Constitution contribution (#88). Read-only: no
+ * transaction, no lock, and no validation of the draft's choices, which the
+ * real submit still performs in full.
+ * @param req The request, its body the wizard's draft
+ * @param res The response: the maximum before and after, and the gain
+ */
+export const previewLevelUp = async (req: Request, res: Response) => {
+  const payload = req.body as Partial<LevelUpPayload> & { characterId: string };
+  const { characterId, targetClassId, hpRoll } = payload;
+
+  if (
+    typeof targetClassId !== "string" ||
+    targetClassId.length === 0 ||
+    typeof hpRoll !== "number" ||
+    !Number.isFinite(hpRoll)
+  ) {
+    return res.status(400).json({
+      success: false,
+      error: "A hit point preview needs a targetClassId and a numeric hpRoll.",
+    });
+  }
+
+  try {
+    const selectedTraits = parsePicksShape(payload.selectedTraits, "selectedTraits");
+    const traitSelections = parsePicksShape(payload.traitSelections, "traitSelections");
+    const { snapshot } = await getCachedRuleSnapshot();
+
+    const { saves } = await loadLevelUpSaves(
+      db,
+      characterId,
+      {
+        targetClassId,
+        subclassId: payload.subclassId,
+        featId: payload.featId,
+        selectedTraits,
+        traitSelections,
+      },
+      { lock: false },
+    );
+
+    const maxHpBefore = finalMaxHp(saves.before, snapshot);
+    const hitPointGain = levelUpHitPointGain({
+      saves,
+      payload: {
+        hpRoll,
+        ...(payload.asiChoices ? { asiChoices: payload.asiChoices } : {}),
+      },
+      snapshot,
+    });
+
+    return res.status(200).json({
+      maxHpBefore,
+      maxHpAfter: maxHpBefore + hitPointGain,
+      hitPointGain,
+    });
+  } catch (error: any) {
+    return res.status(400).json({ success: false, error: error.message });
+  }
+};
