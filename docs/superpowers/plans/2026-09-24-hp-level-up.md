@@ -2330,3 +2330,361 @@ Run by the controller, not a subagent, because Step 2 needs the owner.
   - Re-seed, then send two concurrent level-up requests from the console (the script is in `sample-characters.md`). One succeeds and one returns 400.
   - Brother Mote (`…0128`): Level Up succeeds.
   - Record anything else as a backlog item; do not fix it.
+
+---
+
+## Added 2026-09-24, after Task 8's live check (owner-approved scope)
+
+Task 8's hand check passed every item above and found three older defects.
+The owner chose to fix one on this branch and record two:
+
+- **#103 (fixed here, Tasks 9-10).** `applyLevelUp` keys each ability score
+  increase by the payload's uppercase stat (`"CON"`); the `characters`
+  columns are lowercase (`con`), and Drizzle ignores a `.set()` key that
+  names no column. No level-up increase has ever been stored, while
+  `levelUpHitPointGain` lowercases the stat and grants the hit points: Brannoc
+  levelled with +1 CON/+1 STR kept CON 15/STR 16 and read 44/40 after a reload.
+- **#104 (recorded, Task 10).** Nothing refreshes the sheet after its own
+  level-up; Brannoc read 31/31 until a reload.
+- **#105 (recorded, Task 10).** `HpRollStep` offers a d8 while the class list
+  loads.
+
+The Global Constraints bind Tasks 9-11 too, with "Fix only the five items"
+read as "the five items and #103".
+
+Measured while planning (the fix and test applied, then reverted): the new
+test fails on the current controller with `expected { level: 3, maxHp: SQL{ …(4) }, …(4) } to not have property "CON"`;
+with the fix the server suite is **506** green (505 + 1) and
+`pnpm --filter @project/server typecheck` is clean. The harness's default
+level-up (fighter 2 → 3) returns 200 with `asiChoices` sent, and its
+character write is the one `.set()` call whose values carry `choices`.
+
+### Task 9: #103 — a level-up's ability score increase is written to its column
+
+**Files:**
+- Modify: `apps/server/src/controllers/characterController.ts`
+- Test: `apps/server/src/routes/__tests__/character.test.ts`
+
+- [ ] **Step 1: Write the failing test**
+
+In `apps/server/src/routes/__tests__/character.test.ts`, below the line
+`import type { Request, Response } from "express";` add:
+
+```ts
+import type { SQL } from "drizzle-orm";
+```
+
+Then add this test as the last `it` inside
+`describe("POST /api/character/:characterId/level-up")`, after
+`reads the character FOR UPDATE, so a concurrent level-up waits for this one (#94)`:
+
+```ts
+    it("writes an ability score increase to the column it names (#103)", async () => {
+      const { applyLevelUp, tx } = await setupLevelUpHarness({});
+      const { res, status } = createMockResponse();
+
+      await applyLevelUp(
+        createLevelUpRequest({
+          asiChoices: [
+            { stat: "CON", value: 1 },
+            { stat: "STR", value: 1 },
+          ],
+        }),
+        res,
+      );
+
+      // imported after the harness's resetModules, so this is the same table
+      // object the controller built its update from
+      const { characters } = await import(
+        "@project/database/src/schema/operational.js"
+      );
+      // the character write is the one .set() that carries choices
+      const characterWrite = tx.set.mock.calls
+        .map(([values]) => values as Record<string, unknown>)
+        .find((values) => "choices" in values);
+
+      expect(status).toHaveBeenCalledWith(200);
+      // the payload spells the stat "CON" and the column is `con`: keyed by
+      // the payload's spelling, Drizzle dropped the increase without a word
+      expect(characterWrite).not.toHaveProperty("CON");
+      expect(characterWrite).not.toHaveProperty("STR");
+      expect((characterWrite?.con as SQL).queryChunks).toContain(characters.con);
+      expect((characterWrite?.str as SQL).queryChunks).toContain(characters.str);
+    });
+```
+
+Do not import `characters` at the top of the file: the harness calls
+`vi.resetModules()`, so a top-level import is a different object from the one
+the controller uses and `toContain` would compare unequal.
+
+- [ ] **Step 2: Run it and watch it fail**
+
+Run: `DATABASE_URL= pnpm --filter @project/server exec vitest run src/routes/__tests__/character.test.ts -t "column it names"`
+Expected: FAIL — `expected { level: 3, maxHp: SQL{ …(4) }, …(4) } to not have property "CON"`.
+
+- [ ] **Step 3: One mapping for the gain and the write**
+
+In `apps/server/src/controllers/characterController.ts`:
+
+Replace `import type { LevelUpPayload } from "@project/shared";` with:
+
+```ts
+import type { Ability, AbilityKey, LevelUpPayload } from "@project/shared";
+```
+
+Replace `import { eq, sql } from "drizzle-orm";` with:
+
+```ts
+import { eq, sql, type SQL } from "drizzle-orm";
+```
+
+Immediately above the JSDoc that begins
+`/**` / ` * The hit points a level-up adds to a character's current total:`, add:
+
+```ts
+/**
+ * The characters column an ability score increase writes. The payload spells
+ * a stat as AbilitySchema does ("CON"); the column is lowercase (`con`).
+ * levelUpHitPointGain and applyLevelUp's write both go through here, so the
+ * hit points a level-up grants and the score it stores cannot name different
+ * stats (#103).
+ * @param stat The payload's stat
+ * @returns Its column, which is also its key in a save's attributes
+ */
+const abilityColumn = (stat: Ability): AbilityKey =>
+  stat.toLowerCase() as AbilityKey;
+```
+
+In `levelUpHitPointGain`, replace:
+
+```ts
+  for (const choice of payload.asiChoices ?? []) {
+    const key = choice.stat.toLowerCase() as keyof typeof attributes;
+    attributes[key] += choice.value;
+  }
+```
+
+with:
+
+```ts
+  for (const choice of payload.asiChoices ?? []) {
+    attributes[abilityColumn(choice.stat)] += choice.value;
+  }
+```
+
+In `applyLevelUp`, replace:
+
+```ts
+      // 6 - apply ASI or Feats
+      const asiUpdates: Record<string, unknown> = {};
+      if (payload.asiChoices) {
+        for (const choice of payload.asiChoices) {
+          // dynamically build SQL update for specific stat col
+          asiUpdates[choice.stat] =
+            sql`${characters[choice.stat as keyof typeof characters]} + ${choice.value}`;
+        }
+      }
+```
+
+with:
+
+```ts
+      // 6 - apply ASI or Feats
+      // keyed by column, so a key the table does not have is a type error
+      // rather than an update Drizzle silently drops (#103)
+      const asiUpdates: Partial<Record<AbilityKey, SQL>> = {};
+      if (payload.asiChoices) {
+        for (const choice of payload.asiChoices) {
+          const column = abilityColumn(choice.stat);
+          asiUpdates[column] = sql`${characters[column]} + ${choice.value}`;
+        }
+      }
+```
+
+Nothing else in the file changes. Validating a payload's stats or totals is
+#96's territory and out of scope.
+
+- [ ] **Step 4: Run it and watch it pass, then the suite and typecheck**
+
+Run: `DATABASE_URL= pnpm --filter @project/server exec vitest run src/routes/__tests__/character.test.ts -t "column it names"` — PASS.
+Run: `DATABASE_URL= pnpm --filter @project/server test` — **506** passed.
+Run: `pnpm --filter @project/server typecheck` — clean.
+Measure both files CRLF.
+
+- [ ] **Step 5: Commit**
+
+```bash
+git add apps/server/src/controllers/characterController.ts apps/server/src/routes/__tests__/character.test.ts
+git commit -m "fix(server): a level-up's ability score increase is written to its column (#103)"
+```
+
+### Task 10: Docs — #103 closed, #104 and #105 recorded, Brannoc's check
+
+**Files:**
+- Modify: `docs/TODO_BACKLOG.md`
+- Modify: `docs/development/sample-characters.md`
+
+Both files are CRLF. Apply every edit with a Node script that reads the file,
+normalises to LF, replaces each anchor (throwing if an anchor is missing or
+appears more than once), and writes back CRLF. Every anchor below is quoted
+exactly as the file holds it (LF shown).
+
+- [ ] **Step 1: `docs/TODO_BACKLOG.md` — the status paragraph**
+
+Replace:
+
+```
+level from its class ledger; #31a moved ahead of the rogue pass). The
+workspace is green - **2426 tests**, 0 failures, and typecheck clean per
+```
+
+with:
+
+```
+level from its class ledger; #31a moved ahead of the rogue pass; the live
+check found #103, a level-up's ability score increase never stored, and the
+branch closed it too). The workspace is green - **2427 tests**, 0 failures,
+and typecheck clean per
+```
+
+- [ ] **Step 2: `docs/TODO_BACKLOG.md` — three index rows**
+
+Immediately after the line:
+
+```
+| 102 | An attuned item with no equip slot applies nothing, and no slot holds a belt | Open | Open items |
+```
+
+insert:
+
+```
+| 103 | A level-up's ability score increase is never stored | ✅ Closed | Closed items |
+| 104 | The sheet shows the old character after its own level-up until the page reloads | Open | Open items |
+| 105 | The level-up hit point step offers a d8's average while the class list loads | Open | Open items |
+```
+
+- [ ] **Step 3: `docs/TODO_BACKLOG.md` — #104 and #105 under Open items**
+
+Immediately before the line `### Coverage thresholds`, insert (the blank
+line at the end separates it from that heading):
+
+```
+### #104 — the sheet shows the old character after its own level-up until the page reloads
+
+| # | Item | Notes |
+| --- | --- | --- |
+| 104 | The sheet shows the old character after its own level-up until the page reloads | Found by the live check of `fix/hp-level-up`, 2026-09-24. See below. |
+
+`validateAndSubmit` (`apps/web/src/store/levelUpStore.ts`) posts the level-up
+and resets the wizard; nothing invalidates the sheet's
+`["character", characterId]` query (`apps/web/src/pages/LiveSheetRoute.tsx`),
+and the server broadcasts nothing for a level-up. After Brannoc Hale
+(sample `…0121`) levelled to fighter 4, his sheet still read fighter 3 and
+31/31 until the page was reloaded - level, hit points, scores and granted
+traits all stale. Fix: invalidate the character query when the level-up
+succeeds; other tabs and the rest of the table need a broadcast as well.
+
+### #105 — the level-up hit point step offers a d8's average while the class list loads
+
+| # | Item | Notes |
+| --- | --- | --- |
+| 105 | The level-up hit point step offers a d8's average while the class list loads | Found by the live check of `fix/hp-level-up`, 2026-09-24. See below. |
+
+`HpRollStep` (`apps/web/src/components/wizard/steps/HpRollStep.tsx`) falls
+back to a d8 (`selectedClass?.hitDie ?? 8`) until `/reference/classes`
+answers, so for a moment a fighter's step offers "Take Average 5" and
+"Roll 1d8". Both buttons work during that moment and store a d8's number for
+a d10 class. Fix: hold the step (or show that it is loading) until the class
+is known, rather than defaulting the die.
+
+```
+
+- [ ] **Step 4: `docs/TODO_BACKLOG.md` — #103 under Closed items**
+
+Immediately before the line
+`### P0 — Previously inert runtime seams (now resolved) ✅`, insert (the blank
+line at the end separates it from that heading):
+
+```
+### #103 — A level-up's ability score increase is never stored ✅
+
+| # | Item | Notes |
+| --- | --- | --- |
+| 103 | ✅ A level-up's ability score increase is never stored | Found by the live check of `fix/hp-level-up`, 2026-09-24; closed 2026-09-24. See below. |
+
+`applyLevelUp` (`apps/server/src/controllers/characterController.ts`) keyed
+each increase by the payload's stat, which `AbilitySchema` spells in
+uppercase (`"CON"`), while the `characters` columns are lowercase (`con`).
+Drizzle ignores a `.set()` key that names no column, so every ability score
+increase taken at a level-up - since at least `e58e80c` (2026-07-05) - was
+dropped without an error. `levelUpHitPointGain` lowercased the stat, so the
+hit points counted an increase the row never received: Brannoc Hale (sample
+`…0121`) levelled to fighter 4 with +1 CON and +1 STR, gained 13 hit points,
+kept CON 15 and STR 16, and read 44/40 after a reload. No test covered the
+column write; the route harness's `.set()` mock accepted any key.
+
+**Closed 2026-09-24** on `fix/hp-level-up`. One helper, `abilityColumn`, maps
+a stat to its column for both the hit point gain and the write, and the
+write's updates are typed by column, so a key the table does not have no
+longer compiles. The level-up route test asserts the write names `con` and
+`str` and not their uppercase spellings. Characters that levelled with an
+increase before the fix keep the scores they had; nothing repairs them.
+
+```
+
+- [ ] **Step 5: `docs/development/sample-characters.md` — Brannoc**
+
+Replace the roster row's tail:
+
+```
+| 31/31 | Level-up staging | #88, #94, #24 |
+```
+
+with:
+
+```
+| 31/31 | Level-up staging | #88, #94, #103, #24 |
+```
+
+Replace step 3 under the Brannoc Hale heading:
+
+```
+3. **Level Up → Fighter 4 (#88, a regression check)**, taking the increase as
+   +1 CON and +1 STR with a roll of 6. The review step asks the server and
+   shows 31 → 44 (+13) — the gain the level-up stores, CON 16 raising the three
+   earlier levels included. Submit: the sheet reads 44/44.
+```
+
+with:
+
+```
+3. **Level Up → Fighter 4 (#88 and #103, regression checks).** Take the
+   average, 6, once the hit point step offers a d10 (it shows a d8 while the
+   class list loads, #105), and take the increase as +1 CON and +1 STR. The
+   review step asks the server and shows 31 → 44 (+13) — the gain the
+   level-up stores, CON 16 raising the three earlier levels included. Submit,
+   then reload (the sheet keeps the old character until you do, #104): it
+   reads 44/44 with STR 17 and CON 16. Before #103 the increase was never
+   stored, and the reloaded sheet read 44/40.
+```
+
+- [ ] **Step 6: Verify and commit**
+
+Measure both files CRLF; `pnpm check:hygiene` passes;
+`DATABASE_URL= pnpm test:all` green at **2427** (shared 232, engine 1017,
+database 200, server 506, web 472).
+
+```bash
+git add docs/TODO_BACKLOG.md docs/development/sample-characters.md
+git commit -m "docs: close #103; record #104 and #105; Brannoc's check stores his increase"
+```
+
+### Task 11: Verification — Brannoc again (controller)
+
+- [ ] `pnpm typecheck --force` 5/5; `pnpm check:hygiene` passes.
+- [ ] Re-seed (`db:seed:samples`; the pack is unchanged since Task 8's import)
+  and restart the `server` preview.
+- [ ] Brannoc (`…0121`): Level Up as in `sample-characters.md` step 3. The
+  review shows 31 → 44 (+13); after a reload the sheet reads 44/44, and
+  `GET /api/character/…0121` stores `con` 14 and `str` 17.
+- [ ] Re-seed once more so the samples are back at their staged state.
