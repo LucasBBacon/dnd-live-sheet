@@ -61,7 +61,7 @@ Each is reachable at `http://localhost:5173/character/<id>`.
 | Character | Lvl | Build | HP | Kind | Backlog |
 | --- | --- | --- | --- | --- | --- |
 | [Quill Ashgrove](http://localhost:5173/character/00000000-0000-0000-0000-000000000120) | 2 | Rogue 2 | 17/17 | Level-up staging | #65b, #31a, #66, #70 |
-| [Brannoc Hale](http://localhost:5173/character/00000000-0000-0000-0000-000000000121) | 3 | Fighter 3 (Champion) | 31/31 | Level-up staging | #88, #94, #24 |
+| [Brannoc Hale](http://localhost:5173/character/00000000-0000-0000-0000-000000000121) | 3 | Fighter 3 (Champion) | 31/31 | Level-up staging | #88, #94, #103, #24 |
 | [Isolde Varn](http://localhost:5173/character/00000000-0000-0000-0000-000000000122) | 4 | Warlock 4 (Archfey) | 20/31 | Level-up and dip staging | #81, #77, #36 |
 | [Ursk Gravemaw](http://localhost:5173/character/00000000-0000-0000-0000-000000000123) | 5 | Paladin 5 (Vengeance) | 6/54 | Two tabs | #92, #93 |
 | [Tamsin Burrowdeep](http://localhost:5173/character/00000000-0000-0000-0000-000000000124) | 6 | Barbarian 6 (Totem Warrior) | 30/65 | Two tabs, socket | #76, #97, #99, #101 |
@@ -142,10 +142,14 @@ re-running the seed. Stored values can be read with
    *After #24:* +2 damage while the off hand is empty.
 2. **Dwarven Toughness.** The maximum is 31: 22 rolled, +6 Constitution, +3
    from Dwarven Toughness's +1 per level.
-3. **Level Up → Fighter 4 (#88, a regression check)**, taking the increase as
-   +1 CON and +1 STR with a roll of 6. The review step asks the server and
-   shows 31 → 44 (+13) — the gain the level-up stores, CON 16 raising the three
-   earlier levels included. Submit: the sheet reads 44/44.
+3. **Level Up → Fighter 4 (#88 and #103, regression checks).** Take the
+   average, 6, once the hit point step offers a d10 (it shows a d8 while the
+   class list loads, #105), and take the increase as +1 CON and +1 STR. The
+   review step asks the server and shows 31 → 44 (+13) — the gain the
+   level-up stores, CON 16 raising the three earlier levels included. Submit,
+   then reload (the sheet keeps the old character until you do, #104): it
+   reads 44/44 with STR 17 and CON 16. Before #103 the increase was never
+   stored, and the reloaded sheet read 44/40.
 4. **Double submit (#94, a regression check).** Re-seed, repeat step 3, and double-click the final
    submit. If the button disables after one click, send two requests at once
    from the browser console instead:

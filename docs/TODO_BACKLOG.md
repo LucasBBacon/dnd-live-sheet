@@ -6,8 +6,10 @@ each level's roll and Constitution together, Draconic Resilience scales per
 sorcerer level and pack validation rejects class-level scaling that names
 no class, the level-up review previews the server's own hit point gain, a
 level-up locks the row it reads, and every web caller takes a character's
-level from its class ledger; #31a moved ahead of the rogue pass). The
-workspace is green - **2426 tests**, 0 failures, and typecheck clean per
+level from its class ledger; #31a moved ahead of the rogue pass; the live
+check found #103, a level-up's ability score increase never stored, and the
+branch closed it too). The workspace is green - **2427 tests**, 0 failures,
+and typecheck clean per
 package (6f explains why "per package" matters). Nothing below is breaking
 a build; these are gaps, debt and content.
 
@@ -308,6 +310,9 @@ Every id this file has ever issued, in one table. Gaps in the numbering are inte
 | 100 | `resolveActionError`'s async-failure branch is untested, and the reachable case is the untested one | Open | Open items |
 | 101 | ✅ One inventory writer does not recompose the sheet's states, unlike the six beside it | ✅ Closed | Closed items |
 | 102 | An attuned item with no equip slot applies nothing, and no slot holds a belt | Open | Open items |
+| 103 | A level-up's ability score increase is never stored | ✅ Closed | Closed items |
+| 104 | The sheet shows the old character after its own level-up until the page reloads | Open | Open items |
+| 105 | The level-up hit point step offers a d8's average while the class list loads | Open | Open items |
 | A1 | Ready's trigger is not modelled | Open | Open items |
 | A2 | No roll-initiating UI for skills | ✅ Closed | Closed items |
 | A2b | actions do not prompt their own check | Open | Open items |
@@ -1084,6 +1089,34 @@ vocabulary gains a waist slot (or a general "worn" slot for items that occupy
 no body location), and whether an attuned row that is not equipped should
 show its attunement rather than hide it.
 
+### #104 — the sheet shows the old character after its own level-up until the page reloads
+
+| # | Item | Notes |
+| --- | --- | --- |
+| 104 | The sheet shows the old character after its own level-up until the page reloads | Found by the live check of `fix/hp-level-up`, 2026-09-24. See below. |
+
+`validateAndSubmit` (`apps/web/src/store/levelUpStore.ts`) posts the level-up
+and resets the wizard; nothing invalidates the sheet's
+`["character", characterId]` query (`apps/web/src/pages/LiveSheetRoute.tsx`),
+and the server broadcasts nothing for a level-up. After Brannoc Hale
+(sample `…0121`) levelled to fighter 4, his sheet still read fighter 3 and
+31/31 until the page was reloaded - level, hit points, scores and granted
+traits all stale. Fix: invalidate the character query when the level-up
+succeeds; other tabs and the rest of the table need a broadcast as well.
+
+### #105 — the level-up hit point step offers a d8's average while the class list loads
+
+| # | Item | Notes |
+| --- | --- | --- |
+| 105 | The level-up hit point step offers a d8's average while the class list loads | Found by the live check of `fix/hp-level-up`, 2026-09-24. See below. |
+
+`HpRollStep` (`apps/web/src/components/wizard/steps/HpRollStep.tsx`) falls
+back to a d8 (`selectedClass?.hitDie ?? 8`) until `/reference/classes`
+answers, so for a moment a fighter's step offers "Take Average 5" and
+"Roll 1d8". Both buttons work during that moment and store a d8's number for
+a d10 class. Fix: hold the step (or show that it is loading) until the class
+is known, rather than defaulting the die.
+
 ### Coverage thresholds
 
 *The unnumbered Tier 5 item. The live sequence's Tier 5 names it among the
@@ -1301,6 +1334,30 @@ writer leaves the composition fresh. It seeds a deliberately stale
 to be gone and the worn-armour state present. That fails against the old
 code, which wrote only `inventory`, and it keeps holding if a future
 authored rule ever does tie a state to attunement.
+
+### #103 — A level-up's ability score increase is never stored ✅
+
+| # | Item | Notes |
+| --- | --- | --- |
+| 103 | ✅ A level-up's ability score increase is never stored | Found by the live check of `fix/hp-level-up`, 2026-09-24; closed 2026-09-24. See below. |
+
+`applyLevelUp` (`apps/server/src/controllers/characterController.ts`) keyed
+each increase by the payload's stat, which `AbilitySchema` spells in
+uppercase (`"CON"`), while the `characters` columns are lowercase (`con`).
+Drizzle ignores a `.set()` key that names no column, so every ability score
+increase taken at a level-up - since at least `e58e80c` (2026-07-05) - was
+dropped without an error. `levelUpHitPointGain` lowercased the stat, so the
+hit points counted an increase the row never received: Brannoc Hale (sample
+`…0121`) levelled to fighter 4 with +1 CON and +1 STR, gained 13 hit points,
+kept CON 15 and STR 16, and read 44/40 after a reload. No test covered the
+column write; the route harness's `.set()` mock accepted any key.
+
+**Closed 2026-09-24** on `fix/hp-level-up`. One helper, `abilityColumn`, maps
+a stat to its column for both the hit point gain and the write, and the
+write's updates are typed by column, so a key the table does not have no
+longer compiles. The level-up route test asserts the write names `con` and
+`str` and not their uppercase spellings. Characters that levelled with an
+increase before the fix keep the scores they had; nothing repairs them.
 
 ### P0 — Previously inert runtime seams (now resolved) ✅
 
