@@ -285,7 +285,8 @@ describe("DerivedStatEngine.calculateMaxHp", () => {
         ],
       );
 
-      // base(10) + CON floor(1)*5 + Draconic Resilience(1*5)
+      // base(10) + CON(0*5=0; the rolled 10 already covers the 5-level
+      // floor, so no lift applies) + Draconic Resilience(1*5)
       expect(result.total).toBe(15);
       expect(result.breakdown).toContainEqual({
         name: "Draconic Resilience",
@@ -308,7 +309,8 @@ describe("DerivedStatEngine.calculateMaxHp", () => {
         ],
       );
 
-      // base(10) + CON floor(1)*6 + Barbarian Bonus(2*4)
+      // base(10) + CON(0*6=0; the rolled 10 already covers the 6-level
+      // floor, so no lift applies) + Barbarian Bonus(2*4)
       expect(result.total).toBe(18);
       expect(result.breakdown).toContainEqual({
         name: "Barbarian Bonus",
@@ -331,7 +333,8 @@ describe("DerivedStatEngine.calculateMaxHp", () => {
         ],
       );
 
-      // base(10) + CON floor(1)*6; the unmatched class contributes nothing
+      // base(10) + CON(0*6=0; the rolled 10 already covers the 6-level
+      // floor, so no lift applies); the unmatched class contributes nothing
       expect(result.total).toBe(10);
       expect(result.breakdown).toEqual([
         { name: "Base HP Rolled", value: 10 },
