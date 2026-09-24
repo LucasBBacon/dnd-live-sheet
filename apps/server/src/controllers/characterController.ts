@@ -84,8 +84,8 @@ const abilityColumn = (stat: Ability): AbilityKey =>
  * is taken with - the rules' minimum for every level (#107). Rolls are stored
  * as one sum (characters.max_hp), so the minimum cannot be applied per level
  * later. Residual, recorded rather than solved: a later Constitution increase
- * also counts the lift, overstating the maximum by about one hit point per
- * lifted level.
+ * also counts the lift, overstating the maximum by up to the lift itself per
+ * lifted level (one hit point at CON 8-9).
  * @param saves The character before and after this level (buildLevelUpSaves)
  * @param payload The level-up's roll and any ability score increases
  * @param snapshot Pack content

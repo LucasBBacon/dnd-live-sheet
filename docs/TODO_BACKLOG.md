@@ -5,12 +5,12 @@ merged (#104–#109 closed: a level-up refreshes the sheet that made it, the
 hit point step waits for the class's own die, both level-up routes check the
 roll and the ability score increase, a new level always adds at least one
 hit point, pack validation rejects a scaling class the pack does not define,
-and every web reader takes the level from the class ledger; #110 and #111
-recorded). Before it, `fix/hp-level-up` closed #86, #87, #88, #94, #95 and
-#103 and moved #31a ahead of the rogue pass. The workspace is green -
-**2458 tests**, 0 failures, and typecheck clean per
-package (6f explains why "per package" matters). Nothing below is breaking
-a build; these are gaps, debt and content.
+and every web reader takes the level from the class ledger; #110, #111, #112
+and #113 recorded). Before it, `fix/hp-level-up` closed #86, #87, #88, #94,
+#95 and #103 and moved #31a ahead of the rogue pass. The workspace is green
+- **2461 tests**, 0 failures, and typecheck clean per package (6f explains
+why "per package" matters). Nothing below is breaking a build; these are
+gaps, debt and content.
 
 ---
 
@@ -318,6 +318,8 @@ Every id this file has ever issued, in one table. Gaps in the numbering are inte
 | 109 | The sheet's proficiency bonus reads the level column | ✅ Closed | Closed items |
 | 110 | The wizard's ASI step caps and shows scores that include equipment | Open | Open items |
 | 111 | A level-up is not broadcast | Open | Open items |
+| 112 | A feat picked after a partial ability score increase is refused with the wrong message | Open | Open items |
+| 113 | The wizard accepts a roll above the hit die | Open | Open items |
 | A1 | Ready's trigger is not modelled | Open | Open items |
 | A2 | No roll-initiating UI for skills | ✅ Closed | Closed items |
 | A2b | actions do not prompt their own check | Open | Open items |
@@ -1128,6 +1130,38 @@ than applied twice, so it fails safe. Fix: give the HTTP layer a way to emit
 to `campaign_<id>` after the transaction commits, and have the sheet refetch
 its character on that event.
 
+### #112 — a feat picked after a partial ability score increase is refused with the wrong message
+
+| # | Item | Notes |
+| --- | --- | --- |
+| 112 | A feat picked after a partial ability score increase is refused with the wrong message | Found by the final review of `fix/level-up-follow-ups`, 2026-09-24. See below. |
+
+`AsiFeatStep`
+(`apps/web/src/components/wizard/steps/AsiFeatStep.tsx`) switches mode
+without clearing the other mode's draft, so allocating +1 STR, switching to
+"Choose a Feat" and picking one sends both. Before this branch the server
+answered "You cannot select both Ability Score Improvements and a Feat";
+since #106 `checkLevelUpNumbers` runs first and answers "ability score
+increases must total 2, not 1", and the review's hit point row reads "Hit
+point preview unavailable". Nothing is refused that was not refused before;
+the message misleads. Fix: clear `asiChoices` or `featId` when the step
+switches mode (and `checkLevelUpNumbers`' docstring then holds).
+
+### #113 — the wizard accepts a roll above the hit die
+
+| # | Item | Notes |
+| --- | --- | --- |
+| 113 | The wizard accepts a roll above the hit die | Found by the final review of `fix/level-up-follow-ups`, 2026-09-24. See below. |
+
+`RollInterceptor` accepts any integer for a physical roll and
+`isStepComplete` (`apps/web/src/utils/wizardValidation.ts`) only checks
+`hpRoll > 0`, so an 11 typed for a d10 passes the step; the review shows
+"Hit point preview unavailable" with no reason and the submit is refused
+(#106) - before #106 the server stored it. Relatedly, `HpRollStep`'s
+"Total +CON" shows the roll plus the modifier, which can read 0 where the
+server now stores a lifted roll (#107). Fix: bound the roll to the die in
+the step or in `isStepComplete`, and show the lifted total.
+
 ### Coverage thresholds
 
 *The unnumbered Tier 5 item. The live sequence's Tier 5 names it among the
@@ -1396,7 +1430,10 @@ the level-up is stored; the route refetches and re-hydrates the store, so the
 sheet shows the new level, hit points, scores and grants without a reload,
 and a second level-up from the same tab asks for the right level. Other tabs
 and viewers still keep the old character until they reload - broadcasting a
-level-up is #111.
+level-up is #111. The `/dev` fixture route
+(`apps/web/src/pages/DevSheetRoute.tsx`) queries under
+`["character", "dev-fixture", id]`, which the wizard's invalidation does not
+match, so a level-up there still needs a reload.
 
 ### #105 — the level-up hit point step offers a d8's average while the class list loads ✅
 
@@ -1471,8 +1508,8 @@ one hit point; the preview and the write share it. The review step signs a
 gain properly ("+0", "−1") should one ever reach it. **Residual, recorded
 rather than solved:** rolls are still stored as one sum, so a later
 Constitution increase also counts a lifted level's lift, overstating the
-maximum by about one hit point per lifted level; only storing per-level
-rolls is exact.
+maximum by up to the lift itself per lifted level (one hit point at CON
+8-9); only storing per-level rolls is exact.
 
 ### #108 — `validateClassScaling` checks that a class is named, not that it exists ✅
 
