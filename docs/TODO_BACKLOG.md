@@ -1,16 +1,14 @@
 # TODO Backlog
 
-**Status as of 2026-09-24**, on `main`, after `fix/hp-level-up` merged (#86,
-#87, #88, #94 and #95 closed: the one-hit-point-per-level floor applies to
-each level's roll and Constitution together, Draconic Resilience scales per
-sorcerer level and pack validation rejects class-level scaling that names no
-class, the level-up review previews the server's own hit point gain, a
-level-up locks the row it reads, and every web caller takes a character's
-level from its class ledger; #31a moved ahead of the rogue pass; the live
-check found #103, a level-up's ability score increase never stored, and the
-branch closed it too; its final review then recorded four more open items,
-#106–#109). The workspace is green - **2429 tests**, 0 failures,
-and typecheck clean per
+**Status as of 2026-09-24**, on `main`, after `fix/level-up-follow-ups`
+merged (#104–#109 closed: a level-up refreshes the sheet that made it, the
+hit point step waits for the class's own die, both level-up routes check the
+roll and the ability score increase, a new level always adds at least one
+hit point, pack validation rejects a scaling class the pack does not define,
+and every web reader takes the level from the class ledger; #110 and #111
+recorded). Before it, `fix/hp-level-up` closed #86, #87, #88, #94, #95 and
+#103 and moved #31a ahead of the rogue pass. The workspace is green -
+**2458 tests**, 0 failures, and typecheck clean per
 package (6f explains why "per package" matters). Nothing below is breaking
 a build; these are gaps, debt and content.
 
@@ -312,12 +310,14 @@ Every id this file has ever issued, in one table. Gaps in the numbering are inte
 | 101 | ✅ One inventory writer does not recompose the sheet's states, unlike the six beside it | ✅ Closed | Closed items |
 | 102 | An attuned item with no equip slot applies nothing, and no slot holds a belt | Open | Open items |
 | 103 | A level-up's ability score increase is never stored | ✅ Closed | Closed items |
-| 104 | The sheet shows the old character after its own level-up until the page reloads | Open | Open items |
-| 105 | The level-up hit point step offers a d8's average while the class list loads | Open | Open items |
-| 106 | The level-up payload is trusted | Open | Open items |
-| 107 | A level whose roll plus a negative Constitution modifier is below 1 gains less than 1 hit point | Open | Open items |
-| 108 | `validateClassScaling` checks that a class is named, not that it exists | Open | Open items |
-| 109 | The sheet's proficiency bonus reads the level column | Open | Open items |
+| 104 | The sheet shows the old character after its own level-up until the page reloads | ✅ Closed | Closed items |
+| 105 | The level-up hit point step offers a d8's average while the class list loads | ✅ Closed | Closed items |
+| 106 | The level-up payload is trusted | ✅ Closed | Closed items |
+| 107 | A level whose roll plus a negative Constitution modifier is below 1 gains less than 1 hit point | ✅ Closed | Closed items |
+| 108 | `validateClassScaling` checks that a class is named, not that it exists | ✅ Closed | Closed items |
+| 109 | The sheet's proficiency bonus reads the level column | ✅ Closed | Closed items |
+| 110 | The wizard's ASI step caps and shows scores that include equipment | Open | Open items |
+| 111 | A level-up is not broadcast | Open | Open items |
 | A1 | Ready's trigger is not modelled | Open | Open items |
 | A2 | No roll-initiating UI for skills | ✅ Closed | Closed items |
 | A2b | actions do not prompt their own check | Open | Open items |
@@ -1094,99 +1094,39 @@ vocabulary gains a waist slot (or a general "worn" slot for items that occupy
 no body location), and whether an attuned row that is not equipped should
 show its attunement rather than hide it.
 
-### #104 — the sheet shows the old character after its own level-up until the page reloads
+### #110 — the wizard's ASI step caps and shows scores that include equipment
 
 | # | Item | Notes |
 | --- | --- | --- |
-| 104 | The sheet shows the old character after its own level-up until the page reloads | Found by the live check of `fix/hp-level-up`, 2026-09-24. See below. |
+| 110 | The wizard's ASI step caps and shows scores that include equipment | Found while designing `fix/level-up-follow-ups`, 2026-09-24. See below. |
 
-`validateAndSubmit` (`apps/web/src/store/levelUpStore.ts`) posts the level-up
-and resets the wizard; nothing invalidates the sheet's
-`["character", characterId]` query (`apps/web/src/pages/LiveSheetRoute.tsx`),
-and the server broadcasts nothing for a level-up. After Brannoc Hale
-(sample `…0121`) levelled to fighter 4, his sheet still read fighter 3 and
-31/31 until the page was reloaded - level, hit points, scores and granted
-traits all stale. Fix: invalidate the character query when the level-up
-succeeds; other tabs and the rest of the table need a broadcast as well.
+`AsiDistribution`
+(`apps/web/src/components/wizard/steps/subcomponents/AsiDistribution.tsx`)
+and the review step's ability rows read `useAbilities().finalAbilities`,
+which counts equipment and live effects as well as race and traits. The
+rules cap an increase against the character's own score, and the server's
+check (#106) uses `finalAbilityScores` - race and traits, no items. So an
+item that sets a score shows the item's score as the "Base" and stops the
+increase at 20 against it: Brother Mote (sample `…0128`) wears a Headband of
+Intellect, and his step shows INT 19 and allows only +1 there. The wizard
+can never send what the server refuses, only refuse what it would allow.
+Fix: have the step read the same race-and-traits scores the server does.
 
-A second level-up without a reload is refused — the stale store sends
-`ledgerTotalLevel + 1` from the old ledger (4 for Brannoc) while the
-server's ledger already stands one higher, so #90's check answers 400; the
-preview meanwhile computes numbers for the real next level.
-
-### #105 — the level-up hit point step offers a d8's average while the class list loads
+### #111 — a level-up is not broadcast
 
 | # | Item | Notes |
 | --- | --- | --- |
-| 105 | The level-up hit point step offers a d8's average while the class list loads | Found by the live check of `fix/hp-level-up`, 2026-09-24. See below. |
+| 111 | A level-up is not broadcast | Split from #104 by `fix/level-up-follow-ups`, 2026-09-24. See below. |
 
-`HpRollStep` (`apps/web/src/components/wizard/steps/HpRollStep.tsx`) falls
-back to a d8 (`selectedClass?.hitDie ?? 8`) until `/reference/classes`
-answers, so for a moment a fighter's step offers "Take Average 5" and
-"Roll 1d8". Both buttons work during that moment and store a d8's number for
-a d10 class. Fix: hold the step (or show that it is loading) until the class
-is known, rather than defaulting the die.
-
-### #106 — the level-up payload is trusted
-
-| # | Item | Notes |
-| --- | --- | --- |
-| 106 | The level-up payload is trusted | Found by the final review of `fix/hp-level-up`, 2026-09-24. See below. |
-
-`POST /api/character/:id/level-up` (and the preview) accept `asiChoices` and
-`hpRoll` unchecked: `validateLevelUpPayloadFromResolver`
-(`apps/server/src/services/levelUpValidation.ts`) checks only that an ASI or
-a feat is present where the level offers one. Nothing checks that each stat
-is an ability, that values are integers, that they total 2, that no score
-passes 20, or that a stat appears once; `hpRoll` is not bounded by the hit
-die. Before #103 the increase was dropped at the write, so a crafted payload
-only inflated hit points; since #103 it is stored. Reachable only by an
-authenticated campaign member with a crafted request (the wizard cannot
-produce these). A non-ability stat or a non-numeric value yields NaN in the
-preview's 200; `abilityColumn`'s cast has no runtime guard. #96 covers
-socket payloads only. Fix: parse `asiChoices` (lowercased stat through
-`AbilityKeySchema`, integer values, sum 2, final score ≤ 20, unique stats)
-and bound `hpRoll` to 1..hit die, in the validation both routes share; add
-route tests for malformed bodies.
-
-### #107 — a level whose roll plus a negative Constitution modifier is below 1 gains less than 1 hit point
-
-| # | Item | Notes |
-| --- | --- | --- |
-| 107 | A level whose roll plus a negative Constitution modifier is below 1 gains less than 1 hit point | Found by the final review of `fix/hp-level-up`, 2026-09-24. See below. |
-
-#86's accepted residual reaches ordinary level-ups, not just stored history:
-`calculateMaxHp` (`packages/engine/src/calculators/derivedStats.ts`) floors
-the whole sum, so at CON 8–9 a rolled 1 gains 0 (the rules give 1) and at
-CON 7 or below it gains −1 — maximum and current hit points both drop, and
-the review step shows "+-1"
-(`apps/web/src/components/wizard/steps/ReviewStep.tsx`). Before #86 no level
-gained less than 2. Options for whoever picks it up: store per-level rolls,
-or have the level-up write lift the stored roll so the new level contributes
-at least 1; and render a non-positive gain honestly.
-
-### #108 — `validateClassScaling` checks that a class is named, not that it exists
-
-| # | Item | Notes |
-| --- | --- | --- |
-| 108 | `validateClassScaling` checks that a class is named, not that it exists | Found by the final review of `fix/hp-level-up`, 2026-09-24. See below. |
-
-(`packages/shared/src/schemas/content/validatePack.ts`) A mistyped
-`scalingClassId` still contributes nothing without a word — #87's failure by
-another route. Fix: check the id against the pack's class ids.
-
-### #109 — the sheet's proficiency bonus reads the level column
-
-| # | Item | Notes |
-| --- | --- | --- |
-| 109 | The sheet's proficiency bonus reads the level column | Found by the final review of `fix/hp-level-up`, 2026-09-24. See below. |
-
-`useDerivedStats` (`apps/web/src/hooks/useCharacterStats.ts`) takes the
-proficiency bonus from `character.level` rather than the class ledger, and
-keeps a second inline ledger sum (a copy of `ledgerTotalLevel`) under a
-comment that has been false since #90; `ledgerLevel.ts`'s docstring claims
-every web caller reads the ledger. Fix: use `ledgerTotalLevel` there and
-correct the docstring.
+The tab that levels up refetches its character (#104); nothing tells any
+other. `applyLevelUp` is an HTTP handler with no path to the socket
+gateway's rooms (`apps/server/src/gateway/socket.ts` creates the `Server`),
+so a second tab on the same character - the two-tab samples, Ursk and
+Tamsin - or another player's view keeps the old level, hit points and scores
+until it reloads. Its next level-up is refused by #90's check (400) rather
+than applied twice, so it fails safe. Fix: give the HTTP layer a way to emit
+to `campaign_<id>` after the transaction commits, and have the sheet refetch
+its character on that event.
 
 ### Coverage thresholds
 
@@ -1429,6 +1369,146 @@ write's updates are typed by column, so a key the table does not have no
 longer compiles. The level-up route test asserts the write names `con` and
 `str` and not their uppercase spellings. Characters that levelled with an
 increase before the fix keep the scores they had; nothing repairs them.
+
+### #104 — the sheet shows the old character after its own level-up until the page reloads ✅
+
+| # | Item | Notes |
+| --- | --- | --- |
+| 104 | ✅ The sheet shows the old character after its own level-up until the page reloads | Found by the live check of `fix/hp-level-up`, 2026-09-24; closed 2026-09-24. See below. |
+
+`validateAndSubmit` (`apps/web/src/store/levelUpStore.ts`) posts the level-up
+and resets the wizard; nothing invalidates the sheet's
+`["character", characterId]` query (`apps/web/src/pages/LiveSheetRoute.tsx`),
+and the server broadcasts nothing for a level-up. After Brannoc Hale
+(sample `…0121`) levelled to fighter 4, his sheet still read fighter 3 and
+31/31 until the page was reloaded - level, hit points, scores and granted
+traits all stale. Fix: invalidate the character query when the level-up
+succeeds; other tabs and the rest of the table need a broadcast as well.
+
+A second level-up without a reload is refused — the stale store sends
+`ledgerTotalLevel + 1` from the old ledger (4 for Brannoc) while the
+server's ledger already stands one higher, so #90's check answers 400; the
+preview meanwhile computes numbers for the real next level.
+
+**Closed 2026-09-24** on `fix/level-up-follow-ups`, for the tab that levels
+up. `LevelUpWizard` invalidates the `["character", characterId]` query once
+the level-up is stored; the route refetches and re-hydrates the store, so the
+sheet shows the new level, hit points, scores and grants without a reload,
+and a second level-up from the same tab asks for the right level. Other tabs
+and viewers still keep the old character until they reload - broadcasting a
+level-up is #111.
+
+### #105 — the level-up hit point step offers a d8's average while the class list loads ✅
+
+| # | Item | Notes |
+| --- | --- | --- |
+| 105 | ✅ The level-up hit point step offers a d8's average while the class list loads | Found by the live check of `fix/hp-level-up`, 2026-09-24; closed 2026-09-24. See below. |
+
+`HpRollStep` (`apps/web/src/components/wizard/steps/HpRollStep.tsx`) falls
+back to a d8 (`selectedClass?.hitDie ?? 8`) until `/reference/classes`
+answers, so for a moment a fighter's step offers "Take Average 5" and
+"Roll 1d8". Both buttons work during that moment and store a d8's number for
+a d10 class. Fix: hold the step (or show that it is loading) until the class
+is known, rather than defaulting the die.
+
+**Closed 2026-09-24** on `fix/level-up-follow-ups`. The step no longer
+defaults the die: while `/reference/classes` loads it shows "Loading hit
+die…", and if the list lacks the class, "Hit die unavailable" - neither
+offers a button, so nothing can be stored for the wrong die.
+
+### #106 — the level-up payload is trusted ✅
+
+| # | Item | Notes |
+| --- | --- | --- |
+| 106 | ✅ The level-up payload is trusted | Found by the final review of `fix/hp-level-up`, 2026-09-24; closed 2026-09-24. See below. |
+
+`POST /api/character/:id/level-up` (and the preview) accept `asiChoices` and
+`hpRoll` unchecked: `validateLevelUpPayloadFromResolver`
+(`apps/server/src/services/levelUpValidation.ts`) checks only that an ASI or
+a feat is present where the level offers one. Nothing checks that each stat
+is an ability, that values are integers, that they total 2, that no score
+passes 20, or that a stat appears once; `hpRoll` is not bounded by the hit
+die. Before #103 the increase was dropped at the write, so a crafted payload
+only inflated hit points; since #103 it is stored. Reachable only by an
+authenticated campaign member with a crafted request (the wizard cannot
+produce these). A non-ability stat or a non-numeric value yields NaN in the
+preview's 200; `abilityColumn`'s cast has no runtime guard. #96 covers
+socket payloads only. Fix: parse `asiChoices` (lowercased stat through
+`AbilityKeySchema`, integer values, sum 2, final score ≤ 20, unique stats)
+and bound `hpRoll` to 1..hit die, in the validation both routes share; add
+route tests for malformed bodies.
+
+**Closed 2026-09-24** on `fix/level-up-follow-ups`. `checkLevelUpNumbers`
+(`apps/server/src/services/levelUpNumbers.ts`) runs in both routes right
+after the character is loaded, before any write: `hpRoll` is a whole number
+from 1 to the class's hit die; `asiChoices`, unless empty, is one or two
+entries, each an `AbilitySchema` stat named once with a positive whole value,
+totalling 2, with no score - race and traits, not items - rising above 20.
+An unknown target class is refused too. A failure is a 400 naming the broken
+rule; the preview answers 400 where it answered NaN. The wizard's own cap
+reads a different score - #110.
+
+### #107 — a level whose roll plus a negative Constitution modifier is below 1 gains less than 1 hit point ✅
+
+| # | Item | Notes |
+| --- | --- | --- |
+| 107 | ✅ A level whose roll plus a negative Constitution modifier is below 1 gains less than 1 hit point | Found by the final review of `fix/hp-level-up`, 2026-09-24; closed 2026-09-24. See below. |
+
+#86's accepted residual reaches ordinary level-ups, not just stored history:
+`calculateMaxHp` (`packages/engine/src/calculators/derivedStats.ts`) floors
+the whole sum, so at CON 8–9 a rolled 1 gains 0 (the rules give 1) and at
+CON 7 or below it gains −1 — maximum and current hit points both drop, and
+the review step shows "+-1"
+(`apps/web/src/components/wizard/steps/ReviewStep.tsx`). Before #86 no level
+gained less than 2. Options for whoever picks it up: store per-level rolls,
+or have the level-up write lift the stored roll so the new level contributes
+at least 1; and render a non-positive gain honestly.
+
+**Closed 2026-09-24** on `fix/level-up-follow-ups`. `levelUpHitPoints`
+stores the roll lifted to `1 - Constitution modifier` when it is lower - the
+modifier after this level's own increase - so every new level adds at least
+one hit point; the preview and the write share it. The review step signs a
+gain properly ("+0", "−1") should one ever reach it. **Residual, recorded
+rather than solved:** rolls are still stored as one sum, so a later
+Constitution increase also counts a lifted level's lift, overstating the
+maximum by about one hit point per lifted level; only storing per-level
+rolls is exact.
+
+### #108 — `validateClassScaling` checks that a class is named, not that it exists ✅
+
+| # | Item | Notes |
+| --- | --- | --- |
+| 108 | ✅ `validateClassScaling` checks that a class is named, not that it exists | Found by the final review of `fix/hp-level-up`, 2026-09-24; closed 2026-09-24. See below. |
+
+(`packages/shared/src/schemas/content/validatePack.ts`) A mistyped
+`scalingClassId` still contributes nothing without a word — #87's failure by
+another route. Fix: check the id against the pack's class ids.
+
+**Closed 2026-09-24** on `fix/level-up-follow-ups`. `validateCoreRulePack`
+rejects a `scalingClassId` that names no class in the pack
+(`unknown_scaling_class`), through the same whole-pack walk as
+`missing_scaling_class`. The shipped pack's four ids all resolve.
+
+### #109 — the sheet's proficiency bonus reads the level column ✅
+
+| # | Item | Notes |
+| --- | --- | --- |
+| 109 | ✅ The sheet's proficiency bonus reads the level column | Found by the final review of `fix/hp-level-up`, 2026-09-24; closed 2026-09-24. See below. |
+
+`useDerivedStats` (`apps/web/src/hooks/useCharacterStats.ts`) takes the
+proficiency bonus from `character.level` rather than the class ledger, and
+keeps a second inline ledger sum (a copy of `ledgerTotalLevel`) under a
+comment that has been false since #90; `ledgerLevel.ts`'s docstring claims
+every web caller reads the ledger. Fix: use `ledgerTotalLevel` there and
+correct the docstring.
+
+**Closed 2026-09-24** on `fix/level-up-follow-ups`. `useDerivedStats` takes
+the proficiency bonus, attacks per action and maximum hit points from
+`ledgerTotalLevel`; its inline copy and stale comment are gone. The header
+badge and the TraitWidget's "Level:" line read the ledger too (attacks per
+action was a fourth reader the record above missed), so no web reader shows
+the column and `ledgerLevel.ts`'s docstring holds. The store keeps its
+`level` field as loaded.
 
 ### P0 — Previously inert runtime seams (now resolved) ✅
 
