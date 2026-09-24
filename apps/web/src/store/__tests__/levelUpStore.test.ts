@@ -545,4 +545,29 @@ describe("useLevelUpStore hit point preview (#88)", () => {
       hitPointGain: 13,
     });
   });
+
+  it("drops a stale preview answer if the wizard is cancelled and reopened before it resolves (#88)", async () => {
+    let answerFirst!: (value: unknown) => void;
+    vi.mocked(apiClient).mockImplementationOnce(
+      () =>
+        new Promise((resolve) => {
+          answerFirst = resolve;
+        }),
+    );
+
+    const pending = useLevelUpStore.getState().requestHitPointPreview();
+    useLevelUpStore.getState().cancelLevelUp();
+    // a new wizard session begins before the stale request resolves
+    useLevelUpStore.setState({ isActive: true });
+
+    answerFirst({ maxHpBefore: 31, maxHpAfter: 42, hitPointGain: 11 });
+    await pending;
+
+    expect(useLevelUpStore.getState().hitPointPreview).not.toEqual({
+      status: "ready",
+      maxHpBefore: 31,
+      maxHpAfter: 42,
+      hitPointGain: 11,
+    });
+  });
 });

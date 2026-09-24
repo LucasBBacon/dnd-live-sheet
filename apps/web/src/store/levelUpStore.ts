@@ -259,6 +259,10 @@ export const useLevelUpStore = create<LevelUpState>((set, get) => ({
         return;
       }
 
+      // a preview in flight for the session this begin-level-up replaces
+      // (a wizard cancelled and reopened while it was pending) must not be
+      // allowed to land here (#88)
+      ++latestHitPointPreview;
       set({
         isActive: true,
         progressionContext: {
@@ -469,6 +473,9 @@ export const useLevelUpStore = create<LevelUpState>((set, get) => ({
       body: JSON.stringify(payload),
     });
 
+    // a preview still in flight for this session must not land after it
+    // ends (#88)
+    ++latestHitPointPreview;
     set({
       isActive: false,
       progressionContext: null,
@@ -483,6 +490,9 @@ export const useLevelUpStore = create<LevelUpState>((set, get) => ({
   },
 
   cancelLevelUp: () => {
+    // a preview still in flight for this session must not land in whatever
+    // session comes next (#88)
+    ++latestHitPointPreview;
     set({
       isActive: false,
       progressionContext: null,
