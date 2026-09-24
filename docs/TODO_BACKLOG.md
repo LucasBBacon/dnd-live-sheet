@@ -3,12 +3,13 @@
 **Status as of 2026-09-24**, on `main`, after `fix/hp-level-up` merged (#86,
 #87, #88, #94 and #95 closed: the one-hit-point-per-level floor applies to
 each level's roll and Constitution together, Draconic Resilience scales per
-sorcerer level and pack validation rejects class-level scaling that names
-no class, the level-up review previews the server's own hit point gain, a
+sorcerer level and pack validation rejects class-level scaling that names no
+class, the level-up review previews the server's own hit point gain, a
 level-up locks the row it reads, and every web caller takes a character's
 level from its class ledger; #31a moved ahead of the rogue pass; the live
 check found #103, a level-up's ability score increase never stored, and the
-branch closed it too). The workspace is green - **2427 tests**, 0 failures,
+branch closed it too; its final review then recorded four more open items,
+#106–#109). The workspace is green - **2429 tests**, 0 failures,
 and typecheck clean per
 package (6f explains why "per package" matters). Nothing below is breaking
 a build; these are gaps, debt and content.
@@ -313,6 +314,10 @@ Every id this file has ever issued, in one table. Gaps in the numbering are inte
 | 103 | A level-up's ability score increase is never stored | ✅ Closed | Closed items |
 | 104 | The sheet shows the old character after its own level-up until the page reloads | Open | Open items |
 | 105 | The level-up hit point step offers a d8's average while the class list loads | Open | Open items |
+| 106 | The level-up payload is trusted | Open | Open items |
+| 107 | A level whose roll plus a negative Constitution modifier is below 1 gains less than 1 hit point | Open | Open items |
+| 108 | `validateClassScaling` checks that a class is named, not that it exists | Open | Open items |
+| 109 | The sheet's proficiency bonus reads the level column | Open | Open items |
 | A1 | Ready's trigger is not modelled | Open | Open items |
 | A2 | No roll-initiating UI for skills | ✅ Closed | Closed items |
 | A2b | actions do not prompt their own check | Open | Open items |
@@ -1104,6 +1109,11 @@ and the server broadcasts nothing for a level-up. After Brannoc Hale
 traits all stale. Fix: invalidate the character query when the level-up
 succeeds; other tabs and the rest of the table need a broadcast as well.
 
+A second level-up without a reload is refused — the stale store sends
+`ledgerTotalLevel + 1` from the old ledger (4 for Brannoc) while the
+server's ledger already stands one higher, so #90's check answers 400; the
+preview meanwhile computes numbers for the real next level.
+
 ### #105 — the level-up hit point step offers a d8's average while the class list loads
 
 | # | Item | Notes |
@@ -1116,6 +1126,67 @@ answers, so for a moment a fighter's step offers "Take Average 5" and
 "Roll 1d8". Both buttons work during that moment and store a d8's number for
 a d10 class. Fix: hold the step (or show that it is loading) until the class
 is known, rather than defaulting the die.
+
+### #106 — the level-up payload is trusted
+
+| # | Item | Notes |
+| --- | --- | --- |
+| 106 | The level-up payload is trusted | Found by the final review of `fix/hp-level-up`, 2026-09-24. See below. |
+
+`POST /api/character/:id/level-up` (and the preview) accept `asiChoices` and
+`hpRoll` unchecked: `validateLevelUpPayloadFromResolver`
+(`apps/server/src/services/levelUpValidation.ts`) checks only that an ASI or
+a feat is present where the level offers one. Nothing checks that each stat
+is an ability, that values are integers, that they total 2, that no score
+passes 20, or that a stat appears once; `hpRoll` is not bounded by the hit
+die. Before #103 the increase was dropped at the write, so a crafted payload
+only inflated hit points; since #103 it is stored. Reachable only by an
+authenticated campaign member with a crafted request (the wizard cannot
+produce these). A non-ability stat or a non-numeric value yields NaN in the
+preview's 200; `abilityColumn`'s cast has no runtime guard. #96 covers
+socket payloads only. Fix: parse `asiChoices` (lowercased stat through
+`AbilityKeySchema`, integer values, sum 2, final score ≤ 20, unique stats)
+and bound `hpRoll` to 1..hit die, in the validation both routes share; add
+route tests for malformed bodies.
+
+### #107 — a level whose roll plus a negative Constitution modifier is below 1 gains less than 1 hit point
+
+| # | Item | Notes |
+| --- | --- | --- |
+| 107 | A level whose roll plus a negative Constitution modifier is below 1 gains less than 1 hit point | Found by the final review of `fix/hp-level-up`, 2026-09-24. See below. |
+
+#86's accepted residual reaches ordinary level-ups, not just stored history:
+`calculateMaxHp` (`packages/engine/src/calculators/derivedStats.ts`) floors
+the whole sum, so at CON 8–9 a rolled 1 gains 0 (the rules give 1) and at
+CON 7 or below it gains −1 — maximum and current hit points both drop, and
+the review step shows "+-1"
+(`apps/web/src/components/wizard/steps/ReviewStep.tsx`). Before #86 no level
+gained less than 2. Options for whoever picks it up: store per-level rolls,
+or have the level-up write lift the stored roll so the new level contributes
+at least 1; and render a non-positive gain honestly.
+
+### #108 — `validateClassScaling` checks that a class is named, not that it exists
+
+| # | Item | Notes |
+| --- | --- | --- |
+| 108 | `validateClassScaling` checks that a class is named, not that it exists | Found by the final review of `fix/hp-level-up`, 2026-09-24. See below. |
+
+(`packages/shared/src/schemas/content/validatePack.ts`) A mistyped
+`scalingClassId` still contributes nothing without a word — #87's failure by
+another route. Fix: check the id against the pack's class ids.
+
+### #109 — the sheet's proficiency bonus reads the level column
+
+| # | Item | Notes |
+| --- | --- | --- |
+| 109 | The sheet's proficiency bonus reads the level column | Found by the final review of `fix/hp-level-up`, 2026-09-24. See below. |
+
+`useDerivedStats` (`apps/web/src/hooks/useCharacterStats.ts`) takes the
+proficiency bonus from `character.level` rather than the class ledger, and
+keeps a second inline ledger sum (a copy of `ledgerTotalLevel`) under a
+comment that has been false since #90; `ledgerLevel.ts`'s docstring claims
+every web caller reads the ledger. Fix: use `ledgerTotalLevel` there and
+correct the docstring.
 
 ### Coverage thresholds
 
@@ -1212,7 +1283,7 @@ derived-maximum case. A zero-or-positive modifier should contribute
 `conModifier x level`; only a negative one needs the floor - the genuinely
 unsolvable part is that per-level rolls are not stored, only their sum.
 
-**Closed 2026-09-24** on `fix/hp-level-up`. `calculateMaxHp` counts the Constitution modifier at its full value, negative included, and floors the rolled-plus-Constitution sum at 1 per level, adding a "Minimum 1 HP per level" breakdown line when the floor lifts it. The server test moved to 13 (with #87), the web store block's fixture base to 10, and Seraphine Dusk derives 29 (her seeded current hit points dropped from 33 to 21 so she stays wounded rather than over her maximum). **Residual, recorded rather than solved:** rolls are stored as a sum, so a single level whose roll plus a negative modifier fell below 1 is understated by the shortfall; only storing per-level rolls would fix that.
+**Closed 2026-09-24** on `fix/hp-level-up`. `calculateMaxHp` counts the Constitution modifier at its full value, negative included, and floors the rolled-plus-Constitution sum at 1 per level, adding a "Minimum 1 HP per level" breakdown line when the floor lifts it. The server test moved to 13 (with #87), the web store block's fixture base to 10, and Seraphine Dusk derives 29 (her seeded current hit points dropped from 33 to 21 so she stays wounded rather than over her maximum). **Residual, recorded rather than solved:** rolls are stored as a sum, so a single level whose roll plus a negative modifier fell below 1 is understated by the shortfall; only storing per-level rolls would fix that. The same shortfall also reaches any new level-up whose roll plus a negative modifier is below 1, gaining 0 (or losing a point) instead of the rules' minimum of 1 (#107).
 
 ### #87 — Draconic Resilience's `MAX_HP` modifier does not scale, and the engine says nothing ✅
 
