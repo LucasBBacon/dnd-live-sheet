@@ -142,4 +142,23 @@ describe("ReviewStep hit point preview (#88)", () => {
     root.unmount();
     container.remove();
   });
+
+  it.each([
+    ["no change", 29, 0, "29+0"],
+    ["a loss", 28, -1, "28−1"],
+  ])("signs %s properly (#107)", async (_label, maxHpAfter, hitPointGain, expected) => {
+    vi.mocked(apiClient).mockResolvedValueOnce({
+      maxHpBefore: 29,
+      maxHpAfter,
+      hitPointGain,
+    });
+
+    const { container, root } = await render();
+    await act(async () => {});
+
+    expect(rowCells(container, "Maximum Hit Points")?.[3]).toBe(expected);
+
+    root.unmount();
+    container.remove();
+  });
 });

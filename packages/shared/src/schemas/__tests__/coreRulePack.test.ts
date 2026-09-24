@@ -457,6 +457,23 @@ describe("class-level scaling names its class (#87)", () => {
     });
   });
 
+  it("rejects a scalingClassId that names no class in the pack (#108)", () => {
+    const result = validateCoreRulePack(
+      packWithScaledTrait({
+        scalingFactor: "class_level",
+        scalingClassId: "class_sorceror",
+      }),
+    );
+
+    expect(result.ok).toBe(false);
+    expect(result.issues).toContainEqual({
+      code: "unknown_scaling_class",
+      path: ["traits", 1, "modifiers", "fixed", 0],
+      message:
+        "'trait_test_resilience' scales MAX_HP by class 'class_sorceror', which the pack does not define.",
+    });
+  });
+
   it("accepts the same modifier once it names its class", () => {
     const result = validateCoreRulePack(
       packWithScaledTrait({

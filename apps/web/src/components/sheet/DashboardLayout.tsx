@@ -121,7 +121,7 @@ export const DashboardLayout = () => {
           {character.id ? "Live Session Active" : "Loading..."}
         </h1>
         <div className="flex items-center gap-3">
-          <span>Lvl {character.level}</span>
+          <span>Lvl {ledgerTotalLevel(character.classLevels)}</span>
 
           <button
             onClick={() => {

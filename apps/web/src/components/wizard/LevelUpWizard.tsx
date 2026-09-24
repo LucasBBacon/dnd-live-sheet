@@ -1,5 +1,7 @@
 import { useMemo, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { useLevelUpStore } from "../../store/levelUpStore";
+import { useCharacterSheetStore } from "../../store/characterSheetStore";
 import { WizardStepRouter } from "./WizardStepRouter";
 import { isStepComplete, levelUpSteps } from "../../utils/wizardValidation";
 
@@ -13,6 +15,8 @@ export const LevelUpWizard = () => {
     cancelLevelUp,
     validateAndSubmit,
   } = useLevelUpStore();
+  const queryClient = useQueryClient();
+  const characterId = useCharacterSheetStore((state) => state.id);
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
   const [feedbackMessage, setFeedbackMessage] = useState<string | null>(null);
   const [feedbackTone, setFeedbackTone] = useState<"success" | "error">(
@@ -43,6 +47,13 @@ export const LevelUpWizard = () => {
   const handleSubmit = async () => {
     try {
       await validateAndSubmit();
+      // the sheet refetches and re-hydrates from what the server stored - the
+      // new level, hit points, scores and grants - so it stops showing the
+      // old character, and a second level-up from this tab asks for the
+      // right level (#104)
+      void queryClient.invalidateQueries({
+        queryKey: ["character", characterId],
+      });
       setFeedbackTone("success");
       setFeedbackMessage("Level-up committed successfully.");
       window.setTimeout(() => {

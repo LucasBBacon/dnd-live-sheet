@@ -19,7 +19,8 @@ export type CoreRulePackIssueCode =
   | "invalid_progression_order"
   | "missing_scaling_class"
   | "missing_subrace"
-  | "unexpected_subrace";
+  | "unexpected_subrace"
+  | "unknown_scaling_class";
 
 export type CoreRulePackValidationIssue = {
   code: CoreRulePackIssueCode;
@@ -207,11 +208,16 @@ const CLASS_SCALED = new Set(["class_level", "class_level_thresholds"]);
  * and critical-hit dice and as `scalingMode` on damage segments, and a site
  * added later is covered without anyone remembering to add it here. The
  * message names the nearest enclosing entity with an id.
+ *
+ * A `scalingClassId` must also name a class the pack defines: a mistyped id
+ * reads no class level and falls through the same way, silently (#108).
  */
 const validateClassScaling = (
   pack: CoreRulePack,
   issues: CoreRulePackValidationIssue[],
 ) => {
+  const classIds = new Set(pack.classes.map((entry) => entry.id));
+
   const visit = (
     value: unknown,
     path: Array<string | number>,
@@ -226,18 +232,31 @@ const validateClassScaling = (
     const record = value as Record<string, unknown>;
     const owner = typeof record.id === "string" ? record.id : ownerId;
     const scaling = record.scalingFactor ?? record.scalingMode;
+    const target =
+      typeof record.target === "string" ? ` ${record.target}` : "";
+    const entry = owner ? `'${owner}'` : "An entry";
 
     if (
       typeof scaling === "string" &&
       CLASS_SCALED.has(scaling) &&
       !record.scalingClassId
     ) {
-      const target =
-        typeof record.target === "string" ? ` ${record.target}` : "";
       issues.push({
         code: "missing_scaling_class",
         path,
-        message: `${owner ? `'${owner}'` : "An entry"} scales${target} by ${scaling} but names no scalingClassId.`,
+        message: `${entry} scales${target} by ${scaling} but names no scalingClassId.`,
+      });
+    }
+
+    if (
+      typeof record.scalingClassId === "string" &&
+      record.scalingClassId.length > 0 &&
+      !classIds.has(record.scalingClassId)
+    ) {
+      issues.push({
+        code: "unknown_scaling_class",
+        path,
+        message: `${entry} scales${target} by class '${record.scalingClassId}', which the pack does not define.`,
       });
     }
 

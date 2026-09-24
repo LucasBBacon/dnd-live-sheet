@@ -61,14 +61,14 @@ Each is reachable at `http://localhost:5173/character/<id>`.
 | Character | Lvl | Build | HP | Kind | Backlog |
 | --- | --- | --- | --- | --- | --- |
 | [Quill Ashgrove](http://localhost:5173/character/00000000-0000-0000-0000-000000000120) | 2 | Rogue 2 | 17/17 | Level-up staging | #65b, #31a, #66, #70 |
-| [Brannoc Hale](http://localhost:5173/character/00000000-0000-0000-0000-000000000121) | 3 | Fighter 3 (Champion) | 31/31 | Level-up staging | #88, #94, #103, #24 |
+| [Brannoc Hale](http://localhost:5173/character/00000000-0000-0000-0000-000000000121) | 3 | Fighter 3 (Champion) | 31/31 | Level-up staging | #88, #94, #103, #104, #106, #24 |
 | [Isolde Varn](http://localhost:5173/character/00000000-0000-0000-0000-000000000122) | 4 | Warlock 4 (Archfey) | 20/31 | Level-up and dip staging | #81, #77, #36 |
 | [Ursk Gravemaw](http://localhost:5173/character/00000000-0000-0000-0000-000000000123) | 5 | Paladin 5 (Vengeance) | 6/54 | Two tabs | #92, #93 |
 | [Tamsin Burrowdeep](http://localhost:5173/character/00000000-0000-0000-0000-000000000124) | 6 | Barbarian 6 (Totem Warrior) | 30/65 | Two tabs, socket | #76, #97, #99, #101 |
 | [Hesk Mossgather](http://localhost:5173/character/00000000-0000-0000-0000-000000000125) | 8 | Druid 8 (Moon) | 41/59 | Wild-shape preview | #62, #83, #80 |
-| [Seraphine Dusk](http://localhost:5173/character/00000000-0000-0000-0000-000000000126) | 9 | Wizard 9 (Divination) | 21/29 | Wizard preview | #86, #31a, #83 |
+| [Seraphine Dusk](http://localhost:5173/character/00000000-0000-0000-0000-000000000126) | 9 | Wizard 9 (Divination) | 21/29 | Wizard preview | #86, #107, #31a, #83 |
 | [Kestrel Vey](http://localhost:5173/character/00000000-0000-0000-0000-000000000127) | 7 | Sorcerer 7 (Wild Magic) | 44/44 | Sorcery-points preview | #62 |
-| [Brother Mote](http://localhost:5173/character/00000000-0000-0000-0000-000000000128) | 11 (column: 12) | Cleric 11 (Tempest) | 95/80 | Broken on purpose | #95, #98 |
+| [Brother Mote](http://localhost:5173/character/00000000-0000-0000-0000-000000000128) | 11 (column: 12) | Cleric 11 (Tempest) | 95/80 | Broken on purpose | #95, #109, #98 |
 | [Orrik Stonehide](http://localhost:5173/character/00000000-0000-0000-0000-000000000129) | 13 | Fighter 13 (Rune Knight) | 134/134 | Broken on purpose | #102 |
 
 Ids run `…000000000110` through `…000000000129`; the last two digits are the
@@ -142,15 +142,33 @@ re-running the seed. Stored values can be read with
    *After #24:* +2 damage while the off hand is empty.
 2. **Dwarven Toughness.** The maximum is 31: 22 rolled, +6 Constitution, +3
    from Dwarven Toughness's +1 per level.
-3. **Level Up → Fighter 4 (#88 and #103, regression checks).** Take the
-   average, 6, once the hit point step offers a d10 (it shows a d8 while the
-   class list loads, #105), and take the increase as +1 CON and +1 STR. The
-   review step asks the server and shows 31 → 44 (+13) — the gain the
-   level-up stores, CON 16 raising the three earlier levels included. Submit,
-   then reload (the sheet keeps the old character until you do, #104): it
-   reads 44/44 with STR 17 and CON 16. Before #103 the increase was never
-   stored, and the reloaded sheet read 44/40.
-4. **Double submit (#94, a regression check).** Re-seed, repeat step 3, and double-click the final
+3. **Level Up → Fighter 4 (#88, #103 and #104, regression checks).** Take
+   the average, 6, from the hit point step's d10, and take the increase as +1
+   CON and +1 STR. The review step asks the server and shows 31 → 44 (+13) —
+   the gain the level-up stores, CON 16 raising the three earlier levels
+   included. Submit: as the wizard closes, the sheet reads 44/44 with STR 17
+   and CON 16, no reload needed. Before #104 it kept the old character until
+   a reload; before #103 the increase was never stored at all.
+4. **Again, in the same tab (#104, a regression check).** Level Up once more
+   → Fighter 5: the wizard asks for total level 5 and the level-up succeeds.
+   Before #104 the stale sheet asked for 4 and was refused.
+5. **A crafted increase (#106, a regression check).** From the browser
+   console, both routes refuse an increase that does not total 2:
+
+   ```js
+   const body = { targetClassId: "class_fighter", newTotalLevel: 4, hpRoll: 6,
+     asiChoices: [{ stat: "CON", value: 3 }] };
+   const post = (path) => fetch(
+     `http://localhost:3000/api/character/00000000-0000-0000-0000-000000000121/${path}`,
+     { method: "POST", body: JSON.stringify(body),
+       headers: { "content-type": "application/json", "x-tester-id": "dev-user-1" } },
+   ).then(async (response) => [response.status, (await response.json()).error]);
+   await Promise.all([post("level-up/preview"), post("level-up")]);
+   ```
+
+   Both answer 400, "Invalid character choices: ability score increases must
+   total 2, not 3." Before #106 the level-up stored the +3.
+6. **Double submit (#94, a regression check).** Re-seed, repeat step 3, and double-click the final
    submit. If the button disables after one click, send two requests at once
    from the browser console instead:
 
@@ -255,6 +273,19 @@ re-running the seed. Stored values can be read with
 3. **Drow Magic.** Spend Darkness, then take a short rest: it stays spent.
 4. **Spells (#31a, #83).** The spellbook is an item; nothing lists a spell.
 5. **Race stubs.** Sunlight Sensitivity changes nothing (a race stub, #30).
+6. **A low roll (#107, a regression check).** From the browser console, ask
+   the preview for a roll of 1 at wizard 10:
+
+   ```js
+   await fetch("http://localhost:3000/api/character/00000000-0000-0000-0000-000000000126/level-up/preview",
+     { method: "POST",
+       body: JSON.stringify({ targetClassId: "class_wizard", hpRoll: 1 }),
+       headers: { "content-type": "application/json", "x-tester-id": "dev-user-1" } },
+   ).then((response) => response.json());
+   ```
+
+   It answers 29 → 30 (+1): the roll is stored as 2, so the level adds the
+   rules' minimum of one hit point. Before #107 it answered +0.
 
 ### Kestrel Vey — `…0127`
 
@@ -269,10 +300,11 @@ re-running the seed. Stored values can be read with
 
 ### Brother Mote — `…0128`
 
-1. **The level (#95, a regression check).** The header reads level 12; the
-   class ledger reads Cleric 11. Level Up and submit: it succeeds. The wizard
-   takes his total from the ledger and asks for 12, which the server accepts;
-   the ledger reaches Cleric 12 and now agrees with the column. Re-seed to
+1. **The level (#95 and #109, regression checks).** The level column says
+   12; the class ledger says Cleric 11, and the sheet shows 11 - the header
+   badge reads the ledger. Level Up and submit: it succeeds. The wizard takes
+   his total from the ledger and asks for 12, which the server accepts; the
+   ledger reaches Cleric 12 and now agrees with the column. Re-seed to
    restore the drift.
 2. **An over-maximum pool (#98).** 1st-level slots show 4 of 4, though 6 are
    stored. Spend one: still 4. Spend another: still 4 — two spends the player
