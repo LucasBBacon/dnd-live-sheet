@@ -181,6 +181,19 @@ describe("POST /api/character/:characterId/level-up/preview (#88)", () => {
     );
   });
 
+  it("refuses a preview naming a class the pack does not define", async () => {
+    const { app } = await setupApp();
+
+    const response = await request(app)
+      .post("/api/character/char-1/level-up/preview")
+      .send({ targetClassId: "class_unknown", hpRoll: 6 });
+
+    expect(response.status).toBe(400);
+    expect(response.body.error).toBe(
+      "Invalid character choices: unknown class class_unknown",
+    );
+  });
+
   it("returns 404 for a character that does not exist", async () => {
     const { app } = await setupApp({ rows: [] });
 

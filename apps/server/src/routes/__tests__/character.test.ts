@@ -80,6 +80,7 @@ describe("Character Routes", () => {
       },
     ],
     multiclassValidationErrorMessage,
+    characterOverrides,
   }: {
     resolverErrorMessage?: string;
     resolverContextOverrides?: Partial<{
@@ -99,6 +100,8 @@ describe("Character Routes", () => {
       position: number;
     }>;
     multiclassValidationErrorMessage?: string;
+    /** overrides fields of the character row this harness serves (#107) */
+    characterOverrides?: Record<string, unknown>;
   }) => {
     vi.resetModules();
 
@@ -113,6 +116,7 @@ describe("Character Routes", () => {
           int: 10,
           wis: 10,
           cha: 8,
+          ...characterOverrides,
         },
       ],
       existingClasses,
@@ -997,6 +1001,30 @@ describe("Character Routes", () => {
       });
       expect(tx.update).not.toHaveBeenCalled();
       expect(tx.insert).not.toHaveBeenCalled();
+    });
+
+    it("stores the lifted roll in max_hp and the gain in current_hp (#107)", async () => {
+      // CON 8 (modifier -1, no race) lifts hpRoll 1 to storedRoll
+      // max(1, 1 - (-1)) = 2. Stored at maxHp 20/currentHp 20, fighter 2 -> 3:
+      // before = floor(20 + (-1 x 2)) = 18; after = floor(22 + (-1 x 3)) = 19,
+      // so the gain levelUpHitPoints reports is 19 - 18 = 1
+      const { applyLevelUp, tx } = await setupLevelUpHarness({
+        characterOverrides: { con: 8, maxHp: 20, currentHp: 20 },
+      });
+      const { res, status } = createMockResponse();
+
+      await applyLevelUp(createLevelUpRequest({ hpRoll: 1 }), res);
+
+      expect(status).toHaveBeenCalledWith(200);
+
+      const characterWrite = tx.set.mock.calls
+        .map(([values]) => values as Record<string, unknown>)
+        .find((values) => "choices" in values);
+
+      // the lifted roll (2), not the raw payload.hpRoll (1), reaches max_hp
+      expect((characterWrite?.maxHp as SQL).queryChunks).toContain(2);
+      // the gain (1) reaches current_hp
+      expect((characterWrite?.currentHp as SQL).queryChunks).toContain(1);
     });
   });
 });
