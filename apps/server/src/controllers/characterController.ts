@@ -7,7 +7,11 @@ import {
 import type { Ability, AbilityKey, LevelUpPayload } from "@project/shared";
 import type { Request, Response } from "express";
 import { eq, sql, type SQL } from "drizzle-orm";
-import { CharacterBootstrapper, type RuleSnapshotLookup } from "@project/engine";
+import {
+  AbilityEngine,
+  CharacterBootstrapper,
+  type RuleSnapshotLookup,
+} from "@project/engine";
 import {
   resolveNextLevelValidationContext,
   validateMulticlassPrerequisites,
@@ -56,7 +60,7 @@ const parsePicksShape = (
 /**
  * The characters column an ability score increase writes. The payload spells
  * a stat as AbilitySchema does ("CON"); the column is lowercase (`con`).
- * levelUpHitPointGain and applyLevelUp's write both go through here, so the
+ * levelUpHitPoints and applyLevelUp's write both go through here, so the
  * hit points a level-up grants and the score it stores cannot name different
  * stats (#103).
  * @param stat The payload's stat
@@ -66,17 +70,27 @@ const abilityColumn = (stat: Ability): AbilityKey =>
   stat.toLowerCase() as AbilityKey;
 
 /**
- * The hit points a level-up adds to a character's current total: the
- * difference between the maximum after this level and the maximum before it.
- * The roll, this level's Constitution modifier, an ability score increase
- * taken at this level and any MAX_HP trait it grants all count once, so the
+ * What a level-up does to hit points: the roll it stores, and the hit points
+ * it adds to the character's current total.
+ *
+ * The gain is the maximum after this level minus the maximum before it, so
+ * the roll, this level's Constitution modifier, an ability score increase
+ * taken at this level and any MAX_HP trait it grants all count once, and the
  * wizard's preview and the stored number cannot disagree (#78).
+ *
+ * The stored roll is lifted to `1 - Constitution modifier` when the roll is
+ * lower, so the new level adds at least one hit point at the Constitution it
+ * is taken with - the rules' minimum for every level (#107). Rolls are stored
+ * as one sum (characters.max_hp), so the minimum cannot be applied per level
+ * later. Residual, recorded rather than solved: a later Constitution increase
+ * also counts the lift, overstating the maximum by about one hit point per
+ * lifted level.
  * @param saves The character before and after this level (buildLevelUpSaves)
  * @param payload The level-up's roll and any ability score increases
  * @param snapshot Pack content
- * @returns The hit points to add to current hit points
+ * @returns The roll to add to max_hp and the hit points to add to current
  */
-export const levelUpHitPointGain = ({
+export const levelUpHitPoints = ({
   saves,
   payload,
   snapshot,
@@ -84,25 +98,35 @@ export const levelUpHitPointGain = ({
   saves: Pick<LevelUpSaves<CharacterClassSource>, "before" | "after">;
   payload: Pick<LevelUpPayload, "hpRoll" | "asiChoices">;
   snapshot: RuleSnapshotLookup;
-}): number => {
+}): { storedRoll: number; gain: number } => {
   const attributes = { ...saves.after.attributes };
   for (const choice of payload.asiChoices ?? []) {
     attributes[abilityColumn(choice.stat)] += choice.value;
   }
+  const after = { ...saves.after, attributes };
 
-  const after = finalMaxHp(
+  // this level's Constitution: after its own increase, with racial and trait
+  // modifiers - the modifier finalMaxHp counts for every level
+  const conModifier = AbilityEngine.getModifier(
+    finalAbilityScores(after, snapshot).con,
+  );
+  const storedRoll = Math.max(payload.hpRoll, 1 - conModifier);
+
+  const maxAfter = finalMaxHp(
     {
-      ...saves.after,
-      attributes,
+      ...after,
       hp: {
         ...saves.after.hp,
-        baseRolledHp: saves.after.hp.baseRolledHp + payload.hpRoll,
+        baseRolledHp: saves.after.hp.baseRolledHp + storedRoll,
       },
     },
     snapshot,
   );
 
-  return after - finalMaxHp(saves.before, snapshot);
+  return {
+    storedRoll,
+    gain: maxAfter - finalMaxHp(saves.before, snapshot),
+  };
 };
 
 /** Whatever can `.select()`: the module `db`, or a caller's transaction. */
@@ -388,7 +412,7 @@ export const applyLevelUp = async (req: Request, res: Response) => {
       // totalled per column first: two choices naming the same stat (a
       // crafted payload; the wizard cannot produce one) would otherwise
       // overwrite rather than add, so the write would carry only the last
-      // choice while levelUpHitPointGain - which sums every choice into
+      // choice while levelUpHitPoints - which sums every choice into
       // attributes - counted them all (#103's guarantee)
       const columnTotals: Partial<Record<AbilityKey, number>> = {};
       for (const choice of payload.asiChoices ?? []) {
@@ -407,15 +431,15 @@ export const applyLevelUp = async (req: Request, res: Response) => {
       // the bootstrapper grants its traits from choices.feats at read time,
       // so no trait row is written for it here
 
-      const gainedHp = levelUpHitPointGain({ saves, payload, snapshot });
+      const { storedRoll, gain } = levelUpHitPoints({ saves, payload, snapshot });
 
       // 7 - mutate top level character state
       await tx
         .update(characters)
         .set({
           level: derivedTotalLevel,
-          maxHp: sql`COALESCE(${characters.maxHp}, 0) + ${payload.hpRoll}`,
-          currentHp: sql`COALESCE(${characters.currentHp}, 0) + ${gainedHp}`,
+          maxHp: sql`COALESCE(${characters.maxHp}, 0) + ${storedRoll}`,
+          currentHp: sql`COALESCE(${characters.currentHp}, 0) + ${gain}`,
           ...asiUpdates,
           choices: mergedChoices,
         })
@@ -436,7 +460,7 @@ export const applyLevelUp = async (req: Request, res: Response) => {
  *
  * Builds the character before and after through the same loadLevelUpSaves
  * applyLevelUp uses, then measures both with finalMaxHp and
- * levelUpHitPointGain - so the level-up wizard previews exactly the number
+ * levelUpHitPoints - so the level-up wizard previews exactly the number
  * the write will store, including an ability score increase that raises
  * every earlier level's Constitution contribution (#88). Read-only: no
  * transaction, no lock, and no validation of the draft's choices, which the
@@ -479,7 +503,7 @@ export const previewLevelUp = async (req: Request, res: Response) => {
     );
 
     const maxHpBefore = finalMaxHp(saves.before, snapshot);
-    const hitPointGain = levelUpHitPointGain({
+    const { gain: hitPointGain } = levelUpHitPoints({
       saves,
       payload: {
         hpRoll,
