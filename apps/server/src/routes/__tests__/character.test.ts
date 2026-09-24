@@ -960,9 +960,9 @@ describe("Character Routes", () => {
       expect((characterWrite?.str as SQL).queryChunks).toContain(characters.str);
     });
 
-    it("totals duplicate stats in one ability score increase before writing (#103's guarantee)", async () => {
+    it("refuses an ability score increase that names the same stat twice, before writing (#106)", async () => {
       const { applyLevelUp, tx } = await setupLevelUpHarness({});
-      const { res, status } = createMockResponse();
+      const { res, status, json } = createMockResponse();
 
       await applyLevelUp(
         createLevelUpRequest({
@@ -974,22 +974,29 @@ describe("Character Routes", () => {
         res,
       );
 
-      // imported after the harness's resetModules, so this is the same table
-      // object the controller built its update from
-      const { characters } = await import(
-        "@project/database/src/schema/operational.js"
-      );
-      const characterWrite = tx.set.mock.calls
-        .map(([values]) => values as Record<string, unknown>)
-        .find((values) => "choices" in values);
+      expect(status).toHaveBeenCalledWith(400);
+      expect(json).toHaveBeenCalledWith({
+        success: false,
+        error: "Invalid character choices: CON is increased twice.",
+      });
+      expect(tx.update).not.toHaveBeenCalled();
+      expect(tx.insert).not.toHaveBeenCalled();
+    });
 
-      expect(status).toHaveBeenCalledWith(200);
-      // keying by column let the second CON choice overwrite the first
-      // instead of adding to it, so the write carried only 1 while
-      // levelUpHitPointGain (which sums every choice into attributes)
-      // counted 2 - the guarantee abilityColumn's docstring states
-      expect((characterWrite?.con as SQL).queryChunks).toContain(characters.con);
-      expect((characterWrite?.con as SQL).queryChunks).toContain(2);
+    it("refuses a roll above the class's hit die (#106)", async () => {
+      const { applyLevelUp, tx } = await setupLevelUpHarness({});
+      const { res, status, json } = createMockResponse();
+
+      // the harness levels a fighter, whose hit die is a d10
+      await applyLevelUp(createLevelUpRequest({ hpRoll: 11 }), res);
+
+      expect(status).toHaveBeenCalledWith(400);
+      expect(json).toHaveBeenCalledWith({
+        success: false,
+        error: "Invalid character choices: hpRoll must be a whole number from 1 to 10.",
+      });
+      expect(tx.update).not.toHaveBeenCalled();
+      expect(tx.insert).not.toHaveBeenCalled();
     });
   });
 });

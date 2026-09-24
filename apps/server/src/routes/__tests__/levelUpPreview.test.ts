@@ -164,6 +164,23 @@ describe("POST /api/character/:characterId/level-up/preview (#88)", () => {
     expect(response.body.error).toContain("hpRoll");
   });
 
+  it("refuses an increase the level-up would refuse, rather than answering NaN (#106)", async () => {
+    const { app } = await setupApp();
+
+    const response = await request(app)
+      .post("/api/character/char-1/level-up/preview")
+      .send({
+        targetClassId: "class_fighter",
+        hpRoll: 6,
+        asiChoices: [{ stat: "CON", value: 3 }],
+      });
+
+    expect(response.status).toBe(400);
+    expect(response.body.error).toBe(
+      "Invalid character choices: ability score increases must total 2, not 3.",
+    );
+  });
+
   it("returns 404 for a character that does not exist", async () => {
     const { app } = await setupApp({ rows: [] });
 

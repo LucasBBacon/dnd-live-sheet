@@ -28,6 +28,7 @@ import {
   type LevelUpSaves,
 } from "../services/characterSave.js";
 import { classLedgerOrder } from "../services/classLedger.js";
+import { checkLevelUpNumbers } from "../services/levelUpNumbers.js";
 import { z } from "zod";
 
 /** The shape both level-up pick maps share: a key to an array of option ids. */
@@ -127,6 +128,22 @@ export const levelUpHitPoints = ({
     storedRoll,
     gain: maxAfter - finalMaxHp(saves.before, snapshot),
   };
+};
+
+/**
+ * The hit die of the class a level-up is taken in.
+ * @param snapshot Pack content
+ * @param classId The level-up's target class
+ * @returns The class's hit die
+ * @throws Error("Invalid character choices: unknown class …") when the pack
+ *   has no such class
+ */
+const hitDieOf = (snapshot: RuleSnapshotLookup, classId: string): number => {
+  const hitDie = snapshot.classesById?.[classId]?.hitDie;
+  if (hitDie === undefined) {
+    throw new Error(`Invalid character choices: unknown class ${classId}`);
+  }
+  return hitDie;
 };
 
 /** Whatever can `.select()`: the module `db`, or a caller's transaction. */
@@ -234,6 +251,14 @@ export const applyLevelUp = async (req: Request, res: Response) => {
         },
         { lock: true },
       );
+
+      // the roll and any ability score increase, checked before anything is
+      // written: since #103 an increase is stored as sent (#106)
+      checkLevelUpNumbers({
+        payload,
+        scoresBefore: finalAbilityScores(saves.before, snapshot),
+        hitDie: hitDieOf(snapshot, targetClassId),
+      });
 
       // the new total level comes from the ledger this transaction is about
       // to extend, never from the request. A level-up adds exactly one class
@@ -409,11 +434,11 @@ export const applyLevelUp = async (req: Request, res: Response) => {
       }
 
       // 6 - apply ASI or Feats
-      // totalled per column first: two choices naming the same stat (a
-      // crafted payload; the wizard cannot produce one) would otherwise
-      // overwrite rather than add, so the write would carry only the last
-      // choice while levelUpHitPoints - which sums every choice into
-      // attributes - counted them all (#103's guarantee)
+      // totalled per column first, a guard at the write: checkLevelUpNumbers
+      // already refuses a stat named twice (#106), and if one ever got this
+      // far, keying by column would let the second overwrite the first while
+      // levelUpHitPoints - which sums every choice into attributes - counted
+      // both (#103's guarantee)
       const columnTotals: Partial<Record<AbilityKey, number>> = {};
       for (const choice of payload.asiChoices ?? []) {
         const column = abilityColumn(choice.stat);
@@ -460,11 +485,11 @@ export const applyLevelUp = async (req: Request, res: Response) => {
  *
  * Builds the character before and after through the same loadLevelUpSaves
  * applyLevelUp uses, then measures both with finalMaxHp and
- * levelUpHitPoints - so the level-up wizard previews exactly the number
- * the write will store, including an ability score increase that raises
- * every earlier level's Constitution contribution (#88). Read-only: no
- * transaction, no lock, and no validation of the draft's choices, which the
- * real submit still performs in full.
+ * levelUpHitPoints - so the level-up wizard previews exactly the number the
+ * write will store, including an ability score increase that raises every
+ * earlier level's Constitution contribution (#88). Read-only: no transaction
+ * and no lock. The draft's numbers are checked exactly as the write checks
+ * them (#106); its choices are not, which the real submit still does in full.
  * @param req The request, its body the wizard's draft
  * @param res The response: the maximum before and after, and the gain
  */
@@ -501,6 +526,12 @@ export const previewLevelUp = async (req: Request, res: Response) => {
       },
       { lock: false },
     );
+
+    checkLevelUpNumbers({
+      payload,
+      scoresBefore: finalAbilityScores(saves.before, snapshot),
+      hitDie: hitDieOf(snapshot, targetClassId),
+    });
 
     const maxHpBefore = finalMaxHp(saves.before, snapshot);
     const { gain: hitPointGain } = levelUpHitPoints({
