@@ -151,4 +151,16 @@ describe("TraitWidget held proficiencies", () => {
     expect(container.textContent).toContain("Proficiencies: 2");
     expect(container.textContent).not.toContain("Proficiencies: 0");
   });
+
+  it("shows the class ledger's total level, not the level column (#109)", async () => {
+    useFakeStore = buildStore();
+    // a drifted column; hydration below brings a fighter 1 ledger
+    useFakeStore.setState({ level: 5 });
+    mocks.queryData.current = { character: { id: "char_1" } };
+
+    const container = await renderWidget();
+
+    expect(container.textContent).toContain("Level: 1");
+    expect(container.textContent).not.toContain("Level: 5");
+  });
 });

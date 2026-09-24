@@ -307,4 +307,22 @@ describe("DashboardLayout level up", () => {
     root.unmount();
     container.remove();
   });
+
+  it("shows the class ledger's total in the header, not the level column (#109)", async () => {
+    storeState = {
+      ...baseStoreState,
+      level: 5,
+      classLevels: { class_fighter: 3 },
+    };
+
+    const { container, root } = await renderDashboard();
+    const badge = Array.from(container.querySelectorAll("header span")).find(
+      (span) => span.textContent?.startsWith("Lvl"),
+    );
+
+    expect(badge?.textContent).toBe("Lvl 3");
+
+    root.unmount();
+    container.remove();
+  });
 });

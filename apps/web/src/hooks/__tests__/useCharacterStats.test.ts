@@ -389,3 +389,35 @@ describe("useDerivedStats attacks per action", () => {
     ]);
   });
 });
+
+describe("useDerivedStats level (#109)", () => {
+  beforeEach(() => {
+    mockStoreState = {
+      baseScores: { STR: 16, DEX: 14, CON: 14, INT: 10, WIS: 10, CHA: 10 },
+      activeModifiers: [],
+      getSheetModifiers: () => mockStoreState.activeModifiers,
+      getSheetStates: () => mockStoreState.activeStates,
+      inventory: [],
+      activeStates: [],
+      ruleSnapshot: null,
+      raceId: null,
+      subraceId: null,
+      backgroundId: null,
+      subclassIds: {},
+      choices: { classSelections: {}, traitSelections: {} },
+      runtimeEffects: null,
+      // a row whose level column drifted to 5 while its ledger says
+      // barbarian 4: the column would give a +3 proficiency bonus
+      level: 5,
+      classLevels: { class_barbarian: 4 },
+      getProficiencyGrants: () => [],
+      baseHpRolled: 1,
+    };
+  });
+
+  it("takes the proficiency bonus from the class ledger, not the level column", () => {
+    const { profBonus } = useDerivedStats();
+
+    expect(profBonus).toBe(2);
+  });
+});

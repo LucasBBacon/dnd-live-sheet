@@ -13,6 +13,7 @@ import {
   hydrateCharacterSheetWithRules,
 } from "../../pages/characterSheetRouteData";
 import { useCharacterSheetStore } from "../../store/characterSheetStore";
+import { ledgerTotalLevel } from "../../utils/ledgerLevel";
 
 const DEV_FIXTURE_CHARACTER_ID = "00000000-0000-0000-0000-000000000101";
 
@@ -77,7 +78,6 @@ export const TraitWidget = () => {
   const activeModifiers = useCharacterSheetStore((state) => state.activeModifiers);
   const characterId = useCharacterSheetStore((state) => state.id);
   const campaignId = useCharacterSheetStore((state) => state.campaignId);
-  const level = useCharacterSheetStore((state) => state.level);
   const classLevels = useCharacterSheetStore((state) => state.classLevels);
   const ruleSnapshot = useCharacterSheetStore((state) => state.ruleSnapshot);
   const traitsById = useMemo(
@@ -352,7 +352,7 @@ export const TraitWidget = () => {
               <div className="font-mono break-all">Campaign ID: {campaignId ?? "none"}</div>
               <div>Race: {raceId ?? "none"}</div>
               <div>Subrace: {subraceId ?? "none"}</div>
-              <div>Level: {level}</div>
+              <div>Level: {ledgerTotalLevel(classLevels)}</div>
               <div>Class Levels: {Object.keys(classLevels).length > 0 ? JSON.stringify(classLevels) : "{}"}</div>
               <div>Inventory Items: {inventory.length}</div>
               <div>Resources: {resources.length}</div>

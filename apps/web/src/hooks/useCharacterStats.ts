@@ -11,6 +11,7 @@ import {
   type DerivedSpellcasting,
 } from "@project/engine";
 import { SKILL_MAP } from "@project/shared";
+import { ledgerTotalLevel } from "../utils/ledgerLevel";
 
 const ABILITY_KEYS: Ability[] = ["STR", "DEX", "CON", "INT", "WIS", "CHA"];
 
@@ -99,7 +100,6 @@ export const useAbilities = () => {
 };
 
 export const useDerivedStats = () => {
-  const level = useCharacterSheetStore((state) => state.level);
   const classLevels = useCharacterSheetStore((state) => state.classLevels);
   const getProficiencyGrants = useCharacterSheetStore(
     (state) => state.getProficiencyGrants,
@@ -109,19 +109,14 @@ export const useDerivedStats = () => {
   const { finalAbilities, totalMods, activeStates } = useAbilities();
 
   return useMemo(() => {
-    const profBonus = AbilityEngine.getProficiencyBonus(level);
+    // the class ledger's total, never the level column: the server derives a
+    // level-up's expected level and every maximum from the ledger, and the
+    // column can drift from it (#90, #109)
+    const totalLevel = ledgerTotalLevel(classLevels);
+    const profBonus = AbilityEngine.getProficiencyBonus(totalLevel);
     const grants = getProficiencyGrants();
     const skillAndInitiativeProficiencies = grants.filter(
       (grant) => grant.category === "skills",
-    );
-
-    // the ledger's sum, not level: applyLevelUp writes characters.level
-    // straight from the request without checking it against the ledger, so
-    // the two can drift. finalMaxHp (server) already derives its total the
-    // same way (#78 final review, F2)
-    const totalLevel = Object.values(classLevels).reduce(
-      (sum, classLevel) => sum + classLevel,
-      0,
     );
 
     // hp calc
@@ -185,7 +180,7 @@ export const useDerivedStats = () => {
 
     const attacksPerAction = DerivedStatEngine.calculateAttacksPerAction(
       totalMods,
-      { total: level, classes: classLevels },
+      { total: totalLevel, classes: classLevels },
       activeStates,
     );
 
@@ -199,7 +194,6 @@ export const useDerivedStats = () => {
       attacksPerAction,
     };
   }, [
-    level,
     baseHpRolled,
     getProficiencyGrants,
     classLevels,
