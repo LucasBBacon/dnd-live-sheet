@@ -1,13 +1,15 @@
 # TODO Backlog
 
-**Status as of 2026-09-23**, on `main`, after `fix/sheet-truthfulness`
-merged (#71, #76, #93 and S5 closed: a refused resource spend is put back
-and reported through one sheet-level notice, `activeStates` carries trait
-and equipment states so authored gates hold, the sheet stops offering an
-action its states forbid, and a heal reaches the server raw; #97 corrected,
-#98 to #101 recorded). The workspace is green — **2371 tests**, 0 failures,
-and typecheck clean per package (6f explains why "per package" matters). Nothing below is breaking a build; these are gaps, debt and
-content.
+**Status as of 2026-09-24**, on `main`, after `fix/hp-level-up` merged (#86,
+#87, #88, #94 and #95 closed: the one-hit-point-per-level floor applies to
+each level's roll and Constitution together, Draconic Resilience scales per
+sorcerer level and pack validation rejects class-level scaling that names
+no class, the level-up review previews the server's own hit point gain, a
+level-up locks the row it reads, and every web caller takes a character's
+level from its class ledger; #31a moved ahead of the rogue pass). The
+workspace is green - **2426 tests**, 0 failures, and typecheck clean per
+package (6f explains why "per package" matters). Nothing below is breaking
+a build; these are gaps, debt and content.
 
 ---
 
@@ -79,6 +81,14 @@ things the last three branches showed replace it:
 | 5d | ✅ **#77** — stored ability scores are pre-racial, and two readers use them directly | small–medium | **Closed 2026-09-21** on `fix/levelup-correctness` — the readers that took stored scores at face value now take the final ones. See #77 (11g). |
 
 ### Tier 2 — the burndown, one system per pass
+
+**Re-ordered 2026-09-24:** order 7, #31a, now comes **before** order 6, the
+rogue pass. Since #79 (closed 2026-09-22) every caster's creation and
+level-up asks spell questions whose options are the pack's 111 level-0
+placeholders - a rogue 3 taking Arcane Trickster is offered Bless as a
+cantrip - so seven of the twelve classes have slots and nothing real to
+pick, and every stored placeholder pick is one more #31a must clear or
+migrate. The order numbers are unchanged because other entries cite them.
 
 | Order | Item | Scale | Why here |
 | --- | --- | --- | --- |
@@ -281,16 +291,16 @@ Every id this file has ever issued, in one table. Gaps in the numbering are inte
 | 83 | The sheet does not list a character's picked spells | Open | Open items (11h) |
 | 84 | A stored pick can go stale | Open | Open items (11h) |
 | 85 | Nothing stops a pack gating a choice option on a pick made at the same level | Open | Open items (11h) |
-| 86 | `calculateMaxHp` floors Constitution at 1 per level, not the level's whole gain | Open | Open items (11h) |
-| 87 | Draconic Resilience's `MAX_HP` modifier does not scale, and the engine says nothing | Open | Open items (11h) |
-| 88 | The level-up review step understates the hit points an ability score increase adds | Open | Open items (11h) |
+| 86 | `calculateMaxHp` floors Constitution at 1 per level, not the level's whole gain | ✅ Closed | Closed items |
+| 87 | Draconic Resilience's `MAX_HP` modifier does not scale, and the engine says nothing | ✅ Closed | Closed items |
+| 88 | The level-up review step understates the hit points an ability score increase adds | ✅ Closed | Closed items |
 | 89 | The sheet's own damage and heal writes are never clamped | ✅ Closed | Closed items (11h) |
 | 90 | `newTotalLevel` is written from the request without checking the ledger | ✅ Closed | Closed items (11h) |
 | 91 | The fake database cannot tell the pool from a transaction, so nothing pins which one a service queries | Open | Open items (11h) |
 | 92 | the server clamps hit points without knowing the rules that govern them | Open | Open items (11h) |
 | 93 | A stale client silently truncates its own healing, and nothing reports it | ✅ Closed | Closed items (11h) |
-| 94 | Two concurrent level-ups both pass the ledger check and both add hit points | Open | Open items (11h) |
-| 95 | A row whose level already disagrees with its ledger can no longer level up | Open | Open items (11h) |
+| 94 | Two concurrent level-ups both pass the ledger check and both add hit points | ✅ Closed | Closed items |
+| 95 | A row whose level already disagrees with its ledger can no longer level up | ✅ Closed | Closed items |
 | 96 | A socket payload is trusted to be the shape its type claims | Open | Open items (11h) |
 | 97 | A blocked action reports `executed: true`, having applied nothing | Open | Open items |
 | 98 | A resource total has no ceiling, so a rollback can over-restore it | Open | Open items |
@@ -884,61 +894,6 @@ bonus skills at bard 3, no longer catches the duplicate.
   level-up question's `unmet` as the player answers, which is a larger
   change to how the wizard fetches questions.
 
-### #86 — `calculateMaxHp` floors Constitution at 1 per level, not the level's whole gain
-
-*Recorded as 11h.*
-
-| # | Item | Notes |
-| --- | --- | --- |
-| 86 | `calculateMaxHp` floors Constitution at 1 per level, not the level's whole gain | Recorded 2026-09-22 while closing #78. See below. |
-
-5e grants at least 1 hit point per level counting the roll and the modifier
-together; `DerivedStatEngine.calculateMaxHp` floors the Constitution
-contribution alone (`Math.max(1, conModifier) * levels.total`), so a
-character with a Constitution modifier of zero or below gets more hit points
-than the rules give - the common case, not just a negative modifier: a CON
-10 fighter 5 shows 5 hit points more than the rules give, and a newly
-created CON 10 cleric opens at 9/9 rather than 8/8. Two tests currently pin
-the inflated number:
-`apps/server/src/services/__tests__/characterSave.test.ts`'s "gives at least
-one hit point per level when Constitution is not a bonus" (expecting 14),
-and `apps/web/src/store/__tests__/characterSheetStore.test.ts`'s
-derived-maximum case. A zero-or-positive modifier should contribute
-`conModifier x level`; only a negative one needs the floor - the genuinely
-unsolvable part is that per-level rolls are not stored, only their sum.
-
-### #87 — Draconic Resilience's `MAX_HP` modifier does not scale, and the engine says nothing
-
-*Recorded as 11h.*
-
-| # | Item | Notes |
-| --- | --- | --- |
-| 87 | Draconic Resilience's `MAX_HP` modifier does not scale, and the engine says nothing | Recorded 2026-09-22 while closing #78. See below. |
-
-The pack authors it `scalingFactor: "class_level"` with no `scalingClassId`
-(`traits/ported.json`), and `DerivedStatEngine.resolveScaledValue` falls
-through to the flat value, so a Draconic Bloodline sorcerer gains 1 hit
-point instead of 1 per sorcerer level - Nyx Vale derives 78 where the rules
-give 80. Two halves: author the `scalingClassId`, and make a `class_level`
-modifier that carries none loud rather than silent (a pack validation rule,
-or a warning).
-
-### #88 — the level-up review step understates the hit points an ability score increase adds
-
-*Recorded as 11h.*
-
-| # | Item | Notes |
-| --- | --- | --- |
-| 88 | The level-up review step understates the hit points an ability score increase adds | Recorded 2026-09-22 while closing #78. See below. |
-
-`ReviewStep.tsx` previews the gain as `hpRoll + projectedConMod`, which is
-right for an ordinary level but not for one whose ability score increase
-raises Constitution: that raises every earlier level's hit points too, which
-is what `levelUpHitPointGain` now stores (Sister Aveline at cleric 3 -> 4
-with a +2 Constitution increase gains 11, where the preview says 8). Fix:
-preview the same difference the server computes, rather than re-deriving it
-in the UI.
-
 ### #91 — the fake database cannot tell the pool from a transaction, so nothing pins which one a service queries
 
 *Recorded as 11h.*
@@ -989,42 +944,6 @@ client would obey - charge spent, character at 0, and the trigger's own
 `previousHp > 0` guard means it cannot fire again. Fix: move trigger
 resolution server-side so the server can compute the true result.
 Pre-existing; not introduced by this branch.
-
-### #94 — Two concurrent level-ups both pass the ledger check and both add hit points
-
-*Recorded as 11h.*
-
-| # | Item | Notes |
-| --- | --- | --- |
-| 94 | Two concurrent level-ups both pass the ledger check and both add hit points | Found by the final review of `fix/hp-authority`. See below. |
-
-`applyLevelUp` (`apps/server/src/controllers/characterController.ts`) selects
-the character without `.for("update")` and takes no lock on the ledger read.
-Two simultaneous requests - a double-click or a retry - both read a ledger
-summing 3, both derive 4, both pass #90's new check, and both apply `maxHp +
-hpRoll` and `currentHp + gainedHp`. The class row write is idempotent, so the
-character ends at level 4 carrying two levels of hit points: the column now
-disagrees with the hit points instead of with the ledger. Fix: `.for("update")`
-on the character select in step 1. Pre-existing; found by the final review of
-`fix/hp-authority`.
-
-### #95 — A row whose level already disagrees with its ledger can no longer level up
-
-*Recorded as 11h.*
-
-| # | Item | Notes |
-| --- | --- | --- |
-| 95 | A row whose level already disagrees with its ledger can no longer level up | Found by the final review of `fix/hp-authority`. See below. |
-
-Since #90, `applyLevelUp` rejects a `newTotalLevel` that disagrees with the
-ledger, and both callers source that number from the suspect column itself
-(`DashboardLayout.tsx` sends `character.level + 1`; the wizard's
-`OverviewStep.tsx` sends the store's `totalLevel + 1`). Any row that had
-already drifted therefore gets a permanent 400 on every level-up with no way
-to repair it from the UI. Loud rejection is the right behaviour, but it wants
-a one-off reconciliation: a query comparing `characters.level` against the
-sum of each character's `character_classes.class_level`, and a decision
-about rows that disagree. Found by the final review of `fix/hp-authority`.
 
 ### #96 — A socket payload is trusted to be the shape its type claims
 
@@ -1236,6 +1155,107 @@ since two-weapon fighting needs a bonus-action attack to be worth anything.
 ## Closed items
 
 Item numbers are stable ids — gaps below are intentional, not renumbered.
+
+### #86 — `calculateMaxHp` floors Constitution at 1 per level, not the level's whole gain ✅
+
+*Recorded as 11h.*
+
+| # | Item | Notes |
+| --- | --- | --- |
+| 86 | ✅ `calculateMaxHp` floors Constitution at 1 per level, not the level's whole gain | Recorded 2026-09-22 while closing #78. Closed 2026-09-24. See below. |
+
+5e grants at least 1 hit point per level counting the roll and the modifier
+together; `DerivedStatEngine.calculateMaxHp` floors the Constitution
+contribution alone (`Math.max(1, conModifier) * levels.total`), so a
+character with a Constitution modifier of zero or below gets more hit points
+than the rules give - the common case, not just a negative modifier: a CON
+10 fighter 5 shows 5 hit points more than the rules give, and a newly
+created CON 10 cleric opens at 9/9 rather than 8/8. Two tests currently pin
+the inflated number:
+`apps/server/src/services/__tests__/characterSave.test.ts`'s "gives at least
+one hit point per level when Constitution is not a bonus" (expecting 14),
+and `apps/web/src/store/__tests__/characterSheetStore.test.ts`'s
+derived-maximum case. A zero-or-positive modifier should contribute
+`conModifier x level`; only a negative one needs the floor - the genuinely
+unsolvable part is that per-level rolls are not stored, only their sum.
+
+**Closed 2026-09-24** on `fix/hp-level-up`. `calculateMaxHp` counts the Constitution modifier at its full value, negative included, and floors the rolled-plus-Constitution sum at 1 per level, adding a "Minimum 1 HP per level" breakdown line when the floor lifts it. The server test moved to 13 (with #87), the web store block's fixture base to 10, and Seraphine Dusk derives 29 (her seeded current hit points dropped from 33 to 21 so she stays wounded rather than over her maximum). **Residual, recorded rather than solved:** rolls are stored as a sum, so a single level whose roll plus a negative modifier fell below 1 is understated by the shortfall; only storing per-level rolls would fix that.
+
+### #87 — Draconic Resilience's `MAX_HP` modifier does not scale, and the engine says nothing ✅
+
+*Recorded as 11h.*
+
+| # | Item | Notes |
+| --- | --- | --- |
+| 87 | ✅ Draconic Resilience's `MAX_HP` modifier does not scale, and the engine says nothing | Recorded 2026-09-22 while closing #78. Closed 2026-09-24. See below. |
+
+The pack authors it `scalingFactor: "class_level"` with no `scalingClassId`
+(`traits/ported.json`), and `DerivedStatEngine.resolveScaledValue` falls
+through to the flat value, so a Draconic Bloodline sorcerer gains 1 hit
+point instead of 1 per sorcerer level - Nyx Vale derives 78 where the rules
+give 80. Two halves: author the `scalingClassId`, and make a `class_level`
+modifier that carries none loud rather than silent (a pack validation rule,
+or a warning).
+
+**Closed 2026-09-24** on `fix/hp-level-up`. The modifier names `class_sorcerer`, patched with `patchPackSegment.ts` (whose printer also expanded the same trait's one-line `forbiddenStates` array, the only line in `traits/ported.json` that does not round-trip). `validateCoreRulePack` now rejects any entry scaled by `class_level` or `class_level_thresholds` that names no `scalingClassId` (`missing_scaling_class`), walking the whole pack so modifiers, critical-hit dice and damage segments are all covered. Nyx Vale derives 80.
+
+### #88 — the level-up review step understates the hit points an ability score increase adds ✅
+
+*Recorded as 11h.*
+
+| # | Item | Notes |
+| --- | --- | --- |
+| 88 | ✅ The level-up review step understates the hit points an ability score increase adds | Recorded 2026-09-22 while closing #78. Closed 2026-09-24. See below. |
+
+`ReviewStep.tsx` previews the gain as `hpRoll + projectedConMod`, which is
+right for an ordinary level but not for one whose ability score increase
+raises Constitution: that raises every earlier level's hit points too, which
+is what `levelUpHitPointGain` now stores (Sister Aveline at cleric 3 -> 4
+with a +2 Constitution increase gains 11, where the preview says 8). Fix:
+preview the same difference the server computes, rather than re-deriving it
+in the UI.
+
+**Closed 2026-09-24** on `fix/hp-level-up`. `POST /api/character/:characterId/level-up/preview` returns `{ maxHpBefore, maxHpAfter, hitPointGain }`, built by the same `loadLevelUpSaves` `applyLevelUp` uses, and the review step shows those numbers: "Calculating…" while pending and "Hit point preview unavailable" on a failure, never an estimate. `getProjectedConModifier` is deleted. Brannoc Hale at fighter 3 → 4 with +1 CON and +1 STR on a roll of 6 previews 31 → 44 (+13); the old preview said +9.
+
+### #94 — Two concurrent level-ups both pass the ledger check and both add hit points ✅
+
+*Recorded as 11h.*
+
+| # | Item | Notes |
+| --- | --- | --- |
+| 94 | ✅ Two concurrent level-ups both pass the ledger check and both add hit points | Found by the final review of `fix/hp-authority`. Closed 2026-09-24. See below. |
+
+`applyLevelUp` (`apps/server/src/controllers/characterController.ts`) selects
+the character without `.for("update")` and takes no lock on the ledger read.
+Two simultaneous requests - a double-click or a retry - both read a ledger
+summing 3, both derive 4, both pass #90's new check, and both apply `maxHp +
+hpRoll` and `currentHp + gainedHp`. The class row write is idempotent, so the
+character ends at level 4 carrying two levels of hit points: the column now
+disagrees with the hit points instead of with the ledger. Fix: `.for("update")`
+on the character select in step 1. Pre-existing; found by the final review of
+`fix/hp-authority`.
+
+**Closed 2026-09-24** on `fix/hp-level-up`. `applyLevelUp` reads the character `FOR UPDATE` through `loadLevelUpSaves`, so a second concurrent level-up waits for the first to commit, then reads the ledger it wrote and fails #90's check. The rule snapshot is now resolved before the transaction opens, per #89's F2.
+
+### #95 — A row whose level already disagrees with its ledger can no longer level up ✅
+
+*Recorded as 11h.*
+
+| # | Item | Notes |
+| --- | --- | --- |
+| 95 | ✅ A row whose level already disagrees with its ledger can no longer level up | Found by the final review of `fix/hp-authority`. Closed 2026-09-24. See below. |
+
+Since #90, `applyLevelUp` rejects a `newTotalLevel` that disagrees with the
+ledger, and both callers source that number from the suspect column itself
+(`DashboardLayout.tsx` sends `character.level + 1`; the wizard's
+`OverviewStep.tsx` sends the store's `totalLevel + 1`). Any row that had
+already drifted therefore gets a permanent 400 on every level-up with no way
+to repair it from the UI. Loud rejection is the right behaviour, but it wants
+a one-off reconciliation: a query comparing `characters.level` against the
+sum of each character's `character_classes.class_level`, and a decision
+about rows that disagree. Found by the final review of `fix/hp-authority`.
+
+**Closed 2026-09-24** on `fix/hp-level-up`, in the callers rather than with a reconciliation: `DashboardLayout`'s Level Up, `OverviewStep`'s class switcher and label, and `ReviewStep`'s level row take a character's total level from its class ledger (`ledgerTotalLevel`), so a drifted row levels up normally and the server's existing write repairs its column. Brother Mote, the drifted sample, now levels up. The sheet header still shows the column.
 
 ### #101 — One inventory writer does not recompose the sheet's states, unlike the six beside it ✅
 
