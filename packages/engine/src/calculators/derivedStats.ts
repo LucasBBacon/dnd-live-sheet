@@ -43,16 +43,24 @@ export class DerivedStatEngine {
   ): CalculationResult {
     const breakdown: CalculationResult["breakdown"] = [];
 
-    // 5e hp rule: base + (con * level)
-    // min 1 hp granted per lvl regardless of negative con mod
-    const conContribution = Math.max(1, conModifier) * levels.total;
-    let total = baseHpRolled + conContribution;
+    // 5e: every level grants its hit die roll plus the CON modifier, and at
+    // least 1 hit point counting the two together. Only the sum of the rolls
+    // is stored (#78), so the floor is applied to the sum - exact unless a
+    // single level's roll plus a negative modifier fell below 1, which this
+    // then understates by the shortfall (#86)
+    const conContribution = conModifier * levels.total;
+    const rolledAndCon = baseHpRolled + conContribution;
+    const floorLift = Math.max(0, levels.total - rolledAndCon);
+    let total = rolledAndCon + floorLift;
 
     breakdown.push({ name: "Base HP Rolled", value: baseHpRolled });
     breakdown.push({
       name: `CON (${conModifier >= 0 ? "+" : ""}${conModifier}) x Level (${levels.total})`,
       value: conContribution,
     });
+    if (floorLift > 0) {
+      breakdown.push({ name: "Minimum 1 HP per level", value: `+${floorLift}` });
+    }
 
     const hpMods = modifiers.filter((m) => {
       if (m.target !== "MAX_HP" || !m.isActive) {

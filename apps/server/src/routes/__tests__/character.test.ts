@@ -9,6 +9,7 @@ import {
   type CoreRulePackSnapshot,
 } from "@project/shared";
 import type { Request, Response } from "express";
+import type { SQL } from "drizzle-orm";
 import { globalErrorHandler } from "../../middleware/errorHandler.js";
 
 const PACK_DIR = path.join(
@@ -117,6 +118,9 @@ describe("Character Routes", () => {
       existingClasses,
     ];
 
+    // records the strength of every row lock a read asks for (#94)
+    const lockMock = vi.fn();
+
     const tx = {
       select: vi.fn().mockReturnThis(),
       from: vi.fn().mockReturnThis(),
@@ -124,6 +128,10 @@ describe("Character Routes", () => {
         const rows = selectResults.shift() ?? [];
         return Object.assign(Promise.resolve(rows), {
           orderBy: () => Promise.resolve(rows),
+          for: (strength: string) => {
+            lockMock(strength);
+            return Promise.resolve(rows);
+          },
         });
       }),
       update: vi.fn().mockReturnThis(),
@@ -197,6 +205,7 @@ describe("Character Routes", () => {
     return {
       applyLevelUp,
       tx,
+      lockMock,
       effectiveReferenceMock,
       resolveContextMock,
       validateMulticlassPrerequisitesMock,
@@ -904,6 +913,83 @@ describe("Character Routes", () => {
         success: true,
         message: "Level up applied successfully.",
       });
+    });
+
+    it("reads the character FOR UPDATE, so a concurrent level-up waits for this one (#94)", async () => {
+      const { applyLevelUp, lockMock } = await setupLevelUpHarness({});
+      const { res } = createMockResponse();
+
+      await applyLevelUp(createLevelUpRequest(), res);
+
+      // exactly one read takes a lock, and it takes the strength that makes a
+      // second level-up wait for this transaction to commit
+      expect(lockMock).toHaveBeenCalledTimes(1);
+      expect(lockMock).toHaveBeenCalledWith("update");
+    });
+
+    it("writes an ability score increase to the column it names (#103)", async () => {
+      const { applyLevelUp, tx } = await setupLevelUpHarness({});
+      const { res, status } = createMockResponse();
+
+      await applyLevelUp(
+        createLevelUpRequest({
+          asiChoices: [
+            { stat: "CON", value: 1 },
+            { stat: "STR", value: 1 },
+          ],
+        }),
+        res,
+      );
+
+      // imported after the harness's resetModules, so this is the same table
+      // object the controller built its update from
+      const { characters } = await import(
+        "@project/database/src/schema/operational.js"
+      );
+      // the character write is the one .set() that carries choices
+      const characterWrite = tx.set.mock.calls
+        .map(([values]) => values as Record<string, unknown>)
+        .find((values) => "choices" in values);
+
+      expect(status).toHaveBeenCalledWith(200);
+      // the payload spells the stat "CON" and the column is `con`: keyed by
+      // the payload's spelling, Drizzle dropped the increase without a word
+      expect(characterWrite).not.toHaveProperty("CON");
+      expect(characterWrite).not.toHaveProperty("STR");
+      expect((characterWrite?.con as SQL).queryChunks).toContain(characters.con);
+      expect((characterWrite?.str as SQL).queryChunks).toContain(characters.str);
+    });
+
+    it("totals duplicate stats in one ability score increase before writing (#103's guarantee)", async () => {
+      const { applyLevelUp, tx } = await setupLevelUpHarness({});
+      const { res, status } = createMockResponse();
+
+      await applyLevelUp(
+        createLevelUpRequest({
+          asiChoices: [
+            { stat: "CON", value: 1 },
+            { stat: "CON", value: 1 },
+          ],
+        }),
+        res,
+      );
+
+      // imported after the harness's resetModules, so this is the same table
+      // object the controller built its update from
+      const { characters } = await import(
+        "@project/database/src/schema/operational.js"
+      );
+      const characterWrite = tx.set.mock.calls
+        .map(([values]) => values as Record<string, unknown>)
+        .find((values) => "choices" in values);
+
+      expect(status).toHaveBeenCalledWith(200);
+      // keying by column let the second CON choice overwrite the first
+      // instead of adding to it, so the write carried only 1 while
+      // levelUpHitPointGain (which sums every choice into attributes)
+      // counted 2 - the guarantee abilityColumn's docstring states
+      expect((characterWrite?.con as SQL).queryChunks).toContain(characters.con);
+      expect((characterWrite?.con as SQL).queryChunks).toContain(2);
     });
   });
 });

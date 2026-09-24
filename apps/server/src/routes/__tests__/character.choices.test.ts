@@ -448,6 +448,8 @@ describe("applyLevelUp choices", () => {
             orderBy(...args);
             return Promise.resolve(rows);
           },
+          // applyLevelUp reads the character FOR UPDATE (#94)
+          for: () => Promise.resolve(rows),
         });
       }),
       update: vi.fn().mockReturnThis(),
@@ -509,6 +511,8 @@ describe("applyLevelUp choices", () => {
             orderBy(...args);
             return Promise.resolve(rows);
           },
+          // applyLevelUp reads the character FOR UPDATE (#94)
+          for: () => Promise.resolve(rows),
         });
       }),
       update: vi.fn().mockReturnThis(),

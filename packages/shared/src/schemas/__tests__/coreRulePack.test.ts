@@ -3,6 +3,7 @@ import {
   CoreRulePackSchema,
   type CoreRulePack,
 } from "../content/coreRulePack.js";
+import { BaseModifierSchema } from "../content/modifiers.js";
 import {
   collectReferencedTraitIds,
   validateCoreRulePack,
@@ -418,5 +419,52 @@ describe("collectReferencedTraitIds", () => {
     expect(collectReferencedTraitIds(CoreRulePackSchema.parse(source))).not.toContain(
       "trait_orphan",
     );
+  });
+});
+
+describe("class-level scaling names its class (#87)", () => {
+  const packWithScaledTrait = (scaling: Record<string, unknown>) => {
+    const source = createValidPack();
+    source.traits.push({
+      ...source.traits[0]!,
+      id: "trait_test_resilience",
+      name: "Test Resilience",
+      modifiers: {
+        fixed: [
+          BaseModifierSchema.parse({
+            target: "MAX_HP",
+            type: "add",
+            value: 1,
+            ...scaling,
+          }),
+        ],
+        choices: [],
+      },
+    });
+    return CoreRulePackSchema.parse(source);
+  };
+
+  it("rejects a modifier scaled by class level that names no class", () => {
+    const result = validateCoreRulePack(
+      packWithScaledTrait({ scalingFactor: "class_level" }),
+    );
+
+    expect(result.ok).toBe(false);
+    expect(result.issues).toContainEqual({
+      code: "missing_scaling_class",
+      path: ["traits", 1, "modifiers", "fixed", 0],
+      message: expect.stringContaining("trait_test_resilience"),
+    });
+  });
+
+  it("accepts the same modifier once it names its class", () => {
+    const result = validateCoreRulePack(
+      packWithScaledTrait({
+        scalingFactor: "class_level",
+        scalingClassId: "class_test",
+      }),
+    );
+
+    expect(result).toEqual({ ok: true, issues: [] });
   });
 });

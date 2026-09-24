@@ -92,7 +92,6 @@ vi.mock("@project/engine", async () => {
 });
 
 import { useAbilities, useDerivedStats } from "../useCharacterStats";
-import { getProjectedConModifier } from "../../utils/levelUpReview";
 
 describe("useAbilities", () => {
   beforeEach(() => {
@@ -124,14 +123,6 @@ describe("useAbilities", () => {
     const { finalAbilities } = useAbilities();
 
     expect(finalAbilities.STR.score).toBe(20);
-  });
-
-  it("projects the Constitution modifier from the current ASI allocation", () => {
-    const finalAbilities = {
-      CON: { score: 14, modifier: 2 },
-    } as Record<string, { score: number; modifier: number }>;
-
-    expect(getProjectedConModifier(finalAbilities, [{ stat: "CON", value: 2 }])).toBe(3);
   });
 });
 

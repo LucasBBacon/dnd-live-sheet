@@ -70,7 +70,7 @@ describe("DerivedStatEngine.calculateMaxHp", () => {
       ]);
     });
 
-    it("floors a negative CON modifier's contribution to a minimum of 1 per level", () => {
+    it("counts a negative CON modifier at its full value when the rolls cover it", () => {
       const result = DerivedStatEngine.calculateMaxHp(
         20,
         -2,
@@ -78,15 +78,15 @@ describe("DerivedStatEngine.calculateMaxHp", () => {
         [],
       );
 
-      // 5e rule: 1 HP/level minimum regardless of a negative CON modifier
-      expect(result.total).toBe(23);
+      // 20 rolled - 6 = 14, well above the 3-hit-point floor (#86)
+      expect(result.total).toBe(14);
       expect(result.breakdown).toEqual([
         { name: "Base HP Rolled", value: 20 },
-        { name: "CON (-2) x Level (3)", value: 3 },
+        { name: "CON (-2) x Level (3)", value: -6 },
       ]);
     });
 
-    it("treats a zero CON modifier the same as the 1-per-level floor", () => {
+    it("adds nothing for a zero CON modifier", () => {
       const result = DerivedStatEngine.calculateMaxHp(
         20,
         0,
@@ -94,10 +94,53 @@ describe("DerivedStatEngine.calculateMaxHp", () => {
         [],
       );
 
-      expect(result.total).toBe(24);
+      expect(result.total).toBe(20);
       expect(result.breakdown).toEqual([
         { name: "Base HP Rolled", value: 20 },
-        { name: "CON (+0) x Level (4)", value: 4 },
+        { name: "CON (+0) x Level (4)", value: 0 },
+      ]);
+    });
+
+    it("floors the rolls and CON together at 1 hit point per level", () => {
+      // 5e: each level grants at least 1 hit point, roll and modifier
+      // together. 4 rolled - 9 = -5; the floor lifts it to 3 (#86)
+      const result = DerivedStatEngine.calculateMaxHp(
+        4,
+        -3,
+        makeLevels({ total: 3 }),
+        [],
+      );
+
+      expect(result.total).toBe(3);
+      expect(result.breakdown).toEqual([
+        { name: "Base HP Rolled", value: 4 },
+        { name: "CON (-3) x Level (3)", value: -9 },
+        { name: "Minimum 1 HP per level", value: "+8" },
+      ]);
+    });
+
+    it("adds MAX_HP modifiers after the floor, not before it", () => {
+      // 2 rolled - 4 = -2, floored to 2; Tough's 2 x 2 then adds 4: 6.
+      // Adding Tough first would give 2 - 4 + 4 = 2, which the floor keeps
+      const result = DerivedStatEngine.calculateMaxHp(
+        2,
+        -2,
+        makeLevels({ total: 2 }),
+        [
+          makeMod({
+            value: 2,
+            scalingFactor: "total_level",
+            sourceName: "Tough",
+          }),
+        ],
+      );
+
+      expect(result.total).toBe(6);
+      expect(result.breakdown).toEqual([
+        { name: "Base HP Rolled", value: 2 },
+        { name: "CON (-2) x Level (2)", value: -4 },
+        { name: "Minimum 1 HP per level", value: "+4" },
+        { name: "Tough", value: "+4" },
       ]);
     });
   });
@@ -108,7 +151,7 @@ describe("DerivedStatEngine.calculateMaxHp", () => {
         makeMod({ target: "ARMOR_CLASS", value: 5, sourceName: "Shield" }),
       ]);
 
-      expect(result.total).toBe(11);
+      expect(result.total).toBe(10);
       expect(result.breakdown).toHaveLength(2);
     });
 
@@ -117,7 +160,7 @@ describe("DerivedStatEngine.calculateMaxHp", () => {
         makeMod({ value: 5, sourceName: "Tough Feat", isActive: false }),
       ]);
 
-      expect(result.total).toBe(11);
+      expect(result.total).toBe(10);
       expect(result.breakdown).toHaveLength(2);
     });
 
@@ -136,7 +179,7 @@ describe("DerivedStatEngine.calculateMaxHp", () => {
         ["wildshaped"],
       );
 
-      expect(result.total).toBe(11);
+      expect(result.total).toBe(10);
     });
 
     it("applies modifiers whose forbiddenStates are not active", () => {
@@ -154,7 +197,7 @@ describe("DerivedStatEngine.calculateMaxHp", () => {
         [],
       );
 
-      expect(result.total).toBe(16);
+      expect(result.total).toBe(15);
     });
 
     it("excludes modifiers whose requiredStates are not satisfied", () => {
@@ -172,7 +215,7 @@ describe("DerivedStatEngine.calculateMaxHp", () => {
         [],
       );
 
-      expect(result.total).toBe(11);
+      expect(result.total).toBe(10);
     });
 
     it("includes modifiers whose requiredStates are satisfied", () => {
@@ -190,7 +233,7 @@ describe("DerivedStatEngine.calculateMaxHp", () => {
         ["raging"],
       );
 
-      expect(result.total).toBe(16);
+      expect(result.total).toBe(15);
     });
 
     it("ignores MAX_HP modifiers whose type is not 'add' (e.g. set_base)", () => {
@@ -198,7 +241,7 @@ describe("DerivedStatEngine.calculateMaxHp", () => {
         makeMod({ type: "set_base", value: 50, sourceName: "Fake Override" }),
       ]);
 
-      expect(result.total).toBe(11);
+      expect(result.total).toBe(10);
       expect(result.breakdown).toHaveLength(2);
     });
   });
@@ -209,7 +252,7 @@ describe("DerivedStatEngine.calculateMaxHp", () => {
         makeMod({ value: 3, sourceName: "Tough Feat" }),
       ]);
 
-      expect(result.total).toBe(14);
+      expect(result.total).toBe(13);
       expect(result.breakdown).toContainEqual({
         name: "Tough Feat",
         value: "+3",
@@ -221,7 +264,7 @@ describe("DerivedStatEngine.calculateMaxHp", () => {
         makeMod({ value: -4, sourceName: "Withering Curse" }),
       ]);
 
-      expect(result.total).toBe(7);
+      expect(result.total).toBe(6);
       expect(result.breakdown).toContainEqual({
         name: "Withering Curse",
         value: "-4",
@@ -242,8 +285,9 @@ describe("DerivedStatEngine.calculateMaxHp", () => {
         ],
       );
 
-      // base(10) + CON floor(1)*5 + Draconic Resilience(1*5)
-      expect(result.total).toBe(20);
+      // base(10) + CON(0*5=0; the rolled 10 already covers the 5-level
+      // floor, so no lift applies) + Draconic Resilience(1*5)
+      expect(result.total).toBe(15);
       expect(result.breakdown).toContainEqual({
         name: "Draconic Resilience",
         value: "+5",
@@ -265,8 +309,9 @@ describe("DerivedStatEngine.calculateMaxHp", () => {
         ],
       );
 
-      // base(10) + CON floor(1)*6 + Barbarian Bonus(2*4)
-      expect(result.total).toBe(24);
+      // base(10) + CON(0*6=0; the rolled 10 already covers the 6-level
+      // floor, so no lift applies) + Barbarian Bonus(2*4)
+      expect(result.total).toBe(18);
       expect(result.breakdown).toContainEqual({
         name: "Barbarian Bonus",
         value: "+8",
@@ -288,11 +333,12 @@ describe("DerivedStatEngine.calculateMaxHp", () => {
         ],
       );
 
-      // base(10) + CON floor(1)*6; the unmatched class contributes nothing
-      expect(result.total).toBe(16);
+      // base(10) + CON(0*6=0; the rolled 10 already covers the 6-level
+      // floor, so no lift applies); the unmatched class contributes nothing
+      expect(result.total).toBe(10);
       expect(result.breakdown).toEqual([
         { name: "Base HP Rolled", value: 10 },
-        { name: "CON (+0) x Level (6)", value: 6 },
+        { name: "CON (+0) x Level (6)", value: 0 },
       ]);
     });
 
@@ -306,7 +352,7 @@ describe("DerivedStatEngine.calculateMaxHp", () => {
         }),
       ]);
 
-      expect(result.total).toBe(14);
+      expect(result.total).toBe(13);
       expect(result.breakdown).toContainEqual({
         name: "Ambiguous Bonus",
         value: "+3",

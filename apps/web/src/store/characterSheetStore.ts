@@ -63,6 +63,7 @@ import {
 } from "@project/shared";
 import { create } from "zustand";
 import { socketService } from "../services/socketService";
+import { ledgerTotalLevel } from "../utils/ledgerLevel";
 
 const isKnownSlot = (slot: string): slot is CharacterSlot =>
   CharacterSlotSchema.safeParse(slot).success;
@@ -1586,17 +1587,10 @@ export const useCharacterSheetStore = create<CharacterSheetState>(
         modifiers,
         activeStates,
       );
-      // the ledger's sum, not state.level: the class ledger is the source
-      // both sides derive their total from. The server's finalMaxHp sums the
-      // same character_classes rows rather than reading characters.level,
-      // and since #90 applyLevelUp itself derives the column it writes from
-      // that ledger and rejects a request that disagrees with it - so this
-      // sum and state.level should always agree, but the ledger is still the
-      // authority to read (#78 final review, F2; #90 closed)
-      const totalLevel = Object.values(state.classLevels).reduce(
-        (sum, level) => sum + level,
-        0,
-      );
+      // the ledger, not state.level: the server's finalMaxHp sums the same
+      // character_classes rows, and applyLevelUp writes the column from them
+      // (#78 final review, F2; #90; #95)
+      const totalLevel = ledgerTotalLevel(state.classLevels);
 
       return DerivedStatEngine.calculateMaxHp(
         state.baseHpRolled,

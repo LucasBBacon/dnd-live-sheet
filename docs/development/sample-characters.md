@@ -50,7 +50,7 @@ Each is reachable at `http://localhost:5173/character/<id>`.
 | [Grimnar Stonefist](http://localhost:5173/character/00000000-0000-0000-0000-000000000112) | 5 | Barbarian 5 (Berserker) | 22/55 | Bloodied below half, attuned gloves, renamed weapon, empty body slot |
 | [Lyra Silverstring](http://localhost:5173/character/00000000-0000-0000-0000-000000000113) | 7 | Bard 6 (Lore) / Rogue 1 | 45/45 | Multiclass ledger, attuned cloak, partially spent pool, renamed instrument |
 | [Vaerix the Ashen](http://localhost:5173/character/00000000-0000-0000-0000-000000000114) | 9 | Paladin 9 (Devotion) | 61/85 | Two magic items, one very large partial pool, three resources at once |
-| [Nyx Vale](http://localhost:5173/character/00000000-0000-0000-0000-000000000115) | 11 | Warlock 8 (Fiend) / Sorcerer 3 (Draconic) | 1/78 | One hit point from death, two drained pools, a container holding stacks |
+| [Nyx Vale](http://localhost:5173/character/00000000-0000-0000-0000-000000000115) | 11 | Warlock 8 (Fiend) / Sorcerer 3 (Draconic) | 1/80 | One hit point from death, two drained pools, a container holding stacks |
 | [Master Ko Shen](http://localhost:5173/character/00000000-0000-0000-0000-000000000116) | 12 | Monk 12 (Open Hand) | 99/99 | No armour at all, half-spent pool, attuned boots, one unattuned item waiting |
 | [Thistle Quickfoot](http://localhost:5173/character/00000000-0000-0000-0000-000000000117) | 14 | Wizard 14 (Evocation) | 52/86 | Custom background, ad-hoc granted traits, a dawn-recharging item pool |
 | [Kaelen Duskwarden](http://localhost:5173/character/00000000-0000-0000-0000-000000000118) | 17 | Ranger 12 (Hunter) / Druid 5 (Land) | 0/152 | Downed at zero, high-level multiclass, big ammunition stack |
@@ -61,12 +61,12 @@ Each is reachable at `http://localhost:5173/character/<id>`.
 | Character | Lvl | Build | HP | Kind | Backlog |
 | --- | --- | --- | --- | --- | --- |
 | [Quill Ashgrove](http://localhost:5173/character/00000000-0000-0000-0000-000000000120) | 2 | Rogue 2 | 17/17 | Level-up staging | #65b, #31a, #66, #70 |
-| [Brannoc Hale](http://localhost:5173/character/00000000-0000-0000-0000-000000000121) | 3 | Fighter 3 (Champion) | 31/31 | Level-up staging | #88, #94, #24 |
+| [Brannoc Hale](http://localhost:5173/character/00000000-0000-0000-0000-000000000121) | 3 | Fighter 3 (Champion) | 31/31 | Level-up staging | #88, #94, #103, #24 |
 | [Isolde Varn](http://localhost:5173/character/00000000-0000-0000-0000-000000000122) | 4 | Warlock 4 (Archfey) | 20/31 | Level-up and dip staging | #81, #77, #36 |
 | [Ursk Gravemaw](http://localhost:5173/character/00000000-0000-0000-0000-000000000123) | 5 | Paladin 5 (Vengeance) | 6/54 | Two tabs | #92, #93 |
 | [Tamsin Burrowdeep](http://localhost:5173/character/00000000-0000-0000-0000-000000000124) | 6 | Barbarian 6 (Totem Warrior) | 30/65 | Two tabs, socket | #76, #97, #99, #101 |
 | [Hesk Mossgather](http://localhost:5173/character/00000000-0000-0000-0000-000000000125) | 8 | Druid 8 (Moon) | 41/59 | Wild-shape preview | #62, #83, #80 |
-| [Seraphine Dusk](http://localhost:5173/character/00000000-0000-0000-0000-000000000126) | 9 | Wizard 9 (Divination) | 33/47 | Wizard preview | #86, #31a, #83 |
+| [Seraphine Dusk](http://localhost:5173/character/00000000-0000-0000-0000-000000000126) | 9 | Wizard 9 (Divination) | 21/29 | Wizard preview | #86, #31a, #83 |
 | [Kestrel Vey](http://localhost:5173/character/00000000-0000-0000-0000-000000000127) | 7 | Sorcerer 7 (Wild Magic) | 44/44 | Sorcery-points preview | #62 |
 | [Brother Mote](http://localhost:5173/character/00000000-0000-0000-0000-000000000128) | 11 (column: 12) | Cleric 11 (Tempest) | 95/80 | Broken on purpose | #95, #98 |
 | [Orrik Stonehide](http://localhost:5173/character/00000000-0000-0000-0000-000000000129) | 13 | Fighter 13 (Rune Knight) | 134/134 | Broken on purpose | #102 |
@@ -142,11 +142,15 @@ re-running the seed. Stored values can be read with
    *After #24:* +2 damage while the off hand is empty.
 2. **Dwarven Toughness.** The maximum is 31: 22 rolled, +6 Constitution, +3
    from Dwarven Toughness's +1 per level.
-3. **Level Up → Fighter 4**, taking the increase as +1 CON and +1 STR. Note the
-   review step's previewed hit point gain, then submit. The stored gain is at
-   least 3 more than the preview (#88): CON 16 also raises the three earlier
-   levels by one each. *After #88:* the preview matches.
-4. **Double submit (#94).** Re-seed, repeat step 3, and double-click the final
+3. **Level Up → Fighter 4 (#88 and #103, regression checks).** Take the
+   average, 6, once the hit point step offers a d10 (it shows a d8 while the
+   class list loads, #105), and take the increase as +1 CON and +1 STR. The
+   review step asks the server and shows 31 → 44 (+13) — the gain the
+   level-up stores, CON 16 raising the three earlier levels included. Submit,
+   then reload (the sheet keeps the old character until you do, #104): it
+   reads 44/44 with STR 17 and CON 16. Before #103 the increase was never
+   stored, and the reloaded sheet read 44/40.
+4. **Double submit (#94, a regression check).** Re-seed, repeat step 3, and double-click the final
    submit. If the button disables after one click, send two requests at once
    from the browser console instead:
 
@@ -160,8 +164,9 @@ re-running the seed. Stored values can be read with
    ).then((response) => response.status)));
    ```
 
-   **Today:** both succeed; he is level 4 with two levels' worth of hit points.
-   *After #94:* the second is refused.
+   **Today:** the first succeeds; the second waits for it, then is refused
+   (400, "newTotalLevel 4 does not match the class ledger (5)"), so he gains
+   one level's hit points.
 
 ### Isolde Varn — `…0122`
 
@@ -241,10 +246,9 @@ re-running the seed. Stored values can be read with
 
 ### Seraphine Dusk — `…0126`
 
-1. **The maximum (#86).** The sheet shows 47. The rules give 29: Constitution 8
-   is -1 per level, and `calculateMaxHp` floors the modifier at +1, so nine
-   levels come out 18 too high. *After #86:* 29, and
-   `sampleCharacterHitPoints.test.ts` goes red until its number is updated.
+1. **The maximum (#86, a regression check).** The sheet shows 29: Constitution
+   8 is -1 per level, 38 rolled - 9. Before #86 the engine floored the modifier
+   at +1 and showed 47.
 2. **Pools.** Five slot pools (3 of 4, 1 of 3, 2 of 3, 3 of 3, 0 of 1); Faerie
    Fire (Drow Magic) spent and Darkness available, both `dawn`. Portent and
    Arcane Recovery are stored but not shown — stubs with no rule.
@@ -265,10 +269,11 @@ re-running the seed. Stored values can be read with
 
 ### Brother Mote — `…0128`
 
-1. **The level (#95).** The header reads level 12; the class ledger reads
-   Cleric 11. Level Up and submit: the server refuses it (400), every time, and
-   nothing in the UI can repair the row. *After #95:* a reconciliation decides
-   the row's level.
+1. **The level (#95, a regression check).** The header reads level 12; the
+   class ledger reads Cleric 11. Level Up and submit: it succeeds. The wizard
+   takes his total from the ledger and asks for 12, which the server accepts;
+   the ledger reaches Cleric 12 and now agrees with the column. Re-seed to
+   restore the drift.
 2. **An over-maximum pool (#98).** 1st-level slots show 4 of 4, though 6 are
    stored. Spend one: still 4. Spend another: still 4 — two spends the player
    cannot see. *After #98:* a stored total cannot exceed its maximum. A long
