@@ -69,6 +69,18 @@ describe("HpRollStep hit die (#105)", () => {
     container.remove();
   });
 
+  it("offers no die when the class list fails to load", async () => {
+    query.current = { data: undefined, isError: true };
+
+    const { container, root } = await render();
+
+    expect(container.textContent).toContain("Hit die unavailable");
+    expect(container.querySelectorAll("button")).toHaveLength(0);
+
+    root.unmount();
+    container.remove();
+  });
+
   it("offers the class's own die once it is known", async () => {
     query.current = {
       data: { classes: [{ id: "class_fighter", hitDie: 10 }] },
