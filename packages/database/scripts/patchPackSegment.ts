@@ -35,10 +35,25 @@ type Patch = {
   setClassFields?: Record<string, Record<string, unknown>>;
   /** Subclass id -> fields to set on that subclass, shallow. */
   setSubclassFields?: Record<string, Record<string, unknown>>;
+  /**
+   * Resource id -> fields to set, shallow, on every trait resource in the
+   * segment with that id. Slot pools can appear on more than one trait in a
+   * segment, and every copy is set. An id that matches nothing is an error.
+   */
+  setTraitResourceFields?: Record<string, Record<string, unknown>>;
+  /** Equipment id -> fields to set on that item, shallow. */
+  setEquipmentFields?: Record<string, Record<string, unknown>>;
+  /** Spells to insert, or to replace by id. */
+  upsertSpells?: Array<{ id: string } & Record<string, unknown>>;
+  /** Spell ids to remove. An id the segment lacks is an error. */
+  deleteSpellIds?: string[];
 };
 
 type Segment = {
-  traits?: Array<{ id: string }>;
+  traits?: Array<{
+    id: string;
+    resources?: Array<Record<string, unknown> & { id: string }>;
+  }>;
   classes?: Array<
     Record<string, unknown> & {
       id: string;
@@ -46,6 +61,8 @@ type Segment = {
     }
   >;
   subclasses?: Array<Record<string, unknown> & { id: string }>;
+  equipment?: Array<Record<string, unknown> & { id: string }>;
+  spells?: Array<Record<string, unknown> & { id: string }>;
 };
 
 const [segmentPath, patchPath] = process.argv.slice(2);
@@ -140,6 +157,43 @@ for (const [subclassId, fields] of Object.entries(
   );
   if (!entry) throw new Error(`${segmentPath} has no subclass '${subclassId}'`);
   Object.assign(entry, fields);
+}
+
+for (const [resourceId, fields] of Object.entries(
+  patch.setTraitResourceFields ?? {},
+)) {
+  const matches = (segment.traits ?? []).flatMap((trait) =>
+    (trait.resources ?? []).filter((resource) => resource.id === resourceId),
+  );
+  if (matches.length === 0) {
+    throw new Error(`${segmentPath} has no trait resource '${resourceId}'`);
+  }
+  for (const resource of matches) Object.assign(resource, fields);
+}
+
+for (const [equipmentId, fields] of Object.entries(
+  patch.setEquipmentFields ?? {},
+)) {
+  const entry = (segment.equipment ?? []).find(
+    (item) => item.id === equipmentId,
+  );
+  if (!entry) throw new Error(`${segmentPath} has no equipment '${equipmentId}'`);
+  Object.assign(entry, fields);
+}
+
+for (const id of patch.deleteSpellIds ?? []) {
+  const index = (segment.spells ?? []).findIndex((spell) => spell.id === id);
+  if (index === -1) {
+    throw new Error(`${segmentPath} has no spell '${id}' to delete`);
+  }
+  segment.spells!.splice(index, 1);
+}
+
+for (const spell of patch.upsertSpells ?? []) {
+  segment.spells ??= [];
+  const index = segment.spells.findIndex((entry) => entry.id === spell.id);
+  if (index === -1) segment.spells.push(spell);
+  else segment.spells[index] = spell;
 }
 
 const printed = JSON.stringify(segment, null, 4).split("\n").join(eol);

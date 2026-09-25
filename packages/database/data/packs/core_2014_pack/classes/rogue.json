@@ -330,7 +330,9 @@
             "spellcasting": {
                 "ability": "INT",
                 "progression": "third",
-                "startsAtLevel": 3
+                "startsAtLevel": 3,
+                "preparation": "known",
+                "focusCategories": []
             }
         },
         {
@@ -551,6 +553,10 @@
                                 "value": 4
                             }
                         ]
+                    },
+                    "spellSlot": {
+                        "kind": "level",
+                        "level": 1
                     }
                 },
                 {
@@ -569,6 +575,10 @@
                                 "value": 3
                             }
                         ]
+                    },
+                    "spellSlot": {
+                        "kind": "level",
+                        "level": 2
                     }
                 },
                 {
@@ -587,6 +597,10 @@
                                 "value": 3
                             }
                         ]
+                    },
+                    "spellSlot": {
+                        "kind": "level",
+                        "level": 3
                     }
                 },
                 {
@@ -609,6 +623,10 @@
                                 "value": 3
                             }
                         ]
+                    },
+                    "spellSlot": {
+                        "kind": "level",
+                        "level": 4
                     }
                 }
             ],

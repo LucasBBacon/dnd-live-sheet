@@ -56,6 +56,24 @@ export const ChargesResourceSchema = z
     resetCondition: ResourceResetSchema,
     maxRule: ResourceMaxRuleSchema,
     mode: z.literal("charges").optional(),
+    /**
+     * Marks the pool as spell slots, and at what level. Declared rather than
+     * read off the id, as category tags are: the cast path spends a slot by
+     * asking which pools are slots of at least the spell's level. A pact
+     * pool's level is the warlock's pact slot level, which rises with
+     * warlock level (SpellcastingEngine's pactSlotLevel).
+     */
+    spellSlot: z
+      .discriminatedUnion("kind", [
+        z
+          .object({
+            kind: z.literal("level"),
+            level: z.number().int().min(1).max(9),
+          })
+          .strict(),
+        z.object({ kind: z.literal("pact") }).strict(),
+      ])
+      .optional(),
   })
   .strict();
 

@@ -309,7 +309,9 @@
             "weight": 2,
             "costCp": 2500,
             "requiresAttunement": false,
-            "categoryTags": [],
+            "categoryTags": [
+                "category_component_pouch"
+            ],
             "lore": {
                 "shortDescription": "A watertight belt pouch of compartments holding spell components.",
                 "fullText": "A component pouch is a small, watertight leather belt pouch divided into compartments, holding all the material components and other special items you need to cast your spells - except for those components that have a specific cost given in the spell's description. A caster carrying one never has to name or track the common components inside it."

@@ -984,6 +984,42 @@
                     "mode": {
                       "type": "string",
                       "const": "charges"
+                    },
+                    "spellSlot": {
+                      "oneOf": [
+                        {
+                          "type": "object",
+                          "properties": {
+                            "kind": {
+                              "type": "string",
+                              "const": "level"
+                            },
+                            "level": {
+                              "type": "integer",
+                              "minimum": 1,
+                              "maximum": 9
+                            }
+                          },
+                          "required": [
+                            "kind",
+                            "level"
+                          ],
+                          "additionalProperties": false
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "kind": {
+                              "type": "string",
+                              "const": "pact"
+                            }
+                          },
+                          "required": [
+                            "kind"
+                          ],
+                          "additionalProperties": false
+                        }
+                      ]
                     }
                   },
                   "required": [
@@ -3814,6 +3850,42 @@
               "mode": {
                 "type": "string",
                 "const": "charges"
+              },
+              "spellSlot": {
+                "oneOf": [
+                  {
+                    "type": "object",
+                    "properties": {
+                      "kind": {
+                        "type": "string",
+                        "const": "level"
+                      },
+                      "level": {
+                        "type": "integer",
+                        "minimum": 1,
+                        "maximum": 9
+                      }
+                    },
+                    "required": [
+                      "kind",
+                      "level"
+                    ],
+                    "additionalProperties": false
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "kind": {
+                        "type": "string",
+                        "const": "pact"
+                      }
+                    },
+                    "required": [
+                      "kind"
+                    ],
+                    "additionalProperties": false
+                  }
+                ]
               }
             },
             "required": [
@@ -4229,12 +4301,33 @@
                 "type": "integer",
                 "minimum": 1,
                 "maximum": 20
+              },
+              "preparation": {
+                "type": "string",
+                "enum": [
+                  "prepared",
+                  "known"
+                ]
+              },
+              "focusCategories": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "enum": [
+                    "category_arcane_focus",
+                    "category_druidic_focus",
+                    "category_holy_symbol",
+                    "category_musical_instrument"
+                  ]
+                }
               }
             },
             "required": [
               "ability",
               "progression",
-              "startsAtLevel"
+              "startsAtLevel",
+              "preparation",
+              "focusCategories"
             ],
             "additionalProperties": false
           },
@@ -4687,12 +4780,33 @@
                 "type": "integer",
                 "minimum": 1,
                 "maximum": 20
+              },
+              "preparation": {
+                "type": "string",
+                "enum": [
+                  "prepared",
+                  "known"
+                ]
+              },
+              "focusCategories": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "enum": [
+                    "category_arcane_focus",
+                    "category_druidic_focus",
+                    "category_holy_symbol",
+                    "category_musical_instrument"
+                  ]
+                }
               }
             },
             "required": [
               "ability",
               "progression",
-              "startsAtLevel"
+              "startsAtLevel",
+              "preparation",
+              "focusCategories"
             ],
             "additionalProperties": false
           }
@@ -5198,7 +5312,8 @@
                 "category_arcane_focus",
                 "category_druidic_focus",
                 "category_musical_instrument",
-                "category_pack"
+                "category_pack",
+                "category_component_pouch"
               ]
             }
           },

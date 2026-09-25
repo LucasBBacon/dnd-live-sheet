@@ -941,6 +941,8 @@ describe("CharacterBootstrapper.hydrateRuntimeManagers caster level", () => {
           ability: "INT" as const,
           progression: "full" as const,
           startsAtLevel: 1,
+          preparation: "prepared" as const,
+          focusCategories: [],
         },
       },
     },

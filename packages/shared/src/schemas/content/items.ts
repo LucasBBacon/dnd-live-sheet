@@ -112,7 +112,28 @@ export const StartingEquipmentCategoryTagSchema = z.enum([
   // this tag while nothing here declared it, which is why the shipped pack
   // stopped parsing the moment that segment joined the manifest.
   "category_pack",
+  // Not a starting-equipment category - classes grant the pouch by id - but
+  // the cast path's material check reads these tags too, and a component
+  // pouch covers any spell's ordinary material component (spellCast.ts)
+  "category_component_pouch",
 ]);
+
+/**
+ * The categories an item can be a spellcasting focus through. A class names
+ * the ones its spells can use; the component pouch is not among them, because
+ * it serves every caster.
+ */
+export const SpellcastingFocusCategorySchema =
+  StartingEquipmentCategoryTagSchema.extract([
+    "category_arcane_focus",
+    "category_druidic_focus",
+    "category_holy_symbol",
+    "category_musical_instrument",
+  ]);
+
+export type SpellcastingFocusCategory = z.infer<
+  typeof SpellcastingFocusCategorySchema
+>;
 
 export const StartingEquipmentGrantSchema = z
   .object({

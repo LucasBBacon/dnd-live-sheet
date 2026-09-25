@@ -1552,7 +1552,11 @@
             "spellcasting": {
                 "ability": "CHA",
                 "progression": "pact",
-                "startsAtLevel": 1
+                "startsAtLevel": 1,
+                "preparation": "known",
+                "focusCategories": [
+                    "category_arcane_focus"
+                ]
             }
         }
     ],
@@ -1820,6 +1824,9 @@
                                 "value": 4
                             }
                         ]
+                    },
+                    "spellSlot": {
+                        "kind": "pact"
                     }
                 },
                 {
