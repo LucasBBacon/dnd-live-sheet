@@ -101,6 +101,16 @@ sample character stores a pick of any of the four spells.
    track — here, concentration — and the rest is a `tableNote`.
 7. **Verbal and somatic components are displayed, not gated.** Conditions are
    client-only and nothing models "cannot speak".
+8. **Leveled spell choices stay unasked until #31a.** Found while planning:
+   `spellOptions` offers every pack spell of a node's level range, whatever
+   the class, because the pack has no class spell lists. While every spell
+   was a level-0 placeholder, leveled nodes offered nothing and were skipped.
+   Giving Faerie Fire and Burning Hands real levels would make every leveled
+   node offer exactly those two, and a new wizard could not fill a six-spell
+   spellbook from them — creation would block. So a leveled node offers
+   nothing until #31a gives the pack class lists, which is what every
+   character gets today. The four spells need no pick: Faerie Fire and
+   Burning Hands arrive by fixed grant, the other two are cantrips.
 
 ## Design
 
@@ -221,7 +231,8 @@ path's material check.
 
 A new `packages/engine/src/pipeline/spellSynthesizer.ts`, beside
 `weaponSynthesizer.ts`, produces the character's castable spells. It replaces
-`SpellbookEngine`, which is deleted along with its test.
+`SpellbookEngine`, which is deleted along with `types/spells.ts`, the
+`RuntimeSpellSource` type only it used.
 
 **Sources:**
 
@@ -311,14 +322,25 @@ In `ActionResolver` (`packages/engine/src/pipeline/actionResolver.ts`):
    rolled, the same reasoning `notes` gives.
 3. **`macro`** returns its nested effects' `rollResults`, `targetSaves` and
    `notes`, concatenated in order, instead of discarding them.
-4. **`castLevel`** joins the execution context. Each segment with
-   `perSlotAbove` adds that expression `castLevel − spell level` times. Absent
-   `castLevel` means the spell's own level.
+4. **`spellCast: { spellLevel, castLevel }`** joins the execution context.
+   Each segment with `perSlotAbove` adds that expression
+   `castLevel − spellLevel` times. Absent, nothing is added.
 5. **`EffectManager.dropConcentration`** also removes the actors tied to each
    dropped effect, as `removeEffect` already does.
+6. **A new `end_concentration` effect** calls `dropConcentration()`. It backs
+   one new standard action, `action_end_concentration` ("End
+   Concentration", `activation: "special"`), beside the existing
+   `action_end_hiding`. That is the precedent: a free standard action whose
+   effect ends another effect, which `ActiveEffectsWidget` already finds and
+   offers as that effect's ender.
 
-`ActionFailureReason` gains `slot_required`, `slot_too_low`, `slot_empty` and
-`materials_required`.
+**`settleSpellCast`** (`packages/engine/src/pipeline/spellCast.ts`) holds the
+cast checks of section 5 as a pure function, so they are unit-testable
+without a socket. Its refusals are a `SpellCastRefusal`: `slot_required`,
+`slot_too_low`, `slot_empty` and `materials_required`. Payment by slot needs no
+change to `settleCosts`: `settleSpellCast` returns the spell's action with
+`consumesResource` set to the chosen pool, so the existing all-or-nothing
+spend, and its refunds, pay for it.
 
 ### 5. The cast intent (server)
 
@@ -345,13 +367,13 @@ spent. A failure returns `executed: false` with its reason:
    one tagged with one of the source's `focusCategories`. Otherwise it passes
    only with `cast.materialsConfirmed`; else `materials_required`. "Holds"
    means anywhere in the inventory: no item can be held in a hand yet.
-3. **Execution** through `ActionResolver.execute` with `castLevel`, then the
+3. **Execution** through `ActionResolver.execute` with `spellCast`, then the
    existing persistence and `ACTION_RESOLVED` broadcast.
 
-**`END_CONCENTRATION`**, a new client-to-server event, carries
-`{ characterId, requestId }`. The server calls `dropConcentration()` on the
-character's authoritative effect manager and broadcasts the updated effects
-the way `ACTION_RESOLVED` does.
+Ending concentration needs no server change. `action_end_concentration` is a
+standard action, so it is already in `liveSheet.actions`, resolves through
+`ACTION_INTENT` like Dodge, and `ACTION_RESOLVED` carries the effects without
+the dropped one.
 
 ### 6. The sheet (web)
 
@@ -391,8 +413,9 @@ surface:
 - Notes keep rendering under "Rules the engine could not run".
 
 **Concentration:** `ActiveEffectsWidget` marks the concentration effect
-"Concentrating" and adds an **End concentration** button, which emits
-`END_CONCENTRATION`.
+"Concentrating", and offers `action_end_concentration` as its ender — the
+**End Concentration** button — the same way it offers Stop Hiding for the
+hidden effect.
 
 ### 7. The four spells (pack)
 
@@ -535,6 +558,13 @@ Two rules consequences, both correct per the PHB:
   it, as a 1st-level spell paid with a slot.
 - **`implementationMarkers.test.ts`** pins 107 of 111 spells as stubs, and
   scopes its placeholder pin (level 0, evocation) to stubs only.
+- **`spellOptions`** (`packages/engine/src/pipeline/spellChoices.ts`) returns
+  nothing for a leveled node (decision 8), so no wizard, bard, sorcerer or
+  warlock is asked a question they cannot answer. Cantrip nodes are
+  unchanged: Eldritch Blast and Dancing Lights stay cantrips.
+- **A critical beam** doubles its dice. A spell attack has no weapon
+  analysis to resolve `criticalDamage` for it, so the synthesizer stamps the
+  doubled pool (Eldritch Blast: 2d10), with `perSlotAbove` doubled too.
 
 ## Testing
 
@@ -582,7 +612,8 @@ Two rules consequences, both correct per the PHB:
   resolves unconfirmed. A drow wizard's arcane focus does not cover it.
 - Faerie Fire through Drow Magic spends `drow_magic_faerie_fire`, and is
   refused when the pool is empty.
-- `END_CONCENTRATION` drops the effect and broadcasts it.
+- `action_end_concentration` drops the effect, and `ACTION_RESOLVED` carries
+  the effects without it.
 
 **web**
 
