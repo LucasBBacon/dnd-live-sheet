@@ -111,6 +111,10 @@ sample character stores a pick of any of the four spells.
    nothing until #31a gives the pack class lists, which is what every
    character gets today. The four spells need no pick: Faerie Fire and
    Burning Hands arrive by fixed grant, the other two are cantrips.
+9. **Ending concentration is a standard action.** Found while planning:
+   `action_end_concentration` beside `action_end_hiding`, backed by a new
+   `end_concentration` effect, rides the existing `ACTION_INTENT` path. A new
+   socket event would have duplicated that plumbing for the same broadcast.
 
 ## Design
 
