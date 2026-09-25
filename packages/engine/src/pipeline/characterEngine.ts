@@ -9,6 +9,7 @@ import type {
   InventoryInstance,
   RuntimeModifier,
 } from "@project/shared";
+import { resolveActionScaling } from "./actionScaling.js";
 import {
   AbilityEngine,
   type DerivedAbility,
@@ -485,9 +486,13 @@ export class CharacterEngine {
       // button that spent the activation and reached the resolver's default
       // case.
       ...activeTraits.flatMap((t) =>
-        (t.actions || []).filter(
-          (action) => action.effect.type !== "dynamic_weapon_attack",
-        ),
+        (t.actions || [])
+          .filter((action) => action.effect.type !== "dynamic_weapon_attack")
+          // every damage die at this character's level: a breath weapon's
+          // ladder was authored and never read
+          .map((action) =>
+            resolveActionScaling(action, { total: totalLevel, classes: classLevels }),
+          ),
       ),
     ];
 

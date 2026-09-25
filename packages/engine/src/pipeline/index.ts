@@ -1,4 +1,5 @@
 export * from "./actionResolver.js";
+export * from "./actionScaling.js";
 export * from "./characterBootstrapper.js";
 export * from "./choiceQuestions.js";
 export * from "./spellChoices.js";

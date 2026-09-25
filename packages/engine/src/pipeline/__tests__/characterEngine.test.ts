@@ -1985,3 +1985,53 @@ describe("CharacterEngine.buildLiveSheet: dynamic templates", () => {
     expect(damageBonus("off_hand")).toBeGreaterThanOrEqual(2);
   });
 });
+
+describe("CharacterEngine.buildLiveSheet: trait actions scale with level", () => {
+  const dragonborn = (level: number): CharacterSave => ({
+    ...halfElfFighter({ traitSelections: {} }),
+    race: {
+      baseRaceId: "race_dragonborn",
+      hasSubraces: true,
+      subraceId: "subrace_dragonborn_black",
+    },
+    classes: [
+      {
+        classId: "class_fighter",
+        level,
+        selections: { fighter_level_1_fighting_style: ["trait_fs_defense"] },
+      },
+    ],
+  });
+
+  const breathDice = (level: number) => {
+    const action = CharacterEngine.buildLiveSheet(
+      dragonborn(level),
+      [],
+      new EffectManager(),
+      new ResourceManager(),
+      { snapshot: corePackLookup() },
+    ).actions.find(
+      (entry) => entry.id === "action_black_breath",
+    );
+    return action?.effect.type === "save"
+      ? action.effect.damage?.[0]?.baseDice
+      : undefined;
+  };
+
+  it.each([
+    [5, "2d6"],
+    [6, "3d6"],
+    [11, "4d6"],
+    [16, "5d6"],
+  ])("a level-%i dragonborn breathes %s", (level, dice) => {
+    expect(breathDice(level)).toBe(dice);
+  });
+
+  it("leaves the pack's breath weapon at its base dice", () => {
+    breathDice(16);
+    const effect =
+      corePackSnapshot().traitsById.subrace_dragonborn_black?.actions?.[0]?.effect;
+
+    expect(effect?.type === "save" && effect.damage?.[0]?.baseDice).toBe("2d6");
+  });
+});
