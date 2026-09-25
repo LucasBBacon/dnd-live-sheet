@@ -1,6 +1,7 @@
 import z from "zod";
-import { ActionGrantSchema } from "./actions.js";
+import { ActionGrantSchema, AreaOfEffectSchema } from "./actions.js";
 import { ModifierScalingSchema, ModifierTargetSchema } from "./modifiers.js";
+import { LoreSchema } from "../primitives/lore.js";
 
 export const SpellSchoolSchema = z.enum([
   "abjuration",
@@ -22,6 +23,49 @@ export const SpellComponentSchema = z.object({
   isConsumed: z.boolean().default(false),
 });
 
+/**
+ * Where a spell reaches. `touch`, `sight` and `unlimited` arrive with the
+ * first spell that needs one; the repo adds no variant before a real rule.
+ *
+ * `area` is the spell's area, authored once, here. The spell synthesizer
+ * copies it onto the spell's save, so the save line the table reads names it.
+ */
+export const SpellRangeSchema = z.discriminatedUnion("kind", [
+  z
+    .object({
+      kind: z.literal("feet"),
+      feet: z.number().int().positive(),
+      area: AreaOfEffectSchema.optional(),
+    })
+    .strict(),
+  z
+    .object({
+      kind: z.literal("self"),
+      area: AreaOfEffectSchema.optional(),
+    })
+    .strict(),
+]);
+
+/**
+ * How long a spell lasts. `concentration` is display here; the rule itself is
+ * the `isSelfConcentration` effect the spell's action applies, and pack
+ * validation requires the two to agree.
+ */
+export const SpellDurationSchema = z.discriminatedUnion("kind", [
+  z.object({ kind: z.literal("instantaneous") }).strict(),
+  z
+    .object({
+      kind: z.literal("timed"),
+      amount: z.number().int().positive(),
+      unit: z.enum(["minute"]),
+      concentration: z.boolean(),
+    })
+    .strict(),
+]);
+
+/** Rounds in one unit of a timed duration: a round is six seconds. */
+export const ROUNDS_PER_DURATION_UNIT = { minute: 10 } as const;
+
 export const SpellDefinitionSchema = z.object({
   id: z.string(),
   name: z.string(),
@@ -30,6 +74,16 @@ export const SpellDefinitionSchema = z.object({
   isRitual: z.boolean().default(false),
   // a spell fundamentally grants an  action to the character
   action: ActionGrantSchema,
+
+  /**
+   * What the table needs to know to cast it. Optional on the schema because a
+   * stub carries none of them; pack validation requires all four on every
+   * authored spell (validateSpells).
+   */
+  lore: LoreSchema.optional(),
+  range: SpellRangeSchema.optional(),
+  components: SpellComponentSchema.optional(),
+  duration: SpellDurationSchema.optional(),
 
   /**
    * Declares a spell that exists only so references to it resolve.
@@ -54,6 +108,9 @@ export const SpellDefinitionSchema = z.object({
 });
 
 export type SpellDefinition = z.infer<typeof SpellDefinitionSchema>;
+export type SpellRange = z.infer<typeof SpellRangeSchema>;
+export type SpellDuration = z.infer<typeof SpellDurationSchema>;
+export type SpellComponents = z.infer<typeof SpellComponentSchema>;
 
 // #region Spell Grant Schemas
 
