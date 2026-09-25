@@ -485,3 +485,207 @@ describe("class-level scaling names its class (#87)", () => {
     expect(result).toEqual({ ok: true, issues: [] });
   });
 });
+
+describe("validateCoreRulePack: spells", () => {
+  const saveFor = (extra: Record<string, unknown> = {}) => ({
+    targetStat: "DEX",
+    dcCalculation: {
+      base: 8,
+      scalingStat: "SPELLCASTING_MOD",
+      includeProficiency: true,
+    },
+    saveEffect: "half_damage",
+    ...extra,
+  });
+
+  const concentrationEffect = (rounds: number) => ({
+    type: "apply_effect",
+    effectName: "Test Flame",
+    durationType: "rounds",
+    durationRounds: rounds,
+    isSelfConcentration: true,
+  });
+
+  const CONCENTRATION_MINUTE = {
+    kind: "timed",
+    amount: 1,
+    unit: "minute",
+    concentration: true,
+  };
+
+  const authored = (overrides: Record<string, unknown> = {}) => ({
+    id: "spell_test_flame",
+    name: "Test Flame",
+    level: 1,
+    school: "evocation",
+    isRitual: false,
+    lore: { shortDescription: "A test flame." },
+    range: { kind: "self", area: { shape: "cone", size: 15 } },
+    components: { verbal: true, somatic: true, material: false },
+    duration: { kind: "instantaneous" },
+    action: {
+      id: "action_spell_test_flame",
+      name: "Test Flame",
+      activation: "action",
+      effect: {
+        type: "save",
+        savingThrow: saveFor(),
+        damage: [
+          {
+            sourceName: "Test Flame",
+            baseDice: "3d6",
+            damageType: "fire",
+            perSlotAbove: "1d6",
+          },
+        ],
+      },
+    },
+    ...overrides,
+  });
+
+  const withEffect = (effect: unknown, overrides: Record<string, unknown> = {}) =>
+    authored({
+      action: {
+        id: "action_spell_test_flame",
+        name: "Test Flame",
+        activation: "action",
+        effect,
+      },
+      ...overrides,
+    });
+
+  const issuesFor = (spell: unknown) => {
+    const source = createValidPack() as unknown as { spells: unknown[] };
+    source.spells.push(spell);
+    return validateCoreRulePack(CoreRulePackSchema.parse(source)).issues;
+  };
+
+  const codesFor = (spell: unknown) => issuesFor(spell).map((issue) => issue.code);
+
+  it("accepts an authored spell with its metadata", () => {
+    expect(issuesFor(authored())).toEqual([]);
+  });
+
+  it("rejects an authored spell missing its metadata, naming what is missing", () => {
+    expect(issuesFor(authored({ lore: undefined, duration: undefined }))).toContainEqual({
+      code: "incomplete_spell",
+      path: ["spells", 0],
+      message: expect.stringContaining("lore, duration"),
+    });
+  });
+
+  it("rejects a stub that carries metadata", () => {
+    expect(
+      codesFor(
+        withEffect(
+          { type: "no_effect" },
+          { implementation: { mode: "unimplemented", summary: "Awaiting authoring." } },
+        ),
+      ),
+    ).toContain("incomplete_spell");
+  });
+
+  it("rejects a material component nobody named", () => {
+    expect(
+      codesFor(authored({ components: { verbal: true, material: true } })),
+    ).toContain("incomplete_spell");
+  });
+
+  it("accepts a concentration duration paired with a concentration effect of its length", () => {
+    expect(
+      issuesFor(withEffect(concentrationEffect(10), { duration: CONCENTRATION_MINUTE })),
+    ).toEqual([]);
+  });
+
+  it("finds the concentration effect inside a macro", () => {
+    expect(
+      issuesFor(
+        withEffect(
+          {
+            type: "macro",
+            effects: [
+              { type: "save", savingThrow: saveFor({ saveEffect: "negates_effect" }) },
+              concentrationEffect(10),
+            ],
+          },
+          { duration: CONCENTRATION_MINUTE },
+        ),
+      ),
+    ).toEqual([]);
+  });
+
+  it("rejects a concentration effect whose rounds disagree with the duration", () => {
+    expect(
+      codesFor(withEffect(concentrationEffect(5), { duration: CONCENTRATION_MINUTE })),
+    ).toContain("concentration_mismatch");
+  });
+
+  it("rejects a concentration duration with no concentration effect", () => {
+    expect(codesFor(authored({ duration: CONCENTRATION_MINUTE }))).toContain(
+      "concentration_mismatch",
+    );
+  });
+
+  it("rejects a concentration effect on a spell that does not concentrate", () => {
+    expect(codesFor(withEffect(concentrationEffect(10)))).toContain(
+      "concentration_mismatch",
+    );
+  });
+
+  it("rejects upcast dice on a cantrip", () => {
+    expect(codesFor(authored({ level: 0 }))).toContain("invalid_upcast");
+  });
+
+  it("rejects upcast dice of another die size", () => {
+    expect(
+      codesFor(
+        withEffect({
+          type: "save",
+          savingThrow: saveFor(),
+          damage: [
+            {
+              sourceName: "Test Flame",
+              baseDice: "3d6",
+              damageType: "fire",
+              perSlotAbove: "1d8",
+            },
+          ],
+        }),
+      ),
+    ).toContain("invalid_upcast");
+  });
+
+  it("rejects a spell that hard-codes its caster's numbers", () => {
+    const resolvedDc = issuesFor(
+      withEffect({ type: "save", savingThrow: saveFor({ dc: 15 }) }),
+    );
+    expect(resolvedDc).toContainEqual(
+      expect.objectContaining({
+        code: "spell_hardcodes_caster_value",
+        message: expect.stringContaining("savingThrow.dc"),
+      }),
+    );
+
+    expect(
+      codesFor(
+        withEffect({
+          type: "save",
+          areaOfEffect: { shape: "cone", size: 15 },
+          savingThrow: saveFor(),
+        }),
+      ),
+    ).toContain("spell_hardcodes_caster_value");
+
+    expect(
+      codesFor(
+        withEffect({
+          type: "attack",
+          attackType: "ranged_spell",
+          attackStat: "SPELLCASTING_MOD",
+          attackBonus: 5,
+          damage: [{ sourceName: "Test Flame", baseDice: "1d10", damageType: "fire" }],
+        }),
+      ),
+    ).toContain("spell_hardcodes_caster_value");
+  });
+});

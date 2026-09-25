@@ -2,25 +2,30 @@ import { z } from "zod";
 import type { CoreRulePack } from "./coreRulePack.js";
 import { traitIdOfOption } from "./character.js";
 import { StartingEquipmentDefinitionSchema } from "./items.js";
+import { ROUNDS_PER_DURATION_UNIT } from "./spells.js";
 
 export type CoreRulePackIssueCode =
+  | "concentration_mismatch"
   | "duplicate_id"
+  | "incomplete_spell"
+  | "incompatible_ammunition_reference"
+  | "invalid_choice_count"
+  | "invalid_progression_order"
+  | "invalid_upcast"
+  | "missing_scaling_class"
+  | "missing_subrace"
+  | "spell_hardcodes_caster_value"
+  | "unexpected_subrace"
   | "unknown_class_reference"
   | "unknown_equipment_reference"
   | "unknown_feat_reference"
   | "unknown_race_reference"
   | "unknown_resource_reference"
+  | "unknown_scaling_class"
   | "unknown_spell_reference"
   | "unknown_subclass_reference"
   | "unknown_subrace_reference"
-  | "unknown_trait_reference"
-  | "incompatible_ammunition_reference"
-  | "invalid_choice_count"
-  | "invalid_progression_order"
-  | "missing_scaling_class"
-  | "missing_subrace"
-  | "unexpected_subrace"
-  | "unknown_scaling_class";
+  | "unknown_trait_reference";
 
 export type CoreRulePackValidationIssue = {
   code: CoreRulePackIssueCode;
@@ -196,6 +201,136 @@ const validateStartingEquipment = (
 };
 
 const CLASS_SCALED = new Set(["class_level", "class_level_thresholds"]);
+
+type PackSpell = CoreRulePack["spells"][number];
+type SpellEffect = PackSpell["action"]["effect"];
+
+/** An action's effect, and a macro's nested ones beside it. */
+const flattenEffects = (effect: SpellEffect): SpellEffect[] =>
+  effect.type === "macro" ? [effect, ...effect.effects] : [effect];
+
+const SPELL_METADATA = ["lore", "range", "components", "duration"] as const;
+
+const DICE = /^(\d+)d(\d+)([+-]\d+)?$/;
+
+/**
+ * What an authored spell must say, and what it must not.
+ *
+ * - An authored spell carries lore, range, components and duration; a stub
+ *   carries none, since the marker says it is a placeholder.
+ * - A material component names its material.
+ * - A concentration duration and a concentration effect come together, and
+ *   agree on how long.
+ * - `perSlotAbove` sits only on a leveled spell, as plain dice of its
+ *   segment's own die size - the resolver adds it by count.
+ * - A spell never authors a number its caster decides: the synthesizer
+ *   stamps attack bonus, DC, beam count and area from the casting source and
+ *   the spell's range.
+ */
+const validateSpells = (
+  pack: CoreRulePack,
+  issues: CoreRulePackValidationIssue[],
+) => {
+  pack.spells.forEach((spell, index) => {
+    const path: Array<string | number> = ["spells", index];
+    const isStub = spell.implementation?.mode === "unimplemented";
+
+    const present = SPELL_METADATA.filter((key) => spell[key] !== undefined);
+    const missing = SPELL_METADATA.filter((key) => spell[key] === undefined);
+    if (isStub && present.length > 0) {
+      issues.push({
+        code: "incomplete_spell",
+        path,
+        message: `Stub spell '${spell.id}' carries ${present.join(", ")}; a stub is a placeholder, and metadata belongs on an authored spell.`,
+      });
+    }
+    if (!isStub && missing.length > 0) {
+      issues.push({
+        code: "incomplete_spell",
+        path,
+        message: `Spell '${spell.id}' is authored but has no ${missing.join(", ")}.`,
+      });
+    }
+
+    if (spell.components?.material && !spell.components.materialDescription) {
+      issues.push({
+        code: "incomplete_spell",
+        path: [...path, "components"],
+        message: `Spell '${spell.id}' needs a material component but does not say what it is.`,
+      });
+    }
+
+    const effects = flattenEffects(spell.action.effect);
+    const concentration = effects.flatMap((effect) =>
+      effect.type === "apply_effect" && effect.isSelfConcentration ? [effect] : [],
+    );
+    const duration = spell.duration;
+    if (duration !== undefined) {
+      const concentrates = duration.kind === "timed" && duration.concentration;
+      if (concentrates !== concentration.length > 0) {
+        issues.push({
+          code: "concentration_mismatch",
+          path: [...path, "duration"],
+          message: concentrates
+            ? `Spell '${spell.id}' lasts with concentration, but its action applies no concentration effect.`
+            : `Spell '${spell.id}' applies a concentration effect, but its duration is not concentration.`,
+        });
+      }
+      if (duration.kind === "timed" && concentrates) {
+        const rounds = duration.amount * ROUNDS_PER_DURATION_UNIT[duration.unit];
+        for (const effect of concentration) {
+          if (effect.durationType !== "rounds" || effect.durationRounds !== rounds) {
+            issues.push({
+              code: "concentration_mismatch",
+              path: [...path, "action"],
+              message: `Spell '${spell.id}' lasts ${rounds} rounds, but its concentration effect does not.`,
+            });
+          }
+        }
+      }
+    }
+
+    for (const effect of effects) {
+      const segments =
+        "damage" in effect && Array.isArray(effect.damage) ? effect.damage : [];
+      for (const segment of segments) {
+        if (segment.perSlotAbove === undefined) continue;
+        if (spell.level === 0) {
+          issues.push({
+            code: "invalid_upcast",
+            path: [...path, "action"],
+            message: `Cantrip '${spell.id}' cannot be cast with a slot, so it cannot add dice per slot level.`,
+          });
+          continue;
+        }
+        const base = DICE.exec(segment.baseDice);
+        const extra = DICE.exec(segment.perSlotAbove);
+        if (!base || !extra || extra[3] !== undefined || extra[2] !== base[2]) {
+          issues.push({
+            code: "invalid_upcast",
+            path: [...path, "action"],
+            message: `Spell '${spell.id}' adds '${segment.perSlotAbove}' per slot level to '${segment.baseDice}'; it must be plain dice of the same die size.`,
+          });
+        }
+      }
+
+      const hardcoded = [
+        effect.type === "attack" && effect.attackBonus !== undefined ? "attackBonus" : undefined,
+        effect.type === "attack" && effect.damageBonus !== undefined ? "damageBonus" : undefined,
+        effect.type === "attack" && effect.repeatCount !== undefined ? "repeatCount" : undefined,
+        effect.type === "save" && effect.savingThrow.dc !== undefined ? "savingThrow.dc" : undefined,
+        effect.type === "save" && effect.areaOfEffect !== undefined ? "areaOfEffect" : undefined,
+      ].filter((field): field is string => field !== undefined);
+      if (hardcoded.length > 0) {
+        issues.push({
+          code: "spell_hardcodes_caster_value",
+          path: [...path, "action"],
+          message: `Spell '${spell.id}' authors ${hardcoded.join(", ")}; the spell synthesizer stamps these from the casting source and the spell's range.`,
+        });
+      }
+    }
+  });
+};
 
 /**
  * An entry scaled by one class's level must say which class.
@@ -481,6 +616,7 @@ export const validateCoreRulePack = (
   });
 
   validateClassScaling(pack, issues);
+  validateSpells(pack, issues);
 
   return { ok: issues.length === 0, issues };
 };
