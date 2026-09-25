@@ -51,6 +51,7 @@
         "feats/unimplemented.json",
         "backgrounds/core.json",
         "resources/core.json",
+        "spells/core.json",
         "spells/unimplemented.json"
     ]
 }

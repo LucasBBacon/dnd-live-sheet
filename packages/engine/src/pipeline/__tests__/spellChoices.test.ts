@@ -46,11 +46,11 @@ describe("spellOptions", () => {
     ]);
   });
 
-  it("offers any other node levels 1 through its cap, and no cantrips", () => {
-    expect(spellOptions(node(2), { spellsById }).map((s) => s.id)).toEqual([
-      "first_a",
-      "second_a",
-    ]);
+  // #31a: without class spell lists a leveled node would offer every leveled
+  // pack spell whatever the class - a wizard's six-spell spellbook drawn from
+  // Faerie Fire and Burning Hands - so it offers nothing until lists exist
+  it("offers a leveled node nothing until the pack has class spell lists", () => {
+    expect(spellOptions(node(2), { spellsById })).toEqual([]);
   });
 
   it("offers nothing without spells to read", () => {

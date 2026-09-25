@@ -1,0 +1,219 @@
+{
+    "$schema": "../../../schemas/segment.schema.json",
+    "spells": [
+        {
+            "id": "spell_eldritch_blast",
+            "name": "Eldritch Blast",
+            "level": 0,
+            "school": "evocation",
+            "isRitual": false,
+            "lore": {
+                "shortDescription": "A ranged spell attack for 1d10 force damage. It fires two beams at 5th level, three at 11th and four at 17th, each with its own attack roll.",
+                "fullText": "A beam of crackling energy streaks toward a creature within range. Make a ranged spell attack against the target. On a hit, the target takes 1d10 force damage.\n\nThe spell creates more than one beam when you reach higher levels: two beams at 5th level, three beams at 11th level, and four beams at 17th level. You can direct the beams at the same target or at different ones. Make a separate attack roll for each beam."
+            },
+            "range": {
+                "kind": "feet",
+                "feet": 120
+            },
+            "components": {
+                "verbal": true,
+                "somatic": true,
+                "material": false
+            },
+            "duration": {
+                "kind": "instantaneous"
+            },
+            "action": {
+                "id": "action_spell_eldritch_blast",
+                "name": "Eldritch Blast",
+                "activation": "action",
+                "effect": {
+                    "type": "attack",
+                    "attackType": "ranged_spell",
+                    "attackStat": "SPELLCASTING_MOD",
+                    "range": 120,
+                    "repeat": {
+                        "label": "Beam",
+                        "thresholds": [
+                            {
+                                "minimumLevel": 1,
+                                "value": 1
+                            },
+                            {
+                                "minimumLevel": 5,
+                                "value": 2
+                            },
+                            {
+                                "minimumLevel": 11,
+                                "value": 3
+                            },
+                            {
+                                "minimumLevel": 17,
+                                "value": 4
+                            }
+                        ]
+                    },
+                    "damage": [
+                        {
+                            "sourceName": "Eldritch Blast",
+                            "baseDice": "1d10",
+                            "damageType": "force"
+                        }
+                    ]
+                }
+            }
+        },
+        {
+            "id": "spell_dancing_lights",
+            "name": "Dancing Lights",
+            "level": 0,
+            "school": "evocation",
+            "isRitual": false,
+            "lore": {
+                "shortDescription": "Up to four hovering torch-sized lights, or one glowing Medium form, each shedding dim light in a 10-foot radius. Concentration, up to 1 minute.",
+                "fullText": "You create up to four torch-sized lights within range, making them appear as torches, lanterns, or glowing orbs that hover in the air for the duration. You can also combine the four lights into one glowing vaguely humanoid form of Medium size. Whichever form you choose, each light sheds dim light in a 10-foot radius.\n\nAs a bonus action on your turn, you can move the lights up to 60 feet to a new spot within range. A light must be within 20 feet of another light created by this spell, and a light winks out if it exceeds the spell's range."
+            },
+            "range": {
+                "kind": "feet",
+                "feet": 120
+            },
+            "components": {
+                "verbal": true,
+                "somatic": true,
+                "material": true,
+                "materialDescription": "a bit of phosphorus or wychwood, or a glowworm"
+            },
+            "duration": {
+                "kind": "timed",
+                "amount": 1,
+                "unit": "minute",
+                "concentration": true
+            },
+            "action": {
+                "id": "action_spell_dancing_lights",
+                "name": "Dancing Lights",
+                "activation": "action",
+                "tableNote": "Up to four torch-sized lights (torches, lanterns or glowing orbs), or one glowing Medium humanoid form; each sheds dim light in a 10-foot radius. As a bonus action you can move them up to 60 feet. Each light must stay within 20 feet of another, and winks out beyond the spell's range.",
+                "effect": {
+                    "type": "apply_effect",
+                    "effectName": "Dancing Lights",
+                    "durationType": "rounds",
+                    "durationRounds": 10,
+                    "isSelfConcentration": true
+                }
+            }
+        },
+        {
+            "id": "spell_faerie_fire",
+            "name": "Faerie Fire",
+            "level": 1,
+            "school": "evocation",
+            "isRitual": false,
+            "lore": {
+                "shortDescription": "Creatures in a 20-foot cube that fail a Dexterity save are outlined in light: attacks against them have advantage, and they can't benefit from being invisible. Concentration, up to 1 minute.",
+                "fullText": "Each object in a 20-foot cube within range is outlined in blue, green, or violet light (your choice). Any creature in the area when the spell is cast is also outlined in light if it fails a Dexterity saving throw. For the duration, objects and affected creatures shed dim light in a 10-foot radius.\n\nAny attack roll against an affected creature or object has advantage if the attacker can see it, and the affected creature or object can't benefit from being invisible."
+            },
+            "range": {
+                "kind": "feet",
+                "feet": 60,
+                "area": {
+                    "shape": "cube",
+                    "size": 20
+                }
+            },
+            "components": {
+                "verbal": true,
+                "somatic": false,
+                "material": false
+            },
+            "duration": {
+                "kind": "timed",
+                "amount": 1,
+                "unit": "minute",
+                "concentration": true
+            },
+            "action": {
+                "id": "action_spell_faerie_fire",
+                "name": "Faerie Fire",
+                "activation": "action",
+                "tableNote": "Objects in the area, and creatures that fail, are outlined in light and shed dim light in a 10-foot radius. Attack rolls against an outlined target have advantage if the attacker can see it, and it can't benefit from being invisible.",
+                "effect": {
+                    "type": "macro",
+                    "effects": [
+                        {
+                            "type": "save",
+                            "savingThrow": {
+                                "targetStat": "DEX",
+                                "dcCalculation": {
+                                    "base": 8,
+                                    "scalingStat": "SPELLCASTING_MOD",
+                                    "includeProficiency": true
+                                },
+                                "saveEffect": "negates_effect"
+                            }
+                        },
+                        {
+                            "type": "apply_effect",
+                            "effectName": "Faerie Fire",
+                            "durationType": "rounds",
+                            "durationRounds": 10,
+                            "isSelfConcentration": true
+                        }
+                    ]
+                }
+            }
+        },
+        {
+            "id": "spell_burning_hands",
+            "name": "Burning Hands",
+            "level": 1,
+            "school": "evocation",
+            "isRitual": false,
+            "lore": {
+                "shortDescription": "A 15-foot cone of flame: 3d6 fire damage on a failed Dexterity save, half on a success, and 1d6 more for each slot level above 1st.",
+                "fullText": "As you hold your hands with thumbs touching and fingers spread, a thin sheet of flames shoots forth from your outstretched fingertips. Each creature in a 15-foot cone must make a Dexterity saving throw. A creature takes 3d6 fire damage on a failed save, or half as much damage on a successful one.\n\nThe fire ignites any flammable objects in the area that aren't being worn or carried.\n\nAt Higher Levels. When you cast this spell using a spell slot of 2nd level or higher, the damage increases by 1d6 for each slot level above 1st."
+            },
+            "range": {
+                "kind": "self",
+                "area": {
+                    "shape": "cone",
+                    "size": 15
+                }
+            },
+            "components": {
+                "verbal": true,
+                "somatic": true,
+                "material": false
+            },
+            "duration": {
+                "kind": "instantaneous"
+            },
+            "action": {
+                "id": "action_spell_burning_hands",
+                "name": "Burning Hands",
+                "activation": "action",
+                "tableNote": "The fire ignites flammable objects in the area that aren't being worn or carried.",
+                "effect": {
+                    "type": "save",
+                    "savingThrow": {
+                        "targetStat": "DEX",
+                        "dcCalculation": {
+                            "base": 8,
+                            "scalingStat": "SPELLCASTING_MOD",
+                            "includeProficiency": true
+                        },
+                        "saveEffect": "half_damage"
+                    },
+                    "damage": [
+                        {
+                            "sourceName": "Burning Hands",
+                            "baseDice": "3d6",
+                            "damageType": "fire",
+                            "perSlotAbove": "1d6"
+                        }
+                    ]
+                }
+            }
+        }
+    ]
+}
