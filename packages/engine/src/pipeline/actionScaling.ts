@@ -54,7 +54,13 @@ const scaleEffect = (effect: CoreEffect, levels: ScalingLevels): CoreEffect => {
 
   switch (effect.type) {
     case "attack":
-      return { ...effect, damage: scale(effect.damage) };
+      return {
+        ...effect,
+        damage: scale(effect.damage),
+        ...(effect.criticalDamage !== undefined && {
+          criticalDamage: scale(effect.criticalDamage),
+        }),
+      };
     case "damage_rider":
       return { ...effect, damage: scale(effect.damage) };
     case "save":

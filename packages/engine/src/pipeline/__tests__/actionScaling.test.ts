@@ -93,6 +93,41 @@ describe("resolveActionScaling", () => {
 
     expect(nested?.type === "save" && nested.damage?.[0]?.baseDice).toBe("5d6");
   });
+
+  it("scales an attack's critical damage as well as its damage", () => {
+    const damageSegment: DamageSegment = {
+      sourceName: "Scaled Attack",
+      baseDice: "4d6",
+      damageType: "fire",
+      scalingMode: "total_level",
+      levelScaling: [{ levelRequired: 6, newDice: "5d6" }],
+    };
+    const criticalSegment: DamageSegment = {
+      sourceName: "Scaled Attack",
+      baseDice: "4d6",
+      damageType: "fire",
+      scalingMode: "total_level",
+      levelScaling: [{ levelRequired: 6, newDice: "6d6" }],
+    };
+    const attack: ActionGrant = {
+      id: "action_scaled_attack",
+      name: "Scaled Attack",
+      activation: "action",
+      effect: {
+        type: "attack",
+        attackType: "melee_spell",
+        attackStat: "STR",
+        range: 5,
+        attackBonus: 0,
+        damage: [damageSegment],
+        criticalDamage: [criticalSegment],
+      },
+    };
+    const resolved = resolveActionScaling(attack, at(11));
+
+    expect(resolved.effect.type === "attack" && resolved.effect.damage?.[0]?.baseDice).toBe("5d6");
+    expect(resolved.effect.type === "attack" && resolved.effect.criticalDamage?.[0]?.baseDice).toBe("6d6");
+  });
 });
 
 describe("upcastDice", () => {
