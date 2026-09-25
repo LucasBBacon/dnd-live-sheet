@@ -7,8 +7,8 @@ import { ROUNDS_PER_DURATION_UNIT } from "./spells.js";
 export type CoreRulePackIssueCode =
   | "concentration_mismatch"
   | "duplicate_id"
-  | "incomplete_spell"
   | "incompatible_ammunition_reference"
+  | "incomplete_spell"
   | "invalid_choice_count"
   | "invalid_progression_order"
   | "invalid_upcast"
