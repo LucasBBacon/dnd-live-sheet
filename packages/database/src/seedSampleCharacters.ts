@@ -13,7 +13,7 @@
  * 1. Reference stubs are inserted with onConflictDoNothing. If an id already
  *    exists - because the real pack now defines it, or because a previous run
  *    created it - the authored row wins and this script leaves it alone.
- * 2. Operational writes touch only the twenty fixed ids in ROSTER. Child rows
+ * 2. Operational writes touch only the twenty-one fixed ids in ROSTER. Child rows
  *    for those ids are cleared and rewritten so re-running is idempotent; no
  *    other character is read or modified.
  *
