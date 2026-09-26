@@ -46,8 +46,11 @@ import {
   canEquipTo,
   collectGrantedResources,
   materialiseMissingPools,
+  settleSpellCast,
   slotsConsumedBy,
+  type CastableSpell,
   type LiveCharacterSheet,
+  type SlotPool,
 } from "@project/engine";
 import { resolvePlayerTurn } from "../services/turnResolution.js";
 import { getCachedRuleSnapshot } from "../services/ruleSnapshotCache.js";
@@ -666,6 +669,11 @@ export function initializeWebSocketGateway(httpServer: any) {
           // branch leaves it empty, since a summoned actor carries nothing.
           let inventory: InventoryInstance[] = [];
 
+          // the castable spell this intent names, when it names one. Its
+          // checks run once the snapshot is loaded, below
+          let castable: CastableSpell | undefined;
+          let slotPools: SlotPool[] = [];
+
           if (payload.source === "character") {
             const resolved = await resolveCharacterAction(
               runtime,
@@ -676,6 +684,10 @@ export function initializeWebSocketGateway(httpServer: any) {
             diceRules = resolved.diceRules;
             attacksPerAction = resolved.attacksPerAction;
             inventory = resolved.inventory;
+            castable = resolved.liveSheet.spells.find(
+              (spell) => spell.actionId === payload.actionId,
+            );
+            slotPools = resolved.liveSheet.slotPools;
             saveModifiers = Object.fromEntries(
               Object.entries(resolved.liveSheet.saves).map(([ability, save]) => [
                 ability,
@@ -766,6 +778,32 @@ export function initializeWebSocketGateway(httpServer: any) {
           // is refused as the wrong ammunition.
           const { snapshot } = await getCachedRuleSnapshot();
 
+          // A spell is paid for and supplied before anything happens: a slot
+          // of at least its level with a charge left, and its material from a
+          // pouch, a usable focus or the player's word. A refusal spends
+          // nothing and never reaches the resolver. On success the chosen
+          // slot rides in as the action's consumesResource, so settleCosts
+          // spends it with everything else, all or nothing.
+          let spellCast: { spellLevel: number; castLevel: number } | undefined;
+          let castRefusal: { reason: string } | undefined;
+          if (castable !== undefined && action !== null) {
+            const settled = settleSpellCast({
+              spell: castable,
+              action,
+              request: payload.cast ?? {},
+              slotPools,
+              charges: runtime.resourceManager.getRuntimeResources(),
+              inventory,
+              snapshot,
+            });
+            if (settled.ok) {
+              action = settled.action;
+              spellCast = settled.spellCast;
+            } else {
+              castRefusal = { reason: settled.reason };
+            }
+          }
+
           // ActionResolver takes the ammunition choice as input rather than
           // making it, because policy belongs to the caller. Nothing on
           // ACTION_INTENT carries a choice, though, so the caller making one
@@ -788,45 +826,48 @@ export function initializeWebSocketGateway(httpServer: any) {
                 )[0];
 
           const execution =
-            action !== null
-              ? ActionResolver.execute(
-                  action,
-                  {
-                    actionId: payload.actionId,
-                    activeStates: actionStates,
-                    ...(chosenAmmo !== undefined && {
-                      consumedResources: [
-                        {
-                          type: "inventory_instance" as const,
-                          id: chosenAmmo.instanceId,
-                          amount: 1,
-                        },
-                      ],
-                    }),
-                  },
-                  {
-                    effectManager: runtime.effectManager,
-                    resourceManager: runtime.resourceManager,
-                    combatContext: runtime.combatContext,
-                    snapshot,
-                    attacksPerAction,
-                    // the sheet tracks the economy rather than policing it:
-                    // tables bend it constantly, and a refusal here would be
-                    // something the player fights instead of uses
-                    economyPolicy: "track",
-                    activeStates: runtime.effectManager.getActiveStates(),
-                    diceRules: diceRules as any,
-                    saveModifiers: saveModifiers as any,
-                    abilityScores: abilityScores as any,
-                    proficiencyBonus,
-                    inventoryLedger: ledger,
-                    ...(payload.source === "item" &&
-                      payload.instanceId !== undefined && {
-                        selfInstanceId: payload.instanceId,
+            castRefusal !== undefined
+              ? { executed: false as const, reason: castRefusal.reason }
+              : action !== null
+                ? ActionResolver.execute(
+                    action,
+                    {
+                      actionId: payload.actionId,
+                      activeStates: actionStates,
+                      ...(chosenAmmo !== undefined && {
+                        consumedResources: [
+                          {
+                            type: "inventory_instance" as const,
+                            id: chosenAmmo.instanceId,
+                            amount: 1,
+                          },
+                        ],
                       }),
-                  },
-                )
-              : { executed: false, reason: "action_not_found" as const };
+                    },
+                    {
+                      effectManager: runtime.effectManager,
+                      resourceManager: runtime.resourceManager,
+                      combatContext: runtime.combatContext,
+                      snapshot,
+                      attacksPerAction,
+                      // the sheet tracks the economy rather than policing it:
+                      // tables bend it constantly, and a refusal here would be
+                      // something the player fights instead of uses
+                      economyPolicy: "track",
+                      activeStates: runtime.effectManager.getActiveStates(),
+                      diceRules: diceRules as any,
+                      saveModifiers: saveModifiers as any,
+                      abilityScores: abilityScores as any,
+                      proficiencyBonus,
+                      inventoryLedger: ledger,
+                      ...(payload.source === "item" &&
+                        payload.instanceId !== undefined && {
+                          selfInstanceId: payload.instanceId,
+                        }),
+                      ...(spellCast !== undefined && { spellCast }),
+                    },
+                  )
+                : { executed: false, reason: "action_not_found" as const };
 
           // Gated on executed: settleCosts can buffer a deduction and then
           // have executeEffect fail anyway (e.g. a summon action hitting its
@@ -980,6 +1021,24 @@ export function initializeWebSocketGateway(httpServer: any) {
             })),
             ...("notes" in execution &&
               execution.notes !== undefined && { notes: execution.notes }),
+            ...("targetSaves" in execution &&
+              execution.targetSaves !== undefined && {
+                targetSaves: execution.targetSaves.map((save) => ({
+                  ability: save.ability,
+                  dc: save.dc,
+                  onSuccess: save.onSuccess,
+                  label: save.label,
+                  ...(save.area !== undefined && {
+                    area: {
+                      shape: save.area.shape,
+                      size: save.area.size,
+                      ...(save.area.secondarySize !== undefined && {
+                        secondarySize: save.area.secondarySize,
+                      }),
+                    },
+                  }),
+                })),
+              }),
             activeStates: runtime.effectManager.getActiveStates(),
             resources: runtime.resourceManager
               .getRuntimeResources()
