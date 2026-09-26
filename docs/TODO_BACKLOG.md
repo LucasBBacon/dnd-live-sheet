@@ -328,6 +328,9 @@ Every id this file has ever issued, in one table. Gaps in the numbering are inte
 | 119 | Spells cannot be cast as rituals | Open | Open items |
 | 120 | The invocations that modify Eldritch Blast are unauthored | Open | Open items |
 | 121 | A spellcasting focus need only be carried, not held | Open | Open items |
+| 122 | Healing spells cannot be authored yet | Open | Open items |
+| 123 | A rest does not end round-timed effects | Open | Open items |
+| 124 | "Latest rolls" appends across actions | Open | Open items |
 | A1 | Ready's trigger is not modelled | Open | Open items |
 | A2 | No roll-initiating UI for skills | ✅ Closed | Closed items |
 | A2b | actions do not prompt their own check | Open | Open items |
@@ -480,11 +483,14 @@ beside its spells known) can take the same spell until submit fails; (c) Mystic
 Arcanum needs exactly its level, not `spellOptions`' 1..max. #31a must also
 remove `spellOptions`' rule that a leveled node offers nothing
 (`feat/spell-casting`'s decision 8), which exists only because no class list
-exists to filter on.
+exists to filter on. Until then a stub's placeholder level also sets its
+place and price on the Spells panel: Flaming Sphere and Scorching Ray (Light
+Domain) and Drow Magic's Darkness show under Cantrips as "At will"; real
+levels fix both, since payment checks `level === 0` first.
 
 *#31b is that per-spell rules job. It is recorded here rather than under a
-heading of its own; the sentence above is its whole record, and #83 is the
-other item that waits on it.*
+heading of its own; the sentence above is its whole record. #83, the other
+item that waited on it, closed on `feat/spell-casting`.*
 
 ### #36 — `SUMMON_ACTOR_DICTIONARY`
 
@@ -1232,6 +1238,39 @@ resolved `damageBonus`.
 
 No item can be held in a hand except weapons and shields (`equipSlots.ts`),
 so the material check accepts a focus anywhere in the inventory.
+
+### #122 — healing spells cannot be authored yet
+
+| # | Item | Notes |
+| --- | --- | --- |
+| 122 | Healing spells cannot be authored yet | Recorded 2026-09-26 on `feat/spell-casting`. See below. |
+
+`heal` carries only dice: no casting modifier, no upcast, and the server
+applies it to the caster's own hit points. Cure Wounds, Healing Word and the
+like stay stubs until `heal` gains a casting modifier, `perSlotAbove` and a
+target.
+
+### #123 — a rest does not end round-timed effects
+
+| # | Item | Notes |
+| --- | --- | --- |
+| 123 | A rest does not end round-timed effects | Recorded 2026-09-26 on `feat/spell-casting`. See below. |
+
+Rests clear only `rest_short`/`rest_long` effects and rounds tick only on
+turns, so a one-minute concentration effect (Dancing Lights) survives an
+eight-hour long rest; Rage has the same shape. Any rest of an hour or more
+should expire every rounds-timed effect.
+
+### #124 — "Latest rolls" appends across actions
+
+| # | Item | Notes |
+| --- | --- | --- |
+| 124 | "Latest rolls" appends across actions | Recorded 2026-09-26 on `feat/spell-casting`. See below. |
+
+A resolution's rolls are appended to the previous ones while its target
+saves replace them, so Burning Hands' fire damage can sit under Eldritch
+Blast's beams with no save line beside it. Group rolls per action, or reset
+them on each ACTION_RESOLVED as the store's own comment says it does.
 
 ### Coverage thresholds
 
