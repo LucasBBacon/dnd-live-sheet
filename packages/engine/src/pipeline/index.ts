@@ -4,6 +4,7 @@ export * from "./characterBootstrapper.js";
 export * from "./choiceQuestions.js";
 export * from "./spellChoices.js";
 export * from "./spellSynthesizer.js";
+export * from "./spellCast.js";
 export * from "./optionPrerequisites.js";
 export * from "./characterEngine.js";
 export * from "./dynamicWeaponAttacks.js";
