@@ -852,27 +852,6 @@ re-answer a stored question (`Invalid character choices: <id> already
 answered`). Waits on #31a: until spells have real levels no spells-known
 node is asked at all.
 
-### #83 — the sheet does not list a character's picked spells
-
-*Recorded as 11h.*
-
-| # | Item | Notes |
-| --- | --- | --- |
-| 83 | The sheet does not list a character's picked spells | Recorded 2026-09-22 on `feat/spell-choices`. See below. |
-
-Since `feat/spell-choices` spell picks are stored in `choices`, and
-`knownSpellIds` reads them for invocation prerequisites, but
-`SpellcastingWidget` shows slots only and no code builds a
-`RuntimeSpellSource` from a save, so `SpellbookEngine` has no caller. Best
-done with or after #31a, when spells have real levels (and #31b, real
-actions).
-
-**Closed 2026-09-25** by `feat/spell-casting`. `synthesizeSpells` builds every
-spell a character has from fixed grants and stored picks, one per source. The
-Spells panel lists them and casts the implemented ones through
-`ACTION_INTENT`, with a slot picker, a material prompt and refusals.
-Preparation, which this item's note left for later, is split out as #114.
-
 ### #84 — a stored pick can go stale
 
 *Recorded as 11h.*
@@ -2931,6 +2910,27 @@ with Armor of Shadows and Devil's Sight pickable; the commit stored both.
 A second warlock created with Eldritch Blast got Agonizing Blast with no
 reasons, while Thirsting Blade kept "needs Warlock level 5, needs Pact of
 the Blade".
+
+### #83 — the sheet does not list a character's picked spells ✅
+
+*Recorded as 11h.*
+
+| # | Item | Notes |
+| --- | --- | --- |
+| 83 | The sheet does not list a character's picked spells | Recorded 2026-09-22 on `feat/spell-choices`. See below. |
+
+Since `feat/spell-choices` spell picks are stored in `choices`, and
+`knownSpellIds` reads them for invocation prerequisites, but
+`SpellcastingWidget` shows slots only and no code builds a
+`RuntimeSpellSource` from a save, so `SpellbookEngine` has no caller. Best
+done with or after #31a, when spells have real levels (and #31b, real
+actions).
+
+**Closed 2026-09-25** by `feat/spell-casting`. `synthesizeSpells` builds every
+spell a character has from fixed grants and stored picks, one per source. The
+Spells panel lists them and casts the implemented ones through
+`ACTION_INTENT`, with a slot picker, a material prompt and refusals.
+Preparation, which this item's note left for later, is split out as #114.
 
 ### #89 — the sheet's own damage and heal writes are never clamped ✅
 
