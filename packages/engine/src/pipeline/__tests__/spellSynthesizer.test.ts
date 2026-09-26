@@ -163,6 +163,41 @@ describe("synthesizeSpells", () => {
     ).toBe("drow_magic_faerie_fire");
   });
 
+  it("grants a High Elf's chosen cantrip through the subrace's own cantrip trait", () => {
+    const result = synthesize(
+      save({
+        race: {
+          baseRaceId: "race_elf",
+          hasSubraces: true,
+          subraceId: "subrace_elf_high",
+        },
+        classes: [
+          {
+            classId: "class_fighter",
+            level: 1,
+            selections: { fighter_level_1_fighting_style: ["trait_fs_defense"] },
+          },
+        ],
+        traitSelections: { high_elf_cantrip: ["spell_dancing_lights"] },
+      }),
+      scores({ INT: 16 }),
+    );
+
+    expect(
+      find(result, "spell_dancing_lights", "subrace_elf_high_cantrip"),
+    ).toMatchObject({
+      ability: "INT",
+      source: {
+        kind: "trait",
+        traitId: "subrace_elf_high_cantrip",
+        label: "(High Elf) Cantrip",
+      },
+      actionId: "action_spell_dancing_lights@subrace_elf_high_cantrip",
+      focusCategories: [],
+      payment: { kind: "at_will" },
+    });
+  });
+
   it("gives a Light cleric's domain spells to the cleric, paid with slots", () => {
     expect(find(synthesize(lightCleric(1), scores({ WIS: 16 })), "spell_burning_hands")).toMatchObject({
       source: { kind: "class", classId: "class_cleric", label: "Cleric" },
