@@ -8,6 +8,7 @@ import {
 } from "@project/engine";
 import {
   CombatContextSchema,
+  type ActionResolvedPayload,
   type ActorInstance,
   type InventoryInstance,
   type RuntimeModifier,
@@ -2236,5 +2237,115 @@ describe("activeStates recomposes on every inventory write (final review, #76)",
     expect(useCharacterSheetStore.getState().getSheetStates()).toContain(
       "status_wearing_heavy_armor",
     );
+  });
+});
+
+describe("useCharacterSheetStore spell casting", () => {
+  beforeEach(() => {
+    vi.restoreAllMocks();
+    useCharacterSheetStore.setState({
+      ...useCharacterSheetStore.getState(),
+      id: "char_1",
+      classLevels: { class_cleric: 3 },
+      subclassIds: { class_cleric: "subclass_cleric_light" },
+      raceId: "race_human",
+      subraceId: null,
+      ruleSnapshot: packRuleSnapshot(),
+      latestRollResults: [],
+      latestNotes: [],
+      latestTargetSaves: [],
+      lastActionOutcome: null,
+      runtimeEffects: null,
+      runtimeResources: null,
+      resources: [],
+    });
+    vi.spyOn(socketService, "emitActionIntent").mockImplementation(() => {});
+  });
+
+  const resolution = (
+    overrides: Partial<ActionResolvedPayload> = {},
+  ): ActionResolvedPayload => ({
+    characterId: "char_1",
+    requestId: "request_cast",
+    actionId: "action_spell_burning_hands@class_cleric",
+    source: "character",
+    executed: true,
+    rollResults: [],
+    activeStates: [],
+    resources: [],
+    effects: [],
+    actors: [],
+    combatContext: CombatContextSchema.parse({}),
+    timestamp: 1,
+    ...overrides,
+  });
+
+  const burningHandsSave = {
+    ability: "DEX",
+    dc: 13,
+    onSuccess: "half_damage" as const,
+    area: { shape: "cone", size: 15 },
+    label: "Burning Hands",
+  };
+
+  it("casts through the action intent, carrying the player's choices", () => {
+    useCharacterSheetStore
+      .getState()
+      .castSpell("action_spell_burning_hands@class_cleric", {
+        slotResourceId: "spell_slots_2",
+      });
+
+    expect(socketService.emitActionIntent).toHaveBeenCalledWith(
+      expect.objectContaining({
+        characterId: "char_1",
+        actionId: "action_spell_burning_hands@class_cleric",
+        source: "character",
+        cast: { slotResourceId: "spell_slots_2" },
+      }),
+    );
+  });
+
+  it("takes the targets' saves and the outcome from each resolution, fresh", () => {
+    useCharacterSheetStore
+      .getState()
+      .syncRemoteActionExecution(
+        resolution({ targetSaves: [burningHandsSave] }),
+      );
+    expect(useCharacterSheetStore.getState().latestTargetSaves).toEqual([
+      burningHandsSave,
+    ]);
+
+    useCharacterSheetStore
+      .getState()
+      .syncRemoteActionExecution(
+        resolution({ requestId: "request_2", executed: false, reason: "slot_empty" }),
+      );
+
+    const state = useCharacterSheetStore.getState();
+    expect(state.latestTargetSaves).toEqual([]);
+    expect(state.lastActionOutcome).toEqual({
+      actionId: "action_spell_burning_hands@class_cleric",
+      executed: false,
+      reason: "slot_empty",
+    });
+  });
+
+  it("clears the targets' saves when an unrelated roll is recorded", () => {
+    useCharacterSheetStore
+      .getState()
+      .syncRemoteActionExecution(resolution({ targetSaves: [burningHandsSave] }));
+    expect(useCharacterSheetStore.getState().latestTargetSaves).toEqual([
+      burningHandsSave,
+    ]);
+
+    useCharacterSheetStore.getState().recordRollResult({
+      characterId: "char_1",
+      rollResults: [
+        { total: 12, rolls: [12], modifier: 0, target: "ABILITY_CHECK" },
+      ],
+      timestamp: 2,
+    });
+
+    expect(useCharacterSheetStore.getState().latestTargetSaves).toEqual([]);
   });
 });

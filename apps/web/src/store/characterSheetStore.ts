@@ -44,6 +44,7 @@ import {
   type CombatRollSnapshot,
   CharacterSlotSchema,
   type ActionGrant,
+  type ActionIntentPayload,
   type ActionResolvedPayload,
   type CharacterSave,
   type CharacterSlot,
@@ -58,6 +59,7 @@ import {
   type RuntimeModifier,
   // TraitDefinition moved to the shared schemas when traits were extracted
   type TraitDefinition,
+  type TargetSavePayload,
   type TurnResolvedPayload,
   type SurpriseResolvedPayload,
 } from "@project/shared";
@@ -173,7 +175,11 @@ const newRowId = () => `inv_${crypto.randomUUID()}`;
 const clampHealth = (currentHp: number, delta: number, maxHp: number) =>
   Math.min(Math.max(0, currentHp + delta), maxHp);
 
-const toCharacterSave = (state: CharacterSheetState): CharacterSave => ({
+/**
+ * The save the engine reads, built from the sheet's own state. Exported for
+ * useSpells, which runs the same synthesis the server's live sheet does.
+ */
+export const toCharacterSave = (state: CharacterSheetState): CharacterSave => ({
   attributes: {
     str: state.baseScores.STR,
     dex: state.baseScores.DEX,
@@ -807,6 +813,23 @@ export interface CharacterSheetState {
    * that already read the last resolution can read this too.
    */
   latestNotes: string[];
+  /**
+   * The saves the last resolved action asked of its targets - Burning Hands'
+   * DEX save, its DC and its cone. Decided with latestNotes from the same
+   * payload, and cleared by every roll source that clears them.
+   */
+  latestTargetSaves: TargetSavePayload[];
+  /**
+   * How the last resolved action came out: whether it ran, and if not, why.
+   * The spell panel reads it to say "No slots of that level left" under the
+   * spell that was refused. Nothing read `executed` or `reason` before.
+   */
+  lastActionOutcome: {
+    actionId: string;
+    executed: boolean;
+    reason?: string;
+    economyOverdrawn?: boolean;
+  } | null;
   runtimeEffects: EffectManager | null;
   runtimeResources: ResourceManager | null;
   combatContext: CombatContext;
@@ -884,6 +907,8 @@ export interface CharacterSheetState {
   getSuspendedConditions: () => SuspendedCondition[];
   getCharacterActions: () => ActionGrant[];
   executeCharacterAction: (actionId: string) => void;
+  /** Casts a spell: an action intent carrying the slot and materials choices. */
+  castSpell: (actionId: string, cast?: ActionIntentPayload["cast"]) => void;
   selectActorInstance: (actorInstanceId: string | null) => void;
   executeActorAction: (actionId: string, actorInstanceId?: string) => void;
   syncRemoteActionExecution: (payload: ActionResolvedPayload) => void;
@@ -941,6 +966,8 @@ export const useCharacterSheetStore = create<CharacterSheetState>(
     selectedActorInstanceId: null,
     latestRollResults: [],
     latestNotes: [],
+    latestTargetSaves: [],
+    lastActionOutcome: null,
     runtimeEffects: null,
     runtimeResources: null,
     combatContext: CombatContextSchema.parse({}),
@@ -1034,6 +1061,7 @@ export const useCharacterSheetStore = create<CharacterSheetState>(
         // was showing, and it never carries a note of its own - so a stale
         // note from an earlier action must not survive it either
         latestNotes: [],
+        latestTargetSaves: [],
         resources,
         runtimeEffects,
         runtimeResources,
@@ -1094,6 +1122,7 @@ export const useCharacterSheetStore = create<CharacterSheetState>(
         activeStates,
         latestRollResults: rollResults,
         latestNotes: [],
+        latestTargetSaves: [],
         resources,
         runtimeEffects,
         runtimeResources,
@@ -1515,6 +1544,7 @@ export const useCharacterSheetStore = create<CharacterSheetState>(
         // a rest is a new moment, and this dispatch path carries no note of
         // its own - clear whatever the last resolved action left behind
         latestNotes: [],
+        latestTargetSaves: [],
         runtimeEffects,
         runtimeResources,
       });
@@ -1536,6 +1566,7 @@ export const useCharacterSheetStore = create<CharacterSheetState>(
         // this dispatch path carries no note of its own, so a note left by
         // an earlier resolved action must not survive it
         latestNotes: [],
+        latestTargetSaves: [],
         resources: dispatched.resources,
         runtimeEffects: dispatched.runtimeEffects,
         runtimeResources: dispatched.runtimeResources,
@@ -1676,6 +1707,20 @@ export const useCharacterSheetStore = create<CharacterSheetState>(
       }
     },
 
+    castSpell: (actionId, cast) => {
+      const state = get();
+      if (!state.id) return;
+
+      socketService.emitActionIntent({
+        characterId: state.id,
+        requestId: crypto.randomUUID(),
+        actionId,
+        source: "character",
+        ...(cast !== undefined && { cast }),
+        timestamp: Date.now(),
+      });
+    },
+
     selectActorInstance: (actorInstanceId) => {
       set({ selectedActorInstanceId: actorInstanceId });
     },
@@ -1776,6 +1821,13 @@ export const useCharacterSheetStore = create<CharacterSheetState>(
               )
             : [],
         latestNotes: payload.notes ?? [],
+        latestTargetSaves: payload.targetSaves ?? [],
+        lastActionOutcome: {
+          actionId: payload.actionId,
+          executed: payload.executed,
+          ...(payload.reason !== undefined && { reason: payload.reason }),
+          ...(payload.economyOverdrawn === true && { economyOverdrawn: true }),
+        },
         runtimeEffects,
         runtimeResources,
         selectedActorInstanceId:
@@ -1794,6 +1846,7 @@ export const useCharacterSheetStore = create<CharacterSheetState>(
         // resolved last must not linger beside it. Only ACTION_RESOLVED ever
         // supplies a real note; every other roll source clears it.
         latestNotes: [],
+        latestTargetSaves: [],
       }));
     },
 
