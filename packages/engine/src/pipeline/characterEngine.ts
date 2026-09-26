@@ -34,6 +34,11 @@ import { ActionResolver } from "./actionResolver.js";
 import { ProficiencyExtractor } from "./proficiencyExtractor.js";
 import { gatherBaseStates, gatherSheetModifiers } from "./sheetModifiers.js";
 import {
+  synthesizeSpells,
+  type CastableSpell,
+  type SlotPool,
+} from "./spellSynthesizer.js";
+import {
   dynamicAttackApplies,
   dynamicAttackId,
 } from "./dynamicWeaponAttacks.js";
@@ -138,6 +143,13 @@ export interface LiveCharacterSheet {
    * has two of each and one number would be wrong for half their spells.
    */
   spellcasting: DerivedSpellcasting[];
+  /**
+   * Every spell the character has, one entry per source, stubs included - see
+   * synthesizeSpells. The implemented ones' resolved actions are in `actions`.
+   */
+  spells: CastableSpell[];
+  /** The spell slot pools the character holds, and the level each casts at. */
+  slotPools: SlotPool[];
 
   // load
   encumbrance: EncumbranceResult;
@@ -470,6 +482,18 @@ export class CharacterEngine {
       activeStates,
     );
 
+    // every spell the character has, the caster's numbers stamped in. Stage
+    // two for the reason spellcasting is: a SPELLCASTING_MOD bonus can be
+    // gated on states
+    const spellSynthesis = synthesizeSpells({
+      save,
+      ...(options.snapshot !== undefined && { snapshot: options.snapshot }),
+      abilityScores,
+      proficiencyBonus: profBonus,
+      modifiers: allModifiers,
+      activeStates,
+    });
+
     // endregion
 
     // region State Synthesis
@@ -494,6 +518,9 @@ export class CharacterEngine {
             resolveActionScaling(action, { total: totalLevel, classes: classLevels }),
           ),
       ),
+      // a spell's action is keyed by its source, so the server's lookup by
+      // id finds exactly the casting the player pressed
+      ...spellSynthesis.actions,
     ];
 
     // Carried, not equipped: a vial in your pack is throwable. This is why the
@@ -695,6 +722,8 @@ export class CharacterEngine {
       summons,
       saves,
       spellcasting,
+      spells: spellSynthesis.spells,
+      slotPools: spellSynthesis.slotPools,
       baseStates,
       activeStates,
     };

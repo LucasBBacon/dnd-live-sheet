@@ -2035,3 +2035,38 @@ describe("CharacterEngine.buildLiveSheet: trait actions scale with level", () =>
     expect(effect?.type === "save" && effect.damage?.[0]?.baseDice).toBe("2d6");
   });
 });
+
+describe("CharacterEngine.buildLiveSheet: spells", () => {
+  const warlockSheet = () =>
+    buildSheet({
+      ...halfElfFighter(),
+      classes: [
+        {
+          classId: "class_warlock",
+          level: 5,
+          selections: {
+            warlock_level_1_cantrips: ["spell_eldritch_blast", "spell_minor_illusion"],
+          },
+        },
+      ],
+    });
+
+  it("puts a warlock's Eldritch Blast on the sheet, with its castable action", () => {
+    const sheet = warlockSheet();
+
+    expect(sheet.spells.map((spell) => spell.spellId)).toContain("spell_eldritch_blast");
+    expect(sheet.actions.map((action) => action.id)).toContain(
+      "action_spell_eldritch_blast@class_warlock",
+    );
+    expect(sheet.slotPools).toEqual([{ resourceId: "pact_slots", level: 3 }]);
+  });
+
+  it("lists a stub without offering it as an action", () => {
+    const sheet = warlockSheet();
+
+    expect(sheet.spells.map((spell) => spell.spellId)).toContain("spell_minor_illusion");
+    expect(
+      sheet.actions.some((action) => action.id.startsWith("action_spell_minor_illusion")),
+    ).toBe(false);
+  });
+});
