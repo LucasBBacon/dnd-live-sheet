@@ -2917,7 +2917,7 @@ the Blade".
 
 | # | Item | Notes |
 | --- | --- | --- |
-| 83 | The sheet does not list a character's picked spells | Recorded 2026-09-22 on `feat/spell-choices`. See below. |
+| 83 | ✅ The sheet does not list a character's picked spells | Recorded 2026-09-22 on `feat/spell-choices`. See below. |
 
 Since `feat/spell-choices` spell picks are stored in `choices`, and
 `knownSpellIds` reads them for invocation prerequisites, but
