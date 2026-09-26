@@ -65,7 +65,7 @@ Each is reachable at `http://localhost:5173/character/<id>`.
 | [Isolde Varn](http://localhost:5173/character/00000000-0000-0000-0000-000000000122) | 4 | Warlock 4 (Archfey) | 20/31 | Level-up and dip staging | #81, #77, #36, #31b |
 | [Ursk Gravemaw](http://localhost:5173/character/00000000-0000-0000-0000-000000000123) | 5 | Paladin 5 (Vengeance) | 6/54 | Two tabs | #92, #93 |
 | [Tamsin Burrowdeep](http://localhost:5173/character/00000000-0000-0000-0000-000000000124) | 6 | Barbarian 6 (Totem Warrior) | 30/65 | Two tabs, socket | #76, #97, #99, #101 |
-| [Hesk Mossgather](http://localhost:5173/character/00000000-0000-0000-0000-000000000125) | 8 | Druid 8 (Moon) | 41/59 | Wild-shape preview | #62, #83, #80 |
+| [Hesk Mossgather](http://localhost:5173/character/00000000-0000-0000-0000-000000000125) | 8 | Druid 8 (Moon) | 41/59 | Wild-shape preview | #62, #80 |
 | [Seraphine Dusk](http://localhost:5173/character/00000000-0000-0000-0000-000000000126) | 9 | Wizard 9 (Divination) | 21/29 | Wizard preview | #86, #107, #31a, #83 |
 | [Kestrel Vey](http://localhost:5173/character/00000000-0000-0000-0000-000000000127) | 7 | Sorcerer 7 (Wild Magic) | 44/44 | Sorcery-points preview | #62, #31b |
 | [Brother Mote](http://localhost:5173/character/00000000-0000-0000-0000-000000000128) | 11 (column: 12) | Cleric 11 (Tempest) | 95/80 | Broken on purpose | #95, #109, #98 |
@@ -264,7 +264,8 @@ re-running the seed. Stored values can be read with
 2. **Wild Shape (#62).** Not shown. The stored `trait_wild_shape` row (1 of 2)
    has no rule behind it, and the sheet drops a pool it cannot resolve.
    *After the druid pass:* a two-charge short-rest pool.
-3. **Spells (#83).** No spell is listed anywhere.
+3. **Spells.** No spell is listed anywhere — he has picked none; spell
+   choices beyond cantrips are not asked until #31a.
 4. **The custom background (#80).** "Grove Warden" carries the acolyte's
    two-language block and the soldier's gaming-set block. Neither is ever
    asked — Level Up → Druid 9 and look at the Choices step.

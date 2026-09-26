@@ -649,7 +649,7 @@ const SCENARIO_ROSTER: SampleCharacter[] = [
     maxHp: 43,
     currentHp: 41,
     testFocus:
-      "Wild Shape preview: its pool is stored but has no rule to show it (#62); slots with no spells listed (#83); an unasked custom-background choice (#80).",
+      "Wild Shape preview: its pool is stored but has no rule to show it (#62); slots with no spells listed; an unasked custom-background choice (#80).",
     personalityTraits: "I talk to the weather as if it owed me money.",
     ideals: "Balance. The forest takes back what the town forgets it borrowed.",
     bonds: "The oak at Gallowmere is older than the kingdom and I am its keeper.",
