@@ -2,6 +2,9 @@ import {
   costsAttack,
   costsCombatEconomy,
   type ActionGrant,
+  type AreaOfEffect,
+  type AttackEffect,
+  type DamageSegment,
   type DamageType,
   type DiceRule,
   type EngineEvent,
@@ -17,6 +20,7 @@ import {
   resolveEquipmentDefinition,
   type RuleSnapshotLookup,
 } from "../rules/ruleLookup.js";
+import { upcastDice } from "./actionScaling.js";
 import type { InventoryLedger } from "./inventoryLedger.js";
 import type {
   ConsumedResource,
@@ -49,6 +53,19 @@ export interface ActionRollResult {
   summary?: string;
 }
 
+/**
+ * A saving throw an action asks of its targets: the ability, the caster's DC,
+ * what a success does, and where. The sheet models one character, so the
+ * roll belongs to the table; this is what the table needs to make it.
+ */
+export interface TargetSave {
+  ability: Ability;
+  dc: number;
+  onSuccess: "half_damage" | "no_damage" | "negates_effect";
+  area?: AreaOfEffect;
+  label: string;
+}
+
 export interface ActionResult {
   executed: boolean;
   reason?: ActionFailureReason;
@@ -69,6 +86,12 @@ export interface ActionResult {
    * to the action: a net has no damage roll to hang one on.
    */
   notes?: string[];
+  /**
+   * Saving throws this action asks of its targets. On the result rather than
+   * as an ActionRollResult because nothing was rolled: the DC is the
+   * caster's, and the roll belongs to whoever is caught in it.
+   */
+  targetSaves?: TargetSave[];
 }
 
 /**
@@ -112,6 +135,12 @@ export interface ActionExecutionContext {
   saveModifiers?: Record<Ability, number>;
   abilityScores?: Record<Ability, number>;
   proficiencyBonus?: number;
+  /**
+   * The spell being cast and the slot paying for it. Each damage segment with
+   * `perSlotAbove` adds that expression once per level the slot sits above
+   * the spell. Absent for anything a slot did not pay for.
+   */
+  spellCast?: { spellLevel: number; castLevel: number };
 }
 
 const ok: ActionResult = { executed: true };
@@ -341,6 +370,95 @@ export class ActionResolver {
     );
   }
 
+  /**
+   * One damage segment, rolled: upcast dice added, maximised when the segment
+   * or the critical rule says so, and passed through the character's dice
+   * rules.
+   */
+  private static rollDamageSegment(
+    segment: DamageSegment,
+    context: ActionExecutionContext,
+    activeStates: string[],
+    options: { maximize?: boolean; bonus?: number; label?: string } = {},
+  ): ActionRollResult {
+    const dice = upcastDice(segment, context.spellCast);
+    const { sides } = DiceEngine.parse(dice);
+    const roll =
+      segment.maximized || options.maximize
+        ? DiceEngine.rollMaximized(dice)
+        : DiceEngine.rollDigital(dice);
+    const resolvedRoll = this.resolveTargetRoll(
+      roll,
+      "DAMAGE_ROLL",
+      context,
+      activeStates,
+      sides,
+      segment.damageType,
+    );
+
+    return {
+      total: resolvedRoll.total + (options.bonus ?? 0),
+      rolls: resolvedRoll.rolls,
+      modifier: options.bonus !== undefined ? options.bonus : roll.modifier,
+      target: "DAMAGE_ROLL",
+      damageType: segment.damageType,
+      ...(options.label !== undefined && { label: options.label }),
+    };
+  }
+
+  /**
+   * One attack roll and its damage. A critical hit rolls the pool resolved for
+   * it ahead of the roll - already doubled, carrying whatever critical-hit
+   * modifiers matched - and an action with none falls back to its base dice.
+   */
+  private static rollAttack(
+    effect: AttackEffect,
+    context: ActionExecutionContext,
+    activeStates: string[],
+    label: string | undefined,
+  ): ActionRollResult[] {
+    const attackBonus = effect.attackBonus ?? 0;
+    const damageBonus = effect.damageBonus ?? 0;
+
+    const attackRoll = DiceEngine.rollDigital("1d20");
+    const isCriticalHit = attackRoll.rolls[0] === 20;
+    const resolvedAttackRoll = this.resolveTargetRoll(
+      attackRoll,
+      "ATTACK_ROLL",
+      context,
+      activeStates,
+      20,
+    );
+
+    const results: ActionRollResult[] = [
+      {
+        total: resolvedAttackRoll.total + attackBonus,
+        rolls: resolvedAttackRoll.rolls,
+        modifier: attackBonus,
+        target: "ATTACK_ROLL",
+        ...(label !== undefined && { label }),
+      },
+    ];
+
+    const segments =
+      isCriticalHit && effect.criticalDamage?.length
+        ? effect.criticalDamage
+        : effect.damage;
+
+    segments.forEach((segment, index) => {
+      results.push(
+        this.rollDamageSegment(segment, context, activeStates, {
+          ...(isCriticalHit &&
+            effect.criticalDamageMaximized === true && { maximize: true }),
+          ...(index === 0 && { bonus: damageBonus }),
+          ...(label !== undefined && { label }),
+        }),
+      );
+    });
+
+    return results;
+  }
+
   private static executeEffect(
     effect: ActionGrant["effect"],
     action: ActionGrant,
@@ -359,6 +477,11 @@ export class ActionResolver {
       case "remove_effect":
         context.effectManager.removeEffectsByTag(effect.effectTag);
         return ok;
+
+      case "end_concentration":
+        context.effectManager.dropConcentration();
+        return ok;
+
       case "apply_effect": {
         const blueprint = effect;
         const instanceId = `effect_${generateId()}`;
@@ -394,64 +517,21 @@ export class ActionResolver {
         return ok;
       }
       case "attack": {
-        const damageSegments = effect.damage ?? [];
-        const rollResults: ActionRollResult[] = [];
         const resolvedActiveStates =
           activeStates.length > 0 ? activeStates : (context.activeStates ?? []);
-        const attackBonus = effect.attackBonus ?? 0;
-        const damageBonus = effect.damageBonus ?? 0;
-
-        const attackRoll = DiceEngine.rollDigital("1d20");
-        const isCriticalHit = attackRoll.rolls[0] === 20;
-        const resolvedAttackRoll = this.resolveTargetRoll(
-          attackRoll,
-          "ATTACK_ROLL",
-          context,
-          resolvedActiveStates,
-          20,
-        );
-
-        rollResults.push({
-          total: resolvedAttackRoll.total + attackBonus,
-          rolls: resolvedAttackRoll.rolls,
-          modifier: attackBonus,
-          target: "ATTACK_ROLL",
-        });
-
-        // a critical hit rolls its own pool - already doubled, and already
-        // carrying whatever critical-hit modifiers matched - which CombatEngine
-        // resolved ahead of the roll. An action authored before critical
-        // segments existed has none, and falls back to its base dice.
-        const resolvedSegments =
-          isCriticalHit && effect.criticalDamage?.length
-            ? effect.criticalDamage
-            : damageSegments;
-
-        for (const [index, segment] of resolvedSegments.entries()) {
-          const baseDice = segment.baseDice;
-          const { sides } = DiceEngine.parse(baseDice);
-          const roll =
-            segment.maximized ||
-            (isCriticalHit && effect.criticalDamageMaximized)
-              ? DiceEngine.rollMaximized(baseDice)
-              : DiceEngine.rollDigital(baseDice);
-          const resolvedRoll = this.resolveTargetRoll(
-            roll,
-            "DAMAGE_ROLL",
-            context,
-            resolvedActiveStates,
-            sides,
-            segment.damageType,
+        // a repeat rolls whole attacks - Eldritch Blast's beams - each with
+        // its own d20, its own critical check and its own damage
+        const count = effect.repeatCount ?? 1;
+        const rollResults: ActionRollResult[] = [];
+        for (let beam = 1; beam <= count; beam += 1) {
+          rollResults.push(
+            ...this.rollAttack(
+              effect,
+              context,
+              resolvedActiveStates,
+              effect.repeat ? `${effect.repeat.label} ${beam}` : undefined,
+            ),
           );
-
-          const total = resolvedRoll.total + (index === 0 ? damageBonus : 0);
-          rollResults.push({
-            total,
-            rolls: resolvedRoll.rolls,
-            modifier: index === 0 ? damageBonus : roll.modifier,
-            target: "DAMAGE_ROLL",
-            damageType: segment.damageType,
-          });
         }
 
         return { ...ok, rollResults };
@@ -510,6 +590,12 @@ export class ActionResolver {
       }
 
       case "macro": {
+        // a macro is one action, so what its parts produced is the action's:
+        // Faerie Fire's save line and its concentration are one cast
+        const rollResults: ActionRollResult[] = [];
+        const targetSaves: TargetSave[] = [];
+        const notes: string[] = [];
+
         for (const nestedEffect of effect.effects) {
           const nestedResult = this.executeEffect(
             nestedEffect,
@@ -518,79 +604,66 @@ export class ActionResolver {
             activeStates,
           );
           if (!nestedResult.executed) return nestedResult;
+
+          rollResults.push(...(nestedResult.rollResults ?? []));
+          targetSaves.push(...(nestedResult.targetSaves ?? []));
+          notes.push(...(nestedResult.notes ?? []));
         }
-
-        return ok;
-      }
-
-      case "damage_rider": {
-        const rollResults: ActionRollResult[] = [];
-
-        for (const segment of effect.damage) {
-          const baseDice = segment.baseDice;
-          const { sides } = DiceEngine.parse(baseDice);
-          const roll = segment.maximized
-            ? DiceEngine.rollMaximized(baseDice)
-            : DiceEngine.rollDigital(baseDice);
-          const resolvedRoll = this.resolveTargetRoll(
-            roll,
-            "DAMAGE_ROLL",
-            context,
-            activeStates.length > 0
-              ? activeStates
-              : (context.activeStates ?? []),
-            sides,
-            segment.damageType,
-          );
-
-          const total = resolvedRoll.total;
-          rollResults.push({
-            total,
-            rolls: resolvedRoll.rolls,
-            modifier: roll.modifier,
-            target: "DAMAGE_ROLL",
-            damageType: segment.damageType,
-          });
-        }
-
-        return { ...ok, rollResults };
-      }
-
-      case "save": {
-        const saveAbility = effect.savingThrow.targetStat as Ability;
-        const saveRoll = DiceEngine.rollDigital("1d20");
-        const resolvedRoll = this.resolveTargetRoll(
-          saveRoll,
-          "SAVING_THROW",
-          context,
-          activeStates.length > 0 ? activeStates : (context.activeStates ?? []),
-          20,
-        );
-
-        const modifier = context.saveModifiers?.[saveAbility] ?? 0;
-        const { base, scalingStat, includeProficiency } =
-          effect.savingThrow.dcCalculation;
-        const scalingScore = context.abilityScores?.[scalingStat as Ability] ?? 10;
-        const dc =
-          base +
-          Math.floor((scalingScore - 10) / 2) +
-          (includeProficiency ? context.proficiencyBonus ?? 0 : 0);
-        const total = resolvedRoll.total + modifier;
 
         return {
           ...ok,
-          rollResults: [
-            {
-              total,
-              rolls: resolvedRoll.rolls,
-              modifier,
-              target: "SAVING_THROW",
-              summary: `${saveAbility} saving throw, DC ${dc}`,
-              ...(effect.damage?.[0]?.damageType !== undefined
-                ? { damageType: effect.damage[0].damageType }
-                : {}),
-            },
-          ],
+          ...(rollResults.length > 0 && { rollResults }),
+          ...(targetSaves.length > 0 && { targetSaves }),
+          ...(notes.length > 0 && { notes }),
+        };
+      }
+
+      case "damage_rider": {
+        const resolvedActiveStates =
+          activeStates.length > 0 ? activeStates : (context.activeStates ?? []);
+
+        return {
+          ...ok,
+          rollResults: effect.damage.map((segment) =>
+            this.rollDamageSegment(segment, context, resolvedActiveStates),
+          ),
+        };
+      }
+
+      case "save": {
+        const resolvedActiveStates =
+          activeStates.length > 0 ? activeStates : (context.activeStates ?? []);
+        const { targetStat, dcCalculation, saveEffect, dc: resolvedDc } =
+          effect.savingThrow;
+
+        // the targets make this save, not the character. It used to roll the
+        // character's own save modifier against their own DC - for every
+        // breath weapon and for Intimidating Presence - and roll no damage
+        const scalingScore =
+          context.abilityScores?.[dcCalculation.scalingStat as Ability] ?? 10;
+        const dc =
+          resolvedDc ??
+          dcCalculation.base +
+            Math.floor((scalingScore - 10) / 2) +
+            (dcCalculation.includeProficiency
+              ? (context.proficiencyBonus ?? 0)
+              : 0);
+
+        const targetSave: TargetSave = {
+          ability: targetStat as Ability,
+          dc,
+          onSuccess: saveEffect,
+          label: action.name,
+          ...(effect.areaOfEffect !== undefined && { area: effect.areaOfEffect }),
+        };
+        const rollResults = (effect.damage ?? []).map((segment) =>
+          this.rollDamageSegment(segment, context, resolvedActiveStates),
+        );
+
+        return {
+          ...ok,
+          targetSaves: [targetSave],
+          ...(rollResults.length > 0 && { rollResults }),
         };
       }
 

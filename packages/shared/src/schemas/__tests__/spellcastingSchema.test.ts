@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { ClassDefinitionSchema, SpellcastingSchema } from "../content/character.js";
+import { ChargesResourceSchema } from "../content/resources.js";
 
 const minimalClass = {
   id: "class_wizard",
@@ -10,14 +11,16 @@ const minimalClass = {
 };
 
 describe("SpellcastingSchema", () => {
-  it("accepts an ability, a progression and a startsAtLevel", () => {
-    expect(
-      SpellcastingSchema.parse({
-        ability: "INT",
-        progression: "full",
-        startsAtLevel: 1,
-      }),
-    ).toEqual({ ability: "INT", progression: "full", startsAtLevel: 1 });
+  it("accepts an ability, a progression, a start level, preparation and foci", () => {
+    const block = {
+      ability: "INT",
+      progression: "full",
+      startsAtLevel: 1,
+      preparation: "prepared",
+      focusCategories: ["category_arcane_focus"],
+    };
+
+    expect(SpellcastingSchema.parse(block)).toEqual(block);
   });
 
   it("rejects a non-casting ability", () => {
@@ -67,6 +70,39 @@ describe("SpellcastingSchema", () => {
     ).toThrow();
   });
 
+  // required, not defaulted, for the same reason startsAtLevel is: a caster
+  // without an answer fails to validate instead of quietly reading as one
+  it("rejects a block that does not say how it prepares, or what foci it uses", () => {
+    expect(() =>
+      SpellcastingSchema.parse({
+        ability: "INT",
+        progression: "full",
+        startsAtLevel: 1,
+        focusCategories: [],
+      }),
+    ).toThrow();
+    expect(() =>
+      SpellcastingSchema.parse({
+        ability: "INT",
+        progression: "full",
+        startsAtLevel: 1,
+        preparation: "known",
+      }),
+    ).toThrow();
+  });
+
+  it("rejects a focus category that is not a spellcasting focus", () => {
+    expect(() =>
+      SpellcastingSchema.parse({
+        ability: "INT",
+        progression: "full",
+        startsAtLevel: 1,
+        preparation: "prepared",
+        focusCategories: ["category_weapon_simple"],
+      }),
+    ).toThrow();
+  });
+
   it("rejects an unknown key, so a typo cannot be authored silently", () => {
     expect(() =>
       SpellcastingSchema.parse({
@@ -74,6 +110,8 @@ describe("SpellcastingSchema", () => {
         progression: "full",
         startsAtLevel: 1,
         preparation: "prepared",
+        focusCategories: [],
+        slotTable: "full",
       }),
     ).toThrow();
   });
@@ -85,15 +123,48 @@ describe("a class may declare how it casts", () => {
   });
 
   it("carries the block through when present", () => {
-    const parsed = ClassDefinitionSchema.parse({
-      ...minimalClass,
-      spellcasting: { ability: "INT", progression: "full", startsAtLevel: 1 },
-    });
-
-    expect(parsed.spellcasting).toEqual({
+    const block = {
       ability: "INT",
       progression: "full",
       startsAtLevel: 1,
-    });
+      preparation: "prepared",
+      focusCategories: ["category_arcane_focus"],
+    };
+
+    expect(
+      ClassDefinitionSchema.parse({ ...minimalClass, spellcasting: block })
+        .spellcasting,
+    ).toEqual(block);
+  });
+});
+
+describe("a charges pool may declare itself a spell slot", () => {
+  const pool = {
+    id: "spell_slots_3",
+    name: "3rd-Level Spell Slots",
+    resetCondition: "long_rest",
+    maxRule: { kind: "fixed", value: 2 },
+  };
+
+  it("carries a slot level, or pact", () => {
+    expect(
+      ChargesResourceSchema.parse({
+        ...pool,
+        spellSlot: { kind: "level", level: 3 },
+      }).spellSlot,
+    ).toEqual({ kind: "level", level: 3 });
+    expect(
+      ChargesResourceSchema.parse({ ...pool, spellSlot: { kind: "pact" } })
+        .spellSlot,
+    ).toEqual({ kind: "pact" });
+  });
+
+  it("rejects a slot level above 9", () => {
+    expect(() =>
+      ChargesResourceSchema.parse({
+        ...pool,
+        spellSlot: { kind: "level", level: 10 },
+      }),
+    ).toThrow();
   });
 });

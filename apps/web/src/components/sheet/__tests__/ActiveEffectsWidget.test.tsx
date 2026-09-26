@@ -192,4 +192,47 @@ describe("ActiveEffectsWidget", () => {
       "status_attacks_against_have_disadvantage",
     );
   });
+
+  const endConcentration: ActionGrant = {
+    id: "action_end_concentration",
+    name: "End Concentration",
+    activation: "special",
+    effect: { type: "end_concentration" },
+  };
+
+  it("marks a concentration effect, and offers End Concentration on it", async () => {
+    mocks.effects.current = [
+      effect({
+        sourceName: "Faerie Fire",
+        isSelfConcentration: true,
+        durationType: "rounds",
+        durationRemaining: 10,
+        grantedStates: [],
+      }),
+    ];
+    mocks.actions.current = [endConcentration];
+
+    const container = await renderWidget();
+    expect(container.textContent).toContain("Concentrating");
+
+    const end = dismissButtons(container).find(
+      (button) => button.textContent === "End Concentration",
+    );
+    await act(async () => {
+      end?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    });
+
+    expect(mocks.executeCharacterAction).toHaveBeenCalledWith(
+      "action_end_concentration",
+    );
+  });
+
+  it("does not offer End Concentration on an effect that is not concentration", async () => {
+    mocks.effects.current = [effect()];
+    mocks.actions.current = [endConcentration];
+
+    const container = await renderWidget();
+
+    expect(dismissButtons(container)).toHaveLength(0);
+  });
 });

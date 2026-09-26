@@ -1,9 +1,9 @@
 /**
- * Development fixture: ten scenario characters, seeded beside the ten in
+ * Development fixture: eleven scenario characters, seeded beside the ten in
  * seedSampleCharacters.ts by the same `db:seed:samples`.
  *
  * The first ten are a coverage set - between them they fill every slot,
- * reset condition and hit point state. These ten are each staged for a hand
+ * reset condition and hit point state. These eleven are each staged for a hand
  * check a unit test cannot reach: a level-up one level away, a divergence
  * that needs two tabs, a Tier 2 pass that has nothing to verify against yet,
  * or data the UI cannot create. docs/development/sample-characters.md holds
@@ -295,6 +295,9 @@ const SCENARIO_ROSTER: SampleCharacter[] = [
       feats: ["feat_alert"],
       classSelections: {
         class_warlock: {
+          // real warlock cantrips; Eldritch Blast is what #31b's live check
+          // casts, one beam at 4 and two after her level-up to 5
+          warlock_level_1_cantrips: ["spell_eldritch_blast", "spell_minor_illusion"],
           warlock_level_2_invocations: [
             "trait_invocation_beast_speech",
             "trait_invocation_eldritch_sight",
@@ -304,8 +307,9 @@ const SCENARIO_ROSTER: SampleCharacter[] = [
       },
       traitSelections: {
         elf_high_choice_extra_lang: ["sylvan"],
-        // a pack spell that stays a wizard cantrip once #31a gives spells levels
-        high_elf_cantrip: ["spell_minor_illusion"],
+        // a wizard cantrip with a material component, which the pouch she
+        // carries covers: Dancing Lights casts without asking
+        high_elf_cantrip: ["spell_dancing_lights"],
         noble_gaming_set: ["three_dragon_ante_set"],
         noble_language: ["celestial"],
         warlock_starting_skills: ["arcana", "deception"],
@@ -321,7 +325,7 @@ const SCENARIO_ROSTER: SampleCharacter[] = [
     maxHp: 23,
     currentHp: 20,
     testFocus:
-      "Staging: level to 5 for invocation prerequisites against Pact of the Chain (#81); a wizard dip that only final INT allows (#77); Alert reaches initiative; no familiar actor (#36).",
+      "Staging: level to 5 for invocation prerequisites against Pact of the Chain (#81) and Eldritch Blast's second beam (#31b); a wizard dip that only final INT allows (#77); Alert reaches initiative; no familiar actor (#36).",
     personalityTraits: "I thank the air before I speak to it, and it answers.",
     ideals: "Freedom. A bargain is only as good as the way out of it.",
     bonds: "The Summer Court holds a promise I made at nine years old.",
@@ -645,7 +649,7 @@ const SCENARIO_ROSTER: SampleCharacter[] = [
     maxHp: 43,
     currentHp: 41,
     testFocus:
-      "Wild Shape preview: its pool is stored but has no rule to show it (#62); slots with no spells listed (#83); an unasked custom-background choice (#80).",
+      "Wild Shape preview: its pool is stored but has no rule to show it (#62); slots with no spells listed; an unasked custom-background choice (#80).",
     personalityTraits: "I talk to the weather as if it owed me money.",
     ideals: "Balance. The forest takes back what the town forgets it borrowed.",
     bonds: "The oak at Gallowmere is older than the kingdom and I am its keeper.",
@@ -1266,6 +1270,105 @@ const SCENARIO_ROSTER: SampleCharacter[] = [
         current: 2,
         max: 2,
         resetCondition: "long_rest",
+      },
+    ],
+  },
+  {
+    id: "00000000-0000-0000-0000-000000000130",
+    name: "Maren Solace",
+    raceId: "race_human",
+    classes: [
+      {
+        classId: "class_cleric",
+        classLevel: 3,
+        subclassId: "subclass_cleric_light",
+      },
+    ],
+    backgroundId: "background_acolyte",
+    choices: {
+      feats: [],
+      classSelections: {},
+      traitSelections: {
+        human_language_choice: ["celestial"],
+        acolyte_languages: ["draconic", "dwarvish"],
+        cleric_starting_skills: ["medicine", "persuasion"],
+      },
+    },
+    alignment: "Neutral Good",
+    // Sister Aveline's numbers, so both pinned expectations are known: the
+    // human's +1 makes WIS 17 (+3), a spell save DC of 13 and +5 to hit
+    str: 12,
+    dex: 9,
+    con: 14,
+    int: 10,
+    wis: 16,
+    cha: 11,
+    maxHp: 18,
+    currentHp: 24,
+    testFocus:
+      "Spell casting (#31b, #83): Burning Hands from a 1st- and then a 2nd-level slot (3d6, then 4d6) against WIS DC 13; the spent 1st-level slot leaves the picker; Faerie Fire's concentration ended from Active effects.",
+    personalityTraits: "I narrate sunrises to people who did not ask for one.",
+    ideals: "Hope. Every dark room has a window someone forgot to open.",
+    bonds: "The lighthouse-temple at Greyhaven kept me alive through one long winter.",
+    flaws: "I treat every shadow as a problem to solve, including other people's.",
+    traits: [
+      { traitId: "trait_cleric_prof_armor", source: "class_cleric_level_1" },
+      { traitId: "trait_cleric_prof_weapons", source: "class_cleric_level_1" },
+      { traitId: "trait_cleric_prof_skills", source: "class_cleric_level_1" },
+      {
+        traitId: "trait_cleric_prof_saving_throw",
+        source: "class_cleric_level_1",
+      },
+      { traitId: "trait_spellcasting_cleric", source: "class_cleric_level_1" },
+      { traitId: "trait_divine_domain", source: "class_cleric_level_1" },
+      {
+        traitId: "trait_light_domain_spells",
+        source: "subclass_cleric_light_level_1",
+      },
+      {
+        traitId: "trait_cleric_light_bonus_cantrip",
+        source: "subclass_cleric_light_level_1",
+      },
+      { traitId: "trait_warding_flare", source: "subclass_cleric_light_level_1" },
+      { traitId: "trait_channel_divinity", source: "class_cleric_level_2" },
+      { traitId: "trait_divine_domain_feature", source: "class_cleric_level_2" },
+      {
+        traitId: "trait_cd_radiance_of_the_dawn",
+        source: "subclass_cleric_light_level_2",
+      },
+      { traitId: "trait_human_languages", source: "race_human" },
+      { traitId: "trait_acolyte_prof_skills", source: "background_acolyte" },
+      { traitId: "trait_acolyte_languages", source: "background_acolyte" },
+    ],
+    inventory: [
+      { itemId: "item_armor_chain_shirt", slot: "body" },
+      { itemId: "item_weapon_mace", slot: "main_hand" },
+      { itemId: "item_armor_shield", slot: "off_hand" },
+      { itemId: "item_focus_emblem" },
+      { itemId: "item_pack_priests" },
+      { itemId: "item_clothes_vestments" },
+    ],
+    resources: [
+      {
+        id: "spell_slots_1",
+        name: "1st-Level Spell Slots",
+        current: 1,
+        max: 4,
+        resetCondition: "long_rest",
+      },
+      {
+        id: "spell_slots_2",
+        name: "2nd-Level Spell Slots",
+        current: 2,
+        max: 2,
+        resetCondition: "long_rest",
+      },
+      {
+        id: "trait_channel_divinity",
+        name: "Channel Divinity",
+        current: 1,
+        max: 1,
+        resetCondition: "short_rest",
       },
     ],
   },

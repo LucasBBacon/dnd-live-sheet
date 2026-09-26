@@ -106,6 +106,14 @@ export const STANDARD_ACTIONS: ActionGrant[] = [
     effect: { type: "remove_effect", effectTag: "hidden" },
   },
   {
+    // "no action required" (PHB p.203). Offered beside the concentration
+    // effect in Active effects, the way Stop Hiding is offered beside hidden
+    id: "action_end_concentration",
+    name: "End Concentration",
+    activation: "special",
+    effect: { type: "end_concentration" },
+  },
+  {
     id: "action_ready",
     name: "Ready",
     activation: "action",

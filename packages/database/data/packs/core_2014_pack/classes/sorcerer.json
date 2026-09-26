@@ -398,7 +398,11 @@
             "spellcasting": {
                 "ability": "CHA",
                 "progression": "full",
-                "startsAtLevel": 1
+                "startsAtLevel": 1,
+                "preparation": "known",
+                "focusCategories": [
+                    "category_arcane_focus"
+                ]
             }
         }
     ],
@@ -581,6 +585,10 @@
                                 "value": 4
                             }
                         ]
+                    },
+                    "spellSlot": {
+                        "kind": "level",
+                        "level": 1
                     }
                 },
                 {
@@ -599,6 +607,10 @@
                                 "value": 3
                             }
                         ]
+                    },
+                    "spellSlot": {
+                        "kind": "level",
+                        "level": 2
                     }
                 },
                 {
@@ -617,6 +629,10 @@
                                 "value": 3
                             }
                         ]
+                    },
+                    "spellSlot": {
+                        "kind": "level",
+                        "level": 3
                     }
                 },
                 {
@@ -639,6 +655,10 @@
                                 "value": 3
                             }
                         ]
+                    },
+                    "spellSlot": {
+                        "kind": "level",
+                        "level": 4
                     }
                 },
                 {
@@ -661,6 +681,10 @@
                                 "value": 3
                             }
                         ]
+                    },
+                    "spellSlot": {
+                        "kind": "level",
+                        "level": 5
                     }
                 },
                 {
@@ -679,6 +703,10 @@
                                 "value": 2
                             }
                         ]
+                    },
+                    "spellSlot": {
+                        "kind": "level",
+                        "level": 6
                     }
                 },
                 {
@@ -697,6 +725,10 @@
                                 "value": 2
                             }
                         ]
+                    },
+                    "spellSlot": {
+                        "kind": "level",
+                        "level": 7
                     }
                 },
                 {
@@ -711,6 +743,10 @@
                                 "value": 1
                             }
                         ]
+                    },
+                    "spellSlot": {
+                        "kind": "level",
+                        "level": 8
                     }
                 },
                 {
@@ -725,6 +761,10 @@
                                 "value": 1
                             }
                         ]
+                    },
+                    "spellSlot": {
+                        "kind": "level",
+                        "level": 9
                     }
                 }
             ],

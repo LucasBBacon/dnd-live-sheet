@@ -19,6 +19,7 @@ import { FeaturesWidget } from "./FeaturesWidget";
 import { SavingThrowsWidget } from "./SavingThrowsWidget";
 import { SkillsWidget } from "./SkillsWidget";
 import { SpellcastingWidget } from "./SpellcastingWidget";
+import { SpellsWidget } from "./SpellsWidget";
 import { TableRulesWidget } from "./TableRulesWidget";
 
 export const DashboardLayout = () => {
@@ -272,6 +273,8 @@ export const DashboardLayout = () => {
           </div>
 
           <SpellcastingWidget />
+
+          <SpellsWidget />
 
           <SavingThrowsWidget />
 

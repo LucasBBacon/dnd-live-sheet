@@ -105,14 +105,33 @@ describe("trait and spell implementation markers match their data", () => {
 
   it("keeps the spell section's placeholders as placeholders", async () => {
     const pack = await assembleCoreRulePack(SHIPPED_PACK);
+    const stubs = pack.spells.filter((spell) => spell.implementation);
 
-    // The marker's summary says level and school are placeholders too. If a
-    // second level or school ever appears, some spell has had real data
-    // authored and the claim has stopped being true for the whole section.
-    expect([...new Set(pack.spells.map((spell) => spell.level))]).toEqual([0]);
-    expect([...new Set(pack.spells.map((spell) => spell.school))]).toEqual([
+    // The marker's summary says level and school are placeholders too, so the
+    // claim is checked on the stubs alone: an authored spell has real ones.
+    expect([...new Set(stubs.map((spell) => spell.level))]).toEqual([0]);
+    expect([...new Set(stubs.map((spell) => spell.school))]).toEqual([
       "evocation",
     ]);
+  });
+
+  it("records which spells carry rules", async () => {
+    const pack = await assembleCoreRulePack(SHIPPED_PACK);
+
+    // 4 of 111 since feat/spell-casting (#31). Add each spell as it is
+    // authored; one leaving this list is a regression.
+    expect(
+      pack.spells
+        .filter((spell) => !spell.implementation)
+        .map((spell) => spell.id)
+        .sort(),
+    ).toEqual([
+      "spell_burning_hands",
+      "spell_dancing_lights",
+      "spell_eldritch_blast",
+      "spell_faerie_fire",
+    ]);
+    expect(pack.spells).toHaveLength(111);
   });
 
   /**

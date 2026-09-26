@@ -9,6 +9,7 @@ import type {
   InventoryInstance,
   RuntimeModifier,
 } from "@project/shared";
+import { resolveActionScaling } from "./actionScaling.js";
 import {
   AbilityEngine,
   type DerivedAbility,
@@ -32,6 +33,11 @@ import { CharacterBootstrapper } from "./characterBootstrapper.js";
 import { ActionResolver } from "./actionResolver.js";
 import { ProficiencyExtractor } from "./proficiencyExtractor.js";
 import { gatherBaseStates, gatherSheetModifiers } from "./sheetModifiers.js";
+import {
+  synthesizeSpells,
+  type CastableSpell,
+  type SlotPool,
+} from "./spellSynthesizer.js";
 import {
   dynamicAttackApplies,
   dynamicAttackId,
@@ -137,6 +143,13 @@ export interface LiveCharacterSheet {
    * has two of each and one number would be wrong for half their spells.
    */
   spellcasting: DerivedSpellcasting[];
+  /**
+   * Every spell the character has, one entry per source, stubs included - see
+   * synthesizeSpells. The implemented ones' resolved actions are in `actions`.
+   */
+  spells: CastableSpell[];
+  /** The spell slot pools the character holds, and the level each casts at. */
+  slotPools: SlotPool[];
 
   // load
   encumbrance: EncumbranceResult;
@@ -469,6 +482,18 @@ export class CharacterEngine {
       activeStates,
     );
 
+    // every spell the character has, the caster's numbers stamped in. Stage
+    // two for the reason spellcasting is: a SPELLCASTING_MOD bonus can be
+    // gated on states
+    const spellSynthesis = synthesizeSpells({
+      save,
+      ...(options.snapshot !== undefined && { snapshot: options.snapshot }),
+      abilityScores,
+      proficiencyBonus: profBonus,
+      modifiers: allModifiers,
+      activeStates,
+    });
+
     // endregion
 
     // region State Synthesis
@@ -485,10 +510,17 @@ export class CharacterEngine {
       // button that spent the activation and reached the resolver's default
       // case.
       ...activeTraits.flatMap((t) =>
-        (t.actions || []).filter(
-          (action) => action.effect.type !== "dynamic_weapon_attack",
-        ),
+        (t.actions || [])
+          .filter((action) => action.effect.type !== "dynamic_weapon_attack")
+          // every damage die at this character's level: a breath weapon's
+          // ladder was authored and never read
+          .map((action) =>
+            resolveActionScaling(action, { total: totalLevel, classes: classLevels }),
+          ),
       ),
+      // a spell's action is keyed by its source, so the server's lookup by
+      // id finds exactly the casting the player pressed
+      ...spellSynthesis.actions,
     ];
 
     // Carried, not equipped: a vial in your pack is throwable. This is why the
@@ -690,6 +722,8 @@ export class CharacterEngine {
       summons,
       saves,
       spellcasting,
+      spells: spellSynthesis.spells,
+      slotPools: spellSynthesis.slotPools,
       baseStates,
       activeStates,
     };

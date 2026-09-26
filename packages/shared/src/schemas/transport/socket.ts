@@ -125,6 +125,18 @@ export interface RollResultPayload {
   summary?: string;
 }
 
+/**
+ * A saving throw an action asks of its targets - the DC is the caster's, and
+ * the roll belongs to the table. Mirrors the engine's TargetSave.
+ */
+export interface TargetSavePayload {
+  ability: string;
+  dc: number;
+  onSuccess: "half_damage" | "no_damage" | "negates_effect";
+  area?: { shape: string; size: number; secondarySize?: number };
+  label: string;
+}
+
 export interface RollResultsBroadcastPayload {
   characterId: string;
   rollResults: RollResultPayload[];
@@ -154,6 +166,12 @@ export interface ActionIntentPayload {
   actorInstanceId?: string;
   /** Required when source is "item": the inventory stack Use was pressed on. */
   instanceId?: string;
+  /**
+   * What the player chose when casting a spell: the slot pool paying for it,
+   * and that they have a material component no pouch or focus covers.
+   * Ignored for anything that is not a spell.
+   */
+  cast?: { slotResourceId?: string; materialsConfirmed?: boolean };
   timestamp: number;
 }
 
@@ -210,6 +228,8 @@ export interface ActionResolvedPayload {
    * it was authored and until now had nowhere to go once it crossed the wire.
    */
   notes?: string[];
+  /** Saving throws the action asks of its targets. Mirrors ActionResult.targetSaves. */
+  targetSaves?: TargetSavePayload[];
   activeStates: string[];
   resources: RuntimeResourceSyncPayload[];
   effects: RuntimeEffectSyncPayload[];

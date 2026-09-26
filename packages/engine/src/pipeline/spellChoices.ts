@@ -8,13 +8,20 @@ import type { RuleSnapshotLookup } from "../rules/ruleLookup.js";
 import { isSpellChoice, unlockedGrants } from "./grantSources.js";
 
 /**
- * The spells a spell_choice node offers, in pack order: level-0 spells for a
- * cantrip node (maxSpellLevel 0), levels 1 through maxSpellLevel otherwise.
+ * The spells a spell_choice node offers, in pack order.
  *
- * Not filtered by listSource: the pack has no spell lists yet (#31a), and
- * this is the one place list membership goes when it does. Until #31a gives
- * spells real levels every pack spell is level 0, so a cantrip node offers
- * all of them and any other node offers none.
+ * A cantrip node (maxSpellLevel 0) offers every level-0 spell. It is not
+ * filtered by listSource: the pack has no spell lists yet (#31a), and this is
+ * the one place list membership goes when it does.
+ *
+ * A leveled node offers nothing until then. With no list to filter on, it
+ * would offer every leveled pack spell whatever the class; since
+ * feat/spell-casting gave Faerie Fire and Burning Hands real levels, a new
+ * wizard would be asked to fill a six-spell spellbook from those two, and
+ * could not finish creation. An empty roster is neither asked
+ * (listChoiceQuestions) nor reported unanswered (collectSaveIssues), which is
+ * what every character got while every spell was a level-0 placeholder.
+ * #31a removes this rule.
  * @param node The spell choice, from a class track or a trait's spells block
  * @param snapshot Pack content, when the caller has any loaded
  * @returns The spells a player may pick for this node
@@ -22,14 +29,12 @@ import { isSpellChoice, unlockedGrants } from "./grantSources.js";
 export const spellOptions = (
   node: SpellChoiceNode,
   snapshot?: RuleSnapshotLookup,
-): SpellDefinition[] => {
-  const spells = Object.values(snapshot?.spellsById ?? {});
-  return node.maxSpellLevel === 0
-    ? spells.filter((spell) => spell.level === 0)
-    : spells.filter(
-        (spell) => spell.level >= 1 && spell.level <= node.maxSpellLevel,
+): SpellDefinition[] =>
+  node.maxSpellLevel > 0
+    ? []
+    : Object.values(snapshot?.spellsById ?? {}).filter(
+        (spell) => spell.level === 0,
       );
-};
 
 /**
  * One spell choice a character has, and where its answer is stored: a class

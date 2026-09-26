@@ -24,10 +24,65 @@ export interface DerivedSpellcasting {
  * layer reads, and it should not have to resolve a resource to answer "what
  * level does this warlock cast at".
  */
-const pactSlotLevel = (warlockLevel: number): number =>
+export const pactSlotLevel = (warlockLevel: number): number =>
   Math.min(5, Math.ceil(warlockLevel / 2));
 
 export class SpellcastingEngine {
+  /**
+   * The spellcasting modifier, save DC and attack bonus for one ability.
+   *
+   * Every casting source shares it: a class's (calculate, below) and a racial
+   * grant's - Drow Magic is cast with Charisma whatever the character's class.
+   * Folds in every active SPELLCASTING_MOD bonus either way.
+   * @param ability The ability the source casts with
+   * @param abilityScores The character's final ability scores
+   * @param profBonus The character's proficiency bonus
+   * @param modifiers Every active runtime modifier
+   * @param activeStates The character's active states, which gate modifiers
+   * @returns The modifier, 8 + proficiency + modifier, proficiency + modifier, and a breakdown
+   */
+  public static numbersFor(
+    ability: Ability,
+    abilityScores: Record<Ability, number>,
+    profBonus: number,
+    modifiers: RuntimeModifier[],
+    activeStates: string[] = [],
+  ): { modifier: number; saveDc: number; attackBonus: number; breakdown: string } {
+    // SPELLCASTING_MOD was declared in ModifierTargetSchema and read by nothing
+    // until this calculator existed
+    const bonuses = modifiers.filter((mod) => {
+      if (!mod.isActive) return false;
+      if (mod.target !== "SPELLCASTING_MOD" || mod.type !== "add") return false;
+      if (mod.forbiddenStates?.some((state) => activeStates.includes(state))) {
+        return false;
+      }
+      return mod.requiredStates
+        ? mod.requiredStates.every((state) => activeStates.includes(state))
+        : true;
+    });
+
+    const abilityMod = AbilityEngine.getModifier(abilityScores[ability]);
+    const tokens = [
+      `${ability} (${abilityMod >= 0 ? "+" : ""}${abilityMod})`,
+      `Proficiency (+${profBonus})`,
+    ];
+
+    let total = abilityMod;
+    for (const bonus of bonuses) {
+      total += bonus.value;
+      tokens.push(
+        `${bonus.sourceName} (${bonus.value >= 0 ? "+" : ""}${bonus.value})`,
+      );
+    }
+
+    return {
+      modifier: total,
+      saveDc: 8 + profBonus + total,
+      attackBonus: profBonus + total,
+      breakdown: tokens.join(" | "),
+    };
+  }
+
   /**
    * The save DC and attack bonus for each class that casts.
    *
@@ -48,45 +103,19 @@ export class SpellcastingEngine {
     modifiers: RuntimeModifier[],
     activeStates: string[] = [],
   ): DerivedSpellcasting[] {
-    // SPELLCASTING_MOD was declared in ModifierTargetSchema and read by nothing
-    // until this calculator existed
-    const bonuses = modifiers.filter((mod) => {
-      if (!mod.isActive) return false;
-      if (mod.target !== "SPELLCASTING_MOD" || mod.type !== "add") return false;
-      if (mod.forbiddenStates?.some((state) => activeStates.includes(state))) {
-        return false;
-      }
-      return mod.requiredStates
-        ? mod.requiredStates.every((state) => activeStates.includes(state))
-        : true;
-    });
-
-    return sources.map((source) => {
-      const abilityMod = AbilityEngine.getModifier(abilityScores[source.ability]);
-      const tokens = [
-        `${source.ability} (${abilityMod >= 0 ? "+" : ""}${abilityMod})`,
-        `Proficiency (+${profBonus})`,
-      ];
-
-      let total = abilityMod;
-      for (const bonus of bonuses) {
-        total += bonus.value;
-        tokens.push(
-          `${bonus.sourceName} (${bonus.value >= 0 ? "+" : ""}${bonus.value})`,
-        );
-      }
-
-      return {
-        classId: source.classId,
-        ability: source.ability,
-        modifier: total,
-        saveDc: 8 + profBonus + total,
-        attackBonus: profBonus + total,
-        ...(source.progression === "pact" && {
-          pactSlotLevel: pactSlotLevel(source.level),
-        }),
-        breakdown: tokens.join(" | "),
-      };
-    });
+    return sources.map((source) => ({
+      classId: source.classId,
+      ability: source.ability,
+      ...this.numbersFor(
+        source.ability,
+        abilityScores,
+        profBonus,
+        modifiers,
+        activeStates,
+      ),
+      ...(source.progression === "pact" && {
+        pactSlotLevel: pactSlotLevel(source.level),
+      }),
+    }));
   }
 }

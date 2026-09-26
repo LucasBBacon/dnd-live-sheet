@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { resolveEquipmentDefinition } from "@project/engine";
-import { costsAttack } from "@project/shared";
+import { costsAttack, type TargetSavePayload } from "@project/shared";
 import { useEffect, useMemo, useState, type MouseEvent } from "react";
 import { useCombat } from "../../hooks/useCombat";
 import { useDerivedStats } from "../../hooks/useCharacterStats";
@@ -9,6 +9,24 @@ import { TurnControlsWidget } from "./TurnControlsWidget";
 import { useRollStore } from "../../store/rollStore";
 
 const PROTECTION_TRAIT_ID = "trait_fs_protection";
+
+const ON_SUCCESS: Record<TargetSavePayload["onSuccess"], string> = {
+  half_damage: "half damage on a success",
+  no_damage: "no damage on a success",
+  negates_effect: "a success negates it",
+};
+
+/** "Burning Hands: DEX save DC 13 · half damage on a success · 15-foot cone" */
+const targetSaveLine = (save: TargetSavePayload): string =>
+  [
+    `${save.label}: ${save.ability} save DC ${save.dc}`,
+    ON_SUCCESS[save.onSuccess],
+    save.area && save.area.shape !== "single_target"
+      ? `${save.area.size}-foot ${save.area.shape}`
+      : undefined,
+  ]
+    .filter(Boolean)
+    .join(" · ");
 
 /** The activation badge on an attack card. Retaliation is the first reaction card. */
 const ACTIVATION_BADGE: Record<string, { short: string; long: string }> = {
@@ -40,6 +58,9 @@ export const CombatWidget = () => {
     (state) => state.latestRollResults,
   );
   const latestNotes = useCharacterSheetStore((state) => state.latestNotes);
+  const latestTargetSaves = useCharacterSheetStore(
+    (state) => state.latestTargetSaves,
+  );
   const recordRollResult = useCharacterSheetStore(
     (state) => state.recordRollResult,
   );
@@ -444,7 +465,8 @@ export const CombatWidget = () => {
                       {result.target === "ATTACK_ROLL" && result.label
                         ? `${result.label}${result.summary ? ` • ${result.summary}` : ""}`
                         : result.damageType
-                          ? `${result.damageType}`
+                          ? // a beam's damage names its beam, as its attack does
+                            `${result.label && !isHeal ? `${result.label} • ` : ""}${result.damageType}`
                           : "authored effect"}
                     </div>
                   </div>
@@ -457,6 +479,22 @@ export const CombatWidget = () => {
               );
             })}
           </div>
+        </div>
+      )}
+
+      {latestTargetSaves.length > 0 && (
+        <div className="rounded-xl border border-indigo-200 bg-indigo-50 p-3">
+          <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-indigo-700">
+            Saving throws for the targets
+          </div>
+          {latestTargetSaves.map((save, index) => (
+            <p
+              key={`${save.label}-${index}`}
+              className="mt-2 text-xs text-indigo-800"
+            >
+              {targetSaveLine(save)}
+            </p>
+          ))}
         </div>
       )}
 

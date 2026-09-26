@@ -43,6 +43,7 @@ const EXPECTED_MAX_HP: Record<string, number> = {
   // his current hit points (95) are stored above this on purpose
   "Brother Mote": 80,
   "Orrik Stonehide": 134,
+  "Maren Solace": 24,
 };
 
 describe("sample character hit points", () => {

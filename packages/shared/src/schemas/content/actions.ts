@@ -3,6 +3,7 @@ import {
   BaseModifierSchema,
   ModifierAttackContextSchema,
   ModifierScalingSchema,
+  ModifierScalingThresholdSchema,
   ModifierTargetSchema,
 } from "./modifiers.js";
 import { DamageTypeSchema } from "./affinities.js";
@@ -94,6 +95,12 @@ export const ActionSaveSchema = z.object({
     includeProficiency: z.boolean().default(true),
   }),
   saveEffect: z.enum(["half_damage", "no_damage", "negates_effect"]),
+  /**
+   * The DC, resolved before the roll by whoever knows the caster: the spell
+   * synthesizer stamps a spell's from its casting source. Absent, the resolver
+   * computes it from `dcCalculation`, as a breath weapon's is.
+   */
+  dc: z.number().int().optional(),
 });
 
 export const DamageSegmentSchema = z.object({
@@ -106,6 +113,13 @@ export const DamageSegmentSchema = z.object({
   levelScaling: z
     .array(z.object({ levelRequired: z.number(), newDice: z.string() }))
     .default([]),
+  /**
+   * Dice added once for each slot level a spell is cast above its own, as
+   * Burning Hands adds 1d6. Plain dice of the segment's own die size - pack
+   * validation holds it to that - because the resolver adds it by count and
+   * the dice parser reads one term.
+   */
+  perSlotAbove: DamageExpressionSchema.optional(),
 });
 
 export const DamageRiderEffectSchema = z.object({
@@ -199,6 +213,23 @@ export const AttackEffectSchema = z.object({
    * authored before critical segments existed wants.
    */
   criticalDamage: z.array(DamageSegmentSchema).optional(),
+  /**
+   * One action that makes several attack rolls, each with its own damage:
+   * Eldritch Blast's beams. Laddered by character level, the cantrip rule;
+   * the rolls are labelled `${label} 1`, `${label} 2`, and so on.
+   */
+  repeat: z
+    .object({
+      label: z.string().min(1),
+      thresholds: z.array(ModifierScalingThresholdSchema).min(1),
+    })
+    .strict()
+    .optional(),
+  /**
+   * `repeat` resolved at the character's level, stamped by the spell
+   * synthesizer ahead of the roll the way `attackBonus` is. Absent means one.
+   */
+  repeatCount: z.number().int().positive().optional(),
 });
 
 export const SummonEffectSchema = z.object({
@@ -246,6 +277,17 @@ export const DynamicWeaponAttackSchema = z.object({
 
 export type DynamicWeaponAttack = z.infer<typeof DynamicWeaponAttackSchema>;
 
+/**
+ * Ends whatever the character is concentrating on.
+ *
+ * Its own effect rather than a `remove_effect`, because concentration is not
+ * a tag an author sets: it is `isSelfConcentration` on whichever effect the
+ * last concentration spell applied.
+ */
+export const EndConcentrationEffectSchema = z.object({
+  type: z.literal("end_concentration"),
+});
+
 export const CoreEffectUnion = z.discriminatedUnion("type", [
   SaveEffectSchema,
   AbilityCheckEffectSchema,
@@ -258,6 +300,7 @@ export const CoreEffectUnion = z.discriminatedUnion("type", [
   DynamicWeaponAttackSchema,
   HealEffectSchema,
   SelfSaveEffectSchema,
+  EndConcentrationEffectSchema,
 ]);
 
 export const MacroEffectSchema = z.object({
@@ -317,3 +360,6 @@ export type ActionGrant = z.infer<typeof ActionGrantSchema>;
 export type DamageSegment = z.infer<typeof DamageSegmentSchema>;
 export type WeaponAttackContext = z.infer<typeof WeaponAttackContextSchema>;
 export type WeaponAttackUsage = z.infer<typeof WeaponAttackUsageSchema>;
+export type AreaOfEffect = z.infer<typeof AreaOfEffectSchema>;
+export type AttackEffect = z.infer<typeof AttackEffectSchema>;
+export type SaveEffect = z.infer<typeof SaveEffectSchema>;

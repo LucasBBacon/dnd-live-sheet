@@ -984,6 +984,42 @@
                     "mode": {
                       "type": "string",
                       "const": "charges"
+                    },
+                    "spellSlot": {
+                      "oneOf": [
+                        {
+                          "type": "object",
+                          "properties": {
+                            "kind": {
+                              "type": "string",
+                              "const": "level"
+                            },
+                            "level": {
+                              "type": "integer",
+                              "minimum": 1,
+                              "maximum": 9
+                            }
+                          },
+                          "required": [
+                            "kind",
+                            "level"
+                          ],
+                          "additionalProperties": false
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "kind": {
+                              "type": "string",
+                              "const": "pact"
+                            }
+                          },
+                          "required": [
+                            "kind"
+                          ],
+                          "additionalProperties": false
+                        }
+                      ]
                     }
                   },
                   "required": [
@@ -1496,6 +1532,11 @@
                                 "no_damage",
                                 "negates_effect"
                               ]
+                            },
+                            "dc": {
+                              "type": "integer",
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991
                             }
                           },
                           "required": [
@@ -1568,6 +1609,10 @@
                                     "newDice"
                                   ]
                                 }
+                              },
+                              "perSlotAbove": {
+                                "type": "string",
+                                "pattern": "^(\\d+d\\d+([+-]\\d+)?|\\d+)$"
                               }
                             },
                             "required": [
@@ -1760,6 +1805,10 @@
                                     "newDice"
                                   ]
                                 }
+                              },
+                              "perSlotAbove": {
+                                "type": "string",
+                                "pattern": "^(\\d+d\\d+([+-]\\d+)?|\\d+)$"
                               }
                             },
                             "required": [
@@ -1833,6 +1882,10 @@
                                     "newDice"
                                   ]
                                 }
+                              },
+                              "perSlotAbove": {
+                                "type": "string",
+                                "pattern": "^(\\d+d\\d+([+-]\\d+)?|\\d+)$"
                               }
                             },
                             "required": [
@@ -1841,6 +1894,47 @@
                               "damageType"
                             ]
                           }
+                        },
+                        "repeat": {
+                          "type": "object",
+                          "properties": {
+                            "label": {
+                              "type": "string",
+                              "minLength": 1
+                            },
+                            "thresholds": {
+                              "minItems": 1,
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "minimumLevel": {
+                                    "type": "integer",
+                                    "exclusiveMinimum": 0,
+                                    "maximum": 9007199254740991
+                                  },
+                                  "value": {
+                                    "type": "number"
+                                  }
+                                },
+                                "required": [
+                                  "minimumLevel",
+                                  "value"
+                                ],
+                                "additionalProperties": false
+                              }
+                            }
+                          },
+                          "required": [
+                            "label",
+                            "thresholds"
+                          ],
+                          "additionalProperties": false
+                        },
+                        "repeatCount": {
+                          "type": "integer",
+                          "exclusiveMinimum": 0,
+                          "maximum": 9007199254740991
                         }
                       },
                       "required": [
@@ -1928,6 +2022,10 @@
                                     "newDice"
                                   ]
                                 }
+                              },
+                              "perSlotAbove": {
+                                "type": "string",
+                                "pattern": "^(\\d+d\\d+([+-]\\d+)?|\\d+)$"
                               }
                             },
                             "required": [
@@ -2419,6 +2517,18 @@
                       "properties": {
                         "type": {
                           "type": "string",
+                          "const": "end_concentration"
+                        }
+                      },
+                      "required": [
+                        "type"
+                      ]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "type": {
+                          "type": "string",
                           "const": "macro"
                         },
                         "effects": {
@@ -2546,6 +2656,11 @@
                                           "no_damage",
                                           "negates_effect"
                                         ]
+                                      },
+                                      "dc": {
+                                        "type": "integer",
+                                        "minimum": -9007199254740991,
+                                        "maximum": 9007199254740991
                                       }
                                     },
                                     "required": [
@@ -2618,6 +2733,10 @@
                                               "newDice"
                                             ]
                                           }
+                                        },
+                                        "perSlotAbove": {
+                                          "type": "string",
+                                          "pattern": "^(\\d+d\\d+([+-]\\d+)?|\\d+)$"
                                         }
                                       },
                                       "required": [
@@ -2810,6 +2929,10 @@
                                               "newDice"
                                             ]
                                           }
+                                        },
+                                        "perSlotAbove": {
+                                          "type": "string",
+                                          "pattern": "^(\\d+d\\d+([+-]\\d+)?|\\d+)$"
                                         }
                                       },
                                       "required": [
@@ -2883,6 +3006,10 @@
                                               "newDice"
                                             ]
                                           }
+                                        },
+                                        "perSlotAbove": {
+                                          "type": "string",
+                                          "pattern": "^(\\d+d\\d+([+-]\\d+)?|\\d+)$"
                                         }
                                       },
                                       "required": [
@@ -2891,6 +3018,47 @@
                                         "damageType"
                                       ]
                                     }
+                                  },
+                                  "repeat": {
+                                    "type": "object",
+                                    "properties": {
+                                      "label": {
+                                        "type": "string",
+                                        "minLength": 1
+                                      },
+                                      "thresholds": {
+                                        "minItems": 1,
+                                        "type": "array",
+                                        "items": {
+                                          "type": "object",
+                                          "properties": {
+                                            "minimumLevel": {
+                                              "type": "integer",
+                                              "exclusiveMinimum": 0,
+                                              "maximum": 9007199254740991
+                                            },
+                                            "value": {
+                                              "type": "number"
+                                            }
+                                          },
+                                          "required": [
+                                            "minimumLevel",
+                                            "value"
+                                          ],
+                                          "additionalProperties": false
+                                        }
+                                      }
+                                    },
+                                    "required": [
+                                      "label",
+                                      "thresholds"
+                                    ],
+                                    "additionalProperties": false
+                                  },
+                                  "repeatCount": {
+                                    "type": "integer",
+                                    "exclusiveMinimum": 0,
+                                    "maximum": 9007199254740991
                                   }
                                 },
                                 "required": [
@@ -2978,6 +3146,10 @@
                                               "newDice"
                                             ]
                                           }
+                                        },
+                                        "perSlotAbove": {
+                                          "type": "string",
+                                          "pattern": "^(\\d+d\\d+([+-]\\d+)?|\\d+)$"
                                         }
                                       },
                                       "required": [
@@ -3463,6 +3635,18 @@
                                   "ability",
                                   "dcRule"
                                 ]
+                              },
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "type": {
+                                    "type": "string",
+                                    "const": "end_concentration"
+                                  }
+                                },
+                                "required": [
+                                  "type"
+                                ]
                               }
                             ]
                           }
@@ -3666,6 +3850,42 @@
               "mode": {
                 "type": "string",
                 "const": "charges"
+              },
+              "spellSlot": {
+                "oneOf": [
+                  {
+                    "type": "object",
+                    "properties": {
+                      "kind": {
+                        "type": "string",
+                        "const": "level"
+                      },
+                      "level": {
+                        "type": "integer",
+                        "minimum": 1,
+                        "maximum": 9
+                      }
+                    },
+                    "required": [
+                      "kind",
+                      "level"
+                    ],
+                    "additionalProperties": false
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "kind": {
+                        "type": "string",
+                        "const": "pact"
+                      }
+                    },
+                    "required": [
+                      "kind"
+                    ],
+                    "additionalProperties": false
+                  }
+                ]
               }
             },
             "required": [
@@ -4081,12 +4301,33 @@
                 "type": "integer",
                 "minimum": 1,
                 "maximum": 20
+              },
+              "preparation": {
+                "type": "string",
+                "enum": [
+                  "prepared",
+                  "known"
+                ]
+              },
+              "focusCategories": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "enum": [
+                    "category_arcane_focus",
+                    "category_druidic_focus",
+                    "category_holy_symbol",
+                    "category_musical_instrument"
+                  ]
+                }
               }
             },
             "required": [
               "ability",
               "progression",
-              "startsAtLevel"
+              "startsAtLevel",
+              "preparation",
+              "focusCategories"
             ],
             "additionalProperties": false
           },
@@ -4539,12 +4780,33 @@
                 "type": "integer",
                 "minimum": 1,
                 "maximum": 20
+              },
+              "preparation": {
+                "type": "string",
+                "enum": [
+                  "prepared",
+                  "known"
+                ]
+              },
+              "focusCategories": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "enum": [
+                    "category_arcane_focus",
+                    "category_druidic_focus",
+                    "category_holy_symbol",
+                    "category_musical_instrument"
+                  ]
+                }
               }
             },
             "required": [
               "ability",
               "progression",
-              "startsAtLevel"
+              "startsAtLevel",
+              "preparation",
+              "focusCategories"
             ],
             "additionalProperties": false
           }
@@ -5050,7 +5312,8 @@
                 "category_arcane_focus",
                 "category_druidic_focus",
                 "category_musical_instrument",
-                "category_pack"
+                "category_pack",
+                "category_component_pouch"
               ]
             }
           },
@@ -5449,6 +5712,11 @@
                                 "no_damage",
                                 "negates_effect"
                               ]
+                            },
+                            "dc": {
+                              "type": "integer",
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991
                             }
                           },
                           "required": [
@@ -5521,6 +5789,10 @@
                                     "newDice"
                                   ]
                                 }
+                              },
+                              "perSlotAbove": {
+                                "type": "string",
+                                "pattern": "^(\\d+d\\d+([+-]\\d+)?|\\d+)$"
                               }
                             },
                             "required": [
@@ -5713,6 +5985,10 @@
                                     "newDice"
                                   ]
                                 }
+                              },
+                              "perSlotAbove": {
+                                "type": "string",
+                                "pattern": "^(\\d+d\\d+([+-]\\d+)?|\\d+)$"
                               }
                             },
                             "required": [
@@ -5786,6 +6062,10 @@
                                     "newDice"
                                   ]
                                 }
+                              },
+                              "perSlotAbove": {
+                                "type": "string",
+                                "pattern": "^(\\d+d\\d+([+-]\\d+)?|\\d+)$"
                               }
                             },
                             "required": [
@@ -5794,6 +6074,47 @@
                               "damageType"
                             ]
                           }
+                        },
+                        "repeat": {
+                          "type": "object",
+                          "properties": {
+                            "label": {
+                              "type": "string",
+                              "minLength": 1
+                            },
+                            "thresholds": {
+                              "minItems": 1,
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "minimumLevel": {
+                                    "type": "integer",
+                                    "exclusiveMinimum": 0,
+                                    "maximum": 9007199254740991
+                                  },
+                                  "value": {
+                                    "type": "number"
+                                  }
+                                },
+                                "required": [
+                                  "minimumLevel",
+                                  "value"
+                                ],
+                                "additionalProperties": false
+                              }
+                            }
+                          },
+                          "required": [
+                            "label",
+                            "thresholds"
+                          ],
+                          "additionalProperties": false
+                        },
+                        "repeatCount": {
+                          "type": "integer",
+                          "exclusiveMinimum": 0,
+                          "maximum": 9007199254740991
                         }
                       },
                       "required": [
@@ -5881,6 +6202,10 @@
                                     "newDice"
                                   ]
                                 }
+                              },
+                              "perSlotAbove": {
+                                "type": "string",
+                                "pattern": "^(\\d+d\\d+([+-]\\d+)?|\\d+)$"
                               }
                             },
                             "required": [
@@ -6372,6 +6697,18 @@
                       "properties": {
                         "type": {
                           "type": "string",
+                          "const": "end_concentration"
+                        }
+                      },
+                      "required": [
+                        "type"
+                      ]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "type": {
+                          "type": "string",
                           "const": "macro"
                         },
                         "effects": {
@@ -6499,6 +6836,11 @@
                                           "no_damage",
                                           "negates_effect"
                                         ]
+                                      },
+                                      "dc": {
+                                        "type": "integer",
+                                        "minimum": -9007199254740991,
+                                        "maximum": 9007199254740991
                                       }
                                     },
                                     "required": [
@@ -6571,6 +6913,10 @@
                                               "newDice"
                                             ]
                                           }
+                                        },
+                                        "perSlotAbove": {
+                                          "type": "string",
+                                          "pattern": "^(\\d+d\\d+([+-]\\d+)?|\\d+)$"
                                         }
                                       },
                                       "required": [
@@ -6763,6 +7109,10 @@
                                               "newDice"
                                             ]
                                           }
+                                        },
+                                        "perSlotAbove": {
+                                          "type": "string",
+                                          "pattern": "^(\\d+d\\d+([+-]\\d+)?|\\d+)$"
                                         }
                                       },
                                       "required": [
@@ -6836,6 +7186,10 @@
                                               "newDice"
                                             ]
                                           }
+                                        },
+                                        "perSlotAbove": {
+                                          "type": "string",
+                                          "pattern": "^(\\d+d\\d+([+-]\\d+)?|\\d+)$"
                                         }
                                       },
                                       "required": [
@@ -6844,6 +7198,47 @@
                                         "damageType"
                                       ]
                                     }
+                                  },
+                                  "repeat": {
+                                    "type": "object",
+                                    "properties": {
+                                      "label": {
+                                        "type": "string",
+                                        "minLength": 1
+                                      },
+                                      "thresholds": {
+                                        "minItems": 1,
+                                        "type": "array",
+                                        "items": {
+                                          "type": "object",
+                                          "properties": {
+                                            "minimumLevel": {
+                                              "type": "integer",
+                                              "exclusiveMinimum": 0,
+                                              "maximum": 9007199254740991
+                                            },
+                                            "value": {
+                                              "type": "number"
+                                            }
+                                          },
+                                          "required": [
+                                            "minimumLevel",
+                                            "value"
+                                          ],
+                                          "additionalProperties": false
+                                        }
+                                      }
+                                    },
+                                    "required": [
+                                      "label",
+                                      "thresholds"
+                                    ],
+                                    "additionalProperties": false
+                                  },
+                                  "repeatCount": {
+                                    "type": "integer",
+                                    "exclusiveMinimum": 0,
+                                    "maximum": 9007199254740991
                                   }
                                 },
                                 "required": [
@@ -6931,6 +7326,10 @@
                                               "newDice"
                                             ]
                                           }
+                                        },
+                                        "perSlotAbove": {
+                                          "type": "string",
+                                          "pattern": "^(\\d+d\\d+([+-]\\d+)?|\\d+)$"
                                         }
                                       },
                                       "required": [
@@ -7416,6 +7815,18 @@
                                   "ability",
                                   "dcRule"
                                 ]
+                              },
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "type": {
+                                    "type": "string",
+                                    "const": "end_concentration"
+                                  }
+                                },
+                                "required": [
+                                  "type"
+                                ]
                               }
                             ]
                           }
@@ -7862,6 +8273,11 @@
                               "no_damage",
                               "negates_effect"
                             ]
+                          },
+                          "dc": {
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991
                           }
                         },
                         "required": [
@@ -7934,6 +8350,10 @@
                                   "newDice"
                                 ]
                               }
+                            },
+                            "perSlotAbove": {
+                              "type": "string",
+                              "pattern": "^(\\d+d\\d+([+-]\\d+)?|\\d+)$"
                             }
                           },
                           "required": [
@@ -8126,6 +8546,10 @@
                                   "newDice"
                                 ]
                               }
+                            },
+                            "perSlotAbove": {
+                              "type": "string",
+                              "pattern": "^(\\d+d\\d+([+-]\\d+)?|\\d+)$"
                             }
                           },
                           "required": [
@@ -8199,6 +8623,10 @@
                                   "newDice"
                                 ]
                               }
+                            },
+                            "perSlotAbove": {
+                              "type": "string",
+                              "pattern": "^(\\d+d\\d+([+-]\\d+)?|\\d+)$"
                             }
                           },
                           "required": [
@@ -8207,6 +8635,47 @@
                             "damageType"
                           ]
                         }
+                      },
+                      "repeat": {
+                        "type": "object",
+                        "properties": {
+                          "label": {
+                            "type": "string",
+                            "minLength": 1
+                          },
+                          "thresholds": {
+                            "minItems": 1,
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "minimumLevel": {
+                                  "type": "integer",
+                                  "exclusiveMinimum": 0,
+                                  "maximum": 9007199254740991
+                                },
+                                "value": {
+                                  "type": "number"
+                                }
+                              },
+                              "required": [
+                                "minimumLevel",
+                                "value"
+                              ],
+                              "additionalProperties": false
+                            }
+                          }
+                        },
+                        "required": [
+                          "label",
+                          "thresholds"
+                        ],
+                        "additionalProperties": false
+                      },
+                      "repeatCount": {
+                        "type": "integer",
+                        "exclusiveMinimum": 0,
+                        "maximum": 9007199254740991
                       }
                     },
                     "required": [
@@ -8294,6 +8763,10 @@
                                   "newDice"
                                 ]
                               }
+                            },
+                            "perSlotAbove": {
+                              "type": "string",
+                              "pattern": "^(\\d+d\\d+([+-]\\d+)?|\\d+)$"
                             }
                           },
                           "required": [
@@ -8785,6 +9258,18 @@
                     "properties": {
                       "type": {
                         "type": "string",
+                        "const": "end_concentration"
+                      }
+                    },
+                    "required": [
+                      "type"
+                    ]
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "type": {
+                        "type": "string",
                         "const": "macro"
                       },
                       "effects": {
@@ -8912,6 +9397,11 @@
                                         "no_damage",
                                         "negates_effect"
                                       ]
+                                    },
+                                    "dc": {
+                                      "type": "integer",
+                                      "minimum": -9007199254740991,
+                                      "maximum": 9007199254740991
                                     }
                                   },
                                   "required": [
@@ -8984,6 +9474,10 @@
                                             "newDice"
                                           ]
                                         }
+                                      },
+                                      "perSlotAbove": {
+                                        "type": "string",
+                                        "pattern": "^(\\d+d\\d+([+-]\\d+)?|\\d+)$"
                                       }
                                     },
                                     "required": [
@@ -9176,6 +9670,10 @@
                                             "newDice"
                                           ]
                                         }
+                                      },
+                                      "perSlotAbove": {
+                                        "type": "string",
+                                        "pattern": "^(\\d+d\\d+([+-]\\d+)?|\\d+)$"
                                       }
                                     },
                                     "required": [
@@ -9249,6 +9747,10 @@
                                             "newDice"
                                           ]
                                         }
+                                      },
+                                      "perSlotAbove": {
+                                        "type": "string",
+                                        "pattern": "^(\\d+d\\d+([+-]\\d+)?|\\d+)$"
                                       }
                                     },
                                     "required": [
@@ -9257,6 +9759,47 @@
                                       "damageType"
                                     ]
                                   }
+                                },
+                                "repeat": {
+                                  "type": "object",
+                                  "properties": {
+                                    "label": {
+                                      "type": "string",
+                                      "minLength": 1
+                                    },
+                                    "thresholds": {
+                                      "minItems": 1,
+                                      "type": "array",
+                                      "items": {
+                                        "type": "object",
+                                        "properties": {
+                                          "minimumLevel": {
+                                            "type": "integer",
+                                            "exclusiveMinimum": 0,
+                                            "maximum": 9007199254740991
+                                          },
+                                          "value": {
+                                            "type": "number"
+                                          }
+                                        },
+                                        "required": [
+                                          "minimumLevel",
+                                          "value"
+                                        ],
+                                        "additionalProperties": false
+                                      }
+                                    }
+                                  },
+                                  "required": [
+                                    "label",
+                                    "thresholds"
+                                  ],
+                                  "additionalProperties": false
+                                },
+                                "repeatCount": {
+                                  "type": "integer",
+                                  "exclusiveMinimum": 0,
+                                  "maximum": 9007199254740991
                                 }
                               },
                               "required": [
@@ -9344,6 +9887,10 @@
                                             "newDice"
                                           ]
                                         }
+                                      },
+                                      "perSlotAbove": {
+                                        "type": "string",
+                                        "pattern": "^(\\d+d\\d+([+-]\\d+)?|\\d+)$"
                                       }
                                     },
                                     "required": [
@@ -9829,6 +10376,18 @@
                                 "ability",
                                 "dcRule"
                               ]
+                            },
+                            {
+                              "type": "object",
+                              "properties": {
+                                "type": {
+                                  "type": "string",
+                                  "const": "end_concentration"
+                                }
+                              },
+                              "required": [
+                                "type"
+                              ]
                             }
                           ]
                         }
@@ -9847,6 +10406,187 @@
               "name",
               "activation",
               "effect"
+            ]
+          },
+          "lore": {
+            "type": "object",
+            "properties": {
+              "shortDescription": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 280
+              },
+              "fullText": {
+                "type": "string",
+                "maxLength": 8000
+              }
+            },
+            "required": [
+              "shortDescription"
+            ],
+            "additionalProperties": false
+          },
+          "range": {
+            "oneOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "kind": {
+                    "type": "string",
+                    "const": "feet"
+                  },
+                  "feet": {
+                    "type": "integer",
+                    "exclusiveMinimum": 0,
+                    "maximum": 9007199254740991
+                  },
+                  "area": {
+                    "type": "object",
+                    "properties": {
+                      "shape": {
+                        "type": "string",
+                        "enum": [
+                          "cone",
+                          "line",
+                          "sphere",
+                          "cube",
+                          "cylinder",
+                          "single_target"
+                        ]
+                      },
+                      "size": {
+                        "type": "number"
+                      },
+                      "secondarySize": {
+                        "type": "number"
+                      }
+                    },
+                    "required": [
+                      "shape",
+                      "size"
+                    ]
+                  }
+                },
+                "required": [
+                  "kind",
+                  "feet"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "kind": {
+                    "type": "string",
+                    "const": "self"
+                  },
+                  "area": {
+                    "type": "object",
+                    "properties": {
+                      "shape": {
+                        "type": "string",
+                        "enum": [
+                          "cone",
+                          "line",
+                          "sphere",
+                          "cube",
+                          "cylinder",
+                          "single_target"
+                        ]
+                      },
+                      "size": {
+                        "type": "number"
+                      },
+                      "secondarySize": {
+                        "type": "number"
+                      }
+                    },
+                    "required": [
+                      "shape",
+                      "size"
+                    ]
+                  }
+                },
+                "required": [
+                  "kind"
+                ],
+                "additionalProperties": false
+              }
+            ]
+          },
+          "components": {
+            "type": "object",
+            "properties": {
+              "verbal": {
+                "default": false,
+                "type": "boolean"
+              },
+              "somatic": {
+                "default": false,
+                "type": "boolean"
+              },
+              "material": {
+                "default": false,
+                "type": "boolean"
+              },
+              "materialDescription": {
+                "type": "string"
+              },
+              "goldCost": {
+                "default": 0,
+                "type": "number"
+              },
+              "isConsumed": {
+                "default": false,
+                "type": "boolean"
+              }
+            }
+          },
+          "duration": {
+            "oneOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "kind": {
+                    "type": "string",
+                    "const": "instantaneous"
+                  }
+                },
+                "required": [
+                  "kind"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "kind": {
+                    "type": "string",
+                    "const": "timed"
+                  },
+                  "amount": {
+                    "type": "integer",
+                    "exclusiveMinimum": 0,
+                    "maximum": 9007199254740991
+                  },
+                  "unit": {
+                    "type": "string",
+                    "enum": [
+                      "minute"
+                    ]
+                  },
+                  "concentration": {
+                    "type": "boolean"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "amount",
+                  "unit",
+                  "concentration"
+                ],
+                "additionalProperties": false
+              }
             ]
           },
           "implementation": {

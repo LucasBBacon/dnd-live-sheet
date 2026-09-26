@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import { EffectManager } from "../effects.js";
 import type { ActiveEffect } from "../effects.js";
-import type { RuntimeModifier } from "@project/shared";
+import type { RuntimeModifier, ActorInstance } from "@project/shared";
 
 let idCounter = 0;
 
@@ -516,3 +516,28 @@ describe("EffectManager.getActiveStates", () => {
 });
 
 // #endregion
+
+describe("dropConcentration", () => {
+  it("takes the actors a concentration effect brought with it", () => {
+    const manager = new EffectManager();
+    const effect = makeEffect({ isSelfConcentration: true });
+    const actor: ActorInstance = {
+      instanceId: `${effect.instanceId}:actor_steed:0`,
+      templateId: "actor_steed",
+      displayLabel: "Steed",
+      controller: "player",
+      lifecycleState: "active",
+      currentStates: [],
+      availableActions: [],
+      statusSummary: "Active steed",
+      sourceEffectInstanceId: effect.instanceId,
+    };
+    manager.addEffect(effect);
+    manager.addActor(actor);
+
+    manager.dropConcentration();
+
+    expect(manager.getActiveEffects()).toEqual([]);
+    expect(manager.getActiveActors()).toEqual([]);
+  });
+});

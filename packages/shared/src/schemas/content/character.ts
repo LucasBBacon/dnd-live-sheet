@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { StartingEquipmentDefinitionSchema } from "./items.js";
+import { SpellcastingFocusCategorySchema, StartingEquipmentDefinitionSchema } from "./items.js";
 import { SpellChoiceNodeSchema } from "./spells.js";
 import { ClassMulticlassPrerequisitesSchema } from "./prerequisites.js";
 import { LoreSchema } from "../primitives/lore.js";
@@ -114,11 +114,6 @@ export const ClassLevelFeatureSchema = z.object({
 /**
  * How a class casts, for the classes that cast.
  *
- * Three fields. A `preparation: "prepared" | "known"` belongs here
- * eventually and is deliberately absent: nothing reads it until spell lists
- * exist, and a field authored before it has a reader is the dead-data pattern
- * ruleSnapshot.ts warns about in its own docstring.
- *
  * `progression` drives caster level, which is what the slot tables read. Pact
  * magic is listed here but never contributes to that sum - it is its own pool
  * on its own table, which is what the PHB means by keeping it separate.
@@ -136,6 +131,18 @@ export const SpellcastingSchema = z
     ability: z.enum(["INT", "WIS", "CHA"]),
     progression: z.enum(["full", "half", "third", "pact"]),
     startsAtLevel: z.number().int().min(1).max(20),
+    /**
+     * Whether the class prepares its leveled spells each day or knows a fixed
+     * list. The spell synthesizer reads it to flag a prepared caster's picks,
+     * since preparation itself is not tracked yet.
+     */
+    preparation: z.enum(["prepared", "known"]),
+    /**
+     * The foci this class's spells can use in place of material components.
+     * Empty is a statement - component pouch only - and is what the ranger,
+     * the Eldritch Knight and the Arcane Trickster get.
+     */
+    focusCategories: z.array(SpellcastingFocusCategorySchema),
   })
   .strict();
 

@@ -115,12 +115,14 @@ export class EffectManager {
   }
 
   /**
-   * Drops whatever the character is currently concentrating on.
+   * Drops whatever the character is concentrating on, and any actor that
+   * effect brought with it - as removeEffect does.
    */
   public dropConcentration(): void {
     for (const [id, effect] of this.effects.entries()) {
       if (effect.isSelfConcentration) {
         this.effects.delete(id);
+        this.removeActorsForEffect(id);
       }
     }
   }

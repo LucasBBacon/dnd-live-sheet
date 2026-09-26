@@ -1,6 +1,6 @@
 /**
- * Development fixture: twenty sample characters on stable URLs - the ten
- * coverage characters below, and the ten scenario characters in
+ * Development fixture: twenty-one sample characters on stable URLs - the ten
+ * coverage characters below, and the eleven scenario characters in
  * sampleScenarioCharacters.ts, each staged for one hand check.
  *
  * Purpose is live UI and socket testing, not content authoring. Every row it
@@ -13,7 +13,7 @@
  * 1. Reference stubs are inserted with onConflictDoNothing. If an id already
  *    exists - because the real pack now defines it, or because a previous run
  *    created it - the authored row wins and this script leaves it alone.
- * 2. Operational writes touch only the twenty fixed ids in ROSTER. Child rows
+ * 2. Operational writes touch only the twenty-one fixed ids in ROSTER. Child rows
  *    for those ids are cleared and rewritten so re-running is idempotent; no
  *    other character is read or modified.
  *
@@ -1860,7 +1860,7 @@ const seedCampaign = async () => {
  *
  * Child rows are cleared first so a second run cannot double up inventory or
  * trait grants. Every delete is keyed on this character's id alone, which is
- * one of the twenty in ROSTER.
+ * one of the twenty-one in ROSTER.
  */
 const seedCharacter = async (character: SampleCharacter) => {
   // the ledger decides, except where a character exists to disagree with it

@@ -289,7 +289,7 @@ Every id this file has ever issued, in one table. Gaps in the numbering are inte
 | 80 | A custom background's choice blocks cannot be answered | Open | Open items (11g) |
 | 81 | A choice question offers options whose prerequisites the character does not meet | ✅ Closed | Closed items (11g) |
 | 82 | Level-up cannot swap a known spell | Open | Open items (11h) |
-| 83 | The sheet does not list a character's picked spells | Open | Open items (11h) |
+| 83 | The sheet does not list a character's picked spells | ✅ Closed | Closed items (11h) |
 | 84 | A stored pick can go stale | Open | Open items (11h) |
 | 85 | Nothing stops a pack gating a choice option on a pick made at the same level | Open | Open items (11h) |
 | 86 | `calculateMaxHp` floors Constitution at 1 per level, not the level's whole gain | ✅ Closed | Closed items |
@@ -320,6 +320,17 @@ Every id this file has ever issued, in one table. Gaps in the numbering are inte
 | 111 | A level-up is not broadcast | Open | Open items |
 | 112 | A feat picked after a partial ability score increase is refused with the wrong message | Open | Open items |
 | 113 | The wizard accepts a roll above the hit die | Open | Open items |
+| 114 | Spell preparation is not tracked | Open | Open items |
+| 115 | Concentration is never checked when the caster takes damage | Open | Open items |
+| 116 | Verbal and somatic components are not gated | Open | Open items |
+| 117 | Costly and consumed material components are not enforced | Open | Open items |
+| 118 | The bonus-action spell rule is not enforced | Open | Open items |
+| 119 | Spells cannot be cast as rituals | Open | Open items |
+| 120 | The invocations that modify Eldritch Blast are unauthored | Open | Open items |
+| 121 | A spellcasting focus need only be carried, not held | Open | Open items |
+| 122 | Healing spells cannot be authored yet | Open | Open items |
+| 123 | A rest does not end round-timed effects | Open | Open items |
+| 124 | "Latest rolls" appends across actions | Open | Open items |
 | A1 | Ready's trigger is not modelled | Open | Open items |
 | A2 | No roll-initiating UI for skills | ✅ Closed | Closed items |
 | A2b | actions do not prompt their own check | Open | Open items |
@@ -446,7 +457,7 @@ not be confused when sequencing work.
 
 | # | Item | Scale | Notes |
 | --- | --- | --- | --- |
-| 31 | Spells marked `unimplemented` | **111 of 111** | Every spell in the pack is a stub with a `no_effect` action; `level` and `school` are placeholders, which the marker's summary says outright. |
+| 31 | Spells marked `unimplemented` | **107 of 111** | Four authored on `feat/spell-casting` (2026-09-25): Eldritch Blast, Dancing Lights, Faerie Fire, Burning Hands, in `spells/core.json`. The other 107 are stubs with a `no_effect` action; their `level` and `school` are placeholders, which the marker's summary says outright. `docs/architecture/spell-authoring-guide.md` is how the rest are authored. |
 
 Two passes, not one. `level` is `0` for every spell and `school` is `evocation`
 for every spell, so these need real **data** before they can carry rules — which
@@ -469,11 +480,17 @@ the level-up Choices step takes `held` from the server as-is, so two new spell
 questions at one level with overlapping rosters (a Lore bard 6's Additional
 Magical Secrets beside its spells known; a warlock 11/13/15/17's Mystic Arcanum
 beside its spells known) can take the same spell until submit fails; (c) Mystic
-Arcanum needs exactly its level, not `spellOptions`' 1..max.
+Arcanum needs exactly its level, not `spellOptions`' 1..max. #31a must also
+remove `spellOptions`' rule that a leveled node offers nothing
+(`feat/spell-casting`'s decision 8), which exists only because no class list
+exists to filter on. Until then a stub's placeholder level also sets its
+place and price on the Spells panel: Flaming Sphere and Scorching Ray (Light
+Domain) and Drow Magic's Darkness show under Cantrips as "At will"; real
+levels fix both, since payment checks `level === 0` first.
 
 *#31b is that per-spell rules job. It is recorded here rather than under a
-heading of its own; the sentence above is its whole record, and #83 is the
-other item that waits on it.*
+heading of its own; the sentence above is its whole record. #83, the other
+item that waited on it, closed on `feat/spell-casting`.*
 
 ### #36 — `SUMMON_ACTOR_DICTIONARY`
 
@@ -841,21 +858,6 @@ re-answer a stored question (`Invalid character choices: <id> already
 answered`). Waits on #31a: until spells have real levels no spells-known
 node is asked at all.
 
-### #83 — the sheet does not list a character's picked spells
-
-*Recorded as 11h.*
-
-| # | Item | Notes |
-| --- | --- | --- |
-| 83 | The sheet does not list a character's picked spells | Recorded 2026-09-22 on `feat/spell-choices`. See below. |
-
-Since `feat/spell-choices` spell picks are stored in `choices`, and
-`knownSpellIds` reads them for invocation prerequisites, but
-`SpellcastingWidget` shows slots only and no code builds a
-`RuntimeSpellSource` from a save, so `SpellbookEngine` has no caller. Best
-done with or after #31a, when spells have real levels (and #31b, real
-actions).
-
 ### #84 — a stored pick can go stale
 
 *Recorded as 11h.*
@@ -1161,6 +1163,114 @@ switches mode (and `checkLevelUpNumbers`' docstring then holds).
 "Total +CON" shows the roll plus the modifier, which can read 0 where the
 server now stores a lifted roll (#107). Fix: bound the roll to the die in
 the step or in `isStepComplete`, and show the lifted total.
+
+### #114 — spell preparation is not tracked
+
+| # | Item | Notes |
+| --- | --- | --- |
+| 114 | Spell preparation is not tracked | Recorded 2026-09-25 on `feat/spell-casting`. See below. |
+
+Every picked spell is castable, and a prepared caster's leveled picks carry a
+note instead. Needs a prepare/unprepare control and the daily limit (ability
+modifier + level); clerics, druids and paladins also need #31a's class lists
+to prepare from.
+
+### #115 — concentration is never checked when the caster takes damage
+
+| # | Item | Notes |
+| --- | --- | --- |
+| 115 | Concentration is never checked when the caster takes damage | Recorded 2026-09-25 on `feat/spell-casting`. See below. |
+
+Nothing emits a damage-taken event, so the sheet cannot prompt the DC
+10-or-half-damage Constitution save that keeps concentration.
+
+### #116 — verbal and somatic components are not gated
+
+| # | Item | Notes |
+| --- | --- | --- |
+| 116 | Verbal and somatic components are not gated | Recorded 2026-09-25 on `feat/spell-casting`. See below. |
+
+Conditions are client-only and nothing models "cannot speak" or "hands
+bound"; `components` are displayed, never checked.
+
+### #117 — costly and consumed material components are not enforced
+
+| # | Item | Notes |
+| --- | --- | --- |
+| 117 | Costly and consumed material components are not enforced | Recorded 2026-09-25 on `feat/spell-casting`. See below. |
+
+A pouch or focus cannot cover a component with a cost (Revivify's diamond).
+Nothing checks that the character owns one, or spends it when `isConsumed`.
+
+### #118 — the bonus-action spell rule is not enforced
+
+| # | Item | Notes |
+| --- | --- | --- |
+| 118 | The bonus-action spell rule is not enforced | Recorded 2026-09-25 on `feat/spell-casting`. See below. |
+
+Casting a bonus-action spell limits your action to a cantrip that turn (PHB
+p.202). Not enforced.
+
+### #119 — spells cannot be cast as rituals
+
+| # | Item | Notes |
+| --- | --- | --- |
+| 119 | Spells cannot be cast as rituals | Recorded 2026-09-25 on `feat/spell-casting`. See below. |
+
+`isRitual` is authored and nothing reads it: no ritual cast (+10 minutes, no
+slot).
+
+### #120 — the invocations that modify Eldritch Blast are unauthored
+
+| # | Item | Notes |
+| --- | --- | --- |
+| 120 | The invocations that modify Eldritch Blast are unauthored | Recorded 2026-09-25 on `feat/spell-casting`. See below. |
+
+Agonizing Blast, Repelling Blast and Eldritch Spear are stubs. Agonizing
+Blast will add CHA to Eldritch Blast's damage segment, the synthesizer's
+resolved `damageBonus`.
+
+### #121 — a spellcasting focus need only be carried, not held
+
+| # | Item | Notes |
+| --- | --- | --- |
+| 121 | A spellcasting focus need only be carried, not held | Recorded 2026-09-25 on `feat/spell-casting`. See below. |
+
+No item can be held in a hand except weapons and shields (`equipSlots.ts`),
+so the material check accepts a focus anywhere in the inventory.
+
+### #122 — healing spells cannot be authored yet
+
+| # | Item | Notes |
+| --- | --- | --- |
+| 122 | Healing spells cannot be authored yet | Recorded 2026-09-26 on `feat/spell-casting`. See below. |
+
+`heal` carries only dice: no casting modifier, no upcast, and the server
+applies it to the caster's own hit points. Cure Wounds, Healing Word and the
+like stay stubs until `heal` gains a casting modifier, `perSlotAbove` and a
+target.
+
+### #123 — a rest does not end round-timed effects
+
+| # | Item | Notes |
+| --- | --- | --- |
+| 123 | A rest does not end round-timed effects | Recorded 2026-09-26 on `feat/spell-casting`. See below. |
+
+Rests clear only `rest_short`/`rest_long` effects and rounds tick only on
+turns, so a one-minute concentration effect (Dancing Lights) survives an
+eight-hour long rest; Rage has the same shape. Any rest of an hour or more
+should expire every rounds-timed effect.
+
+### #124 — "Latest rolls" appends across actions
+
+| # | Item | Notes |
+| --- | --- | --- |
+| 124 | "Latest rolls" appends across actions | Recorded 2026-09-26 on `feat/spell-casting`. See below. |
+
+A resolution's rolls are appended to the previous ones while its target
+saves replace them, so Burning Hands' fire damage can sit under Eldritch
+Blast's beams with no save line beside it. Group rolls per action, or reset
+them on each ACTION_RESOLVED as the store's own comment says it does.
 
 ### Coverage thresholds
 
@@ -2839,6 +2949,27 @@ with Armor of Shadows and Devil's Sight pickable; the commit stored both.
 A second warlock created with Eldritch Blast got Agonizing Blast with no
 reasons, while Thirsting Blade kept "needs Warlock level 5, needs Pact of
 the Blade".
+
+### #83 — the sheet does not list a character's picked spells ✅
+
+*Recorded as 11h.*
+
+| # | Item | Notes |
+| --- | --- | --- |
+| 83 | ✅ The sheet does not list a character's picked spells | Recorded 2026-09-22 on `feat/spell-choices`; closed 2026-09-25 on `feat/spell-casting`. See below. |
+
+Since `feat/spell-choices` spell picks are stored in `choices`, and
+`knownSpellIds` reads them for invocation prerequisites, but
+`SpellcastingWidget` shows slots only and no code builds a
+`RuntimeSpellSource` from a save, so `SpellbookEngine` has no caller. Best
+done with or after #31a, when spells have real levels (and #31b, real
+actions).
+
+**Closed 2026-09-25** by `feat/spell-casting`. `synthesizeSpells` builds every
+spell a character has from fixed grants and stored picks, one per source. The
+Spells panel lists them and casts the implemented ones through
+`ACTION_INTENT`, with a slot picker, a material prompt and refusals.
+Preparation, which this item's note left for later, is split out as #114.
 
 ### #89 — the sheet's own damage and heal writes are never clamped ✅
 

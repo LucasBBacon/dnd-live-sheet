@@ -2,63 +2,6 @@
     "$schema": "../../../schemas/segment.schema.json",
     "spells": [
         {
-            "id": "spell_eldritch_blast",
-            "name": "Eldritch Blast",
-            "level": 0,
-            "school": "evocation",
-            "isRitual": false,
-            "action": {
-                "id": "action_spell_eldritch_blast",
-                "name": "Eldritch Blast",
-                "activation": "action",
-                "effect": {
-                    "type": "no_effect"
-                }
-            },
-            "implementation": {
-                "mode": "unimplemented",
-                "summary": "Awaiting authoring; level, school and action are placeholders."
-            }
-        },
-        {
-            "id": "spell_dancing_lights",
-            "name": "Dancing Lights",
-            "level": 0,
-            "school": "evocation",
-            "isRitual": false,
-            "action": {
-                "id": "action_spell_dancing_lights",
-                "name": "Dancing Lights",
-                "activation": "action",
-                "effect": {
-                    "type": "no_effect"
-                }
-            },
-            "implementation": {
-                "mode": "unimplemented",
-                "summary": "Awaiting authoring; level, school and action are placeholders."
-            }
-        },
-        {
-            "id": "spell_faerie_fire",
-            "name": "Faerie Fire",
-            "level": 0,
-            "school": "evocation",
-            "isRitual": false,
-            "action": {
-                "id": "action_spell_faerie_fire",
-                "name": "Faerie Fire",
-                "activation": "action",
-                "effect": {
-                    "type": "no_effect"
-                }
-            },
-            "implementation": {
-                "mode": "unimplemented",
-                "summary": "Awaiting authoring; level, school and action are placeholders."
-            }
-        },
-        {
             "id": "spell_darkness",
             "name": "Darkness",
             "level": 0,
@@ -504,25 +447,6 @@
             "action": {
                 "id": "action_spell_raise_dead",
                 "name": "Raise Dead",
-                "activation": "action",
-                "effect": {
-                    "type": "no_effect"
-                }
-            },
-            "implementation": {
-                "mode": "unimplemented",
-                "summary": "Awaiting authoring; level, school and action are placeholders."
-            }
-        },
-        {
-            "id": "spell_burning_hands",
-            "name": "Burning Hands",
-            "level": 0,
-            "school": "evocation",
-            "isRitual": false,
-            "action": {
-                "id": "action_spell_burning_hands",
-                "name": "Burning Hands",
                 "activation": "action",
                 "effect": {
                     "type": "no_effect"
