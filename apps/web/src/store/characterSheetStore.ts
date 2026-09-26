@@ -1995,6 +1995,10 @@ export const useCharacterSheetStore = create<CharacterSheetState>(
         // note must go with it; when it adds nothing, latestRollResults is
         // untouched and latestNotes follows the same rule
         latestNotes: payload.rollResults.length > 0 ? [] : previous.latestNotes,
+        latestTargetSaves:
+          payload.rollResults.length > 0
+            ? []
+            : previous.latestTargetSaves,
         runtimeEffects,
         runtimeResources,
         runtimeCombat: createCombatManager(payload.combatContext),

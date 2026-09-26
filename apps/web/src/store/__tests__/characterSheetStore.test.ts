@@ -2348,4 +2348,30 @@ describe("useCharacterSheetStore spell casting", () => {
 
     expect(useCharacterSheetStore.getState().latestTargetSaves).toEqual([]);
   });
+
+  it("clears the targets' saves when a turn resolution carries a fresh roll", () => {
+    useCharacterSheetStore
+      .getState()
+      .syncRemoteActionExecution(resolution({ targetSaves: [burningHandsSave] }));
+    expect(useCharacterSheetStore.getState().latestTargetSaves).toEqual([
+      burningHandsSave,
+    ]);
+
+    useCharacterSheetStore.getState().syncRemoteTurnResolution({
+      characterId: "char_1",
+      requestId: "request_turn",
+      transition: "ended",
+      rollResults: [
+        { total: 12, rolls: [12], modifier: 0, target: "ABILITY_CHECK" },
+      ],
+      activeStates: [],
+      resources: [],
+      effects: [],
+      actors: [],
+      combatContext: CombatContextSchema.parse({}),
+      timestamp: 2,
+    });
+
+    expect(useCharacterSheetStore.getState().latestTargetSaves).toEqual([]);
+  });
 });
