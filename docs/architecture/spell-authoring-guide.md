@@ -35,7 +35,7 @@ schema variant before a real rule needs it.
 | forces a save for damage | `save` with `damage` and `saveEffect: "half_damage"` or `"no_damage"` | Burning Hands |
 | forces a save, then lasts | `macro` of a `save` (`negates_effect`) and a concentration `apply_effect` | Faerie Fire |
 | changes the caster's own numbers while it lasts | `apply_effect` with `modifiers` or `states` | — |
-| heals | `heal` | — |
+| heals | `heal` — a stub until it gains a casting modifier, upcast dice and a target (#122) | — |
 | does what only the table can see | a concentration `apply_effect` if it concentrates, `no_effect` otherwise; the rest in a `tableNote` | Dancing Lights |
 
 Author `SPELLCASTING_MOD` for `attackStat` and for a save's
