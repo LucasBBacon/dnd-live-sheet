@@ -24,6 +24,6 @@ describe("seedSampleCharacters import", () => {
 
     const { ROSTER } = await import("../seedSampleCharacters.js");
 
-    expect(ROSTER).toHaveLength(20);
+    expect(ROSTER).toHaveLength(21);
   }, 30_000);
 });

@@ -1,6 +1,6 @@
 /**
- * Development fixture: twenty sample characters on stable URLs - the ten
- * coverage characters below, and the ten scenario characters in
+ * Development fixture: twenty-one sample characters on stable URLs - the ten
+ * coverage characters below, and the eleven scenario characters in
  * sampleScenarioCharacters.ts, each staged for one hand check.
  *
  * Purpose is live UI and socket testing, not content authoring. Every row it
@@ -1860,7 +1860,7 @@ const seedCampaign = async () => {
  *
  * Child rows are cleared first so a second run cannot double up inventory or
  * trait grants. Every delete is keyed on this character's id alone, which is
- * one of the twenty in ROSTER.
+ * one of the twenty-one in ROSTER.
  */
 const seedCharacter = async (character: SampleCharacter) => {
   // the ledger decides, except where a character exists to disagree with it

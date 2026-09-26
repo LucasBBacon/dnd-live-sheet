@@ -50,6 +50,7 @@ const INTENDED_FINAL: Record<string, number[]> = {
   "Brother Mote": [14, 10, 14, 10, 20, 13],
   // the pack knows no Goliath, so nothing is added to the stored scores
   "Orrik Stonehide": [20, 12, 18, 8, 12, 10],
+  "Maren Solace": [13, 10, 15, 11, 17, 12],
 };
 
 describe("sample character scores", () => {

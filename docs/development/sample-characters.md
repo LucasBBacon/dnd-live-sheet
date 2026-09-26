@@ -1,18 +1,18 @@
 # Sample characters
 
-Twenty fixture characters for exercising the live sheet against a real
+Twenty-one fixture characters for exercising the live sheet against a real
 database, in two sets:
 
 - **The coverage set** (`…0110`–`…0119`) fills the sheet. Between them the ten
   reach every class, race, equipment slot, reset condition and hit point
   state. They live in `packages/database/src/seedSampleCharacters.ts`.
-- **The scenario set** (`…0120`–`…0129`) stages the hand checks a unit test
+- **The scenario set** (`…0120`–`…0130`) stages the hand checks a unit test
   cannot reach: a level-up one level away, a divergence that needs two tabs,
   a Tier 2 pass with nothing yet to verify against, or data the UI cannot
   create. Each has a script under [Live checks](#live-checks). They live in
   `packages/database/src/sampleScenarioCharacters.ts`.
 
-All twenty sit in the **Dev Smoke Campaign**
+All twenty-one sit in the **Dev Smoke Campaign**
 (`00000000-0000-0000-0000-000000000001`), owned by `dev-user-1` — the id the
 web client sends as `x-tester-id`.
 
@@ -24,7 +24,7 @@ pnpm --filter @project/database db:seed:samples
 
 Re-running is safe, and it is also how you reset. Character rows are
 upserted, their ledgers are cleared and rewritten, and no character outside
-the twenty ids is read or modified. A level-up check consumes its staging
+the twenty-one ids is read or modified. A level-up check consumes its staging
 character, so re-run the seed before trying it again.
 
 The server serves rules from `core_rule_packs`, not from the pack's JSON, and
@@ -62,16 +62,17 @@ Each is reachable at `http://localhost:5173/character/<id>`.
 | --- | --- | --- | --- | --- | --- |
 | [Quill Ashgrove](http://localhost:5173/character/00000000-0000-0000-0000-000000000120) | 2 | Rogue 2 | 17/17 | Level-up staging | #65b, #31a, #66, #70 |
 | [Brannoc Hale](http://localhost:5173/character/00000000-0000-0000-0000-000000000121) | 3 | Fighter 3 (Champion) | 31/31 | Level-up staging | #88, #94, #103, #104, #106, #24 |
-| [Isolde Varn](http://localhost:5173/character/00000000-0000-0000-0000-000000000122) | 4 | Warlock 4 (Archfey) | 20/31 | Level-up and dip staging | #81, #77, #36 |
+| [Isolde Varn](http://localhost:5173/character/00000000-0000-0000-0000-000000000122) | 4 | Warlock 4 (Archfey) | 20/31 | Level-up and dip staging | #81, #77, #36, #31b |
 | [Ursk Gravemaw](http://localhost:5173/character/00000000-0000-0000-0000-000000000123) | 5 | Paladin 5 (Vengeance) | 6/54 | Two tabs | #92, #93 |
 | [Tamsin Burrowdeep](http://localhost:5173/character/00000000-0000-0000-0000-000000000124) | 6 | Barbarian 6 (Totem Warrior) | 30/65 | Two tabs, socket | #76, #97, #99, #101 |
 | [Hesk Mossgather](http://localhost:5173/character/00000000-0000-0000-0000-000000000125) | 8 | Druid 8 (Moon) | 41/59 | Wild-shape preview | #62, #83, #80 |
 | [Seraphine Dusk](http://localhost:5173/character/00000000-0000-0000-0000-000000000126) | 9 | Wizard 9 (Divination) | 21/29 | Wizard preview | #86, #107, #31a, #83 |
-| [Kestrel Vey](http://localhost:5173/character/00000000-0000-0000-0000-000000000127) | 7 | Sorcerer 7 (Wild Magic) | 44/44 | Sorcery-points preview | #62 |
+| [Kestrel Vey](http://localhost:5173/character/00000000-0000-0000-0000-000000000127) | 7 | Sorcerer 7 (Wild Magic) | 44/44 | Sorcery-points preview | #62, #31b |
 | [Brother Mote](http://localhost:5173/character/00000000-0000-0000-0000-000000000128) | 11 (column: 12) | Cleric 11 (Tempest) | 95/80 | Broken on purpose | #95, #109, #98 |
 | [Orrik Stonehide](http://localhost:5173/character/00000000-0000-0000-0000-000000000129) | 13 | Fighter 13 (Rune Knight) | 134/134 | Broken on purpose | #102 |
+| [Maren Solace](http://localhost:5173/character/00000000-0000-0000-0000-000000000130) | 3 | Cleric 3 (Light) | 24/24 | Spell casting | #31b, #83 |
 
-Ids run `…000000000110` through `…000000000129`; the last two digits are the
+Ids run `…000000000110` through `…000000000130`; the last two digits are the
 row. HP is current over the derived maximum, as the sheet shows it.
 
 ## Coverage, both sets
@@ -192,8 +193,7 @@ re-running the seed. Stored values can be read with
 2. **Level Up → Warlock 5.** The Choices step asks for **one** new invocation.
    Voice of the Chain Master is available (she holds Pact of the Chain);
    Thirsting Blade is disabled with "needs Pact of the Blade", and Agonizing
-   Blast with "needs Eldritch Blast" (spell picks are not stored until #31a).
-   This is the #81 regression check.
+   Blast is available: she knows Eldritch Blast. This is the #81 regression check.
 3. **After submitting.** The pact slot level rises to 3rd.
 4. **Familiar.** Pact of the Chain summons nothing: the engine knows no
    familiar actor (#36).
@@ -202,6 +202,13 @@ re-running the seed. Stored values can be read with
    makes 13, the wizard's requirement, so the check passes only when it reads
    final scores; before #77's fix it read the stored 12 and refused. (Charisma
    15 meets the warlock's own requirement.) Cancel without submitting.
+6. **Eldritch Blast (#31b).** The Spells panel lists Eldritch Blast (Warlock ·
+   At will). Cast it: one attack roll at +4 and a 1d10 force damage roll, both
+   labelled Beam 1. After step 2's level-up to 5, a cast rolls Beam 1 and
+   Beam 2, each with its own attack. Minor Illusion is listed as not yet
+   automated. Dancing Lights (her High Elf cantrip) casts without asking,
+   because her component pouch covers it; End Concentration in Active effects
+   ends it.
 
 ### Ursk Gravemaw — `…0123`
 
@@ -271,7 +278,14 @@ re-running the seed. Stored values can be read with
    Fire (Drow Magic) spent and Darkness available, both `dawn`. Portent and
    Arcane Recovery are stored but not shown — stubs with no rule.
 3. **Drow Magic.** Spend Darkness, then take a short rest: it stays spent.
-4. **Spells (#31a, #83).** The spellbook is an item; nothing lists a spell.
+4. **Spells (#31b, #83).** The Spells panel lists Dancing Lights, Faerie Fire
+   and Darkness under Drow Magic. Dancing Lights asks for its material: her
+   crystal is a wizard's focus, which does not serve a racial spell. Confirm,
+   and Active effects shows it Concentrating. Faerie Fire is refused ("No uses
+   left"), since its use is spent. Take a long rest and cast it: the results
+   read "Faerie Fire: DEX save DC 12 · a success negates it · 20-foot cube",
+   Dancing Lights gives way to Faerie Fire, and End Concentration clears it.
+   Darkness is not yet automated.
 5. **Race stubs.** Sunlight Sensitivity changes nothing (a race stub, #30).
 6. **A low roll (#107, a regression check).** From the browser console, ask
    the preview for a roll of 1 at wizard 10:
@@ -297,6 +311,10 @@ re-running the seed. Stored values can be read with
    damage.
 3. **Stubs.** Wild Magic Surge and Tides of Chaos do nothing yet; Careful and
    Extended Spell are stored in `choices`.
+4. **The breath's save (#31b, a regression check).** Using Cold Breath reports
+   "Cold Breath: CON save DC 13 · half damage on a success · 15-foot cone" -
+   the targets' save, not hers - and rolls 3d6 cold, the dice for level 7.
+   Before feat/spell-casting it rolled her own Constitution save and 2d6.
 
 ### Brother Mote — `…0128`
 
@@ -333,6 +351,19 @@ finding. Record it as a backlog item rather than fixing it. The first load, on
    without its "Attuned" marker (#102).**
 4. Level Up: what do the level-up wizard and its dip menu do with a subclass
    the snapshot does not have?
+
+### Maren Solace — `…0130`
+
+1. **Burning Hands (#31b).** The Spells panel lists Burning Hands and Faerie
+   Fire (Cleric · Slot), both always prepared through Light Domain Spells.
+   Cast Burning Hands: the picker offers "1st level (1 left) · 3d6" and "2nd
+   level (2 left) · 4d6". Take the 1st: the results read "Burning Hands: DEX
+   save DC 13 · half damage on a success · 15-foot cone" with 3d6 fire.
+2. **The spent slot.** Cast again: the 1st level is gone from the picker.
+   Take the 2nd: 4d6.
+3. **Faerie Fire.** Cast it with the remaining 2nd-level slot: "DEX save DC
+   13 · a success negates it · 20-foot cube", and Active effects shows it
+   Concentrating. End Concentration clears it.
 
 ## Reference stubs
 
