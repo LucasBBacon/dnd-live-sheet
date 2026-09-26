@@ -4,6 +4,7 @@ import type {
   CharacterSlot,
   InventoryInstance,
 } from "@project/shared";
+import { STANDARD_ACTIONS } from "@project/shared";
 import { ActionResolver } from "../actionResolver.js";
 import type { InventoryLedger } from "../inventoryLedger.js";
 import {
@@ -2320,5 +2321,107 @@ describe("ActionResolver self_save (Relentless Rage)", () => {
     const result = run(countedAt(0), { STR: 0, DEX: 0, CON: 3, INT: 0, WIS: 0, CHA: 0 });
 
     expect(result.rollResults?.[0]).toMatchObject({ total: 13, modifier: 3 });
+  });
+});
+
+describe("ActionResolver macros and concentration", () => {
+  let effectManager: EffectManager;
+  let resourceManager: ResourceManager;
+
+  beforeEach(() => {
+    effectManager = new EffectManager();
+    resourceManager = new ResourceManager();
+  });
+
+  const concentrate = (name: string) => ({
+    type: "apply_effect" as const,
+    effectName: name,
+    durationType: "rounds" as const,
+    durationRounds: 10,
+    isSelfConcentration: true,
+    modifiers: [],
+    states: [],
+    requiredStates: [],
+    forbiddenStates: [],
+  });
+
+  const faerieFire: ActionGrant = {
+    id: "action_spell_faerie_fire@drow_magic",
+    name: "Faerie Fire",
+    activation: "action",
+    tableNote: "Outlined in light.",
+    effect: {
+      type: "macro",
+      effects: [
+        {
+          type: "save",
+          savingThrow: {
+            targetStat: "DEX",
+            dcCalculation: { base: 8, scalingStat: "CHA", includeProficiency: true },
+            saveEffect: "negates_effect",
+            dc: 12,
+          },
+        },
+        concentrate("Faerie Fire"),
+      ],
+    },
+  };
+
+  const dancingLights: ActionGrant = {
+    id: "action_spell_dancing_lights@drow_magic",
+    name: "Dancing Lights",
+    activation: "action",
+    effect: concentrate("Dancing Lights"),
+  };
+
+  const endConcentration = STANDARD_ACTIONS.find(
+    (action) => action.id === "action_end_concentration",
+  )!;
+
+  it("keeps a macro's nested save and applies its nested effect", () => {
+    const result = ActionResolver.execute(faerieFire, payload(), {
+      effectManager,
+      resourceManager,
+    });
+
+    expect(result.targetSaves).toEqual([
+      expect.objectContaining({ ability: "DEX", dc: 12, onSuccess: "negates_effect" }),
+    ]);
+    expect(result.notes).toEqual(["Outlined in light."]);
+    expect(effectManager.getActiveEffects()).toEqual([
+      expect.objectContaining({ sourceName: "Faerie Fire", isSelfConcentration: true }),
+    ]);
+  });
+
+  it("ends one concentration spell by casting another", () => {
+    const context = { effectManager, resourceManager };
+    ActionResolver.execute(dancingLights, payload(), context);
+    ActionResolver.execute(faerieFire, payload(), context);
+
+    expect(effectManager.getActiveEffects().map((effect) => effect.sourceName)).toEqual([
+      "Faerie Fire",
+    ]);
+  });
+
+  it("ends concentration on its own, and nothing else", () => {
+    effectManager.addEffect({
+      instanceId: "effect_rage",
+      sourceName: "Rage",
+      durationType: "manual",
+      isSelfConcentration: false,
+      modifiers: [],
+      grantedStates: ["status_raging"],
+    });
+    ActionResolver.execute(dancingLights, payload(), { effectManager, resourceManager });
+
+    const result = ActionResolver.execute(endConcentration, payload(), {
+      effectManager,
+      resourceManager,
+    });
+
+    expect(result.executed).toBe(true);
+    expect(effectManager.getActiveEffects().map((effect) => effect.sourceName)).toEqual([
+      "Rage",
+    ]);
   });
 });

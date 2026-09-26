@@ -134,3 +134,13 @@ describe("actions the engine does not model", () => {
     },
   );
 });
+
+describe("End Concentration", () => {
+  const end = byId("action_end_concentration");
+
+  // "no action required" (PHB p.203): ending concentration costs nothing
+  it("is free, and ends concentration", () => {
+    expect(end?.activation).toBe("special");
+    expect(end?.effect).toEqual({ type: "end_concentration" });
+  });
+});

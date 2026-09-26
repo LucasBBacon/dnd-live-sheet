@@ -477,6 +477,11 @@ export class ActionResolver {
       case "remove_effect":
         context.effectManager.removeEffectsByTag(effect.effectTag);
         return ok;
+
+      case "end_concentration":
+        context.effectManager.dropConcentration();
+        return ok;
+
       case "apply_effect": {
         const blueprint = effect;
         const instanceId = `effect_${generateId()}`;
@@ -585,6 +590,12 @@ export class ActionResolver {
       }
 
       case "macro": {
+        // a macro is one action, so what its parts produced is the action's:
+        // Faerie Fire's save line and its concentration are one cast
+        const rollResults: ActionRollResult[] = [];
+        const targetSaves: TargetSave[] = [];
+        const notes: string[] = [];
+
         for (const nestedEffect of effect.effects) {
           const nestedResult = this.executeEffect(
             nestedEffect,
@@ -593,9 +604,18 @@ export class ActionResolver {
             activeStates,
           );
           if (!nestedResult.executed) return nestedResult;
+
+          rollResults.push(...(nestedResult.rollResults ?? []));
+          targetSaves.push(...(nestedResult.targetSaves ?? []));
+          notes.push(...(nestedResult.notes ?? []));
         }
 
-        return ok;
+        return {
+          ...ok,
+          ...(rollResults.length > 0 && { rollResults }),
+          ...(targetSaves.length > 0 && { targetSaves }),
+          ...(notes.length > 0 && { notes }),
+        };
       }
 
       case "damage_rider": {
