@@ -15,7 +15,7 @@ import type { WeaponView } from "../../rules/equipmentProjection.js";
 import { CombatContextManager } from "../../calculators/combatContext.js";
 import { EffectManager } from "../../calculators/effects.js";
 import { ResourceManager } from "../../calculators/resources.js";
-import { corePackLookup } from "./corePackFixture.js";
+import { corePackLookup, corePackSnapshot } from "./corePackFixture.js";
 import type { LevelContext } from "../../utils/resourceRules.js";
 
 const ARROW = "item_ammo_arrow";
@@ -749,46 +749,198 @@ describe("ActionResolver save resolution", () => {
     resourceManager = new ResourceManager();
   });
 
-  it("rolls a saving throw when the action effect is a save", () => {
-    const saveAction: ActionGrant = {
-      ...bowShot,
-      consumesAmmo: undefined,
-      effect: {
-        type: "save",
-        areaOfEffect: { shape: "single_target", size: 1 },
-        savingThrow: {
-          targetStat: "CON",
-          dcCalculation: {
-            base: 10,
-            scalingStat: "CON",
-            includeProficiency: false,
-          },
-          saveEffect: "half_damage",
-        },
-        damage: [
-          {
-            sourceName: "Fireball",
-            baseDice: "1d6",
-            damageType: "fire",
-            scalingMode: "none",
-            levelScaling: [],
-          },
-        ],
+  const abilityScores = { STR: 10, DEX: 10, CON: 14, INT: 10, WIS: 10, CHA: 10 };
+
+  const fireDamage = {
+    sourceName: "Test Fire",
+    baseDice: "3d6",
+    damageType: "fire" as const,
+    scalingMode: "none" as const,
+    levelScaling: [],
+    perSlotAbove: "1d6",
+  };
+
+  const fire = (
+    options: { dc?: number; damage?: boolean } = {},
+  ): ActionGrant => ({
+    id: "action_test_fire",
+    name: "Test Fire",
+    activation: "action",
+    effect: {
+      type: "save",
+      areaOfEffect: { shape: "cone", size: 15 },
+      savingThrow: {
+        targetStat: "DEX",
+        dcCalculation: { base: 8, scalingStat: "CON", includeProficiency: true },
+        saveEffect: "half_damage",
+        ...(options.dc !== undefined && { dc: options.dc }),
       },
-    };
+      ...(options.damage !== false && { damage: [fireDamage] }),
+    },
+  });
 
-    const randomSpy = vi.spyOn(Math, "random").mockReturnValue(0.999);
+  it("asks the targets for a save instead of rolling the caster's own", () => {
+    const result = ActionResolver.execute(fire(), payload(), {
+      effectManager,
+      resourceManager,
+      abilityScores,
+      proficiencyBonus: 3,
+    });
 
-    const result = ActionResolver.execute(saveAction, payload(), {
+    expect(result.targetSaves).toEqual([
+      {
+        ability: "DEX",
+        dc: 13,
+        onSuccess: "half_damage",
+        area: { shape: "cone", size: 15 },
+        label: "Test Fire",
+      },
+    ]);
+    expect(
+      result.rollResults?.some((roll) => roll.target === "SAVING_THROW"),
+    ).toBe(false);
+  });
+
+  it("uses a DC resolved ahead of the roll", () => {
+    const result = ActionResolver.execute(fire({ dc: 15 }), payload(), {
+      effectManager,
+      resourceManager,
+      abilityScores,
+      proficiencyBonus: 3,
+    });
+
+    expect(result.targetSaves?.[0]?.dc).toBe(15);
+  });
+
+  it("rolls the save's damage once", () => {
+    const result = ActionResolver.execute(fire(), payload(), {
       effectManager,
       resourceManager,
     });
 
-    expect(result.executed).toBe(true);
-    expect(result.rollResults?.[0]?.target).toBe("SAVING_THROW");
-    expect(result.rollResults?.[0]?.total).toBe(20);
+    expect(result.rollResults).toHaveLength(1);
+    expect(result.rollResults?.[0]).toMatchObject({
+      target: "DAMAGE_ROLL",
+      damageType: "fire",
+    });
+    expect(result.rollResults?.[0]?.rolls).toHaveLength(3);
+  });
 
-    randomSpy.mockRestore();
+  it("adds a die for every slot level above the spell's own", () => {
+    const result = ActionResolver.execute(fire(), payload(), {
+      effectManager,
+      resourceManager,
+      spellCast: { spellLevel: 1, castLevel: 3 },
+    });
+
+    expect(result.rollResults?.[0]?.rolls).toHaveLength(5);
+  });
+
+  it("rolls nothing for a save that deals no damage", () => {
+    const result = ActionResolver.execute(fire({ damage: false }), payload(), {
+      effectManager,
+      resourceManager,
+    });
+
+    expect(result.rollResults ?? []).toEqual([]);
+    expect(result.targetSaves).toHaveLength(1);
+  });
+
+  // it used to roll the barbarian's own Wisdom save against their own DC
+  it("asks Intimidating Presence's target for a Wisdom save, and rolls nothing", () => {
+    const presence = Object.values(corePackSnapshot().traitsById)
+      .flatMap((trait) => trait.actions ?? [])
+      .find((action) => action.id === "action_intimidating_presence")!;
+
+    const result = ActionResolver.execute(presence, payload(), {
+      effectManager,
+      resourceManager,
+      abilityScores: { ...abilityScores, CHA: 16 },
+      proficiencyBonus: 3,
+    });
+
+    expect(result.rollResults ?? []).toEqual([]);
+    expect(result.targetSaves).toEqual([
+      expect.objectContaining({ ability: "WIS", dc: 14, onSuccess: "negates_effect" }),
+    ]);
+  });
+});
+
+describe("ActionResolver repeated attacks", () => {
+  let effectManager: EffectManager;
+  let resourceManager: ResourceManager;
+
+  beforeEach(() => {
+    effectManager = new EffectManager();
+    resourceManager = new ResourceManager();
+  });
+
+  const force = (baseDice: string) => ({
+    sourceName: "Eldritch Blast",
+    baseDice,
+    damageType: "force" as const,
+    scalingMode: "none" as const,
+    levelScaling: [],
+  });
+
+  const beams = (count: number): ActionGrant => ({
+    id: "action_spell_eldritch_blast@class_warlock",
+    name: "Eldritch Blast",
+    activation: "action",
+    effect: {
+      type: "attack",
+      attackType: "ranged_spell",
+      attackStat: "CHA",
+      range: 120,
+      attackBonus: 5,
+      repeat: {
+        label: "Beam",
+        thresholds: [
+          { minimumLevel: 1, value: 1 },
+          { minimumLevel: 5, value: 2 },
+        ],
+      },
+      repeatCount: count,
+      damage: [force("1d10")],
+      criticalDamage: [force("2d10")],
+    },
+  });
+
+  it("rolls an attack and its damage for every beam, each labelled", () => {
+    const result = ActionResolver.execute(beams(2), payload(), {
+      effectManager,
+      resourceManager,
+    });
+
+    expect(result.rollResults?.map((roll) => [roll.target, roll.label])).toEqual([
+      ["ATTACK_ROLL", "Beam 1"],
+      ["DAMAGE_ROLL", "Beam 1"],
+      ["ATTACK_ROLL", "Beam 2"],
+      ["DAMAGE_ROLL", "Beam 2"],
+    ]);
+  });
+
+  it("checks each beam for a critical hit on its own", () => {
+    const random = vi
+      .spyOn(Math, "random")
+      .mockReturnValueOnce(0.999) // beam 1 attack: 20
+      .mockReturnValueOnce(0.5) // beam 1 damage, first of 2d10
+      .mockReturnValueOnce(0.5) // beam 1 damage, second of 2d10
+      .mockReturnValueOnce(0) // beam 2 attack: 1
+      .mockReturnValueOnce(0.5); // beam 2 damage: 1d10
+
+    const result = ActionResolver.execute(beams(2), payload(), {
+      effectManager,
+      resourceManager,
+    });
+
+    expect(
+      result.rollResults
+        ?.filter((roll) => roll.target === "DAMAGE_ROLL")
+        .map((roll) => roll.rolls.length),
+    ).toEqual([2, 1]);
+
+    random.mockRestore();
   });
 });
 
