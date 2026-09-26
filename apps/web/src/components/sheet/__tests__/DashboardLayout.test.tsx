@@ -42,6 +42,7 @@ vi.mock("../FeaturesWidget", () => ({
   FeaturesWidget: () => <div data-testid="features-widget-stub" />,
 }));
 vi.mock("../SavingThrowsWidget", () => ({ SavingThrowsWidget: () => null }));
+vi.mock("../SpellsWidget", () => ({ SpellsWidget: () => null }));
 vi.mock("../SkillsWidget", () => ({ SkillsWidget: () => null }));
 vi.mock("../TableRulesWidget", () => ({ TableRulesWidget: () => null }));
 vi.mock("../CombatWidget", () => ({ CombatWidget: () => null }));
