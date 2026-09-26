@@ -1,7 +1,8 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { createRoot } from "react-dom/client";
 import { act } from "react";
-import type { ActionGrant, ActorInstance, CharacterChoices } from "@project/shared";
+import type { ActionGrant, ActorInstance, CharacterChoices, TargetSavePayload } from "@project/shared";
+import type { ActionRollResult } from "@project/engine";
 import { CombatWidget } from "../CombatWidget";
 import { packRuleSnapshot } from "../../../store/__tests__/packFixture";
 
@@ -107,8 +108,9 @@ const storeState = {
       isAttuned: false,
     },
   ],
-  latestRollResults: [],
+  latestRollResults: [] as ActionRollResult[],
   latestNotes: [],
+  latestTargetSaves: [] as TargetSavePayload[],
   combatContext: {
     pendingEvents: [
       {
@@ -688,5 +690,46 @@ describe("CombatWidget activation badge", () => {
     });
 
     expect(container.textContent).toContain("REACTION");
+  });
+});
+
+describe("CombatWidget: what an action asked of its targets", () => {
+  const render = async () => {
+    const container = document.createElement("div");
+    document.body.appendChild(container);
+    const root = createRoot(container);
+    await act(async () => {
+      root.render(<CombatWidget />);
+    });
+    return container;
+  };
+
+  afterEach(() => {
+    storeState.latestTargetSaves = [];
+    storeState.latestRollResults = [];
+  });
+
+  it("shows the targets' save with its DC, what a success does, and the area", async () => {
+    storeState.latestTargetSaves = [
+      {
+        ability: "DEX",
+        dc: 13,
+        onSuccess: "half_damage",
+        area: { shape: "cone", size: 15 },
+        label: "Burning Hands",
+      },
+    ];
+
+    expect((await render()).textContent).toContain(
+      "Burning Hands: DEX save DC 13 · half damage on a success · 15-foot cone",
+    );
+  });
+
+  it("labels each beam's damage", async () => {
+    storeState.latestRollResults = [
+      { total: 6, rolls: [6], modifier: 0, target: "DAMAGE_ROLL", damageType: "force", label: "Beam 2" },
+    ];
+
+    expect((await render()).textContent).toContain("Beam 2 • force");
   });
 });

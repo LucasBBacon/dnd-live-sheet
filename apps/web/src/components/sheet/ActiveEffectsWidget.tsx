@@ -30,6 +30,7 @@ const durationLabel = (effect: ActiveEffect): string => {
  * effect manager: the server owns effects, and an action already goes through
  * it. A button appears only where such an action exists, so Rage and Hiding can
  * be stopped and Dash cannot - which is correct, since Dash ends on its own.
+ * Concentration is ended by End Concentration, whichever spell it came from.
  */
 export const ActiveEffectsWidget = () => {
   const runtimeEffects = useCharacterSheetStore(
@@ -47,13 +48,20 @@ export const ActiveEffectsWidget = () => {
     (effect) => effect.kind !== "trait_state" && effect.kind !== "summon",
   );
 
-  const enderFor = (effectTag: string | undefined) => {
-    if (!effectTag) return undefined;
+  const enderFor = (effect: ActiveEffect) => {
+    const actions = getCharacterActions();
 
-    return getCharacterActions().find(
+    // concentration is a flag on whichever effect a spell applied, not a tag,
+    // so its ender is found by what it does rather than by what it names
+    if (effect.isSelfConcentration) {
+      return actions.find((action) => action.effect.type === "end_concentration");
+    }
+    if (!effect.effectTag) return undefined;
+
+    return actions.find(
       (action) =>
         action.effect.type === "remove_effect" &&
-        action.effect.effectTag === effectTag,
+        action.effect.effectTag === effect.effectTag,
     );
   };
 
@@ -68,7 +76,7 @@ export const ActiveEffectsWidget = () => {
       ) : (
         <ul className="space-y-2">
           {effects.map((effect) => {
-            const ender = enderFor(effect.effectTag);
+            const ender = enderFor(effect);
 
             return (
               <li
@@ -79,6 +87,11 @@ export const ActiveEffectsWidget = () => {
                   <div>
                     <div className="text-sm font-semibold text-gray-900">
                       {effect.sourceName}
+                      {effect.isSelfConcentration && (
+                        <span className="ml-2 rounded bg-indigo-100 px-1.5 py-0.5 text-[10px] font-semibold uppercase text-indigo-700">
+                          Concentrating
+                        </span>
+                      )}
                     </div>
                     <div className="text-[11px] text-gray-500">
                       {durationLabel(effect)}
