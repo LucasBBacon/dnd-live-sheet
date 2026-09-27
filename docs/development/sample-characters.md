@@ -83,7 +83,7 @@ row. HP is current over the derived maximum, as the sheet shows it.
   of the ten dragonborn colours — plus a Goliath, which the pack does not
   author.
 - **Classes** all twelve; three characters multiclassed.
-- **Subclasses** 20 of the pack's 40 (21 once Quill's check takes Arcane
+- **Subclasses** 22 of the pack's 40 (23 once Quill's check takes Arcane
   Trickster), plus a Rune Knight the pack does not author.
 - **Feats** Alert (Isolde) and Tough (Ursk).
 - **Backgrounds** all four preset rows, all five stubs, and two custom

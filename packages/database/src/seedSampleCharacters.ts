@@ -1,6 +1,6 @@
 /**
  * Development fixture: twenty-two sample characters on stable URLs - the ten
- * coverage characters below, and the eleven scenario characters in
+ * coverage characters below, and the twelve scenario characters in
  * sampleScenarioCharacters.ts, each staged for one hand check.
  *
  * Purpose is live UI and socket testing, not content authoring. Every row it

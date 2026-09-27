@@ -338,7 +338,7 @@
             "isRitual": false,
             "lore": {
                 "shortDescription": "A reaction when a creature you can see damages you: it makes a Dexterity save against 2d10 fire damage, half on a success, and 1d10 more for each slot level above 1st.",
-                "fullText": "Cast as a reaction when a creature you can see within 60 feet of you damages you. You point at that creature, and hellish flames flare around it for a moment. It makes a Dexterity saving throw, taking 2d10 fire damage if it fails, or half as much if it succeeds.\n\nAt Higher Levels. Cast with a spell slot of 2nd level or higher, the damage rises by 1d10 for each slot level above 1st."
+                "fullText": "Cast as a reaction when a creature you can see within 60 feet of you damages you. You point at that creature, and hellish flames flare around it for a moment. It makes a Dexterity saving throw, taking 2d10 fire damage if it fails, or half as much if it succeeds.\n\nAt Higher Levels. When this spell is cast with a spell slot of 2nd level or higher, the damage rises by 1d10 for each slot level above 1st."
             },
             "range": {
                 "kind": "feet",

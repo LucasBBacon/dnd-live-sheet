@@ -7,6 +7,7 @@ import { useDerivedStats } from "../../hooks/useCharacterStats";
 import { useCharacterSheetStore } from "../../store/characterSheetStore";
 import { TurnControlsWidget } from "./TurnControlsWidget";
 import { useRollStore } from "../../store/rollStore";
+import { areaText } from "./areaText";
 
 const PROTECTION_TRAIT_ID = "trait_fs_protection";
 
@@ -22,7 +23,7 @@ const targetSaveLine = (save: TargetSavePayload): string =>
     `${save.label}: ${save.ability} save DC ${save.dc}`,
     ON_SUCCESS[save.onSuccess],
     save.area && save.area.shape !== "single_target"
-      ? `${save.area.size}-foot ${save.area.shape}`
+      ? areaText(save.area)
       : undefined,
   ]
     .filter(Boolean)

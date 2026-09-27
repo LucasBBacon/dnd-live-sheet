@@ -725,6 +725,20 @@ describe("CombatWidget: what an action asked of its targets", () => {
     );
   });
 
+  it("reads a sphere's area by its radius, the same as the Spells panel", async () => {
+    storeState.latestTargetSaves = [
+      {
+        ability: "DEX",
+        dc: 15,
+        onSuccess: "half_damage",
+        area: { shape: "sphere", size: 20 },
+        label: "Fireball",
+      },
+    ];
+
+    expect((await render()).textContent).toContain("20-foot-radius sphere");
+  });
+
   it("labels each beam's damage", async () => {
     storeState.latestRollResults = [
       { total: 6, rolls: [6], modifier: 0, target: "DAMAGE_ROLL", damageType: "force", label: "Beam 2" },

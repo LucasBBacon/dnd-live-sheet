@@ -4,9 +4,10 @@ import {
   upcastDice,
   type CastableSpell,
 } from "@project/engine";
-import type { ActionGrant, AreaOfEffect, SpellComponents } from "@project/shared";
+import type { ActionGrant, SpellComponents } from "@project/shared";
 import { useSpells } from "../../hooks/useSpells";
 import { useCharacterSheetStore } from "../../store/characterSheetStore";
+import { areaText } from "./areaText";
 
 const LEVEL_HEADINGS = [
   "Cantrips",
@@ -43,12 +44,6 @@ const REFUSALS: Record<string, string> = {
   insufficient_resource: "No uses left.",
   ritual_not_allowed: "This spell can't be cast as a ritual through this source.",
 };
-
-/** A sphere or cylinder is sized by its radius; the rest by their length. */
-const areaText = (area: AreaOfEffect): string =>
-  area.shape === "sphere" || area.shape === "cylinder"
-    ? `${area.size}-foot-radius ${area.shape}`
-    : `${area.size}-foot ${area.shape.replace("_", " ")}`;
 
 const rangeText = (spell: CastableSpell): string | undefined => {
   const range = spell.range;

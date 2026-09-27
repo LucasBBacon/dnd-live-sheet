@@ -57,7 +57,7 @@ rolls its damage once; it never rolls the caster's own save.
 
 | When | What | Where |
 | --- | --- | --- |
-| The sheet is built | casting ability, attack bonus, save DC, area, beam count, damage dice at the character's level, doubled critical dice | `synthesizeSpells` |
+| The sheet is built | casting ability, attack bonus, save DC, area, beam count, damage dice at the character's level, doubled critical dice, and dice at a grant's fixed cast level (`castAtLevel`) | `synthesizeSpells` |
 | The spell is cast | the slot's level, and the dice `perSlotAbove` adds for it | `settleSpellCast`, then the resolver's `spellCast` context |
 
 ## How a spell reaches a character

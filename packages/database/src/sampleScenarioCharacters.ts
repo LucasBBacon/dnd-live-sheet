@@ -1,9 +1,9 @@
 /**
- * Development fixture: eleven scenario characters, seeded beside the ten in
+ * Development fixture: twelve scenario characters, seeded beside the ten in
  * seedSampleCharacters.ts by the same `db:seed:samples`.
  *
  * The first ten are a coverage set - between them they fill every slot,
- * reset condition and hit point state. These eleven are each staged for a hand
+ * reset condition and hit point state. These twelve are each staged for a hand
  * check a unit test cannot reach: a level-up one level away, a divergence
  * that needs two tabs, a Tier 2 pass that has nothing to verify against yet,
  * or data the UI cannot create. docs/development/sample-characters.md holds
