@@ -943,6 +943,7 @@ describe("CharacterBootstrapper.hydrateRuntimeManagers caster level", () => {
           startsAtLevel: 1,
           preparation: "prepared" as const,
           focusCategories: [],
+          ritualCasting: false,
         },
       },
     },

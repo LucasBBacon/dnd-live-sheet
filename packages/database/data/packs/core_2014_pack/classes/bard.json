@@ -401,7 +401,8 @@
                 "preparation": "known",
                 "focusCategories": [
                     "category_musical_instrument"
-                ]
+                ],
+                "ritualCasting": true
             }
         }
     ],

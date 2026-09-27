@@ -4325,6 +4325,9 @@
                     "category_musical_instrument"
                   ]
                 }
+              },
+              "ritualCasting": {
+                "type": "boolean"
               }
             },
             "required": [
@@ -4332,7 +4335,8 @@
               "progression",
               "startsAtLevel",
               "preparation",
-              "focusCategories"
+              "focusCategories",
+              "ritualCasting"
             ],
             "additionalProperties": false
           },
@@ -4804,6 +4808,9 @@
                     "category_musical_instrument"
                   ]
                 }
+              },
+              "ritualCasting": {
+                "type": "boolean"
               }
             },
             "required": [
@@ -4811,7 +4818,8 @@
               "progression",
               "startsAtLevel",
               "preparation",
-              "focusCategories"
+              "focusCategories",
+              "ritualCasting"
             ],
             "additionalProperties": false
           }

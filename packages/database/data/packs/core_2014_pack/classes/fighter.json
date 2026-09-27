@@ -655,7 +655,8 @@
                 "progression": "third",
                 "startsAtLevel": 3,
                 "preparation": "known",
-                "focusCategories": []
+                "focusCategories": [],
+                "ritualCasting": false
             }
         }
     ],

@@ -243,7 +243,8 @@
                 "preparation": "prepared",
                 "focusCategories": [
                     "category_druidic_focus"
-                ]
+                ],
+                "ritualCasting": true
             }
         }
     ],

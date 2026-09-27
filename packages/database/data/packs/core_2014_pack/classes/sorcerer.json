@@ -402,7 +402,8 @@
                 "preparation": "known",
                 "focusCategories": [
                     "category_arcane_focus"
-                ]
+                ],
+                "ritualCasting": false
             }
         }
     ],
