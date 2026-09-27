@@ -1372,6 +1372,135 @@ const SCENARIO_ROSTER: SampleCharacter[] = [
       },
     ],
   },
+  {
+    id: "00000000-0000-0000-0000-000000000131",
+    name: "Cassia Emberlane",
+    raceId: "race_tiefling",
+    classes: [
+      {
+        classId: "class_cleric",
+        classLevel: 5,
+        subclassId: "subclass_cleric_knowledge",
+      },
+    ],
+    backgroundId: "background_acolyte",
+    choices: {
+      feats: [],
+      classSelections: {},
+      traitSelections: {
+        acolyte_languages: ["celestial", "draconic"],
+        cleric_starting_skills: ["medicine", "persuasion"],
+        knowledge_domain_languages: ["dwarvish", "elvish"],
+        knowledge_domain_skills: ["arcana", "history"],
+      },
+    },
+    alignment: "Lawful Neutral",
+    // the tiefling's +1 INT and +2 CHA make INT 13 and CHA 15 (+2). WIS 16
+    // (+3) and proficiency +3 give the cleric's spells DC 14; Infernal
+    // Legacy's Charisma spells are DC 13
+    str: 10,
+    dex: 12,
+    con: 14,
+    int: 12,
+    wis: 16,
+    cha: 13,
+    maxHp: 28,
+    currentHp: 38,
+    testFocus:
+      "Spell casting (#31, #117, #119): Identify and Augury as rituals with no 1st-level slot left; a holy symbol that covers Speak with Dead's incense but not Identify's pearl; Nondetection's consumed diamond dust; Command's WIS save; Suggestion's concentration handed to Infernal Legacy's Darkness; Hellish Rebuke at 2nd level (3d10).",
+    personalityTraits: "I catalogue every door I pass, in case one is ever worth opening twice.",
+    ideals: "Knowledge. A secret kept is a question someone else must answer badly.",
+    bonds: "The archive at Hollowmere took me in when the village would not.",
+    flaws: "I will read a letter that is not addressed to me, and then correct its spelling.",
+    traits: [
+      { traitId: "trait_cleric_prof_armor", source: "class_cleric_level_1" },
+      { traitId: "trait_cleric_prof_weapons", source: "class_cleric_level_1" },
+      { traitId: "trait_cleric_prof_skills", source: "class_cleric_level_1" },
+      {
+        traitId: "trait_cleric_prof_saving_throw",
+        source: "class_cleric_level_1",
+      },
+      { traitId: "trait_spellcasting_cleric", source: "class_cleric_level_1" },
+      { traitId: "trait_divine_domain", source: "class_cleric_level_1" },
+      {
+        traitId: "trait_knowledge_domain_spells",
+        source: "subclass_cleric_knowledge_level_1",
+      },
+      {
+        traitId: "trait_blessings_of_knowledge",
+        source: "subclass_cleric_knowledge_level_1",
+      },
+      { traitId: "trait_channel_divinity", source: "class_cleric_level_2" },
+      { traitId: "trait_divine_domain_feature", source: "class_cleric_level_2" },
+      {
+        traitId: "trait_cd_knowledge_of_the_ages",
+        source: "subclass_cleric_knowledge_level_2",
+      },
+      { traitId: "trait_destroy_undead", source: "class_cleric_level_5" },
+      { traitId: "race_tiefling_asi", source: "race_tiefling" },
+      { traitId: "race_tiefling_darkvision", source: "race_tiefling" },
+      { traitId: "hellish_resistance", source: "race_tiefling" },
+      { traitId: "infernal_legacy", source: "race_tiefling" },
+      { traitId: "race_tiefling_languages", source: "race_tiefling" },
+      { traitId: "trait_acolyte_prof_skills", source: "background_acolyte" },
+      { traitId: "trait_acolyte_languages", source: "background_acolyte" },
+    ],
+    inventory: [
+      { itemId: "item_armor_chain_shirt", slot: "body" },
+      { itemId: "item_weapon_mace", slot: "main_hand" },
+      { itemId: "item_armor_shield", slot: "off_hand" },
+      // a holy symbol: it covers the cleric's ordinary materials, and none
+      // with a cost
+      { itemId: "item_focus_amulet" },
+      { itemId: "item_pack_priests" },
+      { itemId: "item_clothes_vestments" },
+    ],
+    resources: [
+      {
+        // none left: Identify is cast as a ritual or not at all
+        id: "spell_slots_1",
+        name: "1st-Level Spell Slots",
+        current: 0,
+        max: 4,
+        resetCondition: "long_rest",
+      },
+      {
+        id: "spell_slots_2",
+        name: "2nd-Level Spell Slots",
+        current: 1,
+        max: 3,
+        resetCondition: "long_rest",
+      },
+      {
+        id: "spell_slots_3",
+        name: "3rd-Level Spell Slots",
+        current: 2,
+        max: 2,
+        resetCondition: "long_rest",
+      },
+      {
+        id: "infernal_legacy_hellish_rebuke",
+        name: "Hellish Rebuke (Infernal Legacy)",
+        current: 1,
+        max: 1,
+        resetCondition: "long_rest",
+      },
+      {
+        id: "infernal_legacy_darkness",
+        name: "Darkness (Infernal Legacy)",
+        current: 1,
+        max: 1,
+        resetCondition: "long_rest",
+      },
+      {
+        id: "trait_channel_divinity",
+        name: "Channel Divinity",
+        current: 1,
+        max: 1,
+        resetCondition: "short_rest",
+      },
+    ],
+  },
 ];
 
 // #endregion
