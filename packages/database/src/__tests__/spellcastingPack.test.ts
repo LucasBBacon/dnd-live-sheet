@@ -116,3 +116,15 @@ describe("the shipped pack declares how each class casts", () => {
     expect(pouch?.categoryTags).toEqual(["category_component_pouch"]);
   });
 });
+
+describe("the shipped pack's fixed spell grants", () => {
+  // PHB p.43: "you can cast the hellish rebuke spell as a 2nd-level spell"
+  it("casts Infernal Legacy's Hellish Rebuke as a 2nd-level spell", async () => {
+    const pack = await assembleCoreRulePack(SHIPPED_PACK);
+    const grant = pack.traits
+      .find((trait) => trait.id === "infernal_legacy")
+      ?.spells?.fixed.find((entry) => entry.spellId === "spell_hellish_rebuke");
+
+    expect(grant?.castAtLevel).toBe(2);
+  });
+});

@@ -689,3 +689,55 @@ describe("validateCoreRulePack: spells", () => {
     ).toContain("spell_hardcodes_caster_value");
   });
 });
+
+describe("validateCoreRulePack: a grant's cast level", () => {
+  const issuesForGrant = (grant: Record<string, unknown>) => {
+    const source = createValidPack() as unknown as {
+      traits: Array<Record<string, unknown>>;
+      spells: unknown[];
+    };
+    source.spells.push({
+      id: "spell_test_rebuke",
+      name: "Test Rebuke",
+      level: 2,
+      school: "evocation",
+      action: {
+        id: "action_spell_test_rebuke",
+        name: "Test Rebuke",
+        activation: "reaction",
+        effect: { type: "no_effect" },
+      },
+      implementation: { mode: "unimplemented", summary: "A test stub." },
+    });
+    source.traits[0]!.spells = {
+      fixed: [{ type: "fixed_spell", spellId: "spell_test_rebuke", ...grant }],
+      choices: [],
+    };
+    return validateCoreRulePack(CoreRulePackSchema.parse(source)).issues;
+  };
+
+  const RESOURCE = { usage: { kind: "resource", resourceId: "resource_test" } };
+
+  it("accepts a priced grant cast above its spell's level", () => {
+    expect(issuesForGrant({ ...RESOURCE, castAtLevel: 3 })).toEqual([]);
+  });
+
+  it("rejects a grant cast below its spell's level", () => {
+    expect(issuesForGrant({ ...RESOURCE, castAtLevel: 1 })).toContainEqual({
+      code: "invalid_cast_level",
+      path: ["traits", 0, "spells", "fixed", 0, "castAtLevel"],
+      message: expect.stringContaining("below"),
+    });
+  });
+
+  // a slot chooses an always-prepared spell's level when it is cast
+  it("rejects a cast level on an always-prepared grant", () => {
+    expect(
+      issuesForGrant({ usage: { kind: "always_prepared" }, castAtLevel: 3 }),
+    ).toContainEqual({
+      code: "invalid_cast_level",
+      path: ["traits", 0, "spells", "fixed", 0, "castAtLevel"],
+      message: expect.stringContaining("always prepared"),
+    });
+  });
+});

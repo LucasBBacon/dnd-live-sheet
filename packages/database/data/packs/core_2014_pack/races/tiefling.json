@@ -120,7 +120,8 @@
                         "usage": {
                             "kind": "resource",
                             "resourceId": "infernal_legacy_hellish_rebuke"
-                        }
+                        },
+                        "castAtLevel": 2
                     },
                     {
                         "type": "fixed_spell",
@@ -140,13 +141,19 @@
                 {
                     "id": "infernal_legacy_hellish_rebuke",
                     "name": "Hellish Rebuke (Infernal Legacy)",
-                    "maxRule": { "kind": "fixed", "value": 1 },
+                    "maxRule": {
+                        "kind": "fixed",
+                        "value": 1
+                    },
                     "resetCondition": "long_rest"
                 },
                 {
                     "id": "infernal_legacy_darkness",
                     "name": "Darkness (Infernal Legacy)",
-                    "maxRule": { "kind": "fixed", "value": 1 },
+                    "maxRule": {
+                        "kind": "fixed",
+                        "value": 1
+                    },
                     "resetCondition": "long_rest"
                 }
             ],
