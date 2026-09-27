@@ -1,4 +1,8 @@
-import type { ActionGrant, InventoryInstance } from "@project/shared";
+import {
+  costsCombatEconomy,
+  type ActionGrant,
+  type InventoryInstance,
+} from "@project/shared";
 import {
   resolveEquipmentDefinition,
   type RuleSnapshotLookup,
@@ -10,6 +14,8 @@ import type { CastableSpell, SlotPool } from "./spellSynthesizer.js";
  * being asked: a component pouch, or a focus the spell's source can use,
  * anywhere in the inventory. No item can be held in a hand yet, so carried is
  * enough (#121). A spell with no material component is always covered.
+ *
+ * A component with a gold cost is never covered: the player is always asked.
  *
  * The sheet asks it to decide whether to prompt; the server asks it to decide
  * whether an unconfirmed cast is refused. One answer for both.
@@ -24,6 +30,10 @@ export const materialCoverage = (
   snapshot?: RuleSnapshotLookup,
 ): { covered: boolean; by?: string } => {
   if (!spell.components?.material) return { covered: true };
+
+  // a pouch or focus can't stand in for a component with a cost (PHB p.203):
+  // only the player's word supplies it
+  if (spell.components.goldCost > 0) return { covered: false };
 
   for (const instance of inventory) {
     const definition = resolveEquipmentDefinition(instance.itemId, snapshot);
@@ -40,6 +50,7 @@ export const materialCoverage = (
 };
 
 export type SpellCastRefusal =
+  | "ritual_not_allowed"
   | "slot_required"
   | "slot_too_low"
   | "slot_empty"
@@ -49,6 +60,8 @@ export type SpellCastRefusal =
 export interface SpellCastRequest {
   slotResourceId?: string;
   materialsConfirmed?: boolean;
+  /** Cast as a ritual: no slot, and ten minutes longer. */
+  asRitual?: boolean;
 }
 
 export type SpellCastSettlement =
@@ -62,7 +75,12 @@ export type SpellCastSettlement =
 /**
  * Everything a spell needs before it is cast, checked before anything is
  * spent: a slot of at least its level with a charge left, when a slot pays for
- * it; then its material, from a pouch, a usable focus or the player's word.
+ * it and it is not cast as a ritual; then its material, from a pouch, a usable
+ * focus or the player's word - only their word, for a component with a cost.
+ *
+ * A ritual is refused unless its source can cast one (`spell.ritual`). It
+ * spends no slot and casts at the spell's own level, and its action comes back
+ * as a `minute` activation, so it spends no action, bonus action or reaction.
  *
  * A slot is paid by returning the action with `consumesResource` set to the
  * chosen pool, so ActionResolver's settleCosts spends it with every other
@@ -85,7 +103,16 @@ export const settleSpellCast = (input: {
   let action = input.action;
   let spellCast: { spellLevel: number; castLevel: number } | undefined;
 
-  if (spell.payment.kind === "slot") {
+  if (request.asRitual === true) {
+    if (!spell.ritual) {
+      return { ok: false, reason: "ritual_not_allowed", offendingId: spell.spellId };
+    }
+    // ten minutes longer than its casting time, so no action, bonus action
+    // or reaction is spent on it; a ritual casts at its own level
+    if (costsCombatEconomy(action.activation)) {
+      action = { ...action, activation: "minute" };
+    }
+  } else if (spell.payment.kind === "slot") {
     const pool =
       typeof request.slotResourceId === "string"
         ? input.slotPools.find((entry) => entry.resourceId === request.slotResourceId)

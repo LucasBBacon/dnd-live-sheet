@@ -43,9 +43,27 @@ const carriesRules = (trait: PackTrait): boolean => {
   );
 };
 
+/**
+ * A stub is an action that does nothing and tells the table nothing:
+ * `effect.type === "no_effect"` and no `tableNote`.
+ *
+ * `effect.type === "no_effect"` alone stopped being the signal once
+ * narrative spells were authored - Minor Illusion, Augury and their kin are
+ * real, and `no_effect` by design (the authoring guide: a spell that "does
+ * what only the table can see" is "no_effect otherwise; the rest in a
+ * tableNote"). What tells a stub apart from one of those is exactly that
+ * note: a stub has none, because there is no rule yet to hand the table:
+ * every authored narrative spell carries one, and no stub does.
+ *
+ * `lore === undefined` was tried as the proxy instead, but `validateSpells`
+ * already enforces that pairing (`incomplete_spell`: unmarked means all of
+ * `lore`/`range`/`components`/`duration`, marked means none) for every pack
+ * that assembles at all - checking it again here can never fail, so it is
+ * not this test's cross-check. The table note is: nothing else guarantees a
+ * narrative spell's `no_effect` action carries one.
+ */
 const isStub = (spell: PackSpell): boolean =>
-  (spell as { action?: { effect?: { type?: string } } }).action?.effect?.type ===
-  "no_effect";
+  spell.action.effect.type === "no_effect" && !spell.action.tableNote;
 
 /**
  * Equipment got a cross-check when it learned to declare its own gaps (E3).
@@ -118,7 +136,7 @@ describe("trait and spell implementation markers match their data", () => {
   it("records which spells carry rules", async () => {
     const pack = await assembleCoreRulePack(SHIPPED_PACK);
 
-    // 4 of 111 since feat/spell-casting (#31). Add each spell as it is
+    // 14 of 111 since feat/spells-first-ten (#31). Add each spell as it is
     // authored; one leaving this list is a regression.
     expect(
       pack.spells
@@ -126,10 +144,20 @@ describe("trait and spell implementation markers match their data", () => {
         .map((spell) => spell.id)
         .sort(),
     ).toEqual([
+      "spell_augury",
       "spell_burning_hands",
+      "spell_command",
       "spell_dancing_lights",
+      "spell_darkness",
       "spell_eldritch_blast",
       "spell_faerie_fire",
+      "spell_hellish_rebuke",
+      "spell_identify",
+      "spell_minor_illusion",
+      "spell_nondetection",
+      "spell_speak_with_dead",
+      "spell_suggestion",
+      "spell_thaumaturgy",
     ]);
     expect(pack.spells).toHaveLength(111);
   });

@@ -44,6 +44,8 @@ const EXPECTED_MAX_HP: Record<string, number> = {
   "Brother Mote": 80,
   "Orrik Stonehide": 134,
   "Maren Solace": 24,
+  // 28 rolled (8, then 5 a level) + CON 14's +2 at each of five levels
+  "Cassia Emberlane": 38,
 };
 
 describe("sample character hit points", () => {

@@ -73,6 +73,7 @@ const eldritchBlast: CastableSpell = {
   saveDc: 12,
   payment: { kind: "at_will" },
   preparationTracked: true,
+  ritual: false,
   focusCategories: ["category_arcane_focus"],
   actionId: "action_spell_eldritch_blast@class_warlock",
 };
@@ -109,6 +110,7 @@ const darkness: CastableSpell = {
   source: { kind: "trait", traitId: "drow_magic", label: "Drow Magic" },
   payment: { kind: "at_will" },
   preparationTracked: true,
+  ritual: false,
   focusCategories: [],
 };
 
@@ -135,6 +137,35 @@ const burningHandsAction: ActionGrant = {
       },
     ],
   },
+};
+
+const identify: CastableSpell = {
+  ...burningHands,
+  spellId: "spell_identify",
+  name: "Identify",
+  activation: "minute",
+  range: { kind: "touch" },
+  components: {
+    ...components("a pearl worth at least 100 gp and an owl feather"),
+    goldCost: 100,
+  },
+  ritual: true,
+  actionId: "action_spell_identify@class_cleric",
+};
+
+const nondetection: CastableSpell = {
+  ...burningHands,
+  spellId: "spell_nondetection",
+  name: "Nondetection",
+  level: 3,
+  components: {
+    ...components(
+      "a pinch of diamond dust worth 25 gp sprinkled over the target, which the spell consumes",
+    ),
+    goldCost: 25,
+    isConsumed: true,
+  },
+  actionId: "action_spell_nondetection@class_cleric",
 };
 
 const pouch: InventoryInstance = {
@@ -299,5 +330,132 @@ describe("SpellsWidget", () => {
     mocks.concentratingOn.current = "Faerie Fire";
 
     expect((await render()).textContent).toContain("Casting this ends Faerie Fire.");
+  });
+
+  it("reads a touch range as Touch", async () => {
+    mocks.spells.current = [{ ...burningHands, range: { kind: "touch" } }];
+
+    expect((await render()).textContent).toContain("1 action · Touch · V, S");
+  });
+
+  it("reads round and hour durations", async () => {
+    mocks.spells.current = [
+      {
+        ...burningHands,
+        duration: { kind: "timed", amount: 1, unit: "round", concentration: false },
+      },
+      {
+        ...eldritchBlast,
+        duration: { kind: "timed", amount: 8, unit: "hour", concentration: true },
+      },
+    ];
+    const text = (await render()).textContent;
+
+    expect(text).toContain("1 round");
+    expect(text).toContain("Concentration, up to 8 hours");
+  });
+
+  it("offers a ritual cast with every slot spent, and asks for the pearl a pouch can't replace", async () => {
+    mocks.spells.current = [identify];
+    mocks.slotPools.current = [{ resourceId: "spell_slots_1", level: 1 }] satisfies SlotPool[];
+    mocks.resources.current = [{ id: "spell_slots_1", current: 0 }];
+    mocks.inventory.current = [pouch];
+    const container = await render();
+
+    expect(container.textContent).toContain("Ritual");
+    expect(container.textContent).toContain("Cleric · Slot or ritual");
+
+    await click(button(container, "Cast"));
+
+    expect(container.textContent).not.toContain("No slots left that can cast this.");
+
+    await click(button(container, "As a ritual (+10 minutes, no slot)"));
+
+    expect(container.textContent).toContain(
+      "Needs a pearl worth at least 100 gp and an owl feather. A pouch or focus can't stand in for a component with a cost. Do you have it?",
+    );
+    expect(mocks.castSpell).not.toHaveBeenCalled();
+
+    await click(button(container, "Cast anyway"));
+
+    expect(mocks.castSpell).toHaveBeenCalledWith("action_spell_identify@class_cleric", {
+      asRitual: true,
+      materialsConfirmed: true,
+    });
+  });
+
+  it("says when no slot can pay for a spell that is not a ritual", async () => {
+    mocks.spells.current = [burningHands];
+    mocks.slotPools.current = [{ resourceId: "spell_slots_1", level: 1 }] satisfies SlotPool[];
+    mocks.resources.current = [{ id: "spell_slots_1", current: 0 }];
+    const container = await render();
+
+    await click(button(container, "Cast"));
+
+    expect(container.textContent).toContain("No slots left that can cast this.");
+  });
+
+  it("says a costly component is consumed, and that a pouch can't replace it", async () => {
+    mocks.spells.current = [nondetection];
+    mocks.slotPools.current = [{ resourceId: "spell_slots_3", level: 3 }] satisfies SlotPool[];
+    mocks.resources.current = [{ id: "spell_slots_3", current: 2 }];
+    mocks.inventory.current = [pouch];
+    const container = await render();
+
+    await click(button(container, "Details"));
+
+    expect(container.textContent).toContain(
+      "Costs 25 gp, consumed; a pouch or focus can't replace it.",
+    );
+
+    await click(button(container, "Cast"));
+    await click(button(container, "3rd level"));
+
+    expect(container.textContent).toContain("The spell consumes it. Do you have it?");
+    expect(mocks.castSpell).not.toHaveBeenCalled();
+  });
+
+  it("says a grant casts its spell at a fixed level", async () => {
+    mocks.spells.current = [
+      {
+        ...burningHands,
+        spellId: "spell_hellish_rebuke",
+        name: "Hellish Rebuke",
+        source: { kind: "trait", traitId: "infernal_legacy", label: "Infernal Legacy" },
+        payment: { kind: "resource", resourceId: "infernal_legacy_hellish_rebuke" },
+        castLevel: 2,
+        focusCategories: [],
+        actionId: "action_spell_hellish_rebuke@infernal_legacy",
+      },
+    ];
+    mocks.resources.current = [{ id: "infernal_legacy_hellish_rebuke", current: 1 }];
+
+    expect((await render()).textContent).toContain(
+      "Infernal Legacy · 1 left · cast at 2nd level",
+    );
+  });
+
+  it("reads a sphere's size as its radius", async () => {
+    mocks.spells.current = [
+      {
+        ...burningHands,
+        range: { kind: "feet", feet: 60, area: { shape: "sphere", size: 15 } },
+      },
+    ];
+
+    expect((await render()).textContent).toContain("60 feet (15-foot-radius sphere)");
+  });
+
+  it("says why a ritual cast was refused", async () => {
+    mocks.spells.current = [burningHands];
+    mocks.lastActionOutcome.current = {
+      actionId: "action_spell_burning_hands@class_cleric",
+      executed: false,
+      reason: "ritual_not_allowed",
+    };
+
+    expect((await render()).textContent).toContain(
+      "This spell can't be cast as a ritual through this source.",
+    );
   });
 });

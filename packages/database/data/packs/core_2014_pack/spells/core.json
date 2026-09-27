@@ -214,6 +214,410 @@
                     ]
                 }
             }
+        },
+        {
+            "id": "spell_darkness",
+            "name": "Darkness",
+            "level": 2,
+            "school": "evocation",
+            "isRitual": false,
+            "lore": {
+                "shortDescription": "Magical darkness fills a 15-foot-radius sphere within 60 feet. Darkvision can't see through it and nonmagical light can't light it. Concentration, up to 10 minutes.",
+                "fullText": "Magical darkness spreads from a point you choose within range to fill a 15-foot-radius sphere for the duration. The darkness spreads around corners. A creature with darkvision can't see through this darkness, and nonmagical light can't illuminate it.\n\nIf the point you choose is on an object you are holding or one that isn't being worn or carried, the darkness emanates from the object and moves with it. Completely covering the source of the darkness with an opaque object, such as a bowl or a helm, blocks the darkness.\n\nIf any of this spell's area overlaps with an area of light created by a spell of 2nd level or lower, the spell that created the light is dispelled."
+            },
+            "range": {
+                "kind": "feet",
+                "feet": 60,
+                "area": {
+                    "shape": "sphere",
+                    "size": 15
+                }
+            },
+            "components": {
+                "verbal": true,
+                "somatic": false,
+                "material": true,
+                "materialDescription": "bat fur and a drop of pitch or piece of coal"
+            },
+            "duration": {
+                "kind": "timed",
+                "amount": 10,
+                "unit": "minute",
+                "concentration": true
+            },
+            "action": {
+                "id": "action_spell_darkness",
+                "name": "Darkness",
+                "activation": "action",
+                "tableNote": "Magical darkness fills a 15-foot-radius sphere and spreads around corners. Darkvision can't see through it and nonmagical light can't light it. Centred on an object you hold or one nobody is wearing or carrying, it moves with the object, and covering the object with something opaque blocks it. Where it overlaps light from a spell of 2nd level or lower, that spell is dispelled.",
+                "effect": {
+                    "type": "apply_effect",
+                    "effectName": "Darkness",
+                    "durationType": "rounds",
+                    "durationRounds": 100,
+                    "isSelfConcentration": true
+                }
+            }
+        },
+        {
+            "id": "spell_minor_illusion",
+            "name": "Minor Illusion",
+            "level": 0,
+            "school": "illusion",
+            "isRitual": false,
+            "lore": {
+                "shortDescription": "A sound, or the image of an object no bigger than a 5-foot cube, within 30 feet for 1 minute. An Intelligence (Investigation) check against your spell save DC sees through it.",
+                "fullText": "You create a sound or an image of an object within range that lasts for the duration. The illusion also ends if you dismiss it as an action or cast this spell again.\n\nIf you create a sound, its volume can range from a whisper to a scream. It can be your voice, someone else's voice, a lion's roar, a beating of drums, or any other sound you choose. The sound continues unabated throughout the duration, or you can make discrete sounds at different times before the spell ends.\n\nIf you create an image of an object—such as a chair, muddy footprints, or a small chest—it must be no larger than a 5-foot cube. The image can't create sound, light, smell, or any other sensory effect. Physical interaction with the image reveals it to be an illusion, because things can pass through it.\n\nIf a creature uses its action to examine the sound or image, the creature can determine that it is an illusion with a successful Intelligence (Investigation) check against your spell save DC. If a creature discerns the illusion for what it is, the illusion becomes faint to the creature."
+            },
+            "range": {
+                "kind": "feet",
+                "feet": 30
+            },
+            "components": {
+                "verbal": false,
+                "somatic": true,
+                "material": true,
+                "materialDescription": "a bit of fleece"
+            },
+            "duration": {
+                "kind": "timed",
+                "amount": 1,
+                "unit": "minute",
+                "concentration": false
+            },
+            "action": {
+                "id": "action_spell_minor_illusion",
+                "name": "Minor Illusion",
+                "activation": "action",
+                "tableNote": "Either a sound (a whisper to a scream, constant or in bursts) or an image of an object no bigger than a 5-foot cube that makes no sound, light or smell. Anything passing through the image reveals it. A creature can use its action to make an Intelligence (Investigation) check against your spell save DC; on a success the illusion turns faint to it. It ends early if you dismiss it as an action or cast the spell again.",
+                "effect": {
+                    "type": "no_effect"
+                }
+            }
+        },
+        {
+            "id": "spell_thaumaturgy",
+            "name": "Thaumaturgy",
+            "level": 0,
+            "school": "transmutation",
+            "isRitual": false,
+            "lore": {
+                "shortDescription": "A minor wonder within 30 feet: a booming voice, flickering flames, harmless tremors, a sudden sound, a door flung open or shut, or strange eyes.",
+                "fullText": "You manifest a minor wonder, a sign of supernatural power, within range. You create one of the following magical effects within range:\n\n- Your voice booms up to three times as loud as normal for 1 minute.\n- You cause flames to flicker, brighten, dim, or change color for 1 minute.\n- You cause harmless tremors in the ground for 1 minute.\n- You create an instantaneous sound that originates from a point of your choice within range, such as a rumble of thunder, the cry of a raven, or ominous whispers.\n- You instantaneously cause an unlocked door or window to fly open or slam shut.\n- You alter the appearance of your eyes for 1 minute.\n\nIf you cast this spell multiple times, you can have up to three of its 1-minute effects active at a time, and you can dismiss such an effect as an action."
+            },
+            "range": {
+                "kind": "feet",
+                "feet": 30
+            },
+            "components": {
+                "verbal": true,
+                "somatic": false,
+                "material": false
+            },
+            "duration": {
+                "kind": "timed",
+                "amount": 1,
+                "unit": "minute",
+                "concentration": false
+            },
+            "action": {
+                "id": "action_spell_thaumaturgy",
+                "name": "Thaumaturgy",
+                "activation": "action",
+                "tableNote": "Pick one: your voice booms three times louder; flames flicker, brighten, dim or change colour; harmless tremors shake the ground; or your eyes change appearance, each for 1 minute. Or, instantly, a sound rings out from a point in range, or an unlocked door or window flies open or slams shut. Up to three 1-minute effects can be active at once; dismiss one as an action.",
+                "effect": {
+                    "type": "no_effect"
+                }
+            }
+        },
+        {
+            "id": "spell_hellish_rebuke",
+            "name": "Hellish Rebuke",
+            "level": 1,
+            "school": "evocation",
+            "isRitual": false,
+            "lore": {
+                "shortDescription": "A reaction when a creature you can see damages you: it makes a Dexterity save against 2d10 fire damage, half on a success, and 1d10 more for each slot level above 1st.",
+                "fullText": "Cast as a reaction when a creature you can see within 60 feet of you damages you. You point at that creature, and hellish flames flare around it for a moment. It makes a Dexterity saving throw, taking 2d10 fire damage if it fails, or half as much if it succeeds.\n\nAt Higher Levels. When this spell is cast with a spell slot of 2nd level or higher, the damage rises by 1d10 for each slot level above 1st."
+            },
+            "range": {
+                "kind": "feet",
+                "feet": 60
+            },
+            "components": {
+                "verbal": true,
+                "somatic": true,
+                "material": false
+            },
+            "duration": {
+                "kind": "instantaneous"
+            },
+            "action": {
+                "id": "action_spell_hellish_rebuke",
+                "name": "Hellish Rebuke",
+                "activation": "reaction",
+                "tableNote": "Cast as a reaction when a creature within 60 feet that you can see damages you. That creature makes the save.",
+                "effect": {
+                    "type": "save",
+                    "savingThrow": {
+                        "targetStat": "DEX",
+                        "dcCalculation": {
+                            "base": 8,
+                            "scalingStat": "SPELLCASTING_MOD",
+                            "includeProficiency": true
+                        },
+                        "saveEffect": "half_damage"
+                    },
+                    "damage": [
+                        {
+                            "sourceName": "Hellish Rebuke",
+                            "baseDice": "2d10",
+                            "damageType": "fire",
+                            "perSlotAbove": "1d10"
+                        }
+                    ]
+                }
+            }
+        },
+        {
+            "id": "spell_command",
+            "name": "Command",
+            "level": 1,
+            "school": "enchantment",
+            "isRitual": false,
+            "lore": {
+                "shortDescription": "A one-word command to a creature within 60 feet: on a failed Wisdom save it obeys on its next turn. One more target for each slot level above 1st.",
+                "fullText": "You speak a one-word command to a creature you can see within range. The target must succeed on a Wisdom saving throw or follow the command on its next turn. The spell has no effect if the target is undead, if it doesn't understand your language, or if your command is directly harmful to it.\n\nSome typical commands and their effects follow. You might issue a command other than one described here. If you do so, the DM determines how the target behaves. If the target can't follow your command, the spell ends.\n\nApproach. The target moves toward you by the shortest and most direct route, ending its turn if it moves within 5 feet of you.\n\nDrop. The target drops whatever it is holding and then ends its turn.\n\nFlee. The target spends its turn moving away from you by the fastest available means.\n\nGrovel. The target falls prone and then ends its turn.\n\nHalt. The target doesn't move and takes no actions. A flying creature stays aloft, provided that it is able to do so. If it must move to stay aloft, it flies the minimum distance needed to remain in the air.\n\nAt Higher Levels. When you cast this spell using a spell slot of 2nd level or higher, you can affect one additional creature for each slot level above 1st. The creatures must be within 30 feet of each other when you target them."
+            },
+            "range": {
+                "kind": "feet",
+                "feet": 60
+            },
+            "components": {
+                "verbal": true,
+                "somatic": false,
+                "material": false
+            },
+            "duration": {
+                "kind": "timed",
+                "amount": 1,
+                "unit": "round",
+                "concentration": false
+            },
+            "action": {
+                "id": "action_spell_command",
+                "name": "Command",
+                "activation": "action",
+                "tableNote": "Speak a one-word command. On a failed save the target obeys on its next turn: Approach (it moves to you and stops within 5 feet), Drop (it drops what it holds and ends its turn), Flee (it moves away by the fastest means), Grovel (it falls prone and ends its turn) or Halt (it doesn't move or act). The DM rules on any other command. No effect on undead, on a creature that doesn't understand you, or if the command is directly harmful to it. Each slot level above 1st adds one more target; all must be within 30 feet of each other.",
+                "effect": {
+                    "type": "save",
+                    "savingThrow": {
+                        "targetStat": "WIS",
+                        "dcCalculation": {
+                            "base": 8,
+                            "scalingStat": "SPELLCASTING_MOD",
+                            "includeProficiency": true
+                        },
+                        "saveEffect": "negates_effect"
+                    }
+                }
+            }
+        },
+        {
+            "id": "spell_identify",
+            "name": "Identify",
+            "level": 1,
+            "school": "divination",
+            "isRitual": true,
+            "lore": {
+                "shortDescription": "Touch an object for a minute to learn its magical properties, attunement and charges, or a creature to learn the spells affecting it. Ritual; needs a pearl worth 100 gp.",
+                "fullText": "You choose one object that you must touch throughout the casting of the spell. If it is a magic item or some other magic-imbued object, you learn its properties and how to use them, whether it requires attunement to use, and how many charges it has, if any. You learn whether any spells are affecting the item and what they are. If the item was created by a spell, you learn which spell created it.\n\nIf you instead touch a creature throughout the casting, you learn what spells, if any, are currently affecting it."
+            },
+            "range": {
+                "kind": "touch"
+            },
+            "components": {
+                "verbal": true,
+                "somatic": true,
+                "material": true,
+                "materialDescription": "a pearl worth at least 100 gp and an owl feather",
+                "goldCost": 100
+            },
+            "duration": {
+                "kind": "instantaneous"
+            },
+            "action": {
+                "id": "action_spell_identify",
+                "name": "Identify",
+                "activation": "minute",
+                "tableNote": "Touch an object throughout the casting. If it is magical, the DM tells you its properties and how to use it, whether it needs attunement, how many charges it has, which spells affect it, and which spell created it. Touch a creature instead to learn which spells are affecting it. The pearl isn't consumed.",
+                "effect": {
+                    "type": "no_effect"
+                }
+            }
+        },
+        {
+            "id": "spell_augury",
+            "name": "Augury",
+            "level": 2,
+            "school": "divination",
+            "isRitual": true,
+            "lore": {
+                "shortDescription": "An omen of weal, woe, both or nothing about something you plan to do within 30 minutes. Ritual; needs divining tokens worth 25 gp.",
+                "fullText": "By casting gem-inlaid sticks, rolling dragon bones, laying out ornate cards, or employing some other divining tool, you receive an omen from an otherworldly entity about the results of a specific course of action that you plan to take within the next 30 minutes. The DM chooses from the following possible omens:\n\n- Weal, for good results\n- Woe, for bad results\n- Weal and woe, for both good and bad results\n- Nothing, for results that aren't especially good or bad\n\nThe spell doesn't take into account any possible circumstances that might change the outcome, such as the casting of additional spells or the loss or gain of a companion.\n\nIf you cast the spell two or more times before completing your next long rest, there is a cumulative 25 percent chance for each casting after the first that you get a random reading. The DM makes this roll in secret."
+            },
+            "range": {
+                "kind": "self"
+            },
+            "components": {
+                "verbal": true,
+                "somatic": true,
+                "material": true,
+                "materialDescription": "specially marked sticks, bones, or similar tokens worth at least 25 gp",
+                "goldCost": 25
+            },
+            "duration": {
+                "kind": "instantaneous"
+            },
+            "action": {
+                "id": "action_spell_augury",
+                "name": "Augury",
+                "activation": "minute",
+                "tableNote": "Describe something you plan to do within the next 30 minutes; the DM answers weal, woe, weal and woe, or nothing. Later changes, such as new spells or a companion lost or gained, aren't foreseen. Each casting after the first before your next long rest adds a cumulative 25% chance of a random answer, which the DM rolls in secret.",
+                "effect": {
+                    "type": "no_effect"
+                }
+            }
+        },
+        {
+            "id": "spell_suggestion",
+            "name": "Suggestion",
+            "level": 2,
+            "school": "enchantment",
+            "isRitual": false,
+            "lore": {
+                "shortDescription": "A creature within 30 feet that fails a Wisdom save follows a reasonable-sounding suggestion. Concentration, up to 8 hours.",
+                "fullText": "You suggest a course of activity (limited to a sentence or two) and magically influence a creature you can see within range that can hear and understand you. Creatures that can't be charmed are immune to this effect. The suggestion must be worded in such a manner as to make the course of action sound reasonable. Asking the creature to stab itself, throw itself onto a spear, immolate itself, or do some other obviously harmful act ends the spell.\n\nThe target must make a Wisdom saving throw. On a failed save, it pursues the course of action you described to the best of its ability. The suggested course of action can continue for the entire duration. If the suggested activity can be completed in a shorter time, the spell ends when the subject finishes what it was asked to do.\n\nYou can also specify conditions that will trigger a special activity during the duration. For example, you might suggest that a knight give her warhorse to the first beggar she meets. If the condition isn't met before the spell expires, the activity isn't performed.\n\nIf you or any of your companions damage the target, the spell ends."
+            },
+            "range": {
+                "kind": "feet",
+                "feet": 30
+            },
+            "components": {
+                "verbal": true,
+                "somatic": false,
+                "material": true,
+                "materialDescription": "a snake's tongue and either a bit of honeycomb or a drop of sweet oil"
+            },
+            "duration": {
+                "kind": "timed",
+                "amount": 8,
+                "unit": "hour",
+                "concentration": true
+            },
+            "action": {
+                "id": "action_spell_suggestion",
+                "name": "Suggestion",
+                "activation": "action",
+                "tableNote": "Suggest a reasonable-sounding course of action, in a sentence or two, to a creature that can hear and understand you; creatures that can't be charmed are immune. On a failed save it follows the suggestion for the duration, or until the task is done. An obviously harmful suggestion ends the spell, as does damage from you or your companions. A suggestion can wait on a trigger; if the trigger never comes, nothing happens.",
+                "effect": {
+                    "type": "macro",
+                    "effects": [
+                        {
+                            "type": "save",
+                            "savingThrow": {
+                                "targetStat": "WIS",
+                                "dcCalculation": {
+                                    "base": 8,
+                                    "scalingStat": "SPELLCASTING_MOD",
+                                    "includeProficiency": true
+                                },
+                                "saveEffect": "negates_effect"
+                            }
+                        },
+                        {
+                            "type": "apply_effect",
+                            "effectName": "Suggestion",
+                            "durationType": "rounds",
+                            "durationRounds": 4800,
+                            "isSelfConcentration": true
+                        }
+                    ]
+                }
+            }
+        },
+        {
+            "id": "spell_nondetection",
+            "name": "Nondetection",
+            "level": 3,
+            "school": "abjuration",
+            "isRitual": false,
+            "lore": {
+                "shortDescription": "For 8 hours, a creature, place or object you touch can't be targeted by divination magic or seen through scrying. Consumes diamond dust worth 25 gp.",
+                "fullText": "For the duration, you hide a target that you touch from divination magic. The target can be a willing creature or a place or an object no larger than 10 feet in any dimension. The target can't be targeted by any divination magic or perceived through magical scrying sensors."
+            },
+            "range": {
+                "kind": "touch"
+            },
+            "components": {
+                "verbal": true,
+                "somatic": true,
+                "material": true,
+                "materialDescription": "a pinch of diamond dust worth 25 gp sprinkled over the target, which the spell consumes",
+                "goldCost": 25,
+                "isConsumed": true
+            },
+            "duration": {
+                "kind": "timed",
+                "amount": 8,
+                "unit": "hour",
+                "concentration": false
+            },
+            "action": {
+                "id": "action_spell_nondetection",
+                "name": "Nondetection",
+                "activation": "action",
+                "tableNote": "For 8 hours the target — a willing creature, or a place or object no larger than 10 feet in any dimension — can't be targeted by divination magic or perceived through magical scrying sensors. The diamond dust is consumed.",
+                "effect": {
+                    "type": "no_effect"
+                }
+            }
+        },
+        {
+            "id": "spell_speak_with_dead",
+            "name": "Speak with Dead",
+            "level": 3,
+            "school": "necromancy",
+            "isRitual": false,
+            "lore": {
+                "shortDescription": "A corpse within 10 feet answers up to five questions over 10 minutes, knowing only what it knew in life.",
+                "fullText": "You grant the semblance of life and intelligence to a corpse of your choice within range, allowing it to answer the questions you pose. The corpse must still have a mouth and can't be undead. The spell fails if the corpse was the target of this spell within the last 10 days.\n\nUntil the spell ends, you can ask the corpse up to five questions. The corpse knows only what it knew in life, including the languages it knew. Answers are usually brief, cryptic, or repetitive, and the corpse is under no compulsion to offer a truthful answer if you are hostile to it or it recognizes you as an enemy. This spell doesn't return the creature's soul to its body, only its animating spirit. Thus, the corpse can't learn new information, doesn't comprehend anything that has happened since it died, and can't speculate about future events."
+            },
+            "range": {
+                "kind": "feet",
+                "feet": 10
+            },
+            "components": {
+                "verbal": true,
+                "somatic": true,
+                "material": true,
+                "materialDescription": "burning incense"
+            },
+            "duration": {
+                "kind": "timed",
+                "amount": 10,
+                "unit": "minute",
+                "concentration": false
+            },
+            "action": {
+                "id": "action_spell_speak_with_dead",
+                "name": "Speak with Dead",
+                "activation": "action",
+                "tableNote": "A corpse that still has a mouth and isn't undead answers up to five questions before the spell ends. The spell fails if the corpse was its target in the last 10 days. The corpse knows only what it knew in life, answers briefly, cryptically or repetitively, and needn't tell the truth to someone it sees as an enemy.",
+                "effect": {
+                    "type": "no_effect"
+                }
+            }
         }
     ]
 }

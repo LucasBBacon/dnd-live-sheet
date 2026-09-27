@@ -51,6 +51,8 @@ const INTENDED_FINAL: Record<string, number[]> = {
   // the pack knows no Goliath, so nothing is added to the stored scores
   "Orrik Stonehide": [20, 12, 18, 8, 12, 10],
   "Maren Solace": [13, 10, 15, 11, 17, 12],
+  // the tiefling adds +1 INT and +2 CHA
+  "Cassia Emberlane": [10, 12, 14, 13, 16, 15],
 };
 
 describe("sample character scores", () => {

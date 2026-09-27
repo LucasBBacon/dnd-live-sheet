@@ -399,7 +399,8 @@
                 "preparation": "prepared",
                 "focusCategories": [
                     "category_arcane_focus"
-                ]
+                ],
+                "ritualCasting": true
             }
         }
     ],

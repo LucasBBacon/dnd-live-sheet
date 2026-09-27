@@ -1,18 +1,18 @@
 # Sample characters
 
-Twenty-one fixture characters for exercising the live sheet against a real
+Twenty-two fixture characters for exercising the live sheet against a real
 database, in two sets:
 
 - **The coverage set** (`…0110`–`…0119`) fills the sheet. Between them the ten
   reach every class, race, equipment slot, reset condition and hit point
   state. They live in `packages/database/src/seedSampleCharacters.ts`.
-- **The scenario set** (`…0120`–`…0130`) stages the hand checks a unit test
+- **The scenario set** (`…0120`–`…0131`) stages the hand checks a unit test
   cannot reach: a level-up one level away, a divergence that needs two tabs,
   a Tier 2 pass with nothing yet to verify against, or data the UI cannot
   create. Each has a script under [Live checks](#live-checks). They live in
   `packages/database/src/sampleScenarioCharacters.ts`.
 
-All twenty-one sit in the **Dev Smoke Campaign**
+All twenty-two sit in the **Dev Smoke Campaign**
 (`00000000-0000-0000-0000-000000000001`), owned by `dev-user-1` — the id the
 web client sends as `x-tester-id`.
 
@@ -24,7 +24,7 @@ pnpm --filter @project/database db:seed:samples
 
 Re-running is safe, and it is also how you reset. Character rows are
 upserted, their ledgers are cleared and rewritten, and no character outside
-the twenty-one ids is read or modified. A level-up check consumes its staging
+the twenty-two ids is read or modified. A level-up check consumes its staging
 character, so re-run the seed before trying it again.
 
 The server serves rules from `core_rule_packs`, not from the pack's JSON, and
@@ -71,8 +71,9 @@ Each is reachable at `http://localhost:5173/character/<id>`.
 | [Brother Mote](http://localhost:5173/character/00000000-0000-0000-0000-000000000128) | 11 (column: 12) | Cleric 11 (Tempest) | 95/80 | Broken on purpose | #95, #109, #98 |
 | [Orrik Stonehide](http://localhost:5173/character/00000000-0000-0000-0000-000000000129) | 13 | Fighter 13 (Rune Knight) | 134/134 | Broken on purpose | #102 |
 | [Maren Solace](http://localhost:5173/character/00000000-0000-0000-0000-000000000130) | 3 | Cleric 3 (Light) | 24/24 | Spell casting | #31b, #83 |
+| [Cassia Emberlane](http://localhost:5173/character/00000000-0000-0000-0000-000000000131) | 5 | Cleric 5 (Knowledge) | 38/38 | Spell casting: rituals, costly components | #31, #117, #119 |
 
-Ids run `…000000000110` through `…000000000130`; the last two digits are the
+Ids run `…000000000110` through `…000000000131`; the last two digits are the
 row. HP is current over the derived maximum, as the sheet shows it.
 
 ## Coverage, both sets
@@ -82,7 +83,7 @@ row. HP is current over the derived maximum, as the sheet shows it.
   of the ten dragonborn colours — plus a Goliath, which the pack does not
   author.
 - **Classes** all twelve; three characters multiclassed.
-- **Subclasses** 20 of the pack's 40 (21 once Quill's check takes Arcane
+- **Subclasses** 22 of the pack's 40 (23 once Quill's check takes Arcane
   Trickster), plus a Rune Knight the pack does not author.
 - **Feats** Alert (Isolde) and Tough (Ursk).
 - **Backgrounds** all four preset rows, all five stubs, and two custom
@@ -205,10 +206,11 @@ re-running the seed. Stored values can be read with
 6. **Eldritch Blast (#31b).** The Spells panel lists Eldritch Blast (Warlock ·
    At will). Cast it: one attack roll at +4 and a 1d10 force damage roll, both
    labelled Beam 1. After step 2's level-up to 5, a cast rolls Beam 1 and
-   Beam 2, each with its own attack. Minor Illusion is listed as not yet
-   automated. Dancing Lights (her High Elf cantrip) casts without asking,
-   because her component pouch covers it; End Concentration in Active effects
-   ends it.
+   Beam 2, each with its own attack. Minor Illusion casts at will; its note
+   says what the illusion can be and that an Investigation check against her
+   spell save DC sees through it. Dancing Lights (her High Elf cantrip) casts
+   without asking, because her component pouch covers it; End Concentration
+   in Active effects ends it.
 
 ### Ursk Gravemaw — `…0123`
 
@@ -286,7 +288,8 @@ re-running the seed. Stored values can be read with
    left"), since its use is spent. Take a long rest and cast it: the results
    read "Faerie Fire: DEX save DC 12 · a success negates it · 20-foot cube",
    Dancing Lights gives way to Faerie Fire, and End Concentration clears it.
-   Darkness is not yet automated.
+   Darkness asks for its bat fur (her crystal serves wizard spells, not Drow
+   Magic's), then spends the use and shows Concentrating.
 5. **Race stubs.** Sunlight Sensitivity changes nothing (a race stub, #30).
 6. **A low roll (#107, a regression check).** From the browser console, ask
    the preview for a roll of 1 at wizard 10:
@@ -365,6 +368,36 @@ finding. Record it as a backlog item rather than fixing it. The first load, on
 3. **Faerie Fire.** Cast it with the remaining 2nd-level slot: "DEX save DC
    13 · a success negates it · 20-foot cube", and Active effects shows it
    Concentrating. End Concentration clears it.
+
+### Cassia Emberlane — `…0131`
+
+A tiefling Knowledge cleric with no 1st-level slot left, one 2nd and two
+3rd. Her amulet is a holy symbol.
+
+1. **Identify as a ritual (#119, #117).** The Spells panel lists Identify
+   (Cleric · Slot or ritual) with a Ritual badge. Cast: the picker leads with
+   "As a ritual (+10 minutes, no slot)". Take it: the sheet asks for "a pearl
+   worth at least 100 gp and an owl feather" and says a pouch or focus can't
+   stand in, although she carries the amulet. Cast anyway: no slot changes,
+   and the note lists what she learns.
+2. **Augury** as a ritual the same way: it asks for its 25 gp tokens.
+3. **Command.** Cast with the 2nd-level slot: "Command: WIS save DC 14 · a
+   success negates it", and the note names the five commands and the extra
+   target per slot level.
+4. **Suggestion, then Darkness.** Cast Suggestion with a 3rd-level slot:
+   Active effects shows it Concentrating. Darkness (Infernal Legacy · 1 left)
+   warns "Casting this ends Suggestion", asks for its bat fur (Infernal
+   Legacy is no class, so the amulet does not serve it), and takes over the
+   concentration.
+5. **Hellish Rebuke.** Its row reads "Infernal Legacy · 1 left · cast at 2nd
+   level". Cast: "DEX save DC 13 · half damage on a success" and a 3d10 fire
+   roll; the use is spent.
+6. **Nondetection.** Cast with the last 3rd-level slot: the prompt says the
+   diamond dust costs 25 gp and "The spell consumes it." Cancel.
+7. **Speak with Dead.** Cast with the same slot: no prompt, because the amulet
+   covers burning incense. The slot is spent.
+8. **Thaumaturgy** casts at will through Infernal Legacy, and its note lists
+   the six wonders.
 
 ## Reference stubs
 

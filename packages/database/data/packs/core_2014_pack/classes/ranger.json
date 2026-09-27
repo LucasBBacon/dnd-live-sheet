@@ -339,7 +339,8 @@
                 "progression": "half",
                 "startsAtLevel": 2,
                 "preparation": "known",
-                "focusCategories": []
+                "focusCategories": [],
+                "ritualCasting": false
             }
         }
     ],

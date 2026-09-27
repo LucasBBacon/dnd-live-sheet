@@ -12,48 +12,57 @@ const SHIPPED_PACK = path.join(process.cwd(), "data/packs/core_2014_pack");
 describe("the shipped pack declares how each class casts", () => {
   const EXPECTED: Record<
     string,
-    { preparation: string; focusCategories: string[] }
+    { preparation: string; focusCategories: string[]; ritualCasting: boolean }
   > = {
     class_bard: {
       preparation: "known",
       focusCategories: ["category_musical_instrument"],
+      ritualCasting: true,
     },
     class_cleric: {
       preparation: "prepared",
       focusCategories: ["category_holy_symbol"],
+      ritualCasting: true,
     },
     class_druid: {
       preparation: "prepared",
       focusCategories: ["category_druidic_focus"],
+      ritualCasting: true,
     },
     class_paladin: {
       preparation: "prepared",
       focusCategories: ["category_holy_symbol"],
+      ritualCasting: false,
     },
-    class_ranger: { preparation: "known", focusCategories: [] },
+    class_ranger: { preparation: "known", focusCategories: [], ritualCasting: false },
     class_sorcerer: {
       preparation: "known",
       focusCategories: ["category_arcane_focus"],
+      ritualCasting: false,
     },
     class_warlock: {
       preparation: "known",
       focusCategories: ["category_arcane_focus"],
+      ritualCasting: false,
     },
     class_wizard: {
       preparation: "prepared",
       focusCategories: ["category_arcane_focus"],
+      ritualCasting: true,
     },
     subclass_fighter_eldritch_knight: {
       preparation: "known",
       focusCategories: [],
+      ritualCasting: false,
     },
     subclass_rogue_arcane_trickster: {
       preparation: "known",
       focusCategories: [],
+      ritualCasting: false,
     },
   };
 
-  it("states preparation and foci for every caster", async () => {
+  it("states preparation, foci and ritual casting for every caster", async () => {
     const pack = await assembleCoreRulePack(SHIPPED_PACK);
     const declared = Object.fromEntries(
       [...pack.classes, ...pack.subclasses].flatMap((entry) =>
@@ -64,6 +73,7 @@ describe("the shipped pack declares how each class casts", () => {
                 {
                   preparation: entry.spellcasting.preparation,
                   focusCategories: entry.spellcasting.focusCategories,
+                  ritualCasting: entry.spellcasting.ritualCasting,
                 },
               ],
             ]
@@ -104,5 +114,17 @@ describe("the shipped pack declares how each class casts", () => {
     );
 
     expect(pouch?.categoryTags).toEqual(["category_component_pouch"]);
+  });
+});
+
+describe("the shipped pack's fixed spell grants", () => {
+  // PHB p.43: "you can cast the hellish rebuke spell as a 2nd-level spell"
+  it("casts Infernal Legacy's Hellish Rebuke as a 2nd-level spell", async () => {
+    const pack = await assembleCoreRulePack(SHIPPED_PACK);
+    const grant = pack.traits
+      .find((trait) => trait.id === "infernal_legacy")
+      ?.spells?.fixed.find((entry) => entry.spellId === "spell_hellish_rebuke");
+
+    expect(grant?.castAtLevel).toBe(2);
   });
 });

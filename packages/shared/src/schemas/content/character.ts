@@ -143,6 +143,12 @@ export const SpellcastingSchema = z
      * the Eldritch Knight and the Arcane Trickster get.
      */
     focusCategories: z.array(SpellcastingFocusCategorySchema),
+    /**
+     * Whether this class can cast its ritual spells as rituals: no slot, and
+     * ten minutes longer. The bard, cleric, druid and wizard can; the
+     * warlock's Book of Ancient Secrets is an invocation, not this.
+     */
+    ritualCasting: z.boolean(),
   })
   .strict();
 

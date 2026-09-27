@@ -6,6 +6,7 @@ import {
   SaveEffectSchema,
 } from "../content/actions.js";
 import {
+  FixedSpellGrantSchema,
   ROUNDS_PER_DURATION_UNIT,
   SpellDefinitionSchema,
   SpellDurationSchema,
@@ -86,9 +87,12 @@ describe("the spell contract", () => {
     ).toEqual({ kind: "self", area: { shape: "cone", size: 15 } });
   });
 
-  // no range kind before a spell needs it
-  it("has no touch range yet", () => {
-    expect(() => SpellRangeSchema.parse({ kind: "touch" })).toThrow();
+  // Identify and Nondetection: a touch spell has no area
+  it("carries a touch range", () => {
+    expect(SpellRangeSchema.parse({ kind: "touch" })).toEqual({ kind: "touch" });
+    expect(() =>
+      SpellRangeSchema.parse({ kind: "touch", area: { shape: "sphere", size: 5 } }),
+    ).toThrow();
   });
 
   it("requires a timed duration to say whether it is concentration", () => {
@@ -105,8 +109,41 @@ describe("the spell contract", () => {
     ).toEqual({ kind: "timed", amount: 1, unit: "minute", concentration: true });
   });
 
-  it("counts ten rounds to the minute", () => {
-    expect(ROUNDS_PER_DURATION_UNIT.minute).toBe(10);
+  it("counts rounds in each duration unit: a round is six seconds", () => {
+    expect(ROUNDS_PER_DURATION_UNIT).toEqual({ round: 1, minute: 10, hour: 600 });
+  });
+
+  // Command lasts a round; Suggestion and Nondetection, eight hours
+  it("lasts rounds and hours as well as minutes, and nothing else", () => {
+    for (const unit of ["round", "hour"]) {
+      expect(
+        SpellDurationSchema.parse({ kind: "timed", amount: 8, unit, concentration: false }),
+      ).toEqual({ kind: "timed", amount: 8, unit, concentration: false });
+    }
+    expect(() =>
+      SpellDurationSchema.parse({
+        kind: "timed",
+        amount: 1,
+        unit: "day",
+        concentration: false,
+      }),
+    ).toThrow();
+  });
+
+  // Infernal Legacy casts Hellish Rebuke "as a 2nd-level spell"
+  it("lets a fixed grant cast its spell at a set level, from 1st to 9th", () => {
+    const grant = {
+      type: "fixed_spell",
+      spellId: "spell_hellish_rebuke",
+      castingStat: "CHA",
+      unlockLevel: 3,
+      usage: { kind: "resource", resourceId: "infernal_legacy_hellish_rebuke" },
+    };
+
+    expect(FixedSpellGrantSchema.parse({ ...grant, castAtLevel: 2 }).castAtLevel).toBe(2);
+    expect(FixedSpellGrantSchema.parse(grant).castAtLevel).toBeUndefined();
+    expect(() => FixedSpellGrantSchema.parse({ ...grant, castAtLevel: 0 })).toThrow();
+    expect(() => FixedSpellGrantSchema.parse({ ...grant, castAtLevel: 10 })).toThrow();
   });
 
   it("ladders an attack's repeat by level, and needs at least one rung", () => {

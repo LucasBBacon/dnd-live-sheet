@@ -11,13 +11,14 @@ const minimalClass = {
 };
 
 describe("SpellcastingSchema", () => {
-  it("accepts an ability, a progression, a start level, preparation and foci", () => {
+  it("accepts an ability, a progression, a start level, preparation, foci and ritual casting", () => {
     const block = {
       ability: "INT",
       progression: "full",
       startsAtLevel: 1,
       preparation: "prepared",
       focusCategories: ["category_arcane_focus"],
+      ritualCasting: true,
     };
 
     expect(SpellcastingSchema.parse(block)).toEqual(block);
@@ -91,6 +92,20 @@ describe("SpellcastingSchema", () => {
     ).toThrow();
   });
 
+  // required, not defaulted, like preparation: a caster that never says
+  // whether it casts rituals fails to validate instead of reading as "no"
+  it("rejects a block that does not say whether it casts rituals", () => {
+    expect(() =>
+      SpellcastingSchema.parse({
+        ability: "WIS",
+        progression: "full",
+        startsAtLevel: 1,
+        preparation: "prepared",
+        focusCategories: ["category_holy_symbol"],
+      }),
+    ).toThrow();
+  });
+
   it("rejects a focus category that is not a spellcasting focus", () => {
     expect(() =>
       SpellcastingSchema.parse({
@@ -111,6 +126,7 @@ describe("SpellcastingSchema", () => {
         startsAtLevel: 1,
         preparation: "prepared",
         focusCategories: [],
+        ritualCasting: false,
         slotTable: "full",
       }),
     ).toThrow();
@@ -129,6 +145,7 @@ describe("a class may declare how it casts", () => {
       startsAtLevel: 1,
       preparation: "prepared",
       focusCategories: ["category_arcane_focus"],
+      ritualCasting: true,
     };
 
     expect(

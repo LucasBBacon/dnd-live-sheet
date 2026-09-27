@@ -41,6 +41,11 @@ type Patch = {
    * segment, and every copy is set. An id that matches nothing is an error.
    */
   setTraitResourceFields?: Record<string, Record<string, unknown>>;
+  /**
+   * Trait id -> spell id -> fields to set, shallow, on that trait's fixed
+   * spell grant. A trait or grant that matches nothing is an error.
+   */
+  setFixedSpellGrantFields?: Record<string, Record<string, Record<string, unknown>>>;
   /** Equipment id -> fields to set on that item, shallow. */
   setEquipmentFields?: Record<string, Record<string, unknown>>;
   /** Spells to insert, or to replace by id. */
@@ -53,6 +58,7 @@ type Segment = {
   traits?: Array<{
     id: string;
     resources?: Array<Record<string, unknown> & { id: string }>;
+    spells?: { fixed?: Array<Record<string, unknown> & { spellId: string }> };
   }>;
   classes?: Array<
     Record<string, unknown> & {
@@ -169,6 +175,24 @@ for (const [resourceId, fields] of Object.entries(
     throw new Error(`${segmentPath} has no trait resource '${resourceId}'`);
   }
   for (const resource of matches) Object.assign(resource, fields);
+}
+
+for (const [traitId, grants] of Object.entries(
+  patch.setFixedSpellGrantFields ?? {},
+)) {
+  const trait = (segment.traits ?? []).find((entry) => entry.id === traitId);
+  if (!trait) throw new Error(`${segmentPath} has no trait '${traitId}'`);
+  for (const [spellId, fields] of Object.entries(grants)) {
+    const grant = (trait.spells?.fixed ?? []).find(
+      (entry) => entry.spellId === spellId,
+    );
+    if (!grant) {
+      throw new Error(
+        `${segmentPath} trait '${traitId}' grants no fixed spell '${spellId}'`,
+      );
+    }
+    Object.assign(grant, fields);
+  }
 }
 
 for (const [equipmentId, fields] of Object.entries(

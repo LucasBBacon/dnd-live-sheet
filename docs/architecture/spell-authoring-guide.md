@@ -2,7 +2,9 @@
 
 How a spell goes from a stub in `spells/unimplemented.json` to a castable
 spell in `spells/core.json`. Eldritch Blast, Dancing Lights, Faerie Fire and
-Burning Hands are the worked examples; read them beside this.
+Burning Hands are the worked examples; Hellish Rebuke (a reaction cast at a
+fixed level through Infernal Legacy), Command, Suggestion and Identify (a
+ritual with a costly component) show the rest. Read them beside this.
 
 The engine interprets the pack; the pack describes the rule. A spell is
 authored once, with the numbers that depend on its caster left abstract, and
@@ -16,15 +18,15 @@ fills them in for each character and each source that grants it.
 | `id`, `name` | Stable id (`spell_<name>`) and display name. |
 | `level`, `school`, `isRitual` | The book's values. `level: 0` is a cantrip. |
 | `lore` | `shortDescription` (your own words, 280 characters at most) and `fullText` (see Text). |
-| `range` | `{ kind: "feet", feet, area? }` or `{ kind: "self", area? }`. `area` is the spell's area, authored once, here. |
+| `range` | `{ kind: "feet", feet, area? }`, `{ kind: "self", area? }` or `{ kind: "touch" }`. `area` is the spell's area, authored once, here. |
 | `components` | `verbal`, `somatic`, `material`, and `materialDescription` when `material` is true. `goldCost` and `isConsumed` for a costly component. |
-| `duration` | `{ kind: "instantaneous" }` or `{ kind: "timed", amount, unit: "minute", concentration }`. |
+| `duration` | `{ kind: "instantaneous" }` or `{ kind: "timed", amount, unit, concentration }`, where `unit` is `"round"`, `"minute"` or `"hour"`. |
 | `action` | The action the spell grants. Casting time is its `activation`. Its id is `action_spell_<name>`. |
 
-`touch`, `sight` and `unlimited` ranges, and `round`, `hour` and
-`until_dispelled` durations, do not exist yet. The first spell that needs one
-adds it to `SpellRangeSchema` or `SpellDurationSchema`; the repo adds no
-schema variant before a real rule needs it.
+`sight` and `unlimited` ranges, and `day` and `until_dispelled` durations,
+do not exist yet. The first spell that needs one adds it to
+`SpellRangeSchema` or `SpellDurationSchema`; the repo adds no schema
+variant before a real rule needs it.
 
 ## Which effect fits which spell
 
@@ -33,10 +35,11 @@ schema variant before a real rule needs it.
 | makes an attack roll | `attack`, `attackType: "ranged_spell"` or `"melee_spell"`, `attackStat: "SPELLCASTING_MOD"` | Eldritch Blast |
 | makes several attack rolls at once | `attack` with `repeat: { label, thresholds }` | Eldritch Blast's beams |
 | forces a save for damage | `save` with `damage` and `saveEffect: "half_damage"` or `"no_damage"` | Burning Hands |
-| forces a save, then lasts | `macro` of a `save` (`negates_effect`) and a concentration `apply_effect` | Faerie Fire |
+| forces a save whose failure only the table resolves | `save` with `saveEffect: "negates_effect"` and no `damage`; what failing means goes in the `tableNote` | Command |
+| forces a save, then lasts | `macro` of a `save` (`negates_effect`) and a concentration `apply_effect` | Faerie Fire, Suggestion |
 | changes the caster's own numbers while it lasts | `apply_effect` with `modifiers` or `states` | — |
 | heals | `heal` — a stub until it gains a casting modifier, upcast dice and a target (#122) | — |
-| does what only the table can see | a concentration `apply_effect` if it concentrates, `no_effect` otherwise; the rest in a `tableNote` | Dancing Lights |
+| does what only the table can see | a concentration `apply_effect` if it concentrates, `no_effect` otherwise; the rest in a `tableNote` | Dancing Lights, Identify |
 
 Author `SPELLCASTING_MOD` for `attackStat` and for a save's
 `dcCalculation.scalingStat`.
@@ -54,7 +57,7 @@ rolls its damage once; it never rolls the caster's own save.
 
 | When | What | Where |
 | --- | --- | --- |
-| The sheet is built | casting ability, attack bonus, save DC, area, beam count, damage dice at the character's level, doubled critical dice | `synthesizeSpells` |
+| The sheet is built | casting ability, attack bonus, save DC, area, beam count, damage dice at the character's level, doubled critical dice, and dice at a grant's fixed cast level (`castAtLevel`) | `synthesizeSpells` |
 | The spell is cast | the slot's level, and the dice `perSlotAbove` adds for it | `settleSpellCast`, then the resolver's `spellCast` context |
 
 ## How a spell reaches a character
@@ -62,6 +65,7 @@ rolls its damage once; it never rolls the caster's own save.
 - **A fixed grant** on a trait (`spells.fixed`), from `unlockLevel` on.
   - `usage` sets the price: `at_will` is free, `resource` spends the named pool, and `always_prepared` spends a slot.
   - `castingStat` sets the ability, and falls back to the granting class's.
+  - `castAtLevel` casts it at a set level above its own (Infernal Legacy's Hellish Rebuke, "as a 2nd-level spell"). The synthesizer stamps the dice at that level and drops `perSlotAbove`. Pack validation rejects one below the spell's level, or on an `always_prepared` grant, whose slot chooses (`invalid_cast_level`).
 - **A stored pick** on a `spell_choice` node. A cantrip is free and a leveled spell spends a slot. The ability is the node's `castingStat`, or the class's.
 
 Each spell is one entry per source. Its action id is
@@ -80,15 +84,34 @@ then; do not work around this per spell.
   - A component pouch, or a focus in the casting source's `focusCategories`, covers it silently.
   - Otherwise the sheet asks the player to confirm, and the server refuses an unconfirmed cast.
   - A class declares its foci on its `spellcasting` block; a racial or feat grant has none, so a pouch only.
-- **A costly or consumed material** (`goldCost`, `isConsumed`) is not enforced yet (#117). Author it, and say so in the `tableNote`.
+- **A costly material** (`goldCost` above 0) is never covered by a pouch or focus: the sheet asks on every cast, names the cost, and says so when `isConsumed`. Owning the item and spending it are not tracked (#117).
 
 ## Durations and concentration
 
 A concentration spell's action applies an `apply_effect` with
 `isSelfConcentration: true`, `durationType: "rounds"`, and `durationRounds`
-equal to the duration in rounds (a minute is 10). Pack validation requires
-the two to agree (`concentration_mismatch`). Casting a new concentration spell
-ends the old one, and End Concentration ends it at any time.
+equal to the duration in rounds (a round is 1, a minute 10, an hour 600). Pack
+validation requires the two to agree (`concentration_mismatch`). Casting a new
+concentration spell ends the old one, and End Concentration ends it at any
+time.
+
+A duration without concentration is not tracked: the spell's effect is
+`no_effect` (or a `save`), and the `tableNote` says how long it lasts.
+
+## Rituals
+
+A spell with `isRitual: true` can be cast as a ritual through a class whose
+`spellcasting.ritualCasting` is true: the bard, cleric, druid and wizard.
+The synthesizer marks such an entry `ritual`, and the sheet offers "As a
+ritual (+10 minutes, no slot)" beside the slot picker, even with every slot
+spent.
+
+A ritual spends no slot and casts at the spell's own level. It takes ten
+minutes longer than its casting time, so it spends no action, bonus action
+or reaction: `settleSpellCast` returns its action as a `minute` activation.
+Its materials are still checked. A trait's spells (Drow Magic, Infernal
+Legacy, a feat) are never ritual-castable, and the server refuses one as
+`ritual_not_allowed`.
 
 ## Scaling
 

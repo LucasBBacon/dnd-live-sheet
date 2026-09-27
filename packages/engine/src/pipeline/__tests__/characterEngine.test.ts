@@ -2062,11 +2062,23 @@ describe("CharacterEngine.buildLiveSheet: spells", () => {
   });
 
   it("lists a stub without offering it as an action", () => {
-    const sheet = warlockSheet();
+    // every stub keeps the placeholder level 0, so a cantrip node takes it
+    const sheet = buildSheet({
+      ...halfElfFighter(),
+      classes: [
+        {
+          classId: "class_warlock",
+          level: 5,
+          selections: {
+            warlock_level_1_cantrips: ["spell_eldritch_blast", "spell_bless"],
+          },
+        },
+      ],
+    });
 
-    expect(sheet.spells.map((spell) => spell.spellId)).toContain("spell_minor_illusion");
+    expect(sheet.spells.map((spell) => spell.spellId)).toContain("spell_bless");
     expect(
-      sheet.actions.some((action) => action.id.startsWith("action_spell_minor_illusion")),
+      sheet.actions.some((action) => action.id.startsWith("action_spell_bless")),
     ).toBe(false);
   });
 });

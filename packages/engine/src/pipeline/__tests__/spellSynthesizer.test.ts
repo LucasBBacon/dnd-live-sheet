@@ -79,6 +79,36 @@ const lightCleric = (level: number, race: CharacterSave["race"] = save({}).race)
     ],
   });
 
+const TIEFLING = {
+  baseRaceId: "race_tiefling",
+  hasSubraces: false,
+  subraceId: null,
+} as const;
+
+const tieflingFighter = (level: number) =>
+  save({
+    race: TIEFLING,
+    classes: [
+      {
+        classId: "class_fighter",
+        level,
+        selections: { fighter_level_1_fighting_style: ["trait_fs_defense"] },
+      },
+    ],
+  });
+
+const knowledgeCleric = (level: number) =>
+  save({
+    classes: [
+      {
+        classId: "class_cleric",
+        level,
+        subclassId: "subclass_cleric_knowledge",
+        selections: {},
+      },
+    ],
+  });
+
 const find = (
   result: ReturnType<typeof synthesize>,
   spellId: string,
@@ -135,11 +165,24 @@ describe("synthesizeSpells", () => {
   });
 
   it("lists a stub the character picked, and makes no action of it", () => {
-    const result = synthesize(warlock(1));
+    // every stub keeps the placeholder level 0, so a cantrip node takes it
+    const result = synthesize(
+      save({
+        classes: [
+          {
+            classId: "class_warlock",
+            level: 1,
+            selections: {
+              warlock_level_1_cantrips: ["spell_eldritch_blast", "spell_bless"],
+            },
+          },
+        ],
+      }),
+    );
 
-    expect(find(result, "spell_minor_illusion")?.actionId).toBeUndefined();
+    expect(find(result, "spell_bless")?.actionId).toBeUndefined();
     expect(
-      result.actions.some((action) => action.id.startsWith("action_spell_minor_illusion")),
+      result.actions.some((action) => action.id.startsWith("action_spell_bless")),
     ).toBe(false);
   });
 
@@ -328,5 +371,76 @@ describe("synthesizeSpells", () => {
         }),
       ),
     ).toEqual({ spells: [], actions: [], slotPools: [] });
+  });
+
+  // PHB p.43: Infernal Legacy casts it "as a 2nd-level spell"
+  it("casts Infernal Legacy's Hellish Rebuke at 2nd level: 3d10, and no further upcast", () => {
+    const result = synthesize(tieflingFighter(3), scores({ CHA: 14 }));
+
+    expect(find(result, "spell_hellish_rebuke")).toMatchObject({
+      level: 1,
+      castLevel: 2,
+      ability: "CHA",
+      payment: { kind: "resource", resourceId: "infernal_legacy_hellish_rebuke" },
+    });
+
+    const effect = actionOf(result, "action_spell_hellish_rebuke@infernal_legacy")?.effect;
+    const damage = effect?.type === "save" ? effect.damage : undefined;
+    expect(damage).toEqual([
+      expect.objectContaining({ baseDice: "3d10", damageType: "fire" }),
+    ]);
+    expect(damage?.[0]).not.toHaveProperty("perSlotAbove");
+  });
+
+  it("gives a grant with no fixed cast level none", () => {
+    expect(
+      find(synthesize(drowWizard(3)), "spell_faerie_fire", "drow_magic"),
+    ).not.toHaveProperty("castLevel");
+  });
+
+  it("lets a Knowledge cleric cast Identify and Augury as rituals, and nothing else", () => {
+    const result = synthesize(knowledgeCleric(3), scores({ WIS: 16 }));
+
+    expect(find(result, "spell_identify")?.ritual).toBe(true);
+    expect(find(result, "spell_augury")?.ritual).toBe(true);
+    expect(find(result, "spell_command")?.ritual).toBe(false);
+  });
+
+  it("casts a ritual only through a class that casts rituals", () => {
+    const pick = (classId: string, nodeId: string) =>
+      synthesize(
+        save({
+          classes: [{ classId, level: 1, selections: { [nodeId]: ["spell_identify"] } }],
+        }),
+      );
+
+    expect(
+      find(pick("class_wizard", "wizard_level_1_spellbook"), "spell_identify")?.ritual,
+    ).toBe(true);
+    expect(
+      find(pick("class_sorcerer", "sorcerer_level_1_spells_known"), "spell_identify")
+        ?.ritual,
+    ).toBe(false);
+  });
+
+  // a trait's spell is nobody's class: Drow Magic, Infernal Legacy, a feat
+  it("never casts a trait's spell as a ritual", () => {
+    const result = synthesize(
+      save({
+        race: {
+          baseRaceId: "race_elf",
+          hasSubraces: true,
+          subraceId: "subrace_elf_high",
+        },
+        classes: [{ classId: "class_wizard", level: 1, selections: {} }],
+        // a pick the High Elf's cantrip block would not offer: the
+        // synthesizer lists whatever is stored, which is what this needs
+        traitSelections: { high_elf_cantrip: ["spell_identify"] },
+      }),
+    );
+
+    expect(
+      find(result, "spell_identify", "subrace_elf_high_cantrip")?.ritual,
+    ).toBe(false);
   });
 });

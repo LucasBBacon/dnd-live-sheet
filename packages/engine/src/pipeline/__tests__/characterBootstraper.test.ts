@@ -624,7 +624,7 @@ describe("CharacterBootstrapper.collectSaveIssues - spell choices", () => {
       high_elf_cantrip: ["spell_not_real"],
     });
     const tooMany = wizard(highElf, { wizard_level_1_cantrips: cantrips }, {
-      high_elf_cantrip: ["spell_thaumaturgy", "spell_command"],
+      high_elf_cantrip: ["spell_thaumaturgy", "spell_bless"],
     });
 
     expect(issuesAt(notOffered, "high_elf_cantrip")).toEqual(["invalid_option"]);
@@ -943,6 +943,7 @@ describe("CharacterBootstrapper.hydrateRuntimeManagers caster level", () => {
           startsAtLevel: 1,
           preparation: "prepared" as const,
           focusCategories: [],
+          ritualCasting: false,
         },
       },
     },

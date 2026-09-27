@@ -779,8 +779,9 @@ export function initializeWebSocketGateway(httpServer: any) {
           const { snapshot } = await getCachedRuleSnapshot();
 
           // A spell is paid for and supplied before anything happens: a slot
-          // of at least its level with a charge left, and its material from a
-          // pouch, a usable focus or the player's word. A refusal spends
+          // of at least its level with a charge left (a ritual needs none),
+          // and its material from a pouch, a usable focus or the player's
+          // word - only their word for one with a cost. A refusal spends
           // nothing and never reaches the resolver. On success the chosen
           // slot rides in as the action's consumesResource, so settleCosts
           // spends it with everything else, all or nothing.

@@ -9,6 +9,7 @@ export type CoreRulePackIssueCode =
   | "duplicate_id"
   | "incompatible_ammunition_reference"
   | "incomplete_spell"
+  | "invalid_cast_level"
   | "invalid_choice_count"
   | "invalid_progression_order"
   | "invalid_upcast"
@@ -474,6 +475,7 @@ export const validateCoreRulePack = (
   const featIds = new Set(pack.feats.map((entry) => entry.id));
   const equipmentIds = new Set(pack.equipment.map((entry) => entry.id));
   const spellIds = new Set(pack.spells.map((entry) => entry.id));
+  const spellLevels = new Map(pack.spells.map((entry) => [entry.id, entry.level]));
 
   pack.races.forEach((race, raceIndex) => {
     if (race.hasSubraces && Object.keys(race.subraces).length === 0) {
@@ -611,6 +613,23 @@ export const validateCoreRulePack = (
       }
       if (grant.usage.kind === "resource" && !resourceIds.has(grant.usage.resourceId!)) {
         pushReferenceIssue(issues, "unknown_resource_reference", ["traits", index, "spells", "fixed", grantIndex, "usage", "resourceId"], grant.usage.resourceId!);
+      }
+      if (grant.castAtLevel !== undefined) {
+        const path = ["traits", index, "spells", "fixed", grantIndex, "castAtLevel"];
+        const level = spellLevels.get(grant.spellId);
+        if (grant.usage.kind === "always_prepared") {
+          issues.push({
+            code: "invalid_cast_level",
+            path,
+            message: `Grant of '${grant.spellId}' is always prepared, so the slot it is cast with chooses its level; castAtLevel is for a grant with its own price.`,
+          });
+        } else if (level !== undefined && grant.castAtLevel < level) {
+          issues.push({
+            code: "invalid_cast_level",
+            path,
+            message: `Grant of '${grant.spellId}' casts it at level ${grant.castAtLevel}, below the spell's own level ${level}.`,
+          });
+        }
       }
     });
   });

@@ -31,6 +31,7 @@ const spell = (overrides: Partial<CastableSpell> = {}): CastableSpell => ({
   saveDc: 13,
   payment: { kind: "slot" },
   preparationTracked: true,
+  ritual: false,
   focusCategories: ["category_holy_symbol"],
   actionId: "action_spell_burning_hands@class_cleric",
   ...overrides,
@@ -48,6 +49,24 @@ const lights = (focusCategories: CastableSpell["focusCategories"] = []) =>
       material: true,
       materialDescription: "a bit of phosphorus or wychwood, or a glowworm",
       goldCost: 0,
+      isConsumed: false,
+    },
+  });
+
+const identify = (
+  focusCategories: CastableSpell["focusCategories"] = ["category_holy_symbol"],
+) =>
+  spell({
+    spellId: "spell_identify",
+    activation: "minute",
+    ritual: true,
+    focusCategories,
+    components: {
+      verbal: true,
+      somatic: true,
+      material: true,
+      materialDescription: "a pearl worth at least 100 gp and an owl feather",
+      goldCost: 100,
       isConsumed: false,
     },
   });
@@ -112,6 +131,17 @@ describe("materialCoverage", () => {
   it("does not cover it with nothing", () => {
     expect(materialCoverage(lights(), [], corePackLookup())).toEqual({ covered: false });
   });
+
+  // PHB p.203: a pouch or focus can't stand in for a component with a cost
+  it("never covers a component with a gold cost", () => {
+    expect(
+      materialCoverage(
+        identify(),
+        [carried("item_gear_component_pouch"), carried("item_focus_amulet")],
+        corePackLookup(),
+      ),
+    ).toEqual({ covered: false });
+  });
 });
 
 describe("settleSpellCast", () => {
@@ -172,5 +202,49 @@ describe("settleSpellCast", () => {
     expect(
       settle({ spell: { ...lights(), level: 1, payment: { kind: "slot" } } }),
     ).toEqual({ ok: false, reason: "slot_required" });
+  });
+
+  it("casts a ritual without a slot, at its own level, and spends no action on it", () => {
+    expect(
+      settle({ spell: identify(), request: { asRitual: true, materialsConfirmed: true } }),
+    ).toEqual({ ok: true, action: { ...action, activation: "minute" } });
+  });
+
+  it("leaves a ritual that already takes minutes as it is", () => {
+    const minute: ActionGrant = { ...action, activation: "minute" };
+
+    expect(
+      settle({
+        spell: identify(),
+        action: minute,
+        request: { asRitual: true, materialsConfirmed: true },
+      }),
+    ).toEqual({ ok: true, action: minute });
+  });
+
+  it("refuses a ritual cast through a source that cannot cast one", () => {
+    expect(settle({ request: { asRitual: true } })).toEqual({
+      ok: false,
+      reason: "ritual_not_allowed",
+      offendingId: "spell_burning_hands",
+    });
+  });
+
+  it("still asks a ritual for its material", () => {
+    expect(settle({ spell: identify(), request: { asRitual: true } })).toEqual({
+      ok: false,
+      reason: "materials_required",
+      offendingId: "spell_identify",
+    });
+  });
+
+  it("refuses a costly component the player has not confirmed, whatever they carry", () => {
+    expect(
+      settle({
+        spell: identify(),
+        request: { slotResourceId: "spell_slots_2" },
+        inventory: [carried("item_gear_component_pouch")],
+      }),
+    ).toEqual({ ok: false, reason: "materials_required", offendingId: "spell_identify" });
   });
 });
