@@ -43,9 +43,17 @@ const carriesRules = (trait: PackTrait): boolean => {
   );
 };
 
+/**
+ * A stub carries none of `lore`, `range`, `components` or `duration` -
+ * `SpellDefinitionSchema` makes all four optional for exactly that reason,
+ * and pack validation requires all four together on every authored spell.
+ * `effect.type === "no_effect"` used to double as this signal, back when no
+ * authored spell had one; Minor Illusion and friends now do (a spell that
+ * "does what only the table can see" is `no_effect` by design), so `lore`'s
+ * presence is the proxy that still holds.
+ */
 const isStub = (spell: PackSpell): boolean =>
-  (spell as { action?: { effect?: { type?: string } } }).action?.effect?.type ===
-  "no_effect";
+  (spell as { lore?: unknown }).lore === undefined;
 
 /**
  * Equipment got a cross-check when it learned to declare its own gaps (E3).
@@ -118,7 +126,7 @@ describe("trait and spell implementation markers match their data", () => {
   it("records which spells carry rules", async () => {
     const pack = await assembleCoreRulePack(SHIPPED_PACK);
 
-    // 4 of 111 since feat/spell-casting (#31). Add each spell as it is
+    // 14 of 111 since feat/spells-first-ten (#31). Add each spell as it is
     // authored; one leaving this list is a regression.
     expect(
       pack.spells
@@ -126,10 +134,20 @@ describe("trait and spell implementation markers match their data", () => {
         .map((spell) => spell.id)
         .sort(),
     ).toEqual([
+      "spell_augury",
       "spell_burning_hands",
+      "spell_command",
       "spell_dancing_lights",
+      "spell_darkness",
       "spell_eldritch_blast",
       "spell_faerie_fire",
+      "spell_hellish_rebuke",
+      "spell_identify",
+      "spell_minor_illusion",
+      "spell_nondetection",
+      "spell_speak_with_dead",
+      "spell_suggestion",
+      "spell_thaumaturgy",
     ]);
     expect(pack.spells).toHaveLength(111);
   });

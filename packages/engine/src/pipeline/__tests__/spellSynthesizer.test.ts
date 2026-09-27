@@ -135,11 +135,24 @@ describe("synthesizeSpells", () => {
   });
 
   it("lists a stub the character picked, and makes no action of it", () => {
-    const result = synthesize(warlock(1));
+    // every stub keeps the placeholder level 0, so a cantrip node takes it
+    const result = synthesize(
+      save({
+        classes: [
+          {
+            classId: "class_warlock",
+            level: 1,
+            selections: {
+              warlock_level_1_cantrips: ["spell_eldritch_blast", "spell_bless"],
+            },
+          },
+        ],
+      }),
+    );
 
-    expect(find(result, "spell_minor_illusion")?.actionId).toBeUndefined();
+    expect(find(result, "spell_bless")?.actionId).toBeUndefined();
     expect(
-      result.actions.some((action) => action.id.startsWith("action_spell_minor_illusion")),
+      result.actions.some((action) => action.id.startsWith("action_spell_bless")),
     ).toBe(false);
   });
 
