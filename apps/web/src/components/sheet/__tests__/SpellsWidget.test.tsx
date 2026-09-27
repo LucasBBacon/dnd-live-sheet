@@ -73,6 +73,7 @@ const eldritchBlast: CastableSpell = {
   saveDc: 12,
   payment: { kind: "at_will" },
   preparationTracked: true,
+  ritual: false,
   focusCategories: ["category_arcane_focus"],
   actionId: "action_spell_eldritch_blast@class_warlock",
 };
@@ -109,6 +110,7 @@ const darkness: CastableSpell = {
   source: { kind: "trait", traitId: "drow_magic", label: "Drow Magic" },
   payment: { kind: "at_will" },
   preparationTracked: true,
+  ritual: false,
   focusCategories: [],
 };
 

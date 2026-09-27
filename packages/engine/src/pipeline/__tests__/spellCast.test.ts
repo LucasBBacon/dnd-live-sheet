@@ -31,6 +31,7 @@ const spell = (overrides: Partial<CastableSpell> = {}): CastableSpell => ({
   saveDc: 13,
   payment: { kind: "slot" },
   preparationTracked: true,
+  ritual: false,
   focusCategories: ["category_holy_symbol"],
   actionId: "action_spell_burning_hands@class_cleric",
   ...overrides,

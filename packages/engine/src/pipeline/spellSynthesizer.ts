@@ -25,7 +25,11 @@ import {
   resolveTraitDefinition,
   type RuleSnapshotLookup,
 } from "../rules/ruleLookup.js";
-import { resolveSegmentDice, type ScalingLevels } from "./actionScaling.js";
+import {
+  resolveSegmentDice,
+  upcastDice,
+  type ScalingLevels,
+} from "./actionScaling.js";
 import { CharacterBootstrapper } from "./characterBootstrapper.js";
 import {
   backgroundTraitIds,
@@ -64,6 +68,12 @@ export interface CastableSpell {
   spellId: string;
   name: string;
   level: number;
+  /**
+   * The level a grant fixes it to be cast at, above its own: Infernal
+   * Legacy's Hellish Rebuke is cast as a 2nd-level spell. Its dice are
+   * already stamped at this level.
+   */
+  castLevel?: number;
   school: SpellDefinition["school"];
   lore?: Lore;
   range?: SpellRange;
@@ -78,6 +88,11 @@ export interface CastableSpell {
   payment: SpellPayment;
   /** False for a prepared caster's leveled pick: preparation is not tracked. */
   preparationTracked: boolean;
+  /**
+   * Whether this source can cast it as a ritual: a ritual spell, through a
+   * class whose spellcasting casts rituals. A trait's spell never can.
+   */
+  ritual: boolean;
   /** The foci this source can use. A component pouch always works. */
   focusCategories: SpellcastingFocusCategory[];
   /** The resolved action's id. Absent for a stub: listed, never cast. */
@@ -129,6 +144,24 @@ const rungAt = (
 const areaOf = (range: SpellRange | undefined) =>
   range !== undefined && range.kind !== "touch" ? range.area : undefined;
 
+/**
+ * A segment cast at the level its grant fixes: the upcast dice folded into
+ * its base and nothing left to add, so no slot can upcast it again.
+ */
+const atCastLevel = (
+  segment: DamageSegment,
+  spellLevel: number,
+  castLevel: number | undefined,
+): DamageSegment => {
+  if (castLevel === undefined || segment.perSlotAbove === undefined) return segment;
+  const stamped: DamageSegment = {
+    ...segment,
+    baseDice: upcastDice(segment, { spellLevel, castLevel }),
+  };
+  delete stamped.perSlotAbove;
+  return stamped;
+};
+
 interface CasterNumbers {
   ability: Ability;
   attackBonus: number;
@@ -140,16 +173,20 @@ type CoreEffect = Exclude<ActionGrant["effect"], { type: "macro" }>;
 /**
  * One effect with its caster stamped in, ahead of the roll the way weapons
  * are: attack bonus and beam count on an attack, DC and area on a save, and
- * every damage die at the character's level.
+ * every damage die at the character's level and at a grant's fixed cast
+ * level.
  */
 const resolveSpellEffect = (
   effect: CoreEffect,
   numbers: CasterNumbers,
   spell: SpellDefinition,
   levels: ScalingLevels,
+  castLevel: number | undefined,
 ): CoreEffect => {
   const scale = (segments: DamageSegment[]) =>
-    segments.map((segment) => resolveSegmentDice(segment, levels));
+    segments.map((segment) =>
+      atCastLevel(resolveSegmentDice(segment, levels), spell.level, castLevel),
+    );
 
   switch (effect.type) {
     case "attack": {
@@ -202,6 +239,7 @@ const resolveSpellAction = (
   levels: ScalingLevels,
   actionId: string,
   payment: SpellPayment,
+  castLevel: number | undefined,
 ): ActionGrant => {
   const effect = spell.action.effect;
   return {
@@ -212,10 +250,10 @@ const resolveSpellAction = (
         ? {
             ...effect,
             effects: effect.effects.map((nested) =>
-              resolveSpellEffect(nested, numbers, spell, levels),
+              resolveSpellEffect(nested, numbers, spell, levels, castLevel),
             ),
           }
-        : resolveSpellEffect(effect, numbers, spell, levels),
+        : resolveSpellEffect(effect, numbers, spell, levels, castLevel),
     ...(payment.kind === "resource" && { consumesResource: payment.resourceId }),
   };
 };
@@ -228,7 +266,8 @@ const resolveSpellAction = (
  * wizard's spellbook). Each spell becomes one entry per source, carrying the
  * source's casting ability, numbers, price and foci. An implemented spell also
  * yields its resolved action - the caster's numbers stamped in, dice at the
- * character's level - under `${spell.action.id}@${sourceKey}`, which is how
+ * character's level and at any cast level its grant fixes - under
+ * `${spell.action.id}@${sourceKey}`, which is how
  * the server finds it. A stub is listed and never becomes an action.
  * @param input The character, the pack, and the numbers the character casts with
  * @returns The spells, their actions, and the slot pools that pay for them
@@ -296,6 +335,7 @@ export const synthesizeSpells = (input: SpellSynthesisInput): SpellSynthesis => 
       payment: SpellPayment;
       preparationTracked: boolean;
       focusCategories: SpellcastingFocusCategory[];
+      castAtLevel?: number;
     },
   ) => {
     const actionId = `${spell.action.id}@${entry.sourceKey}`;
@@ -319,13 +359,23 @@ export const synthesizeSpells = (input: SpellSynthesisInput): SpellSynthesis => 
       spell.implementation?.mode !== "unimplemented" && numbers !== undefined;
 
     if (castable) {
-      actions.push(resolveSpellAction(spell, numbers, levels, actionId, entry.payment));
+      actions.push(
+        resolveSpellAction(
+          spell,
+          numbers,
+          levels,
+          actionId,
+          entry.payment,
+          entry.castAtLevel,
+        ),
+      );
     }
 
     spells.push({
       spellId: spell.id,
       name: spell.name,
       level: spell.level,
+      ...(entry.castAtLevel !== undefined && { castLevel: entry.castAtLevel }),
       school: spell.school,
       ...(spell.lore !== undefined && { lore: spell.lore }),
       ...(spell.range !== undefined && { range: spell.range }),
@@ -340,6 +390,10 @@ export const synthesizeSpells = (input: SpellSynthesisInput): SpellSynthesis => 
       }),
       payment: entry.payment,
       preparationTracked: entry.preparationTracked,
+      ritual:
+        spell.isRitual &&
+        entry.source.kind === "class" &&
+        castingOf(entry.source.classId)?.ritualCasting === true,
       focusCategories: entry.focusCategories,
       ...(castable && { actionId }),
     });
@@ -380,6 +434,7 @@ export const synthesizeSpells = (input: SpellSynthesisInput): SpellSynthesis => 
         payment,
         preparationTracked: true,
         focusCategories: casting?.focusCategories ?? [],
+        ...(grant.castAtLevel !== undefined && { castAtLevel: grant.castAtLevel }),
       });
     }
   }
