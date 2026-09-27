@@ -168,10 +168,11 @@ export interface ActionIntentPayload {
   instanceId?: string;
   /**
    * What the player chose when casting a spell: the slot pool paying for it,
-   * and that they have a material component no pouch or focus covers.
-   * Ignored for anything that is not a spell.
+   * or a ritual cast, which needs none; and that they have a material
+   * component no pouch or focus covers. Ignored for anything that is not a
+   * spell.
    */
-  cast?: { slotResourceId?: string; materialsConfirmed?: boolean };
+  cast?: { slotResourceId?: string; materialsConfirmed?: boolean; asRitual?: boolean };
   timestamp: number;
 }
 

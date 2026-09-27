@@ -71,6 +71,20 @@ describe("socket gateway - casting a spell", () => {
     ]);
   };
 
+  const knowledgeCleric = async (inventory: Record<string, unknown>[] = []) => {
+    harness = await setupGateway();
+    await joinCampaign(harness);
+    harness.db.seed(characters, [
+      characterRow({ raceId: "race_human", subraceId: null, wis: 16 }),
+    ]);
+    harness.db.seed(characterClasses, [
+      { classId: "class_cleric", classLevel: 1, subclassId: "subclass_cleric_knowledge" },
+    ]);
+    harness.db.seed(characterInventory, inventory);
+    // every slot spent: a ritual needs none
+    harness.db.seed(characterResources, [slot("spell_slots_1", 1, 0, 2)]);
+  };
+
   const drowWizard = async (
     inventory: Record<string, unknown>[] = [],
     faerieFire = 1,
@@ -243,5 +257,41 @@ describe("socket gateway - casting a spell", () => {
         (effect) => effect.isSelfConcentration,
       ),
     ).toBe(false);
+  });
+
+  it("casts Identify as a ritual with every slot spent, and spends none", async () => {
+    await knowledgeCleric();
+
+    await cast("action_spell_identify@class_cleric", {
+      cast: { asRitual: true, materialsConfirmed: true },
+    });
+
+    expect(lastResolved()["executed"]).toBe(true);
+    expect(chargesOf("spell_slots_1")).toBe(0);
+  });
+
+  it("refuses a ritual cast of a spell that is not a ritual, and spends nothing", async () => {
+    await lightCleric();
+
+    await cast("action_spell_burning_hands@class_cleric", { cast: { asRitual: true } });
+
+    expect(lastResolved()).toMatchObject({ executed: false, reason: "ritual_not_allowed" });
+    expect(chargesOf("spell_slots_1")).toBe(1);
+  });
+
+  // a holy symbol serves the cleric's spells, but not a 100 gp pearl
+  it("asks for a costly component even with a holy symbol carried, and casts once confirmed", async () => {
+    await knowledgeCleric([inventoryRow({ itemId: "item_focus_amulet" })]);
+
+    await cast("action_spell_identify@class_cleric", { cast: { asRitual: true } });
+    expect(lastResolved()).toMatchObject({
+      executed: false,
+      reason: "materials_required",
+    });
+
+    await cast("action_spell_identify@class_cleric", {
+      cast: { asRitual: true, materialsConfirmed: true },
+    });
+    expect(lastResolved()["executed"]).toBe(true);
   });
 });
