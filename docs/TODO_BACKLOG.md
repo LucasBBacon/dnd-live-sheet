@@ -323,14 +323,16 @@ Every id this file has ever issued, in one table. Gaps in the numbering are inte
 | 114 | Spell preparation is not tracked | Open | Open items |
 | 115 | Concentration is never checked when the caster takes damage | Open | Open items |
 | 116 | Verbal and somatic components are not gated | Open | Open items |
-| 117 | Costly and consumed material components are not enforced | Open | Open items |
+| 117 | Costly material components are taken on the player's word | Open | Open items |
 | 118 | The bonus-action spell rule is not enforced | Open | Open items |
-| 119 | Spells cannot be cast as rituals | Open | Open items |
+| 119 | Spells cannot be cast as rituals | ✅ Closed | Closed items |
 | 120 | The invocations that modify Eldritch Blast are unauthored | Open | Open items |
 | 121 | A spellcasting focus need only be carried, not held | Open | Open items |
 | 122 | Healing spells cannot be authored yet | Open | Open items |
 | 123 | A rest does not end round-timed effects | Open | Open items |
 | 124 | "Latest rolls" appends across actions | Open | Open items |
+| 125 | Timed spells without concentration are not tracked | Open | Open items |
+| 126 | A concentration spell whose every target saves still concentrates | Open | Open items |
 | A1 | Ready's trigger is not modelled | Open | Open items |
 | A2 | No roll-initiating UI for skills | ✅ Closed | Closed items |
 | A2b | actions do not prompt their own check | Open | Open items |
@@ -457,7 +459,7 @@ not be confused when sequencing work.
 
 | # | Item | Scale | Notes |
 | --- | --- | --- | --- |
-| 31 | Spells marked `unimplemented` | **107 of 111** | Four authored on `feat/spell-casting` (2026-09-25): Eldritch Blast, Dancing Lights, Faerie Fire, Burning Hands, in `spells/core.json`. The other 107 are stubs with a `no_effect` action; their `level` and `school` are placeholders, which the marker's summary says outright. `docs/architecture/spell-authoring-guide.md` is how the rest are authored. |
+| 31 | Spells marked `unimplemented` | **97 of 111** | Fourteen authored, in `spells/core.json`: four on `feat/spell-casting` (2026-09-25) — Eldritch Blast, Dancing Lights, Faerie Fire, Burning Hands — and ten on `feat/spells-first-ten` (2026-09-27) — Darkness, Minor Illusion, Thaumaturgy, Hellish Rebuke, Command, Identify, Augury, Suggestion, Nondetection, Speak with Dead. The other 97 are stubs with a `no_effect` action; their `level` and `school` are placeholders, which the marker's summary says outright. `docs/architecture/spell-authoring-guide.md` is how the rest are authored. |
 
 Two passes, not one. `level` is `0` for every spell and `school` is `evocation`
 for every spell, so these need real **data** before they can carry rules — which
@@ -1193,14 +1195,17 @@ Nothing emits a damage-taken event, so the sheet cannot prompt the DC
 Conditions are client-only and nothing models "cannot speak" or "hands
 bound"; `components` are displayed, never checked.
 
-### #117 — costly and consumed material components are not enforced
+### #117 — costly material components are taken on the player's word
 
 | # | Item | Notes |
 | --- | --- | --- |
-| 117 | Costly and consumed material components are not enforced | Recorded 2026-09-25 on `feat/spell-casting`. See below. |
+| 117 | Costly material components are taken on the player's word | Recorded 2026-09-25 on `feat/spell-casting`. See below. |
 
-A pouch or focus cannot cover a component with a cost (Revivify's diamond).
-Nothing checks that the character owns one, or spends it when `isConsumed`.
+Since `feat/spells-first-ten` a pouch or focus no longer covers a component
+with a cost: the sheet asks on every cast, names the cost, and says when the
+spell consumes it (Identify, Augury, Nondetection). Still open: nothing
+checks that the character owns the component, or spends it when
+`isConsumed`. The pack has no items for gems or diamond dust yet.
 
 ### #118 — the bonus-action spell rule is not enforced
 
@@ -1210,15 +1215,6 @@ Nothing checks that the character owns one, or spends it when `isConsumed`.
 
 Casting a bonus-action spell limits your action to a cantrip that turn (PHB
 p.202). Not enforced.
-
-### #119 — spells cannot be cast as rituals
-
-| # | Item | Notes |
-| --- | --- | --- |
-| 119 | Spells cannot be cast as rituals | Recorded 2026-09-25 on `feat/spell-casting`. See below. |
-
-`isRitual` is authored and nothing reads it: no ritual cast (+10 minutes, no
-slot).
 
 ### #120 — the invocations that modify Eldritch Blast are unauthored
 
@@ -1271,6 +1267,25 @@ A resolution's rolls are appended to the previous ones while its target
 saves replace them, so Burning Hands' fire damage can sit under Eldritch
 Blast's beams with no save line beside it. Group rolls per action, or reset
 them on each ACTION_RESOLVED as the store's own comment says it does.
+
+### #125 — timed spells without concentration are not tracked
+
+| # | Item | Notes |
+| --- | --- | --- |
+| 125 | Timed spells without concentration are not tracked | Recorded 2026-09-27 on `feat/spells-first-ten`. See below. |
+
+Minor Illusion (1 minute), Nondetection (8 hours) and Speak with Dead (10
+minutes) are `no_effect`; the note says how long they last, and nothing
+counts it down.
+
+### #126 — a concentration spell whose every target saves still concentrates
+
+| # | Item | Notes |
+| --- | --- | --- |
+| 126 | A concentration spell whose every target saves still concentrates | Recorded 2026-09-27 on `feat/spells-first-ten`. See below. |
+
+Suggestion's and Faerie Fire's macros apply the concentration effect
+whatever the targets roll; the player ends it with End Concentration.
 
 ### Coverage thresholds
 
@@ -1656,6 +1671,23 @@ badge and the TraitWidget's "Level:" line read the ledger too (attacks per
 action was a fourth reader the record above missed), so no web reader shows
 the column and `ledgerLevel.ts`'s docstring holds. The store keeps its
 `level` field as loaded.
+
+### #119 — spells cannot be cast as rituals ✅
+
+| # | Item | Notes |
+| --- | --- | --- |
+| 119 | ✅ Spells cannot be cast as rituals | Recorded 2026-09-25 on `feat/spell-casting`; closed 2026-09-27 on `feat/spells-first-ten`. See below. |
+
+`isRitual` is authored and nothing reads it: no ritual cast (+10 minutes, no
+slot).
+
+**Closed 2026-09-27** by `feat/spells-first-ten`. Each class's spellcasting
+block declares `ritualCasting` (the bard, cleric, druid and wizard), the
+synthesizer marks a ritual spell cast through one `ritual`, and the Spells
+panel offers "As a ritual (+10 minutes, no slot)". `settleSpellCast` spends
+no slot, and returns the action as a `minute` activation so no action is
+spent. The warlock's Book of Ancient Secrets is still an unauthored
+invocation.
 
 ### P0 — Previously inert runtime seams (now resolved) ✅
 
