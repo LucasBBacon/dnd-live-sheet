@@ -46,6 +46,7 @@ const REFUSALS: Record<string, string> = {
 const rangeText = (spell: CastableSpell): string | undefined => {
   const range = spell.range;
   if (!range) return undefined;
+  if (range.kind === "touch") return "Touch";
   const area = range.area
     ? `${range.area.size}-foot ${range.area.shape.replace("_", " ")}`
     : undefined;

@@ -24,11 +24,12 @@ export const SpellComponentSchema = z.object({
 });
 
 /**
- * Where a spell reaches. `touch`, `sight` and `unlimited` arrive with the
- * first spell that needs one; the repo adds no variant before a real rule.
+ * Where a spell reaches. `sight` and `unlimited` arrive with the first spell
+ * that needs one; the repo adds no variant before a real rule.
  *
  * `area` is the spell's area, authored once, here. The spell synthesizer
  * copies it onto the spell's save, so the save line the table reads names it.
+ * A touch spell has none.
  */
 export const SpellRangeSchema = z.discriminatedUnion("kind", [
   z
@@ -44,6 +45,7 @@ export const SpellRangeSchema = z.discriminatedUnion("kind", [
       area: AreaOfEffectSchema.optional(),
     })
     .strict(),
+  z.object({ kind: z.literal("touch") }).strict(),
 ]);
 
 /**
@@ -57,14 +59,14 @@ export const SpellDurationSchema = z.discriminatedUnion("kind", [
     .object({
       kind: z.literal("timed"),
       amount: z.number().int().positive(),
-      unit: z.enum(["minute"]),
+      unit: z.enum(["round", "minute", "hour"]),
       concentration: z.boolean(),
     })
     .strict(),
 ]);
 
 /** Rounds in one unit of a timed duration: a round is six seconds. */
-export const ROUNDS_PER_DURATION_UNIT = { minute: 10 } as const;
+export const ROUNDS_PER_DURATION_UNIT = { round: 1, minute: 10, hour: 600 } as const;
 
 export const SpellDefinitionSchema = z.object({
   id: z.string(),
@@ -149,6 +151,12 @@ export const FixedSpellGrantSchema = z.object({
   // which level unlockLevel counts against: character level or the level of the
   // class that granted the trait
   unlockScaling: ModifierScalingSchema.exclude(["none"]).default("total_level"),
+  /**
+   * The level the spell is cast at, when a grant fixes one above the spell's
+   * own: Infernal Legacy's Hellish Rebuke is cast "as a 2nd-level spell". Only
+   * on a grant that is not slot-paid; a slot picks its own level.
+   */
+  castAtLevel: z.number().int().min(1).max(9).optional(),
   usage: SpellUsageSchema,
 });
 

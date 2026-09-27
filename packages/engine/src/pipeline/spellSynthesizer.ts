@@ -125,6 +125,10 @@ const rungAt = (
   return best?.value ?? 1;
 };
 
+/** A spell's area, when its range has one: a touch spell's never does. */
+const areaOf = (range: SpellRange | undefined) =>
+  range !== undefined && range.kind !== "touch" ? range.area : undefined;
+
 interface CasterNumbers {
   ability: Ability;
   attackBonus: number;
@@ -169,7 +173,8 @@ const resolveSpellEffect = (
         }),
       };
     }
-    case "save":
+    case "save": {
+      const area = areaOf(spell.range);
       return {
         ...effect,
         savingThrow: {
@@ -180,9 +185,10 @@ const resolveSpellEffect = (
           },
           dc: numbers.saveDc,
         },
-        ...(spell.range?.area !== undefined && { areaOfEffect: spell.range.area }),
+        ...(area !== undefined && { areaOfEffect: area }),
         ...(effect.damage !== undefined && { damage: scale(effect.damage) }),
       };
+    }
     case "damage_rider":
       return { ...effect, damage: scale(effect.damage) };
     default:

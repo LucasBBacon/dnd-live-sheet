@@ -300,4 +300,27 @@ describe("SpellsWidget", () => {
 
     expect((await render()).textContent).toContain("Casting this ends Faerie Fire.");
   });
+
+  it("reads a touch range as Touch", async () => {
+    mocks.spells.current = [{ ...burningHands, range: { kind: "touch" } }];
+
+    expect((await render()).textContent).toContain("1 action · Touch · V, S");
+  });
+
+  it("reads round and hour durations", async () => {
+    mocks.spells.current = [
+      {
+        ...burningHands,
+        duration: { kind: "timed", amount: 1, unit: "round", concentration: false },
+      },
+      {
+        ...eldritchBlast,
+        duration: { kind: "timed", amount: 8, unit: "hour", concentration: true },
+      },
+    ];
+    const text = (await render()).textContent;
+
+    expect(text).toContain("1 round");
+    expect(text).toContain("Concentration, up to 8 hours");
+  });
 });
