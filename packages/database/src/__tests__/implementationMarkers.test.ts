@@ -44,16 +44,26 @@ const carriesRules = (trait: PackTrait): boolean => {
 };
 
 /**
- * A stub carries none of `lore`, `range`, `components` or `duration` -
- * `SpellDefinitionSchema` makes all four optional for exactly that reason,
- * and pack validation requires all four together on every authored spell.
- * `effect.type === "no_effect"` used to double as this signal, back when no
- * authored spell had one; Minor Illusion and friends now do (a spell that
- * "does what only the table can see" is `no_effect` by design), so `lore`'s
- * presence is the proxy that still holds.
+ * A stub is an action that does nothing and tells the table nothing:
+ * `effect.type === "no_effect"` and no `tableNote`.
+ *
+ * `effect.type === "no_effect"` alone stopped being the signal once
+ * narrative spells were authored - Minor Illusion, Augury and their kin are
+ * real, and `no_effect` by design (the authoring guide: a spell that "does
+ * what only the table can see" is "no_effect otherwise; the rest in a
+ * tableNote"). What tells a stub apart from one of those is exactly that
+ * note: a stub has none, because there is no rule yet to hand the table:
+ * every authored narrative spell carries one, and no stub does.
+ *
+ * `lore === undefined` was tried as the proxy instead, but `validateSpells`
+ * already enforces that pairing (`incomplete_spell`: unmarked means all of
+ * `lore`/`range`/`components`/`duration`, marked means none) for every pack
+ * that assembles at all - checking it again here can never fail, so it is
+ * not this test's cross-check. The table note is: nothing else guarantees a
+ * narrative spell's `no_effect` action carries one.
  */
 const isStub = (spell: PackSpell): boolean =>
-  (spell as { lore?: unknown }).lore === undefined;
+  spell.action.effect.type === "no_effect" && !spell.action.tableNote;
 
 /**
  * Equipment got a cross-check when it learned to declare its own gaps (E3).
