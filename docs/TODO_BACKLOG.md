@@ -85,11 +85,12 @@ things the last three branches showed replace it:
 
 **Re-ordered 2026-09-24:** order 7, #31a, now comes **before** order 6, the
 rogue pass. Since #79 (closed 2026-09-22) every caster's creation and
-level-up asks spell questions whose options are the pack's 111 level-0
-placeholders - a rogue 3 taking Arcane Trickster is offered Bless as a
-cantrip - so seven of the twelve classes have slots and nothing real to
-pick, and every stored placeholder pick is one more #31a must clear or
-migrate. The order numbers are unchanged because other entries cite them.
+level-up asks spell questions whose options include the pack's stubs, every
+one a level-0 placeholder - a rogue 3 taking Arcane Trickster is offered
+Cure Wounds as a cantrip - so seven of the twelve classes have slots and
+nothing real to pick, and every stored placeholder pick is one more #31a
+must clear or migrate. The order numbers are unchanged because other
+entries cite them.
 
 | Order | Item | Scale | Why here |
 | --- | --- | --- | --- |
@@ -334,7 +335,7 @@ Every id this file has ever issued, in one table. Gaps in the numbering are inte
 | 125 | Timed spells without concentration are not tracked | Open | Open items |
 | 126 | A concentration spell whose every target saves still concentrates | Open | Open items |
 | 127 | No AC floor | Open | Open items |
-| 128 | No repeat action while concentrating | Open | Open items |
+| 128 | No follow-up damage after the cast | Open | Open items |
 | 129 | No damage type chosen at cast time | Open | Open items |
 | 130 | No weapon damage granted by an effect | Open | Open items |
 | 131 | No dice bonus on the caster's own rolls from an effect | Open | Open items |
@@ -466,13 +467,13 @@ not be confused when sequencing work.
 | --- | --- | --- | --- |
 | 31 | Spells marked `unimplemented` | **87 of 111** | Twenty-four authored, in `spells/core.json`: four on `feat/spell-casting` (2026-09-25) — Eldritch Blast, Dancing Lights, Faerie Fire, Burning Hands — ten on `feat/spells-first-ten` (2026-09-27) — Darkness, Minor Illusion, Thaumaturgy, Hellish Rebuke, Command, Identify, Augury, Suggestion, Nondetection, Speak with Dead — and ten on `feat/spells-third-ten` (2026-09-28) — Bane, Bless, Charm Person, Animal Friendship, Daylight, Create Food and Water, Banishment, Confusion, Blight, Cone of Cold. The other 87 are stubs with a `no_effect` action; their `level` and `school` are placeholders, which the marker's summary says outright. `docs/architecture/spell-authoring-guide.md` is how the rest are authored. |
 
-Two passes, not one. `level` is `0` for every spell and `school` is `evocation`
-for every spell, so these need real **data** before they can carry rules — which
+Two passes, not one. `level` is `0` for every stub and `school` is `evocation`
+for every stub, so these need real **data** before they can carry rules — which
 is why this sits behind #30 despite the smaller number.
 
 #### #31a — spell *data*: real `level`, `school` and class spell lists
 
-111 spells. Slots exist since `feat/spellcasting-slots`, but every spell is
+111 spells. Slots exist since `feat/spellcasting-slots`, but every stub is
 level 0 evocation, so a wizard has slots and nothing meaningful to cast. The
 data pass is mechanical (PHB values) and adds spell lists as a pack concept,
 which also unblocks **#67**. Rules (#31b) stay a later, per-spell job. Since
@@ -480,8 +481,8 @@ which also unblocks **#67**. Rules (#31b) stay a later, per-spell job. Since
 (`packages/engine/src/pipeline/spellChoices.ts`) is the one place list
 membership goes, and once spells have real levels the spellbook and
 spells-known questions are asked with no code change — but #31a must also (a)
-decide whether to clear or migrate the placeholder picks already stored (Bless
-as a cantrip becomes off-roster; level-up ignores it since #84's fix, but
+decide whether to clear or migrate the placeholder picks already stored (Cure
+Wounds as a cantrip becomes off-roster; level-up ignores it since #84's fix, but
 nothing repairs it), planned together with an answer-later path; (b) note that
 the level-up Choices step takes `held` from the server as-is, so two new spell
 questions at one level with overlapping rosters (a Lore bard 6's Additional
@@ -492,8 +493,9 @@ remove `spellOptions`' rule that a leveled node offers nothing
 (`feat/spell-casting`'s decision 8), which exists only because no class list
 exists to filter on. Until then a stub's placeholder level also sets its
 place and price on the Spells panel: Flaming Sphere and Scorching Ray (Light
-Domain) and Drow Magic's Darkness show under Cantrips as "At will"; real
-levels fix both, since payment checks `level === 0` first.
+Domain) show under Cantrips as "At will" (Drow Magic's Darkness, authored
+at level 2, lists under 2nd level); real levels fix both, since payment
+checks `level === 0` first.
 
 *#31b is that per-spell rules job. It is recorded here rather than under a
 heading of its own; the sentence above is its whole record. #83, the other
@@ -1279,9 +1281,10 @@ them on each ACTION_RESOLVED as the store's own comment says it does.
 | --- | --- | --- |
 | 125 | Timed spells without concentration are not tracked | Recorded 2026-09-27 on `feat/spells-first-ten`. See below. |
 
-Minor Illusion (1 minute), Nondetection (8 hours) and Speak with Dead (10
-minutes) are `no_effect`; the note says how long they last, and nothing
-counts it down.
+Minor Illusion (1 minute), Nondetection (8 hours), Speak with Dead (10
+minutes) and Daylight (1 hour) are `no_effect`, and Charm Person (1 hour)
+and Animal Friendship (24 hours) are a save and nothing more; the note says
+how long they last, and nothing counts it down.
 
 ### #126 — a concentration spell whose every target saves still concentrates
 
@@ -1289,8 +1292,9 @@ counts it down.
 | --- | --- | --- |
 | 126 | A concentration spell whose every target saves still concentrates | Recorded 2026-09-27 on `feat/spells-first-ten`. See below. |
 
-Suggestion's and Faerie Fire's macros apply the concentration effect
-whatever the targets roll; the player ends it with End Concentration.
+Faerie Fire's, Suggestion's, Bane's, Banishment's and Confusion's macros
+apply the concentration effect whatever the targets roll; the player ends
+it with End Concentration.
 
 ### #127 — no AC floor
 
@@ -1304,16 +1308,19 @@ and `calculateAC` takes the highest `set_base` and adds to it, so a
 `set_base` of 16 would let Dexterity and shields raise it past the floor.
 Barkskin stays a stub.
 
-### #128 — no repeat action while concentrating
+### #128 — no follow-up damage after the cast
 
 | # | Item | Notes |
 | --- | --- | --- |
-| 128 | No repeat action while concentrating | Recorded 2026-09-28 on `feat/spells-third-ten`. See below. |
+| 128 | No follow-up damage after the cast | Recorded 2026-09-28 on `feat/spells-third-ten`. See below. |
 
-Call Lightning and Cloudkill (and Moonbeam, Spiritual Weapon, Flaming
-Sphere) let the caster repeat part of the spell on later turns while
-concentrating: no slot, the original cast level and DC, and concentration
-does not restart. A spell grants exactly one action. All five stay stubs.
+Some spells deal their damage again on later turns without a new slot, at
+the original cast level. Call Lightning and Flaming Sphere let the caster
+use an action or bonus action to do it while concentrating; Spiritual
+Weapon's bonus-action melee spell attack lasts a minute without
+concentration. Moonbeam and Cloudkill deal damage again when a creature
+enters the area or starts its turn there. A spell grants exactly one
+action, rolled when it is cast. All five stay stubs.
 
 ### #129 — no damage type chosen at cast time
 

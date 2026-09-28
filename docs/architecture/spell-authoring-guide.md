@@ -135,11 +135,11 @@ If a spell needs something the engine cannot do, leave it a stub and record
 the capability in `docs/TODO_BACKLOG.md`. A spell that quietly does part of
 what it says is the failure the `unimplemented` marker exists to prevent.
 
-The capabilities that keep stubs blocked today:
+Capabilities known to keep stubs blocked, from the spells analysed so far (not an audit of every stub):
 
 - **Healing** (#122) — Cure Wounds, Mass Cure Wounds.
 - **An AC floor** (#127) — Barkskin.
-- **A repeat action while concentrating** (#128) — Call Lightning, Cloudkill, Moonbeam, Spiritual Weapon, Flaming Sphere.
+- **Follow-up damage after the cast** (#128) — Call Lightning, Flaming Sphere and Spiritual Weapon (a repeat action), Moonbeam and Cloudkill (a lingering area).
 - **A damage type chosen at cast time** (#129) — Destructive Wave.
 - **Weapon damage granted by an effect** (#130) — Crusader's Mantle, Divine Favor, Hunter's Mark.
 - **Dice added to the caster's own rolls by an effect** (#131) — Bless is authored around it, table-resolved.

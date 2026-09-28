@@ -124,9 +124,9 @@ Table notes, carrying what the engine does not run:
   with an Intelligence of 4 or more is unaffected. On a failure it is charmed by you for
   24 hours, or until you or your companions harm it. Each slot level above 1st
   adds a beast.
-- **Daylight** — Bright light fills a 60-foot-radius sphere, and dim light
-  another 60 feet beyond. Cast on an object you hold or one nobody wears or
-  carries, the light moves with it; covering the object blocks the light. It
+- **Daylight** — For 1 hour, bright light fills a 60-foot-radius sphere, and dim
+  light another 60 feet beyond. Cast on an object you hold or one nobody wears
+  or carries, the light moves with it; covering the object blocks the light. It
   dispels any darkness created by a spell of 3rd level or lower that overlaps
   it.
 - **Create Food and Water** — 45 pounds of food and 30 gallons of fresh water
@@ -200,10 +200,13 @@ After `db:import-pack --yes` and `db:seed:samples`:
   - **#127 — no AC floor.** Barkskin's "AC can't be less than 16": no modifier
     type sets a minimum (`ModifierTypeSchema`), and `calculateAC` takes the
     highest `set_base` and adds to it.
-  - **#128 — no repeat action while concentrating.** Call Lightning and
-    Cloudkill (and Moonbeam, Spiritual Weapon, Flaming Sphere) let the caster
-    repeat part of the spell on later turns without a slot, at the original
-    cast level and DC. A spell grants exactly one action.
+  - **#128 — no follow-up damage after the cast.** Some spells deal their
+    damage again on later turns without a new slot, at the original cast
+    level. Call Lightning and Flaming Sphere let the caster use an action or
+    bonus action to do it while concentrating; Spiritual Weapon's bonus-action
+    melee spell attack lasts a minute without concentration. Moonbeam and
+    Cloudkill deal damage again when a creature enters the area or starts its
+    turn there. A spell grants exactly one action, rolled when it is cast.
   - **#129 — no damage type chosen at cast time.** Destructive Wave's radiant or
     necrotic: `DamageSegment.damageType` is one value, and the cast request
     carries no choice.

@@ -838,7 +838,7 @@
                 "id": "action_spell_daylight",
                 "name": "Daylight",
                 "activation": "action",
-                "tableNote": "Bright light fills a 60-foot-radius sphere, and dim light another 60 feet beyond. Cast on an object you hold or one nobody wears or carries, the light moves with it; covering the object blocks the light. It dispels any darkness created by a spell of 3rd level or lower that overlaps it.",
+                "tableNote": "For 1 hour, bright light fills a 60-foot-radius sphere, and dim light another 60 feet beyond. Cast on an object you hold or one nobody wears or carries, the light moves with it; covering the object blocks the light. It dispels any darkness created by a spell of 3rd level or lower that overlaps it.",
                 "effect": {
                     "type": "no_effect"
                 }

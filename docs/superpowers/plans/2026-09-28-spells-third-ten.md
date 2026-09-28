@@ -4,7 +4,7 @@
 
 **Goal:** Author Bane, Bless, Charm Person, Animal Friendship, Daylight, Create Food and Water, Banishment, Confusion, Blight and Cone of Cold as pack data, add a Circle of the Land (Desert) druid to check them on, and record the capabilities the blocked spells need.
 
-**Architecture:** No schema, engine or web change. Each spell moves from `spells/unimplemented.json` to `spells/core.json` through the patch script, in a pattern the last two batches already checked live. A new scenario character and live-check scripts make three of them hand-checkable; the docs record the five capability gaps (#127–#131).
+**Architecture:** No schema, engine or web change. Each spell moves from `spells/unimplemented.json` to `spells/core.json` through the patch script, in a pattern the last two batches already checked live. A new scenario character and live-check scripts make four of them hand-checkable; the docs record the five capability gaps (#127–#131).
 
 **Tech Stack:** TypeScript, pnpm + turbo monorepo; Zod 4 (`@project/shared`); Vitest; `@project/engine`; Express + socket.io (`apps/server`); React 19 + Zustand (`apps/web`).
 
@@ -276,7 +276,7 @@ Write `<scratchpad>/third-ten-spells.json` with exactly this content (UTF-8; the
         "id": "action_spell_daylight",
         "name": "Daylight",
         "activation": "action",
-        "tableNote": "Bright light fills a 60-foot-radius sphere, and dim light another 60 feet beyond. Cast on an object you hold or one nobody wears or carries, the light moves with it; covering the object blocks the light. It dispels any darkness created by a spell of 3rd level or lower that overlaps it.",
+        "tableNote": "For 1 hour, bright light fills a 60-foot-radius sphere, and dim light another 60 feet beyond. Cast on an object you hold or one nobody wears or carries, the light moves with it; covering the object blocks the light. It dispels any darkness created by a spell of 3rd level or lower that overlaps it.",
         "effect": { "type": "no_effect" }
       }
     },
@@ -901,7 +901,7 @@ In `docs/architecture/spell-authoring-guide.md`:
 
    - **Healing** (#122) — Cure Wounds, Mass Cure Wounds.
    - **An AC floor** (#127) — Barkskin.
-   - **A repeat action while concentrating** (#128) — Call Lightning, Cloudkill, Moonbeam, Spiritual Weapon, Flaming Sphere.
+   - **Follow-up damage after the cast** (#128) — Call Lightning, Flaming Sphere and Spiritual Weapon (a repeat action), Moonbeam and Cloudkill (a lingering area).
    - **A damage type chosen at cast time** (#129) — Destructive Wave.
    - **Weapon damage granted by an effect** (#130) — Crusader's Mantle, Divine Favor, Hunter's Mark.
    - **Dice added to the caster's own rolls by an effect** (#131) — Bless is authored around it, table-resolved.
@@ -923,7 +923,7 @@ In `docs/TODO_BACKLOG.md`:
 
    ```markdown
    | 127 | No AC floor | Open | Open items |
-   | 128 | No repeat action while concentrating | Open | Open items |
+   | 128 | No follow-up damage after the cast | Open | Open items |
    | 129 | No damage type chosen at cast time | Open | Open items |
    | 130 | No weapon damage granted by an effect | Open | Open items |
    | 131 | No dice bonus on the caster's own rolls from an effect | Open | Open items |
@@ -944,16 +944,19 @@ In `docs/TODO_BACKLOG.md`:
    `set_base` of 16 would let Dexterity and shields raise it past the floor.
    Barkskin stays a stub.
 
-   ### #128 — no repeat action while concentrating
+   ### #128 — no follow-up damage after the cast
 
    | # | Item | Notes |
    | --- | --- | --- |
-   | 128 | No repeat action while concentrating | Recorded 2026-09-28 on `feat/spells-third-ten`. See below. |
+   | 128 | No follow-up damage after the cast | Recorded 2026-09-28 on `feat/spells-third-ten`. See below. |
 
-   Call Lightning and Cloudkill (and Moonbeam, Spiritual Weapon, Flaming
-   Sphere) let the caster repeat part of the spell on later turns while
-   concentrating: no slot, the original cast level and DC, and concentration
-   does not restart. A spell grants exactly one action. All five stay stubs.
+   Some spells deal their damage again on later turns without a new slot, at
+   the original cast level. Call Lightning and Flaming Sphere let the caster
+   use an action or bonus action to do it while concentrating; Spiritual
+   Weapon's bonus-action melee spell attack lasts a minute without
+   concentration. Moonbeam and Cloudkill deal damage again when a creature
+   enters the area or starts its turn there. A spell grants exactly one
+   action, rolled when it is cast. All five stay stubs.
 
    ### #129 — no damage type chosen at cast time
 

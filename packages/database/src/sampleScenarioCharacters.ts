@@ -419,7 +419,7 @@ const SCENARIO_ROSTER: SampleCharacter[] = [
     maxHp: 34,
     currentHp: 6,
     testFocus:
-      "Two tabs: low hit points with Relentless Endurance unspent (#92, #93); Tough per level.",
+      "Two tabs: low hit points with Relentless Endurance unspent (#92, #93); Tough per level; Bane from a 1st-level slot (#31).",
     personalityTraits: "I apologise to people after I have hit them, sincerely.",
     ideals: "Retribution. The ledger balances, one way or the other.",
     bonds: "The gang that raised me is the first name on my oath's list.",
