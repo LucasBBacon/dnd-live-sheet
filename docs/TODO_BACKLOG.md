@@ -333,6 +333,11 @@ Every id this file has ever issued, in one table. Gaps in the numbering are inte
 | 124 | "Latest rolls" appends across actions | Open | Open items |
 | 125 | Timed spells without concentration are not tracked | Open | Open items |
 | 126 | A concentration spell whose every target saves still concentrates | Open | Open items |
+| 127 | No AC floor | Open | Open items |
+| 128 | No repeat action while concentrating | Open | Open items |
+| 129 | No damage type chosen at cast time | Open | Open items |
+| 130 | No weapon damage granted by an effect | Open | Open items |
+| 131 | No dice bonus on the caster's own rolls from an effect | Open | Open items |
 | A1 | Ready's trigger is not modelled | Open | Open items |
 | A2 | No roll-initiating UI for skills | ✅ Closed | Closed items |
 | A2b | actions do not prompt their own check | Open | Open items |
@@ -459,7 +464,7 @@ not be confused when sequencing work.
 
 | # | Item | Scale | Notes |
 | --- | --- | --- | --- |
-| 31 | Spells marked `unimplemented` | **97 of 111** | Fourteen authored, in `spells/core.json`: four on `feat/spell-casting` (2026-09-25) — Eldritch Blast, Dancing Lights, Faerie Fire, Burning Hands — and ten on `feat/spells-first-ten` (2026-09-27) — Darkness, Minor Illusion, Thaumaturgy, Hellish Rebuke, Command, Identify, Augury, Suggestion, Nondetection, Speak with Dead. The other 97 are stubs with a `no_effect` action; their `level` and `school` are placeholders, which the marker's summary says outright. `docs/architecture/spell-authoring-guide.md` is how the rest are authored. |
+| 31 | Spells marked `unimplemented` | **87 of 111** | Twenty-four authored, in `spells/core.json`: four on `feat/spell-casting` (2026-09-25) — Eldritch Blast, Dancing Lights, Faerie Fire, Burning Hands — ten on `feat/spells-first-ten` (2026-09-27) — Darkness, Minor Illusion, Thaumaturgy, Hellish Rebuke, Command, Identify, Augury, Suggestion, Nondetection, Speak with Dead — and ten on `feat/spells-third-ten` (2026-09-28) — Bane, Bless, Charm Person, Animal Friendship, Daylight, Create Food and Water, Banishment, Confusion, Blight, Cone of Cold. The other 87 are stubs with a `no_effect` action; their `level` and `school` are placeholders, which the marker's summary says outright. `docs/architecture/spell-authoring-guide.md` is how the rest are authored. |
 
 Two passes, not one. `level` is `0` for every spell and `school` is `evocation`
 for every spell, so these need real **data** before they can carry rules — which
@@ -1286,6 +1291,62 @@ counts it down.
 
 Suggestion's and Faerie Fire's macros apply the concentration effect
 whatever the targets roll; the player ends it with End Concentration.
+
+### #127 — no AC floor
+
+| # | Item | Notes |
+| --- | --- | --- |
+| 127 | No AC floor | Recorded 2026-09-28 on `feat/spells-third-ten`. See below. |
+
+Barkskin says the target's AC can't be less than 16. No modifier type sets
+a minimum (`ModifierTypeSchema`, `packages/shared/src/schemas/content/modifiers.ts`),
+and `calculateAC` takes the highest `set_base` and adds to it, so a
+`set_base` of 16 would let Dexterity and shields raise it past the floor.
+Barkskin stays a stub.
+
+### #128 — no repeat action while concentrating
+
+| # | Item | Notes |
+| --- | --- | --- |
+| 128 | No repeat action while concentrating | Recorded 2026-09-28 on `feat/spells-third-ten`. See below. |
+
+Call Lightning and Cloudkill (and Moonbeam, Spiritual Weapon, Flaming
+Sphere) let the caster repeat part of the spell on later turns while
+concentrating: no slot, the original cast level and DC, and concentration
+does not restart. A spell grants exactly one action. All five stay stubs.
+
+### #129 — no damage type chosen at cast time
+
+| # | Item | Notes |
+| --- | --- | --- |
+| 129 | No damage type chosen at cast time | Recorded 2026-09-28 on `feat/spells-third-ten`. See below. |
+
+Destructive Wave deals radiant or necrotic damage, the caster's choice.
+`DamageSegment.damageType` is one value, and the cast request carries no
+choice. Destructive Wave stays a stub.
+
+### #130 — no weapon damage granted by an effect
+
+| # | Item | Notes |
+| --- | --- | --- |
+| 130 | No weapon damage granted by an effect | Recorded 2026-09-28 on `feat/spells-third-ten`. See below. |
+
+Crusader's Mantle, Divine Favor and Hunter's Mark add dice to weapon hits
+while an effect lasts. A weapon attack's damage pool holds only the
+weapon's own segment (`CombatEngine.calculateWeaponAttack`), and a
+modifier's value is a number, not dice. All three stay stubs.
+
+### #131 — no dice bonus on the caster's own rolls from an effect
+
+| # | Item | Notes |
+| --- | --- | --- |
+| 131 | No dice bonus on the caster's own rolls from an effect | Recorded 2026-09-28 on `feat/spells-third-ten`. See below. |
+
+Bless adds a d4 to its targets' attack rolls and saving throws. A
+modifier's value is a number, and an effect's modifiers always land on the
+caster, who may not be a target. Bless is authored table-resolved: its note
+tells a self-blessed caster to add the d4. Guidance and Resistance will
+meet the same gap.
 
 ### Coverage thresholds
 
