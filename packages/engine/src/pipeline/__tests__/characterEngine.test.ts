@@ -2062,7 +2062,8 @@ describe("CharacterEngine.buildLiveSheet: spells", () => {
   });
 
   it("lists a stub without offering it as an action", () => {
-    // every stub keeps the placeholder level 0, so a cantrip node takes it
+    // every stub keeps the placeholder level 0, so a cantrip node takes it;
+    // Cure Wounds stays a stub until healing can be authored (#122)
     const sheet = buildSheet({
       ...halfElfFighter(),
       classes: [
@@ -2070,15 +2071,15 @@ describe("CharacterEngine.buildLiveSheet: spells", () => {
           classId: "class_warlock",
           level: 5,
           selections: {
-            warlock_level_1_cantrips: ["spell_eldritch_blast", "spell_bless"],
+            warlock_level_1_cantrips: ["spell_eldritch_blast", "spell_cure_wounds"],
           },
         },
       ],
     });
 
-    expect(sheet.spells.map((spell) => spell.spellId)).toContain("spell_bless");
+    expect(sheet.spells.map((spell) => spell.spellId)).toContain("spell_cure_wounds");
     expect(
-      sheet.actions.some((action) => action.id.startsWith("action_spell_bless")),
+      sheet.actions.some((action) => action.id.startsWith("action_spell_cure_wounds")),
     ).toBe(false);
   });
 });

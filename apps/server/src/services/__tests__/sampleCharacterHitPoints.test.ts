@@ -46,6 +46,8 @@ const EXPECTED_MAX_HP: Record<string, number> = {
   "Maren Solace": 24,
   // 28 rolled (8, then 5 a level) + CON 14's +2 at each of five levels
   "Cassia Emberlane": 38,
+  // 38 rolled (8, then 5 a level) + CON 14's +2 at each of seven levels
+  "Ashar Dunewind": 52,
 };
 
 describe("sample character hit points", () => {

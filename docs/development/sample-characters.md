@@ -1,18 +1,18 @@
 # Sample characters
 
-Twenty-two fixture characters for exercising the live sheet against a real
+Twenty-three fixture characters for exercising the live sheet against a real
 database, in two sets:
 
 - **The coverage set** (`…0110`–`…0119`) fills the sheet. Between them the ten
   reach every class, race, equipment slot, reset condition and hit point
   state. They live in `packages/database/src/seedSampleCharacters.ts`.
-- **The scenario set** (`…0120`–`…0131`) stages the hand checks a unit test
+- **The scenario set** (`…0120`–`…0132`) stages the hand checks a unit test
   cannot reach: a level-up one level away, a divergence that needs two tabs,
   a Tier 2 pass with nothing yet to verify against, or data the UI cannot
   create. Each has a script under [Live checks](#live-checks). They live in
   `packages/database/src/sampleScenarioCharacters.ts`.
 
-All twenty-two sit in the **Dev Smoke Campaign**
+All twenty-three sit in the **Dev Smoke Campaign**
 (`00000000-0000-0000-0000-000000000001`), owned by `dev-user-1` — the id the
 web client sends as `x-tester-id`.
 
@@ -24,7 +24,7 @@ pnpm --filter @project/database db:seed:samples
 
 Re-running is safe, and it is also how you reset. Character rows are
 upserted, their ledgers are cleared and rewritten, and no character outside
-the twenty-two ids is read or modified. A level-up check consumes its staging
+the twenty-three ids is read or modified. A level-up check consumes its staging
 character, so re-run the seed before trying it again.
 
 The server serves rules from `core_rule_packs`, not from the pack's JSON, and
@@ -63,7 +63,7 @@ Each is reachable at `http://localhost:5173/character/<id>`.
 | [Quill Ashgrove](http://localhost:5173/character/00000000-0000-0000-0000-000000000120) | 2 | Rogue 2 | 17/17 | Level-up staging | #65b, #31a, #66, #70 |
 | [Brannoc Hale](http://localhost:5173/character/00000000-0000-0000-0000-000000000121) | 3 | Fighter 3 (Champion) | 31/31 | Level-up staging | #88, #94, #103, #104, #106, #24 |
 | [Isolde Varn](http://localhost:5173/character/00000000-0000-0000-0000-000000000122) | 4 | Warlock 4 (Archfey) | 20/31 | Level-up and dip staging | #81, #77, #36, #31b |
-| [Ursk Gravemaw](http://localhost:5173/character/00000000-0000-0000-0000-000000000123) | 5 | Paladin 5 (Vengeance) | 6/54 | Two tabs | #92, #93 |
+| [Ursk Gravemaw](http://localhost:5173/character/00000000-0000-0000-0000-000000000123) | 5 | Paladin 5 (Vengeance) | 6/54 | Two tabs | #92, #93, #31 |
 | [Tamsin Burrowdeep](http://localhost:5173/character/00000000-0000-0000-0000-000000000124) | 6 | Barbarian 6 (Totem Warrior) | 30/65 | Two tabs, socket | #76, #97, #99, #101 |
 | [Hesk Mossgather](http://localhost:5173/character/00000000-0000-0000-0000-000000000125) | 8 | Druid 8 (Moon) | 41/59 | Wild-shape preview | #62, #80 |
 | [Seraphine Dusk](http://localhost:5173/character/00000000-0000-0000-0000-000000000126) | 9 | Wizard 9 (Divination) | 21/29 | Wizard preview | #86, #107, #31a, #83 |
@@ -72,8 +72,9 @@ Each is reachable at `http://localhost:5173/character/<id>`.
 | [Orrik Stonehide](http://localhost:5173/character/00000000-0000-0000-0000-000000000129) | 13 | Fighter 13 (Rune Knight) | 134/134 | Broken on purpose | #102 |
 | [Maren Solace](http://localhost:5173/character/00000000-0000-0000-0000-000000000130) | 3 | Cleric 3 (Light) | 24/24 | Spell casting | #31b, #83 |
 | [Cassia Emberlane](http://localhost:5173/character/00000000-0000-0000-0000-000000000131) | 5 | Cleric 5 (Knowledge) | 38/38 | Spell casting: rituals, costly components | #31, #117, #119 |
+| [Ashar Dunewind](http://localhost:5173/character/00000000-0000-0000-0000-000000000132) | 7 | Druid 7 (Land: Desert) | 52/52 | Spell casting: circle spells | #31 |
 
-Ids run `…000000000110` through `…000000000131`; the last two digits are the
+Ids run `…000000000110` through `…000000000132`; the last two digits are the
 row. HP is current over the derived maximum, as the sheet shows it.
 
 ## Coverage, both sets
@@ -118,6 +119,16 @@ fix lands, update its line here in the same branch. Reset a character by
 re-running the seed. Stored values can be read with
 `GET http://localhost:3000/api/character/<id>` and the header
 `x-tester-id: dev-user-1`.
+
+### Sister Aveline Cor — `…0111`
+
+A coverage character, scripted for one spell.
+
+1. **Bless (#31).** The Spells panel lists Bless (Cleric · Slot) with a
+   Concentration badge; it is always prepared as a Life domain spell. Cast it
+   with a 1st-level slot: no material prompt (her amulet is a holy symbol),
+   Active effects shows Bless Concentrating, and the note says to add the d4
+   to your own rolls if you blessed yourself. The slot is spent.
 
 ### Quill Ashgrove — `…0120`
 
@@ -237,6 +248,11 @@ re-running the seed. Stored values can be read with
    refused on Intelligence 8. None of his thresholds moves between stored and
    final scores, so this is an observation, not the #77 check — that is
    Isolde's step 5. Cancel without submitting.
+5. **Bane (#31).** The Spells panel lists Bane (Paladin · Slot), always
+   prepared as a Vengeance oath spell. Cast it with a 1st-level slot:
+   no material prompt (his emblem is a holy symbol), the results read "Bane:
+   CHA save DC 13 · a success negates it", and Active effects shows Bane
+   Concentrating. The slot is spent (2 of 4 becomes 1 of 4).
 
 ### Tamsin Burrowdeep — `…0124`
 
@@ -398,6 +414,22 @@ A tiefling Knowledge cleric with no 1st-level slot left, one 2nd and two
    covers burning incense. The slot is spent.
 8. **Thaumaturgy** casts at will through Infernal Legacy, and its note lists
    the six wonders.
+
+### Ashar Dunewind — `…0132`
+
+A Circle of the Land (Desert) druid 7 with every slot full (4/3/3/1).
+
+1. **The circle spells.** The Spells panel lists Create Food and Water (3rd
+   level) and Blight (4th level), each Druid · Slot. The circle's other four
+   spells — Blur, Silence, Protection from Energy and Hallucinatory Terrain —
+   are still stubs: their level is a placeholder 0, so they sit under Cantrips
+   as Druid · At will, marked Not yet automated.
+2. **Blight.** Cast it: the picker offers only "4th level (1 left) · 8d8".
+   The results read "Blight: CON save DC 14 · half damage on a success" with
+   eight d8 of necrotic damage, and the note says undead and constructs are
+   unaffected. The 4th-level slot is spent.
+3. **Create Food and Water.** Cast it with a 3rd-level slot: no material
+   prompt, and the note describes the food and water. The slot is spent.
 
 ## Reference stubs
 

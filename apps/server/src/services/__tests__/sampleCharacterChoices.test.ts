@@ -18,9 +18,10 @@ const PACK_DIR = path.join(
 
 /**
  * The spell_choice nodes a save's classes and subclasses carry. The samples
- * leave them unanswered: every pack spell is a level-0 placeholder until
- * #31a, so the picks a sample could record (Bless as a cantrip) are ones
- * #31a would have to unpick.
+ * leave them unanswered: a leveled node offers nothing until #31a gives the
+ * pack class spell lists, and a cantrip node offers every level-0 spell,
+ * stubs included (their level is a placeholder), so a pick recorded now is
+ * one #31a might have to unpick.
  */
 const spellChoiceNodeIds = (
   snapshot: CoreRulePackSnapshot,

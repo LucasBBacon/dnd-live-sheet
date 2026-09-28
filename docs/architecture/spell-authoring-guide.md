@@ -3,8 +3,10 @@
 How a spell goes from a stub in `spells/unimplemented.json` to a castable
 spell in `spells/core.json`. Eldritch Blast, Dancing Lights, Faerie Fire and
 Burning Hands are the worked examples; Hellish Rebuke (a reaction cast at a
-fixed level through Infernal Legacy), Command, Suggestion and Identify (a
-ritual with a costly component) show the rest. Read them beside this.
+fixed level through Infernal Legacy), Command, Suggestion, Identify (a ritual
+with a costly component), Bless (a buff the sheet cannot apply to the caster)
+and Confusion (an upcast that grows the area) show the rest. Read them beside
+this.
 
 The engine interprets the pack; the pack describes the rule. A spell is
 authored once, with the numbers that depend on its caster left abstract, and
@@ -34,12 +36,13 @@ variant before a real rule needs it.
 | --- | --- | --- |
 | makes an attack roll | `attack`, `attackType: "ranged_spell"` or `"melee_spell"`, `attackStat: "SPELLCASTING_MOD"` | Eldritch Blast |
 | makes several attack rolls at once | `attack` with `repeat: { label, thresholds }` | Eldritch Blast's beams |
-| forces a save for damage | `save` with `damage` and `saveEffect: "half_damage"` or `"no_damage"` | Burning Hands |
-| forces a save whose failure only the table resolves | `save` with `saveEffect: "negates_effect"` and no `damage`; what failing means goes in the `tableNote` | Command |
-| forces a save, then lasts | `macro` of a `save` (`negates_effect`) and a concentration `apply_effect` | Faerie Fire, Suggestion |
+| forces a save for damage | `save` with `damage` and `saveEffect: "half_damage"` or `"no_damage"` | Burning Hands, Blight, Cone of Cold |
+| forces a save whose failure only the table resolves | `save` with `saveEffect: "negates_effect"` and no `damage`; what failing means goes in the `tableNote` | Command, Charm Person, Animal Friendship |
+| forces a save, then lasts | `macro` of a `save` (`negates_effect`) and a concentration `apply_effect` | Faerie Fire, Suggestion, Bane, Banishment, Confusion |
 | changes the caster's own numbers while it lasts | `apply_effect` with `modifiers` or `states` | — |
+| helps creatures that may include the caster, with dice the sheet cannot add | a concentration `apply_effect` with no modifiers; the `tableNote` tells the player to add the dice to their own rolls if they are a target (#131) | Bless |
 | heals | `heal` — a stub until it gains a casting modifier, upcast dice and a target (#122) | — |
-| does what only the table can see | a concentration `apply_effect` if it concentrates, `no_effect` otherwise; the rest in a `tableNote` | Dancing Lights, Identify |
+| does what only the table can see | a concentration `apply_effect` if it concentrates, `no_effect` otherwise; the rest in a `tableNote` | Dancing Lights, Identify, Daylight, Create Food and Water |
 
 Author `SPELLCASTING_MOD` for `attackStat` and for a save's
 `dcCalculation.scalingStat`.
@@ -118,7 +121,7 @@ Legacy, a feat) are never ritual-castable, and the server refuses one as
 - **Cantrip damage dice** use a segment's `levelScaling` with `scalingMode: "total_level"` (Fire Bolt: 2d10 at 5, 3d10 at 11, 4d10 at 17).
 - **A cantrip's beam count** uses `repeat`, laddered by character level.
 - **Upcast damage** uses `perSlotAbove` on a leveled spell's segment: plain dice of the segment's own die size (`invalid_upcast` otherwise).
-- **Any other upcast** — more targets, more rays, a longer duration — is not modelled. Say it in the `tableNote`, or leave the spell a stub.
+- **Any other upcast** — more targets, more rays, a larger area, a longer duration — is not modelled. Say it in the `tableNote` (Bane's extra targets; Confusion's radius, which the stamped area does not show), or leave the spell a stub.
 
 ## Text
 
@@ -131,6 +134,15 @@ Legacy, a feat) are never ritual-castable, and the server refuses one as
 If a spell needs something the engine cannot do, leave it a stub and record
 the capability in `docs/TODO_BACKLOG.md`. A spell that quietly does part of
 what it says is the failure the `unimplemented` marker exists to prevent.
+
+Capabilities known to keep stubs blocked, from the spells analysed so far (not an audit of every stub):
+
+- **Healing** (#122) — Cure Wounds, Mass Cure Wounds.
+- **An AC floor** (#127) — Barkskin.
+- **Follow-up damage after the cast** (#128) — Call Lightning, Flaming Sphere and Spiritual Weapon (a repeat action), Moonbeam and Cloudkill (a lingering area).
+- **A damage type chosen at cast time** (#129) — Destructive Wave.
+- **Weapon damage granted by an effect** (#130) — Crusader's Mantle, Divine Favor, Hunter's Mark.
+- **Dice added to the caster's own rolls by an effect** (#131) — Bless is authored around it, table-resolved.
 
 ## The workflow
 

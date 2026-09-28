@@ -618,6 +618,483 @@
                     "type": "no_effect"
                 }
             }
+        },
+        {
+            "id": "spell_bane",
+            "name": "Bane",
+            "level": 1,
+            "school": "enchantment",
+            "isRitual": false,
+            "lore": {
+                "shortDescription": "Up to three creatures within 30 feet that fail a Charisma save subtract a d4 from their attack rolls and saving throws. Concentration, up to 1 minute.",
+                "fullText": "Up to three creatures of your choice that you can see within range must make Charisma saving throws. Whenever a target that fails this saving throw makes an attack roll or a saving throw before the spell ends, the target must roll a d4 and subtract the number rolled from the attack roll or saving throw.\n\nAt Higher Levels. When you cast this spell using a spell slot of 2nd level or higher, you can target one additional creature for each slot level above 1st."
+            },
+            "range": {
+                "kind": "feet",
+                "feet": 30
+            },
+            "components": {
+                "verbal": true,
+                "somatic": true,
+                "material": true,
+                "materialDescription": "a drop of blood"
+            },
+            "duration": {
+                "kind": "timed",
+                "amount": 1,
+                "unit": "minute",
+                "concentration": true
+            },
+            "action": {
+                "id": "action_spell_bane",
+                "name": "Bane",
+                "activation": "action",
+                "tableNote": "Up to three creatures you can see make the save, plus one more for each slot level above 1st. Each that fails subtracts a d4 from every attack roll and saving throw it makes until the spell ends.",
+                "effect": {
+                    "type": "macro",
+                    "effects": [
+                        {
+                            "type": "save",
+                            "savingThrow": {
+                                "targetStat": "CHA",
+                                "dcCalculation": {
+                                    "base": 8,
+                                    "scalingStat": "SPELLCASTING_MOD",
+                                    "includeProficiency": true
+                                },
+                                "saveEffect": "negates_effect"
+                            }
+                        },
+                        {
+                            "type": "apply_effect",
+                            "effectName": "Bane",
+                            "durationType": "rounds",
+                            "durationRounds": 10,
+                            "isSelfConcentration": true
+                        }
+                    ]
+                }
+            }
+        },
+        {
+            "id": "spell_bless",
+            "name": "Bless",
+            "level": 1,
+            "school": "enchantment",
+            "isRitual": false,
+            "lore": {
+                "shortDescription": "Up to three creatures within 30 feet add a d4 to their attack rolls and saving throws. Concentration, up to 1 minute.",
+                "fullText": "You bless up to three creatures of your choice within range. Whenever a target makes an attack roll or a saving throw before the spell ends, the target can roll a d4 and add the number rolled to the attack roll or saving throw.\n\nAt Higher Levels. When you cast this spell using a spell slot of 2nd level or higher, you can target one additional creature for each slot level above 1st."
+            },
+            "range": {
+                "kind": "feet",
+                "feet": 30
+            },
+            "components": {
+                "verbal": true,
+                "somatic": true,
+                "material": true,
+                "materialDescription": "a sprinkling of holy water"
+            },
+            "duration": {
+                "kind": "timed",
+                "amount": 1,
+                "unit": "minute",
+                "concentration": true
+            },
+            "action": {
+                "id": "action_spell_bless",
+                "name": "Bless",
+                "activation": "action",
+                "tableNote": "Up to three creatures, plus one more for each slot level above 1st. Each adds a d4 to every attack roll and saving throw it makes until the spell ends. If you blessed yourself, add the d4 to your own rolls: the sheet does not.",
+                "effect": {
+                    "type": "apply_effect",
+                    "effectName": "Bless",
+                    "durationType": "rounds",
+                    "durationRounds": 10,
+                    "isSelfConcentration": true
+                }
+            }
+        },
+        {
+            "id": "spell_charm_person",
+            "name": "Charm Person",
+            "level": 1,
+            "school": "enchantment",
+            "isRitual": false,
+            "lore": {
+                "shortDescription": "A humanoid within 30 feet that fails a Wisdom save treats you as a friendly acquaintance for an hour, and knows afterwards that it was charmed.",
+                "fullText": "You attempt to charm a humanoid you can see within range. It must make a Wisdom saving throw, and does so with advantage if you or your companions are fighting it. If it fails the saving throw, it is charmed by you until the spell ends or until you or your companions do anything harmful to it. The charmed creature regards you as a friendly acquaintance. When the spell ends, the creature knows it was charmed by you.\n\nAt Higher Levels. When you cast this spell using a spell slot of 2nd level or higher, you can target one additional creature for each slot level above 1st. The creatures must be within 30 feet of each other when you target them."
+            },
+            "range": {
+                "kind": "feet",
+                "feet": 30
+            },
+            "components": {
+                "verbal": true,
+                "somatic": true,
+                "material": false
+            },
+            "duration": {
+                "kind": "timed",
+                "amount": 1,
+                "unit": "hour",
+                "concentration": false
+            },
+            "action": {
+                "id": "action_spell_charm_person",
+                "name": "Charm Person",
+                "activation": "action",
+                "tableNote": "A humanoid you can see; it makes the save with advantage if you or your companions are fighting it. On a failure it regards you as a friendly acquaintance for the hour, or until you or your companions harm it, and knows afterwards that you charmed it. Each slot level above 1st adds a target; all must be within 30 feet of each other.",
+                "effect": {
+                    "type": "save",
+                    "savingThrow": {
+                        "targetStat": "WIS",
+                        "dcCalculation": {
+                            "base": 8,
+                            "scalingStat": "SPELLCASTING_MOD",
+                            "includeProficiency": true
+                        },
+                        "saveEffect": "negates_effect"
+                    }
+                }
+            }
+        },
+        {
+            "id": "spell_animal_friendship",
+            "name": "Animal Friendship",
+            "level": 1,
+            "school": "enchantment",
+            "isRitual": false,
+            "lore": {
+                "shortDescription": "A beast within 30 feet that fails a Wisdom save is charmed by you for 24 hours. A beast with an Intelligence of 4 or more is unaffected.",
+                "fullText": "This spell lets you convince a beast that you mean it no harm. Choose a beast that you can see within range. It must see and hear you. If the beast's Intelligence is 4 or higher, the spell fails. Otherwise, the beast must succeed on a Wisdom saving throw or be charmed by you for the spell's duration. If you or one of your companions harms the target, the spell ends.\n\nAt Higher Levels. When you cast this spell using a spell slot of 2nd level or higher, you can affect one additional beast for each slot level above 1st."
+            },
+            "range": {
+                "kind": "feet",
+                "feet": 30
+            },
+            "components": {
+                "verbal": true,
+                "somatic": true,
+                "material": true,
+                "materialDescription": "a morsel of food"
+            },
+            "duration": {
+                "kind": "timed",
+                "amount": 24,
+                "unit": "hour",
+                "concentration": false
+            },
+            "action": {
+                "id": "action_spell_animal_friendship",
+                "name": "Animal Friendship",
+                "activation": "action",
+                "tableNote": "A beast you can see and that can see and hear you; one with an Intelligence of 4 or more is unaffected. On a failure it is charmed by you for 24 hours, or until you or your companions harm it. Each slot level above 1st adds a beast.",
+                "effect": {
+                    "type": "save",
+                    "savingThrow": {
+                        "targetStat": "WIS",
+                        "dcCalculation": {
+                            "base": 8,
+                            "scalingStat": "SPELLCASTING_MOD",
+                            "includeProficiency": true
+                        },
+                        "saveEffect": "negates_effect"
+                    }
+                }
+            }
+        },
+        {
+            "id": "spell_daylight",
+            "name": "Daylight",
+            "level": 3,
+            "school": "evocation",
+            "isRitual": false,
+            "lore": {
+                "shortDescription": "A 60-foot-radius sphere of bright light, and dim light 60 feet beyond, for an hour. It dispels darkness from a spell of 3rd level or lower.",
+                "fullText": "A 60-foot-radius sphere of light spreads out from a point you choose within range. The sphere is bright light and sheds dim light for an additional 60 feet.\n\nIf you chose a point on an object you are holding or one that isn't being worn or carried, the light shines from the object and moves with it. Completely covering the affected object with an opaque object, such as a bowl or a helm, blocks the light.\n\nIf any of this spell's area overlaps with an area of darkness created by a spell of 3rd level or lower, the spell that created the darkness is dispelled."
+            },
+            "range": {
+                "kind": "feet",
+                "feet": 60,
+                "area": {
+                    "shape": "sphere",
+                    "size": 60
+                }
+            },
+            "components": {
+                "verbal": true,
+                "somatic": true,
+                "material": false
+            },
+            "duration": {
+                "kind": "timed",
+                "amount": 1,
+                "unit": "hour",
+                "concentration": false
+            },
+            "action": {
+                "id": "action_spell_daylight",
+                "name": "Daylight",
+                "activation": "action",
+                "tableNote": "For 1 hour, bright light fills a 60-foot-radius sphere, and dim light another 60 feet beyond. Cast on an object you hold or one nobody wears or carries, the light moves with it; covering the object blocks the light. It dispels any darkness created by a spell of 3rd level or lower that overlaps it.",
+                "effect": {
+                    "type": "no_effect"
+                }
+            }
+        },
+        {
+            "id": "spell_create_food_and_water",
+            "name": "Create Food and Water",
+            "level": 3,
+            "school": "conjuration",
+            "isRitual": false,
+            "lore": {
+                "shortDescription": "Enough food and fresh water for fifteen humanoids or five steeds for a day.",
+                "fullText": "You create 45 pounds of food and 30 gallons of water on the ground or in containers within range, enough to sustain up to fifteen humanoids or five steeds for 24 hours. The food is bland but nourishing, and spoils if uneaten after 24 hours. The water is clean and doesn't go bad."
+            },
+            "range": {
+                "kind": "feet",
+                "feet": 30
+            },
+            "components": {
+                "verbal": true,
+                "somatic": true,
+                "material": false
+            },
+            "duration": {
+                "kind": "instantaneous"
+            },
+            "action": {
+                "id": "action_spell_create_food_and_water",
+                "name": "Create Food and Water",
+                "activation": "action",
+                "tableNote": "45 pounds of food and 30 gallons of fresh water appear on the ground or in containers within range: enough for fifteen humanoids or five steeds for 24 hours. The food is bland but nourishing, and spoils if uneaten after 24 hours; the water does not go bad.",
+                "effect": {
+                    "type": "no_effect"
+                }
+            }
+        },
+        {
+            "id": "spell_banishment",
+            "name": "Banishment",
+            "level": 4,
+            "school": "abjuration",
+            "isRitual": false,
+            "lore": {
+                "shortDescription": "A creature within 60 feet that fails a Charisma save is banished: to a harmless demiplane if it belongs here, or home if it doesn't. Concentration, up to 1 minute.",
+                "fullText": "You attempt to send one creature that you can see within range to another plane of existence. The target must succeed on a Charisma saving throw or be banished.\n\nIf the target is native to the plane of existence you're on, you banish the target to a harmless demiplane. While there, the target is incapacitated. The target remains there until the spell ends, at which point the target reappears in the space it left or in the nearest unoccupied space if that space is occupied.\n\nIf the target is native to a different plane of existence than the one you're on, the target is banished with a faint popping noise, returning to its home plane. If the spell ends before 1 minute has passed, the target reappears in the space it left or in the nearest unoccupied space if that space is occupied. Otherwise, the target doesn't return.\n\nAt Higher Levels. When you cast this spell using a spell slot of 5th level or higher, you can target one additional creature for each slot level above 4th."
+            },
+            "range": {
+                "kind": "feet",
+                "feet": 60
+            },
+            "components": {
+                "verbal": true,
+                "somatic": true,
+                "material": true,
+                "materialDescription": "an item distasteful to the target"
+            },
+            "duration": {
+                "kind": "timed",
+                "amount": 1,
+                "unit": "minute",
+                "concentration": true
+            },
+            "action": {
+                "id": "action_spell_banishment",
+                "name": "Banishment",
+                "activation": "action",
+                "tableNote": "A creature you can see, plus one more for each slot level above 4th. A creature native to this plane is banished to a harmless demiplane, incapacitated, and returns when the spell ends. A creature from another plane returns to its home plane, and does not come back if you concentrate for the full minute.",
+                "effect": {
+                    "type": "macro",
+                    "effects": [
+                        {
+                            "type": "save",
+                            "savingThrow": {
+                                "targetStat": "CHA",
+                                "dcCalculation": {
+                                    "base": 8,
+                                    "scalingStat": "SPELLCASTING_MOD",
+                                    "includeProficiency": true
+                                },
+                                "saveEffect": "negates_effect"
+                            }
+                        },
+                        {
+                            "type": "apply_effect",
+                            "effectName": "Banishment",
+                            "durationType": "rounds",
+                            "durationRounds": 10,
+                            "isSelfConcentration": true
+                        }
+                    ]
+                }
+            }
+        },
+        {
+            "id": "spell_confusion",
+            "name": "Confusion",
+            "level": 4,
+            "school": "enchantment",
+            "isRitual": false,
+            "lore": {
+                "shortDescription": "Creatures in a 10-foot-radius sphere within 90 feet that fail a Wisdom save lose their reactions and act at random each turn. Concentration, up to 1 minute.",
+                "fullText": "This spell assaults and twists creatures' minds, spawning delusions and provoking uncontrolled action. Each creature in a 10-foot-radius sphere centered on a point you choose within range must succeed on a Wisdom saving throw when you cast this spell or be affected by it.\n\nAn affected target can't take reactions and must roll a d10 at the start of each of its turns to determine its behavior for that turn.\n\n- 1: The creature uses all its movement to move in a random direction. To determine the direction, roll a d8 and assign a direction to each die face. The creature doesn't take an action this turn.\n- 2–6: The creature doesn't move or take actions this turn.\n- 7–8: The creature uses its action to make a melee attack against a randomly determined creature within its reach. If there is no creature within its reach, the creature does nothing this turn.\n- 9–10: The creature can act and move normally.\n\nAt the end of each of its turns, an affected target can make a Wisdom saving throw. If it succeeds, this effect ends for that target.\n\nAt Higher Levels. When you cast this spell using a spell slot of 5th level or higher, the radius of the sphere increases by 5 feet for each slot level above 4th."
+            },
+            "range": {
+                "kind": "feet",
+                "feet": 90,
+                "area": {
+                    "shape": "sphere",
+                    "size": 10
+                }
+            },
+            "components": {
+                "verbal": true,
+                "somatic": true,
+                "material": true,
+                "materialDescription": "three nut shells"
+            },
+            "duration": {
+                "kind": "timed",
+                "amount": 1,
+                "unit": "minute",
+                "concentration": true
+            },
+            "action": {
+                "id": "action_spell_confusion",
+                "name": "Confusion",
+                "activation": "action",
+                "tableNote": "Each creature in a 10-foot-radius sphere makes the save; the radius grows 5 feet for each slot level above 4th. An affected creature can't take reactions and rolls a d10 at the start of each of its turns: 1, it uses all its movement to move in a random direction and takes no action; 2–6, it does nothing; 7–8, it makes a melee attack against a random creature within reach; 9–10, it acts normally. At the end of each of its turns it repeats the save, ending the effect on itself on a success.",
+                "effect": {
+                    "type": "macro",
+                    "effects": [
+                        {
+                            "type": "save",
+                            "savingThrow": {
+                                "targetStat": "WIS",
+                                "dcCalculation": {
+                                    "base": 8,
+                                    "scalingStat": "SPELLCASTING_MOD",
+                                    "includeProficiency": true
+                                },
+                                "saveEffect": "negates_effect"
+                            }
+                        },
+                        {
+                            "type": "apply_effect",
+                            "effectName": "Confusion",
+                            "durationType": "rounds",
+                            "durationRounds": 10,
+                            "isSelfConcentration": true
+                        }
+                    ]
+                }
+            }
+        },
+        {
+            "id": "spell_blight",
+            "name": "Blight",
+            "level": 4,
+            "school": "necromancy",
+            "isRitual": false,
+            "lore": {
+                "shortDescription": "A creature within 30 feet makes a Constitution save against 8d8 necrotic damage, half on a success, and 1d8 more for each slot level above 4th. No effect on undead or constructs.",
+                "fullText": "Necromantic energy washes over a creature of your choice that you can see within range, draining moisture and vitality from it. The target must make a Constitution saving throw. The target takes 8d8 necrotic damage on a failed save, or half as much damage on a successful one. This spell has no effect on undead or constructs.\n\nIf you target a plant creature or a magical plant, it makes the saving throw with disadvantage, and the spell deals maximum damage to it.\n\nIf you target a nonmagical plant that isn't a creature, such as a tree or shrub, it doesn't make a saving throw; it simply withers and dies.\n\nAt Higher Levels. When you cast this spell using a spell slot of 5th level or higher, the damage increases by 1d8 for each slot level above 4th."
+            },
+            "range": {
+                "kind": "feet",
+                "feet": 30
+            },
+            "components": {
+                "verbal": true,
+                "somatic": true,
+                "material": false
+            },
+            "duration": {
+                "kind": "instantaneous"
+            },
+            "action": {
+                "id": "action_spell_blight",
+                "name": "Blight",
+                "activation": "action",
+                "tableNote": "Undead and constructs are unaffected. A plant creature or magical plant makes the save with disadvantage and takes the maximum damage; a nonmagical plant that isn't a creature withers and dies.",
+                "effect": {
+                    "type": "save",
+                    "savingThrow": {
+                        "targetStat": "CON",
+                        "dcCalculation": {
+                            "base": 8,
+                            "scalingStat": "SPELLCASTING_MOD",
+                            "includeProficiency": true
+                        },
+                        "saveEffect": "half_damage"
+                    },
+                    "damage": [
+                        {
+                            "sourceName": "Blight",
+                            "baseDice": "8d8",
+                            "damageType": "necrotic",
+                            "perSlotAbove": "1d8"
+                        }
+                    ]
+                }
+            }
+        },
+        {
+            "id": "spell_cone_of_cold",
+            "name": "Cone of Cold",
+            "level": 5,
+            "school": "evocation",
+            "isRitual": false,
+            "lore": {
+                "shortDescription": "A 60-foot cone of cold: 8d8 cold damage on a failed Constitution save, half on a success, and 1d8 more for each slot level above 5th.",
+                "fullText": "A blast of cold air erupts from your hands. Each creature in a 60-foot cone must make a Constitution saving throw. A creature takes 8d8 cold damage on a failed save, or half as much damage on a successful one.\n\nA creature killed by this spell becomes a frozen statue until it thaws.\n\nAt Higher Levels. When you cast this spell using a spell slot of 6th level or higher, the damage increases by 1d8 for each slot level above 5th."
+            },
+            "range": {
+                "kind": "self",
+                "area": {
+                    "shape": "cone",
+                    "size": 60
+                }
+            },
+            "components": {
+                "verbal": true,
+                "somatic": true,
+                "material": true,
+                "materialDescription": "a small crystal or glass cone"
+            },
+            "duration": {
+                "kind": "instantaneous"
+            },
+            "action": {
+                "id": "action_spell_cone_of_cold",
+                "name": "Cone of Cold",
+                "activation": "action",
+                "tableNote": "A creature killed by this spell becomes a frozen statue until it thaws.",
+                "effect": {
+                    "type": "save",
+                    "savingThrow": {
+                        "targetStat": "CON",
+                        "dcCalculation": {
+                            "base": 8,
+                            "scalingStat": "SPELLCASTING_MOD",
+                            "includeProficiency": true
+                        },
+                        "saveEffect": "half_damage"
+                    },
+                    "damage": [
+                        {
+                            "sourceName": "Cone of Cold",
+                            "baseDice": "8d8",
+                            "damageType": "cold",
+                            "perSlotAbove": "1d8"
+                        }
+                    ]
+                }
+            }
         }
     ]
 }

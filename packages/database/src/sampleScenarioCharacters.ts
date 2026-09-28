@@ -1,9 +1,9 @@
 /**
- * Development fixture: twelve scenario characters, seeded beside the ten in
+ * Development fixture: thirteen scenario characters, seeded beside the ten in
  * seedSampleCharacters.ts by the same `db:seed:samples`.
  *
  * The first ten are a coverage set - between them they fill every slot,
- * reset condition and hit point state. These twelve are each staged for a hand
+ * reset condition and hit point state. These thirteen are each staged for a hand
  * check a unit test cannot reach: a level-up one level away, a divergence
  * that needs two tabs, a Tier 2 pass that has nothing to verify against yet,
  * or data the UI cannot create. docs/development/sample-characters.md holds
@@ -419,7 +419,7 @@ const SCENARIO_ROSTER: SampleCharacter[] = [
     maxHp: 34,
     currentHp: 6,
     testFocus:
-      "Two tabs: low hit points with Relentless Endurance unspent (#92, #93); Tough per level.",
+      "Two tabs: low hit points with Relentless Endurance unspent (#92, #93); Tough per level; Bane from a 1st-level slot (#31).",
     personalityTraits: "I apologise to people after I have hit them, sincerely.",
     ideals: "Retribution. The ledger balances, one way or the other.",
     bonds: "The gang that raised me is the first name on my oath's list.",
@@ -1498,6 +1498,137 @@ const SCENARIO_ROSTER: SampleCharacter[] = [
         current: 1,
         max: 1,
         resetCondition: "short_rest",
+      },
+    ],
+  },
+  {
+    id: "00000000-0000-0000-0000-000000000132",
+    name: "Ashar Dunewind",
+    raceId: "race_human",
+    classes: [
+      {
+        classId: "class_druid",
+        classLevel: 7,
+        subclassId: "subclass_druid_land",
+      },
+    ],
+    backgroundId: "background_acolyte",
+    choices: {
+      feats: [],
+      classSelections: {
+        class_druid: {
+          druid_land_level_3_circle_land: ["trait_land_circle_spells_desert"],
+        },
+      },
+      traitSelections: {
+        human_language_choice: ["dwarvish"],
+        acolyte_languages: ["celestial", "elvish"],
+        druid_starting_skills: ["nature", "survival"],
+      },
+    },
+    alignment: "True Neutral",
+    // the human's +1 makes WIS 16 (+3); proficiency +3 at level 7 gives a
+    // spell save DC of 14
+    str: 10,
+    dex: 13,
+    con: 13,
+    int: 11,
+    wis: 15,
+    cha: 9,
+    maxHp: 38,
+    currentHp: 52,
+    testFocus:
+      "Spell casting (#31): Circle of the Land (Desert) spells — Blight from the one 4th-level slot (8d8 necrotic, CON DC 14) and Create Food and Water from a 3rd; the circle's other spells (Blur, Silence, Protection from Energy, Hallucinatory Terrain) are still stubs and list under Cantrips as not yet automated.",
+    personalityTraits: "I measure distance in wells, not miles.",
+    ideals: "Stewardship. Water taken is water owed.",
+    bonds: "The salt flats at Kheret raised me, and I answer when they call.",
+    flaws: "I ration everything, including my patience with city folk.",
+    traits: [
+      {
+        traitId: "trait_druid_prof_saving_throw",
+        source: "class_druid_level_1",
+      },
+      { traitId: "trait_druid_prof_armor", source: "class_druid_level_1" },
+      { traitId: "trait_druid_prof_weapons", source: "class_druid_level_1" },
+      { traitId: "trait_druid_prof_tools", source: "class_druid_level_1" },
+      { traitId: "trait_druid_prof_skills", source: "class_druid_level_1" },
+      { traitId: "trait_druidic", source: "class_druid_level_1" },
+      { traitId: "trait_spellcasting_druid", source: "class_druid_level_1" },
+      { traitId: "trait_wild_shape", source: "class_druid_level_2" },
+      { traitId: "trait_druid_circle", source: "class_druid_level_2" },
+      {
+        traitId: "trait_bonus_cantrip_druid_land",
+        source: "subclass_druid_land_level_2",
+      },
+      {
+        traitId: "trait_natural_recovery",
+        source: "subclass_druid_land_level_2",
+      },
+      {
+        traitId: "trait_wild_shape_improvement",
+        source: "class_druid_level_4",
+      },
+      {
+        traitId: "trait_druid_circle_feature",
+        source: "class_druid_level_6",
+      },
+      { traitId: "trait_lands_stride", source: "subclass_druid_land_level_6" },
+      { traitId: "race_human_asi", source: "race_human" },
+      { traitId: "race_human_languages", source: "race_human" },
+      { traitId: "trait_acolyte_prof_skills", source: "background_acolyte" },
+      { traitId: "trait_acolyte_languages", source: "background_acolyte" },
+    ],
+    inventory: [
+      { itemId: "item_armor_leather", slot: "body" },
+      { itemId: "item_weapon_scimitar", slot: "main_hand" },
+      { itemId: "item_armor_shield", slot: "off_hand" },
+      // a druidic focus: neither Blight nor Create Food and Water needs a
+      // material, so it changes nothing for this batch
+      { itemId: "item_focus_sprig_of_mistletoe" },
+      { itemId: "item_pack_explorers" },
+    ],
+    resources: [
+      {
+        id: "spell_slots_1",
+        name: "1st-Level Spell Slots",
+        current: 4,
+        max: 4,
+        resetCondition: "long_rest",
+      },
+      {
+        id: "spell_slots_2",
+        name: "2nd-Level Spell Slots",
+        current: 3,
+        max: 3,
+        resetCondition: "long_rest",
+      },
+      {
+        id: "spell_slots_3",
+        name: "3rd-Level Spell Slots",
+        current: 3,
+        max: 3,
+        resetCondition: "long_rest",
+      },
+      {
+        id: "spell_slots_4",
+        name: "4th-Level Spell Slots",
+        current: 1,
+        max: 1,
+        resetCondition: "long_rest",
+      },
+      {
+        id: "trait_wild_shape",
+        name: "Wild Shape",
+        current: 2,
+        max: 2,
+        resetCondition: "short_rest",
+      },
+      {
+        id: "trait_natural_recovery",
+        name: "Natural Recovery",
+        current: 1,
+        max: 1,
+        resetCondition: "long_rest",
       },
     ],
   },

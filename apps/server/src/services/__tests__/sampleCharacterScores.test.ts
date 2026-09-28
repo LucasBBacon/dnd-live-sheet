@@ -53,6 +53,8 @@ const INTENDED_FINAL: Record<string, number[]> = {
   "Maren Solace": [13, 10, 15, 11, 17, 12],
   // the tiefling adds +1 INT and +2 CHA
   "Cassia Emberlane": [10, 12, 14, 13, 16, 15],
+  // the human adds +1 to every score
+  "Ashar Dunewind": [11, 14, 14, 12, 16, 10],
 };
 
 describe("sample character scores", () => {

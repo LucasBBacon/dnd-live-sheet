@@ -21,25 +21,6 @@
             }
         },
         {
-            "id": "spell_confusion",
-            "name": "Confusion",
-            "level": 0,
-            "school": "evocation",
-            "isRitual": false,
-            "action": {
-                "id": "action_spell_confusion",
-                "name": "Confusion",
-                "activation": "action",
-                "effect": {
-                    "type": "no_effect"
-                }
-            },
-            "implementation": {
-                "mode": "unimplemented",
-                "summary": "Awaiting authoring; level, school and action are placeholders."
-            }
-        },
-        {
             "id": "spell_legend_lore",
             "name": "Legend Lore",
             "level": 0,
@@ -67,25 +48,6 @@
             "action": {
                 "id": "action_spell_scrying",
                 "name": "Scrying",
-                "activation": "action",
-                "effect": {
-                    "type": "no_effect"
-                }
-            },
-            "implementation": {
-                "mode": "unimplemented",
-                "summary": "Awaiting authoring; level, school and action are placeholders."
-            }
-        },
-        {
-            "id": "spell_bless",
-            "name": "Bless",
-            "level": 0,
-            "school": "evocation",
-            "isRitual": false,
-            "action": {
-                "id": "action_spell_bless",
-                "name": "Bless",
                 "activation": "action",
                 "effect": {
                     "type": "no_effect"
@@ -306,25 +268,6 @@
             }
         },
         {
-            "id": "spell_daylight",
-            "name": "Daylight",
-            "level": 0,
-            "school": "evocation",
-            "isRitual": false,
-            "action": {
-                "id": "action_spell_daylight",
-                "name": "Daylight",
-                "activation": "action",
-                "effect": {
-                    "type": "no_effect"
-                }
-            },
-            "implementation": {
-                "mode": "unimplemented",
-                "summary": "Awaiting authoring; level, school and action are placeholders."
-            }
-        },
-        {
             "id": "spell_fireball",
             "name": "Fireball",
             "level": 0,
@@ -371,25 +314,6 @@
             "action": {
                 "id": "action_spell_flame_strike",
                 "name": "Flame Strike",
-                "activation": "action",
-                "effect": {
-                    "type": "no_effect"
-                }
-            },
-            "implementation": {
-                "mode": "unimplemented",
-                "summary": "Awaiting authoring; level, school and action are placeholders."
-            }
-        },
-        {
-            "id": "spell_animal_friendship",
-            "name": "Animal Friendship",
-            "level": 0,
-            "school": "evocation",
-            "isRitual": false,
-            "action": {
-                "id": "action_spell_animal_friendship",
-                "name": "Animal Friendship",
                 "activation": "action",
                 "effect": {
                     "type": "no_effect"
@@ -732,25 +656,6 @@
             "action": {
                 "id": "action_spell_destructive_wave",
                 "name": "Destructive Wave",
-                "activation": "action",
-                "effect": {
-                    "type": "no_effect"
-                }
-            },
-            "implementation": {
-                "mode": "unimplemented",
-                "summary": "Awaiting authoring; level, school and action are placeholders."
-            }
-        },
-        {
-            "id": "spell_charm_person",
-            "name": "Charm Person",
-            "level": 0,
-            "school": "evocation",
-            "isRitual": false,
-            "action": {
-                "id": "action_spell_charm_person",
-                "name": "Charm Person",
                 "activation": "action",
                 "effect": {
                     "type": "no_effect"
@@ -1256,25 +1161,6 @@
             }
         },
         {
-            "id": "spell_bane",
-            "name": "Bane",
-            "level": 0,
-            "school": "evocation",
-            "isRitual": false,
-            "action": {
-                "id": "action_spell_bane",
-                "name": "Bane",
-                "activation": "action",
-                "effect": {
-                    "type": "no_effect"
-                }
-            },
-            "implementation": {
-                "mode": "unimplemented",
-                "summary": "Awaiting authoring; level, school and action are placeholders."
-            }
-        },
-        {
             "id": "spell_hunters_mark",
             "name": "Hunters Mark",
             "level": 0,
@@ -1332,25 +1218,6 @@
             }
         },
         {
-            "id": "spell_banishment",
-            "name": "Banishment",
-            "level": 0,
-            "school": "evocation",
-            "isRitual": false,
-            "action": {
-                "id": "action_spell_banishment",
-                "name": "Banishment",
-                "activation": "action",
-                "effect": {
-                    "type": "no_effect"
-                }
-            },
-            "implementation": {
-                "mode": "unimplemented",
-                "summary": "Awaiting authoring; level, school and action are placeholders."
-            }
-        },
-        {
             "id": "spell_slow",
             "name": "Slow",
             "level": 0,
@@ -1359,25 +1226,6 @@
             "action": {
                 "id": "action_spell_slow",
                 "name": "Slow",
-                "activation": "action",
-                "effect": {
-                    "type": "no_effect"
-                }
-            },
-            "implementation": {
-                "mode": "unimplemented",
-                "summary": "Awaiting authoring; level, school and action are placeholders."
-            }
-        },
-        {
-            "id": "spell_cone_of_cold",
-            "name": "Cone Of Cold",
-            "level": 0,
-            "school": "evocation",
-            "isRitual": false,
-            "action": {
-                "id": "action_spell_cone_of_cold",
-                "name": "Cone Of Cold",
                 "activation": "action",
                 "effect": {
                     "type": "no_effect"
@@ -1473,44 +1321,6 @@
             "action": {
                 "id": "action_spell_silence",
                 "name": "Silence",
-                "activation": "action",
-                "effect": {
-                    "type": "no_effect"
-                }
-            },
-            "implementation": {
-                "mode": "unimplemented",
-                "summary": "Awaiting authoring; level, school and action are placeholders."
-            }
-        },
-        {
-            "id": "spell_create_food_and_water",
-            "name": "Create Food And Water",
-            "level": 0,
-            "school": "evocation",
-            "isRitual": false,
-            "action": {
-                "id": "action_spell_create_food_and_water",
-                "name": "Create Food And Water",
-                "activation": "action",
-                "effect": {
-                    "type": "no_effect"
-                }
-            },
-            "implementation": {
-                "mode": "unimplemented",
-                "summary": "Awaiting authoring; level, school and action are placeholders."
-            }
-        },
-        {
-            "id": "spell_blight",
-            "name": "Blight",
-            "level": 0,
-            "school": "evocation",
-            "isRitual": false,
-            "action": {
-                "id": "action_spell_blight",
-                "name": "Blight",
                 "activation": "action",
                 "effect": {
                     "type": "no_effect"
