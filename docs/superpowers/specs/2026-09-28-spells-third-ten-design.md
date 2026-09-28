@@ -52,8 +52,9 @@ All 25 definitions are complete in the document.
    for Blight and Create Food and Water. The other six rely on tests: every
    effect shape they use was checked live in the last two batches.
 3. **Docs:** the authoring guide gains the new worked examples and a list of
-   blocked capabilities; the backlog records those capabilities as #127–#131;
-   `docs/development/spells-definitions.md` is tracked (committed d469434).
+   blocked capabilities; the backlog records those capabilities as #127–#131.
+   `docs/development/spells-definitions.md` stays local and untracked: it is
+   Player's Handbook text, much of it outside the SRD.
 
 ## Design
 

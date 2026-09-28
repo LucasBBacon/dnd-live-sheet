@@ -62,3 +62,6 @@ Thumbs.db
 
 # Subagent-driven-development scratch (ledger, briefs, review packages)
 .superpowers/
+
+# The owner's Player's Handbook spell text: a local reference, not for publishing
+docs/development/spells-definitions.md
