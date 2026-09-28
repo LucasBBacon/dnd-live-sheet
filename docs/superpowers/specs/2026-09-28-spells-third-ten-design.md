@@ -133,21 +133,21 @@ Table notes, carrying what the engine does not run:
   appear on the ground or in containers within range: enough for fifteen
   humanoids or five steeds for 24 hours. The food is bland but nourishing, and
   spoils if uneaten after 24 hours; the water does not go bad.
-- **Banishment** — A creature you can see; each slot level above 4th adds one,
-  all within 30 feet of each other. A creature native to this plane is
-  banished to a harmless demiplane, incapacitated, and returns when the spell
-  ends. A creature from another plane returns to its home plane, and does not
-  come back if you concentrate for the full minute.
+- **Banishment** — A creature you can see, plus one more for each slot level
+  above 4th. A creature native to this plane is banished to a harmless
+  demiplane, incapacitated, and returns when the spell ends. A creature from
+  another plane returns to its home plane, and does not come back if you
+  concentrate for the full minute.
 - **Confusion** — Each creature in a 10-foot-radius sphere makes the save; the
   radius grows 5 feet for each slot level above 4th. An affected creature can't
-  take reactions and rolls a d10 at the start of each of its turns: 1, it moves
-  in a random direction; 2–6, it does nothing; 7–8, it makes a melee attack
-  against a random creature within reach; 9–10, it acts normally. At the end of
-  each of its turns it repeats the save, ending the effect on itself on a
-  success.
-- **Blight** — Undead and constructs are unaffected. A plant creature makes the
-  save with disadvantage and takes the maximum damage; a nonmagical plant that
-  isn't a creature withers and dies.
+  take reactions and rolls a d10 at the start of each of its turns: 1, it uses
+  all its movement to move in a random direction and takes no action; 2–6, it
+  does nothing; 7–8, it makes a melee attack against a random creature within
+  reach; 9–10, it acts normally. At the end of each of its turns it repeats the
+  save, ending the effect on itself on a success.
+- **Blight** — Undead and constructs are unaffected. A plant creature or
+  magical plant makes the save with disadvantage and takes the maximum damage;
+  a nonmagical plant that isn't a creature withers and dies.
 - **Cone of Cold** — A creature killed by this spell becomes a frozen statue
   until it thaws.
 

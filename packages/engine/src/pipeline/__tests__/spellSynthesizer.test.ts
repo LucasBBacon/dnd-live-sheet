@@ -181,6 +181,7 @@ describe("synthesizeSpells", () => {
       }),
     );
 
+    expect(find(result, "spell_cure_wounds")).toBeDefined();
     expect(find(result, "spell_cure_wounds")?.actionId).toBeUndefined();
     expect(
       result.actions.some((action) => action.id.startsWith("action_spell_cure_wounds")),
