@@ -165,7 +165,8 @@ describe("synthesizeSpells", () => {
   });
 
   it("lists a stub the character picked, and makes no action of it", () => {
-    // every stub keeps the placeholder level 0, so a cantrip node takes it
+    // every stub keeps the placeholder level 0, so a cantrip node takes it;
+    // Cure Wounds stays a stub until healing can be authored (#122)
     const result = synthesize(
       save({
         classes: [
@@ -173,16 +174,16 @@ describe("synthesizeSpells", () => {
             classId: "class_warlock",
             level: 1,
             selections: {
-              warlock_level_1_cantrips: ["spell_eldritch_blast", "spell_bless"],
+              warlock_level_1_cantrips: ["spell_eldritch_blast", "spell_cure_wounds"],
             },
           },
         ],
       }),
     );
 
-    expect(find(result, "spell_bless")?.actionId).toBeUndefined();
+    expect(find(result, "spell_cure_wounds")?.actionId).toBeUndefined();
     expect(
-      result.actions.some((action) => action.id.startsWith("action_spell_bless")),
+      result.actions.some((action) => action.id.startsWith("action_spell_cure_wounds")),
     ).toBe(false);
   });
 

@@ -136,7 +136,7 @@ describe("trait and spell implementation markers match their data", () => {
   it("records which spells carry rules", async () => {
     const pack = await assembleCoreRulePack(SHIPPED_PACK);
 
-    // 14 of 111 since feat/spells-first-ten (#31). Add each spell as it is
+    // 24 of 111 since feat/spells-third-ten (#31). Add each spell as it is
     // authored; one leaving this list is a regression.
     expect(
       pack.spells
@@ -144,11 +144,21 @@ describe("trait and spell implementation markers match their data", () => {
         .map((spell) => spell.id)
         .sort(),
     ).toEqual([
+      "spell_animal_friendship",
       "spell_augury",
+      "spell_bane",
+      "spell_banishment",
+      "spell_bless",
+      "spell_blight",
       "spell_burning_hands",
+      "spell_charm_person",
       "spell_command",
+      "spell_cone_of_cold",
+      "spell_confusion",
+      "spell_create_food_and_water",
       "spell_dancing_lights",
       "spell_darkness",
+      "spell_daylight",
       "spell_eldritch_blast",
       "spell_faerie_fire",
       "spell_hellish_rebuke",
