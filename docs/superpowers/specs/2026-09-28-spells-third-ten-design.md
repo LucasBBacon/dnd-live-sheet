@@ -120,8 +120,8 @@ Table notes, carrying what the engine does not run:
   friendly acquaintance for the hour, or until you or your companions harm it,
   and knows afterwards that you charmed it. Each slot level above 1st adds a
   target; all must be within 30 feet of each other.
-- **Animal Friendship** — A beast you can see and that can hear you; one with an
-  Intelligence of 4 or more is unaffected. On a failure it is charmed by you for
+- **Animal Friendship** — A beast you can see and that can see and hear you; one
+  with an Intelligence of 4 or more is unaffected. On a failure it is charmed by you for
   24 hours, or until you or your companions harm it. Each slot level above 1st
   adds a beast.
 - **Daylight** — Bright light fills a 60-foot-radius sphere, and dim light
