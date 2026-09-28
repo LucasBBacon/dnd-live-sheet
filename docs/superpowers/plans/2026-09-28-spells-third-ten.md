@@ -603,7 +603,7 @@ EOF
 - Modify: `docs/development/sample-characters.md`
 
 **Interfaces:**
-- Consumes: Task 1's authored Blight (4th level, CON half, 8d8 necrotic) and Create Food and Water (3rd level, `no_effect`); `trait_land_circle_spells_desert` in `traits/ported.json` grants Blur at druid 3 (still a stub), Create Food and Water at 5 and Blight at 7, all `always_prepared`.
+- Consumes: Task 1's authored Blight (4th level, CON half, 8d8 necrotic) and Create Food and Water (3rd level, `no_effect`); `trait_land_circle_spells_desert` in `traits/ported.json` grants Blur and Silence at druid 3, Create Food and Water and Protection from Energy at 5, and Blight and Hallucinatory Terrain at 7, all `always_prepared`; of the six, only Create Food and Water and Blight are authored, and the other four are stubs whose placeholder level 0 lists them under Cantrips.
 - Produces: `00000000-0000-0000-0000-000000000132`, **Ashar Dunewind**, a human Circle of the Land (Desert) druid 7 — stored scores `[10, 13, 13, 11, 15, 9]`, final `[11, 14, 14, 12, 16, 10]`, derived maximum 52 hit points, spell save DC 14.
 
 - [ ] **Step 1: Pin the druid, and watch the pins fail**
@@ -669,7 +669,7 @@ In `packages/database/src/sampleScenarioCharacters.ts`, append to the scenario r
     maxHp: 38,
     currentHp: 52,
     testFocus:
-      "Spell casting (#31): Circle of the Land (Desert) spells — Blight from the one 4th-level slot (8d8 necrotic, CON DC 14) and Create Food and Water from a 3rd; Blur (druid 3) is still a stub and lists as not yet automated.",
+      "Spell casting (#31): Circle of the Land (Desert) spells — Blight from the one 4th-level slot (8d8 necrotic, CON DC 14) and Create Food and Water from a 3rd; the circle's other spells (Blur, Silence, Protection from Energy, Hallucinatory Terrain) are still stubs and list under Cantrips as not yet automated.",
     personalityTraits: "I measure distance in wells, not miles.",
     ideals: "Stewardship. Water taken is water owed.",
     bonds: "The salt flats at Kheret raised me, and I answer when they call.",
@@ -813,7 +813,7 @@ In `docs/development/sample-characters.md`:
      prepared as a Vengeance oath spell. Cast it with a 1st-level slot:
      no material prompt (his emblem is a holy symbol), the results read "Bane:
      CHA save DC 13 · a success negates it", and Active effects shows Bane
-     Concentrating.
+     Concentrating. The slot is spent (2 of 4 becomes 1 of 4).
   ```
 
 - Add a section after Cassia Emberlane's:
@@ -823,11 +823,13 @@ In `docs/development/sample-characters.md`:
 
   A Circle of the Land (Desert) druid 7 with every slot full (4/3/3/1).
 
-  1. **The circle spells.** The Spells panel lists Blur (2nd, not yet
-     automated), Create Food and Water (3rd) and Blight (4th), each Druid ·
-     Slot.
-  2. **Blight.** Cast it: the picker offers only "4th level (1 left)". The
-     results read "Blight: CON save DC 14 · half damage on a success" with
+  1. **The circle spells.** The Spells panel lists Create Food and Water (3rd
+     level) and Blight (4th level), each Druid · Slot. The circle's other four
+     spells — Blur, Silence, Protection from Energy and Hallucinatory Terrain —
+     are still stubs: their level is a placeholder 0, so they sit under Cantrips
+     as Druid · At will, marked Not yet automated.
+  2. **Blight.** Cast it: the picker offers only "4th level (1 left) · 8d8".
+     The results read "Blight: CON save DC 14 · half damage on a success" with
      eight d8 of necrotic damage, and the note says undead and constructs are
      unaffected. The 4th-level slot is spent.
   3. **Create Food and Water.** Cast it with a 3rd-level slot: no material

@@ -1538,7 +1538,7 @@ const SCENARIO_ROSTER: SampleCharacter[] = [
     maxHp: 38,
     currentHp: 52,
     testFocus:
-      "Spell casting (#31): Circle of the Land (Desert) spells — Blight from the one 4th-level slot (8d8 necrotic, CON DC 14) and Create Food and Water from a 3rd; Blur (druid 3) is still a stub and lists as not yet automated.",
+      "Spell casting (#31): Circle of the Land (Desert) spells — Blight from the one 4th-level slot (8d8 necrotic, CON DC 14) and Create Food and Water from a 3rd; the circle's other spells (Blur, Silence, Protection from Energy, Hallucinatory Terrain) are still stubs and list under Cantrips as not yet automated.",
     personalityTraits: "I measure distance in wells, not miles.",
     ideals: "Stewardship. Water taken is water owed.",
     bonds: "The salt flats at Kheret raised me, and I answer when they call.",

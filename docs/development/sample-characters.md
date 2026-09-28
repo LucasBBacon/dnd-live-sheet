@@ -252,7 +252,7 @@ A coverage character, scripted for one spell.
    prepared as a Vengeance oath spell. Cast it with a 1st-level slot:
    no material prompt (his emblem is a holy symbol), the results read "Bane:
    CHA save DC 13 · a success negates it", and Active effects shows Bane
-   Concentrating.
+   Concentrating. The slot is spent (2 of 4 becomes 1 of 4).
 
 ### Tamsin Burrowdeep — `…0124`
 
@@ -419,11 +419,13 @@ A tiefling Knowledge cleric with no 1st-level slot left, one 2nd and two
 
 A Circle of the Land (Desert) druid 7 with every slot full (4/3/3/1).
 
-1. **The circle spells.** The Spells panel lists Blur (2nd, not yet
-   automated), Create Food and Water (3rd) and Blight (4th), each Druid ·
-   Slot.
-2. **Blight.** Cast it: the picker offers only "4th level (1 left)". The
-   results read "Blight: CON save DC 14 · half damage on a success" with
+1. **The circle spells.** The Spells panel lists Create Food and Water (3rd
+   level) and Blight (4th level), each Druid · Slot. The circle's other four
+   spells — Blur, Silence, Protection from Energy and Hallucinatory Terrain —
+   are still stubs: their level is a placeholder 0, so they sit under Cantrips
+   as Druid · At will, marked Not yet automated.
+2. **Blight.** Cast it: the picker offers only "4th level (1 left) · 8d8".
+   The results read "Blight: CON save DC 14 · half damage on a success" with
    eight d8 of necrotic damage, and the note says undead and constructs are
    unaffected. The 4th-level slot is spent.
 3. **Create Food and Water.** Cast it with a 3rd-level slot: no material

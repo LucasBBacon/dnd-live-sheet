@@ -166,10 +166,12 @@ Table notes, carrying what the engine does not run:
 `00000000-0000-0000-0000-000000000132`, a Circle of the Land (Desert) druid 7,
 added to `packages/database/src/sampleScenarioCharacters.ts` after Cassia
 Emberlane. The circle choice (`druid_land_level_3_circle_land:
-["trait_land_circle_spells_desert"]`) grants Blur at 3 (still a stub), Create
-Food and Water at 5 and Blight at 7. Every slot is full (4/3/3/1), and they
-carry a druidic focus. The roster pins go from 22 to 23; the hit-point and
-score invariant tests gain the new character.
+["trait_land_circle_spells_desert"]`) grants Blur and Silence at 3, Create Food
+and Water and Protection from Energy at 5, and Blight and Hallucinatory Terrain
+at 7. Only Create Food and Water and Blight are authored; the other four are
+still stubs. Every slot is full (4/3/3/1), and they carry a druidic focus. The
+roster pins go from 22 to 23; the hit-point and score invariant tests gain the
+new character.
 
 ### Hand check
 
@@ -182,8 +184,9 @@ After `db:import-pack --yes` and `db:seed:samples`:
    Concentrating; the slot is spent.
 3. **The desert druid** — Blight with the 4th-level slot: "Blight: CON save DC …
    · half damage on a success" and eight d8 of necrotic; Create Food and Water
-   with a 3rd-level slot casts with no prompt and shows its note; Blur is listed
-   as not yet automated.
+   with a 3rd-level slot casts with no prompt and shows its note; the circle's
+   four stub spells (Blur, Silence, Protection from Energy, Hallucinatory
+   Terrain) list under Cantrips as not yet automated.
 
 ## Docs
 
